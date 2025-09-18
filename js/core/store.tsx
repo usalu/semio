@@ -36,6 +36,7 @@ import {
   areSameType,
   Attribute,
   Author,
+  AuthorId,
   Camera,
   colorPortsForTypes,
   Connection,
@@ -60,6 +61,7 @@ import {
   getClusterableGroups,
   getIncludedDesigns,
   getPieceRepresentationUrls,
+  Group,
   hasSameDesign,
   hasSameKit,
   hasSamePiece,
@@ -71,6 +73,9 @@ import {
   KitIdLike,
   kitIdToString,
   KitShallow,
+  Layer,
+  LayerId,
+  Location,
   Piece,
   PieceDiff,
   PieceId,
@@ -79,6 +84,7 @@ import {
   piecesMetadata,
   Plane,
   Port,
+  Prop,
   PortDiff,
   PortId,
   portIdToString,
@@ -86,6 +92,7 @@ import {
   RepresentationDiff,
   RepresentationId,
   File as SemioFile,
+  Stat,
   Type,
   TypeDiff,
   TypeId,
@@ -1622,6 +1629,10 @@ class YPieceStore {
     this.isLocked = piece.isLocked;
     this.color = piece.color;
     this.description = piece.description;
+    this.plane = piece.plane;
+    this.center = piece.center;
+    this.mirrorPlane = piece.mirrorPlane;
+    this.attributes = piece.attributes;
   }
 
   get localId(): string {
@@ -1651,19 +1662,19 @@ class YPieceStore {
     }
   }
   get scale(): number {
-    return this.yPiece.get("scale") as unknown as number;
+    return (this.yPiece.get("scale") as number) ?? 1.0;
   }
   set scale(scale: number | undefined) {
     this.yPiece.set("scale", scale || 1.0);
   }
   get isHidden(): boolean {
-    return this.yPiece.get("isHidden") as unknown as boolean;
+    return (this.yPiece.get("isHidden") as boolean) ?? false;
   }
   set isHidden(isHidden: boolean | undefined) {
     this.yPiece.set("isHidden", isHidden || false);
   }
   get isLocked(): boolean {
-    return this.yPiece.get("isLocked") as unknown as boolean;
+    return (this.yPiece.get("isLocked") as boolean) ?? false;
   }
   set isLocked(isLocked: boolean | undefined) {
     this.yPiece.set("isLocked", isLocked || false);
@@ -1679,6 +1690,46 @@ class YPieceStore {
   }
   set description(description: string | undefined) {
     this.yPiece.set("description", description || "");
+  }
+  get plane(): Plane | undefined {
+    return this.yPiece.get("plane") as Plane | undefined;
+  }
+  set plane(plane: Plane | undefined) {
+    if (plane) {
+      this.yPiece.set("plane", plane as any);
+    } else {
+      this.yPiece.delete("plane");
+    }
+  }
+  get center(): Coord | undefined {
+    return this.yPiece.get("center") as Coord | undefined;
+  }
+  set center(center: Coord | undefined) {
+    if (center) {
+      this.yPiece.set("center", center as any);
+    } else {
+      this.yPiece.delete("center");
+    }
+  }
+  get mirrorPlane(): Plane | undefined {
+    return this.yPiece.get("mirrorPlane") as Plane | undefined;
+  }
+  set mirrorPlane(mirrorPlane: Plane | undefined) {
+    if (mirrorPlane) {
+      this.yPiece.set("mirrorPlane", mirrorPlane as any);
+    } else {
+      this.yPiece.delete("mirrorPlane");
+    }
+  }
+  get attributes(): Attribute[] | undefined {
+    return this.yPiece.get("attributes") as Attribute[] | undefined;
+  }
+  set attributes(attributes: Attribute[] | undefined) {
+    if (attributes) {
+      this.yPiece.set("attributes", attributes as any);
+    } else {
+      this.yPiece.delete("attributes");
+    }
   }
 
   public hash(piece: Piece): string {
@@ -1699,6 +1750,10 @@ class YPieceStore {
       isLocked: this.isLocked,
       color: this.color,
       description: this.description,
+      plane: this.plane,
+      center: this.center,
+      mirrorPlane: this.mirrorPlane,
+      attributes: this.attributes,
     };
     const currentHash = this.hash(currentData);
 
@@ -1712,6 +1767,17 @@ class YPieceStore {
 
   change = (diff: PieceDiff) => {
     if (diff.id_) this.localId = diff.id_;
+    if (diff.type !== undefined) this.type = diff.type;
+    if (diff.design !== undefined) this.design = diff.design;
+    if (diff.scale !== undefined) this.scale = diff.scale;
+    if (diff.isHidden !== undefined) this.isHidden = diff.isHidden;
+    if (diff.isLocked !== undefined) this.isLocked = diff.isLocked;
+    if (diff.color !== undefined) this.color = diff.color;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.plane !== undefined) this.plane = diff.plane;
+    if (diff.center !== undefined) this.center = diff.center;
+    if (diff.mirrorPlane !== undefined) this.mirrorPlane = diff.mirrorPlane;
+    if (diff.attributes !== undefined) this.attributes = diff.attributes;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -1829,6 +1895,16 @@ class YDesignStore {
     this.yDesign.set("icon", design.icon || "");
     this.yDesign.set("image", design.image || "");
     this.yDesign.set("description", design.description || "");
+    this.yDesign.set("connections", design.connections || []);
+    this.yDesign.set("stats", design.stats || []);
+    this.yDesign.set("props", design.props || []);
+    this.yDesign.set("layers", design.layers || []);
+    this.yDesign.set("activeLayer", design.activeLayer);
+    this.yDesign.set("groups", design.groups || []);
+    this.yDesign.set("location", design.location);
+    this.yDesign.set("authors", design.authors || []);
+    this.yDesign.set("concepts", design.concepts || []);
+    this.yDesign.set("attributes", design.attributes || []);
 
     this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
     if (design.pieces) {
@@ -1895,6 +1971,66 @@ class YDesignStore {
   set description(description: string | undefined) {
     this.yDesign.set("description", description || "");
   }
+  get connections(): Connection[] | undefined {
+    return this.yDesign.get("connections") as Connection[] | undefined;
+  }
+  set connections(connections: Connection[] | undefined) {
+    this.yDesign.set("connections", connections || []);
+  }
+  get stats(): Stat[] | undefined {
+    return this.yDesign.get("stats") as Stat[] | undefined;
+  }
+  set stats(stats: Stat[] | undefined) {
+    this.yDesign.set("stats", stats || []);
+  }
+  get props(): Prop[] | undefined {
+    return this.yDesign.get("props") as Prop[] | undefined;
+  }
+  set props(props: Prop[] | undefined) {
+    this.yDesign.set("props", props || []);
+  }
+  get layers(): Layer[] | undefined {
+    return this.yDesign.get("layers") as Layer[] | undefined;
+  }
+  set layers(layers: Layer[] | undefined) {
+    this.yDesign.set("layers", layers || []);
+  }
+  get activeLayer(): LayerId | undefined {
+    return this.yDesign.get("activeLayer") as LayerId | undefined;
+  }
+  set activeLayer(activeLayer: LayerId | undefined) {
+    this.yDesign.set("activeLayer", activeLayer);
+  }
+  get groups(): Group[] | undefined {
+    return this.yDesign.get("groups") as Group[] | undefined;
+  }
+  set groups(groups: Group[] | undefined) {
+    this.yDesign.set("groups", groups || []);
+  }
+  get location(): Location | undefined {
+    return this.yDesign.get("location") as Location | undefined;
+  }
+  set location(location: Location | undefined) {
+    this.yDesign.set("location", location);
+  }
+  get authors(): AuthorId[] | undefined {
+    return this.yDesign.get("authors") as AuthorId[] | undefined;
+  }
+  set authors(authors: AuthorId[] | undefined) {
+    this.yDesign.set("authors", authors || []);
+  }
+  get concepts(): string[] | undefined {
+    return this.yDesign.get("concepts") as string[] | undefined;
+  }
+  set concepts(concepts: string[] | undefined) {
+    this.yDesign.set("concepts", concepts || []);
+  }
+  get attributes(): Attribute[] | undefined {
+    return this.yDesign.get("attributes") as Attribute[] | undefined;
+  }
+  set attributes(attributes: Attribute[] | undefined) {
+    this.yDesign.set("attributes", attributes || []);
+  }
   get createdAt(): Date {
     return new Date(this.yDesign.get("createdAt") as string);
   }
@@ -1949,6 +2085,16 @@ class YDesignStore {
       image: this.image,
       description: this.description,
       pieces: this.pieces.map((piece) => piece.snapshot()),
+      connections: this.connections,
+      stats: this.stats,
+      props: this.props,
+      layers: this.layers,
+      activeLayer: this.activeLayer,
+      groups: this.groups,
+      location: this.location,
+      authors: this.authors,
+      concepts: this.concepts,
+      attributes: this.attributes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };
@@ -1963,6 +2109,25 @@ class YDesignStore {
   };
 
   change = (diff: DesignDiff) => {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.variant !== undefined) this.variant = diff.variant;
+    if (diff.view !== undefined) this.view = diff.view;
+    if (diff.canScale !== undefined) this.canScale = diff.canScale;
+    if (diff.canMirror !== undefined) this.canMirror = diff.canMirror;
+    if (diff.unit !== undefined) this.unit = diff.unit;
+    if (diff.icon !== undefined) this.icon = diff.icon;
+    if (diff.image !== undefined) this.image = diff.image;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.connections !== undefined) this.connections = diff.connections;
+    if (diff.stats !== undefined) this.stats = diff.stats;
+    if (diff.props !== undefined) this.props = diff.props;
+    if (diff.layers !== undefined) this.layers = diff.layers;
+    if (diff.activeLayer !== undefined) this.activeLayer = diff.activeLayer;
+    if (diff.groups !== undefined) this.groups = diff.groups;
+    if (diff.location !== undefined) this.location = diff.location;
+    if (diff.authors !== undefined) this.authors = diff.authors;
+    if (diff.concepts !== undefined) this.concepts = diff.concepts;
+    if (diff.attributes !== undefined) this.attributes = diff.attributes;
     this.cache = undefined;
     this.cacheHash = undefined;
   };

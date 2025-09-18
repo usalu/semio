@@ -109,10 +109,34 @@ export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.
 
 export const CoordDiffSchema = CoordSchema.partial();
 export type CoordDiff = z.infer<typeof CoordDiffSchema>;
-export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => { }
-export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => { }
-export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => { }
-export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => { }
+export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
+  return {
+    x: after.x - before.x,
+    y: after.y - before.y,
+  };
+}
+export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
+  return {
+    x: original.x - x,
+    y: original.y - y,
+  };
+}
+export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
+  return {
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+  };
+}
+export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
+  return {
+    x: base.x + x,
+    y: base.y + y,
+  };
+}
 
 // #endregion Coord
 
@@ -126,10 +150,34 @@ export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(
 
 export const VecDiffSchema = VecSchema.partial();
 export type VecDiff = z.infer<typeof VecDiffSchema>;
-export const getVecDiff = (before: Vec, after: Vec): VecDiff => { }
-export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => { }
-export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => { }
-export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => { }
+export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
+  return {
+    x: after.x - before.x,
+    y: after.y - before.y,
+  };
+}
+export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
+  return {
+    x: original.x - x,
+    y: original.y - y,
+  };
+}
+export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
+  return {
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+  };
+}
+export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
+  return {
+    x: base.x + x,
+    y: base.y + y,
+  };
+}
 
 // #endregion Vec
 
@@ -147,10 +195,40 @@ export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.
 
 export const PointDiffSchema = PointSchema.partial();
 export type PointDiff = z.infer<typeof PointDiffSchema>;
-export const getPointDiff = (before: Point, after: Point): PointDiff => { }
-export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => { }
-export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => { }
-export const applyPointDiff = (base: Point, diff: PointDiff): Point => { }
+export const getPointDiff = (before: Point, after: Point): PointDiff => {
+  return {
+    x: after.x - before.x,
+    y: after.y - before.y,
+    z: after.z - before.z,
+  };
+}
+export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
+  const z = appliedDiff.z ?? 0;
+  return {
+    x: original.x - x,
+    y: original.y - y,
+    z: original.z - z,
+  };
+}
+export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
+  return {
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    z: (diff1.z ?? 0) + (diff2.z ?? 0),
+  };
+}
+export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
+  const z = diff.z ?? 0;
+  return {
+    x: base.x + x,
+    y: base.y + y,
+    z: base.z + z,
+  };
+}
 
 // #endregion Point
 
@@ -168,10 +246,40 @@ export const deserializeVector = (json: string): Vector => VectorSchema.parse(JS
 
 export const VectorDiffSchema = VectorSchema.partial();
 export type VectorDiff = z.infer<typeof VectorDiffSchema>;
-export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => { }
-export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => { }
-export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => { }
-export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => { }
+export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
+  return {
+    x: after.x - before.x,
+    y: after.y - before.y,
+    z: after.z - before.z,
+  };
+}
+export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
+  const z = appliedDiff.z ?? 0;
+  return {
+    x: original.x - x,
+    y: original.y - y,
+    z: original.z - z,
+  };
+}
+export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
+  return {
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    z: (diff1.z ?? 0) + (diff2.z ?? 0),
+  };
+}
+export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
+  const z = diff.z ?? 0;
+  return {
+    x: base.x + x,
+    y: base.y + y,
+    z: base.z + z,
+  };
+}
 
 // #endregion Vector
 
@@ -232,10 +340,37 @@ export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAx
   yAxis: VectorDiffSchema,
 }).partial();
 export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
-export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => { }
-export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => { }
-export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => { }
-export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => { }
+export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
+  return {
+    origin: getPointDiff(before.origin, after.origin),
+    xAxis: getVectorDiff(before.xAxis, after.xAxis),
+    yAxis: getVectorDiff(before.yAxis, after.yAxis),
+  };
+}
+export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
+  const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
+  const xAxis = appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 };
+  const yAxis = appliedDiff.yAxis ?? { x: 0, y: 0, z: 0 };
+  return {
+    origin: inversePointDiff(original.origin, origin),
+    xAxis: inverseVectorDiff(original.xAxis, xAxis),
+    yAxis: inverseVectorDiff(original.yAxis, yAxis),
+  };
+}
+export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
+  return {
+    origin: diff1.origin ?? (diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!)),
+    xAxis: diff1.xAxis ?? (diff2.xAxis ?? mergeVectorDiff(diff1.xAxis!, diff2.xAxis!)),
+    yAxis: diff1.yAxis ?? (diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!)),
+  };
+}
+export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
+  return {
+    origin: diff.origin ? applyPointDiff(base.origin, diff.origin) : base.origin,
+    xAxis: diff.xAxis ? applyVectorDiff(base.xAxis, diff.xAxis) : base.xAxis,
+    yAxis: diff.yAxis ? applyVectorDiff(base.yAxis, diff.yAxis) : base.yAxis,
+  };
+}
 
 // #endregion Plane
 
