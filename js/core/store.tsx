@@ -1629,10 +1629,78 @@ class YPieceStore {
     this.isLocked = piece.isLocked;
     this.color = piece.color;
     this.description = piece.description;
-    this.plane = piece.plane;
-    this.center = piece.center;
-    this.mirrorPlane = piece.mirrorPlane;
-    this.attributes = piece.attributes;
+
+    if (piece.plane) {
+      const yPlane = new Y.Map<YVec3>();
+      if (piece.plane.origin) {
+        const yOrigin = new Y.Map<number>();
+        yOrigin.set("x", piece.plane.origin.x || 0);
+        yOrigin.set("y", piece.plane.origin.y || 0);
+        yOrigin.set("z", piece.plane.origin.z || 0);
+        yPlane.set("origin", yOrigin);
+      }
+      if (piece.plane.xAxis) {
+        const yXAxis = new Y.Map<number>();
+        yXAxis.set("x", piece.plane.xAxis.x || 0);
+        yXAxis.set("y", piece.plane.xAxis.y || 0);
+        yXAxis.set("z", piece.plane.xAxis.z || 0);
+        yPlane.set("xAxis", yXAxis);
+      }
+      if (piece.plane.yAxis) {
+        const yYAxis = new Y.Map<number>();
+        yYAxis.set("x", piece.plane.yAxis.x || 0);
+        yYAxis.set("y", piece.plane.yAxis.y || 0);
+        yYAxis.set("z", piece.plane.yAxis.z || 0);
+        yPlane.set("yAxis", yYAxis);
+      }
+      this.yPiece.set("plane", yPlane);
+    }
+
+    if (piece.center) {
+      const yCenter = new Y.Map<number>();
+      yCenter.set("x", piece.center.x || 0);
+      yCenter.set("y", piece.center.y || 0);
+      yCenter.set("z", piece.center.z || 0);
+      this.yPiece.set("center", yCenter);
+    }
+
+    if (piece.mirrorPlane) {
+      const yMirrorPlane = new Y.Map<YVec3>();
+      if (piece.mirrorPlane.origin) {
+        const yOrigin = new Y.Map<number>();
+        yOrigin.set("x", piece.mirrorPlane.origin.x || 0);
+        yOrigin.set("y", piece.mirrorPlane.origin.y || 0);
+        yOrigin.set("z", piece.mirrorPlane.origin.z || 0);
+        yMirrorPlane.set("origin", yOrigin);
+      }
+      if (piece.mirrorPlane.xAxis) {
+        const yXAxis = new Y.Map<number>();
+        yXAxis.set("x", piece.mirrorPlane.xAxis.x || 0);
+        yXAxis.set("y", piece.mirrorPlane.xAxis.y || 0);
+        yXAxis.set("z", piece.mirrorPlane.xAxis.z || 0);
+        yMirrorPlane.set("xAxis", yXAxis);
+      }
+      if (piece.mirrorPlane.yAxis) {
+        const yYAxis = new Y.Map<number>();
+        yYAxis.set("x", piece.mirrorPlane.yAxis.x || 0);
+        yYAxis.set("y", piece.mirrorPlane.yAxis.y || 0);
+        yYAxis.set("z", piece.mirrorPlane.yAxis.z || 0);
+        yMirrorPlane.set("yAxis", yYAxis);
+      }
+      this.yPiece.set("mirrorPlane", yMirrorPlane);
+    }
+
+    if (piece.attributes) {
+      const yAttributes = new Y.Array<YAttribute>();
+      piece.attributes.forEach(attr => {
+        const yAttr = new Y.Map<string>();
+        yAttr.set("key", attr.key || "");
+        yAttr.set("value", attr.value || "");
+        yAttr.set("definition", attr.definition || "");
+        yAttributes.push([yAttr]);
+      });
+      this.yPiece.set("attributes", yAttributes);
+    }
   }
 
   get localId(): string {
@@ -1691,46 +1759,6 @@ class YPieceStore {
   set description(description: string | undefined) {
     this.yPiece.set("description", description || "");
   }
-  get plane(): Plane | undefined {
-    return this.yPiece.get("plane") as Plane | undefined;
-  }
-  set plane(plane: Plane | undefined) {
-    if (plane) {
-      this.yPiece.set("plane", plane as any);
-    } else {
-      this.yPiece.delete("plane");
-    }
-  }
-  get center(): Coord | undefined {
-    return this.yPiece.get("center") as Coord | undefined;
-  }
-  set center(center: Coord | undefined) {
-    if (center) {
-      this.yPiece.set("center", center as any);
-    } else {
-      this.yPiece.delete("center");
-    }
-  }
-  get mirrorPlane(): Plane | undefined {
-    return this.yPiece.get("mirrorPlane") as Plane | undefined;
-  }
-  set mirrorPlane(mirrorPlane: Plane | undefined) {
-    if (mirrorPlane) {
-      this.yPiece.set("mirrorPlane", mirrorPlane as any);
-    } else {
-      this.yPiece.delete("mirrorPlane");
-    }
-  }
-  get attributes(): Attribute[] | undefined {
-    return this.yPiece.get("attributes") as Attribute[] | undefined;
-  }
-  set attributes(attributes: Attribute[] | undefined) {
-    if (attributes) {
-      this.yPiece.set("attributes", attributes as any);
-    } else {
-      this.yPiece.delete("attributes");
-    }
-  }
 
   public hash(piece: Piece): string {
     return JSON.stringify(piece);
@@ -1741,6 +1769,53 @@ class YPieceStore {
   };
 
   snapshot = (): Piece => {
+    // Extract complex types from Y.js objects
+    let plane: Plane | undefined;
+    const yPlane = this.yPiece.get("plane") as YPlane | undefined;
+    if (yPlane) {
+      const yOrigin = yPlane.get("origin") as Y.Map<number> | undefined;
+      const yXAxis = yPlane.get("xAxis") as Y.Map<number> | undefined;
+      const yYAxis = yPlane.get("yAxis") as Y.Map<number> | undefined;
+      plane = {
+        origin: yOrigin ? { x: yOrigin.get("x") || 0, y: yOrigin.get("y") || 0, z: yOrigin.get("z") || 0 } : undefined,
+        xAxis: yXAxis ? { x: yXAxis.get("x") || 0, y: yXAxis.get("y") || 0, z: yXAxis.get("z") || 0 } : undefined,
+        yAxis: yYAxis ? { x: yYAxis.get("x") || 0, y: yYAxis.get("y") || 0, z: yYAxis.get("z") || 0 } : undefined,
+      };
+    }
+
+    let center: Coord | undefined;
+    const yCenter = this.yPiece.get("center") as Y.Map<number> | undefined;
+    if (yCenter) {
+      center = {
+        x: yCenter.get("x") || 0,
+        y: yCenter.get("y") || 0,
+        z: yCenter.get("z") || 0,
+      };
+    }
+
+    let mirrorPlane: Plane | undefined;
+    const yMirrorPlane = this.yPiece.get("mirrorPlane") as YPlane | undefined;
+    if (yMirrorPlane) {
+      const yOrigin = yMirrorPlane.get("origin") as Y.Map<number> | undefined;
+      const yXAxis = yMirrorPlane.get("xAxis") as Y.Map<number> | undefined;
+      const yYAxis = yMirrorPlane.get("yAxis") as Y.Map<number> | undefined;
+      mirrorPlane = {
+        origin: yOrigin ? { x: yOrigin.get("x") || 0, y: yOrigin.get("y") || 0, z: yOrigin.get("z") || 0 } : undefined,
+        xAxis: yXAxis ? { x: yXAxis.get("x") || 0, y: yXAxis.get("y") || 0, z: yXAxis.get("z") || 0 } : undefined,
+        yAxis: yYAxis ? { x: yYAxis.get("x") || 0, y: yYAxis.get("y") || 0, z: yYAxis.get("z") || 0 } : undefined,
+      };
+    }
+
+    let attributes: Attribute[] | undefined;
+    const yAttributes = this.yPiece.get("attributes") as Y.Array<YAttribute> | undefined;
+    if (yAttributes) {
+      attributes = yAttributes.toArray().map(yAttr => ({
+        key: yAttr.get("key") || "",
+        value: yAttr.get("value") || "",
+        definition: yAttr.get("definition") || "",
+      }));
+    }
+
     const currentData = {
       id_: this.localId,
       type: this.type,
@@ -1750,10 +1825,10 @@ class YPieceStore {
       isLocked: this.isLocked,
       color: this.color,
       description: this.description,
-      plane: this.plane,
-      center: this.center,
-      mirrorPlane: this.mirrorPlane,
-      attributes: this.attributes,
+      plane,
+      center,
+      mirrorPlane,
+      attributes,
     };
     const currentHash = this.hash(currentData);
 
@@ -1774,10 +1849,95 @@ class YPieceStore {
     if (diff.isLocked !== undefined) this.isLocked = diff.isLocked;
     if (diff.color !== undefined) this.color = diff.color;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.plane !== undefined) this.plane = diff.plane;
-    if (diff.center !== undefined) this.center = diff.center;
-    if (diff.mirrorPlane !== undefined) this.mirrorPlane = diff.mirrorPlane;
-    if (diff.attributes !== undefined) this.attributes = diff.attributes;
+
+    // Handle complex type changes
+    if (diff.plane !== undefined) {
+      if (diff.plane) {
+        const yPlane = new Y.Map<YVec3>();
+        if (diff.plane.origin) {
+          const yOrigin = new Y.Map<number>();
+          yOrigin.set("x", diff.plane.origin.x || 0);
+          yOrigin.set("y", diff.plane.origin.y || 0);
+          yOrigin.set("z", diff.plane.origin.z || 0);
+          yPlane.set("origin", yOrigin);
+        }
+        if (diff.plane.xAxis) {
+          const yXAxis = new Y.Map<number>();
+          yXAxis.set("x", diff.plane.xAxis.x || 0);
+          yXAxis.set("y", diff.plane.xAxis.y || 0);
+          yXAxis.set("z", diff.plane.xAxis.z || 0);
+          yPlane.set("xAxis", yXAxis);
+        }
+        if (diff.plane.yAxis) {
+          const yYAxis = new Y.Map<number>();
+          yYAxis.set("x", diff.plane.yAxis.x || 0);
+          yYAxis.set("y", diff.plane.yAxis.y || 0);
+          yYAxis.set("z", diff.plane.yAxis.z || 0);
+          yPlane.set("yAxis", yYAxis);
+        }
+        this.yPiece.set("plane", yPlane);
+      } else {
+        this.yPiece.delete("plane");
+      }
+    }
+
+    if (diff.center !== undefined) {
+      if (diff.center) {
+        const yCenter = new Y.Map<number>();
+        yCenter.set("x", diff.center.x || 0);
+        yCenter.set("y", diff.center.y || 0);
+        yCenter.set("z", diff.center.z || 0);
+        this.yPiece.set("center", yCenter);
+      } else {
+        this.yPiece.delete("center");
+      }
+    }
+
+    if (diff.mirrorPlane !== undefined) {
+      if (diff.mirrorPlane) {
+        const yMirrorPlane = new Y.Map<YVec3>();
+        if (diff.mirrorPlane.origin) {
+          const yOrigin = new Y.Map<number>();
+          yOrigin.set("x", diff.mirrorPlane.origin.x || 0);
+          yOrigin.set("y", diff.mirrorPlane.origin.y || 0);
+          yOrigin.set("z", diff.mirrorPlane.origin.z || 0);
+          yMirrorPlane.set("origin", yOrigin);
+        }
+        if (diff.mirrorPlane.xAxis) {
+          const yXAxis = new Y.Map<number>();
+          yXAxis.set("x", diff.mirrorPlane.xAxis.x || 0);
+          yXAxis.set("y", diff.mirrorPlane.xAxis.y || 0);
+          yXAxis.set("z", diff.mirrorPlane.xAxis.z || 0);
+          yMirrorPlane.set("xAxis", yXAxis);
+        }
+        if (diff.mirrorPlane.yAxis) {
+          const yYAxis = new Y.Map<number>();
+          yYAxis.set("x", diff.mirrorPlane.yAxis.x || 0);
+          yYAxis.set("y", diff.mirrorPlane.yAxis.y || 0);
+          yYAxis.set("z", diff.mirrorPlane.yAxis.z || 0);
+          yMirrorPlane.set("yAxis", yYAxis);
+        }
+        this.yPiece.set("mirrorPlane", yMirrorPlane);
+      } else {
+        this.yPiece.delete("mirrorPlane");
+      }
+    }
+
+    if (diff.attributes !== undefined) {
+      if (diff.attributes) {
+        const yAttributes = new Y.Array<YAttribute>();
+        diff.attributes.forEach(attr => {
+          const yAttr = new Y.Map<string>();
+          yAttr.set("key", attr.key || "");
+          yAttr.set("value", attr.value || "");
+          yAttr.set("definition", attr.definition || "");
+          yAttributes.push([yAttr]);
+        });
+        this.yPiece.set("attributes", yAttributes);
+      } else {
+        this.yPiece.delete("attributes");
+      }
+    }
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -1895,16 +2055,116 @@ class YDesignStore {
     this.yDesign.set("icon", design.icon || "");
     this.yDesign.set("image", design.image || "");
     this.yDesign.set("description", design.description || "");
-    this.yDesign.set("connections", design.connections || []);
-    this.yDesign.set("stats", design.stats || []);
-    this.yDesign.set("props", design.props || []);
-    this.yDesign.set("layers", design.layers || []);
-    this.yDesign.set("activeLayer", design.activeLayer);
-    this.yDesign.set("groups", design.groups || []);
-    this.yDesign.set("location", design.location);
-    this.yDesign.set("authors", design.authors || []);
-    this.yDesign.set("concepts", design.concepts || []);
-    this.yDesign.set("attributes", design.attributes || []);
+
+    // Initialize complex types as Y.js objects
+    if (design.connections) {
+      const yConnections = new Y.Array<YConnection>();
+      design.connections.forEach(conn => {
+        const yConn = new Y.Map();
+        yConn.set("id_", conn.id_ || "");
+        // Add other connection properties as needed
+        yConnections.push([yConn]);
+      });
+      this.yDesign.set("connections", yConnections);
+    }
+
+    if (design.stats) {
+      const yStats = new Y.Array<YStat>();
+      design.stats.forEach(stat => {
+        const yStat = new Y.Map();
+        yStat.set("key", stat.key || "");
+        yStat.set("value", stat.value);
+        yStat.set("definition", stat.definition || "");
+        yStats.push([yStat]);
+      });
+      this.yDesign.set("stats", yStats);
+    }
+
+    if (design.props) {
+      const yProps = new Y.Array<YProp>();
+      design.props.forEach(prop => {
+        const yProp = new Y.Map();
+        yProp.set("key", prop.key || "");
+        yProp.set("value", prop.value);
+        yProp.set("definition", prop.definition || "");
+        yProps.push([yProp]);
+      });
+      this.yDesign.set("props", yProps);
+    }
+
+    if (design.layers) {
+      const yLayers = new Y.Array<YLayer>();
+      design.layers.forEach(layer => {
+        const yLayer = new Y.Map();
+        yLayer.set("path", layer.path || "");
+        yLayer.set("isVisible", layer.isVisible);
+        yLayers.push([yLayer]);
+      });
+      this.yDesign.set("layers", yLayers);
+    }
+
+    if (design.activeLayer) {
+      this.yDesign.set("activeLayer", design.activeLayer.path || "");
+    }
+
+    if (design.groups) {
+      const yGroups = new Y.Array<YGroup>();
+      design.groups.forEach(group => {
+        const yGroup = new Y.Map();
+        const pieceIds = new Y.Array<string>();
+        group.pieces.forEach(piece => pieceIds.push([piece.id_]));
+        yGroup.set("pieces", pieceIds);
+        yGroups.push([yGroup]);
+      });
+      this.yDesign.set("groups", yGroups);
+    }
+
+    if (design.location) {
+      const yLocation = new Y.Map();
+      if (design.location.position) {
+        const yPosition = new Y.Map<number>();
+        yPosition.set("x", design.location.position.x || 0);
+        yPosition.set("y", design.location.position.y || 0);
+        yPosition.set("z", design.location.position.z || 0);
+        yLocation.set("position", yPosition);
+      }
+      if (design.location.direction) {
+        const yDirection = new Y.Map<number>();
+        yDirection.set("x", design.location.direction.x || 0);
+        yDirection.set("y", design.location.direction.y || 0);
+        yDirection.set("z", design.location.direction.z || 0);
+        yLocation.set("direction", yDirection);
+      }
+      this.yDesign.set("location", yLocation);
+    }
+
+    if (design.authors) {
+      const yAuthors = new Y.Array<YAuthor>();
+      design.authors.forEach(author => {
+        const yAuthor = new Y.Map<string>();
+        yAuthor.set("email", author.email || "");
+        yAuthors.push([yAuthor]);
+      });
+      this.yDesign.set("authors", yAuthors);
+    }
+
+    if (design.concepts) {
+      const yConcepts = new Y.Array<string>();
+      design.concepts.forEach(concept => yConcepts.push([concept]));
+      this.yDesign.set("concepts", yConcepts);
+    }
+
+    if (design.attributes) {
+      const yAttributes = new Y.Array<YAttribute>();
+      design.attributes.forEach(attr => {
+        const yAttr = new Y.Map<string>();
+        yAttr.set("key", attr.key || "");
+        yAttr.set("value", attr.value || "");
+        yAttr.set("definition", attr.definition || "");
+        yAttributes.push([yAttr]);
+      });
+      this.yDesign.set("attributes", yAttributes);
+    }
 
     this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
     if (design.pieces) {
@@ -1971,66 +2231,6 @@ class YDesignStore {
   set description(description: string | undefined) {
     this.yDesign.set("description", description || "");
   }
-  get connections(): Connection[] | undefined {
-    return this.yDesign.get("connections") as Connection[] | undefined;
-  }
-  set connections(connections: Connection[] | undefined) {
-    this.yDesign.set("connections", connections || []);
-  }
-  get stats(): Stat[] | undefined {
-    return this.yDesign.get("stats") as Stat[] | undefined;
-  }
-  set stats(stats: Stat[] | undefined) {
-    this.yDesign.set("stats", stats || []);
-  }
-  get props(): Prop[] | undefined {
-    return this.yDesign.get("props") as Prop[] | undefined;
-  }
-  set props(props: Prop[] | undefined) {
-    this.yDesign.set("props", props || []);
-  }
-  get layers(): Layer[] | undefined {
-    return this.yDesign.get("layers") as Layer[] | undefined;
-  }
-  set layers(layers: Layer[] | undefined) {
-    this.yDesign.set("layers", layers || []);
-  }
-  get activeLayer(): LayerId | undefined {
-    return this.yDesign.get("activeLayer") as LayerId | undefined;
-  }
-  set activeLayer(activeLayer: LayerId | undefined) {
-    this.yDesign.set("activeLayer", activeLayer);
-  }
-  get groups(): Group[] | undefined {
-    return this.yDesign.get("groups") as Group[] | undefined;
-  }
-  set groups(groups: Group[] | undefined) {
-    this.yDesign.set("groups", groups || []);
-  }
-  get location(): Location | undefined {
-    return this.yDesign.get("location") as Location | undefined;
-  }
-  set location(location: Location | undefined) {
-    this.yDesign.set("location", location);
-  }
-  get authors(): AuthorId[] | undefined {
-    return this.yDesign.get("authors") as AuthorId[] | undefined;
-  }
-  set authors(authors: AuthorId[] | undefined) {
-    this.yDesign.set("authors", authors || []);
-  }
-  get concepts(): string[] | undefined {
-    return this.yDesign.get("concepts") as string[] | undefined;
-  }
-  set concepts(concepts: string[] | undefined) {
-    this.yDesign.set("concepts", concepts || []);
-  }
-  get attributes(): Attribute[] | undefined {
-    return this.yDesign.get("attributes") as Attribute[] | undefined;
-  }
-  set attributes(attributes: Attribute[] | undefined) {
-    this.yDesign.set("attributes", attributes || []);
-  }
   get createdAt(): Date {
     return new Date(this.yDesign.get("createdAt") as string);
   }
@@ -2074,6 +2274,97 @@ class YDesignStore {
   }
 
   snapshot = (): Design => {
+    // Extract complex types from Y.js objects
+    let connections: Connection[] | undefined;
+    const yConnections = this.yDesign.get("connections") as Y.Array<YConnection> | undefined;
+    if (yConnections) {
+      connections = yConnections.toArray().map(yConn => ({
+        id_: yConn.get("id_") || "",
+        // Add other connection properties as needed based on ConnectionSchema
+      }));
+    }
+
+    let stats: Stat[] | undefined;
+    const yStats = this.yDesign.get("stats") as Y.Array<YStat> | undefined;
+    if (yStats) {
+      stats = yStats.toArray().map(yStat => ({
+        key: yStat.get("key") || "",
+        value: yStat.get("value"),
+        definition: yStat.get("definition") || "",
+      }));
+    }
+
+    let props: Prop[] | undefined;
+    const yProps = this.yDesign.get("props") as Y.Array<YProp> | undefined;
+    if (yProps) {
+      props = yProps.toArray().map(yProp => ({
+        key: yProp.get("key") || "",
+        value: yProp.get("value"),
+        definition: yProp.get("definition") || "",
+      }));
+    }
+
+    let layers: Layer[] | undefined;
+    const yLayers = this.yDesign.get("layers") as Y.Array<YLayer> | undefined;
+    if (yLayers) {
+      layers = yLayers.toArray().map(yLayer => ({
+        path: yLayer.get("path") || "",
+        isVisible: yLayer.get("isVisible") as boolean,
+      }));
+    }
+
+    let activeLayer: LayerId | undefined;
+    const activeLayerPath = this.yDesign.get("activeLayer") as string | undefined;
+    if (activeLayerPath) {
+      activeLayer = { path: activeLayerPath };
+    }
+
+    let groups: Group[] | undefined;
+    const yGroups = this.yDesign.get("groups") as Y.Array<YGroup> | undefined;
+    if (yGroups) {
+      groups = yGroups.toArray().map(yGroup => {
+        const pieceIds = yGroup.get("pieces") as Y.Array<string>;
+        return {
+          pieces: pieceIds.toArray().map(id => ({ id_: id })),
+        };
+      });
+    }
+
+    let location: Location | undefined;
+    const yLocation = this.yDesign.get("location") as Y.Map<any> | undefined;
+    if (yLocation) {
+      const yPosition = yLocation.get("position") as Y.Map<number> | undefined;
+      const yDirection = yLocation.get("direction") as Y.Map<number> | undefined;
+      location = {
+        position: yPosition ? { x: yPosition.get("x") || 0, y: yPosition.get("y") || 0, z: yPosition.get("z") || 0 } : undefined,
+        direction: yDirection ? { x: yDirection.get("x") || 0, y: yDirection.get("y") || 0, z: yDirection.get("z") || 0 } : undefined,
+      };
+    }
+
+    let authors: AuthorId[] | undefined;
+    const yAuthors = this.yDesign.get("authors") as Y.Array<YAuthor> | undefined;
+    if (yAuthors) {
+      authors = yAuthors.toArray().map(yAuthor => ({
+        email: yAuthor.get("email") || "",
+      }));
+    }
+
+    let concepts: string[] | undefined;
+    const yConcepts = this.yDesign.get("concepts") as Y.Array<string> | undefined;
+    if (yConcepts) {
+      concepts = yConcepts.toArray();
+    }
+
+    let attributes: Attribute[] | undefined;
+    const yAttributes = this.yDesign.get("attributes") as Y.Array<YAttribute> | undefined;
+    if (yAttributes) {
+      attributes = yAttributes.toArray().map(yAttr => ({
+        key: yAttr.get("key") || "",
+        value: yAttr.get("value") || "",
+        definition: yAttr.get("definition") || "",
+      }));
+    }
+
     const currentData = {
       name: this.name,
       variant: this.variant,
@@ -2085,16 +2376,16 @@ class YDesignStore {
       image: this.image,
       description: this.description,
       pieces: this.pieces.map((piece) => piece.snapshot()),
-      connections: this.connections,
-      stats: this.stats,
-      props: this.props,
-      layers: this.layers,
-      activeLayer: this.activeLayer,
-      groups: this.groups,
-      location: this.location,
-      authors: this.authors,
-      concepts: this.concepts,
-      attributes: this.attributes,
+      connections,
+      stats,
+      props,
+      layers,
+      activeLayer,
+      groups,
+      location,
+      authors,
+      concepts,
+      attributes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };
@@ -2118,16 +2409,157 @@ class YDesignStore {
     if (diff.icon !== undefined) this.icon = diff.icon;
     if (diff.image !== undefined) this.image = diff.image;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.connections !== undefined) this.connections = diff.connections;
-    if (diff.stats !== undefined) this.stats = diff.stats;
-    if (diff.props !== undefined) this.props = diff.props;
-    if (diff.layers !== undefined) this.layers = diff.layers;
-    if (diff.activeLayer !== undefined) this.activeLayer = diff.activeLayer;
-    if (diff.groups !== undefined) this.groups = diff.groups;
-    if (diff.location !== undefined) this.location = diff.location;
-    if (diff.authors !== undefined) this.authors = diff.authors;
-    if (diff.concepts !== undefined) this.concepts = diff.concepts;
-    if (diff.attributes !== undefined) this.attributes = diff.attributes;
+
+    // Handle complex type changes by updating Y.js objects directly
+    if (diff.connections !== undefined) {
+      if (diff.connections) {
+        const yConnections = new Y.Array<YConnection>();
+        diff.connections.forEach(conn => {
+          const yConn = new Y.Map();
+          yConn.set("id_", conn.id_ || "");
+          // Add other connection properties as needed
+          yConnections.push([yConn]);
+        });
+        this.yDesign.set("connections", yConnections);
+      } else {
+        this.yDesign.delete("connections");
+      }
+    }
+
+    if (diff.stats !== undefined) {
+      if (diff.stats) {
+        const yStats = new Y.Array<YStat>();
+        diff.stats.forEach(stat => {
+          const yStat = new Y.Map();
+          yStat.set("key", stat.key || "");
+          yStat.set("value", stat.value);
+          yStat.set("definition", stat.definition || "");
+          yStats.push([yStat]);
+        });
+        this.yDesign.set("stats", yStats);
+      } else {
+        this.yDesign.delete("stats");
+      }
+    }
+
+    if (diff.props !== undefined) {
+      if (diff.props) {
+        const yProps = new Y.Array<YProp>();
+        diff.props.forEach(prop => {
+          const yProp = new Y.Map();
+          yProp.set("key", prop.key || "");
+          yProp.set("value", prop.value);
+          yProp.set("definition", prop.definition || "");
+          yProps.push([yProp]);
+        });
+        this.yDesign.set("props", yProps);
+      } else {
+        this.yDesign.delete("props");
+      }
+    }
+
+    if (diff.layers !== undefined) {
+      if (diff.layers) {
+        const yLayers = new Y.Array<YLayer>();
+        diff.layers.forEach(layer => {
+          const yLayer = new Y.Map();
+          yLayer.set("path", layer.path || "");
+          yLayer.set("isVisible", layer.isVisible);
+          yLayers.push([yLayer]);
+        });
+        this.yDesign.set("layers", yLayers);
+      } else {
+        this.yDesign.delete("layers");
+      }
+    }
+
+    if (diff.activeLayer !== undefined) {
+      if (diff.activeLayer) {
+        this.yDesign.set("activeLayer", diff.activeLayer.path || "");
+      } else {
+        this.yDesign.delete("activeLayer");
+      }
+    }
+
+    if (diff.groups !== undefined) {
+      if (diff.groups) {
+        const yGroups = new Y.Array<YGroup>();
+        diff.groups.forEach(group => {
+          const yGroup = new Y.Map();
+          const pieceIds = new Y.Array<string>();
+          group.pieces.forEach(piece => pieceIds.push([piece.id_]));
+          yGroup.set("pieces", pieceIds);
+          yGroups.push([yGroup]);
+        });
+        this.yDesign.set("groups", yGroups);
+      } else {
+        this.yDesign.delete("groups");
+      }
+    }
+
+    if (diff.location !== undefined) {
+      if (diff.location) {
+        const yLocation = new Y.Map();
+        if (diff.location.position) {
+          const yPosition = new Y.Map<number>();
+          yPosition.set("x", diff.location.position.x || 0);
+          yPosition.set("y", diff.location.position.y || 0);
+          yPosition.set("z", diff.location.position.z || 0);
+          yLocation.set("position", yPosition);
+        }
+        if (diff.location.direction) {
+          const yDirection = new Y.Map<number>();
+          yDirection.set("x", diff.location.direction.x || 0);
+          yDirection.set("y", diff.location.direction.y || 0);
+          yDirection.set("z", diff.location.direction.z || 0);
+          yLocation.set("direction", yDirection);
+        }
+        this.yDesign.set("location", yLocation);
+      } else {
+        this.yDesign.delete("location");
+      }
+    }
+
+    if (diff.authors !== undefined) {
+      if (diff.authors) {
+        const yAuthors = new Y.Array<YAuthor>();
+        diff.authors.forEach(author => {
+          const yAuthor = new Y.Map<string>();
+          yAuthor.set("email", author.email || "");
+          yAuthors.push([yAuthor]);
+        });
+        this.yDesign.set("authors", yAuthors);
+      } else {
+        this.yDesign.delete("authors");
+      }
+    }
+
+    if (diff.concepts !== undefined) {
+      if (diff.concepts) {
+        const yConcepts = new Y.Array<string>();
+        diff.concepts.forEach(concept => yConcepts.push([concept]));
+        this.yDesign.set("concepts", yConcepts);
+      } else {
+        this.yDesign.delete("concepts");
+      }
+    }
+
+    if (diff.attributes !== undefined) {
+      if (diff.attributes) {
+        const yAttributes = new Y.Array<YAttribute>();
+        diff.attributes.forEach(attr => {
+          const yAttr = new Y.Map<string>();
+          yAttr.set("key", attr.key || "");
+          yAttr.set("value", attr.value || "");
+          yAttr.set("definition", attr.definition || "");
+          yAttributes.push([yAttr]);
+        });
+        this.yDesign.set("attributes", yAttributes);
+      } else {
+        this.yDesign.delete("attributes");
+      }
+    }
+
     this.cache = undefined;
     this.cacheHash = undefined;
   };

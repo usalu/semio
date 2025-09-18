@@ -386,12 +386,40 @@ export type Camera = z.infer<typeof CameraSchema>;
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
 export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
 
-export const CameraDiffSchema = CameraSchema.partial();
+export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true }).extend({
+  position: PointDiffSchema,
+  forward: VectorDiffSchema,
+  up: VectorDiffSchema,
+}).partial();
 export type CameraDiff = z.infer<typeof CameraDiffSchema>;
-export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => { }
-export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => { }
-export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => { }
-export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => { }
+export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
+  return {
+    position: getPointDiff(before.position, after.position),
+    forward: getVectorDiff(before.forward, after.forward),
+    up: getVectorDiff(before.up, after.up),
+  };
+}
+export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => {
+  return {
+    position: appliedDiff.position ? inversePointDiff(original.position, appliedDiff.position) : original.position,
+    forward: appliedDiff.forward ? inverseVectorDiff(original.forward, appliedDiff.forward) : original.forward,
+    up: appliedDiff.up ? inverseVectorDiff(original.up, appliedDiff.up) : original.up,
+  };
+}
+export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => {
+  return {
+    position: diff1.position ?? (diff2.position ?? mergePointDiff(diff1.position!, diff2.position!)),
+    forward: diff1.forward ?? (diff2.forward ?? mergeVectorDiff(diff1.forward!, diff2.forward!)),
+    up: diff1.up ?? (diff2.up ?? mergeVectorDiff(diff1.up!, diff2.up!)),
+  };
+}
+export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
+  return {
+    position: diff.position ? applyPointDiff(base.position, diff.position) : base.position,
+    forward: diff.forward ? applyVectorDiff(base.forward, diff.forward) : base.forward,
+    up: diff.up ? applyVectorDiff(base.up, diff.up) : base.up,
+  };
+}
 
 // #endregion Camera
 
