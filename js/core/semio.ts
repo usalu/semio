@@ -148,6 +148,31 @@ export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDif
   // when first and second have the same id, second wins
 
 };
+export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
+  let result = [...base];
+  
+  // Remove attributes
+  if (diff.removed) {
+    result = result.filter(attr => !diff.removed!.some(removedId => areSameAttribute(attr, removedId)));
+  }
+  
+  // Update attributes
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex(attr => areSameAttribute(attr, update.id));
+      if (index !== -1) {
+        result[index] = applyAttributeDiff(result[index], update.diff);
+      }
+    }
+  }
+  
+  // Add attributes
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  
+  return result;
+};
 
 // #endregion Attribute
 
@@ -488,18 +513,38 @@ export type Location = z.infer<typeof LocationSchema>;
 export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location));
 export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
 
-export const LocationDiffSchema = LocationSchema.partial();
+export const LocationDiffSchema = LocationSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
 export type LocationDiff = z.infer<typeof LocationDiffSchema>;
 export const getLocationDiff = (before: Location, after: Location): LocationDiff => {
+  const diff: LocationDiff = {};
+  if (before.longitude !== after.longitude) diff.longitude = after.longitude - before.longitude;
+  if (before.latitude !== after.latitude) diff.latitude = after.latitude - before.latitude;
+  if (before.altitude !== after.altitude) diff.altitude = after.altitude !== undefined && before.altitude !== undefined ? after.altitude - before.altitude : after.altitude;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+}
+export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => {
+  const inverse: LocationDiff = {};
+  if (appliedDiff.longitude !== undefined) inverse.longitude = original.longitude;
+  if (appliedDiff.latitude !== undefined) inverse.latitude = original.latitude;
+  if (appliedDiff.altitude !== undefined) inverse.altitude = original.altitude;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+}
+export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+}
+export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
   return {
-    longitude: after.longitude - before.longitude,
-    latitude: after.latitude - before.latitude,
-    attributes: before.attributes && after.attributes ? getAttributesDiff(before.attributes!, after.attributes!) : undefined,
+    ...base,
+    longitude: diff.longitude ?? base.longitude,
+    latitude: diff.latitude ?? base.latitude,
+    altitude: diff.altitude ?? base.altitude,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
 }
-export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => { }
-export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => { }
-export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => { }
 
 // #endregion Location
 
@@ -515,12 +560,35 @@ export const AuthorIdSchema = AuthorSchema.pick({ email: true });
 export type AuthorId = z.infer<typeof AuthorIdSchema>;
 export const authorIdToString = (author: AuthorId): string => author.email;
 
-export const AuthorDiffSchema = AuthorSchema.partial();
+export const AuthorDiffSchema = AuthorSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
 export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
-export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => { };
-export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): AuthorDiff => { };
-export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDiff => { };
-export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => { };
+export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => {
+  const diff: AuthorDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.email !== after.email) diff.email = after.email;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): AuthorDiff => {
+  const inverse: AuthorDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.email !== undefined) inverse.email = original.email;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+};
+export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
+  return {
+    ...base,
+    name: diff.name ?? base.name,
+    email: diff.email ?? base.email,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
 
 export const AuthorsDiffSchema = z.object({
   removed: z.array(AuthorIdSchema).optional(),
@@ -569,10 +637,46 @@ export const fileIdToString = (file: FileId): string => file.path;
 
 export const FileDiffSchema = FileSchema.partial();
 export type FileDiff = z.infer<typeof FileDiffSchema>;
-export const getFileDiff = (before: File, after: File): FileDiff => { };
-export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => { };
-export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => { };
-export const applyFileDiff = (base: File, diff: FileDiff): File => { };
+export const getFileDiff = (before: File, after: File): FileDiff => {
+  const diff: FileDiff = {};
+  if (before.path !== after.path) diff.path = after.path;
+  if (before.remote !== after.remote) diff.remote = after.remote;
+  if (before.size !== after.size) diff.size = after.size;
+  if (before.hash !== after.hash) diff.hash = after.hash;
+  if (before.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
+  if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
+  if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
+  if (before.updatedBy !== after.updatedBy) diff.updatedBy = after.updatedBy;
+  return diff;
+};
+export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
+  const inverse: FileDiff = {};
+  if (appliedDiff.path !== undefined) inverse.path = original.path;
+  if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
+  if (appliedDiff.size !== undefined) inverse.size = original.size;
+  if (appliedDiff.hash !== undefined) inverse.hash = original.hash;
+  if (appliedDiff.createdAt !== undefined) inverse.createdAt = original.createdAt;
+  if (appliedDiff.createdBy !== undefined) inverse.createdBy = original.createdBy;
+  if (appliedDiff.updatedAt !== undefined) inverse.updatedAt = original.updatedAt;
+  if (appliedDiff.updatedBy !== undefined) inverse.updatedBy = original.updatedBy;
+  return inverse;
+};
+export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
+  return { ...diff1, ...diff2 };
+};
+export const applyFileDiff = (base: File, diff: FileDiff): File => {
+  return {
+    ...base,
+    path: diff.path ?? base.path,
+    remote: diff.remote ?? base.remote,
+    size: diff.size ?? base.size,
+    hash: diff.hash ?? base.hash,
+    createdAt: diff.createdAt ?? base.createdAt,
+    createdBy: diff.createdBy ?? base.createdBy,
+    updatedAt: diff.updatedAt ?? base.updatedAt,
+    updatedBy: diff.updatedBy ?? base.updatedBy,
+  };
+};
 
 export const FilesDiffSchema = z.object({
   removed: z.array(FileIdSchema).optional(),
@@ -611,15 +715,46 @@ export const BenchmarkIdSchema = BenchmarkSchema.pick({ name: true });
 export type BenchmarkId = z.infer<typeof BenchmarkIdSchema>;
 export const benchmarkIdToString = (benchmark: BenchmarkId): string => benchmark.name;
 
-export const BenchmarkDiffSchema = BenchmarkSchema.partial();
+export const BenchmarkDiffSchema = BenchmarkSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
 export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
 export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchmark => {
+  return {
+    ...base,
+    name: diff.name ?? base.name,
+    icon: diff.icon ?? base.icon,
+    min: diff.min ?? base.min,
+    minExcluded: diff.minExcluded ?? base.minExcluded,
+    max: diff.max ?? base.max,
+    maxExcluded: diff.maxExcluded ?? base.maxExcluded,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
 };
 export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): BenchmarkDiff => {
+  const diff: BenchmarkDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (before.min !== after.min) diff.min = after.min !== undefined && before.min !== undefined ? after.min - before.min : after.min;
+  if (before.minExcluded !== after.minExcluded) diff.minExcluded = after.minExcluded;
+  if (before.max !== after.max) diff.max = after.max !== undefined && before.max !== undefined ? after.max - before.max : after.max;
+  if (before.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
 };
 export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: BenchmarkDiff): BenchmarkDiff => {
+  const inverse: BenchmarkDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
+  if (appliedDiff.min !== undefined) inverse.min = original.min;
+  if (appliedDiff.minExcluded !== undefined) inverse.minExcluded = original.minExcluded;
+  if (appliedDiff.max !== undefined) inverse.max = original.max;
+  if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = original.maxExcluded;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
 };
 export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): BenchmarkDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
 };
 
 export const BenchmarksDiffSchema = z.object({
@@ -627,6 +762,7 @@ export const BenchmarksDiffSchema = z.object({
   updated: z.array(z.object({ id: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(),
   added: z.array(BenchmarkSchema).optional(),
 });
+export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
 
 export const BenchmarkIdLikeSchema = z.union([BenchmarkIdSchema, BenchmarkSchema, BenchmarkDiffSchema, z.string()]);
 export type BenchmarkIdLike = z.infer<typeof BenchmarkIdLikeSchema>;
@@ -634,6 +770,76 @@ export const benchmarkIdLikeToBenchmarkId = (benchmark: BenchmarkIdLike): Benchm
   if (typeof benchmark === "string") return { name: benchmark };
   if (typeof benchmark === "object" && "name" in benchmark) return { name: benchmark.name };
   throw new Error("Invalid benchmark id like");
+};
+
+const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
+  const beforeIds = before.map(benchmarkIdLikeToBenchmarkId);
+  const afterIds = after.map(benchmarkIdLikeToBenchmarkId);
+
+  const removedIds = beforeIds.filter(beforeId => !afterIds.some(afterId => areSameBenchmark(beforeId, afterId)));
+  const addedBenchmarks = after.filter(afterBenchmark => !beforeIds.some(beforeId => areSameBenchmark(beforeId, afterBenchmark)));
+  const updatedBenchmarks = after.filter(afterBenchmark => beforeIds.some(beforeId => areSameBenchmark(beforeId, afterBenchmark)))
+    .map(afterBenchmark => {
+      const beforeBenchmark = before.find(b => areSameBenchmark(b, afterBenchmark))!;
+      const diff = getBenchmarkDiff(beforeBenchmark, afterBenchmark);
+      return { id: benchmarkIdLikeToBenchmarkId(afterBenchmark), diff };
+    })
+    .filter(update => Object.keys(update.diff).length > 0);
+
+  return {
+    removed: removedIds.length > 0 ? removedIds : undefined,
+    added: addedBenchmarks.length > 0 ? addedBenchmarks : undefined,
+    updated: updatedBenchmarks.length > 0 ? updatedBenchmarks : undefined,
+  };
+};
+
+const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
+  const addedKeys = appliedDiff.added?.map(benchmarkIdLikeToBenchmarkId) ?? [];
+  const removedKeys = appliedDiff.removed?.map(benchmarkIdLikeToBenchmarkId) ?? [];
+  const updatedKeys = appliedDiff.updated?.map(u => u.id) ?? [];
+
+  return {
+    removed: addedKeys.length > 0 ? addedKeys : undefined,
+    added: removedKeys.length > 0 ? original.filter(b => removedKeys.some(k => areSameBenchmark(b, k))) : undefined,
+    updated: updatedKeys.map(key => ({ id: key, diff: inverseBenchmarkDiff(original.find(b => areSameBenchmark(b, key))!, appliedDiff.updated?.find(u => areSameBenchmark(u.id, key))!.diff) })),
+  };
+};
+
+const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): BenchmarksDiff => {
+  return {
+    removed: [...(first.removed ?? []), ...(second.removed ?? [])],
+    added: [...(first.added ?? []), ...(second.added ?? [])],
+    updated: [...(first.updated ?? []), ...(second.updated ?? [])],
+  };
+};
+
+const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
+  let result = [...base];
+  
+  if (diff.removed) {
+    result = result.filter(benchmark => !diff.removed!.some(removedId => areSameBenchmark(benchmark, removedId)));
+  }
+  
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex(benchmark => areSameBenchmark(benchmark, update.id));
+      if (index !== -1) {
+        result[index] = applyBenchmarkDiff(result[index], update.diff);
+      }
+    }
+  }
+  
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  
+  return result;
+};
+
+const areSameBenchmark = (benchmark1: BenchmarkIdLike, benchmark2: BenchmarkIdLike): boolean => {
+  const id1 = benchmarkIdLikeToBenchmarkId(benchmark1);
+  const id2 = benchmarkIdLikeToBenchmarkId(benchmark2);
+  return id1.name === id2.name;
 };
 
 // #endregion Benchmark
@@ -680,10 +886,87 @@ export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true
   attributes: AttributesDiffSchema.optional(),
 });
 export type QualityDiff = z.infer<typeof QualityDiffSchema>;
-export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => { };
-export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff): QualityDiff => { };
-export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => { };
-export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => { };
+export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => {
+  const diff: QualityDiff = {};
+  if (before.key !== after.key) diff.key = after.key;
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.uri !== after.uri) diff.uri = after.uri;
+  if (before.kind !== after.kind) diff.kind = after.kind !== undefined && before.kind !== undefined ? after.kind - before.kind : after.kind;
+  if (before.canScale !== after.canScale) diff.canScale = after.canScale;
+  if (before.defaultSiUnit !== after.defaultSiUnit) diff.defaultSiUnit = after.defaultSiUnit;
+  if (before.defaultImperialUnit !== after.defaultImperialUnit) diff.defaultImperialUnit = after.defaultImperialUnit;
+  if (before.min !== after.min) diff.min = after.min !== undefined && before.min !== undefined ? after.min - before.min : after.min;
+  if (before.isMinExcluded !== after.isMinExcluded) diff.isMinExcluded = after.isMinExcluded;
+  if (before.max !== after.max) diff.max = after.max !== undefined && before.max !== undefined ? after.max - before.max : after.max;
+  if (before.isMaxExcluded !== after.isMaxExcluded) diff.isMaxExcluded = after.isMaxExcluded;
+  if (before.defaultValue !== after.defaultValue) diff.defaultValue = after.defaultValue !== undefined && before.defaultValue !== undefined ? after.defaultValue - before.defaultValue : after.defaultValue;
+  if (before.formula !== after.formula) diff.formula = after.formula;
+  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (before.image !== after.image) diff.image = after.image;
+  if (before.variant !== after.variant) diff.variant = after.variant;
+  if (before.unit !== after.unit) diff.unit = after.unit;
+  if (before.benchmarks !== after.benchmarks) diff.benchmarks = getBenchmarksDiff(before.benchmarks ?? [], after.benchmarks ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
+  const inverse: QualityDiff = {};
+  if (appliedDiff.key !== undefined) inverse.key = original.key;
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.uri !== undefined) inverse.uri = original.uri;
+  if (appliedDiff.kind !== undefined) inverse.kind = original.kind;
+  if (appliedDiff.canScale !== undefined) inverse.canScale = original.canScale;
+  if (appliedDiff.defaultSiUnit !== undefined) inverse.defaultSiUnit = original.defaultSiUnit;
+  if (appliedDiff.defaultImperialUnit !== undefined) inverse.defaultImperialUnit = original.defaultImperialUnit;
+  if (appliedDiff.min !== undefined) inverse.min = original.min;
+  if (appliedDiff.isMinExcluded !== undefined) inverse.isMinExcluded = original.isMinExcluded;
+  if (appliedDiff.max !== undefined) inverse.max = original.max;
+  if (appliedDiff.isMaxExcluded !== undefined) inverse.isMaxExcluded = original.isMaxExcluded;
+  if (appliedDiff.defaultValue !== undefined) inverse.defaultValue = original.defaultValue;
+  if (appliedDiff.formula !== undefined) inverse.formula = original.formula;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
+  if (appliedDiff.image !== undefined) inverse.image = original.image;
+  if (appliedDiff.variant !== undefined) inverse.variant = original.variant;
+  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
+  if (appliedDiff.benchmarks !== undefined) inverse.benchmarks = inverseBenchmarksDiff(original.benchmarks ?? [], appliedDiff.benchmarks);
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => {
+  return { 
+    ...diff1, 
+    ...diff2, 
+    benchmarks: diff1.benchmarks && diff2.benchmarks ? mergeBenchmarksDiff(diff1.benchmarks, diff2.benchmarks) : diff2.benchmarks ?? diff1.benchmarks,
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes 
+  };
+};
+export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
+  return {
+    ...base,
+    key: diff.key ?? base.key,
+    name: diff.name ?? base.name,
+    description: diff.description ?? base.description,
+    uri: diff.uri ?? base.uri,
+    kind: diff.kind ?? base.kind,
+    canScale: diff.canScale ?? base.canScale,
+    defaultSiUnit: diff.defaultSiUnit ?? base.defaultSiUnit,
+    defaultImperialUnit: diff.defaultImperialUnit ?? base.defaultImperialUnit,
+    min: diff.min ?? base.min,
+    isMinExcluded: diff.isMinExcluded ?? base.isMinExcluded,
+    max: diff.max ?? base.max,
+    isMaxExcluded: diff.isMaxExcluded ?? base.isMaxExcluded,
+    defaultValue: diff.defaultValue ?? base.defaultValue,
+    formula: diff.formula ?? base.formula,
+    icon: diff.icon ?? base.icon,
+    image: diff.image ?? base.image,
+    variant: diff.variant ?? base.variant,
+    unit: diff.unit ?? base.unit,
+    benchmarks: diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : base.benchmarks,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
 
 export const QualitiesDiffSchema = z.object({
   removed: z.array(QualityIdSchema).optional(),
@@ -718,18 +1001,115 @@ export const PropIdSchema = PropSchema.pick({ key: true });
 export type PropId = z.infer<typeof PropIdSchema>;
 export const propIdToString = (prop: PropId): string => prop.key;
 
-export const PropDiffSchema = PropSchema.partial();
+export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
 export type PropDiff = z.infer<typeof PropDiffSchema>;
-export const getPropDiff = (before: Prop, after: Prop): PropDiff => { };
-export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => { };
-export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => { };
-export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => { };
+export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
+  const diff: PropDiff = {};
+  if (before.key !== after.key) diff.key = after.key;
+  if (before.value !== after.value) diff.value = after.value;
+  if (before.unit !== after.unit) diff.unit = after.unit;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => {
+  const inverse: PropDiff = {};
+  if (appliedDiff.key !== undefined) inverse.key = original.key;
+  if (appliedDiff.value !== undefined) inverse.value = original.value;
+  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+};
+export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
+  return {
+    ...base,
+    key: diff.key ?? base.key,
+    value: diff.value ?? base.value,
+    unit: diff.unit ?? base.unit,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
 
 export const PropsDiffSchema = z.object({
   removed: z.array(PropIdSchema).optional(),
   updated: z.array(z.object({ id: PropIdSchema, diff: PropDiffSchema })).optional(),
   added: z.array(PropSchema).optional(),
 });
+export type PropsDiff = z.infer<typeof PropsDiffSchema>;
+
+const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
+  const beforeIds = before.map(propIdLikeToPropId);
+  const afterIds = after.map(propIdLikeToPropId);
+
+  const removedIds = beforeIds.filter(beforeId => !afterIds.some(afterId => areSameProp(beforeId, afterId)));
+  const addedProps = after.filter(afterProp => !beforeIds.some(beforeId => areSameProp(beforeId, afterProp)));
+  const updatedProps = after.filter(afterProp => beforeIds.some(beforeId => areSameProp(beforeId, afterProp)))
+    .map(afterProp => {
+      const beforeProp = before.find(p => areSameProp(p, afterProp))!;
+      const diff = getPropDiff(beforeProp, afterProp);
+      return { id: propIdLikeToPropId(afterProp), diff };
+    })
+    .filter(update => Object.keys(update.diff).length > 0);
+
+  return {
+    removed: removedIds.length > 0 ? removedIds : undefined,
+    added: addedProps.length > 0 ? addedProps : undefined,
+    updated: updatedProps.length > 0 ? updatedProps : undefined,
+  };
+};
+
+const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
+  const addedKeys = appliedDiff.added?.map(propIdLikeToPropId) ?? [];
+  const removedKeys = appliedDiff.removed?.map(propIdLikeToPropId) ?? [];
+  const updatedKeys = appliedDiff.updated?.map(u => u.id) ?? [];
+
+  return {
+    removed: addedKeys.length > 0 ? addedKeys : undefined,
+    added: removedKeys.length > 0 ? original.filter(p => removedKeys.some(k => areSameProp(p, k))) : undefined,
+    updated: updatedKeys.map(key => ({ id: key, diff: inversePropDiff(original.find(p => areSameProp(p, key))!, appliedDiff.updated?.find(u => areSameProp(u.id, key))!.diff) })),
+  };
+};
+
+const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
+  return {
+    removed: [...(first.removed ?? []), ...(second.removed ?? [])],
+    added: [...(first.added ?? []), ...(second.added ?? [])],
+    updated: [...(first.updated ?? []), ...(second.updated ?? [])],
+  };
+};
+
+const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
+  let result = [...base];
+  
+  if (diff.removed) {
+    result = result.filter(prop => !diff.removed!.some(removedId => areSameProp(prop, removedId)));
+  }
+  
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex(prop => areSameProp(prop, update.id));
+      if (index !== -1) {
+        result[index] = applyPropDiff(result[index], update.diff);
+      }
+    }
+  }
+  
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  
+  return result;
+};
+
+const areSameProp = (prop1: PropIdLike, prop2: PropIdLike): boolean => {
+  const id1 = propIdLikeToPropId(prop1);
+  const id2 = propIdLikeToPropId(prop2);
+  return id1.key === id2.key;
+};
 
 
 export const PropIdLikeSchema = z.union([PropIdSchema, PropSchema, PropDiffSchema, z.string()]);
@@ -759,12 +1139,38 @@ export const RepresentationIdSchema = RepresentationSchema.pick({ tags: true });
 export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
 export const representationIdToString = (representation: RepresentationId): string => representation.tags?.join(",") ?? "";
 
-export const RepresentationDiffSchema = RepresentationSchema.partial();
+export const RepresentationDiffSchema = RepresentationSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
 export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
-export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => { };
-export const inverseRepresentationDiff = (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => { };
-export const mergeRepresentationDiff = (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => { };
-export const applyRepresentationDiff = (base: Representation, diff: RepresentationDiff): Representation => { };
+export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => {
+  const diff: RepresentationDiff = {};
+  if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
+  if (before.url !== after.url) diff.url = after.url;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseRepresentationDiff = (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
+  const inverse: RepresentationDiff = {};
+  if (appliedDiff.tags !== undefined) inverse.tags = original.tags;
+  if (appliedDiff.url !== undefined) inverse.url = original.url;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeRepresentationDiff = (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+};
+export const applyRepresentationDiff = (base: Representation, diff: RepresentationDiff): Representation => {
+  return {
+    ...base,
+    tags: diff.tags ?? base.tags,
+    url: diff.url ?? base.url,
+    description: diff.description ?? base.description,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
 
 export const RepresentationsDiffSchema = z.object({
   removed: z.array(RepresentationIdSchema).optional(),
@@ -819,12 +1225,66 @@ export const PortIdSchema = PortSchema.pick({ id_: true });
 export type PortId = z.infer<typeof PortIdSchema>;
 export const portIdToString = (port: PortId): string => port.id_ ?? "";
 
-export const PortDiffSchema = PortSchema.partial();
+export const PortDiffSchema = PortSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
+  point: PointDiffSchema.optional(),
+  direction: VectorDiffSchema.optional(),
+  props: PropsDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
+});
 export type PortDiff = z.infer<typeof PortDiffSchema>;
-export const getPortDiff = (before: Port, after: Port): PortDiff => { };
-export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => { };
-export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => { };
-export const applyPortDiff = (base: Port, diff: PortDiff): Port => { };
+export const getPortDiff = (before: Port, after: Port): PortDiff => {
+  const diff: PortDiff = {};
+  if (before.id_ !== after.id_) diff.id_ = after.id_;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.family !== after.family) diff.family = after.family;
+  if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
+  if (before.t !== after.t) diff.t = after.t - before.t;
+  if (JSON.stringify(before.compatibleFamilies) !== JSON.stringify(after.compatibleFamilies)) diff.compatibleFamilies = after.compatibleFamilies;
+  if (before.point !== after.point) diff.point = getPointDiff(before.point, after.point);
+  if (before.direction !== after.direction) diff.direction = getVectorDiff(before.direction, after.direction);
+  if (before.props !== after.props) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
+  return { 
+    ...diff1, 
+    ...diff2, 
+    point: diff2.point ?? diff1.point,
+    direction: diff2.direction ?? diff1.direction,
+    props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : diff2.props ?? diff1.props,
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes 
+  };
+};
+export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
+  const inverse: PortDiff = {};
+  if (appliedDiff.id_ !== undefined) inverse.id_ = original.id_;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.family !== undefined) inverse.family = original.family;
+  if (appliedDiff.mandatory !== undefined) inverse.mandatory = original.mandatory;
+  if (appliedDiff.t !== undefined) inverse.t = original.t;
+  if (appliedDiff.compatibleFamilies !== undefined) inverse.compatibleFamilies = original.compatibleFamilies;
+  if (appliedDiff.point !== undefined) inverse.point = inversePointDiff(original.point, appliedDiff.point);
+  if (appliedDiff.direction !== undefined) inverse.direction = inverseVectorDiff(original.direction, appliedDiff.direction);
+  if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(original.props ?? [], appliedDiff.props);
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
+  return {
+    ...base,
+    id_: diff.id_ ?? base.id_,
+    description: diff.description ?? base.description,
+    family: diff.family ?? base.family,
+    mandatory: diff.mandatory ?? base.mandatory,
+    t: diff.t ?? base.t,
+    compatibleFamilies: diff.compatibleFamilies ?? base.compatibleFamilies,
+    point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
+    direction: diff.direction ? applyVectorDiff(base.direction, diff.direction) : base.direction,
+    props: diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
 
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
@@ -1083,10 +1543,40 @@ export const LayerDiffSchema = LayerSchema.partial().omit({ attributes: true }).
 });
 export type LayerDiff = z.infer<typeof LayerDiffSchema>;
 
-export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => { };
-export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => { };
-export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => { };
-export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => { };
+export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
+  const diff: LayerDiff = {};
+  if (before.path !== after.path) diff.path = after.path;
+  if (before.isHidden !== after.isHidden) diff.isHidden = after.isHidden;
+  if (before.isLocked !== after.isLocked) diff.isLocked = after.isLocked;
+  if (before.color !== after.color) diff.color = after.color;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => {
+  const inverse: LayerDiff = {};
+  if (appliedDiff.path !== undefined) inverse.path = original.path;
+  if (appliedDiff.isHidden !== undefined) inverse.isHidden = original.isHidden;
+  if (appliedDiff.isLocked !== undefined) inverse.isLocked = original.isLocked;
+  if (appliedDiff.color !== undefined) inverse.color = original.color;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+};
+export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
+  return {
+    ...base,
+    path: diff.path ?? base.path,
+    isHidden: diff.isHidden ?? base.isHidden,
+    isLocked: diff.isLocked ?? base.isLocked,
+    color: diff.color ?? base.color,
+    description: diff.description ?? base.description,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
 
 export const LayersDiffSchema = z.object({
   removed: z.array(LayerIdSchema).optional(),
@@ -1288,6 +1778,29 @@ export const SidesDiffSchema = z.object({
   added: z.array(SideSchema).optional(),
 });
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
+export const getSideDiff = (before: Side, after: Side): SideDiff => {
+  const diff: SideDiff = {};
+  if (before.piece !== after.piece) diff.piece = after.piece;
+  if (before.designPiece !== after.designPiece) diff.designPiece = after.designPiece;
+  if (before.port !== after.port) diff.port = after.port;
+  return diff;
+};
+export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff => {
+  const inverse: SideDiff = {};
+  if (appliedDiff.piece !== undefined) inverse.piece = original.piece;
+  if (appliedDiff.designPiece !== undefined) inverse.designPiece = original.designPiece;
+  if (appliedDiff.port !== undefined) inverse.port = original.port;
+  return inverse;
+};
+export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
+  return { ...diff1, ...diff2 };
+};
+export const applySideDiff = (base: Side, diff: SideDiff): Side => {
+  return {
+    ...base,
+    ...diff,
+  };
+};
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
 
@@ -1335,18 +1848,64 @@ export const connectionIdLikeToConnectionId = (connection: ConnectionIdLike): Co
   }
   return connection as ConnectionId;
 };
-export const ConnectionDiffSchema = ConnectionSchema.partial();
+export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ connected: true, connecting: true, attributes: true }).extend({
+  connected: SideDiffSchema.optional(),
+  connecting: SideDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
+});
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
 export const getConnectionDiff = (before: Connection, after: Connection): ConnectionDiff => {
+  const diff: ConnectionDiff = {};
+  if (before.connected !== after.connected) diff.connected = getSideDiff(before.connected, after.connected);
+  if (before.connecting !== after.connecting) diff.connecting = getSideDiff(before.connecting, after.connecting);
+  if (before.gap !== after.gap) diff.gap = after.gap !== undefined && before.gap !== undefined ? after.gap - before.gap : after.gap;
+  if (before.shift !== after.shift) diff.shift = after.shift !== undefined && before.shift !== undefined ? after.shift - before.shift : after.shift;
+  if (before.rise !== after.rise) diff.rise = after.rise !== undefined && before.rise !== undefined ? after.rise - before.rise : after.rise;
+  if (before.rotation !== after.rotation) diff.rotation = after.rotation !== undefined && before.rotation !== undefined ? after.rotation - before.rotation : after.rotation;
+  if (before.turn !== after.turn) diff.turn = after.turn !== undefined && before.turn !== undefined ? after.turn - before.turn : after.turn;
+  if (before.tilt !== after.tilt) diff.tilt = after.tilt !== undefined && before.tilt !== undefined ? after.tilt - before.tilt : after.tilt;
+  if (before.x !== after.x) diff.x = after.x !== undefined && before.x !== undefined ? after.x - before.x : after.x;
+  if (before.y !== after.y) diff.y = after.y !== undefined && before.y !== undefined ? after.y - before.y : after.y;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
 };
 
 export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => {
+  return {
+    ...base,
+    ...diff,
+    connected: diff.connected ? applySideDiff(base.connected, diff.connected) : base.connected,
+    connecting: diff.connecting ? applySideDiff(base.connecting, diff.connecting) : base.connecting,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
 };
 
 export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => {
+  return {
+    ...diff1,
+    ...diff2,
+    connected: diff2.connected || diff1.connected,
+    connecting: diff2.connecting || diff1.connecting,
+    attributes: diff2.attributes || diff1.attributes,
+  };
 };
 
 export const inverseConnectionDiff = (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
+  const inverse: ConnectionDiff = {};
+  if (appliedDiff.connected !== undefined) inverse.connected = inverseSideDiff(original.connected, appliedDiff.connected);
+  if (appliedDiff.connecting !== undefined) inverse.connecting = inverseSideDiff(original.connecting, appliedDiff.connecting);
+  if (appliedDiff.gap !== undefined) inverse.gap = original.gap !== undefined && appliedDiff.gap !== undefined ? -appliedDiff.gap : original.gap;
+  if (appliedDiff.shift !== undefined) inverse.shift = original.shift !== undefined && appliedDiff.shift !== undefined ? -appliedDiff.shift : original.shift;
+  if (appliedDiff.rise !== undefined) inverse.rise = original.rise !== undefined && appliedDiff.rise !== undefined ? -appliedDiff.rise : original.rise;
+  if (appliedDiff.rotation !== undefined) inverse.rotation = original.rotation !== undefined && appliedDiff.rotation !== undefined ? -appliedDiff.rotation : original.rotation;
+  if (appliedDiff.turn !== undefined) inverse.turn = original.turn !== undefined && appliedDiff.turn !== undefined ? -appliedDiff.turn : original.turn;
+  if (appliedDiff.tilt !== undefined) inverse.tilt = original.tilt !== undefined && appliedDiff.tilt !== undefined ? -appliedDiff.tilt : original.tilt;
+  if (appliedDiff.x !== undefined) inverse.x = original.x !== undefined && appliedDiff.x !== undefined ? -appliedDiff.x : original.x;
+  if (appliedDiff.y !== undefined) inverse.y = original.y !== undefined && appliedDiff.y !== undefined ? -appliedDiff.y : original.y;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = getAttributesDiff(appliedDiff.attributes ? applyAttributesDiff([], appliedDiff.attributes) : [], original.attributes ?? []);
+  return inverse;
 };
 
 export const ConnectionsDiffSchema = z.object({

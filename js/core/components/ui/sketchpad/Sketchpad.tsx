@@ -28,7 +28,7 @@ import KitEditor from "./KitEditor";
 
 const SketchpadInner: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
-  const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
+  const [navbarToolbar, setToolbar] = useState<ReactNode>(null);
 
   const { createKit, setMode, setTheme, setLayout } = useSketchpadCommands();
 
@@ -79,7 +79,7 @@ const SketchpadInner: FC = () => {
     <NavbarContext.Provider
       value={{
         navbarToolbar: navbarToolbar,
-        setNavbarToolbar: setNavbarToolbar,
+        setToolbar: setToolbar,
       }}
     >
       <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">

@@ -54,7 +54,7 @@ interface VisiblePanels {
 }
 
 const DesignEditor: FC<DesignEditorProps> = () => {
-  const { setNavbarToolbar } = useNavbar();
+  const { setToolbar } = useNavbar();
   const fullscreenPanel = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece, execute } = useDesignEditorCommands();
 
@@ -196,9 +196,9 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   );
 
   useEffect(() => {
-    setNavbarToolbar(designEditorToolbar);
-    return () => setNavbarToolbar(null);
-  }, [visiblePanels, setNavbarToolbar]);
+    setToolbar(designEditorToolbar);
+    return () => setToolbar(null);
+  }, [visiblePanels, setToolbar]);
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

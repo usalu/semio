@@ -848,6 +848,28 @@ class AuthorStore {
   };
 }
 
+type AuthorScope = { id: AuthorId };
+const AuthorScopeContext = createContext<AuthorScope | null>(null);
+export const AuthorScopeProvider = (props: { id: AuthorId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
+};
+const useAuthorScope = () => useContext(AuthorScopeContext);
+
+function useAuthorStore<T>(selector?: (store: AuthorStore) => T, id?: AuthorId): T | AuthorStore {
+  const kitStore = useKitStore() as KitStore;
+  const authorScope = useAuthorScope();
+  const authorId = authorScope?.id ?? id;
+  if (!authorId) throw new Error("useAuthorStore must be called within a AuthorScopeProvider or be directly provided with an id");
+  if (!kitStore.hasAuthor(authorId)) throw new Error(`Author store not found for author ${authorId}`);
+  const authorStore = kitStore.author(authorId);
+  return selector ? selector(authorStore) : authorStore;
+}
+
+export function useAuthor<T>(selector?: (author: Author) => T, id?: AuthorId, deep: boolean = false): T | Author {
+  return useSync<Author, T>(useAuthorStore(identitySelector, id) as AuthorStore, selector ? selector : identitySelector, deep);
+}
+
 // #endregion Author
 
 // #region File
@@ -2172,7 +2194,7 @@ export function usePiecePlane(): Plane {
     return {
       origin: { x: 0, y: 0, z: 0 },
       xAxis: { x: 1, y: 0, z: 0 },
-      yAxis: { x: 0, y: 1, z: 0 }
+      yAxis: { x: 0, y: 1, z: 0 },
     };
   }
 
@@ -2189,11 +2211,7 @@ export function usePieceStatus(): DiffStatus {
   }
 
   // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find(d =>
-    d.id.name === designScope.id.name &&
-    d.id.variant === designScope.id.variant &&
-    d.id.view === designScope.id.view
-  );
+  const designDiff = kitDiff.designs.updated.find((d) => d.id.name === designScope.id.name && d.id.variant === designScope.id.variant && d.id.view === designScope.id.view);
 
   if (!designDiff?.diff.pieces) {
     return DiffStatus.Unchanged;
@@ -2202,23 +2220,22 @@ export function usePieceStatus(): DiffStatus {
   const piecesDiff = designDiff.diff.pieces;
 
   // Check if piece is removed
-  if (piecesDiff.removed?.some(p => p.id_ === piece.id.id_)) {
+  if (piecesDiff.removed?.some((p) => p.id_ === piece.id.id_)) {
     return DiffStatus.Removed;
   }
 
   // Check if piece is added
-  if (piecesDiff.added?.some(p => p.id_ === piece.id.id_)) {
+  if (piecesDiff.added?.some((p) => p.id_ === piece.id.id_)) {
     return DiffStatus.Added;
   }
 
   // Check if piece is updated
-  if (piecesDiff.updated?.some(p => p.id.id_ === piece.id.id_)) {
+  if (piecesDiff.updated?.some((p) => p.id.id_ === piece.id.id_)) {
     return DiffStatus.Modified;
   }
 
   return DiffStatus.Unchanged;
 }
-usePieceStatus();
 
 // #endregion Piece
 
@@ -2241,7 +2258,10 @@ class GroupStore {
 
     if (group.pieces) {
       const yPieces = new Y.Array<string>();
-      yPieces.insert(0, group.pieces.map(p => p.id_));
+      yPieces.insert(
+        0,
+        group.pieces.map((p) => p.id_),
+      );
       this.yGroup.set("pieces", yPieces);
     }
   }
@@ -2270,16 +2290,22 @@ class GroupStore {
   get pieces(): PieceId[] {
     const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
     if (!yPieces) return [];
-    return yPieces.toArray().map(id_ => ({ id_ }));
+    return yPieces.toArray().map((id_) => ({ id_ }));
   }
   set pieces(pieces: PieceId[]) {
     const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
     if (yPieces) {
       yPieces.delete(0, yPieces.length);
-      yPieces.insert(0, pieces.map(p => p.id_));
+      yPieces.insert(
+        0,
+        pieces.map((p) => p.id_),
+      );
     } else {
       const newYPieces = new Y.Array<string>();
-      newYPieces.insert(0, pieces.map(p => p.id_));
+      newYPieces.insert(
+        0,
+        pieces.map((p) => p.id_),
+      );
       this.yGroup.set("pieces", newYPieces);
     }
   }
@@ -2656,11 +2682,7 @@ export function useConnectionStatus(): DiffStatus {
   }
 
   // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find(d =>
-    d.id.name === designScope.id.name &&
-    d.id.variant === designScope.id.variant &&
-    d.id.view === designScope.id.view
-  );
+  const designDiff = kitDiff.designs.updated.find((d) => d.id.name === designScope.id.name && d.id.variant === designScope.id.variant && d.id.view === designScope.id.view);
 
   if (!designDiff?.diff.connections) {
     return DiffStatus.Unchanged;
@@ -2669,23 +2691,22 @@ export function useConnectionStatus(): DiffStatus {
   const connectionsDiff = designDiff.diff.connections;
 
   // Check if connection is removed
-  if (connectionsDiff.removed?.some(c => c.id_ === connection.id.id_)) {
+  if (connectionsDiff.removed?.some((c) => c.id_ === connection.id.id_)) {
     return DiffStatus.Removed;
   }
 
   // Check if connection is added
-  if (connectionsDiff.added?.some(c => c.id_ === connection.id.id_)) {
+  if (connectionsDiff.added?.some((c) => c.id_ === connection.id.id_)) {
     return DiffStatus.Added;
   }
 
   // Check if connection is updated
-  if (connectionsDiff.updated?.some(c => c.id.id_ === connection.id.id_)) {
+  if (connectionsDiff.updated?.some((c) => c.id.id_ === connection.id.id_)) {
     return DiffStatus.Modified;
   }
 
   return DiffStatus.Unchanged;
 }
-useConnectionStatus();
 
 // #endregion Connection
 
@@ -4713,7 +4734,7 @@ export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelectio
     inverseDiff.port = {
       piece: selection.port?.piece,
       designPiece: selection.port?.designPiece,
-      port: selection.port?.port
+      port: selection.port?.port,
     };
   }
 

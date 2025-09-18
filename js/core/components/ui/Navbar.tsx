@@ -31,7 +31,7 @@ import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
 interface NavbarContextType {
   navbarToolbar: ReactNode | null;
-  setNavbarToolbar: (toolbar: ReactNode) => void;
+  setToolbar: (toolbar: ReactNode) => void;
 }
 
 export const NavbarContext = createContext<NavbarContextType | null>(null);
