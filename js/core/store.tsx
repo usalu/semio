@@ -135,7 +135,7 @@ export enum Layout {
 
 // #endregion Constants
 
-// #region Common Types
+// #region General
 
 export type Subscribe = () => void;
 export type Unsubscribe = () => void;
@@ -143,6 +143,7 @@ export type Disposable = () => void;
 export type Transact = (fn: () => void) => void;
 export type Url = string;
 export type SketchpadId = string;
+export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
 type YUuid = string;
 type YUuidArray = Y.Array<YUuid>;
@@ -160,7 +161,264 @@ type YPlane = Y.Map<YVec3>;
 type YCamera = Y.Map<YPoint | YVector | number>;
 type YLocation = Y.Map<YPoint | YVector>;
 
-// #endregion Common Types
+
+export interface Snapshot<TModel> {
+  snapshot(): TModel;
+}
+export interface Id<TId> {
+  id(): TId;
+}
+export interface Actions<TDiff> {
+  change: (diff: TDiff) => void;
+}
+export interface OtherPresence {
+  name: string;
+}
+export interface EditorSelection<TSelection> {
+  selection: TSelection;
+}
+export interface EditorPresence<TPresence> {
+  presence: TPresence;
+}
+export interface EditorChangableState<TSelection, TPresence> extends EditorSelection<TSelection>, EditorPresence<TPresence> {}
+export interface EditorEdit<TEditorStep> {
+  do: TEditorStep;
+  undo: TEditorStep;
+}
+export interface EditorState<TDiff, TPresenceOther, TSelection, TPresence, TEdit> extends EditorChangableState<TSelection, TPresence> {
+  isTransactionActive: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  others: TPresenceOther[];
+  diff: TDiff;
+  currentTransactionStack: TEdit[];
+  pastTransactionsStack: TEdit[];
+}
+export interface EditorSelectionActions<TSelectionDiff> {
+  selectAll: () => void;
+  deselectAll: () => void;
+  changeSelection: (diff: TSelectionDiff) => void;
+}
+export interface EditorPresenceActions<TPresence> {
+  setPresence: (presence: TPresence) => void;
+}
+export interface EditorActions<TDiff, TSelectionDiff, TPresence> extends Actions<TDiff>, EditorSelectionActions<TSelectionDiff>, EditorPresenceActions<TPresence> {
+  undo: () => void;
+  redo: () => void;
+  startTransaction: () => void;
+  abortTransaction: () => void;
+  finalizeTransaction: () => void;
+}
+export interface Subscriptions {
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
+}
+export interface EditorSubscriptions extends Subscriptions {
+  onUndone: (subscribe: Subscribe) => Unsubscribe;
+  onRedone: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
+}
+export interface Store<TModel, TId, TDiff> extends Snapshot<TModel>, Id<TId>, Actions<TDiff>, Subscriptions {}
+export interface Commands<TContext, TResult> {
+  execute(command: string, ...rest: any[]): Promise<TResult>;
+  register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
+}
+export interface StoreWithCommands<TModel, TId, TDiff, TContext, TResult> extends Store<TModel, TId, TDiff>, Commands<TContext, TResult> {}
+export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
+  extends Commands<TContext, TResult>,
+    EditorActions<TDiff, TSelectionDiff, TPresence>,
+    EditorSelection<TSelection>,
+    EditorPresence<TPresence>,
+    EditorSelectionActions<TSelectionDiff> {}
+
+function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
+  if (deep) {
+    yObject.observeDeep(subscribe);
+    return () => {
+      yObject.unobserveDeep(subscribe);
+    };
+  } else {
+    yObject.observe(subscribe);
+    return () => {
+      yObject.unobserve(subscribe);
+    };
+  }
+}
+
+// #endregion General
+
+// #region Attribute
+
+class YAttributeStore implements Store<Attribute, any, any> {
+  public readonly uuid: string;
+  private yAttribute: YAttribute;
+  private cache?: Attribute;
+  private cacheHash?: string;
+
+  private hash(attribute: Attribute): string {
+    return JSON.stringify(attribute);
+  }
+
+  constructor(yAttribute: YAttribute, attribute: Attribute) {
+    this.uuid = uuidv4();
+    this.yAttribute = yAttribute;
+    this.key = attribute.key;
+    this.value = attribute.value;
+    this.definition = attribute.definition;
+  }
+
+  get key(): string {
+    return this.yAttribute.get("key") as string;
+  }
+  set key(key: string) {
+    this.yAttribute.set("key", key);
+  }
+
+  get value(): string | undefined {
+    return this.yAttribute.get("value") as string | undefined;
+  }
+  set value(value: string | undefined) {
+    this.yAttribute.set("value", value || "");
+  }
+
+  get definition(): string | undefined {
+    return this.yAttribute.get("definition") as string | undefined;
+  }
+  set definition(definition: string | undefined) {
+    this.yAttribute.set("definition", definition || "");
+  }
+
+  snapshot = (): Attribute => {
+    const currentData = {
+      key: this.key,
+      value: this.value,
+      definition: this.definition,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => ({ key: this.key });
+  change = (diff: any) => {
+    if (diff.key !== undefined) this.key = diff.key;
+    if (diff.value !== undefined) this.value = diff.value;
+    if (diff.definition !== undefined) this.definition = diff.definition;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yAttribute, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yAttribute, subscribe, true);
+  };
+}
+
+// #endregion Attribute
+
+// #region Coord
+
+// #endregion Coord
+
+// #region Vec
+
+// #endregion Vec
+
+// #region Point
+
+// #endregion Point
+
+// #region Vector
+
+// #endregion Vector
+
+// #region Plane
+
+// #endregion Plane
+
+// #region Camera
+
+// #endregion Camera
+
+// #region Location
+
+// #endregion Location
+
+// #region Author
+
+class YAuthorStore {
+  public readonly uuid: string;
+  private yAuthor: YAuthor;
+  private cache?: Author;
+  private cacheHash?: string;
+
+  private hash(author: Author): string {
+    return JSON.stringify(author);
+  }
+
+  constructor(yAuthor: YAuthor, author: Author) {
+    this.uuid = uuidv4();
+    this.yAuthor = yAuthor;
+    this.name = author.name;
+    this.email = author.email;
+  }
+
+  get name(): string {
+    return this.yAuthor.get("name") as string;
+  }
+  set name(name: string) {
+    this.yAuthor.set("name", name);
+  }
+
+  get email(): string {
+    return this.yAuthor.get("email") as string;
+  }
+  set email(email: string) {
+    this.yAuthor.set("email", email);
+  }
+
+  get snapshot(): Author {
+    const currentHash = this.hash({
+      name: this.name,
+      email: this.email,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const author: Author = {
+      name: this.name,
+      email: this.email,
+    };
+
+    this.cache = author;
+    this.cacheHash = currentHash;
+    return author;
+  }
+
+  get id(): AuthorId {
+    return { email: this.email };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yAuthor, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yAuthor, subscribe, true);
+  };
+}
+
+// #endregion Author
 
 // #region File
 
@@ -310,655 +568,7 @@ class YFileStore implements FileStore {
 
 // #endregion File
 
-// #region Representation
-
-type YRepresentationVal = string | YStringArray | YAttributes;
-type YRepresentation = Y.Map<YRepresentationVal>;
-type YRepresentations = Y.Array<YRepresentation>;
-
-export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
-
-class YRepresentationStore implements RepresentationStore {
-  public readonly uuid: string;
-  private yRepresentation: YRepresentation;
-  private cache?: Representation;
-  private cacheHash?: string;
-
-  private hash(representation: Representation): string {
-    return JSON.stringify(representation);
-  }
-
-  constructor(yRepresentation: YRepresentation, representation: Representation) {
-    this.uuid = uuidv4();
-    this.yRepresentation = yRepresentation;
-    this.url = representation.url;
-    this.description = representation.description;
-  }
-
-  get url(): string {
-    return this.yRepresentation.get("url") as string;
-  }
-  set url(url: string) {
-    this.yRepresentation.set("url", url);
-  }
-
-  get description(): string | undefined {
-    return this.yRepresentation.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yRepresentation.set("description", description || "");
-  }
-
-  get snapshot(): Representation {
-    const currentHash = this.hash({
-      url: this.url,
-      description: this.description,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const representation: Representation = {
-      url: this.url,
-      description: this.description,
-    };
-
-    this.cache = representation;
-    this.cacheHash = currentHash;
-    return representation;
-  }
-
-  get id(): RepresentationId {
-    return { tags: this.snapshot.tags };
-  }
-
-  apply(diff: RepresentationDiff): void {
-    if (diff.url !== undefined) this.url = diff.url;
-    if (diff.description !== undefined) this.description = diff.description;
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe, true);
-  };
-}
-
-// #endregion Representation
-
-// #region Port
-
-type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
-type YPort = Y.Map<YPortVal>;
-type YPorts = Y.Array<YPort>;
-
-export interface PortStore extends Store<Port, PortId, PortDiff> {}
-
-// #endregion Port
-
-// #region Type
-
-type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts | YProps | YLocation;
-type YType = Y.Map<YTypeVal>;
-type YTypes = Y.Array<YType>;
-
-export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
-  representations: Map<string, RepresentationStore>;
-  ports: Map<string, PortStore>;
-}
-
-// #endregion Type
-
-// #region Piece
-
-type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
-type YPiece = Y.Map<YPieceVal>;
-type YPieces = Y.Array<YPiece>;
-
-export interface PieceStore extends Store<Piece, PieceId, PieceDiff> {}
-
-// #endregion Piece
-
-// #region Connection
-
-type YSide = Y.Map<YLeafMapString>;
-type YSides = Y.Array<YSide>;
-
-type YConnectionVal = string | number | YAttributes | YSide | YSides;
-type YConnection = Y.Map<YConnectionVal>;
-type YConnections = Y.Array<YConnection>;
-
-export interface ConnectionStore extends Store<Connection, ConnectionId, ConnectionDiff> {}
-
-// #endregion Connection
-
-// #region Design
-
-type YLayer = Y.Map<string | boolean | YAttributes>;
-type YLayers = Y.Array<YLayer>;
-
-type YGroup = Y.Map<string | YStringArray | YAttributes>;
-type YGroups = Y.Array<YGroup>;
-
-type YStat = Y.Map<string | number | boolean>;
-type YStats = Y.Array<YStat>;
-
-type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
-type YDesign = Y.Map<YDesignVal>;
-type YDesigns = Y.Array<YDesign>;
-
-type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Array<YDesignEditor>;
-
-export interface DesignStore extends Store<Design, DesignId, DesignDiff> {
-  pieces: Map<string, PieceStore>;
-  connections: Map<string, ConnectionStore>;
-}
-
-// #endregion Design
-
-// #region Kit
-
-type YIdMap = Y.Map<string>;
-type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
-type YKit = Y.Map<YKitVal>;
-type YKits = Y.Array<YKit>;
-
-export interface KitStore extends StoreWithCommands<Kit, KitId, KitDiff, KitCommandContext, KitCommandResult> {
-  types: Map<string, TypeStore>;
-  designs: Map<string, DesignStore>;
-  files: Map<Url, FileStore>;
-  fileUrls(): Map<Url, Url>;
-}
-
-export interface KitCommandContext {
-  kit: Kit;
-  fileUrls: Map<Url, Url>;
-}
-
-export interface KitCommandResult {
-  diff?: KitDiff;
-  files?: File[];
-}
-
-// #endregion Kit
-
-// #region Sketchpad
-
-type YSketchpadVal = string | boolean | YDesignEditors;
-type YSketchpad = Y.Map<YSketchpadVal>;
-
-type YSketchpadKeysMap = {
-  mode: string;
-  theme: string;
-  layout: string;
-  activeDesignEditorDesign: YDesign;
-};
-
-// #endregion Sketchpad
-
-// #region Core Interfaces
-
-export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
-
-export interface Snapshot<TModel> {
-  snapshot(): TModel;
-}
-export interface Id<TId> {
-  id(): TId;
-}
-export interface Actions<TDiff> {
-  change: (diff: TDiff) => void;
-}
-export interface OtherPresence {
-  name: string;
-}
-export interface EditorSelection<TSelection> {
-  selection: TSelection;
-}
-export interface EditorPresence<TPresence> {
-  presence: TPresence;
-}
-export interface EditorChangableState<TSelection, TPresence> extends EditorSelection<TSelection>, EditorPresence<TPresence> {}
-export interface EditorEdit<TEditorStep> {
-  do: TEditorStep;
-  undo: TEditorStep;
-}
-export interface EditorState<TDiff, TPresenceOther, TSelection, TPresence, TEdit> extends EditorChangableState<TSelection, TPresence> {
-  isTransactionActive: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
-  others: TPresenceOther[];
-  diff: TDiff;
-  currentTransactionStack: TEdit[];
-  pastTransactionsStack: TEdit[];
-}
-export interface EditorSelectionActions<TSelectionDiff> {
-  selectAll: () => void;
-  deselectAll: () => void;
-  changeSelection: (diff: TSelectionDiff) => void;
-}
-export interface EditorPresenceActions<TPresence> {
-  setPresence: (presence: TPresence) => void;
-}
-export interface EditorActions<TDiff, TSelectionDiff, TPresence> extends Actions<TDiff>, EditorSelectionActions<TSelectionDiff>, EditorPresenceActions<TPresence> {
-  undo: () => void;
-  redo: () => void;
-  startTransaction: () => void;
-  abortTransaction: () => void;
-  finalizeTransaction: () => void;
-}
-export interface Subscriptions {
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface EditorSubscriptions extends Subscriptions {
-  onUndone: (subscribe: Subscribe) => Unsubscribe;
-  onRedone: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface Store<TModel, TId, TDiff> extends Snapshot<TModel>, Id<TId>, Actions<TDiff>, Subscriptions {}
-export interface Commands<TContext, TResult> {
-  execute(command: string, ...rest: any[]): Promise<TResult>;
-  register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
-}
-export interface StoreWithCommands<TModel, TId, TDiff, TContext, TResult> extends Store<TModel, TId, TDiff>, Commands<TContext, TResult> {}
-export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
-  extends Commands<TContext, TResult>,
-    EditorActions<TDiff, TSelectionDiff, TPresence>,
-    EditorSelection<TSelection>,
-    EditorPresence<TPresence>,
-    EditorSelectionActions<TSelectionDiff> {}
-
-// #endregion Core Interfaces
-export interface DesignEditorId {
-  kit: KitId;
-  design: DesignId;
-}
-export interface DesignEditorSelection {
-  pieces?: PieceId[];
-  connections?: ConnectionId[];
-  port?: { piece: PieceId; designPiece?: PieceId; port: PortId };
-}
-export interface DesignEditorSelectionPiecesDiff {
-  added?: PieceId[];
-  removed?: PieceId[];
-}
-export interface DesignEditorSelectionConnectionsDiff {
-  added?: ConnectionId[];
-  removed?: ConnectionId[];
-}
-export interface DesignEditorSelectionPortDiff {
-  piece?: PieceId;
-  designPiece?: PieceId;
-  port?: PortId;
-}
-export interface DesignEditorSelectionDiff {
-  pieces?: DesignEditorSelectionPiecesDiff;
-  connections?: DesignEditorSelectionConnectionsDiff;
-  port?: DesignEditorSelectionPortDiff;
-}
-export enum DesignEditorFullscreenPanel {
-  None = "none",
-  Diagram = "diagram",
-  Model = "model",
-}
-export interface DesignEditorPresence {
-  cursor?: Coord;
-  camera?: Camera;
-}
-export interface DesignEditorHover {
-  piece?: PieceId;
-  connection?: ConnectionId;
-  port?: PortId;
-}
-export interface DesignEditorPresenceOther extends OtherPresence, DesignEditorPresence {}
-export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
-  fullscreenPanel: DesignEditorFullscreenPanel;
-}
-export interface DesignEditorDiff {
-  selection?: DesignEditorSelectionDiff;
-  presence?: DesignEditorPresence;
-  hover?: DesignEditorHover;
-  fullscreenPanel?: DesignEditorFullscreenPanel;
-}
-export interface DesignEditorStep {
-  kitDiff?: KitDiff;
-  selectionDiff?: DesignEditorSelectionDiff;
-}
-export interface DesignEditorEdit extends EditorEdit<DesignEditorStep> {}
-export interface DesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorEdit> {
-  hover?: DesignEditorHover;
-  fullscreenPanel: DesignEditorFullscreenPanel;
-}
-
-export interface DesignEditorSnapshot {
-  snapshot(): DesignEditorState;
-}
-export interface DesignEditorActions extends EditorActions<DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorPresence> {}
-export interface DesignEditorSubscriptions extends EditorSubscriptions {}
-export interface DesignEditorCommandContext extends KitCommandContext {
-  designEditor: DesignEditorState;
-  designId: DesignId;
-}
-export interface DesignEditorCommandResult {
-  diff?: DesignEditorDiff;
-  kitDiff?: KitDiff;
-}
-export interface DesignEditorStore extends StoreWithCommands<DesignEditorState, DesignEditorId, DesignEditorDiff, DesignEditorCommandContext, DesignEditorCommandResult> {}
-
-export interface SketchpadChangableState {
-  mode: Mode;
-  theme: Theme;
-  layout: Layout;
-  activeDesignEditor?: DesignEditorId;
-}
-export interface SketchpadState extends SketchpadChangableState {
-  id?: string;
-  persisted?: boolean;
-}
-
-export interface SketchpadSnapshot {
-  snapshot(): SketchpadState;
-}
-export interface SketchpadDiff {
-  mode?: Mode;
-  theme?: Theme;
-  layout?: Layout;
-  activeDesignEditor?: DesignEditorId;
-}
-export interface SketchpadActions extends Actions<SketchpadDiff> {
-  createKit: (kit: Kit) => void;
-  deleteKit: (id: KitIdLike) => void;
-  createDesignEditor: (id: DesignEditorId) => void;
-  deleteDesignEditor: (id: DesignEditorId) => void;
-}
-export interface SketchpadSubscriptions extends Subscriptions {
-  onKitCreated: (subscribe: Subscribe) => Unsubscribe;
-  onKitDeleted: (subscribe: Subscribe) => Unsubscribe;
-  onDesignEditorCreated: (subscribe: Subscribe) => Unsubscribe;
-  onDesignEditorDeleted: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface SketchpadCommandContext {
-  sketchpad: SketchpadState;
-}
-export interface SketchpadCommandResult {
-  diff?: SketchpadDiff;
-}
-export interface SketchpadStore extends StoreWithCommands<SketchpadState, SketchpadId, SketchpadDiff, SketchpadCommandContext, SketchpadCommandResult> {
-  kits: Map<string, KitStore>;
-  designEditors: Map<string, Map<string, DesignEditorStore>>;
-}
-
-export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff => {
-  // TODO
-};
-export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
-export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
-
-function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
-  if (deep) {
-    yObject.observeDeep(subscribe);
-    return () => {
-      yObject.unobserveDeep(subscribe);
-    };
-  } else {
-    yObject.observe(subscribe);
-    return () => {
-      yObject.unobserve(subscribe);
-    };
-  }
-}
-
-class YPortStore implements PortStore {
-  public readonly uuid: string;
-  private yPort: YPort;
-  private cache?: Port;
-  private cacheHash?: string;
-
-  private hash(port: Port): string {
-    return JSON.stringify(port);
-  }
-
-  constructor(yPort: YPort, port: Port) {
-    this.uuid = uuidv4();
-    this.yPort = yPort;
-    this.id_ = port.id_;
-    this.description = port.description;
-    this.family = port.family;
-    this.mandatory = port.mandatory;
-    this.t = port.t;
-  }
-
-  get id_(): string | undefined {
-    return this.yPort.get("id_") as string | undefined;
-  }
-  set id_(id_: string | undefined) {
-    this.yPort.set("id_", id_ || "");
-  }
-
-  get description(): string | undefined {
-    return this.yPort.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yPort.set("description", description || "");
-  }
-
-  get family(): string | undefined {
-    return this.yPort.get("family") as string | undefined;
-  }
-  set family(family: string | undefined) {
-    this.yPort.set("family", family || "");
-  }
-
-  get mandatory(): boolean | undefined {
-    return this.yPort.get("mandatory") as boolean | undefined;
-  }
-  set mandatory(mandatory: boolean | undefined) {
-    this.yPort.set("mandatory", mandatory);
-  }
-
-  get t(): number {
-    return this.yPort.get("t") as number;
-  }
-  set t(t: number) {
-    this.yPort.set("t", t);
-  }
-
-  get snapshot(): Port {
-    const currentHash = this.hash({
-      id_: this.id_,
-      description: this.description,
-      family: this.family,
-      mandatory: this.mandatory,
-      t: this.t,
-      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
-      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const port: Port = {
-      id_: this.id_,
-      description: this.description,
-      family: this.family,
-      mandatory: this.mandatory,
-      t: this.t,
-      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
-      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
-    };
-
-    this.cache = port;
-    this.cacheHash = currentHash;
-    return port;
-  }
-
-  get id(): PortId {
-    return { t: this.t };
-  }
-
-  apply(diff: PortDiff): void {
-    if (diff.id_ !== undefined) this.id_ = diff.id_;
-    if (diff.description !== undefined) this.description = diff.description;
-    if (diff.family !== undefined) this.family = diff.family;
-    if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
-    if (diff.t !== undefined) this.t = diff.t;
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yPort, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yPort, subscribe, true);
-  };
-}
-
-class YAttributeStore {
-  public readonly uuid: string;
-  private yAttribute: YAttribute;
-  private cache?: Attribute;
-  private cacheHash?: string;
-
-  private hash(attribute: Attribute): string {
-    return JSON.stringify(attribute);
-  }
-
-  constructor(yAttribute: YAttribute, attribute: Attribute) {
-    this.uuid = uuidv4();
-    this.yAttribute = yAttribute;
-    this.key = attribute.key;
-    this.value = attribute.value;
-    this.definition = attribute.definition;
-  }
-
-  get key(): string {
-    return this.yAttribute.get("key") as string;
-  }
-  set key(key: string) {
-    this.yAttribute.set("key", key);
-  }
-
-  get value(): string | undefined {
-    return this.yAttribute.get("value") as string | undefined;
-  }
-  set value(value: string | undefined) {
-    this.yAttribute.set("value", value || "");
-  }
-
-  get definition(): string | undefined {
-    return this.yAttribute.get("definition") as string | undefined;
-  }
-  set definition(definition: string | undefined) {
-    this.yAttribute.set("definition", definition || "");
-  }
-
-  get snapshot(): Attribute {
-    const currentHash = this.hash({
-      key: this.key,
-      value: this.value,
-      definition: this.definition,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const attribute: Attribute = {
-      key: this.key,
-      value: this.value,
-      definition: this.definition,
-    };
-
-    this.cache = attribute;
-    this.cacheHash = currentHash;
-    return attribute;
-  }
-
-  get id(): AttributeId {
-    return { key: this.key };
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yAttribute, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yAttribute, subscribe, true);
-  };
-}
-
-class YAuthorStore {
-  public readonly uuid: string;
-  private yAuthor: YAuthor;
-  private cache?: Author;
-  private cacheHash?: string;
-
-  private hash(author: Author): string {
-    return JSON.stringify(author);
-  }
-
-  constructor(yAuthor: YAuthor, author: Author) {
-    this.uuid = uuidv4();
-    this.yAuthor = yAuthor;
-    this.name = author.name;
-    this.email = author.email;
-  }
-
-  get name(): string {
-    return this.yAuthor.get("name") as string;
-  }
-  set name(name: string) {
-    this.yAuthor.set("name", name);
-  }
-
-  get email(): string {
-    return this.yAuthor.get("email") as string;
-  }
-  set email(email: string) {
-    this.yAuthor.set("email", email);
-  }
-
-  get snapshot(): Author {
-    const currentHash = this.hash({
-      name: this.name,
-      email: this.email,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const author: Author = {
-      name: this.name,
-      email: this.email,
-    };
-
-    this.cache = author;
-    this.cacheHash = currentHash;
-    return author;
-  }
-
-  get id(): AuthorId {
-    return { email: this.email };
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yAuthor, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yAuthor, subscribe, true);
-  };
-}
+// #region Benchmark
 
 class YBenchmarkStore {
   public readonly uuid: string;
@@ -1066,6 +676,10 @@ class YBenchmarkStore {
   };
 }
 
+// #endregion Benchmark
+
+// #region Quality
+
 class YQualityStore {
   public readonly uuid: string;
   private yQuality: YQuality;
@@ -1150,6 +764,10 @@ class YQualityStore {
   };
 }
 
+// #endregion Quality
+
+// #region Prop
+
 class YPropStore {
   public readonly uuid: string;
   private yProp: YProp;
@@ -1224,67 +842,50 @@ class YPropStore {
   };
 }
 
-class YLayerStore {
+// #endregion Prop
+
+// #region Representation
+
+type YRepresentationVal = string | YStringArray | YAttributes;
+type YRepresentation = Y.Map<YRepresentationVal>;
+type YRepresentations = Y.Array<YRepresentation>;
+
+export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
+
+class YRepresentationStore implements RepresentationStore {
   public readonly uuid: string;
-  private yLayer: YLayer;
-  private cache?: Layer;
+  private yRepresentation: YRepresentation;
+  private cache?: Representation;
   private cacheHash?: string;
 
-  private hash(layer: Layer): string {
-    return JSON.stringify(layer);
+  private hash(representation: Representation): string {
+    return JSON.stringify(representation);
   }
 
-  constructor(yLayer: YLayer, layer: Layer) {
+  constructor(yRepresentation: YRepresentation, representation: Representation) {
     this.uuid = uuidv4();
-    this.yLayer = yLayer;
-    this.path = layer.path;
-    this.isHidden = layer.isHidden;
-    this.isLocked = layer.isLocked;
-    this.color = layer.color;
-    this.description = layer.description;
+    this.yRepresentation = yRepresentation;
+    this.url = representation.url;
+    this.description = representation.description;
   }
 
-  get path(): string {
-    return this.yLayer.get("path") as string;
+  get url(): string {
+    return this.yRepresentation.get("url") as string;
   }
-  set path(path: string) {
-    this.yLayer.set("path", path);
-  }
-
-  get isHidden(): boolean | undefined {
-    return this.yLayer.get("isHidden") as boolean | undefined;
-  }
-  set isHidden(isHidden: boolean | undefined) {
-    this.yLayer.set("isHidden", isHidden);
-  }
-
-  get isLocked(): boolean | undefined {
-    return this.yLayer.get("isLocked") as boolean | undefined;
-  }
-  set isLocked(isLocked: boolean | undefined) {
-    this.yLayer.set("isLocked", isLocked);
-  }
-
-  get color(): string | undefined {
-    return this.yLayer.get("color") as string | undefined;
-  }
-  set color(color: string | undefined) {
-    this.yLayer.set("color", color || "");
+  set url(url: string) {
+    this.yRepresentation.set("url", url);
   }
 
   get description(): string | undefined {
-    return this.yLayer.get("description") as string | undefined;
+    return this.yRepresentation.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.yLayer.set("description", description || "");
+    this.yRepresentation.set("description", description || "");
   }
 
-  get snapshot(): Layer {
+  get snapshot(): Representation {
     const currentHash = this.hash({
-      path: this.path,
-      isHidden: this.isHidden,
-      isLocked: this.isLocked,
-      color: this.color,
+      url: this.url,
       description: this.description,
     });
 
@@ -1292,259 +893,161 @@ class YLayerStore {
       return this.cache;
     }
 
-    const layer: Layer = {
-      path: this.path,
-      isHidden: this.isHidden,
-      isLocked: this.isLocked,
-      color: this.color,
+    const representation: Representation = {
+      url: this.url,
       description: this.description,
     };
 
-    this.cache = layer;
+    this.cache = representation;
     this.cacheHash = currentHash;
-    return layer;
+    return representation;
   }
 
-  get id(): LayerId {
-    return { path: this.path };
+  get id(): RepresentationId {
+    return { tags: this.snapshot.tags };
+  }
+
+  apply(diff: RepresentationDiff): void {
+    if (diff.url !== undefined) this.url = diff.url;
+    if (diff.description !== undefined) this.description = diff.description;
   }
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yLayer, subscribe);
+    return createObserver(this.yRepresentation, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yLayer, subscribe, true);
+    return createObserver(this.yRepresentation, subscribe, true);
   };
 }
 
-class YGroupStore {
+// #endregion Representation
+
+// #region Port
+
+type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
+type YPort = Y.Map<YPortVal>;
+type YPorts = Y.Array<YPort>;
+
+export interface PortStore extends Store<Port, PortId, PortDiff> {}
+
+class YPortStore implements PortStore {
   public readonly uuid: string;
-  private yGroup: YGroup;
-  private cache?: Group;
+  private yPort: YPort;
+  private cache?: Port;
   private cacheHash?: string;
 
-  private hash(group: Group): string {
-    return JSON.stringify(group);
+  private hash(port: Port): string {
+    return JSON.stringify(port);
   }
 
-  constructor(yGroup: YGroup, group: Group) {
+  constructor(yPort: YPort, port: Port) {
     this.uuid = uuidv4();
-    this.yGroup = yGroup;
-    this.color = group.color;
-    this.name = group.name;
-    this.description = group.description;
+    this.yPort = yPort;
+    this.id_ = port.id_;
+    this.description = port.description;
+    this.family = port.family;
+    this.mandatory = port.mandatory;
+    this.t = port.t;
   }
 
-  get color(): string | undefined {
-    return this.yGroup.get("color") as string | undefined;
+  get id_(): string | undefined {
+    return this.yPort.get("id_") as string | undefined;
   }
-  set color(color: string | undefined) {
-    this.yGroup.set("color", color || "");
-  }
-
-  get name(): string | undefined {
-    return this.yGroup.get("name") as string | undefined;
-  }
-  set name(name: string | undefined) {
-    this.yGroup.set("name", name || "");
+  set id_(id_: string | undefined) {
+    this.yPort.set("id_", id_ || "");
   }
 
   get description(): string | undefined {
-    return this.yGroup.get("description") as string | undefined;
+    return this.yPort.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.yGroup.set("description", description || "");
+    this.yPort.set("description", description || "");
   }
 
-  get snapshot(): Group {
+  get family(): string | undefined {
+    return this.yPort.get("family") as string | undefined;
+  }
+  set family(family: string | undefined) {
+    this.yPort.set("family", family || "");
+  }
+
+  get mandatory(): boolean | undefined {
+    return this.yPort.get("mandatory") as boolean | undefined;
+  }
+  set mandatory(mandatory: boolean | undefined) {
+    this.yPort.set("mandatory", mandatory);
+  }
+
+  get t(): number {
+    return this.yPort.get("t") as number;
+  }
+  set t(t: number) {
+    this.yPort.set("t", t);
+  }
+
+  get snapshot(): Port {
     const currentHash = this.hash({
-      pieces: [], // TODO: implement pieces handling
-      color: this.color,
-      name: this.name,
+      id_: this.id_,
       description: this.description,
+      family: this.family,
+      mandatory: this.mandatory,
+      t: this.t,
+      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
+      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
     });
 
     if (this.cache && this.cacheHash === currentHash) {
       return this.cache;
     }
 
-    const group: Group = {
-      pieces: [], // TODO: implement pieces handling
-      color: this.color,
-      name: this.name,
+    const port: Port = {
+      id_: this.id_,
       description: this.description,
+      family: this.family,
+      mandatory: this.mandatory,
+      t: this.t,
+      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
+      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
     };
 
-    this.cache = group;
+    this.cache = port;
     this.cacheHash = currentHash;
-    return group;
+    return port;
   }
 
-  get id(): GroupId {
-    return { pieces: [] }; // TODO: implement pieces handling
+  get id(): PortId {
+    return { t: this.t };
+  }
+
+  apply(diff: PortDiff): void {
+    if (diff.id_ !== undefined) this.id_ = diff.id_;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.family !== undefined) this.family = diff.family;
+    if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
+    if (diff.t !== undefined) this.t = diff.t;
   }
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yGroup, subscribe);
+    return createObserver(this.yPort, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yGroup, subscribe, true);
+    return createObserver(this.yPort, subscribe, true);
   };
 }
 
-class YSideStore {
-  public readonly uuid: string;
-  private ySide: YSide;
-  private cache?: Side;
-  private cacheHash?: string;
+// #endregion Port
 
-  private hash(side: Side): string {
-    return JSON.stringify(side);
-  }
+// #region Type
 
-  constructor(ySide: YSide, side: Side) {
-    this.uuid = uuidv4();
-    this.ySide = ySide;
-    // TODO: implement side properties
-  }
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts | YProps | YLocation;
+type YType = Y.Map<YTypeVal>;
+type YTypes = Y.Array<YType>;
 
-  get snapshot(): Side {
-    const currentHash = this.hash({
-      piece: { id_: "" }, // TODO: implement piece handling
-      port: { t: 0 }, // TODO: implement port handling
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const side: Side = {
-      piece: { id_: "" }, // TODO: implement piece handling
-      port: { t: 0 }, // TODO: implement port handling
-    };
-
-    this.cache = side;
-    this.cacheHash = currentHash;
-    return side;
-  }
-
-  get id(): SideId {
-    return { piece: { id_: "" }, port: { t: 0 } }; // TODO: implement handling
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.ySide, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.ySide, subscribe, true);
-  };
-}
-
-class YStatStore {
-  public readonly uuid: string;
-  private yStat: YStat;
-  private cache?: Stat;
-  private cacheHash?: string;
-
-  private hash(stat: Stat): string {
-    return JSON.stringify(stat);
-  }
-
-  constructor(yStat: YStat, stat: Stat) {
-    this.uuid = uuidv4();
-    this.yStat = yStat;
-    this.key = stat.key;
-    this.unit = stat.unit;
-    this.min = stat.min;
-    this.minExcluded = stat.minExcluded;
-    this.max = stat.max;
-    this.maxExcluded = stat.maxExcluded;
-  }
-
-  get key(): string {
-    return this.yStat.get("key") as string;
-  }
-  set key(key: string) {
-    this.yStat.set("key", key);
-  }
-
-  get unit(): string | undefined {
-    return this.yStat.get("unit") as string | undefined;
-  }
-  set unit(unit: string | undefined) {
-    this.yStat.set("unit", unit || "");
-  }
-
-  get min(): number | undefined {
-    return this.yStat.get("min") as number | undefined;
-  }
-  set min(min: number | undefined) {
-    this.yStat.set("min", min);
-  }
-
-  get minExcluded(): boolean | undefined {
-    return this.yStat.get("minExcluded") as boolean | undefined;
-  }
-  set minExcluded(minExcluded: boolean | undefined) {
-    this.yStat.set("minExcluded", minExcluded);
-  }
-
-  get max(): number | undefined {
-    return this.yStat.get("max") as number | undefined;
-  }
-  set max(max: number | undefined) {
-    this.yStat.set("max", max);
-  }
-
-  get maxExcluded(): boolean | undefined {
-    return this.yStat.get("maxExcluded") as boolean | undefined;
-  }
-  set maxExcluded(maxExcluded: boolean | undefined) {
-    this.yStat.set("maxExcluded", maxExcluded);
-  }
-
-  get snapshot(): Stat {
-    const currentHash = this.hash({
-      key: this.key,
-      unit: this.unit,
-      min: this.min,
-      minExcluded: this.minExcluded,
-      max: this.max,
-      maxExcluded: this.maxExcluded,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const stat: Stat = {
-      key: this.key,
-      unit: this.unit,
-      min: this.min,
-      minExcluded: this.minExcluded,
-      max: this.max,
-      maxExcluded: this.maxExcluded,
-    };
-
-    this.cache = stat;
-    this.cacheHash = currentHash;
-    return stat;
-  }
-
-  get id(): StatId {
-    return { key: this.key };
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yStat, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yStat, subscribe, true);
-  };
+export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
+  representations: Map<string, RepresentationStore>;
+  ports: Map<string, PortStore>;
 }
 
 class YTypeStore implements TypeStore {
@@ -1721,8 +1224,8 @@ class YTypeStore implements TypeStore {
       icon: this.icon,
       image: this.image,
       description: this.description,
-      representations: Array.from(this.representations.values()).map(rep => rep.snapshot()),
-      ports: Array.from(this.ports.values()).map(port => port.snapshot()),
+      representations: Array.from(this.representations.values()).map((rep) => rep.snapshot()),
+      ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -1751,6 +1254,114 @@ class YTypeStore implements TypeStore {
     return createObserver(this.yType, subscribe, true);
   };
 }
+
+// #endregion Type
+
+// #region Layer
+
+class YLayerStore {
+  public readonly uuid: string;
+  private yLayer: YLayer;
+  private cache?: Layer;
+  private cacheHash?: string;
+
+  private hash(layer: Layer): string {
+    return JSON.stringify(layer);
+  }
+
+  constructor(yLayer: YLayer, layer: Layer) {
+    this.uuid = uuidv4();
+    this.yLayer = yLayer;
+    this.path = layer.path;
+    this.isHidden = layer.isHidden;
+    this.isLocked = layer.isLocked;
+    this.color = layer.color;
+    this.description = layer.description;
+  }
+
+  get path(): string {
+    return this.yLayer.get("path") as string;
+  }
+  set path(path: string) {
+    this.yLayer.set("path", path);
+  }
+
+  get isHidden(): boolean | undefined {
+    return this.yLayer.get("isHidden") as boolean | undefined;
+  }
+  set isHidden(isHidden: boolean | undefined) {
+    this.yLayer.set("isHidden", isHidden);
+  }
+
+  get isLocked(): boolean | undefined {
+    return this.yLayer.get("isLocked") as boolean | undefined;
+  }
+  set isLocked(isLocked: boolean | undefined) {
+    this.yLayer.set("isLocked", isLocked);
+  }
+
+  get color(): string | undefined {
+    return this.yLayer.get("color") as string | undefined;
+  }
+  set color(color: string | undefined) {
+    this.yLayer.set("color", color || "");
+  }
+
+  get description(): string | undefined {
+    return this.yLayer.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yLayer.set("description", description || "");
+  }
+
+  get snapshot(): Layer {
+    const currentHash = this.hash({
+      path: this.path,
+      isHidden: this.isHidden,
+      isLocked: this.isLocked,
+      color: this.color,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const layer: Layer = {
+      path: this.path,
+      isHidden: this.isHidden,
+      isLocked: this.isLocked,
+      color: this.color,
+      description: this.description,
+    };
+
+    this.cache = layer;
+    this.cacheHash = currentHash;
+    return layer;
+  }
+
+  get id(): LayerId {
+    return { path: this.path };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yLayer, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yLayer, subscribe, true);
+  };
+}
+
+// #endregion Layer
+
+// #region Piece
+
+type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
+type YPiece = Y.Map<YPieceVal>;
+type YPieces = Y.Array<YPiece>;
+
+export interface PieceStore extends Store<Piece, PieceId, PieceDiff> {}
 
 class YPieceStore {
   public readonly uuid: string;
@@ -2105,6 +1716,152 @@ class YPieceStore {
   };
 }
 
+// #endregion Piece
+
+// #region Group
+
+class YGroupStore {
+  public readonly uuid: string;
+  private yGroup: YGroup;
+  private cache?: Group;
+  private cacheHash?: string;
+
+  private hash(group: Group): string {
+    return JSON.stringify(group);
+  }
+
+  constructor(yGroup: YGroup, group: Group) {
+    this.uuid = uuidv4();
+    this.yGroup = yGroup;
+    this.color = group.color;
+    this.name = group.name;
+    this.description = group.description;
+  }
+
+  get color(): string | undefined {
+    return this.yGroup.get("color") as string | undefined;
+  }
+  set color(color: string | undefined) {
+    this.yGroup.set("color", color || "");
+  }
+
+  get name(): string | undefined {
+    return this.yGroup.get("name") as string | undefined;
+  }
+  set name(name: string | undefined) {
+    this.yGroup.set("name", name || "");
+  }
+
+  get description(): string | undefined {
+    return this.yGroup.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yGroup.set("description", description || "");
+  }
+
+  get snapshot(): Group {
+    const currentHash = this.hash({
+      pieces: [], // TODO: implement pieces handling
+      color: this.color,
+      name: this.name,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const group: Group = {
+      pieces: [], // TODO: implement pieces handling
+      color: this.color,
+      name: this.name,
+      description: this.description,
+    };
+
+    this.cache = group;
+    this.cacheHash = currentHash;
+    return group;
+  }
+
+  get id(): GroupId {
+    return { pieces: [] }; // TODO: implement pieces handling
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yGroup, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yGroup, subscribe, true);
+  };
+}
+
+// #endregion Group
+
+// #region Side
+
+class YSideStore {
+  public readonly uuid: string;
+  private ySide: YSide;
+  private cache?: Side;
+  private cacheHash?: string;
+
+  private hash(side: Side): string {
+    return JSON.stringify(side);
+  }
+
+  constructor(ySide: YSide, side: Side) {
+    this.uuid = uuidv4();
+    this.ySide = ySide;
+    // TODO: implement side properties
+  }
+
+  get snapshot(): Side {
+    const currentHash = this.hash({
+      piece: { id_: "" }, // TODO: implement piece handling
+      port: { t: 0 }, // TODO: implement port handling
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const side: Side = {
+      piece: { id_: "" }, // TODO: implement piece handling
+      port: { t: 0 }, // TODO: implement port handling
+    };
+
+    this.cache = side;
+    this.cacheHash = currentHash;
+    return side;
+  }
+
+  get id(): SideId {
+    return { piece: { id_: "" }, port: { t: 0 } }; // TODO: implement handling
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.ySide, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.ySide, subscribe, true);
+  };
+}
+
+// #endregion Side
+
+// #region Connection
+
+type YSide = Y.Map<YLeafMapString>;
+type YSides = Y.Array<YSide>;
+
+type YConnectionVal = string | number | YAttributes | YSide | YSides;
+type YConnection = Y.Map<YConnectionVal>;
+type YConnections = Y.Array<YConnection>;
+
+export interface ConnectionStore extends Store<Connection, ConnectionId, ConnectionDiff> {}
+
 class YConnectionStore implements ConnectionStore {
   public readonly uuid: string;
   private yConnection: YConnection;
@@ -2187,75 +1944,218 @@ class YConnectionStore implements ConnectionStore {
   };
 }
 
-class YAttributeStore implements Store<Attribute, any, any> {
+// #endregion Connection
+
+// #region Stat
+
+class YStatStore {
   public readonly uuid: string;
-  private yAttribute: YAttribute;
-  private cache?: Attribute;
+  private yStat: YStat;
+class YConnectionStore implements ConnectionStore {
+  public readonly uuid: string;
+  private yConnection: YConnection;
+  private cache?: Connection;
   private cacheHash?: string;
 
-  private hash(attribute: Attribute): string {
-    return JSON.stringify(attribute);
+  private hash(connection: Connection): string {
+    return JSON.stringify(connection);
   }
 
-  constructor(yAttribute: YAttribute, attribute: Attribute) {
+  constructor(yConnection: YConnection, connection: Connection) {
     this.uuid = uuidv4();
-    this.yAttribute = yAttribute;
-    this.key = attribute.key;
-    this.value = attribute.value;
-    this.definition = attribute.definition;
+    this.yConnection = yConnection;
+    this.id_ = connection.id_;
+    this.description = connection.description;
+    this.quality = connection.quality;
   }
 
-  get key(): string {
-    return this.yAttribute.get("key") as string;
+  get id_(): string {
+    return this.yConnection.get("id_") as string;
   }
-  set key(key: string) {
-    this.yAttribute.set("key", key);
-  }
-
-  get value(): string | undefined {
-    return this.yAttribute.get("value") as string | undefined;
-  }
-  set value(value: string | undefined) {
-    this.yAttribute.set("value", value || "");
+  set id_(id_: string) {
+    this.yConnection.set("id_", id_);
   }
 
-  get definition(): string | undefined {
-    return this.yAttribute.get("definition") as string | undefined;
+  get description(): string | undefined {
+    return this.yConnection.get("description") as string | undefined;
   }
-  set definition(definition: string | undefined) {
-    this.yAttribute.set("definition", definition || "");
+  set description(description: string | undefined) {
+    this.yConnection.set("description", description || "");
   }
 
-  snapshot = (): Attribute => {
-    const currentData = {
-      key: this.key,
-      value: this.value,
-      definition: this.definition,
-    };
-    const currentHash = this.hash(currentData);
+  get quality(): number | undefined {
+    return this.yConnection.get("quality") as number | undefined;
+  }
+  set quality(quality: number | undefined) {
+    this.yConnection.set("quality", quality);
+  }
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
+  get snapshot(): Connection {
+    const currentHash = this.hash({
+      id_: this.id_,
+      description: this.description,
+      quality: this.quality,
+      sides: [], // TODO: implement sides handling
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
     }
 
-    return this.cache;
-  };
+    const connection: Connection = {
+      id_: this.id_,
+      description: this.description,
+      quality: this.quality,
+      sides: [], // TODO: implement sides handling
+    };
 
-  id = () => ({ key: this.key });
-  change = (diff: any) => {
-    if (diff.key !== undefined) this.key = diff.key;
-    if (diff.value !== undefined) this.value = diff.value;
-    if (diff.definition !== undefined) this.definition = diff.definition;
-  };
+    this.cache = connection;
+    this.cacheHash = currentHash;
+    return connection;
+  }
+
+  get id(): ConnectionId {
+    return { id_: this.id_ };
+  }
+
+  apply(diff: ConnectionDiff): void {
+    if (diff.id_ !== undefined) this.id_ = diff.id_;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.quality !== undefined) this.quality = diff.quality;
+  }
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yAttribute, subscribe, false);
+    return createObserver(this.yConnection, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yAttribute, subscribe, true);
+    return createObserver(this.yConnection, subscribe, true);
   };
+}  private cache?: Stat;
+  private cacheHash?: string;
+
+  private hash(stat: Stat): string {
+    return JSON.stringify(stat);
+  }
+
+  constructor(yStat: YStat, stat: Stat) {
+    this.uuid = uuidv4();
+    this.yStat = yStat;
+    this.key = stat.key;
+    this.unit = stat.unit;
+    this.min = stat.min;
+    this.minExcluded = stat.minExcluded;
+    this.max = stat.max;
+    this.maxExcluded = stat.maxExcluded;
+  }
+
+  get key(): string {
+    return this.yStat.get("key") as string;
+  }
+  set key(key: string) {
+    this.yStat.set("key", key);
+  }
+
+  get unit(): string | undefined {
+    return this.yStat.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yStat.set("unit", unit || "");
+  }
+
+  get min(): number | undefined {
+    return this.yStat.get("min") as number | undefined;
+  }
+  set min(min: number | undefined) {
+    this.yStat.set("min", min);
+  }
+
+  get minExcluded(): boolean | undefined {
+    return this.yStat.get("minExcluded") as boolean | undefined;
+  }
+  set minExcluded(minExcluded: boolean | undefined) {
+    this.yStat.set("minExcluded", minExcluded);
+  }
+
+  get max(): number | undefined {
+    return this.yStat.get("max") as number | undefined;
+  }
+  set max(max: number | undefined) {
+    this.yStat.set("max", max);
+  }
+
+  get maxExcluded(): boolean | undefined {
+    return this.yStat.get("maxExcluded") as boolean | undefined;
+  }
+  set maxExcluded(maxExcluded: boolean | undefined) {
+    this.yStat.set("maxExcluded", maxExcluded);
+  }
+
+  get snapshot(): Stat {
+    const currentHash = this.hash({
+      key: this.key,
+      unit: this.unit,
+      min: this.min,
+      minExcluded: this.minExcluded,
+      max: this.max,
+      maxExcluded: this.maxExcluded,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const stat: Stat = {
+      key: this.key,
+      unit: this.unit,
+      min: this.min,
+      minExcluded: this.minExcluded,
+      max: this.max,
+      maxExcluded: this.maxExcluded,
+    };
+
+    this.cache = stat;
+    this.cacheHash = currentHash;
+    return stat;
+  }
+
+  get id(): StatId {
+    return { key: this.key };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yStat, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yStat, subscribe, true);
+  };
+}
+
+// #endregion Stat
+
+// #region Design
+
+type YLayer = Y.Map<string | boolean | YAttributes>;
+type YLayers = Y.Array<YLayer>;
+
+type YGroup = Y.Map<string | YStringArray | YAttributes>;
+type YGroups = Y.Array<YGroup>;
+
+type YStat = Y.Map<string | number | boolean>;
+type YStats = Y.Array<YStat>;
+
+type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
+type YDesign = Y.Map<YDesignVal>;
+type YDesigns = Y.Array<YDesign>;
+
+type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignEditor = Y.Map<YDesignEditorVal>;
+type YDesignEditors = Y.Array<YDesignEditor>;
+
+export interface DesignStore extends Store<Design, DesignId, DesignDiff> {
+  pieces: Map<string, PieceStore>;
+  connections: Map<string, ConnectionStore>;
 }
 
 class YDesignStore {
@@ -2553,8 +2453,8 @@ class YDesignStore {
     const yProps = this.yDesign.get("props") as Y.Array<YProp> | undefined;
     if (yProps) {
       props = yProps.toArray().map((yProp) => ({
-        key: yProp.get("key") as string || "",
-        value: yProp.get("value") as string || "",
+        key: (yProp.get("key") as string) || "",
+        value: (yProp.get("value") as string) || "",
         unit: yProp.get("unit") as string | undefined,
       }));
     }
@@ -2817,6 +2717,32 @@ class YDesignStore {
       this.yDesign.unobserveDeep(observer);
     };
   };
+}
+
+// #endregion Design
+
+// #region Kit
+
+type YIdMap = Y.Map<string>;
+type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
+type YKit = Y.Map<YKitVal>;
+type YKits = Y.Array<YKit>;
+
+export interface KitStore extends StoreWithCommands<Kit, KitId, KitDiff, KitCommandContext, KitCommandResult> {
+  types: Map<string, TypeStore>;
+  designs: Map<string, DesignStore>;
+  files: Map<Url, FileStore>;
+  fileUrls(): Map<Url, Url>;
+}
+
+export interface KitCommandContext {
+  kit: Kit;
+  fileUrls: Map<Url, Url>;
+}
+
+export interface KitCommandResult {
+  diff?: KitDiff;
+  files?: File[];
 }
 
 class YKitStore {
@@ -3258,617 +3184,6 @@ class YKitStore {
   }
 }
 
-class YDesignEditorStore {
-  public readonly uuid: string;
-  public readonly parent: YSketchpadStore;
-  public readonly yMap: YDesignEditor;
-  private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
-  private readonly transact: (fn: () => void) => void;
-  private cache?: DesignEditorState;
-  private cacheHash?: string;
-
-  constructor(parent: YSketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
-    this.uuid = uuidv4();
-    this.parent = parent;
-    this.yMap = yMap;
-    this.transact = transact;
-
-    const kit = this.parent.kit(id.kit);
-    const design = kit.design(id.design);
-    yMap.set("kit", kit.uuid);
-    yMap.set("design", design.uuid);
-
-    yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
-
-    const selection = new Y.Map<any>();
-    const selectedPieces = new Y.Array<string>();
-    if (state?.selection.pieces) {
-      selectedPieces.push(state?.selection.pieces.map((piece) => pieceIdToString(piece)) || []);
-    }
-    const selectedConnections = new Y.Array<string>();
-    if (state?.selection.connections) {
-      selectedConnections.push(state?.selection.connections.map((connection) => connectionIdToString(connection)) || []);
-    }
-    const selectionPort = new Y.Map<any>();
-    if (state?.selection.port) {
-      selectionPort.set("piece", pieceIdToString(state?.selection.port.piece!));
-      selectionPort.set("port", portIdToString(state?.selection.port.port!));
-      selectionPort.set("designPiece", pieceIdToString(state?.selection.port.designPiece!));
-    }
-    selection.set("pieces", selectedPieces);
-    selection.set("connections", selectedConnections);
-    selection.set("port", selectionPort);
-    yMap.set("selection", selection);
-
-    yMap.set("isTransactionActive", false);
-    yMap.set("presence", new Y.Map<any>());
-    yMap.set("others", new Y.Array<any>());
-    yMap.set("diff", new Y.Map<any>());
-    yMap.set("currentTransactionStack", new Y.Array<any>());
-    yMap.set("pastTransactionsStack", new Y.Array<any>());
-
-    Object.entries(designEditorCommands).forEach(([commandId, command]) => {
-      this.registerCommand(commandId, command);
-    });
-  }
-
-  get fullscreenPanel(): DesignEditorFullscreenPanel {
-    return this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel;
-  }
-  set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
-    this.yMap.set("fullscreenPanel", panel);
-  }
-  get selection(): DesignEditorSelection {
-    return {};
-  }
-  get isTransactionActive(): boolean {
-    return (this.yMap.get("isTransactionActive") as boolean) || false;
-  }
-  set isTransactionActive(active: boolean) {
-    this.yMap.set("isTransactionActive", active);
-  }
-  get presence(): DesignEditorPresence {
-    return {
-      cursor: {
-        x: (this.yMap.get("presenceCursorX") as number) || 0,
-        y: (this.yMap.get("presenceCursorY") as number) || 0,
-      },
-    };
-  }
-  get others(): DesignEditorPresenceOther[] {
-    return [];
-  }
-  get diff(): KitDiff {
-    return {};
-  }
-  get currentTransactionStack(): DesignEditorEdit[] {
-    const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
-  get pastTransactionsStack(): DesignEditorEdit[] {
-    const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
-
-  canUndo(): boolean {
-    return this.pastTransactionsStack.length > 0;
-  }
-
-  canRedo(): boolean {
-    return this.currentTransactionStack.length > 0 && !this.isTransactionActive;
-  }
-
-  id(): DesignEditorId {
-    const kit = this.parent.kitByUuid(this.yMap.get("kit") as string);
-    const design = kit.designByUuid(this.yMap.get("design") as string);
-    return {
-      kit: kit.id(),
-      design: design.id(),
-    } as DesignEditorId;
-  }
-
-  hash(state: DesignEditorState): string {
-    return JSON.stringify(state);
-  }
-
-  snapshot = (): DesignEditorState => {
-    const currentData = {
-      fullscreenPanel: this.fullscreenPanel,
-      selection: this.selection,
-      isTransactionActive: this.isTransactionActive,
-      canUndo: this.canUndo(),
-      canRedo: this.canRedo(),
-      presence: this.presence,
-      others: this.others,
-      diff: this.diff,
-      currentTransactionStack: this.currentTransactionStack,
-      pastTransactionsStack: this.pastTransactionsStack,
-    };
-    const currentHash = this.hash(currentData);
-
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
-
-    return this.cache;
-  };
-
-  change = (diff: DesignEditorDiff) => {
-    this.transact(() => {
-      if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
-      if (diff.selection) {
-        const selection = this.yMap.get("selection") as Y.Map<any>;
-      }
-    });
-  };
-
-  onChanged = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    (this.yMap as unknown as Y.Map<any>).observe(observer);
-    return () => {
-      (this.yMap as unknown as Y.Map<any>).unobserve(observer);
-    };
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    (this.yMap as unknown as Y.Map<any>).observeDeep(observer);
-    return () => {
-      (this.yMap as unknown as Y.Map<any>).unobserveDeep(observer);
-    };
-  };
-
-  startTransaction = () => {
-    this.isTransactionActive = true;
-  };
-
-  onTransactionStarted = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  abortTransaction = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack) {
-        currentStack.delete(0, currentStack.length);
-      }
-      this.isTransactionActive = false;
-    }
-  };
-
-  onTransactionAborted = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  finalizeTransaction = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (currentStack && pastStack && currentStack.length > 0) {
-        pastStack.push(currentStack.toArray());
-        currentStack.delete(0, currentStack.length);
-      }
-      this.isTransactionActive = false;
-    }
-  };
-
-  onTransactionFinalized = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  undo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(currentStack.length - 1);
-        currentStack.delete(currentStack.length - 1, 1);
-        if (edit && edit.undo) {
-          edit.undo.diff && this.change(edit.undo.diff);
-        }
-      }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(pastStack.length - 1);
-        pastStack.delete(pastStack.length - 1, 1);
-        if (edit && edit.undo) {
-          edit.undo.diff && this.change(edit.undo.diff);
-        }
-      }
-    }
-  };
-  onUndone = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-  redo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(0);
-        currentStack.delete(0, 1);
-        if (edit && edit.do) {
-          edit.do.diff && this.change(edit.do.diff);
-        }
-      }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(0);
-        pastStack.delete(0, 1);
-        if (edit && edit.do) {
-          edit.do.diff && this.change(edit.do.diff);
-        }
-      }
-    }
-  };
-  onRedone = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    if (command === "semio.designEditor.startTransaction") {
-      this.startTransaction();
-      return {} as T;
-    }
-    if (command === "semio.designEditor.finalizeTransaction") {
-      this.finalizeTransaction();
-      return {} as T;
-    }
-    if (command === "semio.designEditor.abortTransaction") {
-      this.abortTransaction();
-      return {} as T;
-    }
-    if (command === "semio.designEditor.undo") {
-      this.undo();
-      return {} as T;
-    }
-    if (command === "semio.designEditor.redo") {
-      this.redo();
-      return {} as T;
-    }
-
-    const callback = this.commandRegistry.get(command);
-    if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
-    const parent = this.parent as YSketchpadStore;
-    const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kit))!;
-
-    const state = this.snapshot();
-    const kitState = kitStore.snapshot();
-
-    const context: DesignEditorCommandContext = {
-      designEditor: state,
-      kit: kitState,
-      designId: parent.activeDesignEditor!.design,
-      fileUrls: kitStore.fileUrls(),
-    };
-    const result = callback(context, ...rest);
-
-    if (result.diff) {
-      this.change(result.diff);
-    }
-    if (result.kitDiff) {
-      kitStore.change(result.kitDiff);
-    }
-
-    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      const inversedSelectionDiff = inverseDesignEditorSelectionDiff(state.selection, result.diff?.selection!);
-      const inversedKitDiff = inverseKitDiff(kitState, result.kitDiff!);
-      const edit: DesignEditorEdit = {
-        do: {
-          kitDiff: result.kitDiff,
-          selectionDiff: result.diff?.selection,
-        },
-        undo: {
-          kitDiff: inversedKitDiff,
-          selectionDiff: inversedSelectionDiff,
-        },
-      };
-      currentStack.push([edit]);
-    }
-
-    return result as T;
-  }
-
-  execute<T>(command: string, ...rest: any[]): Promise<T> {
-    return this.executeCommand(command, ...rest);
-  }
-
-  registerCommand(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
-    this.commandRegistry.set(command, callback);
-    return () => {
-      this.commandRegistry.delete(command);
-    };
-  }
-
-  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
-    return this.registerCommand(command, callback);
-  }
-
-  get commands() {
-    return {
-      execute: this.executeCommand.bind(this),
-      register: this.registerCommand.bind(this),
-    };
-  }
-}
-
-// #region Sketchpad
-
-class YSketchpadStore {
-  private readonly id: string | undefined;
-  private readonly yProviderFactory: YProviderFactory | undefined;
-  private readonly yDoc: Y.Doc;
-  private readonly ySketchpad: YSketchpad;
-  private readonly kits: Array<YKitStore>;
-  private readonly yDesignEditors: YDesignEditors;
-  private readonly designEditors: Array<DesignEditorStore>;
-  private readonly persistence?: IndexeddbPersistence;
-  private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
-  private cache?: SketchpadState;
-  private cacheHash?: string;
-  // private readonly broadcastChannel: BroadcastChannel;
-
-  private hash(state: SketchpadState): string {
-    return JSON.stringify(state);
-  }
-
-  constructor(id?: string, yProviderFactory?: YProviderFactory) {
-    this.id = id;
-    this.yProviderFactory = yProviderFactory;
-    // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
-    this.yDoc = new Y.Doc();
-    this.kits = new Array();
-    this.designEditors = new Array();
-    this.commandRegistry = new Map();
-
-    // if (id) {
-    //   this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
-    //   this.persistence!.doc.on("update", () => {
-    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID });
-    //   });
-    //   this.broadcastChannel.addEventListener("message", (msg) => {
-    //     console.log("message", msg);
-    //     const { data } = msg;
-    //     if (data.client !== this.yDoc.clientID) {
-    //     }
-    //   });
-    // } else {
-    //   this.yDoc.on("update", (update: Uint8Array) => {
-    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID, update });
-    //   });
-    //   this.broadcastChannel.addEventListener("message", (msg) => {
-    //     const { data } = msg;
-    //     if (data.client !== this.yDoc.clientID) {
-    //       Y.applyUpdate(this.yDoc, data.update);
-    //     }
-    //   });
-    // }
-
-    // if (yProviderFactory) {
-    //   yProviderFactory(this.yDoc, id);
-    // }
-
-    this.ySketchpad = this.yDoc.getMap("sketchpad");
-    this.yDesignEditors = this.yDoc.getArray("designEditors");
-    this.yDoc.transact(() => {
-      this.ySketchpad.set("mode", Mode.GUEST);
-      this.ySketchpad.set("theme", Theme.SYSTEM);
-      this.ySketchpad.set("layout", Layout.NORMAL);
-      this.ySketchpad.set("activeDesignEditor", "");
-    });
-
-    Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
-      this.registerCommand(commandId, command);
-    });
-  }
-
-  id = () => {
-    return this.yDoc.clientID.toString();
-  };
-
-  snapshot = (): SketchpadState => {
-    const activeDesignEditorIdStr = this.ySketchpad.get("activeDesignEditor") as string;
-    const activeDesignEditor = activeDesignEditorIdStr ? (JSON.parse(activeDesignEditorIdStr) as DesignEditorId) : undefined;
-    const currentValues = {
-      mode: this.ySketchpad.get("mode") as Mode,
-      theme: this.ySketchpad.get("theme") as Theme,
-      layout: this.ySketchpad.get("layout") as Layout,
-      activeDesignEditor: activeDesignEditor,
-    };
-    const currentHash = this.hash(currentValues);
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentValues;
-      this.cacheHash = currentHash;
-    }
-    return this.cache;
-  };
-
-  createKit = (kit: Kit) => {
-    if (this.hasKit(kit)) {
-      throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
-    }
-    this.kits.push(new YKitStore(this, kit));
-  };
-
-  createDesignEditor = (id: DesignEditorId) => {
-    if (this.hasDesignEditor(id)) {
-      throw new Error(`Design editor (${id.kit.name}, ${id.kit.version || ""}, ${id.design.name}, ${id.design.variant || ""}, ${id.design.view || ""}) already exists.`);
-    }
-    this.yDoc.transact(() => {
-      const yDesignEditor = new Y.Map<YDesignEditorVal>();
-      this.yDesignEditors.push([yDesignEditor]);
-      const designEditor = new YDesignEditorStore(this, yDesignEditor, this.yDoc.transact, id);
-      this.designEditors.push(designEditor);
-    });
-  };
-
-  change(diff: SketchpadDiff) {
-    this.yDoc.transact(() => {
-      if (diff.mode) this.ySketchpad.set("mode", diff.mode);
-      if (diff.theme) this.ySketchpad.set("theme", diff.theme);
-      if (diff.layout) this.ySketchpad.set("layout", diff.layout);
-      if (diff.activeDesignEditor) this.ySketchpad.set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
-    });
-  }
-
-  deleteKit = (id: KitIdLike) => {};
-
-  deleteDesignEditor = (id: DesignEditorId) => {};
-
-  // Subscriptions using Yjs observers
-  onKitCreated = (subscribe: Subscribe): Unsubscribe => {};
-
-  onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
-
-  onKitDeleted = (subscribe: Subscribe): Unsubscribe => {};
-
-  onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {};
-
-  onChanged = (subscribe: Subscribe): Unsubscribe => {
-    const observer = () => subscribe();
-    this.ySketchpad.observe(observer);
-    return () => {
-      this.ySketchpad.unobserve(observer);
-    };
-  };
-
-  onChangedDeep = (subscribe: Subscribe): Unsubscribe => {};
-
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    if (command === "semio.sketchpad.createKit") {
-      const kit = rest[0] as Kit;
-      if (!kit.name) throw new Error("Kit name is required to create a kit.");
-      this.createKit(kit);
-      return {} as T;
-    }
-    if (command === "semio.sketchpad.createDesignEditor") {
-      const id = rest[0] as DesignEditorId;
-      this.createDesignEditor(id);
-      return {} as T;
-    }
-    if (command === "semio.sketchpad.importKit") {
-      const kitId = rest[0] as KitId;
-      const url = rest[1] as string;
-      const kitStore = this.kits.get(kitIdToString(kitId));
-      if (kitStore) {
-        await kitStore.execute("semio.kit.import", url);
-      }
-      return {} as T;
-    }
-    const callback = this.commandRegistry.get(command);
-    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
-    const context: SketchpadCommandContext = {
-      sketchpad: this.snapshot(),
-    };
-    const result = callback(context, ...rest);
-    if (result.diff) {
-      this.change(result.diff);
-    }
-    return result as T;
-  }
-
-  execute<T>(command: string, ...rest: any[]): Promise<T> {
-    return this.executeCommand(command, ...rest);
-  }
-
-  registerCommand(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable {
-    this.commandRegistry.set(command, callback);
-    return () => {
-      this.commandRegistry.delete(command);
-    };
-  }
-
-  get commands() {
-    return {
-      execute: this.executeCommand.bind(this),
-      register: this.registerCommand.bind(this),
-    };
-  }
-
-  hasKit(kit: KitIdLike): boolean {
-    return hasSameKit(
-      kit,
-      Array.from(this.kits.values()).map((kit) => kit.id()),
-    );
-  }
-
-  kit(kit: KitIdLike): YKitStore {
-    if (!this.hasKit(kit)) throw new Error(`Kit store not found for kit ${kit}`);
-    return this.kits.find((k) => areSameKit(k.id(), kit))!;
-  }
-
-  kitByUuid(uuid: string): YKitStore {
-    return this.kits.find((k) => k.uuid === uuid)!;
-  }
-
-  hasDesignEditor(designEditor: DesignEditorId): boolean {
-    return hasSameDesignEditor(
-      designEditor,
-      Array.from(this.designEditors.values()).map((designEditor) => designEditor.id()),
-    );
-  }
-
-  designEditor(designEditor: DesignEditorId): YDesignEditorStore {
-    if (!this.hasDesignEditor(designEditor)) throw new Error(`Design editor store not found for design editor ${designEditor}`);
-    return this.designEditors.find((d) => areSameDesignEditor(d.id(), designEditor))!;
-  }
-
-  designEditorByUuid(uuid: string): YDesignEditorStore {
-    return this.designEditors.find((d) => d.uuid === uuid)!;
-  }
-}
-
-// #endregion Sketchpad
-
-const stores: Map<string, YSketchpadStore> = new Map();
-
-// #region Commands
-
-const sketchpadCommands = {
-  "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
-    return {
-      diff: { theme },
-    };
-  },
-  "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
-    return {
-      diff: { mode },
-    };
-  },
-  "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
-    return {
-      diff: { layout },
-    };
-  },
-  "semio.sketchpad.setActiveDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
-    return {
-      diff: { activeDesignEditor: id },
-    };
-  },
-};
-
 const kitCommands = {
   "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
     return {
@@ -4292,6 +3607,449 @@ const kitCommands = {
   },
 };
 
+// #endregion Kit
+
+// #region Design Editor
+
+export interface DesignEditorId {
+  kit: KitId;
+  design: DesignId;
+}
+export interface DesignEditorSelection {
+  pieces?: PieceId[];
+  connections?: ConnectionId[];
+  port?: { piece: PieceId; designPiece?: PieceId; port: PortId };
+}
+export interface DesignEditorSelectionPiecesDiff {
+  added?: PieceId[];
+  removed?: PieceId[];
+}
+export interface DesignEditorSelectionConnectionsDiff {
+  added?: ConnectionId[];
+  removed?: ConnectionId[];
+}
+export interface DesignEditorSelectionPortDiff {
+  piece?: PieceId;
+  designPiece?: PieceId;
+  port?: PortId;
+}
+export interface DesignEditorSelectionDiff {
+  pieces?: DesignEditorSelectionPiecesDiff;
+  connections?: DesignEditorSelectionConnectionsDiff;
+  port?: DesignEditorSelectionPortDiff;
+}
+export enum DesignEditorFullscreenPanel {
+  None = "none",
+  Diagram = "diagram",
+  Model = "model",
+}
+export interface DesignEditorPresence {
+  cursor?: Coord;
+  camera?: Camera;
+}
+export interface DesignEditorHover {
+  piece?: PieceId;
+  connection?: ConnectionId;
+  port?: PortId;
+}
+export interface DesignEditorPresenceOther extends OtherPresence, DesignEditorPresence {}
+export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
+  fullscreenPanel: DesignEditorFullscreenPanel;
+}
+export interface DesignEditorDiff {
+  selection?: DesignEditorSelectionDiff;
+  presence?: DesignEditorPresence;
+  hover?: DesignEditorHover;
+  fullscreenPanel?: DesignEditorFullscreenPanel;
+}
+export interface DesignEditorStep {
+  kitDiff?: KitDiff;
+  selectionDiff?: DesignEditorSelectionDiff;
+}
+export interface DesignEditorEdit extends EditorEdit<DesignEditorStep> {}
+export interface DesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorEdit> {
+  hover?: DesignEditorHover;
+  fullscreenPanel: DesignEditorFullscreenPanel;
+}
+
+export interface DesignEditorSnapshot {
+  snapshot(): DesignEditorState;
+}
+export interface DesignEditorActions extends EditorActions<DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorPresence> {}
+export interface DesignEditorSubscriptions extends EditorSubscriptions {}
+export interface DesignEditorCommandContext extends KitCommandContext {
+  designEditor: DesignEditorState;
+  designId: DesignId;
+}
+export interface DesignEditorCommandResult {
+  diff?: DesignEditorDiff;
+  kitDiff?: KitDiff;
+}
+export interface DesignEditorStore extends StoreWithCommands<DesignEditorState, DesignEditorId, DesignEditorDiff, DesignEditorCommandContext, DesignEditorCommandResult> {}
+
+export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff => {
+  // TODO
+};
+export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
+export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
+
+
+class YDesignEditorStore {
+  public readonly uuid: string;
+  public readonly parent: YSketchpadStore;
+  public readonly yMap: YDesignEditor;
+  private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
+  private readonly transact: (fn: () => void) => void;
+  private cache?: DesignEditorState;
+  private cacheHash?: string;
+
+  constructor(parent: YSketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
+    this.uuid = uuidv4();
+    this.parent = parent;
+    this.yMap = yMap;
+    this.transact = transact;
+
+    const kit = this.parent.kit(id.kit);
+    const design = kit.design(id.design);
+    yMap.set("kit", kit.uuid);
+    yMap.set("design", design.uuid);
+
+    yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+
+    const selection = new Y.Map<any>();
+    const selectedPieces = new Y.Array<string>();
+    if (state?.selection.pieces) {
+      selectedPieces.push(state?.selection.pieces.map((piece) => pieceIdToString(piece)) || []);
+    }
+    const selectedConnections = new Y.Array<string>();
+    if (state?.selection.connections) {
+      selectedConnections.push(state?.selection.connections.map((connection) => connectionIdToString(connection)) || []);
+    }
+    const selectionPort = new Y.Map<any>();
+    if (state?.selection.port) {
+      selectionPort.set("piece", pieceIdToString(state?.selection.port.piece!));
+      selectionPort.set("port", portIdToString(state?.selection.port.port!));
+      selectionPort.set("designPiece", pieceIdToString(state?.selection.port.designPiece!));
+    }
+    selection.set("pieces", selectedPieces);
+    selection.set("connections", selectedConnections);
+    selection.set("port", selectionPort);
+    yMap.set("selection", selection);
+
+    yMap.set("isTransactionActive", false);
+    yMap.set("presence", new Y.Map<any>());
+    yMap.set("others", new Y.Array<any>());
+    yMap.set("diff", new Y.Map<any>());
+    yMap.set("currentTransactionStack", new Y.Array<any>());
+    yMap.set("pastTransactionsStack", new Y.Array<any>());
+
+    Object.entries(designEditorCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
+  }
+
+  get fullscreenPanel(): DesignEditorFullscreenPanel {
+    return this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel;
+  }
+  set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
+    this.yMap.set("fullscreenPanel", panel);
+  }
+  get selection(): DesignEditorSelection {
+    return {};
+  }
+  get isTransactionActive(): boolean {
+    return (this.yMap.get("isTransactionActive") as boolean) || false;
+  }
+  set isTransactionActive(active: boolean) {
+    this.yMap.set("isTransactionActive", active);
+  }
+  get presence(): DesignEditorPresence {
+    return {
+      cursor: {
+        x: (this.yMap.get("presenceCursorX") as number) || 0,
+        y: (this.yMap.get("presenceCursorY") as number) || 0,
+      },
+    };
+  }
+  get others(): DesignEditorPresenceOther[] {
+    return [];
+  }
+  get diff(): KitDiff {
+    return {};
+  }
+  get currentTransactionStack(): DesignEditorEdit[] {
+    const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+  get pastTransactionsStack(): DesignEditorEdit[] {
+    const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+
+  canUndo(): boolean {
+    return this.pastTransactionsStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.currentTransactionStack.length > 0 && !this.isTransactionActive;
+  }
+
+  id(): DesignEditorId {
+    const kit = this.parent.kitByUuid(this.yMap.get("kit") as string);
+    const design = kit.designByUuid(this.yMap.get("design") as string);
+    return {
+      kit: kit.id(),
+      design: design.id(),
+    } as DesignEditorId;
+  }
+
+  hash(state: DesignEditorState): string {
+    return JSON.stringify(state);
+  }
+
+  snapshot = (): DesignEditorState => {
+    const currentData = {
+      fullscreenPanel: this.fullscreenPanel,
+      selection: this.selection,
+      isTransactionActive: this.isTransactionActive,
+      canUndo: this.canUndo(),
+      canRedo: this.canRedo(),
+      presence: this.presence,
+      others: this.others,
+      diff: this.diff,
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  change = (diff: DesignEditorDiff) => {
+    this.transact(() => {
+      if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
+      if (diff.selection) {
+        const selection = this.yMap.get("selection") as Y.Map<any>;
+      }
+    });
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    (this.yMap as unknown as Y.Map<any>).observe(observer);
+    return () => {
+      (this.yMap as unknown as Y.Map<any>).unobserve(observer);
+    };
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    (this.yMap as unknown as Y.Map<any>).observeDeep(observer);
+    return () => {
+      (this.yMap as unknown as Y.Map<any>).unobserveDeep(observer);
+    };
+  };
+
+  startTransaction = () => {
+    this.isTransactionActive = true;
+  };
+
+  onTransactionStarted = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  abortTransaction = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack) {
+        currentStack.delete(0, currentStack.length);
+      }
+      this.isTransactionActive = false;
+    }
+  };
+
+  onTransactionAborted = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  finalizeTransaction = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      if (currentStack && pastStack && currentStack.length > 0) {
+        pastStack.push(currentStack.toArray());
+        currentStack.delete(0, currentStack.length);
+      }
+      this.isTransactionActive = false;
+    }
+  };
+
+  onTransactionFinalized = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  undo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
+    }
+  };
+  onUndone = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+  redo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(0);
+        currentStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(0);
+        pastStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
+    }
+  };
+  onRedone = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.designEditor.startTransaction") {
+      this.startTransaction();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.finalizeTransaction") {
+      this.finalizeTransaction();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.abortTransaction") {
+      this.abortTransaction();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.undo") {
+      this.undo();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.redo") {
+      this.redo();
+      return {} as T;
+    }
+
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
+    const parent = this.parent as YSketchpadStore;
+    const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kit))!;
+
+    const state = this.snapshot();
+    const kitState = kitStore.snapshot();
+
+    const context: DesignEditorCommandContext = {
+      designEditor: state,
+      kit: kitState,
+      designId: parent.activeDesignEditor!.design,
+      fileUrls: kitStore.fileUrls(),
+    };
+    const result = callback(context, ...rest);
+
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.kitDiff) {
+      kitStore.change(result.kitDiff);
+    }
+
+    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      const inversedSelectionDiff = inverseDesignEditorSelectionDiff(state.selection, result.diff?.selection!);
+      const inversedKitDiff = inverseKitDiff(kitState, result.kitDiff!);
+      const edit: DesignEditorEdit = {
+        do: {
+          kitDiff: result.kitDiff,
+          selectionDiff: result.diff?.selection,
+        },
+        undo: {
+          kitDiff: inversedKitDiff,
+          selectionDiff: inversedSelectionDiff,
+        },
+      };
+      currentStack.push([edit]);
+    }
+
+    return result as T;
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+
+  registerCommand(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
+    return this.registerCommand(command, callback);
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+}
+
 const designEditorCommands = {
   "semio.designEditor.setMode": (context: DesignEditorCommandContext, mode: Mode): DesignEditorCommandResult => {
     return { diff: {} };
@@ -4644,7 +4402,313 @@ const designEditorCommands = {
   },
 };
 
-// #endregion Commands
+// #endregion Design Editor
+
+// #region Sketchpad
+
+type YSketchpadVal = string | boolean | YDesignEditors;
+type YSketchpad = Y.Map<YSketchpadVal>;
+
+type YSketchpadKeysMap = {
+  mode: string;
+  theme: string;
+  layout: string;
+  activeDesignEditorDesign: YDesign;
+};
+
+export interface SketchpadChangableState {
+  mode: Mode;
+  theme: Theme;
+  layout: Layout;
+  activeDesignEditor?: DesignEditorId;
+}
+export interface SketchpadState extends SketchpadChangableState {
+  id?: string;
+  persisted?: boolean;
+}
+
+export interface SketchpadSnapshot {
+  snapshot(): SketchpadState;
+}
+export interface SketchpadDiff {
+  mode?: Mode;
+  theme?: Theme;
+  layout?: Layout;
+  activeDesignEditor?: DesignEditorId;
+}
+export interface SketchpadActions extends Actions<SketchpadDiff> {
+  createKit: (kit: Kit) => void;
+  deleteKit: (id: KitIdLike) => void;
+  createDesignEditor: (id: DesignEditorId) => void;
+  deleteDesignEditor: (id: DesignEditorId) => void;
+}
+export interface SketchpadSubscriptions extends Subscriptions {
+  onKitCreated: (subscribe: Subscribe) => Unsubscribe;
+  onKitDeleted: (subscribe: Subscribe) => Unsubscribe;
+  onDesignEditorCreated: (subscribe: Subscribe) => Unsubscribe;
+  onDesignEditorDeleted: (subscribe: Subscribe) => Unsubscribe;
+}
+export interface SketchpadCommandContext {
+  sketchpad: SketchpadState;
+}
+export interface SketchpadCommandResult {
+  diff?: SketchpadDiff;
+}
+export interface SketchpadStore extends StoreWithCommands<SketchpadState, SketchpadId, SketchpadDiff, SketchpadCommandContext, SketchpadCommandResult> {
+  kits: Map<string, KitStore>;
+  designEditors: Map<string, Map<string, DesignEditorStore>>;
+}
+
+class YSketchpadStore {
+  private readonly id: string | undefined;
+  private readonly yProviderFactory: YProviderFactory | undefined;
+  private readonly yDoc: Y.Doc;
+  private readonly ySketchpad: YSketchpad;
+  private readonly kits: Array<YKitStore>;
+  private readonly yDesignEditors: YDesignEditors;
+  private readonly designEditors: Array<DesignEditorStore>;
+  private readonly persistence?: IndexeddbPersistence;
+  private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
+  private cache?: SketchpadState;
+  private cacheHash?: string;
+  // private readonly broadcastChannel: BroadcastChannel;
+
+  private hash(state: SketchpadState): string {
+    return JSON.stringify(state);
+  }
+
+  constructor(id?: string, yProviderFactory?: YProviderFactory) {
+    this.id = id;
+    this.yProviderFactory = yProviderFactory;
+    // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
+    this.yDoc = new Y.Doc();
+    this.kits = new Array();
+    this.designEditors = new Array();
+    this.commandRegistry = new Map();
+
+    // if (id) {
+    //   this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
+    //   this.persistence!.doc.on("update", () => {
+    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID });
+    //   });
+    //   this.broadcastChannel.addEventListener("message", (msg) => {
+    //     console.log("message", msg);
+    //     const { data } = msg;
+    //     if (data.client !== this.yDoc.clientID) {
+    //     }
+    //   });
+    // } else {
+    //   this.yDoc.on("update", (update: Uint8Array) => {
+    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID, update });
+    //   });
+    //   this.broadcastChannel.addEventListener("message", (msg) => {
+    //     const { data } = msg;
+    //     if (data.client !== this.yDoc.clientID) {
+    //       Y.applyUpdate(this.yDoc, data.update);
+    //     }
+    //   });
+    // }
+
+    // if (yProviderFactory) {
+    //   yProviderFactory(this.yDoc, id);
+    // }
+
+    this.ySketchpad = this.yDoc.getMap("sketchpad");
+    this.yDesignEditors = this.yDoc.getArray("designEditors");
+    this.yDoc.transact(() => {
+      this.ySketchpad.set("mode", Mode.GUEST);
+      this.ySketchpad.set("theme", Theme.SYSTEM);
+      this.ySketchpad.set("layout", Layout.NORMAL);
+      this.ySketchpad.set("activeDesignEditor", "");
+    });
+
+    Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
+  }
+
+  id = () => {
+    return this.yDoc.clientID.toString();
+  };
+
+  snapshot = (): SketchpadState => {
+    const activeDesignEditorIdStr = this.ySketchpad.get("activeDesignEditor") as string;
+    const activeDesignEditor = activeDesignEditorIdStr ? (JSON.parse(activeDesignEditorIdStr) as DesignEditorId) : undefined;
+    const currentValues = {
+      mode: this.ySketchpad.get("mode") as Mode,
+      theme: this.ySketchpad.get("theme") as Theme,
+      layout: this.ySketchpad.get("layout") as Layout,
+      activeDesignEditor: activeDesignEditor,
+    };
+    const currentHash = this.hash(currentValues);
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentValues;
+      this.cacheHash = currentHash;
+    }
+    return this.cache;
+  };
+
+  createKit = (kit: Kit) => {
+    if (this.hasKit(kit)) {
+      throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
+    }
+    this.kits.push(new YKitStore(this, kit));
+  };
+
+  createDesignEditor = (id: DesignEditorId) => {
+    if (this.hasDesignEditor(id)) {
+      throw new Error(`Design editor (${id.kit.name}, ${id.kit.version || ""}, ${id.design.name}, ${id.design.variant || ""}, ${id.design.view || ""}) already exists.`);
+    }
+    this.yDoc.transact(() => {
+      const yDesignEditor = new Y.Map<YDesignEditorVal>();
+      this.yDesignEditors.push([yDesignEditor]);
+      const designEditor = new YDesignEditorStore(this, yDesignEditor, this.yDoc.transact, id);
+      this.designEditors.push(designEditor);
+    });
+  };
+
+  change(diff: SketchpadDiff) {
+    this.yDoc.transact(() => {
+      if (diff.mode) this.ySketchpad.set("mode", diff.mode);
+      if (diff.theme) this.ySketchpad.set("theme", diff.theme);
+      if (diff.layout) this.ySketchpad.set("layout", diff.layout);
+      if (diff.activeDesignEditor) this.ySketchpad.set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
+    });
+  }
+
+  deleteKit = (id: KitIdLike) => {};
+
+  deleteDesignEditor = (id: DesignEditorId) => {};
+
+  // Subscriptions using Yjs observers
+  onKitCreated = (subscribe: Subscribe): Unsubscribe => {};
+
+  onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
+
+  onKitDeleted = (subscribe: Subscribe): Unsubscribe => {};
+
+  onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {};
+
+  onChanged = (subscribe: Subscribe): Unsubscribe => {
+    const observer = () => subscribe();
+    this.ySketchpad.observe(observer);
+    return () => {
+      this.ySketchpad.unobserve(observer);
+    };
+  };
+
+  onChangedDeep = (subscribe: Subscribe): Unsubscribe => {};
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.sketchpad.createKit") {
+      const kit = rest[0] as Kit;
+      if (!kit.name) throw new Error("Kit name is required to create a kit.");
+      this.createKit(kit);
+      return {} as T;
+    }
+    if (command === "semio.sketchpad.createDesignEditor") {
+      const id = rest[0] as DesignEditorId;
+      this.createDesignEditor(id);
+      return {} as T;
+    }
+    if (command === "semio.sketchpad.importKit") {
+      const kitId = rest[0] as KitId;
+      const url = rest[1] as string;
+      const kitStore = this.kits.get(kitIdToString(kitId));
+      if (kitStore) {
+        await kitStore.execute("semio.kit.import", url);
+      }
+      return {} as T;
+    }
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
+    const context: SketchpadCommandContext = {
+      sketchpad: this.snapshot(),
+    };
+    const result = callback(context, ...rest);
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    return result as T;
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+
+  registerCommand(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+
+  hasKit(kit: KitIdLike): boolean {
+    return hasSameKit(
+      kit,
+      Array.from(this.kits.values()).map((kit) => kit.id()),
+    );
+  }
+
+  kit(kit: KitIdLike): YKitStore {
+    if (!this.hasKit(kit)) throw new Error(`Kit store not found for kit ${kit}`);
+    return this.kits.find((k) => areSameKit(k.id(), kit))!;
+  }
+
+  kitByUuid(uuid: string): YKitStore {
+    return this.kits.find((k) => k.uuid === uuid)!;
+  }
+
+  hasDesignEditor(designEditor: DesignEditorId): boolean {
+    return hasSameDesignEditor(
+      designEditor,
+      Array.from(this.designEditors.values()).map((designEditor) => designEditor.id()),
+    );
+  }
+
+  designEditor(designEditor: DesignEditorId): YDesignEditorStore {
+    if (!this.hasDesignEditor(designEditor)) throw new Error(`Design editor store not found for design editor ${designEditor}`);
+    return this.designEditors.find((d) => areSameDesignEditor(d.id(), designEditor))!;
+  }
+
+  designEditorByUuid(uuid: string): YDesignEditorStore {
+    return this.designEditors.find((d) => d.uuid === uuid)!;
+  }
+}
+
+const sketchpadCommands = {
+  "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
+    return {
+      diff: { theme },
+    };
+  },
+  "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
+    return {
+      diff: { mode },
+    };
+  },
+  "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
+    return {
+      diff: { layout },
+    };
+  },
+  "semio.sketchpad.setActiveDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
+    return {
+      diff: { activeDesignEditor: id },
+    };
+  },
+};
+
+// #endregion Sketchpad
+
+const stores: Map<string, YSketchpadStore> = new Map();
 
 // #region Hooks
 
