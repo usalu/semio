@@ -1,6 +1,6 @@
 import { arrayMove } from "@dnd-kit/sortable";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 
 import { Input } from "@semio/js/components/ui/Input";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
@@ -8,31 +8,16 @@ import { Slider } from "@semio/js/components/ui/Slider";
 import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import {
-  Connection,
-  ConnectionId,
-  Design,
-  findConnectionInDesign,
-  findPieceInDesign,
-  findReplacableDesignsForDesignPiece,
-  findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign,
-  findTypeInKit,
-  getIncludedDesigns,
-  parseDesignIdFromVariant,
-  Piece,
-  PieceId,
-  PortId,
-} from "../../../semio";
-import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useDesignId, useIncludedDesigns, useKit, usePiecesFromIds, usePiecesMetadata, useReplacableDesigns, useReplacableTypes } from "../../../store";
+import { Connection, ConnectionId, Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, parseDesignIdFromVariant, Piece, PieceId, PortId } from "../../../semio";
+import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useKit, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import Combobox from "../Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface DetailsProps extends ResizablePanelProps {}
 
 const DesignSection: FC = () => {
-  const { setDesign, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
-  const design = useDesign();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const design = useDesign() as Design;
 
   const handleChange = (updatedDesign: Design) => {
     setDesign(updatedDesign);
@@ -404,56 +389,23 @@ const DesignSection: FC = () => {
   );
 };
 
-const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
-  const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
-  const design = useDesign();
-  const metadata = usePiecesMetadata();
-  const pieces = usePiecesFromIds(pieceIds);
-  const includedDesigns = useIncludedDesigns();
-  const kit = useKit();
-  const designId = useDesignId();
-  
-  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
+const PiecesSection: FC = () => {
+  const { startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
+  const design = useDesign() as Design;
+  // const metadata = usePiecesMetadata();
+  const metadata = new Map();
+  const pieces = usePieces();
+  // const includedDesigns = useIncludedDesigns();
 
-  const findParentConnectionForDesignPiece = useCallback((pieceId: string): Connection | null => {
-    const includedDesign = includedDesignMap.get(pieceId);
-    if (!includedDesign || includedDesign.type !== "connected") {
-      return null;
-    }
+  // const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
 
-    const pieceMetadata = metadata.get(pieceId);
-    if (!pieceMetadata?.parentPieceId) {
-      return null;
-    }
-
-    const parentPieceId = pieceMetadata.parentPieceId;
-    const parentConn = design.connections?.find((connection: Connection) => {
-      const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designPiece?.id_ === includedDesign.designId.name;
-      const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designPiece?.id_ === includedDesign.designId.name;
-      return isParentConnecting || isParentConnected;
-    });
-
-    return parentConn || null;
-  }, [includedDesignMap, metadata, design.connections]);
-
-  const isSingle = pieceIds.length === 1;
+  const isSingle = pieces.length === 1;
   const piece = isSingle ? pieces[0] : null;
 
   // Check if we're dealing with design pieces
   const isDesignPiece = isSingle ? piece?.type.name === "design" : pieces.every((p) => p.type.name === "design");
   const hasDesignPieces = pieces.some((p) => p.type.name === "design");
   const hasMixedTypes = hasDesignPieces && pieces.some((p) => p.type.name !== "design");
-
-  // Safety check - if no valid pieces found, show a message
-  if (pieces.length === 0 || pieces.every((p) => p.type.name === "unknown")) {
-    return (
-      <TreeSection label="Pieces" defaultOpen={true}>
-        <TreeItem>
-          <p className="text-sm text-muted-foreground">No valid pieces found in selection.</p>
-        </TreeItem>
-      </TreeSection>
-    );
-  }
 
   const getCommonValue = <T,>(getter: (piece: Piece) => T | undefined): T | undefined => {
     const values = pieces.map(getter).filter((v) => v !== undefined);
@@ -500,7 +452,6 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
     finalizeTransaction();
   };
 
-  // Design-specific handlers
   const handleDesignNameChange = (value: string) => {
     if (!isDesignPiece || !piece || piece.type.name === "unknown") return;
 
@@ -770,20 +721,23 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   const hasUnfixedPieces = pieces.some((p) => !p.plane || !p.center);
 
   const selectedVariants = useMemo(() => [...new Set(pieces.map((p) => p.type.variant).filter((v): v is string => Boolean(v)))], [pieces]);
-  const availableTypes = useReplacableTypes(pieceIds, isDesignPiece ? [] : selectedVariants);
+  const availableTypes = useReplacableTypes(pieces, isDesignPiece ? [] : selectedVariants);
   const availableTypeNames = useMemo(() => [...new Set(availableTypes.map((t) => t.name))], [availableTypes]);
-  const allReplacableTypes = useReplacableTypes(pieceIds, []);
-  const availableVariants = useMemo(() =>
-    commonTypeName && !isDesignPiece
-      ? [
-          ...new Set(
-            allReplacableTypes
-              .filter((t) => t.name === commonTypeName)
-              .map((t) => t.variant)
-              .filter((v): v is string => Boolean(v)),
-          ),
-        ]
-      : [], [commonTypeName, isDesignPiece, allReplacableTypes]);
+  const allReplacableTypes = useReplacableTypes(pieces, []);
+  const availableVariants = useMemo(
+    () =>
+      commonTypeName && !isDesignPiece
+        ? [
+            ...new Set(
+              allReplacableTypes
+                .filter((t) => t.name === commonTypeName)
+                .map((t) => t.variant)
+                .filter((v): v is string => Boolean(v)),
+            ),
+          ]
+        : [],
+    [commonTypeName, isDesignPiece, allReplacableTypes],
+  );
 
   const availableDesigns = isDesignPiece && isSingle && piece ? useReplacableDesigns(piece) : [];
   const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
@@ -867,14 +821,14 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   return (
     <>
       {hasMixedTypes ? (
-        <TreeSection label={`Mixed Selection (${pieceIds.length})`} defaultOpen={true}>
+        <TreeSection label={`Mixed Selection (${pieces.length})`} defaultOpen={true}>
           <TreeItem>
             <p className="text-sm text-muted-foreground">Selection contains both design pieces and regular pieces. Select only design pieces or only regular pieces to edit properties.</p>
           </TreeItem>
         </TreeSection>
       ) : (
         <TreeSection
-          label={isDesignPiece ? (isSingle ? "Design Piece" : `Multiple Design Pieces (${pieceIds.length})`) : isSingle ? "Piece" : `Multiple Pieces (${pieceIds.length})`}
+          label={isDesignPiece ? (isSingle ? "Design Piece" : `Multiple Design Pieces (${pieces.length})`) : isSingle ? "Piece" : `Multiple Pieces (${pieces.length})`}
           defaultOpen={true}
           actions={
             hasUnfixedPieces
@@ -1331,7 +1285,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
           <Tree className="min-w-0 overflow-hidden">
             {!hasSelection && <DesignSection />}
             {hasPortSelected && <PortSection pieceId={selection.port!.piece.id_} portId={selection.port!.port.id_} />}
-            {hasPieces && !hasPortSelected && <PiecesSection pieceIds={selection.pieces || []} />}
+            {hasPieces && !hasPortSelected && <PiecesSection pieces={selection.pieces || []} />}
             {hasConnections && !hasPortSelected && <ConnectionsSection connections={selection.connections || []} />}
             {hasPieces && hasConnections && !hasPortSelected && (
               <TreeSection label="Mixed Selection" defaultOpen={true}>

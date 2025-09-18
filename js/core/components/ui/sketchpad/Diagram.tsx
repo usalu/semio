@@ -20,7 +20,7 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useState } from "react";
 
-import { arePortsCompatible, areSameConnection, Connection, Coord, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Piece, Port, TOLERANCE, Type } from "../../../semio";
+import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Piece, Port, TOLERANCE, Type } from "../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import {

@@ -150,12 +150,12 @@ export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDif
 };
 export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
   let result = [...base];
-  
+
   // Remove attributes
   if (diff.removed) {
     result = result.filter(attr => !diff.removed!.some(removedId => areSameAttribute(attr, removedId)));
   }
-  
+
   // Update attributes
   if (diff.updated) {
     for (const update of diff.updated) {
@@ -165,12 +165,12 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
       }
     }
   }
-  
+
   // Add attributes
   if (diff.added) {
     result.push(...diff.added);
   }
-  
+
   return result;
 };
 
@@ -815,11 +815,11 @@ const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): Ben
 
 const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
   let result = [...base];
-  
+
   if (diff.removed) {
     result = result.filter(benchmark => !diff.removed!.some(removedId => areSameBenchmark(benchmark, removedId)));
   }
-  
+
   if (diff.updated) {
     for (const update of diff.updated) {
       const index = result.findIndex(benchmark => areSameBenchmark(benchmark, update.id));
@@ -828,11 +828,11 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
       }
     }
   }
-  
+
   if (diff.added) {
     result.push(...diff.added);
   }
-  
+
   return result;
 };
 
@@ -935,11 +935,11 @@ export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff):
   return inverse;
 };
 export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => {
-  return { 
-    ...diff1, 
-    ...diff2, 
+  return {
+    ...diff1,
+    ...diff2,
     benchmarks: diff1.benchmarks && diff2.benchmarks ? mergeBenchmarksDiff(diff1.benchmarks, diff2.benchmarks) : diff2.benchmarks ?? diff1.benchmarks,
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes 
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes
   };
 };
 export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
@@ -1084,11 +1084,11 @@ const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
 
 const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   let result = [...base];
-  
+
   if (diff.removed) {
     result = result.filter(prop => !diff.removed!.some(removedId => areSameProp(prop, removedId)));
   }
-  
+
   if (diff.updated) {
     for (const update of diff.updated) {
       const index = result.findIndex(prop => areSameProp(prop, update.id));
@@ -1097,11 +1097,11 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
       }
     }
   }
-  
+
   if (diff.added) {
     result.push(...diff.added);
   }
-  
+
   return result;
 };
 
@@ -1247,13 +1247,13 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
   return diff;
 };
 export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
-  return { 
-    ...diff1, 
-    ...diff2, 
+  return {
+    ...diff1,
+    ...diff2,
     point: diff2.point ?? diff1.point,
     direction: diff2.direction ?? diff1.direction,
     props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : diff2.props ?? diff1.props,
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes 
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes
   };
 };
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
