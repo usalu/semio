@@ -22,7 +22,7 @@
 import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { createContext, FC, ReactNode, useContext } from "react";
 import { DesignId } from "../../semio";
-import { Layout, Theme, useActiveDesignEditor, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
+import { Layout, SketchpadScope, Theme, useActiveDesignEditor, useDesigns, useLayout, useSketchpadCommands, useSketchpadScope, useTheme } from "../../store";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
 import { Toggle } from "./Toggle";
@@ -46,14 +46,10 @@ export const useNavbar = () => {
 
 interface NavbarProps {
   toolbarContent?: ReactNode;
-  onWindowEvents?: {
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-  };
 }
 
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
+const Navbar: FC<NavbarProps> = ({ toolbarContent }) => {
+  const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const { setTheme, setLayout } = useSketchpadCommands();
   const { navbarToolbar } = useNavbar();
   const layout = useLayout();
@@ -104,7 +100,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
   // const currentDesignKey = getDesignKey(designId);
 
   return (
-    <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
+    <div id="navbar" className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag]`} style={{ WebkitAppRegion: "drag" }}>
       <div className="flex items-center gap-2">
         {/* Back button */}
         {/* <Toggle variant="outline" tooltip="Previous design" disabled={sketchpadState.designHistory.length === 0} onClick={previousDesign} className="h-8 w-8 p-0">

@@ -3,7 +3,7 @@ import { Author, Design, DesignId, KitId } from "../../../semio";
 import { DesignEditorId, DesignScopeProvider, useKitCommands, useSketchpadCommands } from "../../../store";
 import DesignEditor from "./DesignEditor";
 
-import { default as Tambour } from "../../../../../assets/semio/type_tambour.json";
+import { Tambour } from "@semio/assets";
 
 const KitEditor: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);

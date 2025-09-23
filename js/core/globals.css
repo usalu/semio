@@ -446,6 +446,9 @@
         crosshair !important;
     } */
   }
+  /* #navbar {
+    -webkit-app-region: window-drag;
+  } */
 }
 
 .dark {
@@ -685,3 +688,7 @@
   --color-popover-foreground: var(--foreground);
   --color-border: var(--accent);
 }
+
+/* #navbar {
+  -webkit-app-region: window-drag;
+} */

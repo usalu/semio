@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import path from "node:path";
 import started from "electron-squirrel-startup";
+import path from "node:path";
 import os from "os";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -14,7 +14,7 @@ const createWindow = () => {
     height: 800,
     autoHideMenuBar: true,
     // TODO: Make webkit app region work for electron
-    // frame: false,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

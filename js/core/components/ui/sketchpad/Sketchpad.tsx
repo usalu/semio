@@ -22,7 +22,7 @@ import { FC, ReactNode, useEffect, useState } from "react";
 import { TooltipProvider } from "../Tooltip";
 
 import { Kit, KitId } from "../../../semio";
-import { KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme, YProviderFactory } from "../../../store";
+import { KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
 import { NavbarContext } from "../Navbar";
 import KitEditor from "./KitEditor";
 
@@ -94,17 +94,13 @@ const SketchpadInner: FC = () => {
 interface SketchpadProps {
   id?: string;
   yProviderFactory?: YProviderFactory;
-  onWindowEvents?: {
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-  };
+  onWindowEvents?: WindowEvents;
 }
 
 const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents }) => {
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory}>
+      <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>
         <SketchpadInner />
       </SketchpadScopeProvider>
     </TooltipProvider>

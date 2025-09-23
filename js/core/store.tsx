@@ -4723,9 +4723,8 @@ export interface DesignEditorHover {
   connection?: ConnectionId;
   port?: PortId;
 }
-export interface DesignEditorPresenceOther extends OtherPresence, DesignEditorPresence {}
-export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
-  fullscreenPanel: DesignEditorFullscreenPanel;
+export interface DesignEditorPresenceOther extends DesignEditorPresence {
+  name: string;
 }
 export interface DesignEditorDiff {
   selection?: DesignEditorSelectionDiff;
@@ -4737,10 +4736,12 @@ export interface DesignEditorStep {
   kitDiff?: KitDiff;
   selectionDiff?: DesignEditorSelectionDiff;
 }
-export interface DesignEditorEdit extends EditorEdit<DesignEditorStep> {}
-export interface YDesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorEdit> {
-  hover?: DesignEditorHover;
+export interface YDesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
+  selection?: DesignEditorSelection;
+  hover?: DesignEditorHover;
+  presence?: DesignEditorPresence;
+  others: DesignEditorPresenceOther[];
 }
 
 export interface DesignEditorCommandContext extends KitCommandContext {
@@ -5981,17 +5982,23 @@ function useSketchpadStore(id?: string) {
   return store;
 }
 
-type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory };
+// TODO: Find clean way to hide Scope and extra hook and still pass window events to navbar
+export type WindowEvents = {
+  minimize: () => void;
+  maximize: () => void;
+  close: () => void;
+};
+export type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory; onWindowEvents?: WindowEvents };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
   const id = props.id || uuidv4();
   if (!stores.has(id)) {
     const store = new SketchpadStore(props.id, props?.yProviderFactory);
     stores.set(id, store);
   }
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id } }, props.children as any);
+  return React.createElement(SketchpadScopeContext.Provider, { value: { id, onWindowEvents: props.onWindowEvents } }, props.children as any);
 };
-const useSketchpadScope = () => useContext(SketchpadScopeContext);
+export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : identitySelector);

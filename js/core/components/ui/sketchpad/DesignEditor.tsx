@@ -21,12 +21,12 @@
 
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { Info, MessageCircle, Terminal, Wrench } from "lucide-react";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { ReactFlowProvider } from "@xyflow/react";
-import { DesignId, TypeId } from "../../../semio";
+import { ReactFlowProvider, ReactFlowInstance } from "@xyflow/react";
+import { DesignId, TypeId, ICON_WIDTH } from "../../../semio";
 import { DesignEditorFullscreenPanel, useDesignEditorCommands, useDesignEditorFullscreen } from "../../../store";
 import Navbar, { useNavbar } from "../Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
@@ -74,6 +74,9 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   // Drag and drop state
   const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<TypeId | null>(null);
   const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<DesignId | null>(null);
+
+  // React Flow instance ref for coordinate conversion
+  const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
   // Hotkeys for common actions
   useHotkeys("ctrl+a", () => selectAll());
@@ -124,20 +127,31 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;
 
-    if (over && over.id === "diagram-drop-zone") {
+    if (over && over.id === "diagram-drop-zone" && reactFlowInstanceRef.current) {
       if (!(event.activatorEvent instanceof PointerEvent)) {
         return;
       }
-      const coordinateEvent = new CustomEvent("semio-drag-end", {
-        detail: {
-          clientX: event.activatorEvent.clientX + delta.x,
-          clientY: event.activatorEvent.clientY + delta.y,
-          activeDraggedTypeId,
-          activeDraggedDesignId,
-        },
+
+      const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
+        x: event.activatorEvent.clientX + delta.x,
+        y: event.activatorEvent.clientY + delta.y,
       });
 
-      document.dispatchEvent(coordinateEvent);
+      if (activeDraggedTypeId) {
+        const piece = {
+          id_: `piece-${Date.now()}`,
+          type: activeDraggedTypeId,
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+        };
+        addPiece(piece).catch(() => {});
+      } else if (activeDraggedDesignId) {
+        const piece = {
+          id_: `design-${Date.now()}`,
+          design: activeDraggedDesignId,
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+        };
+        addPiece(piece).catch(() => {});
+      }
     }
 
     setActiveDraggedTypeId(null);
@@ -202,7 +216,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           <ReactFlowProvider>
             <ResizablePanelGroup direction="horizontal">
               <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
-                <Diagram />
+                <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
               </ResizablePanel>
               <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
               <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={toggleModelFullscreen}>

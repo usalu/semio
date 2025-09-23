@@ -13,6 +13,7 @@ import {
   NodeProps,
   Position,
   ReactFlow,
+  ReactFlowInstance,
   Connection as RFConnection,
   useReactFlow,
   ViewportPortal,
@@ -785,7 +786,11 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   return { nodes: [...pieceNodes, ...designNodes], edges: connectionEdges };
 };
 
-const Diagram: FC = () => {
+interface DiagramProps {
+  reactFlowInstanceRef: React.MutableRefObject<ReactFlowInstance | null>;
+}
+
+const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const {
     deselectAll,
     selectPiece,
@@ -833,6 +838,11 @@ const Diagram: FC = () => {
   const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
   const fullscreen = fullscreenPanel === DesignEditorFullscreenPanel.Diagram;
 
+  // Set the React Flow instance ref for use in DesignEditor
+  useEffect(() => {
+    reactFlowInstanceRef.current = reactFlowInstance;
+  }, [reactFlowInstance, reactFlowInstanceRef]);
+
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && dragState) {
@@ -845,33 +855,6 @@ const Diagram: FC = () => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [dragState, abortTransaction]);
 
-  useEffect(() => {
-    const handleDragEnd = (event: CustomEvent) => {
-      const { clientX, clientY, activeDraggedTypeId, activeDraggedDesignId } = event.detail;
-      const { x, y } = reactFlowInstance.screenToFlowPosition({
-        x: clientX,
-        y: clientY,
-      });
-      if (activeDraggedTypeId) {
-        const piece = {
-          id_: `piece-${Date.now()}`,
-          type: activeDraggedTypeId,
-          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
-        };
-        addPiece(piece).catch(() => {});
-      } else if (activeDraggedDesignId) {
-        const piece = {
-          id_: `design-${Date.now()}`,
-          design: activeDraggedDesignId,
-          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
-        };
-        addPiece(piece).catch(() => {});
-      }
-    };
-
-    document.addEventListener("semio-drag-end", handleDragEnd as EventListener);
-    return () => document.removeEventListener("semio-drag-end", handleDragEnd as EventListener);
-  }, [reactFlowInstance, addPiece]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation();

@@ -1,3 +1,7 @@
-@import 'tailwindcss' source('../core');
-@import '@semio/js/globals.css';
-@import '@xyflow/react/dist/style.css';
+@import "tailwindcss" source("../core");
+@import "@semio/js/globals.css";
+@import "@xyflow/react/dist/style.css";
+
+/* #navbar {
+  -webkit-app-region: window-drag;
+} */
