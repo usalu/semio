@@ -46,39 +46,39 @@ Even after a Wasp Aggregation is generated, individual **Parts 🧩** can still 
 
 ## Conversion Methodologies
 
-Semio and Wasp approach modular design differently, but together they form a **hybrid workflow 🔗**
+Semio and Wasp both deal with modular design but they emphasize **different goals** and **different approaches**
 
-### 🧩 Semio — Define the System
+---
 
-- Organize **Kits 🎒**
-- Create reusable **Types 📦**
-- Place them as **Pieces 🧩**
-- Specify **Ports 🔌** for snapping logic
-- Build structured **Designs 🏗️**
-- Carry **metadata, variants 🎨, and flexibility** at every stage
+### 🧩 Semio — System Definition
+
+Semio focuses on **defining the system** behind modular design  
+Its strength lies in organizing and structuring the building logic so that assemblies remain flexible and parametric
+
+- Organize **Kits 🎒** as curated sets of building blocks
+- Create reusable **Types 📦** that act as molds for Pieces
+- Specify **Ports 🔌** to describe how blocks snap together
+- Place **Pieces 🧩** as transformed instances of Types
+- Assemble connected **Designs 🏗️** as full modular graphs
+- Maintain **metadata, and flexibility** across the workflow
+
+Semio is about clarity, reusability, and embedding design intent
 
 👉 See the [**Think in Semio**](https://docs.semio-tech.com/think-in-semio/) page for more
 
 ---
 
-### 🐝 Wasp — Execute the Assembly
+### 🐝 Wasp — Assembly Execution
 
-- Define **Parts 📦** with fixed **Conns 🔌**
-- Apply explicit **Graph Grammar Rules 🔗**
-- Run **stochastic Aggregations 🎲**
-- Explore many possible **assemblies quickly ⚡**
+Wasp focuses on **executing the assembly** process  
+Its strength lies in generating large-scale aggregations quickly using explicit rules and stochastic methods
 
----
+- Define **Parts 📦** with fixed geometry and Conns
+- Write explicit **Graph Grammar Rules 🔗** that dictate how Parts attach
+- Run **Aggregations 🎲** to assemble structures under rules and constraints
+- Explore many design options through **stochastic variation and restrictions**
 
-### ⚖️ Outputs Compared
-
-- **Semio Design 🏗️** → captures **intent, modular logic, and metadata**
-- **Wasp Aggregation 🐝** → delivers the **concrete result** of rule-based assembly
-
-By linking the two, you get the **best of both worlds 🌍**
-
-- **Semio** for design structure, logic, and flexibility
-- **Wasp** for fast stochastic exploration and execution
+Wasp is about speed, exploration, and generating assemblies from fixed rules
 
 ---
 
@@ -88,12 +88,12 @@ By linking the two, you get the **best of both worlds 🌍**
 
 | Wasp Term                  | Semio Term    | Meaning in Practice                                                   |
 | -------------------------- | ------------- | --------------------------------------------------------------------- |
+| 🚫 _(no direct Wasp term)_ | 🎒 Kit        | A set of Types and Designs that belong together                       |
+| 🔌 Conn (Connection Point) | 🔌 Port       | The snap spots on each brick where other bricks can attach            |
 | 📦 Part                    | 📦 Type       | The reusable distinct brick mold                                      |
 | 🧩 Transformed Part        | 🧩 Piece      | A specific brick placed in the model with a fixed position and ID     |
-| 🔌 Conn (Connection Point) | 🔌 Port       | The snap spots on each brick where other bricks can attach            |
 | 🔗 Graph Grammar Rule      | 🔗 Connection | The rulebook that says which Ports can connect to which               |
 | 🏗️ Aggregation (Aggr)      | 🏗️ Design     | The assembled structure — all Parts and Pieces joined under the rules |
-| 🚫 _(no direct Wasp term)_ | 🎒 Kit        | A set of Types and Designs that belong together                       |
 
 ---
 
@@ -101,11 +101,15 @@ By linking the two, you get the **best of both worlds 🌍**
 
 The Wasp integration in Semio creates a **two-way workflow** between the two systems
 
-- **Semio 🧩** builds modular designs as **graph-based assemblies** with Types, Pieces, Ports, and Connections
-- **Wasp 🐝** generates **aggregations of Parts** through rule-based stochastic placement
+- **Semio Design 🏗️** → captures **intent, modular logic, and metadata**
+- **Wasp Aggregation 🐝** → delivers the **concrete result** of rule-based assembly
 
-This integration allows you to **export a Semio Design into Wasp** for aggregation and then **re-import the result back into Semio** as a structured Design graph  
-Semio provides clarity, rules, and modularity, while Wasp contributes flexible, generative assemblies
+By linking the two, you get the best of both worlds 🌍
+
+- **Semio** for design structure, logic, and flexibility
+- **Wasp** for fast stochastic exploration and execution
+
+This integration allows you to export a Semio Design into Wasp for aggregation and then re-import the result back into Semio
 
 ---
 
@@ -120,13 +124,13 @@ Export **Semio Types** into **Wasp Parts**
 
 - `Ty` → **Type** (Type definition in Semio)
 - `Ob` → **Object** (geometry associated with the Type)
-- `Rt` → **Rotations** (degrees of freedom from Ports)
+- `Rt` → **Rotations** ?
 
 **Outputs**
 
 - `Part` → **Part** (Wasp-ready Part definition)
 - `Rules` → **Rules** (connection grammar for Parts)
-- `Gr` → **Graph Grammar** (set of connection groups)
+- `Gr` → **Graph Grammar** ?
 
 ---
 
@@ -218,17 +222,6 @@ This prepares the data for translation into Wasp’s workflow
 In Wasp, **Parts 📦** must include not only geometry and connection planes but also **3D connection logic**  
 Semio’s **Ports 🔌** provide this by carrying information about **locking and rotational degrees of freedom**
 
-**Inputs**
-
-- `Ty` → **Types**
-- `Ob` → **Objects** (3D geometry)
-- `Rt` → **Rotation locks**
-
-**Outputs**
-
-- `Part` → **Wasp Parts**
-- `Rules` → **Wasp connection rules**
-
 This ensures Semio’s flexible Ports become static, well-defined Wasp Conns
 
 ![📤 Type to part](/Type-to-part.png)
@@ -239,19 +232,6 @@ This ensures Semio’s flexible Ports become static, well-defined Wasp Conns
 
 With Parts and Rules generated, we can run a **stochastic aggregation 🎲** in Wasp
 
-**Inputs**
-
-- `Part` → **Wasp Parts**
-- `Rules` → **Graph Grammar rules**
-
-**Process**
-
-- Wasp assembles the structure step by step following the grammar
-
-**Output**
-
-- `Aggr` → **Aggregation** representing a complete assembled design
-
 💡 Use the **Filter Part 🚦** component in Wasp to control which Types are included in the aggregation and explore design variations
 
 ## ![📤 Wasp Aggregation](/Wasp-aggregation.png)
@@ -259,17 +239,6 @@ With Parts and Rules generated, we can run a **stochastic aggregation 🎲** in 
 ### 🔹 Step 4 — Bringing Aggregation Back into Semio
 
 The final step is to re-import the **Wasp Aggregation 🐝** back into **Semio 🧩**
-
-**Inputs**
-
-- `Ty` → **Types**
-- `Part` → **Wasp Parts**
-- `Aggr` → **Aggregation**
-- `Rt` → **Port rotations**
-
-**Output**
-
-- `Dn` → **Design** that mirrors the Wasp Aggregation inside Semio
 
 ## ![📤 Aggr to Design](/Aggr-to-design.png)
 
