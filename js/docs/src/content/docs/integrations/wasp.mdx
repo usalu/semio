@@ -9,11 +9,11 @@ sidebar:
 
 ## ✨ Why Integration Matters
 
-**Wasp** is a powerful engine for generating **stochastic aggregations**  
-It assembles modular **Parts** into large-scale, rule-based structures with **speed ⚡** and **flexibility 🔀**
+**Wasp** is a powerful engine for generating aggregations of modular parts through stochastic processes
+It assembles modular Parts into large-scale, rule-based structures with speed and flexibility
 
-**Semio** complements this by providing a **seamless integration bridge** into Wasp’s workflow  
-More than that, Semio **extends Wasp’s functionality 🛠️**, making complex aggregation setups **easier to define, manage, and reuse**
+**Semio** complements this by providing a seamless integration bridge into Wasp’s workflow  
+More than that, Semio **extends Wasp’s functionality 🛠️** making complex aggregation setups easier to define, manage, and reuse
 
 ---
 
@@ -25,14 +25,14 @@ The real strength of integration lies in the **unified Semio workflow**
 - Move into **Wasp 🐝** → run stochastic aggregation
 - Return with an **Aggregation → Design 🏗️** in Semio for further parametric refinement
 
-Or begin in **Wasp 🐝** and bring the Aggregation into **Semio 🧩** to unlock **extra layers of intelligence, metadata, and control**
+Or begin in **Wasp 🐝** and bring the Aggregation into **Semio 🧩** to unlock extra layers of intelligence, metadata, various integrations and control
 
 ---
 
 ### 🔌 Port Families
 
 One of Semio’s biggest contributions is the idea of **Port Families**  
-Instead of manually writing **long and complex graph grammars 📜** in Wasp, Port Families allow **compatible Ports to automatically recognize each other**  
+Instead of manually writing long and complex graph grammars 📜 in Wasp, Port Families allow compatible Ports to automatically recognize each other  
 This reduces setup time ⏱️ and makes the aggregation process more intuitive 🤝
 
 ---
@@ -40,8 +40,7 @@ This reduces setup time ⏱️ and makes the aggregation process more intuitive 
 ### ⚙️ Connection Parameters
 
 Semio extends Wasp with **Connection Parameters**  
-Even after a Wasp Aggregation is generated, individual **Parts 🧩** can still be **transformed, rotated, or adjusted** through Semio’s parametric logic  
-This adds a **layer of flexibility 🔀** that goes far beyond Wasp’s **static connection rules**
+Even after a Wasp Aggregation is generated, individual **Parts 🧩** can still be **transformed, rotated, or adjusted** through Semio’s parametric logic
 
 ---
 
@@ -87,14 +86,14 @@ By linking the two, you get the **best of both worlds 🌍**
 
 ## 🐝 Wasp ↔️ Semio Terminologies
 
-| Wasp Term                  | Semio Term    | Meaning in Practice                                                                                  |
-| -------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
-| 📦 Part                    | 📦 Type       | The master brick mold — defines the geometry and its connectors                                      |
-| 🧩 Transformed Part        | 🧩 Piece      | A specific brick placed in the model — same mold (Part/Type), but with a fixed position and rotation |
-| 🔌 Conn (Connection Point) | 🔌 Port       | The snap spots on each brick where other bricks can attach                                           |
-| 🔗 Graph Grammar Rule      | 🔗 Connection | The rulebook that says which Ports can connect to which — the logic of snapping                      |
-| 🏗️ Aggregation (Aggr)      | 🏗️ Design     | The assembled structure — all Parts and Pieces joined under the rules                                |
-| 🚫 _(no direct Wasp term)_ | 🎒 Kit        | A set of Types that belong together, like a curated LEGO set                                         |
+| Wasp Term                  | Semio Term    | Meaning in Practice                                                   |
+| -------------------------- | ------------- | --------------------------------------------------------------------- |
+| 📦 Part                    | 📦 Type       | The reusable distinct brick mold                                      |
+| 🧩 Transformed Part        | 🧩 Piece      | A specific brick placed in the model with a fixed position and ID     |
+| 🔌 Conn (Connection Point) | 🔌 Port       | The snap spots on each brick where other bricks can attach            |
+| 🔗 Graph Grammar Rule      | 🔗 Connection | The rulebook that says which Ports can connect to which               |
+| 🏗️ Aggregation (Aggr)      | 🏗️ Design     | The assembled structure — all Parts and Pieces joined under the rules |
+| 🚫 _(no direct Wasp term)_ | 🎒 Kit        | A set of Types and Designs that belong together                       |
 
 ---
 
@@ -232,6 +231,8 @@ Semio’s **Ports 🔌** provide this by carrying information about **locking an
 
 This ensures Semio’s flexible Ports become static, well-defined Wasp Conns
 
+![📤 Type to part](/Type-to-part.png)
+
 ---
 
 ### 🔹 Step 3 — Stochastic Aggregation in Wasp
@@ -253,7 +254,7 @@ With Parts and Rules generated, we can run a **stochastic aggregation 🎲** in 
 
 💡 Use the **Filter Part 🚦** component in Wasp to control which Types are included in the aggregation and explore design variations
 
----
+## ![📤 Wasp Aggregation](/Wasp-aggregation.png)
 
 ### 🔹 Step 4 — Bringing Aggregation Back into Semio
 
@@ -269,5 +270,7 @@ The final step is to re-import the **Wasp Aggregation 🐝** back into **Semio �
 **Output**
 
 - `Dn` → **Design** that mirrors the Wasp Aggregation inside Semio
+
+## ![📤 Aggr to Design](/Aggr-to-design.png)
 
 ---
