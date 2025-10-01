@@ -19,12 +19,65 @@
 
 // #endregion
 import { FC, ReactNode, useEffect, useState } from "react";
+import { MemoryRouter, Routes, Route, Outlet } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
 import { Kit, KitId } from "../../../semio";
 import { KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
 import { NavbarContext } from "../Navbar";
 import KitEditor from "./KitEditor";
+import DesignEditor from "./DesignEditor";
+import TypeEditor from "./TypeEditor";
+
+const Home: FC = ({  }) => {
+  return (
+    <div>
+      Home
+    </div>
+  );
+};
+
+const KitRoute: FC = () => {
+  let { store, name, version } = useParams();
+  // let [searchParams, setSearchParams] = useSearchParams();
+
+  return (
+    <KitScopeProvider id={{name,version}}>
+      <Outlet/>
+    </ KitScopeProvider>
+  )
+}
+
+const DesignRoute: FC = () => {
+  let { uuid} = useParams();
+  // let [searchParams, setSearchParams] = useSearchParams();
+
+  return (
+    <DesignScopeProvider uuid={uuid}>
+      <Outlet/>
+    </ DesignScopeProvider>
+  )
+}
+
+const TypeRoute: FC = () => {
+  let { uuid} = useParams();
+  // let [searchParams, setSearchParams] = useSearchParams();
+
+  return (
+    <DesignScopeProvider uuid={uuid}>
+      <Outlet/>
+    </ DesignScopeProvider>
+  )
+}
+
+
+const Home: FC = ({  }) => {
+  return (
+    <div>
+      Home
+    </div>
+  );
+};
 
 const SketchpadInner: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
@@ -101,13 +154,23 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
   return (
     <TooltipProvider>
       <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>
-        <SketchpadInner />
+        <MemoryRouter>
+          <Routes index element={<Home />}>
+              <Route path=":store/:name/:version" element={<KitRoute />}>
+                <Route index element={<KitEditor />} />
+                <Route path="d/:uuid" element={<DesignRoute />}>
+                  <Route index element={<DesignEditor />} />
+                </Route>
+                <Route path="t/:uuid" element={<TypeRoute />} >
+                  <Route index element={<TypeEditor />} />
+                </Route>
+              </Route>
+              
+          </Routes>
+        </MemoryRouter>,
       </SketchpadScopeProvider>
     </TooltipProvider>
   );
 };
 
 export default Sketchpad;
-
-// Export Sketchpad state management types for external use
-export {};

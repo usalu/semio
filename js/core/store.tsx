@@ -159,6 +159,7 @@ export enum Layout {
 
 // #region General
 
+export type Uuid = string;
 export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
@@ -5847,7 +5848,6 @@ class SketchpadStore {
 
   deleteDesignEditor = (id: DesignEditorId) => {};
 
-  // Subscriptions using Yjs observers
   onKitCreated = (subscribe: Subscribe): Unsubscribe => {};
 
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
@@ -5971,9 +5971,21 @@ const sketchpadCommands = {
   },
 };
 
-const stores: Map<string, SketchpadStore> = new Map();
+const stores: Map<Uuid, SketchpadStore> = new Map();
 
-function useSketchpadStore(id?: string) {
+const loadPersistedKits = () => {
+  // TODO: proper edge case handeling
+  const semioRaw = localStorage.getItem("semio");
+  if (semio) {
+    const semio =JSON.parse(semio)
+    const { kits } = semio
+    for (const kit in kits) {
+
+    }
+  }
+}
+
+function useSketchpadStore(id?: Uuid) {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");

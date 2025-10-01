@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from "react";
+import { Outlet } from "react-router";
 import { Author, Design, DesignId, KitId } from "../../../semio";
 import { DesignEditorId, DesignScopeProvider, useKitCommands, useSketchpadCommands } from "../../../store";
 import DesignEditor from "./DesignEditor";
@@ -6,6 +7,10 @@ import DesignEditor from "./DesignEditor";
 import { Tambour } from "@semio/assets";
 
 const KitEditor: FC = () => {
+
+  let { store, name, version } = useParams();
+  let [searchParams, setSearchParams] = useSearchParams();
+
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const { createDesign, createType, createAuthor } = useKitCommands();
   const { createDesignEditor, setActiveDesignEditor } = useSketchpadCommands();
@@ -49,11 +54,13 @@ const KitEditor: FC = () => {
 
   if (isImporting) return null;
 
-  return (
-    <DesignScopeProvider id={defaultDesignId}>
-      <DesignEditor />
-    </DesignScopeProvider>
-  );
+  return <Outlet />
+
+  // return (
+  //   <DesignScopeProvider id={defaultDesignId}>
+  //     <DesignEditor />
+  //   </DesignScopeProvider>
+  // );
 };
 
 export default KitEditor;

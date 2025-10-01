@@ -50,63 +50,12 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ toolbarContent }) => {
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
-  const { setTheme, setLayout } = useSketchpadCommands();
-  const { navbarToolbar } = useNavbar();
-  const layout = useLayout();
-  const theme = useTheme();
-  const designId = useActiveDesignEditor();
-  const availableDesigns = useDesigns();
-  // Create a unique key for each design
-  const getDesignKey = (design: DesignId): string => {
-    const parts = [design.name];
-    if (design.variant && design.variant !== "default") parts.push(design.variant);
-    if (design.view && design.view !== "default") parts.push(design.view);
-    return parts.join("|"); // Use | as separator to avoid conflicts
-  };
-
-  // Create display text for each design
-  const getDesignDisplayText = (design: DesignId): string => {
-    if (!availableDesigns) return design.name;
-
-    // Check if there are multiple designs with the same name
-    const sameNameDesigns = availableDesigns.filter((d) => d.name === design.name);
-
-    if (sameNameDesigns.length === 1) {
-      // Only one design with this name, show just the name
-      return design.name;
-    } else {
-      // Multiple designs with same name, include variant/view for disambiguation
-      const parts = [design.name];
-      if (design.variant && design.variant !== "default") {
-        parts.push(design.variant);
-      }
-      if (design.view && design.view !== "default") {
-        parts.push(design.view);
-      }
-      return parts.join(" - ");
-    }
-  };
-
-  // Handle design selection using the compound key
-  const handleDesignChange = (designKey: string) => {
-    // if (!availableDesigns || !onDesignIdChange) return;
-    // const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
-    // if (selectedDesign) {
-    //   onDesignIdChange(selectedDesign);
-    // }
-  };
-
-  // Get current design key for the selected value
-  // const currentDesignKey = getDesignKey(designId);
+  let navigate = useNavigate();
 
   return (
     <div id="navbar" className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag]`} style={{ WebkitAppRegion: "drag" }}>
       <div className="flex items-center gap-2">
-        {/* Back button */}
-        {/* <Toggle variant="outline" tooltip="Previous design" disabled={sketchpadState.designHistory.length === 0} onClick={previousDesign} className="h-8 w-8 p-0">
-          <ArrowLeft size={16} />
-        </Toggle> */}
-
+        
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -194,15 +143,6 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent }) => {
             },
           ]}
         />
-
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="https://github.com/usalu.png" />
-          <AvatarFallback>US</AvatarFallback>
-        </Avatar>
-
-        <Toggle variant="outline" tooltip="Share">
-          <Share2 />
-        </Toggle>
 
         {onWindowEvents && (
           <div className="flex items-center gap-2 ml-4">

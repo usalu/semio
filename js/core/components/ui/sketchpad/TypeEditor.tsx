@@ -19,4 +19,22 @@
 
 // #endregion
 
-// In the future the type editor is used to update one type at a time.
+import { FC, useEffect, useState } from "react";
+import { Outlet } from "react-router";
+import { Author, Design, DesignId, KitId } from "../../../semio";
+import { TypeEditorId, TypeScopeProvider, useKitCommands, useSketchpadCommands } from "../../../store";
+
+
+const TypeEditor: FC = () => {
+
+  let { uuid } = useParams();
+//   let [searchParams, setSearchParams] = useSearchParams();
+
+  return (
+    <TypeScopeProvider id={defaultTypeId}>
+       Type Editor
+    </TypeScopeProvider>
+  );
+};
+
+export default TypeEditor;

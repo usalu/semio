@@ -54,6 +54,8 @@ interface VisiblePanels {
 }
 
 const DesignEditor: FC<DesignEditorProps> = () => {
+  let { uuid } = useParams();
+
   const { setToolbar } = useNavbar();
   const fullscreenPanel = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece, execute } = useDesignEditorCommands();
