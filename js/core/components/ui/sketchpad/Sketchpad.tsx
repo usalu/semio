@@ -38,11 +38,11 @@ const Home: FC = ({  }) => {
 };
 
 const KitRoute: FC = () => {
-  let { store, name, version } = useParams();
+  let { uuid } = useParams();
   // let [searchParams, setSearchParams] = useSearchParams();
 
   return (
-    <KitScopeProvider id={{name,version}}>
+    <KitScopeProvider uuid={uuid}>
       <Outlet/>
     </ KitScopeProvider>
   )
@@ -136,9 +136,7 @@ const SketchpadInner: FC = () => {
       }}
     >
       <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-        <KitScopeProvider id={defaultKitId}>
           <KitEditor />
-        </KitScopeProvider>
       </div>
     </NavbarContext.Provider>
   );
@@ -156,7 +154,7 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
       <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>
         <MemoryRouter>
           <Routes index element={<Home />}>
-              <Route path=":store/:name/:version" element={<KitRoute />}>
+              <Route path=":uuid" element={<KitRoute />}>
                 <Route index element={<KitEditor />} />
                 <Route path="d/:uuid" element={<DesignRoute />}>
                   <Route index element={<DesignEditor />} />
@@ -165,7 +163,6 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
                   <Route index element={<TypeEditor />} />
                 </Route>
               </Route>
-              
           </Routes>
         </MemoryRouter>,
       </SketchpadScopeProvider>

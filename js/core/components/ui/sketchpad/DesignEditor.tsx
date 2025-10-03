@@ -60,7 +60,6 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const fullscreenPanel = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece, execute } = useDesignEditorCommands();
 
-  // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
     workbench: false,
     details: false,
@@ -73,14 +72,11 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const [chatWidth, setChatWidth] = useState(230);
   const [consoleHeight, setConsoleHeight] = useState(200);
 
-  // Drag and drop state
   const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<TypeId | null>(null);
   const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<DesignId | null>(null);
 
-  // React Flow instance ref for coordinate conversion
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
-  // Hotkeys for common actions
   useHotkeys("ctrl+a", () => selectAll());
   useHotkeys("ctrl+d", () => deselectAll());
   useHotkeys("delete", () => deleteSelected());

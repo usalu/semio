@@ -4737,7 +4737,7 @@ export interface DesignEditorStep {
   kitDiff?: KitDiff;
   selectionDiff?: DesignEditorSelectionDiff;
 }
-export interface YDesignEditorState {
+export interface DesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
   selection?: DesignEditorSelection;
   hover?: DesignEditorHover;
@@ -4746,7 +4746,7 @@ export interface YDesignEditorState {
 }
 
 export interface DesignEditorCommandContext extends KitCommandContext {
-  designEditor: YDesignEditorState;
+  designEditor: DesignEditorState;
   designId: DesignId;
 }
 export interface DesignEditorCommandResult {
@@ -4799,10 +4799,10 @@ class DesignEditorStore {
   public readonly yMap: YDesignEditor;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly transact: (fn: () => void) => void;
-  private cache?: YDesignEditorState;
+  private cache?: DesignEditorState;
   private cacheHash?: string;
 
-  constructor(parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: YDesignEditorState) {
+  constructor(parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yMap = yMap;
@@ -4944,11 +4944,11 @@ class DesignEditorStore {
     } as DesignEditorId;
   }
 
-  hash(state: YDesignEditorState): string {
+  hash(state: DesignEditorState): string {
     return JSON.stringify(state);
   }
 
-  snapshot = (): YDesignEditorState => {
+  snapshot = (): DesignEditorState => {
     const currentData = {
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
@@ -5641,8 +5641,8 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
-export function useDesignEditor<T>(selector?: (state: YDesignEditorState) => T, id?: DesignEditorId): T | YDesignEditorState {
-  return useSyncDeep<YDesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
+export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
+  return useSyncDeep<DesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
 }
 
 export function useDesignEditorSelection(): DesignEditorSelection {
@@ -5985,9 +5985,9 @@ const loadPersistedKits = () => {
   }
 }
 
-function useSketchpadStore(id?: Uuid) {
+function useSketchpadStore(uuid?: Uuid) {
   const scope = useSketchpadScope();
-  const storeId = scope?.id ?? id;
+  const storeUuid = scope?.uuid ?? uuid;
   if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
   const store = stores.get(storeId)!;
