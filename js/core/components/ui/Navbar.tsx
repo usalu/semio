@@ -19,13 +19,11 @@
 
 // #endregion
 
-import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
+import { AppWindow, Fingerprint, Home, Minus, Moon, Square, Sun, X } from "lucide-react";
 import { createContext, FC, ReactNode, useContext } from "react";
-import { DesignId } from "../../semio";
-import { Layout, SketchpadScope, Theme, useActiveDesignEditor, useDesigns, useLayout, useSketchpadCommands, useSketchpadScope, useTheme } from "../../store";
-import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
+import { useNavigate } from "react-router";
+import { Layout, SketchpadScope, Theme, useSketchpadScope } from "../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
-import { Toggle } from "./Toggle";
 import { ToggleCycle } from "./ToggleCycle";
 import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
@@ -55,7 +53,6 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent }) => {
   return (
     <div id="navbar" className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag]`} style={{ WebkitAppRegion: "drag" }}>
       <div className="flex items-center gap-2">
-        
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

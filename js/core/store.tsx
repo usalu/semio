@@ -857,8 +857,11 @@ class AuthorStore {
 
 type AuthorScope = { id: AuthorId };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
-export const AuthorScopeProvider = (props: { id: AuthorId; children: React.ReactNode }) => {
-  const value = { id: props.id };
+export const AuthorScopeProvider = (props: { id?: AuthorId; uuid?: string; children: React.ReactNode }) => {
+  const kitStore = useKitStore() as KitStore;
+  const id = props.uuid ? kitStore.authorByUuid(props.uuid).id() : props.id;
+  if (!id) throw new Error("AuthorScopeProvider requires either id or uuid");
+  const value = { id };
   return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
 };
 const useAuthorScope = () => useContext(AuthorScopeContext);
@@ -1773,8 +1776,11 @@ class TypeStore {
 
 type TypeScope = { id: TypeId };
 const TypeScopeContext = createContext<TypeScope | null>(null);
-export const TypeScopeProvider = (props: { id: TypeId; children: React.ReactNode }) => {
-  const value = { id: props.id };
+export const TypeScopeProvider = (props: { id?: TypeId; uuid?: string; children: React.ReactNode }) => {
+  const kitStore = useKitStore() as KitStore;
+  const id = props.uuid ? kitStore.typeByUuid(props.uuid).id() : props.id;
+  if (!id) throw new Error("TypeScopeProvider requires either id or uuid");
+  const value = { id };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
 const useTypeScope = () => useContext(TypeScopeContext);
@@ -2192,8 +2198,11 @@ class PieceStore {
 
 type PieceScope = { id: PieceId };
 const PieceScopeContext = createContext<PieceScope | null>(null);
-export const PieceScopeProvider = (props: { id: PieceId; children: React.ReactNode }) => {
-  const value = { id: props.id };
+export const PieceScopeProvider = (props: { id?: PieceId; uuid?: string; children: React.ReactNode }) => {
+  const designStore = useDesignStore() as DesignStore;
+  const id = props.uuid ? designStore.pieceByUuid(props.uuid).id() : props.id;
+  if (!id) throw new Error("PieceScopeProvider requires either id or uuid");
+  const value = { id };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
 const usePieceScope = () => useContext(PieceScopeContext);
@@ -2691,8 +2700,11 @@ class ConnectionStore {
 
 type ConnectionScope = { id: ConnectionId };
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
-export const ConnectionScopeProvider = (props: { id: ConnectionId; children: React.ReactNode }) => {
-  const value = { id: props.id };
+export const ConnectionScopeProvider = (props: { id?: ConnectionId; uuid?: string; children: React.ReactNode }) => {
+  const designStore = useDesignStore() as DesignStore;
+  const id = props.uuid ? designStore.connectionByUuid(props.uuid).id() : props.id;
+  if (!id) throw new Error("ConnectionScopeProvider requires either id or uuid");
+  const value = { id };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
 const useConnectionScope = () => useContext(ConnectionScopeContext);
@@ -3435,8 +3447,11 @@ class DesignStore {
 
 type DesignScope = { id: DesignId };
 const DesignScopeContext = createContext<DesignScope | null>(null);
-export const DesignScopeProvider = (props: { id: DesignId; children: React.ReactNode }) => {
-  const value = { id: props.id };
+export const DesignScopeProvider = (props: { id?: DesignId; uuid?: string; children: React.ReactNode }) => {
+  const kitStore = useKitStore() as KitStore;
+  const id = props.uuid ? kitStore.designByUuid(props.uuid).id() : props.id;
+  if (!id) throw new Error("DesignScopeProvider requires either id or uuid");
+  const value = { id };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
 const useDesignScope = () => useContext(DesignScopeContext);
@@ -4578,8 +4593,11 @@ const kitCommands = {
 
 type KitScope = { id: KitId };
 const KitScopeContext = createContext<KitScope | null>(null);
-export const KitScopeProvider = (props: { id: KitId; children: React.ReactNode }) => {
-  const value = { id: props.id };
+export const KitScopeProvider = (props: { id?: KitId; uuid?: string; children: React.ReactNode }) => {
+  const store = useSketchpadStore();
+  const id = props.uuid ? store.kitByUuid(props.uuid).id() : props.id;
+  if (!id) throw new Error("KitScopeProvider requires either id or uuid");
+  const value = { id };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
 const useKitStoreScope = () => useContext(KitScopeContext);
@@ -5977,20 +5995,19 @@ const loadPersistedKits = () => {
   // TODO: proper edge case handeling
   const semioRaw = localStorage.getItem("semio");
   if (semio) {
-    const semio =JSON.parse(semio)
-    const { kits } = semio
+    const semio = JSON.parse(semio);
+    const { kits } = semio;
     for (const kit in kits) {
-
     }
   }
-}
+};
 
 function useSketchpadStore(uuid?: Uuid) {
   const scope = useSketchpadScope();
   const storeUuid = scope?.uuid ?? uuid;
-  if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
-  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = stores.get(storeId)!;
+  if (!storeUuid) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
+  if (!stores.has(storeUuid)) throw new Error(`Sketchpad store was not found for id ${storeUuid}`);
+  const store = stores.get(storeUuid)!;
   return store;
 }
 
