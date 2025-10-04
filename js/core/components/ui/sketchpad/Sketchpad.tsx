@@ -29,6 +29,12 @@ import KitEditor from "./KitEditor";
 import Navbar from "./Navbar";
 import TypeEditor from "./TypeEditor";
 
+export interface ResizablePanelProps {
+  visible: boolean;
+  onWidthChange?: (width: number) => void;
+  width: number;
+}
+
 const Home: FC = ({}) => {
   return <div>Home</div>;
 };
@@ -66,7 +72,7 @@ const TypeRoute: FC = () => {
   );
 };
 
-const SketchpadInner: FC = () => {
+const SketchpadBase: FC = () => {
   const layout = useLayout();
 
   return (
@@ -90,7 +96,7 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
       <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>
         <MemoryRouter>
           <Routes>
-            <Route element={<SketchpadInner />}>
+            <Route element={<SketchpadBase />}>
               <Route index element={<Home />} />
               <Route path=":uuid" element={<KitRoute />}>
                 <Route index element={<KitEditor />} />

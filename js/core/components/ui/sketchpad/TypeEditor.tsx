@@ -19,22 +19,10 @@
 
 // #endregion
 
-import { FC, useEffect, useState } from "react";
-import { Outlet } from "react-router";
-import { Author, Design, DesignId, KitId } from "../../../semio";
-import { TypeEditorId, TypeScopeProvider, useKitCommands, useSketchpadCommands } from "../../../store";
-
+import { FC } from "react";
 
 const TypeEditor: FC = () => {
-
-  let { uuid } = useParams();
-//   let [searchParams, setSearchParams] = useSearchParams();
-
-  return (
-    <TypeScopeProvider id={defaultTypeId}>
-       Type Editor
-    </TypeScopeProvider>
-  );
+  return <div>Type Editor</div>;
 };
 
 export default TypeEditor;

@@ -19,15 +19,16 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
-import { FC, useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Minus, Square, X } from "lucide-react";
+import { FC } from "react";
 import { useNavigate } from "react-router";
-import { SketchpadScope, useKits, useNavigation, useSketchpadScope } from "../../../store";
+import { SketchpadScope, useEditorType, useKits, useNavigation, useSketchpad, useSketchpadCommands, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
 import { Toggle } from "../Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
+import { PANEL_CONFIGS } from "./panelConfigs";
 
 const Navigation: FC = ({}) => {
   let navigate = useNavigate();
@@ -83,32 +84,28 @@ const Search: FC = ({}) => {
 };
 
 const PanelToggles: FC = ({}) => {
-  const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
-    workbench: false,
-    details: false,
-    console: false,
-    chat: false,
-    settings: false,
-  });
-  const togglePanel = (panel: keyof VisiblePanels) => {
-    setVisiblePanels((prev) => {
-      const newState = { ...prev };
-      if (panel === "chat" && !prev.chat) {
-        newState.details = false;
-        newState.settings = false;
-      }
-      if (panel === "details" && !prev.details) {
-        newState.chat = false;
-        newState.settings = false;
-      }
-      if (panel === "settings" && !prev.settings) {
-        newState.chat = false;
-        newState.details = false;
-      }
-      newState[panel] = !prev[panel];
-      return newState;
-    });
+  const editorType = useEditorType();
+  const panelConfig = PANEL_CONFIGS[editorType];
+  const visiblePanels = useSketchpad((s) => s.panelVisibility[editorType]) || {};
+  const { togglePanel } = useSketchpadCommands();
+
+  if (panelConfig.length === 0) return null;
+
+  const handleToggle = (panelKey: string) => {
+    // Handle mutual exclusivity for chat, details, and settings
+    const current = visiblePanels[panelKey];
+    if (!current && (panelKey === "chat" || panelKey === "details" || panelKey === "settings")) {
+      // Close the other exclusive panels
+      const exclusivePanels = ["chat", "details", "settings"];
+      exclusivePanels.forEach((p) => {
+        if (p !== panelKey && visiblePanels[p]) {
+          togglePanel(editorType, p);
+        }
+      });
+    }
+    togglePanel(editorType, panelKey);
   };
+
   return (
     <ToggleGroup
       type="multiple"
@@ -117,40 +114,22 @@ const PanelToggles: FC = ({}) => {
         .map(([key]) => key)}
       onValueChange={(values) => {
         Object.keys(visiblePanels).forEach((key) => {
-          const isCurrentlyVisible = visiblePanels[key as keyof VisiblePanels];
+          const isCurrentlyVisible = visiblePanels[key];
           const shouldBeVisible = values.includes(key);
           if (isCurrentlyVisible !== shouldBeVisible) {
-            togglePanel(key as keyof VisiblePanels);
+            handleToggle(key);
           }
         });
       }}
     >
-      <ToggleGroupItem value="workbench" tooltip="Click to toggle workbench panel" hotkey="⌘J">
-        <Wrench />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="console" tooltip="Click to toggle console panel" hotkey="⌘K">
-        <Terminal />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="details" tooltip="Click to toggle details panel" hotkey="⌘L">
-        <Info />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="chat" tooltip="Click to toggle chat panel" hotkey="⌘[">
-        <MessageCircle />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="settings" tooltip="Click to toggle settings panel" hotkey="⌘,">
-        <Settings />
-      </ToggleGroupItem>
+      {panelConfig.map(({ key, icon: Icon, tooltip, hotkey }) => (
+        <ToggleGroupItem key={key} value={key} tooltip={tooltip} hotkey={hotkey}>
+          <Icon />
+        </ToggleGroupItem>
+      ))}
     </ToggleGroup>
   );
 };
-
-interface VisiblePanels {
-  workbench: boolean;
-  details: boolean;
-  console: boolean;
-  chat: boolean;
-  settings: boolean;
-}
 
 interface NavbarProps {}
 

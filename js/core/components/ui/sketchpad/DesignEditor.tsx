@@ -26,42 +26,23 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { DesignId, ICON_WIDTH, TypeId } from "../../../semio";
-import { DesignEditorFullscreenPanel, useDesignEditorCommands, useDesignEditorFullscreen } from "../../../store";
+import { DesignEditorFullscreenPanel, EditorType, useDesignEditorCommands, useDesignEditorFullscreen, useSketchpad } from "../../../store";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
 import Chat from "./Chat";
 import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
-import Navbar from "./Navbar";
+import Settings from "./Settings";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 export interface DesignEditorProps {}
 
-export interface ResizablePanelProps {
-  visible: boolean;
-  onWidthChange?: (width: number) => void;
-  width: number;
-}
-
-interface VisiblePanels {
-  workbench: boolean;
-  details: boolean;
-  console: boolean;
-  chat: boolean;
-}
-
 const DesignEditor: FC<DesignEditorProps> = () => {
-  // const { setToolbar } = useNavbar();
   const fullscreenPanel = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece, execute } = useDesignEditorCommands();
 
-  const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
-    workbench: false,
-    details: false,
-    console: false,
-    chat: false,
-  });
+  const visiblePanels = useSketchpad((s) => s.panelVisibility[EditorType.DESIGN]) || {};
 
   const [workbenchWidth, setWorkbenchWidth] = useState(230);
   const [detailsWidth, setDetailsWidth] = useState(230);
@@ -79,27 +60,6 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   useHotkeys("ctrl+z", () => undo());
   useHotkeys("ctrl+y", () => redo());
   useHotkeys("ctrl+shift+z", () => redo());
-
-  // useHotkeys("mod+j", (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   togglePanel("workbench");
-  // });
-  // useHotkeys("mod+k", (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   togglePanel("console");
-  // });
-  // useHotkeys("mod+l", (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   togglePanel("details");
-  // });
-  // useHotkeys(["mod+[", "mod+semicolon", "mod+ö"], (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   togglePanel("chat");
-  // });
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -152,89 +112,37 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     setActiveDraggedDesignId(null);
   };
 
-  // const togglePanel = (panel: keyof VisiblePanels) => {
-  //   setVisiblePanels((prev) => {
-  //     const newState = { ...prev };
-  //     if (panel === "chat" && !prev.chat) {
-  //       newState.details = false;
-  //     }
-  //     if (panel === "details" && !prev.details) {
-  //       newState.chat = false;
-  //     }
-  //     newState[panel] = !prev[panel];
-  //     return newState;
-  //   });
-  // };
-
-  // const designEditorToolbar = (
-  //   <ToggleGroup
-  //     type="multiple"
-  //     value={Object.entries(visiblePanels)
-  //       .filter(([_, isVisible]) => isVisible)
-  //       .map(([key]) => key)}
-  //     onValueChange={(values) => {
-  //       Object.keys(visiblePanels).forEach((key) => {
-  //         const isCurrentlyVisible = visiblePanels[key as keyof VisiblePanels];
-  //         const shouldBeVisible = values.includes(key);
-  //         if (isCurrentlyVisible !== shouldBeVisible) {
-  //           togglePanel(key as keyof VisiblePanels);
-  //         }
-  //       });
-  //     }}
-  //   >
-  //     <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
-  //       <Wrench />
-  //     </ToggleGroupItem>
-  //     <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
-  //       <Terminal />
-  //     </ToggleGroupItem>
-  //     <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
-  //       <Info />
-  //     </ToggleGroupItem>
-  //     <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
-  //       <MessageCircle />
-  //     </ToggleGroupItem>
-  //   </ToggleGroup>
-  // );
-
-  // useEffect(() => {
-  //   setToolbar(designEditorToolbar);
-  //   return () => setToolbar(null);
-  // }, [visiblePanels, setToolbar]);
-
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="h-screen flex flex-col overflow-hidden bg-background">
-        <Navbar />
-        <div className="flex-1 flex overflow-hidden relative">
-          <ReactFlowProvider>
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
-                <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
-              </ResizablePanel>
-              <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
-              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={toggleModelFullscreen}>
-                <Model />
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </ReactFlowProvider>
-          {visiblePanels.workbench && <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />}
-          {visiblePanels.console && <Console visible={visiblePanels.console} onHeightChange={setConsoleHeight} height={consoleHeight} />}
-          {(visiblePanels.details || visiblePanels.chat) && (
-            <div className="flex">
-              {visiblePanels.details && <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />}
-              {visiblePanels.chat && <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />}
-            </div>
-          )}
-        </div>
-        {createPortal(
-          <DragOverlay>
-            {activeDraggedTypeId && <TypeAvatar typeId={activeDraggedTypeId} />}
-            {activeDraggedDesignId && <DesignAvatar designId={activeDraggedDesignId} />}
-          </DragOverlay>,
-          document.body,
+      <div className="flex-1 flex overflow-hidden relative">
+        <ReactFlowProvider>
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
+              <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
+            </ResizablePanel>
+            <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
+            <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={toggleModelFullscreen}>
+              <Model />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </ReactFlowProvider>
+        {visiblePanels.workbench && <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />}
+        {visiblePanels.console && <Console visible={visiblePanels.console} onHeightChange={setConsoleHeight} height={consoleHeight} />}
+        {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
+          <div className="flex">
+            {visiblePanels.details && <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />}
+            {visiblePanels.chat && <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />}
+            {visiblePanels.settings && <Settings visible={visiblePanels.settings} onWidthChange={setDetailsWidth} width={detailsWidth} />}
+          </div>
         )}
       </div>
+      {createPortal(
+        <DragOverlay>
+          {activeDraggedTypeId && <TypeAvatar typeId={activeDraggedTypeId} />}
+          {activeDraggedDesignId && <DesignAvatar designId={activeDraggedDesignId} />}
+        </DragOverlay>,
+        document.body,
+      )}
     </DndContext>
   );
 };

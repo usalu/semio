@@ -1,11 +1,11 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import { Author, Design, DesignId, KitId } from "../../../semio";
-import { DesignEditorId, DesignScopeProvider, useKitCommands, useSketchpadCommands } from "../../../store";
+import { DesignEditorId, useKitCommands, useSketchpadCommands } from "../../../store";
 
 import { Tambour } from "@semio/assets";
+import { Button } from "../Button";
 
 const KitEditor: FC = () => {
-
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const { createDesign, createType, createAuthor } = useKitCommands();
   const { createDesignEditor, setActiveDesignEditor } = useSketchpadCommands();
@@ -38,15 +38,11 @@ const KitEditor: FC = () => {
     await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
     await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
     setIsImporting(false);
-    };
+  };
 
   if (isImporting) return null;
 
-  return (
-    <Button onClick={onPopulateKit}>
-      Populate Kit
-    </Button>
-  );
+  return <Button onClick={onPopulateKit}>Populate Kit</Button>;
 };
 
 export default KitEditor;

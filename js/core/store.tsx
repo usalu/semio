@@ -155,6 +155,13 @@ export enum Layout {
   TOUCH = "touch",
 }
 
+export enum EditorType {
+  HOME = "home",
+  KIT = "kit",
+  DESIGN = "design",
+  TYPE = "type",
+}
+
 // #endregion Constants
 
 // #region General
@@ -5687,12 +5694,36 @@ export function useDesignEditorCommands() {
 type YSketchpadVal = string | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
+export interface PanelVisibility {
+  workbench?: boolean;
+  details?: boolean;
+  console?: boolean;
+  chat?: boolean;
+  settings?: boolean;
+}
+
+export interface EditorSettings {
+  design?: {
+    snappiness?: number;
+    gridSize?: number;
+  };
+  type?: Record<string, any>;
+  kit?: Record<string, any>;
+}
+
 export interface SketchpadChangableState {
   navigation: string;
   mode: Mode;
   theme: Theme;
   layout: Layout;
   activeDesignEditor?: DesignEditorId;
+  panelVisibility: {
+    [EditorType.HOME]: PanelVisibility;
+    [EditorType.KIT]: PanelVisibility;
+    [EditorType.DESIGN]: PanelVisibility;
+    [EditorType.TYPE]: PanelVisibility;
+  };
+  editorSettings: EditorSettings;
 }
 export interface SketchpadState extends SketchpadChangableState {
   id?: string;
@@ -5705,6 +5736,13 @@ export interface SketchpadDiff {
   theme?: Theme;
   layout?: Layout;
   activeDesignEditor?: DesignEditorId;
+  panelVisibility?: {
+    [EditorType.HOME]?: PanelVisibility;
+    [EditorType.KIT]?: PanelVisibility;
+    [EditorType.DESIGN]?: PanelVisibility;
+    [EditorType.TYPE]?: PanelVisibility;
+  };
+  editorSettings?: EditorSettings;
 }
 
 export interface SketchpadCommandContext {
@@ -5772,6 +5810,17 @@ class SketchpadStore {
       this.ySketchpad.set("theme", Theme.SYSTEM);
       this.ySketchpad.set("layout", Layout.NORMAL);
       this.ySketchpad.set("activeDesignEditor", "");
+      this.ySketchpad.set("panelVisibility", JSON.stringify({
+        [EditorType.HOME]: {},
+        [EditorType.KIT]: { console: false, settings: false },
+        [EditorType.DESIGN]: { workbench: false, details: false, console: false, chat: false, settings: false },
+        [EditorType.TYPE]: { workbench: false, console: false, settings: false },
+      }));
+      this.ySketchpad.set("editorSettings", JSON.stringify({
+        design: { snappiness: 10, gridSize: 24 },
+        type: {},
+        kit: {},
+      }));
     });
 
     Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
@@ -5786,11 +5835,27 @@ class SketchpadStore {
   snapshot = (): SketchpadState => {
     const activeDesignEditorIdStr = this.ySketchpad.get("activeDesignEditor") as string;
     const activeDesignEditor = activeDesignEditorIdStr ? (JSON.parse(activeDesignEditorIdStr) as DesignEditorId) : undefined;
+    const panelVisibilityStr = this.ySketchpad.get("panelVisibility") as string;
+    const panelVisibility = panelVisibilityStr ? JSON.parse(panelVisibilityStr) : {
+      [EditorType.HOME]: {},
+      [EditorType.KIT]: { console: false, settings: false },
+      [EditorType.DESIGN]: { workbench: false, details: false, console: false, chat: false, settings: false },
+      [EditorType.TYPE]: { workbench: false, console: false, settings: false },
+    };
+    const editorSettingsStr = this.ySketchpad.get("editorSettings") as string;
+    const editorSettings = editorSettingsStr ? JSON.parse(editorSettingsStr) : {
+      design: { snappiness: 10, gridSize: 24 },
+      type: {},
+      kit: {},
+    };
     const currentValues = {
+      navigation: this.ySketchpad.get("navigation") as string,
       mode: this.ySketchpad.get("mode") as Mode,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
       activeDesignEditor: activeDesignEditor,
+      panelVisibility: panelVisibility,
+      editorSettings: editorSettings,
     };
     const currentHash = this.hash(currentValues);
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -5826,6 +5891,14 @@ class SketchpadStore {
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
       if (diff.activeDesignEditor) this.ySketchpad.set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
+      if (diff.panelVisibility) {
+        const current = JSON.parse(this.ySketchpad.get("panelVisibility") as string || "{}");
+        this.ySketchpad.set("panelVisibility", JSON.stringify({ ...current, ...diff.panelVisibility }));
+      }
+      if (diff.editorSettings) {
+        const current = JSON.parse(this.ySketchpad.get("editorSettings") as string || "{}");
+        this.ySketchpad.set("editorSettings", JSON.stringify({ ...current, ...diff.editorSettings }));
+      }
     });
   }
 
@@ -6012,6 +6085,19 @@ export function useNavigation(): string {
   return useSketchpad((s) => s.navigation) as string;
 }
 
+export function getEditorTypeFromPath(path: string): EditorType {
+  if (path === '/') return EditorType.HOME;
+  if (path.match(/^\/[^/]+\/d\/[^/]+/)) return EditorType.DESIGN;
+  if (path.match(/^\/[^/]+\/t\/[^/]+/)) return EditorType.TYPE;
+  if (path.match(/^\/[^/]+$/)) return EditorType.KIT;
+  return EditorType.HOME;
+}
+
+export function useEditorType(): EditorType {
+  const navigation = useNavigation();
+  return useMemo(() => getEditorTypeFromPath(navigation), [navigation]);
+}
+
 export function useMode(): Mode {
   return useSketchpad((s) => s.mode) as Mode;
 }
@@ -6037,6 +6123,26 @@ export function useSketchpadCommands() {
     createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
     setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
+    togglePanel: (editorType: EditorType, panelKey: string) => {
+      const current = store.snapshot().panelVisibility[editorType] || {};
+      store.change({
+        panelVisibility: {
+          [editorType]: {
+            ...current,
+            [panelKey]: !current[panelKey],
+          },
+        },
+      });
+    },
+    updateEditorSettings: (editorType: 'design' | 'type' | 'kit', settings: Record<string, any>) => {
+      const current = store.snapshot().editorSettings;
+      store.change({
+        editorSettings: {
+          ...current,
+          [editorType]: { ...current[editorType], ...settings },
+        },
+      });
+    },
   };
 }
 

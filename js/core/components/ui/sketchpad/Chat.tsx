@@ -2,7 +2,7 @@ import { FC, useState } from "react";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
 import { Tree, TreeItem, TreeSection } from "../Tree";
-import { ResizablePanelProps } from "./DesignEditor";
+import { ResizablePanelProps } from "./Sketchpad";
 
 interface ChatProps extends ResizablePanelProps {}
 

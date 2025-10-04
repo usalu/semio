@@ -11,7 +11,7 @@ import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/compon
 import { Connection, ConnectionId, Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, parseDesignIdFromVariant, Piece, PieceId, PortId } from "../../../semio";
 import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useKit, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import Combobox from "../Combobox";
-import { ResizablePanelProps } from "./DesignEditor";
+import { ResizablePanelProps } from "./Sketchpad";
 
 interface DetailsProps extends ResizablePanelProps {}
 
