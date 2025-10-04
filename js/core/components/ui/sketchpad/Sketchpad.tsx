@@ -23,10 +23,10 @@ import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
 import { DesignScopeProvider, KitScopeProvider, SketchpadScopeProvider, useLayout, WindowEvents, YProviderFactory } from "../../../store";
-import Footer from "../Footer";
-import Navbar from "../Navbar";
 import DesignEditor from "./DesignEditor";
+import Footer from "./Footer";
 import KitEditor from "./KitEditor";
+import Navbar from "./Navbar";
 import TypeEditor from "./TypeEditor";
 
 const Home: FC = ({}) => {

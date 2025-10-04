@@ -30,11 +30,11 @@ function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
 }
 
 function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
-  return <ol data-slot="breadcrumb-list" className={cn("text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs break-words xs:gap-1.5", className)} {...props} />;
+  return <ol data-slot="breadcrumb-list" className={cn("text-muted-foreground flex items-stretch text-xs break-words border overflow-hidden h-9", className)} {...props} />;
 }
 
 function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
-  return <li data-slot="breadcrumb-item" className={cn("inline-flex items-center gap-1.5", className)} {...props} />;
+  return <li data-slot="breadcrumb-item" className={cn("flex items-stretch", className)} {...props} />;
 }
 
 function BreadcrumbLink({
@@ -46,7 +46,7 @@ function BreadcrumbLink({
 }) {
   const Comp = asChild ? Slot : "a";
 
-  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground hover:text-accent-foreground transition-colors", className)} {...props} />;
+  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground hover:bg-accent hover:text-accent-foreground transition-colors px-3 flex items-center gap-2", className)} {...props} />;
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
@@ -68,7 +68,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, ...props 
 
   if (!items?.length) {
     return (
-      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-3", className)} {...props}>
+      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-3 px-2 flex items-center", className)} {...props}>
         {children ?? <ChevronRight />}
       </li>
     );
@@ -77,7 +77,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, ...props 
   return (
     <DropdownMenuPrimitive.Root open={open} onOpenChange={setOpen}>
       <DropdownMenuPrimitive.Trigger asChild>
-        <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer", className)} {...props}>
+        <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer hover:bg-accent px-2 flex items-center transition-colors", className)} {...props}>
           {open ? <ChevronDown /> : <ChevronRight />}
         </li>
       </DropdownMenuPrimitive.Trigger>

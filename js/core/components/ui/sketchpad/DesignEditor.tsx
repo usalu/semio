@@ -20,22 +20,20 @@
 // #endregion
 
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
-import { Info, MessageCircle, Terminal, Wrench } from "lucide-react";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { ReactFlowProvider, ReactFlowInstance } from "@xyflow/react";
-import { DesignId, TypeId, ICON_WIDTH } from "../../../semio";
+import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
+import { DesignId, ICON_WIDTH, TypeId } from "../../../semio";
 import { DesignEditorFullscreenPanel, useDesignEditorCommands, useDesignEditorFullscreen } from "../../../store";
-import Navbar, { useNavbar } from "../Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
-import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
 import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
+import Navbar from "./Navbar";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 export interface DesignEditorProps {}
@@ -54,9 +52,7 @@ interface VisiblePanels {
 }
 
 const DesignEditor: FC<DesignEditorProps> = () => {
-  let { uuid } = useParams();
-
-  const { setToolbar } = useNavbar();
+  // const { setToolbar } = useNavbar();
   const fullscreenPanel = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece, execute } = useDesignEditorCommands();
 
@@ -84,26 +80,26 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   useHotkeys("ctrl+y", () => redo());
   useHotkeys("ctrl+shift+z", () => redo());
 
-  useHotkeys("mod+j", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("workbench");
-  });
-  useHotkeys("mod+k", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("console");
-  });
-  useHotkeys("mod+l", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("details");
-  });
-  useHotkeys(["mod+[", "mod+semicolon", "mod+ö"], (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("chat");
-  });
+  // useHotkeys("mod+j", (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   togglePanel("workbench");
+  // });
+  // useHotkeys("mod+k", (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   togglePanel("console");
+  // });
+  // useHotkeys("mod+l", (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   togglePanel("details");
+  // });
+  // useHotkeys(["mod+[", "mod+semicolon", "mod+ö"], (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   togglePanel("chat");
+  // });
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -156,55 +152,55 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     setActiveDraggedDesignId(null);
   };
 
-  const togglePanel = (panel: keyof VisiblePanels) => {
-    setVisiblePanels((prev) => {
-      const newState = { ...prev };
-      if (panel === "chat" && !prev.chat) {
-        newState.details = false;
-      }
-      if (panel === "details" && !prev.details) {
-        newState.chat = false;
-      }
-      newState[panel] = !prev[panel];
-      return newState;
-    });
-  };
+  // const togglePanel = (panel: keyof VisiblePanels) => {
+  //   setVisiblePanels((prev) => {
+  //     const newState = { ...prev };
+  //     if (panel === "chat" && !prev.chat) {
+  //       newState.details = false;
+  //     }
+  //     if (panel === "details" && !prev.details) {
+  //       newState.chat = false;
+  //     }
+  //     newState[panel] = !prev[panel];
+  //     return newState;
+  //   });
+  // };
 
-  const designEditorToolbar = (
-    <ToggleGroup
-      type="multiple"
-      value={Object.entries(visiblePanels)
-        .filter(([_, isVisible]) => isVisible)
-        .map(([key]) => key)}
-      onValueChange={(values) => {
-        Object.keys(visiblePanels).forEach((key) => {
-          const isCurrentlyVisible = visiblePanels[key as keyof VisiblePanels];
-          const shouldBeVisible = values.includes(key);
-          if (isCurrentlyVisible !== shouldBeVisible) {
-            togglePanel(key as keyof VisiblePanels);
-          }
-        });
-      }}
-    >
-      <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
-        <Wrench />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
-        <Terminal />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
-        <Info />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
-        <MessageCircle />
-      </ToggleGroupItem>
-    </ToggleGroup>
-  );
+  // const designEditorToolbar = (
+  //   <ToggleGroup
+  //     type="multiple"
+  //     value={Object.entries(visiblePanels)
+  //       .filter(([_, isVisible]) => isVisible)
+  //       .map(([key]) => key)}
+  //     onValueChange={(values) => {
+  //       Object.keys(visiblePanels).forEach((key) => {
+  //         const isCurrentlyVisible = visiblePanels[key as keyof VisiblePanels];
+  //         const shouldBeVisible = values.includes(key);
+  //         if (isCurrentlyVisible !== shouldBeVisible) {
+  //           togglePanel(key as keyof VisiblePanels);
+  //         }
+  //       });
+  //     }}
+  //   >
+  //     <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
+  //       <Wrench />
+  //     </ToggleGroupItem>
+  //     <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
+  //       <Terminal />
+  //     </ToggleGroupItem>
+  //     <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
+  //       <Info />
+  //     </ToggleGroupItem>
+  //     <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
+  //       <MessageCircle />
+  //     </ToggleGroupItem>
+  //   </ToggleGroup>
+  // );
 
-  useEffect(() => {
-    setToolbar(designEditorToolbar);
-    return () => setToolbar(null);
-  }, [visiblePanels, setToolbar]);
+  // useEffect(() => {
+  //   setToolbar(designEditorToolbar);
+  //   return () => setToolbar(null);
+  // }, [visiblePanels, setToolbar]);
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

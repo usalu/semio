@@ -857,10 +857,9 @@ class AuthorStore {
 
 type AuthorScope = { id: AuthorId };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
-export const AuthorScopeProvider = (props: { id?: AuthorId; uuid?: string; children: React.ReactNode }) => {
+export const AuthorScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = props.uuid ? kitStore.authorByUuid(props.uuid).id() : props.id;
-  if (!id) throw new Error("AuthorScopeProvider requires either id or uuid");
+  const id = kitStore.authorByUuid(props.uuid).id();
   const value = { id };
   return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
 };
@@ -1776,10 +1775,9 @@ class TypeStore {
 
 type TypeScope = { id: TypeId };
 const TypeScopeContext = createContext<TypeScope | null>(null);
-export const TypeScopeProvider = (props: { id?: TypeId; uuid?: string; children: React.ReactNode }) => {
+export const TypeScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = props.uuid ? kitStore.typeByUuid(props.uuid).id() : props.id;
-  if (!id) throw new Error("TypeScopeProvider requires either id or uuid");
+  const id = kitStore.typeByUuid(props.uuid).id();
   const value = { id };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
@@ -2198,10 +2196,9 @@ class PieceStore {
 
 type PieceScope = { id: PieceId };
 const PieceScopeContext = createContext<PieceScope | null>(null);
-export const PieceScopeProvider = (props: { id?: PieceId; uuid?: string; children: React.ReactNode }) => {
+export const PieceScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
   const designStore = useDesignStore() as DesignStore;
-  const id = props.uuid ? designStore.pieceByUuid(props.uuid).id() : props.id;
-  if (!id) throw new Error("PieceScopeProvider requires either id or uuid");
+  const id = designStore.pieceByUuid(props.uuid).id();
   const value = { id };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
@@ -2700,10 +2697,9 @@ class ConnectionStore {
 
 type ConnectionScope = { id: ConnectionId };
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
-export const ConnectionScopeProvider = (props: { id?: ConnectionId; uuid?: string; children: React.ReactNode }) => {
+export const ConnectionScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
   const designStore = useDesignStore() as DesignStore;
-  const id = props.uuid ? designStore.connectionByUuid(props.uuid).id() : props.id;
-  if (!id) throw new Error("ConnectionScopeProvider requires either id or uuid");
+  const id = designStore.connectionByUuid(props.uuid).id();
   const value = { id };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
@@ -3447,10 +3443,9 @@ class DesignStore {
 
 type DesignScope = { id: DesignId };
 const DesignScopeContext = createContext<DesignScope | null>(null);
-export const DesignScopeProvider = (props: { id?: DesignId; uuid?: string; children: React.ReactNode }) => {
+export const DesignScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = props.uuid ? kitStore.designByUuid(props.uuid).id() : props.id;
-  if (!id) throw new Error("DesignScopeProvider requires either id or uuid");
+  const id = kitStore.designByUuid(props.uuid).id();
   const value = { id };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
@@ -4593,10 +4588,9 @@ const kitCommands = {
 
 type KitScope = { id: KitId };
 const KitScopeContext = createContext<KitScope | null>(null);
-export const KitScopeProvider = (props: { id?: KitId; uuid?: string; children: React.ReactNode }) => {
+export const KitScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
   const store = useSketchpadStore();
-  const id = props.uuid ? store.kitByUuid(props.uuid).id() : props.id;
-  if (!id) throw new Error("KitScopeProvider requires either id or uuid");
+  const id = store.kitByUuid(props.uuid).id();
   const value = { id };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
@@ -5725,6 +5719,7 @@ type YSketchpadVal = string | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
 export interface SketchpadChangableState {
+  navigation: string;
   mode: Mode;
   theme: Theme;
   layout: Layout;
@@ -5802,6 +5797,7 @@ class SketchpadStore {
     this.ySketchpad = this.yDoc.getMap("sketchpad");
     this.yDesignEditors = this.yDoc.getArray("designEditors");
     this.yDoc.transact(() => {
+      this.ySketchpad.set("navigation", "/");
       this.ySketchpad.set("mode", Mode.GUEST);
       this.ySketchpad.set("theme", Theme.SYSTEM);
       this.ySketchpad.set("layout", Layout.NORMAL);
@@ -6002,15 +5998,6 @@ const loadPersistedKits = () => {
   }
 };
 
-function useSketchpadStore(uuid?: Uuid) {
-  const scope = useSketchpadScope();
-  const storeUuid = scope?.uuid ?? uuid;
-  if (!storeUuid) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
-  if (!stores.has(storeUuid)) throw new Error(`Sketchpad store was not found for id ${storeUuid}`);
-  const store = stores.get(storeUuid)!;
-  return store;
-}
-
 // TODO: Find clean way to hide Scope and extra hook and still pass window events to navbar
 export type WindowEvents = {
   minimize: () => void;
@@ -6028,6 +6015,15 @@ export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: 
   return React.createElement(SketchpadScopeContext.Provider, { value: { id, onWindowEvents: props.onWindowEvents } }, props.children as any);
 };
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
+
+function useSketchpadStore(id?: string) {
+  const scope = useSketchpadScope();
+  const storeId = scope?.id ?? id;
+  if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
+  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
+  const store = stores.get(storeId)!;
+  return store;
+}
 
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : identitySelector);
