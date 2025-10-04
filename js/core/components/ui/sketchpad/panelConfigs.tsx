@@ -30,7 +30,10 @@ export interface PanelDefinition {
 }
 
 export const PANEL_CONFIGS: Record<EditorType, PanelDefinition[]> = {
-  [EditorType.HOME]: [],
+  [EditorType.HOME]: [
+    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+  ],
   [EditorType.KIT]: [
     { key: "console", icon: Terminal, tooltip: "Click to toggle console panel", hotkey: "⌘K" },
     { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },

@@ -1,20 +1,29 @@
 import { TreeItem, TreeSection } from "../Tree";
 
+import { FingerprintIcon, Laptop, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { FC, useState } from "react";
-import { EditorType, useEditorType, useSketchpad, useSketchpadCommands } from "../../../store";
+import { Theme, useEditorType, useLayout, useSketchpad, useSketchpadCommands, useTheme } from "../../../store";
 import { ScrollArea } from "../ScrollArea";
+import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import { Tree } from "../Tree";
+import { usePanelSections } from "./PanelSectionContext";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface SettingsProps extends ResizablePanelProps {}
 
 const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
+  const theme = useTheme();
+  const layout = useLayout();
+
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
   const editorType = useEditorType();
   const editorSettings = useSketchpad((s) => s.editorSettings);
-  const { updateEditorSettings } = useSketchpadCommands();
+  const { setTheme, setLayout, updateEditorSettings } = useSketchpadCommands();
+
+  // Get editor-specific sections from context
+  const sections = usePanelSections("settings");
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -40,6 +49,9 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  // Sort sections by order
+  const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+
   return (
     <div
       className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border min-w-0 overflow-hidden
@@ -51,43 +63,37 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           <Tree className="min-w-0 overflow-hidden">
             {/* General Settings - always shown */}
             <TreeSection label="General" defaultOpen={true}>
-              <TreeItem>Theme: System</TreeItem>
-              <TreeItem>Layout: Normal</TreeItem>
+              <TreeItem label="Theme">
+                <ToggleGroup type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
+                  <ToggleGroupItem value="system">
+                    <Laptop />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="light">
+                    <SunIcon />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="dark">
+                    <MoonIcon />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </TreeItem>
+              <TreeItem label="Layout">
+                <ToggleGroup type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+                  <ToggleGroupItem value="normal">
+                    <MonitorIcon />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="touch">
+                    <FingerprintIcon />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </TreeItem>
             </TreeSection>
 
-            {/* Design Editor Settings */}
-            {editorType === EditorType.DESIGN && editorSettings.design && (
-              <TreeSection label="Design Editor" defaultOpen={true}>
-                <TreeItem>
-                  <div className="flex flex-col gap-2">
-                    <label>Snappiness: {editorSettings.design.snappiness}</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      value={editorSettings.design.snappiness}
-                      onChange={(e) => updateEditorSettings('design', { snappiness: Number(e.target.value) })}
-                      className="w-full"
-                    />
-                  </div>
-                </TreeItem>
-                <TreeItem>Grid Size: {editorSettings.design.gridSize}px</TreeItem>
+            {/* Editor-specific sections from context */}
+            {sortedSections.map((section) => (
+              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                {section.content}
               </TreeSection>
-            )}
-
-            {/* Type Editor Settings */}
-            {editorType === EditorType.TYPE && (
-              <TreeSection label="Type Editor" defaultOpen={true}>
-                <TreeItem>Type-specific settings here</TreeItem>
-              </TreeSection>
-            )}
-
-            {/* Kit Editor Settings */}
-            {editorType === EditorType.KIT && (
-              <TreeSection label="Kit Editor" defaultOpen={true}>
-                <TreeItem>Kit-specific settings here</TreeItem>
-              </TreeSection>
-            )}
+            ))}
           </Tree>
         </div>
       </ScrollArea>

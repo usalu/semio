@@ -5711,6 +5711,14 @@ export interface EditorSettings {
   kit?: Record<string, any>;
 }
 
+export interface PanelSizes {
+  workbenchWidth: number;
+  detailsWidth: number;
+  chatWidth: number;
+  settingsWidth: number;
+  consoleHeight: number;
+}
+
 export interface SketchpadChangableState {
   navigation: string;
   mode: Mode;
@@ -5724,6 +5732,7 @@ export interface SketchpadChangableState {
     [EditorType.TYPE]: PanelVisibility;
   };
   editorSettings: EditorSettings;
+  panelSizes: PanelSizes;
 }
 export interface SketchpadState extends SketchpadChangableState {
   id?: string;
@@ -5743,6 +5752,7 @@ export interface SketchpadDiff {
     [EditorType.TYPE]?: PanelVisibility;
   };
   editorSettings?: EditorSettings;
+  panelSizes?: Partial<PanelSizes>;
 }
 
 export interface SketchpadCommandContext {
@@ -5821,6 +5831,13 @@ class SketchpadStore {
         type: {},
         kit: {},
       }));
+      this.ySketchpad.set("panelSizes", JSON.stringify({
+        workbenchWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      }));
     });
 
     Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
@@ -5837,7 +5854,7 @@ class SketchpadStore {
     const activeDesignEditor = activeDesignEditorIdStr ? (JSON.parse(activeDesignEditorIdStr) as DesignEditorId) : undefined;
     const panelVisibilityStr = this.ySketchpad.get("panelVisibility") as string;
     const panelVisibility = panelVisibilityStr ? JSON.parse(panelVisibilityStr) : {
-      [EditorType.HOME]: {},
+      [EditorType.HOME]: { chat: false, settings: false },
       [EditorType.KIT]: { console: false, settings: false },
       [EditorType.DESIGN]: { workbench: false, details: false, console: false, chat: false, settings: false },
       [EditorType.TYPE]: { workbench: false, console: false, settings: false },
@@ -5848,6 +5865,14 @@ class SketchpadStore {
       type: {},
       kit: {},
     };
+    const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
+    const panelSizes = panelSizesStr ? JSON.parse(panelSizesStr) : {
+      workbenchWidth: 230,
+      detailsWidth: 230,
+      chatWidth: 230,
+      settingsWidth: 230,
+      consoleHeight: 200,
+    };
     const currentValues = {
       navigation: this.ySketchpad.get("navigation") as string,
       mode: this.ySketchpad.get("mode") as Mode,
@@ -5856,6 +5881,7 @@ class SketchpadStore {
       activeDesignEditor: activeDesignEditor,
       panelVisibility: panelVisibility,
       editorSettings: editorSettings,
+      panelSizes: panelSizes,
     };
     const currentHash = this.hash(currentValues);
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -5898,6 +5924,10 @@ class SketchpadStore {
       if (diff.editorSettings) {
         const current = JSON.parse(this.ySketchpad.get("editorSettings") as string || "{}");
         this.ySketchpad.set("editorSettings", JSON.stringify({ ...current, ...diff.editorSettings }));
+      }
+      if (diff.panelSizes) {
+        const current = JSON.parse(this.ySketchpad.get("panelSizes") as string || "{}");
+        this.ySketchpad.set("panelSizes", JSON.stringify({ ...current, ...diff.panelSizes }));
       }
     });
   }
@@ -6140,6 +6170,13 @@ export function useSketchpadCommands() {
         editorSettings: {
           ...current,
           [editorType]: { ...current[editorType], ...settings },
+        },
+      });
+    },
+    setPanelSize: (panelKey: keyof PanelSizes, size: number) => {
+      store.change({
+        panelSizes: {
+          [panelKey]: size,
         },
       });
     },

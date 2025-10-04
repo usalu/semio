@@ -113,8 +113,9 @@ const PanelToggles: FC = ({}) => {
         .filter(([_, isVisible]) => isVisible)
         .map(([key]) => key)}
       onValueChange={(values) => {
-        Object.keys(visiblePanels).forEach((key) => {
-          const isCurrentlyVisible = visiblePanels[key];
+        // Iterate over all panel config keys, not just existing visiblePanels
+        panelConfig.forEach(({ key }) => {
+          const isCurrentlyVisible = visiblePanels[key] || false;
           const shouldBeVisible = values.includes(key);
           if (isCurrentlyVisible !== shouldBeVisible) {
             handleToggle(key);

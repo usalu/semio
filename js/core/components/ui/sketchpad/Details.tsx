@@ -11,6 +11,7 @@ import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/compon
 import { Connection, ConnectionId, Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, parseDesignIdFromVariant, Piece, PieceId, PortId } from "../../../semio";
 import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useKit, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import Combobox from "../Combobox";
+import { usePanelSections } from "./PanelSectionContext";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface DetailsProps extends ResizablePanelProps {}
@@ -1243,6 +1244,9 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
+  // Get sections from context (provided by editor)
+  const sections = usePanelSections('details');
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -1267,12 +1271,8 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const selection = useDesignEditorSelection();
-
-  const hasPieces = (selection.pieces || []).length > 0;
-  const hasConnections = (selection.connections || []).length > 0;
-  const hasPortSelected = selection.port !== undefined;
-  const hasSelection = hasPieces || hasConnections || hasPortSelected;
+  // Sort sections by order
+  const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
     <div
@@ -1283,14 +1283,25 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1 overflow-hidden min-w-0">
           <Tree className="min-w-0 overflow-hidden">
-            {!hasSelection && <DesignSection />}
-            {hasPortSelected && <PortSection pieceId={selection.port!.piece.id_} portId={selection.port!.port.id_} />}
-            {hasPieces && !hasPortSelected && <PiecesSection pieces={selection.pieces || []} />}
-            {hasConnections && !hasPortSelected && <ConnectionsSection connections={selection.connections || []} />}
-            {hasPieces && hasConnections && !hasPortSelected && (
-              <TreeSection label="Mixed Selection" defaultOpen={true}>
+            {/* Render sections from context */}
+            {sortedSections.map((section) => (
+              <TreeSection
+                key={section.id}
+                label={section.label}
+                defaultOpen={section.defaultOpen}
+                actions={section.actions}
+              >
+                {section.content}
+              </TreeSection>
+            ))}
+
+            {/* Fallback if no sections */}
+            {sortedSections.length === 0 && (
+              <TreeSection label="No Selection" defaultOpen={true}>
                 <TreeItem>
-                  <p className="text-sm text-muted-foreground">Select only pieces or only connections to edit details.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Select an item to view details
+                  </p>
                 </TreeItem>
               </TreeSection>
             )}
@@ -1301,5 +1312,8 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     </div>
   );
 };
+
+// Export section components for use by editors
+export { DesignSection, PiecesSection, ConnectionsSection, PortSection };
 
 export default Details;

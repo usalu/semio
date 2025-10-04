@@ -4,8 +4,10 @@ import { FC, useState } from "react";
 import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
+import { Tree, TreeSection } from "@semio/js/components/ui/Tree";
 import { DesignId, TypeId } from "../../../semio";
 import { useKit } from "../../../store";
+import { usePanelSections } from "./PanelSectionContext";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
@@ -110,9 +112,11 @@ interface WorkbenchProps extends ResizablePanelProps {}
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
-  const kit = useKit();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
+  // Get sections from context (provided by editor)
+  const sections = usePanelSections("workbench");
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -138,6 +142,9 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  // Sort sections by order
+  const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+
   return (
     <div
       className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
@@ -146,30 +153,14 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     >
       <ScrollArea className="h-full">
         <div className="p-1">
-          {/* <Tree>
-            <TreeSection label="Types" defaultOpen={true}>
-              {Object.entries(typesByName).map(([name, variants]) => (
-                <TreeItem key={name} label={name} defaultOpen={false}>
-                  <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                    {variants.map((type) => (
-                      <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} />
-                    ))}
-                  </div>
-                </TreeItem>
-              ))}
-            </TreeSection>
-            <TreeSection label="Designs" defaultOpen={true}>
-              {Object.entries(designsByName).map(([name, designs]) => (
-                <TreeItem key={name} label={name} defaultOpen={false}>
-                  <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                    {designs.map((design) => (
-                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} />
-                    ))}
-                  </div>
-                </TreeItem>
-              ))}
-            </TreeSection>
-          </Tree> */}
+          <Tree>
+            {/* Render sections from context */}
+            {sortedSections.map((section) => (
+              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                {section.content}
+              </TreeSection>
+            ))}
+          </Tree>
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

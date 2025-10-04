@@ -1,7 +1,8 @@
 import { FC, useState } from "react";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
-import { Tree, TreeItem, TreeSection } from "../Tree";
+import { Tree, TreeSection } from "../Tree";
+import { usePanelSections } from "./PanelSectionContext";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface ChatProps extends ResizablePanelProps {}
@@ -10,6 +11,9 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
+  // Get sections from context (provided by editor)
+  const sections = usePanelSections('chat');
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,6 +39,9 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  // Sort sections by order
+  const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+
   return (
     <div
       className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
@@ -44,20 +51,17 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1">
           <Tree>
-            <TreeSection label="Conversation History" defaultOpen={true}>
-              <TreeSection label="Design Session #1">
-                <TreeItem label="How can I add a new piece?" />
-                <TreeItem label="Can you help with connections?" />
+            {/* Render sections from context */}
+            {sortedSections.map((section) => (
+              <TreeSection
+                key={section.id}
+                label={section.label}
+                defaultOpen={section.defaultOpen}
+                actions={section.actions}
+              >
+                {section.content}
               </TreeSection>
-              <TreeSection label="Design Session #2">
-                <TreeItem label="What are the available types?" />
-              </TreeSection>
-            </TreeSection>
-            <TreeSection label="Quick Actions" defaultOpen={true}>
-              <TreeItem label="Add random piece" />
-              <TreeItem label="Connect all pieces" />
-              <TreeItem label="Generate layout suggestions" />
-            </TreeSection>
+            ))}
           </Tree>
         </div>
         <div className="p-4 border-t">
