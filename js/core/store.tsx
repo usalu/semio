@@ -4627,37 +4627,6 @@ export function useFileUrls(): Map<Url, Url> {
   return (useKitStore() as KitStore).fileUrls();
 }
 
-export function useTypesByName(): Record<string, Type[]> {
-  const kit = useKit();
-  return useMemo(() => {
-    if (!kit?.types) return {};
-    return kit.types.reduce(
-      (acc, type) => {
-        acc[type.name] = acc[type.name] || [];
-        acc[type.name].push(type);
-        return acc;
-      },
-      {} as Record<string, Type[]>,
-    );
-  }, [kit?.types]);
-}
-
-export function useDesignsByName(): Record<string, Design[]> {
-  const kit = useKit();
-  return useMemo(() => {
-    if (!kit?.designs) return {};
-    return kit.designs.reduce(
-      (acc, design) => {
-        const nameKey = design.name;
-        acc[nameKey] = acc[nameKey] || [];
-        acc[nameKey].push(design);
-        return acc;
-      },
-      {} as Record<string, Design[]>,
-    );
-  }, [kit?.designs]);
-}
-
 export function useKitCommands() {
   const store = useKitStore() as KitStore;
   return {
@@ -5731,6 +5700,7 @@ export interface SketchpadState extends SketchpadChangableState {
 }
 
 export interface SketchpadDiff {
+  navigation?: string;
   mode?: Mode;
   theme?: Theme;
   layout?: Layout;
@@ -5851,6 +5821,7 @@ class SketchpadStore {
 
   change(diff: SketchpadDiff) {
     this.yDoc.transact(() => {
+      if (diff.navigation) this.ySketchpad.set("navigation", diff.navigation);
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
@@ -5945,6 +5916,10 @@ class SketchpadStore {
     return this.kits.find((k) => k.uuid === uuid)!;
   }
 
+  kitIds(): KitId[] {
+    return this.kits.map((k) => k.id());
+  }
+
   hasDesignEditor(designEditor: DesignEditorId): boolean {
     return hasSameDesignEditor(
       designEditor,
@@ -5959,6 +5934,10 @@ class SketchpadStore {
 
   designEditorByUuid(uuid: string): DesignEditorStore {
     return this.designEditors.find((d) => d.uuid === uuid)!;
+  }
+
+  designEditorIds(): DesignEditorId[] {
+    return this.designEditors.map((d) => d.id());
   }
 }
 
@@ -6016,7 +5995,7 @@ export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: 
 };
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 
-function useSketchpadStore(id?: string) {
+function useSketchpadStore(id?: string): SketchpadStore {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
@@ -6027,6 +6006,10 @@ function useSketchpadStore(id?: string) {
 
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : identitySelector);
+}
+
+export function useNavigation(): string {
+  return useSketchpad((s) => s.navigation) as string;
 }
 
 export function useMode(): Mode {
@@ -6055,6 +6038,12 @@ export function useSketchpadCommands() {
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
     setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
   };
+}
+
+export function useKits(): KitShallow[] {
+  return useSketchpadStore()
+    .kitIds()
+    .map((id) => useKit(identitySelector, id));
 }
 
 // #endregion Sketchpad

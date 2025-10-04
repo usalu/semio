@@ -4,9 +4,8 @@ import { FC, useState } from "react";
 import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
-import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { DesignId, TypeId } from "../../../semio";
-import { useDesignsByName, useKit, useTypesByName } from "../../../store";
+import { useKit } from "../../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
@@ -139,9 +138,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const typesByName = useTypesByName();
-  const designsByName = useDesignsByName();
-
   return (
     <div
       className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
@@ -150,7 +146,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     >
       <ScrollArea className="h-full">
         <div className="p-1">
-          <Tree>
+          {/* <Tree>
             <TreeSection label="Types" defaultOpen={true}>
               {Object.entries(typesByName).map(([name, variants]) => (
                 <TreeItem key={name} label={name} defaultOpen={false}>
@@ -173,7 +169,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 </TreeItem>
               ))}
             </TreeSection>
-          </Tree>
+          </Tree> */}
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

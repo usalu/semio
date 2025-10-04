@@ -19,10 +19,10 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minus, Square, Terminal, Wrench, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
 import { FC, useState } from "react";
 import { useNavigate } from "react-router";
-import { SketchpadScope, useSketchpadScope } from "../../../store";
+import { SketchpadScope, useKits, useNavigation, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
@@ -30,22 +30,25 @@ import { Toggle } from "../Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 
 const Navigation: FC = ({}) => {
+  let navigate = useNavigate();
+  const navigation = useNavigation();
+  const kits = useKits();
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
+        <BreadcrumbItem tooltip="Click to go home">
           <BreadcrumbLink href="/">
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator
-          items={[
-            { label: "Starter", href: "/metabolism/starter" },
-            { label: "Geometry", href: "/metabolism/geometry" },
-          ]}
-          onNavigate={(href) => {}}
+          items={[{ label: "Starter", href: "/metabolism/starter" }]}
+          tooltip="Click to see kits"
+          onNavigate={(href) => {
+            navigate(href);
+          }}
         />
-        <BreadcrumbItem>
+        <BreadcrumbItem tooltip="Click to go to kit">
           <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator
@@ -53,20 +56,14 @@ const Navigation: FC = ({}) => {
             { label: "Types", href: "/designs/types" },
             { label: "Representations", href: "/designs/representations" },
           ]}
-          onNavigate={(href) => {}}
+          tooltip="Click to see all artifacts kinds of the kit"
+          onNavigate={(href) => {
+            navigate(href);
+          }}
         />
-        <BreadcrumbItem>
+        <BreadcrumbItem tooltip="Click to go to see all designs of the kit">
           <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator
-          items={[
-            {
-              label: "Capsule Dream",
-              href: "/designs/nakagin/capsule-dream",
-            },
-          ]}
-          onNavigate={(href) => {}}
-        />
       </BreadcrumbList>
     </Breadcrumb>
   );
@@ -91,15 +88,22 @@ const PanelToggles: FC = ({}) => {
     details: false,
     console: false,
     chat: false,
+    settings: false,
   });
   const togglePanel = (panel: keyof VisiblePanels) => {
     setVisiblePanels((prev) => {
       const newState = { ...prev };
       if (panel === "chat" && !prev.chat) {
         newState.details = false;
+        newState.settings = false;
       }
       if (panel === "details" && !prev.details) {
         newState.chat = false;
+        newState.settings = false;
+      }
+      if (panel === "settings" && !prev.settings) {
+        newState.chat = false;
+        newState.details = false;
       }
       newState[panel] = !prev[panel];
       return newState;
@@ -121,17 +125,20 @@ const PanelToggles: FC = ({}) => {
         });
       }}
     >
-      <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
+      <ToggleGroupItem value="workbench" tooltip="Click to toggle workbench panel" hotkey="⌘J">
         <Wrench />
       </ToggleGroupItem>
-      <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
+      <ToggleGroupItem value="console" tooltip="Click to toggle console panel" hotkey="⌘K">
         <Terminal />
       </ToggleGroupItem>
-      <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
+      <ToggleGroupItem value="details" tooltip="Click to toggle details panel" hotkey="⌘L">
         <Info />
       </ToggleGroupItem>
-      <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
+      <ToggleGroupItem value="chat" tooltip="Click to toggle chat panel" hotkey="⌘[">
         <MessageCircle />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="settings" tooltip="Click to toggle settings panel" hotkey="⌘,">
+        <Settings />
       </ToggleGroupItem>
     </ToggleGroup>
   );
@@ -142,6 +149,7 @@ interface VisiblePanels {
   details: boolean;
   console: boolean;
   chat: boolean;
+  settings: boolean;
 }
 
 interface NavbarProps {}
@@ -153,13 +161,13 @@ const Navbar: FC<NavbarProps> = ({}) => {
   return (
     <div id="navbar" className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag]`} style={{ WebkitAppRegion: "drag" }}>
       <ButtonGroup>
-        <ButtonGroupItem value="back" onClick={() => navigate(-1)}>
+        <ButtonGroupItem value="back" tooltip="Click to go back, hold to see history" onClick={() => navigate(-1)}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" onClick={() => navigate(1)}>
+        <ButtonGroupItem value="forward" tooltip="Click to go forward, hold to see history" onClick={() => navigate(1)}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="up" onClick={() => navigate("/")}>
+        <ButtonGroupItem value="up" tooltip="Click to go up" onClick={() => navigate("/")}>
           <ArrowUp size={16} />
         </ButtonGroupItem>
       </ButtonGroup>
@@ -168,19 +176,19 @@ const Navbar: FC<NavbarProps> = ({}) => {
       {/* <Search /> */}
 
       <PanelToggles />
-      <Toggle variant="outline">
+      <Toggle variant="outline" tooltip="Click to toggle fullscreen">
         <Fullscreen />
       </Toggle>
       {onWindowEvents && (
         <div className="flex items-center gap-2 ml-4">
           <ToggleGroup type="single">
-            <ToggleGroupItem value="minimize" onClick={onWindowEvents.minimize}>
+            <ToggleGroupItem value="minimize" tooltip="Click to minimize" onClick={onWindowEvents.minimize}>
               <Minus size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="maximize" onClick={onWindowEvents.maximize}>
+            <ToggleGroupItem value="maximize" tooltip="Click to maximize" onClick={onWindowEvents.maximize}>
               <Square size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="close" onClick={onWindowEvents.close} className="hover:bg-danger">
+            <ToggleGroupItem value="close" tooltip="Click to close" onClick={onWindowEvents.close} className="hover:bg-danger">
               <X size={16} />
             </ToggleGroupItem>
           </ToggleGroup>
