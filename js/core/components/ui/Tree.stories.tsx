@@ -20,10 +20,10 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Folder, FolderOpen, File, Settings, Plus, Minus } from "lucide-react";
-import { Tree, TreeSection, TreeItem, TreeItems, SortableTreeItems } from "./Tree";
+import { File, Folder, FolderOpen, Minus, Plus, Settings } from "lucide-react";
 import { Button } from "./Button";
 import { Input } from "./Input";
+import { SortableTreeItems, Tree, TreeItem, TreeSection } from "./Tree";
 
 const meta = {
   title: "UI/Tree",
@@ -66,17 +66,11 @@ export const Basic: Story = {
         </TreeSection>
         <TreeSection label="Settings" icon={<Settings size={14} />}>
           <TreeItem label="General">
-            <TreeItem>
-              <Input label="Name" value="My Project" />
-            </TreeItem>
-            <TreeItem>
-              <Input label="Version" value="1.0.0" />
-            </TreeItem>
+            <Input label="Name" value="My Project" />
+            <Input label="Version" value="1.0.0" />
           </TreeItem>
           <TreeItem label="Advanced">
-            <TreeItem>
-              <Button>Reset Settings</Button>
-            </TreeItem>
+            <Button>Reset Settings</Button>
           </TreeItem>
         </TreeSection>
       </Tree>
@@ -91,29 +85,29 @@ export const WithActions: Story = {
   render: () => (
     <div className="w-80 h-96 border rounded-lg p-4">
       <Tree>
-        <TreeSection 
-          label="Files" 
+        <TreeSection
+          label="Files"
           icon={<Folder size={14} />}
           actions={[
             {
               icon: <Plus size={12} />,
               onClick: () => console.log("Add file"),
-              title: "Add file"
-            }
+              title: "Add file",
+            },
           ]}
         >
           <TreeItem label="document.txt" icon={<File size={12} />} />
           <TreeItem label="image.jpg" icon={<File size={12} />} />
         </TreeSection>
-        <TreeSection 
-          label="Empty Folder" 
+        <TreeSection
+          label="Empty Folder"
           icon={<FolderOpen size={14} />}
           actions={[
             {
               icon: <Minus size={12} />,
               onClick: () => console.log("Remove folder"),
-              title: "Remove folder"
-            }
+              title: "Remove folder",
+            },
           ]}
         />
       </Tree>
@@ -191,17 +185,7 @@ export const SortableExample: Story = {
                 console.log(`Move item from ${oldIndex} to ${newIndex}`);
               }}
             >
-              {(item, index) => (
-                <TreeItem
-                  key={item.id}
-                  label={item.name}
-                  icon={<File size={12} />}
-                  sortable={true}
-                  sortableId={item.id}
-                  isDragHandle={true}
-                  isLastItem={index === items.length - 1}
-                />
-              )}
+              {(item, index) => <TreeItem key={item.id} label={item.name} icon={<File size={12} />} sortable={true} sortableId={item.id} isDragHandle={true} isLastItem={index === items.length - 1} />}
             </SortableTreeItems>
           </TreeSection>
         </Tree>
