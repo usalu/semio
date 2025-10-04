@@ -25,13 +25,11 @@ import { TooltipProvider } from "../Tooltip";
 import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useEditorType, useLayout, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
 import { TreeItem } from "../Tree";
 import Chat from "./Chat";
-import Console from "./Console";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
 import Footer from "./Footer";
 import KitEditor from "./KitEditor";
-import Navbar from "./Navbar";
-import { PanelSectionProvider, useAddPanelSection, useRemovePanelSection } from "./PanelSectionContext";
+import Navbar, { PanelSectionProvider, useAddPanelSection, useRemovePanelSection } from "./Navbar";
 import Settings from "./Settings";
 import TypeEditor from "./TypeEditor";
 import Workbench from "./Workbench";
@@ -156,18 +154,11 @@ const SketchpadBase: FC = () => {
     <PanelSectionProvider>
       <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
         <Navbar />
-
-        {/* Main content area with panels */}
         <div className="flex-1 flex overflow-hidden relative">
-          {/* LEFT PANELS */}
           {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
-
-          {/* MAIN CONTENT - Outlet renders DesignEditor/TypeEditor/KitEditor/Home */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <Outlet />
           </div>
-
-          {/* RIGHT PANELS (mutually exclusive: details OR chat OR settings) */}
           {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
             <div className="flex">
               {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
@@ -175,9 +166,6 @@ const SketchpadBase: FC = () => {
               {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}
             </div>
           )}
-
-          {/* BOTTOM PANELS */}
-          {visiblePanels.console && <Console visible={true} height={panelSizes.consoleHeight} onHeightChange={(h) => setPanelSize("consoleHeight", h)} />}
         </div>
 
         <Footer />

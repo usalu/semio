@@ -2,7 +2,7 @@ import { FC, useState } from "react";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
 import { Tree, TreeSection } from "../Tree";
-import { usePanelSections } from "./PanelSectionContext";
+import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface ChatProps extends ResizablePanelProps {}
@@ -12,8 +12,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Get sections from context (provided by editor)
-  const sections = usePanelSections('chat');
+  const sections = usePanelSections("chat");
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,7 +38,6 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Sort sections by order
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
@@ -51,14 +49,8 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1">
           <Tree>
-            {/* Render sections from context */}
             {sortedSections.map((section) => (
-              <TreeSection
-                key={section.id}
-                label={section.label}
-                defaultOpen={section.defaultOpen}
-                actions={section.actions}
-              >
+              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
                 {section.content}
               </TreeSection>
             ))}

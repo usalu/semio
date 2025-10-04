@@ -30,7 +30,28 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@semio/js/c
 import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { createContext, FC, ReactNode, useContext, useState } from "react";
 
-const TreeContext = createContext<{ level: number }>({ level: 0 });
+const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
+
+const IndentationLines: FC<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }> = ({ level, isLastAtLevel, showLines }) => {
+  if (!showLines || level === 0) return null;
+
+  return (
+    <>
+      {Array.from({ length: level }, (_, i) => (
+        <div key={i} className="w-[1.25rem] flex items-center justify-center relative">
+          {i === level - 1 ? (
+            <>
+              <div className="w-[1px] h-[0.75rem] bg-border/30 absolute top-0" />
+              <div className="w-3 h-[1px] bg-border/30 absolute top-[0.75rem] left-0" />
+            </>
+          ) : !isLastAtLevel[i] ? (
+            <div className="w-[1px] h-full bg-border/30" />
+          ) : null}
+        </div>
+      ))}
+    </>
+  );
+};
 
 export interface TreeSectionAction {
   icon: ReactNode;
@@ -58,6 +79,7 @@ interface SortableTreeItemProps {
   isHighlighted?: boolean;
   isDragHandle?: boolean;
   defaultOpen?: boolean;
+  isLastItem?: boolean;
 }
 
 interface TreeItemProps {
@@ -72,6 +94,7 @@ interface TreeItemProps {
   sortableId?: string;
   isDragHandle?: boolean;
   defaultOpen?: boolean;
+  isLastItem?: boolean;
 }
 
 interface SortableTreeItemsProps {
@@ -81,13 +104,15 @@ interface SortableTreeItemsProps {
 }
 
 export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [] }) => {
+  const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const [open, setOpen] = useState(defaultOpen);
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
 
   if (!hasChildren) {
     return (
-      <div className={`flex items-center gap-1 py-1 px-2 hover:bg-muted select-none overflow-hidden group min-w-0 ${className}`} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div className={`flex items-center gap-1 py-1 hover:bg-muted select-none overflow-hidden group min-w-0 ${className}`} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+        <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
         <div className="w-[14px] flex-shrink-0" />
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
@@ -116,7 +141,8 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <div className={`flex items-center gap-1 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden group min-w-0 ${className}`} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+        <div className={`flex items-center gap-1 py-1 hover:bg-muted cursor-pointer select-none overflow-hidden group min-w-0 ${className}`} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+          <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
@@ -140,13 +166,17 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           )}
         </div>
       </CollapsibleTrigger>
-      <CollapsibleContent className="pl-2 min-w-0 overflow-hidden">{children}</CollapsibleContent>
+      <CollapsibleContent className="min-w-0 overflow-hidden">
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, true], showLines }}>
+          <div className="pl-[1.25rem]">{children}</div>
+        </TreeContext.Provider>
+      </CollapsibleContent>
     </Collapsible>
   );
 };
 
-const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true }) => {
-  const { level } = useContext(TreeContext);
+const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false }) => {
+  const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const [open, setOpen] = useState(defaultOpen);
   const hasChildren = Boolean(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -154,17 +184,16 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    paddingLeft: `${level * 1.25}rem`,
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const baseClasses = "flex items-center gap-1 py-0.5 px-1 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0";
+  const baseClasses = "flex items-center gap-1 py-0.5 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
   if (hasChildren) {
     return (
-      <TreeContext.Provider value={{ level: level + 1 }}>
+      <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>
         {label && (
           <div
             ref={setNodeRef}
@@ -177,6 +206,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
               onClick?.();
             }}
           >
+            <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
             {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
             {isDragHandle && (
               <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10 rounded" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
@@ -187,7 +217,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
             <span className="flex-1 text-xs font-normal truncate">{label}</span>
           </div>
         )}
-        {open && <div className="pb-0.5 min-w-0 overflow-hidden">{children}</div>}
+        {open && <div className="pb-0.5 min-w-0 overflow-hidden pl-[1.25rem]">{children}</div>}
       </TreeContext.Provider>
     );
   }
@@ -198,6 +228,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
 
   return (
     <div ref={setNodeRef} style={style} className={itemClasses} onClick={onClick}>
+      <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {isDragHandle && (
         <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10 rounded" {...attributes} {...listeners}>
           <GripVertical size={12} className="text-muted-foreground" />
@@ -230,26 +261,24 @@ export const SortableTreeItems: FC<SortableTreeItemsProps> = ({ items, onReorder
   );
 };
 
-export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true }) => {
+export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true, isLastItem = false }) => {
   if (sortable && sortableId) {
-    return <SortableTreeItem id={sortableId} label={label} icon={icon} children={children} onClick={onClick} className={className} isSelected={isSelected} isHighlighted={isHighlighted} isDragHandle={isDragHandle} defaultOpen={defaultOpen} />;
+    return <SortableTreeItem id={sortableId} label={label} icon={icon} children={children} onClick={onClick} className={className} isSelected={isSelected} isHighlighted={isHighlighted} isDragHandle={isDragHandle} defaultOpen={defaultOpen} isLastItem={isLastItem} />;
   }
 
-  const { level } = useContext(TreeContext);
+  const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const [open, setOpen] = useState(defaultOpen);
   const hasChildren = Boolean(children);
-  const indentStyle = { paddingLeft: `${level * 1.25}rem` };
-  const baseClasses = "flex items-center gap-1 py-0.5 px-1 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0";
+  const baseClasses = "flex items-center gap-1 py-0.5 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
   if (hasChildren) {
     return (
-      <TreeContext.Provider value={{ level: level + 1 }}>
+      <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>
         {label && (
           <div
             className={itemClasses}
-            style={indentStyle}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -257,12 +286,13 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
               onClick?.();
             }}
           >
+            <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
             {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
             {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
             <span className="flex-1 text-xs font-normal truncate">{label}</span>
           </div>
         )}
-        {open && <div className="pb-0.5 min-w-0 overflow-hidden">{children}</div>}
+        {open && <div className="pb-0.5 min-w-0 overflow-hidden pl-[1.25rem]">{children}</div>}
       </TreeContext.Provider>
     );
   }
@@ -272,16 +302,25 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
   }
 
   return (
-    <div className={itemClasses} style={indentStyle} onClick={onClick}>
+    <div className={itemClasses} onClick={onClick}>
+      <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate">{label}</span>
     </div>
   );
 };
 
-export const Tree: FC<{ children: ReactNode; className?: string }> = ({ children, className = "" }) => {
+export const TreeItems: FC<{ children: ReactNode[]; renderItem: (child: ReactNode, index: number, isLast: boolean) => ReactNode }> = ({ children, renderItem }) => {
   return (
-    <TreeContext.Provider value={{ level: 0 }}>
+    <>
+      {children.map((child, index) => renderItem(child, index, index === children.length - 1))}
+    </>
+  );
+};
+
+export const Tree: FC<{ children: ReactNode; className?: string; showLines?: boolean }> = ({ children, className = "", showLines = true }) => {
+  return (
+    <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines }}>
       <div className={`w-full min-w-0 overflow-hidden ${className}`}>{children}</div>
     </TreeContext.Provider>
   );

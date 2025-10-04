@@ -7,7 +7,7 @@ import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeSection } from "@semio/js/components/ui/Tree";
 import { DesignId, TypeId } from "../../../semio";
 import { useKit } from "../../../store";
-import { usePanelSections } from "./PanelSectionContext";
+import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
@@ -16,7 +16,6 @@ interface TypeAvatarProps {
 }
 
 export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false }) => {
-  // Get the kit and find the type from it
   const kit = useKit();
   const type = kit.types?.find((t) => t.name === typeId.name && (t.variant || undefined) === typeId.variant);
 
@@ -62,7 +61,6 @@ interface DesignAvatarProps {
 }
 
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false }) => {
-  // Get the kit and find the design from it
   const kit = useKit();
   const design = kit.designs?.find((d) => d.name === designId.name && (d.variant || undefined) === designId.variant && (d.view || undefined) === designId.view);
 
@@ -72,10 +70,9 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = 
   });
 
   if (!design) {
-    return null; // Design not found
+    return null;
   }
 
-  // Determine if this is the default variant and view
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
 
   const displayVariant = design.variant || design.name;
@@ -115,7 +112,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Get sections from context (provided by editor)
   const sections = usePanelSections("workbench");
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -142,7 +138,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Sort sections by order
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
@@ -154,7 +149,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1">
           <Tree>
-            {/* Render sections from context */}
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
                 {section.content}

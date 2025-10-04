@@ -19,16 +19,120 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Minus, Square, X } from "lucide-react";
-import { FC } from "react";
+import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
+import { createContext, FC, ReactNode, useCallback, useContext, useState } from "react";
 import { useNavigate } from "react-router";
-import { SketchpadScope, useEditorType, useKits, useNavigation, useSketchpad, useSketchpadCommands, useSketchpadScope } from "../../../store";
+import { EditorType, SketchpadScope, useEditorType, useKits, useNavigation, useSketchpad, useSketchpadCommands, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
 import { Toggle } from "../Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
-import { PANEL_CONFIGS } from "./panelConfigs";
+
+export interface PanelSection {
+  id: string;
+  label: string;
+  content: ReactNode;
+  defaultOpen?: boolean;
+  order?: number;
+  actions?: Array<{
+    icon: ReactNode;
+    onClick: () => void;
+    title: string;
+  }>;
+}
+
+export type PanelKey = "details" | "workbench" | "console" | "chat" | "settings";
+
+export interface PanelSections {
+  details: PanelSection[];
+  workbench: PanelSection[];
+  console: PanelSection[];
+  chat: PanelSection[];
+  settings: PanelSection[];
+}
+
+interface PanelSectionContextValue {
+  sections: PanelSections;
+  addSection: (panelKey: PanelKey, section: PanelSection) => void;
+  removeSection: (panelKey: PanelKey, sectionId: string) => void;
+}
+
+const PanelSectionContext = createContext<PanelSectionContextValue | null>(null);
+
+export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [sections, setSections] = useState<PanelSections>({
+    details: [],
+    workbench: [],
+    console: [],
+    chat: [],
+    settings: [],
+  });
+
+  const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
+    setSections((prev) => ({
+      ...prev,
+      [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => (a.order || 0) - (b.order || 0)),
+    }));
+  }, []);
+
+  const removeSection = useCallback((panelKey: PanelKey, sectionId: string) => {
+    setSections((prev) => ({
+      ...prev,
+      [panelKey]: prev[panelKey].filter((s) => s.id !== sectionId),
+    }));
+  }, []);
+
+  return <PanelSectionContext.Provider value={{ sections, addSection, removeSection }}>{children}</PanelSectionContext.Provider>;
+};
+
+export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
+  const context = useContext(PanelSectionContext);
+  if (!context) throw new Error("usePanelSections must be used within PanelSectionProvider");
+  return context.sections[panelKey];
+};
+
+export const useAddPanelSection = () => {
+  const context = useContext(PanelSectionContext);
+  if (!context) throw new Error("useAddPanelSection must be used within PanelSectionProvider");
+  return context.addSection;
+};
+
+export const useRemovePanelSection = () => {
+  const context = useContext(PanelSectionContext);
+  if (!context) throw new Error("useRemovePanelSection must be used within PanelSectionProvider");
+  return context.removeSection;
+};
+
+export interface PanelDefinition {
+  key: string;
+  icon: React.ComponentType<{ size?: number }>;
+  tooltip: string;
+  hotkey: string;
+}
+
+export const PANEL_CONFIGS: Record<EditorType, PanelDefinition[]> = {
+  [EditorType.HOME]: [
+    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+  ],
+  [EditorType.KIT]: [
+    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+  ],
+  [EditorType.DESIGN]: [
+    { key: "workbench", icon: Wrench, tooltip: "Click to toggle workbench panel", hotkey: "⌘J" },
+    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+  ],
+  [EditorType.TYPE]: [
+    { key: "workbench", icon: Wrench, tooltip: "Click to toggle workbench panel", hotkey: "⌘J" },
+    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
+    { key: "console", icon: Terminal, tooltip: "Click to toggle console panel", hotkey: "⌘K" },
+    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+  ],
+};
 
 const Navigation: FC = ({}) => {
   let navigate = useNavigate();

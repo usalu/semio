@@ -9,9 +9,9 @@ import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { Connection, ConnectionId, Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, parseDesignIdFromVariant, Piece, PieceId, PortId } from "../../../semio";
-import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useKit, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
+import { useDesign, useDesignEditorCommands, useKit, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import Combobox from "../Combobox";
-import { usePanelSections } from "./PanelSectionContext";
+import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface DetailsProps extends ResizablePanelProps {}
@@ -1193,12 +1193,11 @@ const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId
   const design = useDesign();
   const kit = useKit();
 
-  // Find the piece using the same pattern as in PiecesSection
   const piece = (() => {
     try {
       return findPieceInDesign(design, pieceId);
     } catch {
-      return null; // Piece not found
+      return null;
     }
   })();
 
@@ -1244,8 +1243,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Get sections from context (provided by editor)
-  const sections = usePanelSections('details');
+  const sections = usePanelSections("details");
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -1271,7 +1269,6 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Sort sections by order
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
@@ -1283,25 +1280,16 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1 overflow-hidden min-w-0">
           <Tree className="min-w-0 overflow-hidden">
-            {/* Render sections from context */}
             {sortedSections.map((section) => (
-              <TreeSection
-                key={section.id}
-                label={section.label}
-                defaultOpen={section.defaultOpen}
-                actions={section.actions}
-              >
+              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
                 {section.content}
               </TreeSection>
             ))}
 
-            {/* Fallback if no sections */}
             {sortedSections.length === 0 && (
               <TreeSection label="No Selection" defaultOpen={true}>
                 <TreeItem>
-                  <p className="text-sm text-muted-foreground">
-                    Select an item to view details
-                  </p>
+                  <p className="text-sm text-muted-foreground">Select an item to view details</p>
                 </TreeItem>
               </TreeSection>
             )}
@@ -1314,6 +1302,6 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 };
 
 // Export section components for use by editors
-export { DesignSection, PiecesSection, ConnectionsSection, PortSection };
+export { ConnectionsSection, DesignSection, PiecesSection, PortSection };
 
 export default Details;

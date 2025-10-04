@@ -2,11 +2,11 @@ import { TreeItem, TreeSection } from "../Tree";
 
 import { FingerprintIcon, Laptop, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { FC, useState } from "react";
-import { Theme, useEditorType, useLayout, useSketchpad, useSketchpadCommands, useTheme } from "../../../store";
+import { Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../../store";
 import { ScrollArea } from "../ScrollArea";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import { Tree } from "../Tree";
-import { usePanelSections } from "./PanelSectionContext";
+import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface SettingsProps extends ResizablePanelProps {}
@@ -18,9 +18,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
-  const editorType = useEditorType();
-  const editorSettings = useSketchpad((s) => s.editorSettings);
-  const { setTheme, setLayout, updateEditorSettings } = useSketchpadCommands();
+  const { setTheme, setLayout } = useSketchpadCommands();
 
   // Get editor-specific sections from context
   const sections = usePanelSections("settings");
