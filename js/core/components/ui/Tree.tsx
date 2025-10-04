@@ -32,18 +32,27 @@ import { createContext, FC, ReactNode, useContext, useState } from "react";
 
 const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
 
-const IndentationLines: FC<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isLeaf?: boolean }> = ({ level, isLastAtLevel, showLines, isLeaf = false }) => {
+const IndentationLines: FC<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }> = ({ level, isLastAtLevel, showLines }) => {
   if (!showLines || level === 0) return null;
-
-  const linesToRender = isLeaf ? level - 1 : level;
 
   return (
     <div className="absolute left-0 top-0 bottom-0 pointer-events-none">
-      {Array.from({ length: linesToRender }, (_, i) => (
+      {Array.from({ length: level }, (_, i) => (
         <div key={i} className="absolute top-0 bottom-0" style={{ left: `${i * 0.75 + 0.375}rem` }}>
           {!isLastAtLevel[i] && <div className="w-px h-full bg-border" />}
         </div>
       ))}
+    </div>
+  );
+};
+
+// Wrapper component that applies indentation to custom content (non-TreeItem children)
+export const TreeContent: FC<{ children: ReactNode }> = ({ children }) => {
+  const { level, isLastAtLevel, showLines } = useContext(TreeContext);
+  return (
+    <div className="relative" style={{ paddingLeft: `${level * 0.75}rem` }}>
+      <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
+      {children}
     </div>
   );
 };
@@ -220,9 +229,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
         </div>
         {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>
-            {children}
-          </TreeContext.Provider>
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>
         )}
       </>
     );
@@ -230,9 +237,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
 
   if (!label) {
     return (
-      <div className="relative" style={{ paddingLeft: `${level * 0.75}rem` }}>
-        {children}
-      </div>
+      <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>
     );
   }
 
@@ -316,9 +321,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
         </div>
         {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>
-            {children}
-          </TreeContext.Provider>
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>
         )}
       </>
     );
@@ -326,9 +329,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
 
   if (!label) {
     return (
-      <div className="relative" style={{ paddingLeft: `${level * 0.75}rem` }}>
-        {children}
-      </div>
+      <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>
     );
   }
 

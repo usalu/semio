@@ -23,7 +23,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, FolderOpen, Minus, Plus, Settings } from "lucide-react";
 import { Button } from "./Button";
 import { Input } from "./Input";
-import { SortableTreeItems, Tree, TreeItem, TreeSection } from "./Tree";
+import { SortableTreeItems, Tree, TreeContent, TreeItem, TreeSection } from "./Tree";
 
 const meta = {
   title: "UI/Tree",
@@ -42,7 +42,7 @@ export const Basic: Story = {
     children: null,
   },
   render: () => (
-    <div className="w-80 h-96 border rounded-lg p-4">
+    <div className="border p-4">
       <Tree>
         <TreeSection label="Project" icon={<Folder size={14} />}>
           <TreeItem label="src" icon={<Folder size={12} />}>
@@ -66,11 +66,15 @@ export const Basic: Story = {
         </TreeSection>
         <TreeSection label="Settings" icon={<Settings size={14} />}>
           <TreeItem label="General">
-            <Input label="Name" value="My Project" />
-            <Input label="Version" value="1.0.0" />
+            <TreeContent>
+              <Input label="Name" value="My Project" />
+              <Input label="Version" value="1.0.0" />
+            </TreeContent>
           </TreeItem>
           <TreeItem label="Advanced">
-            <Button>Reset Settings</Button>
+            <TreeContent>
+              <Button>Reset Settings</Button>
+            </TreeContent>
           </TreeItem>
         </TreeSection>
       </Tree>

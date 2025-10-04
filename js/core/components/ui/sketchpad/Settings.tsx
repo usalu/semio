@@ -1,4 +1,4 @@
-import { TreeItem, TreeSection } from "../Tree";
+import { TreeContent, TreeItem, TreeSection } from "../Tree";
 
 import { FingerprintIcon, Laptop, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { FC, useState } from "react";
@@ -62,27 +62,31 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
             {/* General Settings - always shown */}
             <TreeSection label="General" defaultOpen={true}>
               <TreeItem label="Theme">
-                <ToggleGroup type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
-                  <ToggleGroupItem value="system">
-                    <Laptop />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="light">
-                    <SunIcon />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="dark">
-                    <MoonIcon />
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                <TreeContent>
+                  <ToggleGroup type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
+                    <ToggleGroupItem value="system">
+                      <Laptop />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="light">
+                      <SunIcon />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="dark">
+                      <MoonIcon />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </TreeContent>
               </TreeItem>
               <TreeItem label="Layout">
-                <ToggleGroup type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
-                  <ToggleGroupItem value="normal">
-                    <MonitorIcon />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="touch">
-                    <FingerprintIcon />
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                <TreeContent>
+                  <ToggleGroup type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+                    <ToggleGroupItem value="normal">
+                      <MonitorIcon />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="touch">
+                      <FingerprintIcon />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </TreeContent>
               </TreeItem>
             </TreeSection>
 
