@@ -14,14 +14,11 @@ interface SettingsProps extends ResizablePanelProps {}
 const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const theme = useTheme();
   const layout = useLayout();
+  const { setTheme, setLayout } = useSketchpadCommands();
+  const sections = usePanelSections("settings");
 
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-
-  const { setTheme, setLayout } = useSketchpadCommands();
-
-  // Get editor-specific sections from context
-  const sections = usePanelSections("settings");
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,11 +56,10 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1 overflow-hidden min-w-0">
           <Tree className="min-w-0 overflow-hidden">
-            {/* General Settings - always shown */}
             <TreeSection label="General" defaultOpen={true}>
-              <TreeItem label="Theme">
+              <TreeItem>
                 <TreeContent>
-                  <ToggleGroup type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
+                  <ToggleGroup label="Theme" type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
                     <ToggleGroupItem value="system">
                       <Laptop />
                     </ToggleGroupItem>
@@ -76,9 +72,9 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
                   </ToggleGroup>
                 </TreeContent>
               </TreeItem>
-              <TreeItem label="Layout">
+              <TreeItem>
                 <TreeContent>
-                  <ToggleGroup type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+                  <ToggleGroup label="Layout" type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
                     <ToggleGroupItem value="normal">
                       <MonitorIcon />
                     </ToggleGroupItem>
@@ -90,7 +86,6 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
             </TreeSection>
 
-            {/* Editor-specific sections from context */}
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
                 {section.content}

@@ -50,12 +50,23 @@ const ButtonGroupContext = React.createContext<VariantProps<typeof buttonGroupIt
   variant: "default",
 });
 
-function ButtonGroup({ className, variant, size, children, ...props }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupItemVariants>) {
-  return (
+function ButtonGroup({ className, variant, size, label, children, ...props }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupItemVariants> & { label?: string }) {
+  const buttonGroupElement = (
     <div data-slot="button-group" data-variant={variant} data-size={size} className={cn("group/button-group flex w-fit items-center border overflow-hidden", className)} {...props}>
       <ButtonGroupContext.Provider value={{ variant, size }}>{children}</ButtonGroupContext.Provider>
     </div>
   );
+
+  if (label) {
+    return (
+      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
+        {buttonGroupElement}
+      </div>
+    );
+  }
+
+  return buttonGroupElement;
 }
 
 function ButtonGroupItem({

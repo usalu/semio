@@ -4665,6 +4665,866 @@ export function useKitCommands() {
 
 // #endregion Kit
 
+// #region Kit Editor
+
+type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YKitEditor = Y.Map<YKitEditorVal>;
+type YKitEditors = Y.Array<YKitEditor>;
+
+export interface KitEditorId {
+  kit: KitId;
+}
+export interface KitEditorSelection {
+  types?: TypeId[];
+  designs?: DesignId[];
+}
+export interface KitEditorSelectionTypesDiff {
+  added?: TypeId[];
+  removed?: TypeId[];
+}
+export interface KitEditorSelectionDesignsDiff {
+  added?: DesignId[];
+  removed?: DesignId[];
+}
+export interface KitEditorSelectionDiff {
+  types?: KitEditorSelectionTypesDiff;
+  designs?: KitEditorSelectionDesignsDiff;
+}
+export enum KitEditorFullscreenPanel {
+  None = "none",
+  Types = "types",
+  Designs = "designs",
+}
+export interface KitEditorPresence {
+  cursor?: Coord;
+  camera?: Camera;
+}
+export interface KitEditorHover {
+  type?: TypeId;
+  design?: DesignId;
+}
+export interface KitEditorPresenceOther extends KitEditorPresence {
+  name: string;
+}
+export interface KitEditorDiff {
+  selection?: KitEditorSelectionDiff;
+  presence?: KitEditorPresence;
+  hover?: KitEditorHover;
+  fullscreenPanel?: KitEditorFullscreenPanel;
+}
+export interface KitEditorStep {
+  kitDiff?: KitDiff;
+  selectionDiff?: KitEditorSelectionDiff;
+}
+export interface KitEditorEdit {
+  do: KitEditorStep;
+  undo: KitEditorStep;
+}
+export interface KitEditorState {
+  fullscreenPanel: KitEditorFullscreenPanel;
+  selection?: KitEditorSelection;
+  hover?: KitEditorHover;
+  presence?: KitEditorPresence;
+  others: KitEditorPresenceOther[];
+}
+
+export interface KitEditorCommandContext extends KitCommandContext {
+  kitEditor: KitEditorState;
+}
+export interface KitEditorCommandResult {
+  diff?: KitEditorDiff;
+  kitDiff?: KitDiff;
+}
+
+export const inverseKitEditorSelectionDiff = (selection: KitEditorSelection, diff: KitEditorSelectionDiff): KitEditorSelectionDiff => {
+  const inverseDiff: KitEditorSelectionDiff = {};
+
+  // Inverse types diff
+  if (diff.types) {
+    inverseDiff.types = {};
+    if (diff.types.added) {
+      inverseDiff.types.removed = diff.types.added;
+    }
+    if (diff.types.removed) {
+      inverseDiff.types.added = diff.types.removed;
+    }
+  }
+
+  // Inverse designs diff
+  if (diff.designs) {
+    inverseDiff.designs = {};
+    if (diff.designs.added) {
+      inverseDiff.designs.removed = diff.designs.added;
+    }
+    if (diff.designs.removed) {
+      inverseDiff.designs.added = diff.designs.removed;
+    }
+  }
+
+  return inverseDiff;
+};
+export const areSameKitEditor = (kitEditor: KitEditorId, other: KitEditorId): boolean => areSameKit(kitEditor.kit, other.kit);
+export const hasSameKitEditor = (kitEditor: KitEditorId, others: KitEditorId[]): boolean => others.some((other) => areSameKitEditor(kitEditor, other));
+
+class KitEditorStore {
+  public readonly uuid: string;
+  public readonly parent: SketchpadStore;
+  public readonly yMap: YKitEditor;
+  private readonly commandRegistry: Map<string, (context: KitEditorCommandContext, ...rest: any[]) => KitEditorCommandResult> = new Map();
+  private readonly transact: (fn: () => void) => void;
+  private cache?: KitEditorState;
+  private cacheHash?: string;
+
+  constructor(parent: SketchpadStore, yMap: YKitEditor, transact: (fn: () => void) => void, id: KitEditorId, state?: KitEditorState) {
+    this.uuid = uuidv4();
+    this.parent = parent;
+    this.yMap = yMap;
+    this.transact = transact;
+
+    const kit = this.parent.kit(id.kit);
+    yMap.set("kit", kit.uuid);
+
+    yMap.set("fullscreenPanel", state?.fullscreenPanel || KitEditorFullscreenPanel.None);
+
+    const selection = new Y.Map<any>();
+    const selectedTypes = new Y.Array<string>();
+    if (state?.selection?.types) {
+      selectedTypes.push(state?.selection.types.map((type) => typeIdToString(type)) || []);
+    }
+    const selectedDesigns = new Y.Array<string>();
+    if (state?.selection?.designs) {
+      selectedDesigns.push(state?.selection.designs.map((design) => designIdToString(design)) || []);
+    }
+    selection.set("types", selectedTypes);
+    selection.set("designs", selectedDesigns);
+    yMap.set("selection", selection);
+
+    yMap.set("isTransactionActive", false);
+    yMap.set("presence", new Y.Map<any>());
+    yMap.set("others", new Y.Array<any>());
+    yMap.set("diff", new Y.Map<any>());
+    yMap.set("currentTransactionStack", new Y.Array<any>());
+    yMap.set("pastTransactionsStack", new Y.Array<any>());
+
+    Object.entries(kitEditorCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
+  }
+
+  get fullscreenPanel(): KitEditorFullscreenPanel {
+    return this.yMap.get("fullscreenPanel") as KitEditorFullscreenPanel;
+  }
+  set fullscreenPanel(panel: KitEditorFullscreenPanel) {
+    this.yMap.set("fullscreenPanel", panel);
+  }
+  get selection(): KitEditorSelection {
+    const selection = this.yMap.get("selection") as Y.Map<any>;
+    if (!selection) return {};
+
+    const result: KitEditorSelection = {};
+
+    // Get types
+    const types = selection.get("types") as Y.Array<string>;
+    if (types && types.length > 0) {
+      result.types = types.toArray().map((id_) => ({ id_ }));
+    }
+
+    // Get designs
+    const designs = selection.get("designs") as Y.Array<string>;
+    if (designs && designs.length > 0) {
+      result.designs = designs.toArray().map((id_) => ({ id_ }));
+    }
+
+    return result;
+  }
+  get isTransactionActive(): boolean {
+    return (this.yMap.get("isTransactionActive") as boolean) || false;
+  }
+  set isTransactionActive(active: boolean) {
+    this.yMap.set("isTransactionActive", active);
+  }
+  get presence(): KitEditorPresence {
+    return {
+      cursor: {
+        x: (this.yMap.get("presenceCursorX") as number) || 0,
+        y: (this.yMap.get("presenceCursorY") as number) || 0,
+      },
+    };
+  }
+  get others(): KitEditorPresenceOther[] {
+    return [];
+  }
+  get diff(): KitDiff {
+    return {};
+  }
+  get currentTransactionStack(): KitEditorEdit[] {
+    const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+  get pastTransactionsStack(): KitEditorEdit[] {
+    const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+
+  kit(): KitStore {
+    return this.parent.kitByUuid(this.yMap.get("kit") as string);
+  }
+
+  canUndo(): boolean {
+    return this.pastTransactionsStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.currentTransactionStack.length > 0 && !this.isTransactionActive;
+  }
+
+  id(): KitEditorId {
+    return {
+      kit: this.kit().id(),
+    } as KitEditorId;
+  }
+
+  hash(state: KitEditorState): string {
+    return JSON.stringify(state);
+  }
+
+  snapshot = (): KitEditorState => {
+    const currentData = {
+      fullscreenPanel: this.fullscreenPanel,
+      selection: this.selection,
+      isTransactionActive: this.isTransactionActive,
+      canUndo: this.canUndo(),
+      canRedo: this.canRedo(),
+      presence: this.presence,
+      others: this.others,
+      diff: this.diff,
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  private applySelectionDiff = (selectionDiff: KitEditorSelectionDiff) => {
+    let selection = this.yMap.get("selection") as Y.Map<any>;
+    if (!selection) {
+      selection = new Y.Map();
+      this.yMap.set("selection", selection);
+    }
+
+    // Apply types diff
+    if (selectionDiff.types) {
+      let types = (selection.get("types") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("types")) {
+        selection.set("types", types);
+      }
+
+      if (selectionDiff.types.added) {
+        for (const type of selectionDiff.types.added) {
+          if (!types.toArray().includes(type.id_)) {
+            types.push([type.id_]);
+          }
+        }
+      }
+      if (selectionDiff.types.removed) {
+        for (const type of selectionDiff.types.removed) {
+          const index = types.toArray().indexOf(type.id_);
+          if (index !== -1) {
+            types.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply designs diff
+    if (selectionDiff.designs) {
+      let designs = (selection.get("designs") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("designs")) {
+        selection.set("designs", designs);
+      }
+
+      if (selectionDiff.designs.added) {
+        for (const design of selectionDiff.designs.added) {
+          if (!designs.toArray().includes(design.id_)) {
+            designs.push([design.id_]);
+          }
+        }
+      }
+      if (selectionDiff.designs.removed) {
+        for (const design of selectionDiff.designs.removed) {
+          const index = designs.toArray().indexOf(design.id_);
+          if (index !== -1) {
+            designs.delete(index, 1);
+          }
+        }
+      }
+    }
+  };
+
+  change = (diff: KitEditorDiff) => {
+    this.transact(() => {
+      if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
+      if (diff.selection) {
+        this.applySelectionDiff(diff.selection);
+      }
+      if (diff.presence) {
+        // Handle presence changes if needed
+      }
+      if (diff.hover) {
+        // Handle hover changes if needed
+      }
+    });
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yMap, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yMap, subscribe, true);
+  };
+
+  startTransaction = () => {
+    this.isTransactionActive = true;
+  };
+
+  onTransactionStarted = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  abortTransaction = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack) {
+        currentStack.delete(0, currentStack.length);
+      }
+      this.isTransactionActive = false;
+    }
+  };
+
+  onTransactionAborted = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  finalizeTransaction = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      if (currentStack && pastStack && currentStack.length > 0) {
+        pastStack.push(currentStack.toArray());
+        currentStack.delete(0, currentStack.length);
+      }
+      this.isTransactionActive = false;
+    }
+  };
+
+  onTransactionFinalized = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  undo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+          edit.undo.kitDiff && this.kit().change(edit.undo.kitDiff);
+          edit.undo.selectionDiff && this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+          edit.undo.kitDiff && this.kit().change(edit.undo.kitDiff);
+          edit.undo.selectionDiff && this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+      }
+    }
+  };
+  onUndone = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+  redo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(0);
+        currentStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+          edit.do.kitDiff && this.kit().change(edit.do.kitDiff);
+          edit.do.selectionDiff && this.applySelectionDiff(edit.do.selectionDiff);
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(0);
+        pastStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+          edit.do.kitDiff && this.kit().change(edit.do.kitDiff);
+          edit.do.selectionDiff && this.applySelectionDiff(edit.do.selectionDiff);
+        }
+      }
+    }
+  };
+  onRedone = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yMap.observe(observer);
+    return () => {
+      this.yMap.unobserve(observer);
+    };
+  };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.kitEditor.startTransaction") {
+      this.startTransaction();
+      return {} as T;
+    }
+    if (command === "semio.kitEditor.finalizeTransaction") {
+      this.finalizeTransaction();
+      return {} as T;
+    }
+    if (command === "semio.kitEditor.abortTransaction") {
+      this.abortTransaction();
+      return {} as T;
+    }
+    if (command === "semio.kitEditor.undo") {
+      this.undo();
+      return {} as T;
+    }
+    if (command === "semio.kitEditor.redo") {
+      this.redo();
+      return {} as T;
+    }
+
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in kit editor store`);
+
+    const kitStore = this.kit();
+    const state = this.snapshot();
+    const kitState = kitStore.snapshot();
+
+    const context: KitEditorCommandContext = {
+      kitEditor: state,
+      kit: kitState,
+      fileUrls: kitStore.fileUrls,
+    };
+    const result = callback(context, ...rest);
+
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.kitDiff) {
+      kitStore.change(result.kitDiff);
+    }
+
+    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      const inversedSelectionDiff = inverseKitEditorSelectionDiff(state.selection || {}, result.diff?.selection!);
+      const inversedKitDiff = inverseKitDiff(kitState, result.kitDiff!);
+      const edit: KitEditorEdit = {
+        do: {
+          kitDiff: result.kitDiff,
+          selectionDiff: result.diff?.selection,
+        },
+        undo: {
+          kitDiff: inversedKitDiff,
+          selectionDiff: inversedSelectionDiff,
+        },
+      };
+      currentStack.push([edit]);
+    }
+
+    return result as T;
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+
+  registerCommand(command: string, callback: (context: KitEditorCommandContext, ...rest: any[]) => KitEditorCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  register(command: string, callback: (context: KitEditorCommandContext, ...rest: any[]) => KitEditorCommandResult): Disposable {
+    return this.registerCommand(command, callback);
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+}
+
+const kitEditorCommands = {
+  "semio.kitEditor.setMode": (context: KitEditorCommandContext, mode: Mode): KitEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.kitEditor.setTheme": (context: KitEditorCommandContext, theme: Theme): KitEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.kitEditor.setLayout": (context: KitEditorCommandContext, layout: Layout): KitEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.kitEditor.toggleTypesFullscreen": (context: KitEditorCommandContext): KitEditorCommandResult => {
+    const currentPanel = context.kitEditor.fullscreenPanel;
+    const newPanel = currentPanel === KitEditorFullscreenPanel.Types ? KitEditorFullscreenPanel.None : KitEditorFullscreenPanel.Types;
+    return {
+      diff: {
+        fullscreenPanel: newPanel,
+      },
+    };
+  },
+  "semio.kitEditor.toggleDesignsFullscreen": (context: KitEditorCommandContext): KitEditorCommandResult => {
+    const currentPanel = context.kitEditor.fullscreenPanel;
+    const newPanel = currentPanel === KitEditorFullscreenPanel.Designs ? KitEditorFullscreenPanel.None : KitEditorFullscreenPanel.Designs;
+    return {
+      diff: {
+        fullscreenPanel: newPanel,
+      },
+    };
+  },
+  "semio.kitEditor.selectAll": (context: KitEditorCommandContext): KitEditorCommandResult => {
+    const kit = context.kit;
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: {
+            removed: currentSelection?.types ?? [],
+            added: kit.types ?? [],
+          },
+          designs: {
+            removed: currentSelection?.designs ?? [],
+            added: kit.designs ?? [],
+          },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.deselectAll": (context: KitEditorCommandContext): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectType": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: {
+            removed: currentSelection?.types ?? [],
+            added: [typeId],
+          },
+          designs: { removed: currentSelection?.designs ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectTypes": (context: KitEditorCommandContext, typeIds: TypeId[]): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: {
+            removed: currentSelection?.types ?? [],
+            added: typeIds,
+          },
+          designs: { removed: currentSelection?.designs ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.addTypeToSelection": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          types: { added: [typeId] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.removeTypeFromSelection": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          types: { removed: [typeId] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectDesign": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: {
+            removed: currentSelection?.designs ?? [],
+            added: [designId],
+          },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectDesigns": (context: KitEditorCommandContext, designIds: DesignId[]): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: {
+            removed: currentSelection?.designs ?? [],
+            added: designIds,
+          },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.addDesignToSelection": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          designs: { added: [designId] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.removeDesignFromSelection": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          designs: { removed: [designId] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.deleteSelected": (context: KitEditorCommandContext): KitEditorCommandResult => {
+    const selection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: selection?.types ?? [] },
+          designs: { removed: selection?.designs ?? [] },
+        },
+      },
+      kitDiff: {
+        types: { removed: selection?.types },
+        designs: { removed: selection?.designs },
+      },
+    };
+  },
+  "semio.kitEditor.addType": (context: KitEditorCommandContext, type: Type): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { added: [type] },
+      },
+    };
+  },
+  "semio.kitEditor.addTypes": (context: KitEditorCommandContext, types: Type[]): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { added: types },
+      },
+    };
+  },
+  "semio.kitEditor.removeType": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { removed: [typeId] },
+      },
+    };
+  },
+  "semio.kitEditor.removeTypes": (context: KitEditorCommandContext, typeIds: TypeId[]): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { removed: typeIds },
+      },
+    };
+  },
+  "semio.kitEditor.addDesign": (context: KitEditorCommandContext, design: Design): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { added: [design] },
+      },
+    };
+  },
+  "semio.kitEditor.addDesigns": (context: KitEditorCommandContext, designs: Design[]): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { added: designs },
+      },
+    };
+  },
+  "semio.kitEditor.removeDesign": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { removed: [designId] },
+      },
+    };
+  },
+  "semio.kitEditor.removeDesigns": (context: KitEditorCommandContext, designIds: DesignId[]): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { removed: designIds },
+      },
+    };
+  },
+  "semio.kitEditor.updateType": (context: KitEditorCommandContext, typeId: TypeId, typeDiff: TypeDiff): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { updated: [{ id: typeId, diff: typeDiff }] },
+      },
+    };
+  },
+  "semio.kitEditor.updateTypes": (context: KitEditorCommandContext, updates: { id: TypeId; diff: TypeDiff }[]): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { updated: updates },
+      },
+    };
+  },
+  "semio.kitEditor.updateDesign": (context: KitEditorCommandContext, designId: DesignId, designDiff: DesignDiff): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { updated: [{ id: designId, diff: designDiff }] },
+      },
+    };
+  },
+  "semio.kitEditor.updateDesigns": (context: KitEditorCommandContext, updates: { id: DesignId; diff: DesignDiff }[]): KitEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { updated: updates },
+      },
+    };
+  },
+};
+
+type KitEditorScope = { id: string };
+const KitEditorScopeContext = createContext<KitEditorScope | null>(null);
+export const KitEditorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(KitEditorScopeContext.Provider, { value }, props.children as any);
+};
+const useKitEditorScope = () => useContext(KitEditorScopeContext);
+
+function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore {
+  const store = useSketchpadStore();
+  const kitScope = useKitStoreScope();
+  const resolvedKitId = kitScope?.id ?? id?.kit;
+  if (!resolvedKitId) throw new Error("useKitEditorStore must be called within a KitScopeProvider or be directly provided with an id");
+  const kitEditorStore = store.kitEditor({ kit: resolvedKitId });
+  return selector ? selector(kitEditorStore) : kitEditorStore;
+}
+
+export function useKitEditor<T>(selector?: (state: KitEditorState) => T, id?: KitEditorId): T | KitEditorState {
+  return useSyncDeep<KitEditorState, T>(useKitEditorStore(identitySelector, id) as KitEditorStore, selector ? selector : identitySelector);
+}
+
+export function useKitEditorSelection(): KitEditorSelection {
+  return useKitEditor((s) => s.selection) as KitEditorSelection;
+}
+
+export function useKitEditorFullscreen(): KitEditorFullscreenPanel {
+  return useKitEditor((s) => s.fullscreenPanel) as KitEditorFullscreenPanel;
+}
+
+export function useKitEditorOthers(): KitEditorPresenceOther[] {
+  return useKitEditor((s) => s.others) as KitEditorPresenceOther[];
+}
+
+export function useKitEditorCommands() {
+  const store = useKitEditorStore() as KitEditorStore;
+  return {
+    startTransaction: () => store.execute("semio.kitEditor.startTransaction"),
+    finalizeTransaction: () => store.execute("semio.kitEditor.finalizeTransaction"),
+    abortTransaction: () => store.execute("semio.kitEditor.abortTransaction"),
+    undo: () => store.execute("semio.kitEditor.undo"),
+    redo: () => store.execute("semio.kitEditor.redo"),
+    selectAll: () => store.execute("semio.kitEditor.selectAll"),
+    deselectAll: () => store.execute("semio.kitEditor.deselectAll"),
+    selectType: (typeId: TypeId) => store.execute("semio.kitEditor.selectType", typeId),
+    selectTypes: (typeIds: TypeId[]) => store.execute("semio.kitEditor.selectTypes", typeIds),
+    addTypeToSelection: (typeId: TypeId) => store.execute("semio.kitEditor.addTypeToSelection", typeId),
+    removeTypeFromSelection: (typeId: TypeId) => store.execute("semio.kitEditor.removeTypeFromSelection", typeId),
+    selectDesign: (designId: DesignId) => store.execute("semio.kitEditor.selectDesign", designId),
+    selectDesigns: (designIds: DesignId[]) => store.execute("semio.kitEditor.selectDesigns", designIds),
+    addDesignToSelection: (designId: DesignId) => store.execute("semio.kitEditor.addDesignToSelection", designId),
+    removeDesignFromSelection: (designId: DesignId) => store.execute("semio.kitEditor.removeDesignFromSelection", designId),
+    deleteSelected: () => store.execute("semio.kitEditor.deleteSelected"),
+    toggleTypesFullscreen: () => store.execute("semio.kitEditor.toggleTypesFullscreen"),
+    toggleDesignsFullscreen: () => store.execute("semio.kitEditor.toggleDesignsFullscreen"),
+    addType: (type: Type) => store.execute("semio.kitEditor.addType", type),
+    addTypes: (types: Type[]) => store.execute("semio.kitEditor.addTypes", types),
+    removeType: (typeId: TypeId) => store.execute("semio.kitEditor.removeType", typeId),
+    removeTypes: (typeIds: TypeId[]) => store.execute("semio.kitEditor.removeTypes", typeIds),
+    addDesign: (design: Design) => store.execute("semio.kitEditor.addDesign", design),
+    addDesigns: (designs: Design[]) => store.execute("semio.kitEditor.addDesigns", designs),
+    removeDesign: (designId: DesignId) => store.execute("semio.kitEditor.removeDesign", designId),
+    removeDesigns: (designIds: DesignId[]) => store.execute("semio.kitEditor.removeDesigns", designIds),
+    updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kitEditor.updateType", typeId, typeDiff),
+    updateTypes: (updates: { id: TypeId; diff: TypeDiff }[]) => store.execute("semio.kitEditor.updateTypes", updates),
+    updateDesign: (designId: DesignId, designDiff: DesignDiff) => store.execute("semio.kitEditor.updateDesign", designId, designDiff),
+    updateDesigns: (updates: { id: DesignId; diff: DesignDiff }[]) => store.execute("semio.kitEditor.updateDesigns", updates),
+    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+  };
+}
+
+// #endregion Kit Editor
+
 // #region Design Editor
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
@@ -4724,6 +5584,10 @@ export interface DesignEditorDiff {
 export interface DesignEditorStep {
   kitDiff?: KitDiff;
   selectionDiff?: DesignEditorSelectionDiff;
+}
+export interface DesignEditorEdit {
+  do: DesignEditorStep;
+  undo: DesignEditorStep;
 }
 export interface DesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
@@ -5768,6 +6632,8 @@ class SketchpadStore {
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Array<KitStore>;
+  private readonly yKitEditors: YKitEditors;
+  private readonly kitEditors: Array<KitEditorStore>;
   private readonly yDesignEditors: YDesignEditors;
   private readonly designEditors: Array<DesignEditorStore>;
   private readonly persistence?: IndexeddbPersistence;
@@ -5782,6 +6648,7 @@ class SketchpadStore {
     // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Array();
+    this.kitEditors = new Array();
     this.designEditors = new Array();
     this.commandRegistry = new Map();
 
@@ -5813,6 +6680,7 @@ class SketchpadStore {
     // }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
+    this.yKitEditors = this.yDoc.getArray("kitEditors");
     this.yDesignEditors = this.yDoc.getArray("designEditors");
     this.yDoc.transact(() => {
       this.ySketchpad.set("navigation", "/");
@@ -5898,6 +6766,18 @@ class SketchpadStore {
     this.kits.push(new KitStore(this, kit, this.yProviderFactory));
   };
 
+  createKitEditor = (id: KitEditorId) => {
+    if (this.hasKitEditor(id)) {
+      throw new Error(`Kit editor (${id.kit.name}, ${id.kit.version || ""}) already exists.`);
+    }
+    this.yDoc.transact(() => {
+      const yKitEditor = new Y.Map<YKitEditorVal>();
+      this.yKitEditors.push([yKitEditor]);
+      const kitEditor = new KitEditorStore(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), id);
+      this.kitEditors.push(kitEditor);
+    });
+  };
+
   createDesignEditor = (id: DesignEditorId) => {
     if (this.hasDesignEditor(id)) {
       throw new Error(`Design editor (${id.kit.name}, ${id.kit.version || ""}, ${id.design.name}, ${id.design.variant || ""}, ${id.design.view || ""}) already exists.`);
@@ -5905,7 +6785,7 @@ class SketchpadStore {
     this.yDoc.transact(() => {
       const yDesignEditor = new Y.Map<YDesignEditorVal>();
       this.yDesignEditors.push([yDesignEditor]);
-      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact, id);
+      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), id);
       this.designEditors.push(designEditor);
     });
   };
@@ -5934,13 +6814,19 @@ class SketchpadStore {
 
   deleteKit = (id: KitIdLike) => {};
 
+  deleteKitEditor = (id: KitEditorId) => {};
+
   deleteDesignEditor = (id: DesignEditorId) => {};
 
   onKitCreated = (subscribe: Subscribe): Unsubscribe => {};
 
+  onKitEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
+
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
 
   onKitDeleted = (subscribe: Subscribe): Unsubscribe => {};
+
+  onKitEditorDeleted = (subscribe: Subscribe): Unsubscribe => {};
 
   onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {};
 
@@ -5957,6 +6843,11 @@ class SketchpadStore {
       const kit = rest[0] as Kit;
       if (!kit.name) throw new Error("Kit name is required to create a kit.");
       this.createKit(kit);
+      return {} as T;
+    }
+    if (command === "semio.sketchpad.createKitEditor") {
+      const id = rest[0] as KitEditorId;
+      this.createKitEditor(id);
       return {} as T;
     }
     if (command === "semio.sketchpad.createDesignEditor") {
@@ -6021,6 +6912,26 @@ class SketchpadStore {
 
   kitIds(): KitId[] {
     return this.kits.map((k) => k.id());
+  }
+
+  hasKitEditor(kitEditor: KitEditorId): boolean {
+    return hasSameKitEditor(
+      kitEditor,
+      Array.from(this.kitEditors.values()).map((kitEditor) => kitEditor.id()),
+    );
+  }
+
+  kitEditor(kitEditor: KitEditorId): KitEditorStore {
+    if (!this.hasKitEditor(kitEditor)) throw new Error(`Kit editor store not found for kit editor ${kitEditor}`);
+    return this.kitEditors.find((k) => areSameKitEditor(k.id(), kitEditor))!;
+  }
+
+  kitEditorByUuid(uuid: string): KitEditorStore {
+    return this.kitEditors.find((k) => k.uuid === uuid)!;
+  }
+
+  kitEditorIds(): KitEditorId[] {
+    return this.kitEditors.map((k) => k.id());
   }
 
   hasDesignEditor(designEditor: DesignEditorId): boolean {
@@ -6151,6 +7062,7 @@ export function useSketchpadCommands() {
     setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
     setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
     createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
+    createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
     setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
     togglePanel: (editorType: EditorType, panelKey: string) => {

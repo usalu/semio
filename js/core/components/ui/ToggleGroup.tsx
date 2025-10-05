@@ -31,12 +31,23 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariant
   variant: "default",
 });
 
-function ToggleGroup({ className, variant, size, children, ...props }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants>) {
-  return (
+function ToggleGroup({ className, variant, size, label, children, ...props }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants> & { label?: string }) {
+  const toggleGroupElement = (
     <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} data-size={size} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...props}>
       <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
+
+  if (label) {
+    return (
+      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
+        {toggleGroupElement}
+      </div>
+    );
+  }
+
+  return toggleGroupElement;
 }
 
 function ToggleGroupItem({

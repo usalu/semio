@@ -102,10 +102,6 @@ export const WithIcons: Story = {
           <Grape />
           <span>Grape</span>
         </SelectItem>
-        <SelectItem value="orange">
-          <Orange />
-          <span>Orange</span>
-        </SelectItem>
       </SelectContent>
     </Select>
   ),
