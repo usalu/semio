@@ -21,6 +21,8 @@
 
 // #region TODOs
 
+// TODO: Remove TreeContent boilerplate.
+
 // #endregion TODOs
 
 import { closestCenter, DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -228,17 +230,13 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
         </div>
-        {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>
-        )}
+        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>}
       </>
     );
   }
 
   if (!label) {
-    return (
-      <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>
-    );
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>;
   }
 
   return (
@@ -320,17 +318,13 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
         </div>
-        {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>
-        )}
+        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>}
       </>
     );
   }
 
   if (!label) {
-    return (
-      <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>
-    );
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>;
   }
 
   return (

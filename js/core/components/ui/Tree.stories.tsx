@@ -26,7 +26,7 @@ import { Input } from "./Input";
 import { SortableTreeItems, Tree, TreeContent, TreeItem, TreeSection } from "./Tree";
 
 const meta = {
-  title: "UI/Tree",
+  title: "Elements/Tree",
   component: Tree,
   parameters: {
     layout: "centered",

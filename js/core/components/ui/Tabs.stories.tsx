@@ -1,0 +1,175 @@
+// #region Header
+
+// Tabs.stories.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
+import type { Meta, StoryObj } from "@storybook/react";
+import { Home, Settings, User } from "lucide-react";
+import { Button } from "./Button";
+import { Input } from "./Input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
+
+const meta = {
+  title: "Elements/Tabs",
+  component: Tabs,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+} satisfies Meta<typeof Tabs>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Basic: Story = {
+  render: () => (
+    <Tabs defaultValue="tab1" className="w-96">
+      <TabsList>
+        <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+        <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+        <TabsTrigger value="tab3">Tab 3</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tab1">
+        <div className="border p-4 rounded-md">Content for Tab 1</div>
+      </TabsContent>
+      <TabsContent value="tab2">
+        <div className="border p-4 rounded-md">Content for Tab 2</div>
+      </TabsContent>
+      <TabsContent value="tab3">
+        <div className="border p-4 rounded-md">Content for Tab 3</div>
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
+export const WithIcons: Story = {
+  render: () => (
+    <Tabs defaultValue="home" className="w-96">
+      <TabsList>
+        <TabsTrigger value="home">
+          <Home />
+          Home
+        </TabsTrigger>
+        <TabsTrigger value="profile">
+          <User />
+          Profile
+        </TabsTrigger>
+        <TabsTrigger value="settings">
+          <Settings />
+          Settings
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="home">
+        <div className="border p-4 rounded-md">Home content goes here</div>
+      </TabsContent>
+      <TabsContent value="profile">
+        <div className="border p-4 rounded-md">Profile content goes here</div>
+      </TabsContent>
+      <TabsContent value="settings">
+        <div className="border p-4 rounded-md">Settings content goes here</div>
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
+export const WithForm: Story = {
+  render: () => (
+    <Tabs defaultValue="account" className="w-96">
+      <TabsList>
+        <TabsTrigger value="account">Account</TabsTrigger>
+        <TabsTrigger value="password">Password</TabsTrigger>
+      </TabsList>
+      <TabsContent value="account">
+        <div className="border p-4 rounded-md space-y-4">
+          <div>
+            <h3 className="font-medium mb-2">Account Settings</h3>
+            <p className="text-sm text-muted-foreground">Make changes to your account here.</p>
+          </div>
+          <Input label="Name" defaultValue="John Doe" />
+          <Input label="Email" type="email" defaultValue="john@example.com" />
+          <Button>Save Changes</Button>
+        </div>
+      </TabsContent>
+      <TabsContent value="password">
+        <div className="border p-4 rounded-md space-y-4">
+          <div>
+            <h3 className="font-medium mb-2">Password</h3>
+            <p className="text-sm text-muted-foreground">Change your password here.</p>
+          </div>
+          <Input label="Current Password" type="password" />
+          <Input label="New Password" type="password" />
+          <Input label="Confirm Password" type="password" />
+          <Button>Update Password</Button>
+        </div>
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
+export const ManyTabs: Story = {
+  render: () => (
+    <Tabs defaultValue="tab1" className="w-full">
+      <TabsList>
+        <TabsTrigger value="tab1">Overview</TabsTrigger>
+        <TabsTrigger value="tab2">Analytics</TabsTrigger>
+        <TabsTrigger value="tab3">Reports</TabsTrigger>
+        <TabsTrigger value="tab4">Notifications</TabsTrigger>
+        <TabsTrigger value="tab5">Settings</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tab1">
+        <div className="border p-4 rounded-md">Overview content</div>
+      </TabsContent>
+      <TabsContent value="tab2">
+        <div className="border p-4 rounded-md">Analytics content</div>
+      </TabsContent>
+      <TabsContent value="tab3">
+        <div className="border p-4 rounded-md">Reports content</div>
+      </TabsContent>
+      <TabsContent value="tab4">
+        <div className="border p-4 rounded-md">Notifications content</div>
+      </TabsContent>
+      <TabsContent value="tab5">
+        <div className="border p-4 rounded-md">Settings content</div>
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
+export const Disabled: Story = {
+  render: () => (
+    <Tabs defaultValue="tab1" className="w-96">
+      <TabsList>
+        <TabsTrigger value="tab1">Active</TabsTrigger>
+        <TabsTrigger value="tab2" disabled>
+          Disabled
+        </TabsTrigger>
+        <TabsTrigger value="tab3">Another Active</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tab1">
+        <div className="border p-4 rounded-md">Content for active tab</div>
+      </TabsContent>
+      <TabsContent value="tab2">
+        <div className="border p-4 rounded-md">Content for disabled tab</div>
+      </TabsContent>
+      <TabsContent value="tab3">
+        <div className="border p-4 rounded-md">Content for another active tab</div>
+      </TabsContent>
+    </Tabs>
+  ),
+};
