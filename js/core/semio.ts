@@ -176,7 +176,7 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 
 // #endregion Attribute
 
-// #region Coord
+// #region Coord (weak entity)
 // https://github.com/usalu/semio#-coord-
 
 export const CoordSchema = z.object({ x: z.number(), y: z.number() });
@@ -217,7 +217,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 
 // #endregion Coord
 
-// #region Vec
+// #region Vec (weak entity)
 // https://github.com/usalu/semio#-vec-
 
 export const VecSchema = z.object({ x: z.number(), y: z.number() });
@@ -258,7 +258,7 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
 
 // #endregion Vec
 
-// #region Point
+// #region Point (weak entity)
 // https://github.com/usalu/semio#-point-
 
 export const PointSchema = z.object({
@@ -309,7 +309,7 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
 
 // #endregion Point
 
-// #region Vector
+// #region Vector (weak entity)
 // https://github.com/usalu/semio#-vector-
 
 export const VectorSchema = z.object({
@@ -360,7 +360,7 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
 
 // #endregion Vector
 
-// #region Plane
+// #region Plane (weak entity)
 
 // https://github.com/usalu/semio#-plane-
 export const PlaneSchema = z.object({
@@ -451,7 +451,7 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
 
 // #endregion Plane
 
-// #region Camera
+// #region Camera (weak entity)
 // https://github.com/usalu/semio#-camera-
 
 export const CameraSchema = z.object({

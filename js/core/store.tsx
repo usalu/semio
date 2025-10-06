@@ -771,7 +771,7 @@ type YAuthorUuid = string;
 type YAuthorUuids = Y.Array<YAuthorUuid>;
 
 class AuthorStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   private yAuthor: YAuthor;
   private yAttributes: YAttributes;
   private attributes: AttributeStore[];
@@ -779,7 +779,7 @@ class AuthorStore {
   private cacheHash?: string;
 
   constructor(yAuthor: YAuthor, author: Author) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.yAuthor = yAuthor;
     this.name = author.name;
     this.email = author.email;
@@ -820,8 +820,8 @@ class AuthorStore {
     return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
   }
 
-  attributeByUuid(uuid: string): AttributeStore {
-    return this.attributes.find((a) => a.uuid === uuid)!;
+  attributeByUuid(guid: string): AttributeStore {
+    return this.attributes.find((a) => a.guid === guid)!;
   }
 
   id(): AuthorId {
@@ -864,9 +864,9 @@ class AuthorStore {
 
 type AuthorScope = { id: AuthorId };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
-export const AuthorScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
+export const AuthorScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = kitStore.authorByUuid(props.uuid).id();
+  const id = kitStore.authorByUuid(props.guid).id();
   const value = { id };
   return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
 };
@@ -894,13 +894,13 @@ type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
 
 class FileStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   private yFile: YFile;
   private cache?: SemioFile;
   private cacheHash?: string;
 
   constructor(yFile: YFile, file: SemioFile) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.yFile = yFile;
 
     this.path = file.path;
@@ -1025,13 +1025,13 @@ type YBenchmark = Y.Map<string | number | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
 
 class BenchmarkStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   private yBenchmark: YBenchmark;
   private cache?: Benchmark;
   private cacheHash?: string;
 
   constructor(yBenchmark: YBenchmark, benchmark: Benchmark) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.yBenchmark = yBenchmark;
     this.name = benchmark.name;
     this.icon = benchmark.icon;
@@ -1138,13 +1138,13 @@ type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
 
 class QualityStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   private yQuality: YQuality;
   private cache?: Quality;
   private cacheHash?: string;
 
   constructor(yQuality: YQuality, quality: Quality) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.yQuality = yQuality;
     this.key = quality.key;
     this.name = quality.name;
@@ -1322,7 +1322,7 @@ type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentations = Y.Array<YRepresentation>;
 
 class RepresentationStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   private yRepresentation: YRepresentation;
   private yTags: YStringArray;
   private yAttributes: YAttributes;
@@ -1331,7 +1331,7 @@ class RepresentationStore {
   private cacheHash?: string;
 
   constructor(yRepresentation: YRepresentation, representation: Representation) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.yRepresentation = yRepresentation;
     this.url = representation.url;
     this.description = representation.description;
@@ -1415,7 +1415,7 @@ type YPort = Y.Map<YPortVal>;
 type YPorts = Y.Array<YPort>;
 
 class PortStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   private yPort: YPort;
   private yPoint: YPoint;
   private point: YPointStore;
@@ -1425,7 +1425,7 @@ class PortStore {
   private cacheHash?: string;
 
   constructor(yPort: YPort, port: Port) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.yPort = yPort;
     this.localId = port.id_;
     this.description = port.description;
@@ -1537,7 +1537,7 @@ type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
 class TypeStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   public readonly parent: KitStore;
   private yType: YType;
   private yAttributes: YAttributes;
@@ -1552,7 +1552,7 @@ class TypeStore {
   private cacheHash?: string;
 
   constructor(parent: KitStore, yType: YType, type: Type) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.parent = parent;
     this.yType = yType;
     this.representations = new Array();
@@ -1577,7 +1577,7 @@ class TypeStore {
 
     this.authors = type.authors?.map((author) => this.parent.author(author)) || [];
     this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
-    this.authors.forEach((author) => this.yAuthors.push([author.uuid]));
+    this.authors.forEach((author) => this.yAuthors.push([author.guid]));
 
     this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
     // if (type.representations) {
@@ -1684,11 +1684,11 @@ class TypeStore {
     return this.representations.find((rep) => areSameRepresentation(rep.id(), representation))!;
   }
 
-  representationByUuid(uuid: string): RepresentationStore {
+  representationByUuid(guid: string): RepresentationStore {
     for (const rep of this.representations) {
-      if (rep.uuid === uuid) return rep;
+      if (rep.guid === guid) return rep;
     }
-    throw new Error(`Representation store not found for uuid ${uuid}`);
+    throw new Error(`Representation store not found for guid ${guid}`);
   }
 
   hasPort(port: PortIdLike): boolean {
@@ -1707,11 +1707,11 @@ class TypeStore {
     return this.ports.find((port) => areSamePort(port.id(), port))!;
   }
 
-  portByUuid(uuid: string): PortStore {
+  portByUuid(guid: string): PortStore {
     for (const p of this.ports) {
-      if (p.uuid === uuid) return p;
+      if (p.guid === guid) return p;
     }
-    throw new Error(`Port store not found for uuid ${uuid}`);
+    throw new Error(`Port store not found for guid ${guid}`);
   }
 
   id = (): TypeId => {
@@ -1762,7 +1762,7 @@ class TypeStore {
     if (diff.authors !== undefined) {
       this.yAuthors.delete(0, this.yAuthors.length);
       this.authors = diff.authors.map((author) => this.parent.author(author));
-      this.authors.forEach((author) => this.yAuthors.push([author.uuid]));
+      this.authors.forEach((author) => this.yAuthors.push([author.guid]));
     }
 
     // TODO: Handle location, representations, ports, props, attributes diffs
@@ -1782,9 +1782,9 @@ class TypeStore {
 
 type TypeScope = { id: TypeId };
 const TypeScopeContext = createContext<TypeScope | null>(null);
-export const TypeScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
+export const TypeScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = kitStore.typeByUuid(props.uuid).id();
+  const id = kitStore.typeByUuid(props.guid).id();
   const value = { id };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
@@ -1936,7 +1936,7 @@ type YPiece = Y.Map<YPieceVal>;
 type YPieces = Y.Array<YPiece>;
 
 class PieceStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   public readonly parent: DesignStore;
   private yPiece: YPiece;
   private yPlane: YPlane | undefined;
@@ -1951,7 +1951,7 @@ class PieceStore {
   private cacheHash?: string;
 
   constructor(parent: DesignStore, yPiece: YPiece, piece: Piece) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.parent = parent;
     this.yPiece = yPiece;
     this.attributes = new Array();
@@ -1959,10 +1959,10 @@ class PieceStore {
     this.localId = piece.id_;
     if (piece.type) {
       const type = this.parent.parent.type(piece.type);
-      this.yPiece.set("type", type.uuid);
+      this.yPiece.set("type", type.guid);
     } else {
       const design = this.parent.parent.design(piece.design!);
-      this.yPiece.set("design", design.uuid);
+      this.yPiece.set("design", design.guid);
     }
     this.scale = piece.scale;
     this.isHidden = piece.isHidden;
@@ -2017,7 +2017,7 @@ class PieceStore {
   }
   set type(type: TypeId | undefined) {
     if (type) {
-      this.yPiece.set("type", this.parent.parent.type(type).uuid);
+      this.yPiece.set("type", this.parent.parent.type(type).guid);
     } else {
       this.yPiece.delete("type");
     }
@@ -2028,7 +2028,7 @@ class PieceStore {
   }
   set design(design: DesignId | undefined) {
     if (design) {
-      this.yPiece.set("design", this.parent.parent.design(design).uuid);
+      this.yPiece.set("design", this.parent.parent.design(design).guid);
     } else {
       this.yPiece.delete("design");
     }
@@ -2081,8 +2081,8 @@ class PieceStore {
     return this.attributes.find((a) => areSameAttribute(a.id(), attribute))!;
   }
 
-  attributeByUuid(uuid: string): AttributeStore {
-    return this.attributes.find((a) => a.uuid === uuid)!;
+  attributeByUuid(guid: string): AttributeStore {
+    return this.attributes.find((a) => a.guid === guid)!;
   }
 
   public hash(piece: Piece): string {
@@ -2203,9 +2203,9 @@ class PieceStore {
 
 type PieceScope = { id: PieceId };
 const PieceScopeContext = createContext<PieceScope | null>(null);
-export const PieceScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
+export const PieceScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const designStore = useDesignStore() as DesignStore;
-  const id = designStore.pieceByUuid(props.uuid).id();
+  const id = designStore.pieceByUuid(props.guid).id();
   const value = { id };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
@@ -2415,14 +2415,14 @@ class SideStore {
     // Store piece UUID
     const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), side.piece));
     if (pieceStore) {
-      this.ySide.set("piece", pieceStore.uuid);
+      this.ySide.set("piece", pieceStore.guid);
     }
 
     // Store designPiece UUID if present
     if (side.designPiece) {
       const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), side.designPiece!));
       if (designPieceStore) {
-        this.ySide.set("designPiece", designPieceStore.uuid);
+        this.ySide.set("designPiece", designPieceStore.guid);
       }
     }
 
@@ -2432,7 +2432,7 @@ class SideStore {
       const typeStore = this.parent.parent.type(typeId);
       const portStore = typeStore.ports.get(side.port.id_);
       if (portStore) {
-        this.ySide.set("port", portStore.uuid);
+        this.ySide.set("port", portStore.guid);
       }
     }
   }
@@ -2444,7 +2444,7 @@ class SideStore {
   set piece(piece: PieceId) {
     const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), piece));
     if (pieceStore) {
-      this.ySide.set("piece", pieceStore.uuid);
+      this.ySide.set("piece", pieceStore.guid);
     }
   }
 
@@ -2457,7 +2457,7 @@ class SideStore {
     if (designPiece) {
       const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), designPiece));
       if (designPieceStore) {
-        this.ySide.set("designPiece", designPieceStore.uuid);
+        this.ySide.set("designPiece", designPieceStore.guid);
       }
     } else {
       this.ySide.delete("designPiece");
@@ -2481,7 +2481,7 @@ class SideStore {
     const typeStore = this.parent.parent.type(typeId);
     const portStore = typeStore.ports.get(port.id_);
     if (portStore) {
-      this.ySide.set("port", portStore.uuid);
+      this.ySide.set("port", portStore.guid);
     }
   }
 
@@ -2704,9 +2704,9 @@ class ConnectionStore {
 
 type ConnectionScope = { id: ConnectionId };
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
-export const ConnectionScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
+export const ConnectionScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const designStore = useDesignStore() as DesignStore;
-  const id = designStore.connectionByUuid(props.uuid).id();
+  const id = designStore.connectionByUuid(props.guid).id();
   const value = { id };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
@@ -2890,7 +2890,7 @@ type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
 class DesignStore {
-  public readonly uuid: string;
+  public readonly guid: string;
   public readonly parent: KitStore;
   private yDesign: YDesign;
   private yPieces: YPieces;
@@ -2914,7 +2914,7 @@ class DesignStore {
   private cacheHash?: string;
 
   constructor(parent: KitStore, yDesign: YDesign, design: Design) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.parent = parent;
     this.yDesign = yDesign;
     this.pieces = new Array();
@@ -3008,7 +3008,7 @@ class DesignStore {
 
     this.authors = design.authors?.map((author) => this.parent.author(author)) || [];
     this.yAuthors = this.yDesign.set("authors", new Y.Array<YAuthorUuid>());
-    this.authors.forEach((author) => this.yAuthors.push([author.uuid]));
+    this.authors.forEach((author) => this.yAuthors.push([author.guid]));
 
     this.yDesign.set("createdAt", new Date().toISOString());
     this.updated();
@@ -3140,8 +3140,8 @@ class DesignStore {
     return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
   }
 
-  pieceByUuid(uuid: string): PieceStore {
-    return this.pieces.find((p) => p.uuid === uuid)!;
+  pieceByUuid(guid: string): PieceStore {
+    return this.pieces.find((p) => p.guid === guid)!;
   }
 
   hasConnection(connection: ConnectionIdLike): boolean {
@@ -3153,8 +3153,8 @@ class DesignStore {
     return this.connections.find((c) => c.id.id_ === connection.id_ || c.id.id_ === connection)!;
   }
 
-  connectionByUuid(uuid: string): ConnectionStore {
-    return this.connections.find((c) => c.uuid === uuid)!;
+  connectionByUuid(guid: string): ConnectionStore {
+    return this.connections.find((c) => c.guid === guid)!;
   }
 
   hasAttribute(attribute: AttributeIdLike): boolean {
@@ -3166,8 +3166,8 @@ class DesignStore {
     return this.attributes.find((a) => a.key === attribute.key || a.key === attribute)!;
   }
 
-  attributeByUuid(uuid: string): AttributeStore {
-    return this.attributes.find((a) => a.uuid === uuid)!;
+  attributeByUuid(guid: string): AttributeStore {
+    return this.attributes.find((a) => a.guid === guid)!;
   }
 
   id(): DesignId {
@@ -3450,9 +3450,9 @@ class DesignStore {
 
 type DesignScope = { id: DesignId };
 const DesignScopeContext = createContext<DesignScope | null>(null);
-export const DesignScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
+export const DesignScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = kitStore.designByUuid(props.uuid).id();
+  const id = kitStore.designByUuid(props.guid).id();
   const value = { id };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
@@ -3858,8 +3858,8 @@ class KitStore {
     return this.types.find((t) => areSameType(t.id(), type))!;
   }
 
-  typeByUuid(uuid: string): TypeStore {
-    return this.types.find((t) => t.uuid === uuid)!;
+  typeByUuid(guid: string): TypeStore {
+    return this.types.find((t) => t.guid === guid)!;
   }
 
   hasDesign(design: DesignIdLike): boolean {
@@ -3882,8 +3882,8 @@ class KitStore {
     return this.designs.find((d) => areSameDesign(d.id(), design))!;
   }
 
-  designByUuid(uuid: string): DesignStore {
-    return this.designs.find((d) => d.uuid === uuid)!;
+  designByUuid(guid: string): DesignStore {
+    return this.designs.find((d) => d.guid === guid)!;
   }
 
   hasFile(file: FileIdLike): boolean {
@@ -3903,8 +3903,8 @@ class KitStore {
     return this.files.find((f) => f.id().path === (typeof file === "string" ? file : file.path))!;
   }
 
-  fileByUuid(uuid: string): FileStore {
-    return this.files.find((f) => f.uuid === uuid)!;
+  fileByUuid(guid: string): FileStore {
+    return this.files.find((f) => f.guid === guid)!;
   }
 
   hasQuality(quality: QualityIdLike): boolean {
@@ -3924,8 +3924,8 @@ class KitStore {
     return this.qualities.find((q) => q.id.key === (typeof quality === "string" ? quality : quality.key))!;
   }
 
-  qualityByUuid(uuid: string): QualityStore {
-    return this.qualities.find((q) => q.uuid === uuid)!;
+  qualityByUuid(guid: string): QualityStore {
+    return this.qualities.find((q) => q.guid === guid)!;
   }
 
   hasBenchmark(benchmark: BenchmarkIdLike): boolean {
@@ -3945,8 +3945,8 @@ class KitStore {
     return this.benchmarks.find((b) => b.id().name === (typeof benchmark === "string" ? benchmark : benchmark.name))!;
   }
 
-  benchmarkByUuid(uuid: string): BenchmarkStore {
-    return this.benchmarks.find((b) => b.uuid === uuid)!;
+  benchmarkByUuid(guid: string): BenchmarkStore {
+    return this.benchmarks.find((b) => b.guid === guid)!;
   }
 
   hasAuthor(author: AuthorIdLike): boolean {
@@ -3966,8 +3966,8 @@ class KitStore {
     return this.authors.find((a) => areSameAuthor(a.id(), author))!;
   }
 
-  authorByUuid(uuid: string): AuthorStore {
-    return this.authors.find((a) => a.uuid === uuid)!;
+  authorByUuid(guid: string): AuthorStore {
+    return this.authors.find((a) => a.guid === guid)!;
   }
 
   hasAttribute(attribute: AttributeIdLike): boolean {
@@ -3987,8 +3987,8 @@ class KitStore {
     return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
   }
 
-  attributeByUuid(uuid: string): AttributeStore {
-    return this.attributes.find((a) => a.uuid === uuid)!;
+  attributeByUuid(guid: string): AttributeStore {
+    return this.attributes.find((a) => a.guid === guid)!;
   }
 
   hash(kit: Kit): string {
@@ -4595,9 +4595,9 @@ const kitCommands = {
 
 type KitScope = { id: KitId };
 const KitScopeContext = createContext<KitScope | null>(null);
-export const KitScopeProvider = (props: { uuid: string; children: React.ReactNode }) => {
+export const KitScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const store = useSketchpadStore();
-  const id = store.kitByUuid(props.uuid).id();
+  const id = store.kitByUuid(props.guid).id();
   const value = { id };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
@@ -4690,7 +4690,7 @@ interface EditorCommandResult<TDiff = any> {
 }
 
 abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> {
-  public readonly uuid: string;
+  public readonly guid: string;
   public readonly parent: SketchpadStore;
   public readonly yMap: Y.Map<any>;
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
@@ -4699,7 +4699,7 @@ abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelecti
   protected cacheHash?: string;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
-    this.uuid = uuidv4();
+    this.guid = uuidv4();
     this.parent = parent;
     this.yMap = yMap;
     this.transact = transact;
@@ -5050,7 +5050,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     super(parent, yMap, transact);
 
     const kit = this.parent.kit(id.kit);
-    yMap.set("kit", kit.uuid);
+    yMap.set("kit", kit.guid);
 
     yMap.set("fullscreenPanel", state?.fullscreenPanel || KitEditorFullscreenPanel.None);
 
@@ -5726,8 +5726,8 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
     const kit = this.parent.kit(id.kit);
     const design = kit.design(id.design);
-    yMap.set("kit", kit.uuid);
-    yMap.set("design", design.uuid);
+    yMap.set("kit", kit.guid);
+    yMap.set("design", design.guid);
 
     yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
 
@@ -6876,8 +6876,8 @@ class SketchpadStore {
     return this.kits.find((k) => areSameKit(k.id(), kit))!;
   }
 
-  kitByUuid(uuid: string): KitStore {
-    return this.kits.find((k) => k.uuid === uuid)!;
+  kitByUuid(guid: string): KitStore {
+    return this.kits.find((k) => k.guid === guid)!;
   }
 
   kitIds(): KitId[] {
@@ -6911,8 +6911,8 @@ class SketchpadStore {
     return this.kitEditors.find((k) => areSameKitEditor(k.id(), kitEditor))!;
   }
 
-  kitEditorByUuid(uuid: string): KitEditorStore {
-    return this.kitEditors.find((k) => k.uuid === uuid)!;
+  kitEditorByUuid(guid: string): KitEditorStore {
+    return this.kitEditors.find((k) => k.guid === guid)!;
   }
 
   kitEditorIds(): KitEditorId[] {
@@ -6931,8 +6931,8 @@ class SketchpadStore {
     return this.designEditors.find((d) => areSameDesignEditor(d.id(), designEditor))!;
   }
 
-  designEditorByUuid(uuid: string): DesignEditorStore {
-    return this.designEditors.find((d) => d.uuid === uuid)!;
+  designEditorByUuid(guid: string): DesignEditorStore {
+    return this.designEditors.find((d) => d.guid === guid)!;
   }
 
   designEditorIds(): DesignEditorId[] {
