@@ -138,22 +138,6 @@ export const EditingActions: Story = {
   ),
 };
 
-export const Outline: Story = {
-  render: () => (
-    <ButtonGroup variant="outline">
-      <ButtonGroupItem>
-        <Box />
-      </ButtonGroupItem>
-      <ButtonGroupItem>
-        <Grid />
-      </ButtonGroupItem>
-      <ButtonGroupItem>
-        <Layers />
-      </ButtonGroupItem>
-    </ButtonGroup>
-  ),
-};
-
 export const Sizes: Story = {
   render: () => (
     <div className="flex flex-col items-start gap-4">

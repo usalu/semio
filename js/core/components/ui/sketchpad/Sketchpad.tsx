@@ -23,13 +23,13 @@ import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
 import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useEditorType, useLayout, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
-import { TreeItem } from "../Tree";
 import Chat from "./Chat";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
 import Footer from "./Footer";
+import Home from "./Home";
 import KitEditor from "./KitEditor";
-import Navbar, { PanelSectionProvider, useAddPanelSection, useRemovePanelSection } from "./Navbar";
+import Navbar, { PanelSectionProvider } from "./Navbar";
 import Settings from "./Settings";
 import TypeEditor from "./TypeEditor";
 import Workbench from "./Workbench";
@@ -39,52 +39,6 @@ export interface ResizablePanelProps {
   onWidthChange?: (width: number) => void;
   width: number;
 }
-
-const Home: FC = ({}) => {
-  const addSection = useAddPanelSection();
-  const removeSection = useRemovePanelSection();
-
-  // Add chat section
-  useEffect(() => {
-    addSection("chat", {
-      id: "home-chat",
-      label: "Welcome",
-      order: 0,
-      defaultOpen: true,
-      content: (
-        <TreeItem>
-          <p className="text-sm text-muted-foreground">Welcome to Semio! Start by creating a kit or opening an existing one.</p>
-        </TreeItem>
-      ),
-    });
-
-    return () => {
-      removeSection("chat", "home-chat");
-    };
-  }, [addSection, removeSection]);
-
-  // Add settings section
-  useEffect(() => {
-    addSection("settings", {
-      id: "home-settings",
-      label: "Home",
-      order: 0,
-      defaultOpen: true,
-      content: (
-        <>
-          <TreeItem>Version: 1.0.0</TreeItem>
-          <TreeItem>Environment: Development</TreeItem>
-        </>
-      ),
-    });
-
-    return () => {
-      removeSection("settings", "home-settings");
-    };
-  }, [addSection, removeSection]);
-
-  return <div>Home</div>;
-};
 
 const KitRoute: FC = () => {
   let { uuid } = useParams();

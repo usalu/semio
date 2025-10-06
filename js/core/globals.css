@@ -104,6 +104,14 @@
         default !important;
     }
 
+    ::selection {
+      background-color: var(--color-primary);
+    }
+
+    ::-moz-selection {
+      background-color: var(--color-primary);
+    }
+
     .cursor-pointer {
       cursor:
         url("../../assets/cursors/cursor_pointer.svg") 0 0,

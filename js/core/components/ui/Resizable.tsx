@@ -18,7 +18,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { GripVerticalIcon } from "lucide-react";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 
@@ -33,15 +32,12 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimi
 }
 
 function ResizableHandle({
-  withHandle,
   className,
   onMouseDown: externalOnMouseDown,
   onMouseEnter: externalOnMouseEnter,
   onMouseLeave: externalOnMouseLeave,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
-  withHandle?: boolean;
-}) {
+}: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle>) {
   const [isHovered, setIsHovered] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
 
@@ -87,25 +83,13 @@ function ResizableHandle({
           : "data-[panel-group-direction=vertical]:hover:border-primary", // Vertical hover
         "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
         "data-[panel-group-direction=vertical]:before:inset-x-0 data-[panel-group-direction=vertical]:before:-top-2 data-[panel-group-direction=vertical]:before:h-4 data-[panel-group-direction=vertical]:before:w-full data-[panel-group-direction=vertical]:before:cursor-ns-resize",
-        "[&[data-panel-group-direction=vertical]>div]:rotate-90",
         className,
       )}
       onMouseDown={handleMouseDown as any}
       onMouseEnter={handleMouseEnter as any}
       onMouseLeave={handleMouseLeave as any}
       {...props}
-    >
-      {withHandle && (
-        <div
-          className={cn(
-            "z-10 flex h-4 w-3 items-center justify-center border bg-background",
-            isDragging || isHovered ? "border-primary bg-primary" : "hover:border-primary", // Apply hover/drag to handle itself
-          )}
-        >
-          <GripVerticalIcon className="size-2.5" />
-        </div>
-      )}
-    </ResizablePrimitive.PanelResizeHandle>
+    />
   );
 }
 

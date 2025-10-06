@@ -41,7 +41,7 @@ export const Variants: Story = {
     <div className="flex flex-col gap-8 w-96">
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Basic</p>
-        <Command className="rounded-lg border shadow-md">
+        <Command className="border">
           <CommandInput placeholder="Search types..." />
           <CommandList>
             <CommandEmpty>No types found.</CommandEmpty>
@@ -60,7 +60,7 @@ export const Variants: Story = {
       </div>
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">With Separator</p>
-        <Command className="rounded-lg border shadow-md">
+        <Command className="border">
           <CommandInput placeholder="Search commands..." />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
@@ -90,7 +90,7 @@ export const Variants: Story = {
 
 export const Default: Story = {
   render: () => (
-    <Command className="rounded-lg border shadow-md w-96">
+    <Command className="border w-96">
       <CommandInput placeholder="Search types..." />
       <CommandList>
         <CommandEmpty>No types found.</CommandEmpty>
@@ -115,7 +115,7 @@ export const Default: Story = {
 
 export const WithShortcuts: Story = {
   render: () => (
-    <Command className="rounded-lg border shadow-md w-96">
+    <Command className="border w-96">
       <CommandInput placeholder="Type a command..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
@@ -143,7 +143,7 @@ export const WithShortcuts: Story = {
 
 export const MultipleGroups: Story = {
   render: () => (
-    <Command className="rounded-lg border shadow-md w-96">
+    <Command className="border w-96">
       <CommandInput placeholder="Search..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
@@ -248,7 +248,7 @@ export const WithSelection: Story = {
 
     return (
       <div className="space-y-4">
-        <Command className="rounded-lg border shadow-md w-96" value={value} onValueChange={setValue}>
+        <Command className="border w-96" value={value} onValueChange={setValue}>
           <CommandInput placeholder="Search..." />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>

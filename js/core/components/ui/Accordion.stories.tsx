@@ -37,10 +37,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <div className="w-96">
-      <Accordion type="single" collapsible defaultValue="item-1">
+      <Accordion type="multiple" defaultValue={["item-2", "item-3"]}>
         <AccordionItem value="item-1">
           <AccordionTrigger>What is a Kit?</AccordionTrigger>
-          <AccordionContent>A Kit is a collection of types, designs, and qualities that define a modular building system with reusable components. The Metabolism kit, for example, includes capsule types, base types, tambour types, and connection definitions.</AccordionContent>
+          <AccordionContent>
+            A Kit is a collection of types, designs, and qualities that define a modular building system with reusable components. The Metabolism kit, for example, includes capsule types, base types, tambour types, and connection definitions.
+          </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
           <AccordionTrigger>What is a Type?</AccordionTrigger>
