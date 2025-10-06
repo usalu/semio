@@ -58,7 +58,10 @@ export type Guid = string;
 
 // #region Ids
 
-export const DesignIdSchema = z.object({ guid: z.string() });
+export type AuthorId = Guid;
+export type QualityId = Guid;
+export type TypeId = Guid;
+export type DesignId = Guid;
 
 // #endregion Ids
 
@@ -75,16 +78,6 @@ export const AttributeSchema = z.object({
 export type Attribute = z.infer<typeof AttributeSchema>;
 export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute));
 export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
-
-export const AttributeIdSchema = z.object({ key: z.string() });
-export type AttributeId = z.infer<typeof AttributeIdSchema>;
-export const attributeIdToString = (attribute: AttributeId): string => attribute.key;
-export const areSameAttribute = (attribute1: AttributeId, attribute2: AttributeIdLike): boolean => {
-  const a1 = attributeIdLikeToAttributeId(attribute1);
-  const a2 = attributeIdLikeToAttributeId(attribute2);
-  return a1.key === a2.key;
-}
-export const hasSameAttribute = (attribute: AttributeIdLike, attributes: AttributeIdLike[]): boolean => attributes.some((a) => areSameAttribute(attributeIdLikeToAttributeId(attribute), attributeIdLikeToAttributeId(a)));
 
 export const AttributeDiffSchema = AttributeSchema.partial();
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
@@ -557,10 +550,6 @@ export type Author = z.infer<typeof AuthorSchema>;
 export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
 export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 
-export const AuthorIdSchema = AuthorSchema.pick({ guid: true });
-export type AuthorId = z.infer<typeof AuthorIdSchema>;
-export const authorIdToString = (author: AuthorId): string => author.guid;
-
 export const AuthorDiffSchema = AuthorSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
@@ -592,24 +581,11 @@ export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
 };
 
 export const AuthorsDiffSchema = z.object({
-  removed: z.array(AuthorIdSchema).optional(),
-  updated: z.array(z.object({ id: AuthorIdSchema, diff: AuthorDiffSchema })).optional(),
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: AuthorDiffSchema })).optional(),
   added: z.array(AuthorSchema).optional(),
 });
-
-export const AuthorIdLikeSchema = z.union([AuthorIdSchema, AuthorSchema, AuthorDiffSchema, z.string()]);
-export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
-export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {
-  if (typeof author === "string") return { email: author };
-  if (typeof author === "object" && "email" in author) return { email: author.email! };
-  throw new Error("Invalid author id like");
-};
-export const areSameAuthor = (author1: AuthorIdLike, author2: AuthorIdLike): boolean => {
-  const a1 = authorIdLikeToAuthorId(author1);
-  const a2 = authorIdLikeToAuthorId(author2);
-  return a1.email === a2.email;
-};
-export const hasSameAuthor = (author: AuthorIdLike, authors: AuthorIdLike[]): boolean => authors.some((a) => areSameAuthor(author, a));
+export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #endregion Author
 
@@ -624,9 +600,9 @@ export const FileSchema = z.object({
   size: z.number().optional(),
   hash: z.string().optional(),
   createdAt: DateProperty(),
-  createdBy: AuthorIdSchema.optional(),
+  createdBy: z.string().optional(),
   updatedAt: DateProperty(),
-  updatedBy: AuthorIdSchema.optional(),
+  updatedBy: z.string().optional(),
 });
 export type File = z.infer<typeof FileSchema>;
 export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file));
@@ -879,9 +855,8 @@ export type Quality = z.infer<typeof QualitySchema>;
 export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
 export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
 
-export const QualityIdSchema = QualitySchema.pick({ guid: true });
-export type QualityId = z.infer<typeof QualityIdSchema>;
-export const qualityIdToString = (quality: QualityId): string => quality.guid;
+export const QualityIdSchema = z.string();
+export const qualityIdToString = (quality: QualityId): string => quality;
 
 export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true, attributes: true }).extend({
   benchmarks: BenchmarksDiffSchema.optional(),
@@ -976,11 +951,11 @@ export const QualitiesDiffSchema = z.object({
   added: z.array(QualitySchema).optional(),
 });
 
-export const QualityIdLikeSchema = z.union([QualityIdSchema, QualitySchema, QualityDiffSchema, z.string()]);
+export const QualityIdLikeSchema = z.union([QualityIdSchema, QualitySchema, QualityDiffSchema]);
 export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
 export const qualityIdLikeToQualityId = (quality: QualityIdLike): QualityId => {
-  if (typeof quality === "string") return { key: quality };
-  if (typeof quality === "object" && "key" in quality) return { key: quality.key };
+  if (typeof quality === "string") return quality;
+  if (typeof quality === "object" && "guid" in quality && quality.guid) return quality.guid;
   throw new Error("Invalid quality id like");
 };
 
@@ -1376,7 +1351,7 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   }
 
   // Update all types with unified port families
-  const updated: { id_: TypeId; diff: TypeDiff }[] = [];
+  const updated: { id: TypeId; diff: TypeDiff }[] = [];
 
   for (const type of types) {
     const updatedPorts = type.ports?.map((port) => {
@@ -1409,7 +1384,7 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
     });
 
     updated.push({
-      id: { guid: type.guid },
+      id: type.guid,
       diff: {
         ports: updatedPorts
       }
@@ -1461,7 +1436,7 @@ export const TypeSchema = z.object({
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
   location: LocationSchema.optional(),
-  authors: z.array(AuthorIdSchema).optional(),
+  authors: z.array(z.string()).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),
@@ -1471,15 +1446,7 @@ export type Type = z.infer<typeof TypeSchema>;
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
-export const TypeIdSchema = TypeSchema.pick({ guid: true });
-export type TypeId = z.infer<typeof TypeIdSchema>;
-export const typeIdToString = (type: TypeId): string => type.guid;
-export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
-export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
-export const typeIdLikeToTypeId = (type: TypeIdLike): TypeId => {
-  if (typeof type === "string") return { guid: type };
-  return { guid: type.guid };
-};
+
 export const TypeShallowSchema = TypeSchema.omit({ representations: true, ports: true }).extend({
   representations: z.array(RepresentationIdSchema).optional(),
   ports: z.array(PortIdSchema).optional(),
@@ -1507,18 +1474,11 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
 };
 
 export const TypesDiffSchema = z.object({
-  removed: z.array(TypeIdSchema).optional(),
-  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
-
-export const areSameType = (type: TypeIdLike, other: TypeIdLike): boolean => {
-  const t1 = typeIdLikeToTypeId(type);
-  const t2 = typeIdLikeToTypeId(other);
-  return t1.guid === t2.guid;
-};
-export const hasSameType = (type: TypeIdLike, others: TypeIdLike[]): boolean => others.some((other) => areSameType(type, other));
 
 export const findPortInType = (type: Type, portId: PortIdLike): Port => findPort(type.ports ?? [], portId);
 
@@ -1599,13 +1559,16 @@ export const layerIdLikeToLayerId = (layer: LayerIdLike): LayerId => {
 
 // #endregion Layer
 
+// Forward declaration for DesignIdSchema (defined later in Design section)
+export const DesignIdSchema = z.string();
+
 // #region Piece
 // https://github.com/usalu/semio#-piece-
 
 export const PieceSchema = z.object({
   id_: z.string(),
-  type: TypeIdSchema.optional(),
-  design: DesignIdSchema.optional(),
+  type: z.string().optional(),
+  design: z.string().optional(),
   plane: PlaneSchema.optional(),
   center: CoordSchema.optional(),
   scale: z.number().optional(),
@@ -1649,19 +1612,18 @@ export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
  */
 export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
   const representationUrls = new Map<string, string>();
-  const normalizeVariant = (v: string | undefined | null) => v ?? "";
   design.pieces?.forEach((p) => {
     if (!p.type) return;
-    const type = types.find((t) => t.name === p.type!.name && normalizeVariant(t.variant) === normalizeVariant(p.type!.variant));
-    if (!type) throw new Error(`Type (${p.type!.name}, ${p.type!.variant}) for piece ${p.id_} not found`);
-    if (!type.representations) throw new Error(`Type (${p.type!.name}, ${p.type!.variant}) for piece ${p.id_} has no representations`);
+    const type = types.find((t) => t.guid === p.type);
+    if (!type) throw new Error(`Type ${p.type} for piece ${p.id_} not found`);
+    if (!type.representations) throw new Error(`Type ${p.type} for piece ${p.id_} has no representations`);
     const representation = findRepresentation(type.representations, tags);
     representationUrls.set(p.id_, representation.url);
   });
   return representationUrls;
 };
-export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): DesignDiff => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
+export const fixPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): DesignDiff => {
+  const normalizedDesignId = designId;
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const parentConnection = findParentConnectionForPieceInDesign(kit, normalizedDesignId, normalizedPieceId);
 
@@ -1675,8 +1637,8 @@ export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: Piec
   };
 };
 
-export const fixPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): DesignDiff => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
+export const fixPiecesInDesign = (kit: Kit, designId: DesignId, pieceIds: PieceIdLike[]): DesignDiff => {
+  const normalizedDesignId = designId;
   const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId);
   const parentConnections = normalizedPieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, normalizedDesignId, pieceId.id_));
 
@@ -2008,7 +1970,7 @@ export const DesignSchema = z.object({
   canMirror: z.boolean().optional(),
   unit: z.string().optional(),
   location: LocationSchema.optional(),
-  authors: z.array(AuthorIdSchema).optional(),
+  authors: z.array(z.string()).optional(),
   concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
@@ -2021,8 +1983,6 @@ export type Design = z.infer<typeof DesignSchema>;
 export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
 export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
-export type DesignId = z.infer<typeof DesignIdSchema>;
-export const designIdToString = (design: DesignId): string => design.guid;
 export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true }).extend({
   pieces: z.array(PieceIdSchema).optional(),
   connections: z.array(ConnectionIdSchema).optional(),
@@ -2044,13 +2004,6 @@ export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: t
 });
 
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
-export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, DesignShallowSchema, DesignDiffSchema, z.string()]);
-export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
-export const designIdLikeToDesignId = (design: DesignIdLike): DesignId => {
-  if (typeof design === "string") return { guid: design };
-  if (!design.guid) throw new Error("Design guid is required");
-  return { guid: design.guid };
-};
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
 };
 export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => {
@@ -2189,8 +2142,8 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => { };
 
 export const DesignsDiffSchema = z.object({
-  removed: z.array(DesignIdSchema).optional(),
-  updated: z.array(z.object({ id: DesignIdSchema, diff: DesignDiffSchema })).optional(),
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: DesignDiffSchema })).optional(),
   added: z.array(DesignSchema).optional(),
 });
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
@@ -2217,7 +2170,7 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
   return {};
 };
 
-export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], connectionIds: ConnectionIdLike[]): DesignDiff => {
+export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: DesignId, pieceIds: PieceIdLike[], connectionIds: ConnectionIdLike[]): DesignDiff => {
   const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId);
   const normalizedConnectionIds = connectionIds.map(connectionIdLikeToConnectionId);
 
@@ -2301,11 +2254,11 @@ const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port
 
   return matrixToPlane(finalMatrix);
 };
-export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
+export const flattenDesign = (kit: Kit, designId: DesignId): DesignDiff => {
+  const normalizedDesignId = designId;
   const design = findDesignInKit(kit, normalizedDesignId);
   if (!design) {
-    throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
+    throw new Error(`Design ${normalizedDesignId} not found in kit ${kit.name}`);
   }
   const types = kit.types ?? [];
 
@@ -2313,13 +2266,12 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
 
   if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return {};
 
-  const typesDict: { [key: string]: { [key: string]: Type } } = {};
+  const typesDict: { [key: string]: Type } = {};
   types.forEach((t) => {
-    if (!typesDict[t.name]) typesDict[t.name] = {};
-    typesDict[t.name][t.variant || ""] = t;
+    typesDict[t.guid] = t;
   });
   const getType = (typeId: TypeId): Type | undefined => {
-    return typesDict[typeId.name]?.[typeId.variant || ""];
+    return typesDict[typeId];
   };
   const getPort = (type: Type | undefined, portId: PortId | undefined): Port | undefined => {
     if (!type?.ports) return undefined;
@@ -2414,8 +2366,8 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
         }
         const parentSide = connection.connected.piece.id_ === parentId ? connection.connected : connection.connecting;
         const childSide = connection.connecting.piece.id_ === childId ? connection.connecting : connection.connected;
-        const parentType = getType(parentPiece.type);
-        const childType = getType(childPiece.type);
+        const parentType = parentPiece.type ? getType(parentPiece.type) : undefined;
+        const childType = childPiece.type ? getType(childPiece.type) : undefined;
         const parentPort = getPort(parentType, parentSide.port);
         const childPort = getPort(childType, childSide.port);
         if (!parentPort || !childPort) {
@@ -2790,13 +2742,6 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   return includedDesigns;
 };
 
-export const areSameDesign = (design: DesignIdLike, other: DesignIdLike): boolean => {
-  const d1 = designIdLikeToDesignId(design);
-  const d2 = designIdLikeToDesignId(other);
-  return d1.guid === d2.guid;
-};
-export const hasSameDesign = (design: DesignIdLike, others: DesignIdLike[]): boolean => others.some((other) => areSameDesign(design, other));
-
 export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
   const normalizedPieceId = pieceIdLikeToPieceId(piece);
   const normalizedPortId = portIdLikeToPortId(port);
@@ -2882,10 +2827,10 @@ export type KitId = z.infer<typeof KitIdSchema>;
 export const kitIdToString = (kit: KitId): string => `${kit.name}@${kit.version ?? ""}`;
 
 export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qualities: true, authors: true }).extend({
-  types: z.array(TypeIdSchema).optional(),
-  designs: z.array(DesignIdSchema).optional(),
-  qualities: z.array(QualityIdSchema).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
+  types: z.array(z.string()).optional(),
+  designs: z.array(z.string()).optional(),
+  qualities: z.array(z.string()).optional(),
+  authors: z.array(z.string()).optional(),
 });
 export type KitShallow = z.infer<typeof KitShallowSchema>;
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
@@ -2917,13 +2862,13 @@ export const addTypeToKit = (type: Type): KitDiff => ({
 export const setTypeInKit = (type: Type): KitDiff => ({
   types: {
     updated: [{
-      id: { guid: type.guid },
+      id: type.guid,
       diff: { ...type }
     }]
   }
 });
-export const removeTypeFromKit = (typeId: TypeIdLike): KitDiff => ({
-  types: { removed: [typeIdLikeToTypeId(typeId)] }
+export const removeTypeFromKit = (typeId: TypeId): KitDiff => ({
+  types: { removed: [typeId] }
 });
 
 
@@ -2935,7 +2880,7 @@ export const addDesignToKit = (design: Design): KitDiff => ({
 export const setDesignInKit = (design: Design): KitDiff => ({
   designs: {
     updated: [{
-      id: { name: design.name, variant: design.variant, view: design.view },
+      id: design.guid,
       diff: {
         name: design.name,
         description: design.description,
@@ -2957,8 +2902,8 @@ export const setDesignInKit = (design: Design): KitDiff => ({
     }]
   }
 });
-export const removeDesignFromKit = (designId: DesignIdLike): KitDiff => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
+export const removeDesignFromKit = (designId: DesignId): KitDiff => {
+  const normalizedDesignId = designId;
   return {
     designs: {
       removed: [normalizedDesignId]
@@ -2969,7 +2914,7 @@ export const removeDesignFromKit = (designId: DesignIdLike): KitDiff => {
 export const updateDesignInKit = (design: Design): KitDiff => ({
   designs: {
     updated: [{
-      id: { name: design.name, variant: design.variant, view: design.view },
+      id: design.guid,
       diff: {
         name: design.name,
         description: design.description,
@@ -3046,41 +2991,39 @@ export const areSameKit = (kit: KitIdLike, other: KitIdLike): boolean => {
 };
 export const hasSameKit = (kit: KitIdLike, others: KitIdLike[]): boolean => others.some((other) => areSameKit(kit, other));
 
-export const findTypeInKit = (kit: Kit, typeId: TypeIdLike): Type => {
-  const normalizedTypeId = typeIdLikeToTypeId(typeId);
-  const type = kit.types?.find((t) => t.name === normalizedTypeId.name && normalize(t.variant) === normalize(normalizedTypeId.variant));
-  if (!type) throw new Error(`Type ${normalizedTypeId.name} not found in kit ${kit.name}`);
+export const findTypeInKit = (kit: Kit, typeId: TypeId): Type => {
+  const type = kit.types?.find((t) => t.guid === typeId);
+  if (!type) throw new Error(`Type ${typeId} not found in kit ${kit.name}`);
   return type;
 };
 
-export const findDesignInKit = (kit: Kit, designId: DesignIdLike): Design => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
-  const design = kit.designs?.find((d) => d.name === normalizedDesignId.name && normalize(d.variant) === normalize(normalizedDesignId.variant) && normalize(d.view) === normalize(normalizedDesignId.view));
-  if (!design) throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
+export const findDesignInKit = (kit: Kit, designId: DesignId): Design => {
+  const design = kit.designs?.find((d) => d.guid === designId);
+  if (!design) throw new Error(`Design ${designId} not found in kit ${kit.name}`);
   return design;
 };
 
-export const findPieceTypeInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Type => {
+export const findPieceTypeInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Type => {
   const piece = findPieceInDesign(findDesignInKit(kit, designId), pieceId);
   if (!piece.type) throw new Error(`Piece ${pieceIdLikeToPieceId(pieceId).id_} has no type`);
   return findTypeInKit(kit, piece.type);
 };
 
-export const findParentPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece => {
+export const findParentPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Piece => {
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece`);
   return findPieceInDesign(findDesignInKit(kit, designId), parentPieceId);
 };
 
-export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Connection => {
+export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Connection => {
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece and connection`);
   return findConnectionInDesign(findDesignInKit(kit, designId), parentPieceId);
 };
 
-export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece[] => {
+export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Piece[] => {
   const design = findDesignInKit(kit, designId);
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const metadata = piecesMetadata(kit, designId);
@@ -3093,7 +3036,7 @@ export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pie
   return children;
 };
 
-export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Port[] => {
+export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Port[] => {
   const design = findDesignInKit(kit, designId);
   const piece = findPieceInDesign(design, pieceId);
   if (!piece.type) return [];
@@ -3102,7 +3045,7 @@ export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignIdLike, p
   return connections.map((c) => findPortForPieceInConnection(type, c, pieceId));
 };
 
-export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike, variants?: string[]): Type[] => {
+export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike, variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designId);
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const connections = findPieceConnectionsInDesign(design, pieceId);
@@ -3131,7 +3074,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignId
   );
 };
 
-export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
+export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignId, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designId);
   const normalizedPieceIds = pieceIds.map((id) => (typeof id === "string" ? id : id.id_));
   const pieces = normalizedPieceIds.map((id) => findPieceInDesign(design, id));
@@ -3170,7 +3113,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignI
 
 export const piecesMetadata = (
   kit: Kit,
-  designId: DesignIdLike,
+  designId: DesignId,
 ): Map<
   string,
   {
@@ -3181,13 +3124,12 @@ export const piecesMetadata = (
     depth: number;
   }
 > => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
-  const design = findDesignInKit(kit, normalizedDesignId);
+  const design = findDesignInKit(kit, designId);
   if (!design) {
-    throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
+    throw new Error(`Design ${designId} not found in kit ${kit.name}`);
   }
-  const flattenDiff = flattenDesign(kit, normalizedDesignId);
-  const flatDesign = applyDesignDiff(design, flattenDiff, true);
+  const flattenDiff = flattenDesign(kit, designId);
+  const flatDesign = applyDesignDiff(design, flattenDiff);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.id_);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));

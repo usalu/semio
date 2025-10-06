@@ -31,19 +31,15 @@ import {
   applyDesignDiff,
   applyKitDiff,
   areSameAttribute,
-  areSameAuthor,
-  areSameDesign,
   areSameKit,
   areSamePiece,
   areSamePort,
   areSameRepresentation,
-  areSameType,
   Attribute,
   AttributeIdLike,
   Author,
   AuthorDiff,
   AuthorId,
-  AuthorIdLike,
   Benchmark,
   BenchmarkDiff,
   BenchmarkId,
@@ -61,7 +57,6 @@ import {
   Design,
   DesignDiff,
   DesignId,
-  DesignIdLike,
   DesignShallow,
   DiffStatus,
   FileDiff,
@@ -78,10 +73,8 @@ import {
   getPieceRepresentationUrls,
   Group,
   GroupDiff,
-  hasSameDesign,
   hasSameKit,
   hasSamePiece,
-  hasSameType,
   inverseKitDiff,
   Kit,
   KitDiff,
@@ -130,7 +123,6 @@ import {
   Type,
   TypeDiff,
   TypeId,
-  TypeIdLike,
   Vec,
   VecDiff,
   Vector,
@@ -166,7 +158,6 @@ export enum EditorType {
 
 // #region General
 
-export type Uuid = string;
 export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
@@ -821,17 +812,12 @@ class AuthorStore {
     this.attributes.push(yAttributeStore);
   }
 
-  attribute(attribute: AttributeIdLike): AttributeStore {
-    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
-    return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
-  }
-
-  attributeByUuid(guid: string): AttributeStore {
+  attribute(guid: string): AttributeStore {
     return this.attributes.find((a) => a.guid === guid)!;
   }
 
   id(): AuthorId {
-    return { guid: this.guid };
+    return this.guid;
   }
 
   hash = (author: Author): string => {
@@ -873,7 +859,7 @@ type AuthorScope = { id: AuthorId };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
 export const AuthorScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = kitStore.authorByUuid(props.guid).id();
+  const id = kitStore.author(props.guid).id();
   const value = { id };
   return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
 };
@@ -908,7 +894,6 @@ class FileStore {
   constructor(yFile: YFile, file: SemioFile) {
     this.yFile = yFile;
 
-    this.guid = file.guid;
     this.path = file.path;
     this.remote = file.remote;
     this.size = file.size;
@@ -917,13 +902,6 @@ class FileStore {
     this.updatedAt = file.updatedAt;
     this.createdBy = file.createdBy;
     this.updatedBy = file.updatedBy;
-  }
-
-  get guid(): string {
-    return this.yFile.get("guid") as string;
-  }
-  set guid(guid: string) {
-    this.yFile.set("guid", guid);
   }
 
   get path(): string {
@@ -965,18 +943,16 @@ class FileStore {
     this.yFile.set("updatedAt", updatedAt?.toISOString() || "");
   }
   get createdBy(): AuthorId | undefined {
-    const guid = this.yFile.get("createdBy") as string | undefined;
-    return guid ? { guid } : undefined;
+    return this.yFile.get("createdBy") as string | undefined;
   }
   set createdBy(createdBy: AuthorId | undefined) {
-    this.yFile.set("createdBy", createdBy?.guid || "");
+    this.yFile.set("createdBy", createdBy || "");
   }
   get updatedBy(): AuthorId | undefined {
-    const guid = this.yFile.get("updatedBy") as string | undefined;
-    return guid ? { guid } : undefined;
+    return this.yFile.get("updatedBy") as string | undefined;
   }
   set updatedBy(updatedBy: AuthorId | undefined) {
-    this.yFile.set("updatedBy", updatedBy?.guid || "");
+    this.yFile.set("updatedBy", updatedBy || "");
   }
 
   hashFile = (file: SemioFile): string => {
@@ -985,7 +961,6 @@ class FileStore {
 
   snapshot = (): SemioFile => {
     const currentData = {
-      guid: this.guid,
       path: this.path,
       remote: this.remote,
       size: this.size,
@@ -1006,7 +981,7 @@ class FileStore {
   };
 
   id = (): FileId => {
-    return { guid: this.guid };
+    return { path: this.path };
   };
 
   change = (diff: FileDiff) => {
@@ -1201,7 +1176,7 @@ class QualityStore {
   }
 
   id(): QualityId {
-    return { guid: this.guid };
+    return this.guid;
   }
 
   hash = (quality: Quality): string => {
@@ -1598,7 +1573,7 @@ class TypeStore {
 
     this.authors = type.authors?.map((author) => this.parent.author(author)) || [];
     this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
-    this.authors.forEach((author) => this.yAuthors.push([author.id().guid]));
+    this.authors.forEach((author) => this.yAuthors.push([author.id()]));
 
     this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
     // if (type.representations) {
@@ -1707,12 +1682,7 @@ class TypeStore {
     return this.representations.some((rep) => areSameRepresentation(rep.id(), representation));
   }
 
-  representation(representation: RepresentationIdLike): RepresentationStore {
-    if (!this.hasRepresentation(representation)) throw new Error(`Representation store not found for representation ${representation}`);
-    return this.representations.find((rep) => areSameRepresentation(rep.id(), representation))!;
-  }
-
-  representationByUuid(guid: string): RepresentationStore {
+  representation(guid: string): RepresentationStore {
     for (const rep of this.representations) {
       if (rep.guid === guid) return rep;
     }
@@ -1730,12 +1700,7 @@ class TypeStore {
     this.ports.push(yPortStore);
   }
 
-  port(port: PortIdLike): PortStore {
-    if (!this.hasPort(port)) throw new Error(`Port store not found for port ${port}`);
-    return this.ports.find((port) => areSamePort(port.id(), port))!;
-  }
-
-  portByUuid(guid: string): PortStore {
+  port(guid: string): PortStore {
     for (const p of this.ports) {
       if (p.guid === guid) return p;
     }
@@ -1743,7 +1708,7 @@ class TypeStore {
   }
 
   id = (): TypeId => {
-    return { guid: this.guid };
+    return this.guid;
   };
 
   hash = (type: Type): string => {
@@ -1760,7 +1725,7 @@ class TypeStore {
       icon: this.icon,
       image: this.image,
       description: this.description,
-      authors: this.authors,
+      authors: this.authors.map(a => a.id()),
       representations: this.representations.map((rep) => rep.snapshot()),
       ports: this.ports.map((port) => port.snapshot()),
       createdAt: this.createdAt,
@@ -1813,7 +1778,7 @@ type TypeScope = { id: TypeId };
 const TypeScopeContext = createContext<TypeScope | null>(null);
 export const TypeScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = kitStore.typeByUuid(props.guid).id();
+  const id = kitStore.type(props.guid).id();
   const value = { id };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
@@ -1840,7 +1805,7 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id.guid === type.guid);
+          const update = colorDiff.updated?.find((u) => u.id === type.guid);
           return update ? { ...type, ports: update.diff.ports } : type;
         })
       : diffedKit.types;
@@ -2042,7 +2007,7 @@ class PieceStore {
   }
   get type(): TypeId | undefined {
     const typeUuid = this.yPiece.get("type") as string;
-    return typeUuid ? this.parent.parent.typeByUuid(typeUuid).id() : undefined;
+    return typeUuid ? this.parent.parent.type(typeUuid).id() : undefined;
   }
   set type(type: TypeId | undefined) {
     if (type) {
@@ -2053,7 +2018,7 @@ class PieceStore {
   }
   get design(): DesignId | undefined {
     const designUuid = this.yPiece.get("design") as string;
-    return designUuid ? this.parent.parent.designByUuid(designUuid).id() : undefined;
+    return designUuid ? this.parent.parent.design(designUuid).id() : undefined;
   }
   set design(design: DesignId | undefined) {
     if (design) {
@@ -2105,12 +2070,7 @@ class PieceStore {
     this.attributes.push(yAttributeStore);
   }
 
-  attribute(attribute: AttributeIdLike): AttributeStore {
-    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
-    return this.attributes.find((a) => areSameAttribute(a.id(), attribute))!;
-  }
-
-  attributeByUuid(guid: string): AttributeStore {
+  attribute(guid: string): AttributeStore {
     return this.attributes.find((a) => a.guid === guid)!;
   }
 
@@ -2234,7 +2194,7 @@ type PieceScope = { id: PieceId };
 const PieceScopeContext = createContext<PieceScope | null>(null);
 export const PieceScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const designStore = useDesignStore() as DesignStore;
-  const id = designStore.pieceByUuid(props.guid).id();
+  const id = designStore.piece(props.guid).id();
   const value = { id };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
@@ -2468,7 +2428,7 @@ class SideStore {
 
   get piece(): PieceId {
     const pieceUuid = this.ySide.get("piece") as string;
-    return this.parent.pieceByUuid(pieceUuid).id();
+    return this.parent.piece(pieceUuid).id();
   }
   set piece(piece: PieceId) {
     const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), piece));
@@ -2480,7 +2440,7 @@ class SideStore {
   get designPiece(): PieceId | undefined {
     const designPieceUuid = this.ySide.get("designPiece") as string | undefined;
     if (!designPieceUuid) return undefined;
-    return this.parent.pieceByUuid(designPieceUuid).id();
+    return this.parent.piece(designPieceUuid).id();
   }
   set designPiece(designPiece: PieceId | undefined) {
     if (designPiece) {
@@ -2496,16 +2456,16 @@ class SideStore {
   get port(): PortId {
     const portUuid = this.ySide.get("port") as string;
     const pieceUuid = this.ySide.get("piece") as string;
-    const pieceStore = this.parent.pieceByUuid(pieceUuid);
+    const pieceStore = this.parent.piece(pieceUuid);
     const typeId = pieceStore.type;
     const typeStore = this.parent.parent.type(typeId);
-    const portStore = typeStore.portByUuid(portUuid);
+    const portStore = typeStore.port(portUuid);
     return portStore.id();
   }
   set port(port: PortId) {
     // Find the port through the piece's type
     const pieceUuid = this.ySide.get("piece") as string;
-    const pieceStore = this.parent.pieceByUuid(pieceUuid);
+    const pieceStore = this.parent.piece(pieceUuid);
     const typeId = pieceStore.type;
     const typeStore = this.parent.parent.type(typeId);
     const portStore = typeStore.ports.get(port.id_);
@@ -2735,7 +2695,7 @@ type ConnectionScope = { id: ConnectionId };
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
 export const ConnectionScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const designStore = useDesignStore() as DesignStore;
-  const id = designStore.connectionByUuid(props.guid).id();
+  const id = designStore.connection(props.guid).id();
   const value = { id };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
@@ -3170,12 +3130,7 @@ class DesignStore {
     this.groups.push(yGroupStore);
   }
 
-  piece(piece: PieceIdLike): PieceStore {
-    if (!this.hasPiece(piece)) throw new Error(`Piece store not found for piece ${piece}`);
-    return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
-  }
-
-  pieceByUuid(guid: string): PieceStore {
+  piece(guid: string): PieceStore {
     return this.pieces.find((p) => p.guid === guid)!;
   }
 
@@ -3183,12 +3138,7 @@ class DesignStore {
     return this.connections.some((c) => c.id.id_ === connection.id_ || c.id.id_ === connection);
   }
 
-  connection(connection: ConnectionIdLike): ConnectionStore {
-    if (!this.hasConnection(connection)) throw new Error(`Connection store not found for connection ${connection}`);
-    return this.connections.find((c) => c.id.id_ === connection.id_ || c.id.id_ === connection)!;
-  }
-
-  connectionByUuid(guid: string): ConnectionStore {
+  connection(guid: string): ConnectionStore {
     return this.connections.find((c) => c.guid === guid)!;
   }
 
@@ -3196,12 +3146,7 @@ class DesignStore {
     return this.attributes.some((a) => a.key === attribute.key || a.key === attribute);
   }
 
-  attribute(attribute: AttributeIdLike): AttributeStore {
-    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
-    return this.attributes.find((a) => a.key === attribute.key || a.key === attribute)!;
-  }
-
-  attributeByUuid(guid: string): AttributeStore {
+  attribute(guid: string): AttributeStore {
     return this.attributes.find((a) => a.guid === guid)!;
   }
 
@@ -3488,7 +3433,7 @@ type DesignScope = { id: DesignId };
 const DesignScopeContext = createContext<DesignScope | null>(null);
 export const DesignScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const kitStore = useKitStore() as KitStore;
-  const id = kitStore.designByUuid(props.guid).id();
+  const id = kitStore.design(props.guid).id();
   const value = { id };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
@@ -3874,51 +3819,35 @@ class KitStore {
     return { name: this.name, version: this.version };
   };
 
-  hasType(type: TypeIdLike): boolean {
-    return hasSameType(
-      type,
-      this.types.map((type) => type.id()),
-    );
+  hasType(guid: string): boolean {
+    return this.types.some((t) => t.guid === guid);
   }
 
   createType(type: Type): void {
-    if (this.hasType(type)) throw new Error(`Type (${type.name}, ${type.variant || ""}) already exists.`);
+    if (this.hasType(type.guid)) throw new Error(`Type (${type.name}, ${type.variant || ""}) already exists.`);
     const yType = new Y.Map<YTypeVal>();
     const yTypeStore = new TypeStore(this, yType, type);
     this.yTypes.push([yType]);
     this.types.push(yTypeStore);
   }
 
-  type(type: TypeIdLike): TypeStore {
-    if (!this.hasType(type)) throw new Error(`Type store not found for type ${type}`);
-    return this.types.find((t) => areSameType(t.id(), type))!;
-  }
-
-  typeByUuid(guid: string): TypeStore {
+  type(guid: string): TypeStore {
     return this.types.find((t) => t.guid === guid)!;
   }
 
-  hasDesign(design: DesignIdLike): boolean {
-    return hasSameDesign(
-      design,
-      this.designs.map((design) => design.id()),
-    );
+  hasDesign(guid: string): boolean {
+    return this.designs.some((d) => d.guid === guid);
   }
 
   createDesign(design: Design): void {
-    if (this.hasDesign(design)) throw new Error(`Design (${design.name}, ${design.variant || ""}, ${design.view || ""}) already exists.`);
+    if (this.hasDesign(design.guid)) throw new Error(`Design (${design.name}, ${design.variant || ""}, ${design.view || ""}) already exists.`);
     const yDesign = new Y.Map<YDesignVal>();
     this.yDesigns.push([yDesign]);
     const yDesignStore = new DesignStore(this, yDesign, design);
     this.designs.push(yDesignStore);
   }
 
-  design(design: DesignIdLike): DesignStore {
-    if (!this.hasDesign(design)) throw new Error(`Design store not found for design ${design}`);
-    return this.designs.find((d) => areSameDesign(d.id(), design))!;
-  }
-
-  designByUuid(guid: string): DesignStore {
+  design(guid: string): DesignStore {
     return this.designs.find((d) => d.guid === guid)!;
   }
 
@@ -3934,12 +3863,7 @@ class KitStore {
     this.files.push(yFileStore);
   }
 
-  file(file: FileIdLike): FileStore {
-    if (!this.hasFile(file)) throw new Error(`File store not found for file ${file}`);
-    return this.files.find((f) => f.id().path === (typeof file === "string" ? file : file.path))!;
-  }
-
-  fileByUuid(guid: string): FileStore {
+  file(guid: string): FileStore {
     return this.files.find((f) => f.guid === guid)!;
   }
 
@@ -3955,12 +3879,7 @@ class KitStore {
     this.qualities.push(yQualityStore);
   }
 
-  quality(quality: QualityIdLike): QualityStore {
-    if (!this.hasQuality(quality)) throw new Error(`Quality store not found for quality ${quality}`);
-    return this.qualities.find((q) => q.id.key === (typeof quality === "string" ? quality : quality.key))!;
-  }
-
-  qualityByUuid(guid: string): QualityStore {
+  quality(guid: string): QualityStore {
     return this.qualities.find((q) => q.guid === guid)!;
   }
 
@@ -3976,33 +3895,23 @@ class KitStore {
     this.benchmarks.push(yBenchmarkStore);
   }
 
-  benchmark(benchmark: BenchmarkIdLike): BenchmarkStore {
-    if (!this.hasBenchmark(benchmark)) throw new Error(`Benchmark store not found for benchmark ${benchmark}`);
-    return this.benchmarks.find((b) => b.id().name === (typeof benchmark === "string" ? benchmark : benchmark.name))!;
-  }
-
-  benchmarkByUuid(guid: string): BenchmarkStore {
+  benchmark(guid: string): BenchmarkStore {
     return this.benchmarks.find((b) => b.guid === guid)!;
   }
 
-  hasAuthor(author: AuthorIdLike): boolean {
-    return this.authors.some((a) => areSameAuthor(a.id(), author));
+  hasAuthor(guid: string): boolean {
+    return this.authors.some((a) => a.guid === guid);
   }
 
   createAuthor(author: Author): void {
-    if (this.hasAuthor(author)) throw new Error(`Author (${author.email}) already exists.`);
+    if (this.hasAuthor(author.guid)) throw new Error(`Author (${author.email}) already exists.`);
     const yAuthor = new Y.Map<YAuthorVal>();
     this.yAuthors.push([yAuthor]);
     const yAuthorStore = new AuthorStore(yAuthor, author);
     this.authors.push(yAuthorStore);
   }
 
-  author(author: AuthorIdLike): AuthorStore {
-    if (!this.hasAuthor(author)) throw new Error(`Author store not found for author ${author}`);
-    return this.authors.find((a) => areSameAuthor(a.id(), author))!;
-  }
-
-  authorByUuid(guid: string): AuthorStore {
+  author(guid: string): AuthorStore {
     return this.authors.find((a) => a.guid === guid)!;
   }
 
@@ -4018,12 +3927,7 @@ class KitStore {
     this.attributes.push(yAttributeStore);
   }
 
-  attribute(attribute: AttributeIdLike): AttributeStore {
-    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
-    return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
-  }
-
-  attributeByUuid(guid: string): AttributeStore {
+  attribute(guid: string): AttributeStore {
     return this.attributes.find((a) => a.guid === guid)!;
   }
 
@@ -4096,7 +4000,7 @@ class KitStore {
         }
         if (diff.types.updated) {
           diff.types.updated.forEach(({ id, diff: typeDiff }) => {
-            const typeStore = this.types.find((t) => areSameType(t.id(), id));
+            const typeStore = this.types.find((t) => t.guid === id);
             if (typeStore) {
               typeStore.change(typeDiff);
             }
@@ -4104,7 +4008,7 @@ class KitStore {
         }
         if (diff.types.removed) {
           diff.types.removed.forEach((typeId) => {
-            const typeIndex = this.types.findIndex((t) => areSameType(t.id(), typeId));
+            const typeIndex = this.types.findIndex((t) => t.guid === typeId);
             if (typeIndex !== -1) {
               this.types.splice(typeIndex, 1);
               this.yTypes.delete(typeIndex, 1);
@@ -4118,7 +4022,7 @@ class KitStore {
         }
         if (diff.designs.updated) {
           diff.designs.updated.forEach(({ id, diff: designDiff }) => {
-            const designStore = this.designs.find((d) => areSameDesign(d.id(), id));
+            const designStore = this.designs.find((d) => d.guid === id);
             if (designStore) {
               designStore.change(designDiff);
             }
@@ -4126,7 +4030,7 @@ class KitStore {
         }
         if (diff.designs.removed) {
           diff.designs.removed.forEach((designId) => {
-            const designIndex = this.designs.findIndex((d) => areSameDesign(d.id(), designId));
+            const designIndex = this.designs.findIndex((d) => d.guid === designId);
             if (designIndex !== -1) {
               this.designs.splice(designIndex, 1);
               this.yDesigns.delete(designIndex, 1);
@@ -4633,7 +4537,7 @@ type KitScope = { id: KitId };
 const KitScopeContext = createContext<KitScope | null>(null);
 export const KitScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const store = useSketchpadStore();
-  const id = store.kitByUuid(props.guid).id();
+  const id = store.kit(props.guid).id();
   const value = { id };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
@@ -5155,7 +5059,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
   }
 
   kit(): KitStore {
-    return this.parent.kitByUuid(this.yMap.get("kit") as string);
+    return this.parent.kit(this.yMap.get("kit") as string);
   }
 
   id(): KitEditorId {
@@ -5753,7 +5657,7 @@ export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelectio
 
   return inverseDiff;
 };
-export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
+export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && designEditor.design === other.design;
 export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
 
 class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorEdit, DesignEditorCommandContext, DesignEditorCommandResult> {
@@ -5860,11 +5764,11 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   }
 
   kit(): KitStore {
-    return this.parent.kitByUuid(this.yMap.get("kit") as string);
+    return this.parent.kit(this.yMap.get("kit") as string);
   }
 
   design(): DesignStore {
-    return this.kit().designByUuid(this.yMap.get("design") as string);
+    return this.kit().design(this.yMap.get("design") as string);
   }
 
   id(): DesignEditorId {
@@ -6907,12 +6811,7 @@ class SketchpadStore {
     );
   }
 
-  kit(kit: KitIdLike): KitStore {
-    if (!this.hasKit(kit)) throw new Error(`Kit store not found for kit ${kit}`);
-    return this.kits.find((k) => areSameKit(k.id(), kit))!;
-  }
-
-  kitByUuid(guid: string): KitStore {
+  kit(guid: string): KitStore {
     return this.kits.find((k) => k.guid === guid)!;
   }
 
@@ -6942,12 +6841,7 @@ class SketchpadStore {
     );
   }
 
-  kitEditor(kitEditor: KitEditorId): KitEditorStore {
-    if (!this.hasKitEditor(kitEditor)) throw new Error(`Kit editor store not found for kit editor ${kitEditor}`);
-    return this.kitEditors.find((k) => areSameKitEditor(k.id(), kitEditor))!;
-  }
-
-  kitEditorByUuid(guid: string): KitEditorStore {
+  kitEditor(guid: string): KitEditorStore {
     return this.kitEditors.find((k) => k.guid === guid)!;
   }
 
@@ -6962,12 +6856,7 @@ class SketchpadStore {
     );
   }
 
-  designEditor(designEditor: DesignEditorId): DesignEditorStore {
-    if (!this.hasDesignEditor(designEditor)) throw new Error(`Design editor store not found for design editor ${designEditor}`);
-    return this.designEditors.find((d) => areSameDesignEditor(d.id(), designEditor))!;
-  }
-
-  designEditorByUuid(guid: string): DesignEditorStore {
+  designEditor(guid: string): DesignEditorStore {
     return this.designEditors.find((d) => d.guid === guid)!;
   }
 
