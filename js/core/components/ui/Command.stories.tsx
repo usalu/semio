@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Calendar, CreditCard, Settings, Smile, User } from "lucide-react";
+import { Box, Calendar, Circle, CreditCard, Settings, Smile, User } from "lucide-react";
 import { useState } from "react";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "./Command";
 
@@ -35,6 +35,58 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Basic</p>
+        <Command className="rounded-lg border shadow-md">
+          <CommandInput placeholder="Search types..." />
+          <CommandList>
+            <CommandEmpty>No types found.</CommandEmpty>
+            <CommandGroup heading="Types">
+              <CommandItem>
+                <Box />
+                <span>Capsule</span>
+              </CommandItem>
+              <CommandItem>
+                <Circle />
+                <span>Base</span>
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">With Separator</p>
+        <Command className="rounded-lg border shadow-md">
+          <CommandInput placeholder="Search commands..." />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup heading="Edit">
+              <CommandItem>
+                <span>Add Piece</span>
+              </CommandItem>
+              <CommandItem>
+                <span>Delete Piece</span>
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="View">
+              <CommandItem>
+                <span>Toggle Model</span>
+              </CommandItem>
+              <CommandItem>
+                <span>Toggle Diagram</span>
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </div>
+    </div>
+  ),
+};
 
 export const Basic: Story = {
   render: () => (

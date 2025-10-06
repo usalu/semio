@@ -43,6 +43,34 @@ const types = [
   { value: "cluster", label: "Cluster" },
 ];
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Default</p>
+        {(() => {
+          const [value, setValue] = useState("");
+          return <Combobox options={types} value={value} onValueChange={setValue} placeholder="Select type..." />;
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">With Label</p>
+        {(() => {
+          const [value, setValue] = useState("");
+          return <Combobox options={types} value={value} onValueChange={setValue} label="Type" placeholder="Choose one..." />;
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Pre-Selected</p>
+        {(() => {
+          const [value, setValue] = useState("capsule");
+          return <Combobox options={types} value={value} onValueChange={setValue} placeholder="Select type..." />;
+        })()}
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => {
     const [value, setValue] = useState("");

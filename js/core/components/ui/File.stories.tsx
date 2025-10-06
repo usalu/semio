@@ -37,6 +37,25 @@ type Story = StoryObj<typeof meta>;
 // Note: These stories require actual .glb/.gltf files to work properly
 // The examples below use placeholder paths - replace with actual file paths
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Default</p>
+        <div className="w-96 h-96">
+          <File src="/models/capsule.glb" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">With Environment</p>
+        <div className="w-96 h-96">
+          <File src="/models/base.glb" environment="/environments/studio.hdr" />
+        </div>
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => (
     <div className="w-96 h-96">

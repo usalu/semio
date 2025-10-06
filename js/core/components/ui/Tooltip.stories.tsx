@@ -36,6 +36,39 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-8">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="outline">Basic</Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Basic tooltip</p>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button size="icon" variant="outline">
+            <Plus />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add Piece</p>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="outline">With Side</Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>Tooltip on right</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => (
     <Tooltip>

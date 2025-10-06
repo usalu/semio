@@ -35,6 +35,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <ButtonGroup>
+        <ButtonGroupItem>Default</ButtonGroupItem>
+        <ButtonGroupItem>Default</ButtonGroupItem>
+        <ButtonGroupItem>Default</ButtonGroupItem>
+      </ButtonGroup>
+      <ButtonGroup variant="outline">
+        <ButtonGroupItem>Outline</ButtonGroupItem>
+        <ButtonGroupItem>Outline</ButtonGroupItem>
+        <ButtonGroupItem>Outline</ButtonGroupItem>
+      </ButtonGroup>
+    </div>
+  ),
+};
+
 export const Default: Story = {
   render: () => (
     <ButtonGroup>

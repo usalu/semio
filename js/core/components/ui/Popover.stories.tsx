@@ -37,6 +37,35 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline">Basic</Button>
+        </PopoverTrigger>
+        <PopoverContent>
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Dimensions</h4>
+            <p className="text-sm text-muted-foreground">Set the dimensions for the layer.</p>
+          </div>
+        </PopoverContent>
+      </Popover>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline">With Align</Button>
+        </PopoverTrigger>
+        <PopoverContent align="start">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Connection</h4>
+            <p className="text-sm text-muted-foreground">Configure connection parameters.</p>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => (
     <Popover>

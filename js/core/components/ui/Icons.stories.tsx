@@ -34,6 +34,27 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Default</p>
+        <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+          <Cursor color="#000000" x={50} y={50} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Color Variants</p>
+        <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+          <Cursor color="#FF0000" x={20} y={20} />
+          <Cursor color="#00FF00" x={80} y={80} />
+          <Cursor color="#0000FF" x={140} y={140} />
+        </div>
+      </div>
+    </div>
+  ),
+};
+
 export const DefaultCursor: Story = {
   render: () => (
     <div className="relative w-64 h-64 border rounded-md bg-muted/20">

@@ -34,6 +34,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Default</p>
+        <Textarea placeholder="Enter design description..." />
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">With Label</p>
+        <Textarea label="Type Description" placeholder="Describe the type..." />
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Disabled</p>
+        <Textarea placeholder="Cannot edit" disabled />
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   args: {
     placeholder: "Enter design description...",
@@ -85,9 +104,7 @@ export const WithRows: Story = {
 };
 
 export const AutoHeight: Story = {
-  render: () => (
-    <Textarea label="Connection Description" placeholder="Describe the connection parameters..." className="w-96" defaultValue="This connection links two capsule pieces with a gap of 10mm, shift of 5mm, and rotation of 45 degrees." />
-  ),
+  render: () => <Textarea label="Connection Description" placeholder="Describe the connection parameters..." className="w-96" defaultValue="This connection links two capsule pieces with a gap of 10mm, shift of 5mm, and rotation of 45 degrees." />,
 };
 
 export const MaxLength: Story = {

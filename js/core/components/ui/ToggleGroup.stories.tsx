@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Underline } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Bold, Box, Circle, Cylinder, Hexagon, Italic, List, Network, Underline } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
 const meta = {
@@ -34,6 +34,41 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Single</p>
+        <ToggleGroup type="single">
+          <ToggleGroupItem value="model">
+            <Box />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="diagram">
+            <Network />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="details">
+            <List />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Multiple</p>
+        <ToggleGroup type="multiple">
+          <ToggleGroupItem value="types">
+            <Cylinder />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="designs">
+            <Hexagon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="pieces">
+            <Circle />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+    </div>
+  ),
+};
 
 export const Single: Story = {
   render: () => (

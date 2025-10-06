@@ -35,6 +35,34 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-6 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Default</p>
+        {(() => {
+          const [value, setValue] = useState([50]);
+          return <Slider value={value} onValueChange={setValue} />;
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">With Label</p>
+        {(() => {
+          const [value, setValue] = useState([50]);
+          return <Slider label="Volume" value={value} onValueChange={setValue} />;
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">With Step</p>
+        {(() => {
+          const [value, setValue] = useState([50]);
+          return <Slider label="Scale" value={value} onValueChange={setValue} step={10} />;
+        })()}
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => {
     const [value, setValue] = useState([50]);

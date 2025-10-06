@@ -37,6 +37,41 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button>Basic</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Design</DialogTitle>
+            <DialogDescription>Create a new design in the current kit.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">Enter design parameters and properties.</div>
+        </DialogContent>
+      </Dialog>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline">With Footer</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Type</DialogTitle>
+            <DialogDescription>Modify the type properties and representations.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">Update type configuration.</div>
+          <DialogFooter>
+            <Button variant="outline">Cancel</Button>
+            <Button>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => (
     <Dialog>
@@ -146,23 +181,23 @@ export const LongContent: Story = {
   render: () => (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>View Terms</Button>
+        <Button>View Design Details</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Terms and Conditions</DialogTitle>
-          <DialogDescription>Please read our terms and conditions carefully.</DialogDescription>
+          <DialogTitle>Nakagin Capsule Tower Documentation</DialogTitle>
+          <DialogDescription>Complete design specifications and architectural details.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4 text-sm">
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-          <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+          <p>The Nakagin Capsule Tower is a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan.</p>
+          <p>Completed in 1972, the building is a rare remaining example of Japanese Metabolism, a post-war architectural movement that fused ideas about architectural megastructures with those of organic biological growth.</p>
+          <p>The building was made of prefabricated capsules which could be plugged in to the concrete towers. Each capsule measures 2.5 m × 4.0 m × 2.5 m and was designed to be replaceable.</p>
+          <p>The capsules were intended to be replaced every 25 years, but this never happened. The building became a symbol of the Metabolist movement and its vision of sustainable, adaptable architecture.</p>
+          <p>The tower consists of two interconnected concrete cores with 140 prefabricated capsules inserted into the cores. The capsules can be individually removed and replaced without affecting the integrity of the building.</p>
+          <p>Each capsule features a circular window, built-in storage, a bathroom, and was originally equipped with a bed, desk, and reel-to-reel tape deck. The modular design represented a radical approach to urban living.</p>
         </div>
         <DialogFooter>
-          <Button>Accept</Button>
+          <Button>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

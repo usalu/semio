@@ -35,23 +35,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-4">
+      <Button variant="default">Default</Button>
+      <Button variant="destructive">Destructive</Button>
+      <Button variant="outline">Outline</Button>
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="ghost">Ghost</Button>
+      <Button variant="link">Link</Button>
+    </div>
+  ),
+};
+
 export const Default: Story = {
   args: {
     children: "Create Design",
   },
-};
-
-export const Variants: Story = {
-  render: () => (
-    <div className="flex flex-wrap gap-4">
-      <Button variant="default">Add Piece</Button>
-      <Button variant="destructive">Delete Type</Button>
-      <Button variant="outline">Edit Connection</Button>
-      <Button variant="secondary">View Properties</Button>
-      <Button variant="ghost">Toggle Layer</Button>
-      <Button variant="link">Open Kit</Button>
-    </div>
-  ),
 };
 
 export const Sizes: Story = {

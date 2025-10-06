@@ -34,6 +34,45 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Horizontal</p>
+        <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">
+          <ResizablePanel defaultSize={50}>
+            <div className="flex h-full items-center justify-center p-6">
+              <span className="font-semibold">Model</span>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel defaultSize={50}>
+            <div className="flex h-full items-center justify-center p-6">
+              <span className="font-semibold">Diagram</span>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Vertical</p>
+        <ResizablePanelGroup direction="vertical" className="w-[600px] h-[400px] border rounded-lg">
+          <ResizablePanel defaultSize={50}>
+            <div className="flex h-full items-center justify-center p-6">
+              <span className="font-semibold">Editor</span>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel defaultSize={50}>
+            <div className="flex h-full items-center justify-center p-6">
+              <span className="font-semibold">Console</span>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    </div>
+  ),
+};
+
 export const Horizontal: Story = {
   render: () => (
     <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">

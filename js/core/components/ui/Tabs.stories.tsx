@@ -37,6 +37,47 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Default</p>
+        <Tabs defaultValue="model" className="w-96">
+          <TabsList>
+            <TabsTrigger value="model">Model</TabsTrigger>
+            <TabsTrigger value="diagram">Diagram</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
+          </TabsList>
+          <TabsContent value="model">
+            <div className="border p-4 rounded-md">3D model view</div>
+          </TabsContent>
+          <TabsContent value="diagram">
+            <div className="border p-4 rounded-md">Connection diagram</div>
+          </TabsContent>
+          <TabsContent value="details">
+            <div className="border p-4 rounded-md">Design properties</div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Vertical</p>
+        <Tabs defaultValue="types" orientation="vertical" className="flex w-96">
+          <TabsList className="flex-col h-auto">
+            <TabsTrigger value="types">Types</TabsTrigger>
+            <TabsTrigger value="designs">Designs</TabsTrigger>
+          </TabsList>
+          <TabsContent value="types" className="flex-1 ml-4">
+            <div className="border p-4 rounded-md">Type library</div>
+          </TabsContent>
+          <TabsContent value="designs" className="flex-1 ml-4">
+            <div className="border p-4 rounded-md">Design library</div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => (
     <Tabs defaultValue="tab1" className="w-96">

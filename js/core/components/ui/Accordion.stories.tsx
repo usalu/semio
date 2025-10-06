@@ -34,6 +34,37 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <div className="w-96">
+        <Accordion type="single" collapsible>
+          <AccordionItem value="single-1">
+            <AccordionTrigger>Single Type</AccordionTrigger>
+            <AccordionContent>Only one item can be open at a time with single type accordion.</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="single-2">
+            <AccordionTrigger>Collapsible</AccordionTrigger>
+            <AccordionContent>Items can be collapsed when clicked again.</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+      <div className="w-96">
+        <Accordion type="multiple">
+          <AccordionItem value="multiple-1">
+            <AccordionTrigger>Multiple Type</AccordionTrigger>
+            <AccordionContent>Multiple items can be open simultaneously.</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="multiple-2">
+            <AccordionTrigger>Independent</AccordionTrigger>
+            <AccordionContent>Each item toggles independently.</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    </div>
+  ),
+};
+
 export const Single: Story = {
   render: () => (
     <div className="w-96">

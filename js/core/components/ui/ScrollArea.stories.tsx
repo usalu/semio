@@ -34,6 +34,38 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Vertical</p>
+        <ScrollArea className="h-72 w-80 border rounded-md">
+          <div className="p-4 space-y-2">
+            <h4 className="text-sm font-medium mb-4">Types</h4>
+            {Array.from({ length: 30 }, (_, i) => (
+              <div key={i} className="text-sm">
+                Type {i + 1}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Horizontal</p>
+        <ScrollArea className="w-96 h-32 border rounded-md" orientation="horizontal">
+          <div className="p-4 flex space-x-4">
+            {Array.from({ length: 20 }, (_, i) => (
+              <div key={i} className="text-sm whitespace-nowrap">
+                Piece {i + 1}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    </div>
+  ),
+};
+
 export const Vertical: Story = {
   render: () => (
     <ScrollArea className="h-72 w-96 border rounded-md">
@@ -53,15 +85,15 @@ export const LongText: Story = {
   render: () => (
     <ScrollArea className="h-64 w-96 border rounded-md">
       <div className="p-4">
-        <h4 className="mb-4 text-sm font-medium">Terms and Conditions</h4>
+        <h4 className="mb-4 text-sm font-medium">Design Documentation</h4>
         <div className="text-sm space-y-4">
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-          <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-          <p>Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
-          <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+          <p>The Nakagin Capsule Tower is a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan.</p>
+          <p>Completed in 1972, the building is a rare remaining example of Japanese Metabolism, a post-war architectural movement that fused ideas about architectural megastructures with those of organic biological growth.</p>
+          <p>The building was made of prefabricated capsules which could be plugged in to the concrete towers. Each capsule measures 2.5 m × 4.0 m × 2.5 m and was designed to be replaceable.</p>
+          <p>The capsules were intended to be replaced every 25 years, but this never happened. The building became a symbol of the Metabolist movement and its vision of sustainable, adaptable architecture.</p>
+          <p>The tower consists of two interconnected concrete cores with 140 prefabricated capsules inserted into the cores. The capsules can be individually removed and replaced without affecting the integrity of the building.</p>
+          <p>Each capsule features a circular window, built-in storage, a bathroom, and was originally equipped with a bed, desk, and reel-to-reel tape deck. The modular design represented a radical approach to urban living.</p>
+          <p>Despite its architectural significance and influence on modern modular design, the building was demolished in 2022 due to asbestos concerns and the difficulty of maintaining the aging capsules.</p>
         </div>
       </div>
     </ScrollArea>
@@ -88,41 +120,48 @@ export const CodeBlock: Story = {
   render: () => (
     <ScrollArea className="h-72 w-96 border rounded-md">
       <pre className="p-4 text-sm">
-        {`function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
+        {`// Connection calculation
+function calculateConnection(piece1, piece2, port1, port2) {
+  const plane1 = piece1.getPortPlane(port1);
+  const plane2 = piece2.getPortPlane(port2);
+  
+  const gap = plane1.origin.distanceTo(plane2.origin);
+  const shift = plane1.xAxis.dot(plane2.xAxis);
+  const rise = plane1.yAxis.dot(plane2.yAxis);
+  
+  return { gap, shift, rise };
 }
 
-const result = fibonacci(10);
-console.log(result); // 55
-
-// More code...
-function factorial(n) {
-  if (n === 0) return 1;
-  return n * factorial(n - 1);
-}
-
-const fact = factorial(5);
-console.log(fact); // 120
-
-// Additional functions
-function isPrime(num) {
-  if (num <= 1) return false;
-  for (let i = 2; i <= Math.sqrt(num); i++) {
-    if (num % i === 0) return false;
+// Quality aggregation
+function aggregateQuality(design, qualityKey) {
+  let total = 0;
+  for (const piece of design.pieces) {
+    const value = piece.getQualityValue(qualityKey);
+    if (value !== undefined) {
+      total += value;
+    }
   }
-  return true;
+  return total;
 }
 
-function findPrimes(limit) {
-  const primes = [];
-  for (let i = 2; i <= limit; i++) {
-    if (isPrime(i)) primes.push(i);
+// Design validation
+function validateDesign(design) {
+  const errors = [];
+  
+  for (const piece of design.pieces) {
+    if (!piece.plane && !isConnected(piece, design)) {
+      errors.push(\`Piece \${piece.id} is floating\`);
+    }
   }
-  return primes;
-}
-
-console.log(findPrimes(50));`}
+  
+  for (const connection of design.connections) {
+    if (!isValidConnection(connection)) {
+      errors.push(\`Invalid connection: \${connection.id}\`);
+    }
+  }
+  
+  return errors;
+}`}
       </pre>
     </ScrollArea>
   ),
@@ -132,25 +171,26 @@ export const List: Story = {
   render: () => (
     <ScrollArea className="h-80 w-96 border rounded-md">
       <div className="p-4">
-        <h4 className="mb-4 text-sm font-medium">File List</h4>
+        <h4 className="mb-4 text-sm font-medium">Kit Resources</h4>
         <div className="space-y-2">
           {[
-            "package.json",
-            "tsconfig.json",
-            "vite.config.ts",
-            "index.html",
+            "kit.json",
+            "types/capsule-j.glb",
+            "types/capsule-l.glb",
+            "types/capsule-p.glb",
+            "types/base-blob.glb",
+            "types/base-standard.glb",
+            "types/tambour-cylindric.glb",
+            "types/tambour-first-storey.glb",
+            "types/tambour-last-storey.glb",
+            "types/capital.glb",
+            "designs/nakagin-tower.json",
+            "designs/cluster-a.json",
+            "designs/cluster-b.json",
+            "qualities.json",
             "README.md",
-            "src/main.tsx",
-            "src/App.tsx",
-            "src/components/Button.tsx",
-            "src/components/Input.tsx",
-            "src/components/Dialog.tsx",
-            "src/components/Select.tsx",
-            "src/components/Tabs.tsx",
-            "src/lib/utils.ts",
-            "src/styles/globals.css",
-            "public/favicon.ico",
-            "public/logo.svg",
+            "LICENSE.txt",
+            "preview.png",
           ].map((file) => (
             <div key={file} className="flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer text-sm">
               <span className="font-mono">{file}</span>

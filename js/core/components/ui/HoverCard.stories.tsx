@@ -37,6 +37,45 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Button variant="link">Basic</Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-60">
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">Capsule Type</h4>
+            <p className="text-sm text-muted-foreground">Modular living unit with standardized connections.</p>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Button variant="link">With Avatar</Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="flex justify-between space-x-4">
+            <Avatar>
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>SM</AvatarFallback>
+            </Avatar>
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold">@semio</h4>
+              <p className="text-sm">Parametric design and engineering platform</p>
+              <div className="flex items-center pt-2">
+                <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
+                <span className="text-xs text-muted-foreground">Joined January 2025</span>
+              </div>
+            </div>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => (
     <HoverCard>

@@ -35,6 +35,34 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-6 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Default</p>
+        {(() => {
+          const [value, setValue] = useState(0);
+          return <Stepper value={value} onChange={setValue} />;
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">With Label</p>
+        {(() => {
+          const [value, setValue] = useState(5);
+          return <Stepper label="Piece Count" value={value} onChange={setValue} />;
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">With Min/Max</p>
+        {(() => {
+          const [value, setValue] = useState(5);
+          return <Stepper label="Connections" value={value} onChange={setValue} min={0} max={10} />;
+        })()}
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => {
     const [value, setValue] = useState(0);

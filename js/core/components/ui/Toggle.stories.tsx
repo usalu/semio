@@ -36,6 +36,47 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Default</p>
+        {(() => {
+          const [pressed, setPressed] = useState(false);
+          return (
+            <Toggle pressed={pressed} onPressedChange={setPressed}>
+              <Bold />
+            </Toggle>
+          );
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Outline</p>
+        {(() => {
+          const [pressed, setPressed] = useState(false);
+          return (
+            <Toggle variant="outline" pressed={pressed} onPressedChange={setPressed}>
+              <Italic />
+            </Toggle>
+          );
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">With Text</p>
+        {(() => {
+          const [pressed, setPressed] = useState(false);
+          return (
+            <Toggle pressed={pressed} onPressedChange={setPressed}>
+              <Underline />
+              Underline
+            </Toggle>
+          );
+        })()}
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => {
     const [pressed, setPressed] = useState(false);

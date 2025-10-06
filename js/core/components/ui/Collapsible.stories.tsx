@@ -37,6 +37,55 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Controlled</p>
+        {(() => {
+          const [isOpen, setIsOpen] = useState(false);
+          return (
+            <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-2">
+              <div className="flex items-center justify-between space-x-4">
+                <h4 className="text-sm font-semibold">Capsule Types</h4>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <ChevronDown className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    <span className="sr-only">Toggle</span>
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <div className="border rounded-md px-4 py-2 text-sm">Capsule J</div>
+              <CollapsibleContent className="space-y-2">
+                <div className="border rounded-md px-4 py-2 text-sm">Capsule L</div>
+                <div className="border rounded-md px-4 py-2 text-sm">Capsule P</div>
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })()}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Uncontrolled</p>
+        <Collapsible className="space-y-2">
+          <div className="flex items-center justify-between space-x-4">
+            <h4 className="text-sm font-semibold">Base Types</h4>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <ChevronDown />
+                <span className="sr-only">Toggle</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <div className="border rounded-md px-4 py-2 text-sm">Blob Base</div>
+          <CollapsibleContent className="space-y-2">
+            <div className="border rounded-md px-4 py-2 text-sm">Standard Base</div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   render: () => {
     const [isOpen, setIsOpen] = useState(false);

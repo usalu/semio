@@ -34,6 +34,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Variants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4 w-96">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Default</p>
+        <Input placeholder="Enter design name..." />
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">With Label</p>
+        <Input label="Type Name" placeholder="Enter type name..." />
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Disabled</p>
+        <Input placeholder="Cannot edit" disabled />
+      </div>
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   args: {
     placeholder: "Enter design name...",
