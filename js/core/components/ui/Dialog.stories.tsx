@@ -41,14 +41,14 @@ export const Basic: Story = {
   render: () => (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Open Dialog</Button>
+        <Button>Create Design</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Dialog Title</DialogTitle>
-          <DialogDescription>This is a description of what this dialog does.</DialogDescription>
+          <DialogTitle>New Design</DialogTitle>
+          <DialogDescription>Create a new design in the current kit.</DialogDescription>
         </DialogHeader>
-        <div className="py-4">Dialog content goes here.</div>
+        <div className="py-4">Enter design parameters and properties.</div>
       </DialogContent>
     </Dialog>
   ),
@@ -58,16 +58,16 @@ export const WithForm: Story = {
   render: () => (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Edit Profile</Button>
+        <Button>Edit Type</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
+          <DialogTitle>Edit Type Properties</DialogTitle>
+          <DialogDescription>Modify the type properties and metadata. Changes will apply to all instances.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Input label="Name" defaultValue="John Doe" />
-          <Input label="Email" type="email" defaultValue="john@example.com" />
+          <Input label="Type Name" defaultValue="Capsule J" />
+          <Input label="Variant" defaultValue="Standard" />
         </div>
         <DialogFooter>
           <Button variant="outline">Cancel</Button>

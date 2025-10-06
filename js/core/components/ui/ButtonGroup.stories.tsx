@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { AlignCenter, AlignLeft, AlignRight, Bold, Clipboard, Copy, Italic, Redo, Underline, Undo } from "lucide-react";
+import { Box, Clipboard, Copy, Eye, Grid, Layers, Move, Redo, RotateCw, Undo } from "lucide-react";
 import { ButtonGroup, ButtonGroupItem } from "./ButtonGroup";
 
 const meta = {
@@ -38,9 +38,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <ButtonGroup>
-      <ButtonGroupItem>Option 1</ButtonGroupItem>
-      <ButtonGroupItem>Option 2</ButtonGroupItem>
-      <ButtonGroupItem>Option 3</ButtonGroupItem>
+      <ButtonGroupItem>Model</ButtonGroupItem>
+      <ButtonGroupItem>Diagram</ButtonGroupItem>
+      <ButtonGroupItem>Details</ButtonGroupItem>
     </ButtonGroup>
   ),
 };
@@ -49,13 +49,13 @@ export const WithIcons: Story = {
   render: () => (
     <ButtonGroup>
       <ButtonGroupItem>
-        <Bold />
+        <Box />
       </ButtonGroupItem>
       <ButtonGroupItem>
-        <Italic />
+        <Grid />
       </ButtonGroupItem>
       <ButtonGroupItem>
-        <Underline />
+        <Layers />
       </ButtonGroupItem>
     </ButtonGroup>
   ),
@@ -64,14 +64,14 @@ export const WithIcons: Story = {
 export const WithTooltips: Story = {
   render: () => (
     <ButtonGroup>
-      <ButtonGroupItem tooltip="Bold" hotkey="Ctrl+B">
-        <Bold />
+      <ButtonGroupItem tooltip="3D View" hotkey="Ctrl+1">
+        <Box />
       </ButtonGroupItem>
-      <ButtonGroupItem tooltip="Italic" hotkey="Ctrl+I">
-        <Italic />
+      <ButtonGroupItem tooltip="Grid View" hotkey="Ctrl+2">
+        <Grid />
       </ButtonGroupItem>
-      <ButtonGroupItem tooltip="Underline" hotkey="Ctrl+U">
-        <Underline />
+      <ButtonGroupItem tooltip="Layers" hotkey="Ctrl+3">
+        <Layers />
       </ButtonGroupItem>
     </ButtonGroup>
   ),
@@ -80,14 +80,14 @@ export const WithTooltips: Story = {
 export const TextAlignment: Story = {
   render: () => (
     <ButtonGroup>
-      <ButtonGroupItem tooltip="Align Left">
-        <AlignLeft />
+      <ButtonGroupItem tooltip="Move">
+        <Move />
       </ButtonGroupItem>
-      <ButtonGroupItem tooltip="Align Center">
-        <AlignCenter />
+      <ButtonGroupItem tooltip="Rotate">
+        <RotateCw />
       </ButtonGroupItem>
-      <ButtonGroupItem tooltip="Align Right">
-        <AlignRight />
+      <ButtonGroupItem tooltip="Preview">
+        <Eye />
       </ButtonGroupItem>
     </ButtonGroup>
   ),
@@ -102,10 +102,10 @@ export const EditingActions: Story = {
       <ButtonGroupItem tooltip="Redo" hotkey="Ctrl+Y">
         <Redo />
       </ButtonGroupItem>
-      <ButtonGroupItem tooltip="Copy" hotkey="Ctrl+C">
+      <ButtonGroupItem tooltip="Copy Piece" hotkey="Ctrl+C">
         <Copy />
       </ButtonGroupItem>
-      <ButtonGroupItem tooltip="Paste" hotkey="Ctrl+V">
+      <ButtonGroupItem tooltip="Paste Piece" hotkey="Ctrl+V">
         <Clipboard />
       </ButtonGroupItem>
     </ButtonGroup>
@@ -116,13 +116,13 @@ export const Outline: Story = {
   render: () => (
     <ButtonGroup variant="outline">
       <ButtonGroupItem>
-        <Bold />
+        <Box />
       </ButtonGroupItem>
       <ButtonGroupItem>
-        <Italic />
+        <Grid />
       </ButtonGroupItem>
       <ButtonGroupItem>
-        <Underline />
+        <Layers />
       </ButtonGroupItem>
     </ButtonGroup>
   ),
@@ -132,19 +132,19 @@ export const Sizes: Story = {
   render: () => (
     <div className="flex flex-col items-start gap-4">
       <ButtonGroup size="sm">
-        <ButtonGroupItem>Small</ButtonGroupItem>
-        <ButtonGroupItem>Small</ButtonGroupItem>
-        <ButtonGroupItem>Small</ButtonGroupItem>
+        <ButtonGroupItem>Model</ButtonGroupItem>
+        <ButtonGroupItem>Diagram</ButtonGroupItem>
+        <ButtonGroupItem>Details</ButtonGroupItem>
       </ButtonGroup>
       <ButtonGroup size="default">
-        <ButtonGroupItem>Default</ButtonGroupItem>
-        <ButtonGroupItem>Default</ButtonGroupItem>
-        <ButtonGroupItem>Default</ButtonGroupItem>
+        <ButtonGroupItem>Model</ButtonGroupItem>
+        <ButtonGroupItem>Diagram</ButtonGroupItem>
+        <ButtonGroupItem>Details</ButtonGroupItem>
       </ButtonGroup>
       <ButtonGroup size="lg">
-        <ButtonGroupItem>Large</ButtonGroupItem>
-        <ButtonGroupItem>Large</ButtonGroupItem>
-        <ButtonGroupItem>Large</ButtonGroupItem>
+        <ButtonGroupItem>Model</ButtonGroupItem>
+        <ButtonGroupItem>Diagram</ButtonGroupItem>
+        <ButtonGroupItem>Details</ButtonGroupItem>
       </ButtonGroup>
     </div>
   ),
@@ -153,9 +153,9 @@ export const Sizes: Story = {
 export const Disabled: Story = {
   render: () => (
     <ButtonGroup>
-      <ButtonGroupItem>Active</ButtonGroupItem>
-      <ButtonGroupItem disabled>Disabled</ButtonGroupItem>
-      <ButtonGroupItem>Active</ButtonGroupItem>
+      <ButtonGroupItem>Model</ButtonGroupItem>
+      <ButtonGroupItem disabled>Locked View</ButtonGroupItem>
+      <ButtonGroupItem>Details</ButtonGroupItem>
     </ButtonGroup>
   ),
 };
@@ -165,11 +165,11 @@ export const MixedContent: Story = {
     <ButtonGroup>
       <ButtonGroupItem>
         <Undo />
-        Undo
+        Undo Edit
       </ButtonGroupItem>
       <ButtonGroupItem>
         <Redo />
-        Redo
+        Redo Edit
       </ButtonGroupItem>
     </ButtonGroup>
   ),

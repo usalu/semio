@@ -39,15 +39,15 @@ export const Basic: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="/">Kits</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/docs">Documentation</BreadcrumbLink>
+          <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>Components</BreadcrumbPage>
+          <BreadcrumbPage>Types</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -58,16 +58,16 @@ export const WithTooltips: Story = {
   render: () => (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem tooltip="Go to homepage">
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+        <BreadcrumbItem tooltip="All kits">
+          <BreadcrumbLink href="/">Kits</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
-        <BreadcrumbItem tooltip="View all projects">
-          <BreadcrumbLink href="/projects">Projects</BreadcrumbLink>
+        <BreadcrumbItem tooltip="View metabolism kit">
+          <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
-        <BreadcrumbItem tooltip="Current project">
-          <BreadcrumbPage>Semio Platform</BreadcrumbPage>
+        <BreadcrumbItem tooltip="Current design">
+          <BreadcrumbPage>Nakagin Capsule Tower</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -79,18 +79,18 @@ export const WithCollapsedItems: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="/">Kits</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator
           items={[
-            { label: "Projects", href: "/projects" },
-            { label: "Design", href: "/projects/design" },
-            { label: "Components", href: "/projects/design/components" },
+            { label: "Metabolism", href: "/metabolism" },
+            { label: "Designs", href: "/metabolism/designs" },
+            { label: "Nakagin", href: "/metabolism/designs/nakagin" },
           ]}
           onNavigate={(href) => console.log("Navigate to:", href)}
         />
         <BreadcrumbItem>
-          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+          <BreadcrumbPage>Capsule</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -102,7 +102,7 @@ export const WithEllipsis: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="/">Kits</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
@@ -110,11 +110,11 @@ export const WithEllipsis: Story = {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/components">Components</BreadcrumbLink>
+          <BreadcrumbLink href="/types">Types</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+          <BreadcrumbPage>Capsule</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -126,27 +126,27 @@ export const LongPath: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="/">Sketchpad</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/workspace">Workspace</BreadcrumbLink>
+          <BreadcrumbLink href="/kits">Kits</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/workspace/projects">Projects</BreadcrumbLink>
+          <BreadcrumbLink href="/kits/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/workspace/projects/semio">Semio Platform</BreadcrumbLink>
+          <BreadcrumbLink href="/kits/metabolism/designs">Designs</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/workspace/projects/semio/components">Components</BreadcrumbLink>
+          <BreadcrumbLink href="/kits/metabolism/designs/nakagin">Nakagin</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+          <BreadcrumbPage>Capsule Tower</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -158,15 +158,15 @@ export const CustomSeparator: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="/">Kits</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator>/</BreadcrumbSeparator>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/docs">Docs</BreadcrumbLink>
+          <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator>/</BreadcrumbSeparator>
         <BreadcrumbItem>
-          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+          <BreadcrumbPage>Types</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -180,21 +180,21 @@ export const AsLinks: Story = {
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
             <a href="/" onClick={(e) => e.preventDefault()}>
-              Home
+              Kits
             </a>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <a href="/projects" onClick={(e) => e.preventDefault()}>
-              Projects
+            <a href="/designs" onClick={(e) => e.preventDefault()}>
+              Designs
             </a>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>Current</BreadcrumbPage>
+          <BreadcrumbPage>Capsule Dream</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

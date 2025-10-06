@@ -44,36 +44,36 @@ export const Basic: Story = {
   render: () => (
     <div className="border p-4">
       <Tree>
-        <TreeSection label="Project" icon={<Folder size={14} />}>
-          <TreeItem label="src" icon={<Folder size={12} />}>
-            <TreeItem label="components" icon={<Folder size={12} />}>
-              <TreeItem label="ui" icon={<Folder size={12} />}>
-                <TreeItem label="Tree.tsx" icon={<File size={12} />} />
-                <TreeItem label="Button.tsx" icon={<File size={12} />} />
-                <TreeItem label="Input.tsx" icon={<File size={12} />} />
+        <TreeSection label="Kit" icon={<Folder size={14} />}>
+          <TreeItem label="Types" icon={<Folder size={12} />}>
+            <TreeItem label="Capsules" icon={<Folder size={12} />}>
+              <TreeItem label="Variants" icon={<Folder size={12} />}>
+                <TreeItem label="Capsule J" icon={<File size={12} />} />
+                <TreeItem label="Capsule L" icon={<File size={12} />} />
+                <TreeItem label="Capsule P" icon={<File size={12} />} />
               </TreeItem>
-              <TreeItem label="layout" icon={<Folder size={12} />}>
-                <TreeItem label="Header.tsx" icon={<File size={12} />} />
-                <TreeItem label="Footer.tsx" icon={<File size={12} />} />
+              <TreeItem label="Balcony" icon={<Folder size={12} />}>
+                <TreeItem label="With Balcony J" icon={<File size={12} />} />
+                <TreeItem label="With Balcony L" icon={<File size={12} />} />
               </TreeItem>
             </TreeItem>
-            <TreeItem label="utils" icon={<Folder size={12} />}>
-              <TreeItem label="helpers.ts" icon={<File size={12} />} />
+            <TreeItem label="Bases" icon={<Folder size={12} />}>
+              <TreeItem label="Base Blob" icon={<File size={12} />} />
             </TreeItem>
           </TreeItem>
-          <TreeItem label="package.json" icon={<File size={12} />} />
-          <TreeItem label="README.md" icon={<File size={12} />} />
+          <TreeItem label="Designs" icon={<File size={12} />} />
+          <TreeItem label="Qualities" icon={<File size={12} />} />
         </TreeSection>
         <TreeSection label="Settings" icon={<Settings size={14} />}>
           <TreeItem label="General">
             <TreeContent>
-              <Input label="Name" value="My Project" />
+              <Input label="Kit Name" value="Metabolism" />
               <Input label="Version" value="1.0.0" />
             </TreeContent>
           </TreeItem>
           <TreeItem label="Advanced">
             <TreeContent>
-              <Button>Reset Settings</Button>
+              <Button>Export Kit</Button>
             </TreeContent>
           </TreeItem>
         </TreeSection>
@@ -90,27 +90,27 @@ export const WithActions: Story = {
     <div className="w-80 h-96 border rounded-lg p-4">
       <Tree>
         <TreeSection
-          label="Files"
+          label="Pieces"
           icon={<Folder size={14} />}
           actions={[
             {
               icon: <Plus size={12} />,
-              onClick: () => console.log("Add file"),
-              title: "Add file",
+              onClick: () => console.log("Add piece"),
+              title: "Add piece",
             },
           ]}
         >
-          <TreeItem label="document.txt" icon={<File size={12} />} />
-          <TreeItem label="image.jpg" icon={<File size={12} />} />
+          <TreeItem label="Capsule J" icon={<File size={12} />} />
+          <TreeItem label="Base Blob" icon={<File size={12} />} />
         </TreeSection>
         <TreeSection
-          label="Empty Folder"
+          label="Empty Layer"
           icon={<FolderOpen size={14} />}
           actions={[
             {
               icon: <Minus size={12} />,
-              onClick: () => console.log("Remove folder"),
-              title: "Remove folder",
+              onClick: () => console.log("Remove layer"),
+              title: "Remove layer",
             },
           ]}
         />
@@ -126,22 +126,22 @@ export const DeepNesting: Story = {
   render: () => (
     <div className="w-80 h-96 border rounded-lg p-4">
       <Tree>
-        <TreeSection label="Level 0" icon={<Folder size={14} />}>
-          <TreeItem label="Level 1A" icon={<Folder size={12} />}>
-            <TreeItem label="Level 2A" icon={<Folder size={12} />}>
-              <TreeItem label="Level 3A" icon={<Folder size={12} />}>
-                <TreeItem label="Level 4A" icon={<File size={12} />} />
-                <TreeItem label="Level 4B" icon={<File size={12} />} />
+        <TreeSection label="Nakagin Tower" icon={<Folder size={14} />}>
+          <TreeItem label="Ground Floor" icon={<Folder size={12} />}>
+            <TreeItem label="Lobby" icon={<Folder size={12} />}>
+              <TreeItem label="Reception" icon={<Folder size={12} />}>
+                <TreeItem label="Desk" icon={<File size={12} />} />
+                <TreeItem label="Seating" icon={<File size={12} />} />
               </TreeItem>
-              <TreeItem label="Level 3B" icon={<File size={12} />} />
+              <TreeItem label="Entrance" icon={<File size={12} />} />
             </TreeItem>
-            <TreeItem label="Level 2B" icon={<File size={12} />} />
+            <TreeItem label="Parking" icon={<File size={12} />} />
           </TreeItem>
-          <TreeItem label="Level 1B" icon={<Folder size={12} />}>
-            <TreeItem label="Level 2C" icon={<File size={12} />} />
-            <TreeItem label="Level 2D" icon={<File size={12} />} />
+          <TreeItem label="Upper Floors" icon={<Folder size={12} />}>
+            <TreeItem label="Capsule 101" icon={<File size={12} />} />
+            <TreeItem label="Capsule 102" icon={<File size={12} />} />
           </TreeItem>
-          <TreeItem label="Level 1C" icon={<File size={12} />} />
+          <TreeItem label="Roof" icon={<File size={12} />} />
         </TreeSection>
       </Tree>
     </div>
@@ -156,12 +156,12 @@ export const WithoutLines: Story = {
   render: () => (
     <div className="w-80 h-96 border rounded-lg p-4">
       <Tree showLines={false}>
-        <TreeSection label="No Lines" icon={<Folder size={14} />}>
-          <TreeItem label="Item 1" icon={<File size={12} />}>
-            <TreeItem label="Sub Item 1" icon={<File size={12} />} />
-            <TreeItem label="Sub Item 2" icon={<File size={12} />} />
+        <TreeSection label="Types" icon={<Folder size={14} />}>
+          <TreeItem label="Capsule" icon={<File size={12} />}>
+            <TreeItem label="Variant J" icon={<File size={12} />} />
+            <TreeItem label="Variant L" icon={<File size={12} />} />
           </TreeItem>
-          <TreeItem label="Item 2" icon={<File size={12} />} />
+          <TreeItem label="Base" icon={<File size={12} />} />
         </TreeSection>
       </Tree>
     </div>
@@ -174,15 +174,15 @@ export const SortableExample: Story = {
   },
   render: () => {
     const items = [
-      { id: "1", name: "First Item" },
-      { id: "2", name: "Second Item" },
-      { id: "3", name: "Third Item" },
+      { id: "1", name: "Capsule J" },
+      { id: "2", name: "Capsule L" },
+      { id: "3", name: "Capsule P" },
     ];
 
     return (
       <div className="w-80 h-96 border rounded-lg p-4">
         <Tree>
-          <TreeSection label="Sortable Items" icon={<Folder size={14} />}>
+          <TreeSection label="Sortable Pieces" icon={<Folder size={14} />}>
             <SortableTreeItems
               items={items}
               onReorder={(oldIndex, newIndex) => {

@@ -43,7 +43,7 @@ export const Basic: Story = {
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2">
         <div className="flex items-center justify-between space-x-4">
-          <h4 className="text-sm font-semibold">Starred Repositories</h4>
+          <h4 className="text-sm font-semibold">Capsule Types</h4>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm">
               <ChevronDown className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -51,10 +51,10 @@ export const Basic: Story = {
             </Button>
           </CollapsibleTrigger>
         </div>
-        <div className="border rounded-md px-4 py-2 text-sm">@semio/platform</div>
+        <div className="border rounded-md px-4 py-2 text-sm">Capsule J</div>
         <CollapsibleContent className="space-y-2">
-          <div className="border rounded-md px-4 py-2 text-sm">@semio/grasshopper</div>
-          <div className="border rounded-md px-4 py-2 text-sm">@semio/engine</div>
+          <div className="border rounded-md px-4 py-2 text-sm">Capsule L</div>
+          <div className="border rounded-md px-4 py-2 text-sm">Capsule P</div>
         </CollapsibleContent>
       </Collapsible>
     );
@@ -67,7 +67,7 @@ export const DefaultOpen: Story = {
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2">
         <div className="flex items-center justify-between space-x-4">
-          <h4 className="text-sm font-semibold">Settings</h4>
+          <h4 className="text-sm font-semibold">Design Properties</h4>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm">
               <ChevronDown className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -75,9 +75,9 @@ export const DefaultOpen: Story = {
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="space-y-2">
-          <div className="border rounded-md px-4 py-2 text-sm">General Settings</div>
-          <div className="border rounded-md px-4 py-2 text-sm">Advanced Options</div>
-          <div className="border rounded-md px-4 py-2 text-sm">Privacy Controls</div>
+          <div className="border rounded-md px-4 py-2 text-sm">Piece Count: 24</div>
+          <div className="border rounded-md px-4 py-2 text-sm">Connection Count: 48</div>
+          <div className="border rounded-md px-4 py-2 text-sm">Total Volume: 3240m³</div>
         </CollapsibleContent>
       </Collapsible>
     );
@@ -90,7 +90,7 @@ export const WithForm: Story = {
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2 border p-4 rounded-lg">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold">Advanced Options</h4>
+          <h4 className="text-sm font-semibold">Connection Parameters</h4>
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm">
               {isOpen ? "Hide" : "Show"}
@@ -99,12 +99,12 @@ export const WithForm: Story = {
         </div>
         <CollapsibleContent className="space-y-4 pt-2">
           <div>
-            <label className="text-sm font-medium">API Endpoint</label>
-            <input className="w-full border rounded px-3 py-2 text-sm mt-1" placeholder="https://api.example.com" />
+            <label className="text-sm font-medium">Gap (mm)</label>
+            <input className="w-full border rounded px-3 py-2 text-sm mt-1" placeholder="10" />
           </div>
           <div>
-            <label className="text-sm font-medium">Timeout (ms)</label>
-            <input type="number" className="w-full border rounded px-3 py-2 text-sm mt-1" placeholder="5000" />
+            <label className="text-sm font-medium">Rotation (degrees)</label>
+            <input type="number" className="w-full border rounded px-3 py-2 text-sm mt-1" placeholder="45" />
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -121,7 +121,7 @@ export const NestedCollapsibles: Story = {
     return (
       <Collapsible open={isParentOpen} onOpenChange={setIsParentOpen} className="w-96 space-y-2 border p-4 rounded-lg">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold">Parent Section</h4>
+          <h4 className="text-sm font-semibold">Metabolism Kit</h4>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm">
               <ChevronDown className={`transition-transform ${isParentOpen ? "rotate-180" : ""}`} />
@@ -131,7 +131,7 @@ export const NestedCollapsibles: Story = {
         <CollapsibleContent className="space-y-2 pl-4">
           <Collapsible open={isChild1Open} onOpenChange={setIsChild1Open} className="space-y-2">
             <div className="flex items-center justify-between">
-              <h5 className="text-sm font-medium">Child Section 1</h5>
+              <h5 className="text-sm font-medium">Capsule Types</h5>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm">
                   <ChevronDown className={`size-3 transition-transform ${isChild1Open ? "rotate-180" : ""}`} />
@@ -139,14 +139,14 @@ export const NestedCollapsibles: Story = {
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent className="space-y-1 pl-4">
-              <div className="text-sm">Nested content 1</div>
-              <div className="text-sm">Nested content 2</div>
+              <div className="text-sm">Capsule J</div>
+              <div className="text-sm">Capsule L</div>
             </CollapsibleContent>
           </Collapsible>
 
           <Collapsible open={isChild2Open} onOpenChange={setIsChild2Open} className="space-y-2">
             <div className="flex items-center justify-between">
-              <h5 className="text-sm font-medium">Child Section 2</h5>
+              <h5 className="text-sm font-medium">Base Types</h5>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm">
                   <ChevronDown className={`size-3 transition-transform ${isChild2Open ? "rotate-180" : ""}`} />
@@ -154,7 +154,7 @@ export const NestedCollapsibles: Story = {
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent className="space-y-1 pl-4">
-              <div className="text-sm">More nested content</div>
+              <div className="text-sm">Base Blob</div>
             </CollapsibleContent>
           </Collapsible>
         </CollapsibleContent>

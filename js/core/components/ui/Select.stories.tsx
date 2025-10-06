@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Apple, Banana, Cherry, Grape } from "lucide-react";
+import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "./Select";
 
 const meta = {
@@ -35,20 +35,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const FruitIcons = { Apple, Banana, Cherry, Grape };
+const TypeIcons = { Box, Circle, Cylinder, Hexagon };
 
 export const Basic: Story = {
   render: () => (
     <Select>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Select a fruit" />
+        <SelectValue placeholder="Select a type" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="apple">Apple</SelectItem>
-        <SelectItem value="banana">Banana</SelectItem>
-        <SelectItem value="cherry">Cherry</SelectItem>
-        <SelectItem value="grape">Grape</SelectItem>
-        <SelectItem value="orange">Orange</SelectItem>
+        <SelectItem value="capsule">Capsule</SelectItem>
+        <SelectItem value="base">Base</SelectItem>
+        <SelectItem value="tambour">Tambour</SelectItem>
+        <SelectItem value="capital">Capital</SelectItem>
+        <SelectItem value="cluster">Cluster</SelectItem>
       </SelectContent>
     </Select>
   ),
@@ -58,21 +58,21 @@ export const WithGroups: Story = {
   render: () => (
     <Select>
       <SelectTrigger className="w-[200px]">
-        <SelectValue placeholder="Select a fruit" />
+        <SelectValue placeholder="Select a piece" />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>Citrus</SelectLabel>
-          <SelectItem value="orange">Orange</SelectItem>
-          <SelectItem value="lemon">Lemon</SelectItem>
-          <SelectItem value="lime">Lime</SelectItem>
+          <SelectLabel>Capsules</SelectLabel>
+          <SelectItem value="capsule-j">Capsule J</SelectItem>
+          <SelectItem value="capsule-l">Capsule L</SelectItem>
+          <SelectItem value="capsule-p">Capsule P</SelectItem>
         </SelectGroup>
         <SelectSeparator />
         <SelectGroup>
-          <SelectLabel>Berries</SelectLabel>
-          <SelectItem value="strawberry">Strawberry</SelectItem>
-          <SelectItem value="blueberry">Blueberry</SelectItem>
-          <SelectItem value="raspberry">Raspberry</SelectItem>
+          <SelectLabel>Bases</SelectLabel>
+          <SelectItem value="base-blob">Base Blob</SelectItem>
+          <SelectItem value="base-standard">Base Standard</SelectItem>
+          <SelectItem value="base-circular">Base Circular</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>
@@ -83,24 +83,24 @@ export const WithIcons: Story = {
   render: () => (
     <Select>
       <SelectTrigger className="w-[200px]">
-        <SelectValue placeholder="Select a fruit" />
+        <SelectValue placeholder="Select a type" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="apple">
-          <Apple />
-          <span>Apple</span>
+        <SelectItem value="capsule">
+          <Box />
+          <span>Capsule</span>
         </SelectItem>
-        <SelectItem value="banana">
-          <Banana />
-          <span>Banana</span>
+        <SelectItem value="base">
+          <Circle />
+          <span>Base</span>
         </SelectItem>
-        <SelectItem value="cherry">
-          <Cherry />
-          <span>Cherry</span>
+        <SelectItem value="tambour">
+          <Cylinder />
+          <span>Tambour</span>
         </SelectItem>
-        <SelectItem value="grape">
-          <Grape />
-          <span>Grape</span>
+        <SelectItem value="capital">
+          <Hexagon />
+          <span>Capital</span>
         </SelectItem>
       </SelectContent>
     </Select>
@@ -114,9 +114,9 @@ export const SmallSize: Story = {
         <SelectValue placeholder="Select..." />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="option1">Option 1</SelectItem>
-        <SelectItem value="option2">Option 2</SelectItem>
-        <SelectItem value="option3">Option 3</SelectItem>
+        <SelectItem value="layer1">Layer 1</SelectItem>
+        <SelectItem value="layer2">Layer 2</SelectItem>
+        <SelectItem value="layer3">Layer 3</SelectItem>
       </SelectContent>
     </Select>
   ),
@@ -126,11 +126,11 @@ export const Disabled: Story = {
   render: () => (
     <Select disabled>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Select a fruit" />
+        <SelectValue placeholder="Select a type" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="apple">Apple</SelectItem>
-        <SelectItem value="banana">Banana</SelectItem>
+        <SelectItem value="capsule">Capsule</SelectItem>
+        <SelectItem value="base">Base</SelectItem>
       </SelectContent>
     </Select>
   ),
@@ -143,11 +143,11 @@ export const DisabledItems: Story = {
         <SelectValue placeholder="Select..." />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="option1">Available Option</SelectItem>
-        <SelectItem value="option2" disabled>
-          Disabled Option
+        <SelectItem value="capsule">Capsule</SelectItem>
+        <SelectItem value="base" disabled>
+          Base (Unavailable)
         </SelectItem>
-        <SelectItem value="option3">Another Available</SelectItem>
+        <SelectItem value="tambour">Tambour</SelectItem>
       </SelectContent>
     </Select>
   ),
@@ -155,14 +155,14 @@ export const DisabledItems: Story = {
 
 export const DefaultValue: Story = {
   render: () => (
-    <Select defaultValue="banana">
+    <Select defaultValue="base">
       <SelectTrigger className="w-[180px]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="apple">Apple</SelectItem>
-        <SelectItem value="banana">Banana</SelectItem>
-        <SelectItem value="cherry">Cherry</SelectItem>
+        <SelectItem value="capsule">Capsule</SelectItem>
+        <SelectItem value="base">Base</SelectItem>
+        <SelectItem value="tambour">Tambour</SelectItem>
       </SelectContent>
     </Select>
   ),
@@ -172,23 +172,23 @@ export const ManyOptions: Story = {
   render: () => (
     <Select>
       <SelectTrigger className="w-[200px]">
-        <SelectValue placeholder="Select a country" />
+        <SelectValue placeholder="Select a quality" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="us">United States</SelectItem>
-        <SelectItem value="uk">United Kingdom</SelectItem>
-        <SelectItem value="ca">Canada</SelectItem>
-        <SelectItem value="au">Australia</SelectItem>
-        <SelectItem value="de">Germany</SelectItem>
-        <SelectItem value="fr">France</SelectItem>
-        <SelectItem value="it">Italy</SelectItem>
-        <SelectItem value="es">Spain</SelectItem>
-        <SelectItem value="jp">Japan</SelectItem>
-        <SelectItem value="cn">China</SelectItem>
-        <SelectItem value="in">India</SelectItem>
-        <SelectItem value="br">Brazil</SelectItem>
-        <SelectItem value="mx">Mexico</SelectItem>
-        <SelectItem value="kr">South Korea</SelectItem>
+        <SelectItem value="volume">Volume</SelectItem>
+        <SelectItem value="area">Area</SelectItem>
+        <SelectItem value="height">Height</SelectItem>
+        <SelectItem value="width">Width</SelectItem>
+        <SelectItem value="depth">Depth</SelectItem>
+        <SelectItem value="mass">Mass</SelectItem>
+        <SelectItem value="density">Density</SelectItem>
+        <SelectItem value="cost">Cost</SelectItem>
+        <SelectItem value="energy">Energy</SelectItem>
+        <SelectItem value="carbon">Carbon</SelectItem>
+        <SelectItem value="materials">Materials</SelectItem>
+        <SelectItem value="pieces">Pieces</SelectItem>
+        <SelectItem value="connections">Connections</SelectItem>
+        <SelectItem value="ports">Ports</SelectItem>
       </SelectContent>
     </Select>
   ),

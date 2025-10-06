@@ -37,8 +37,8 @@ type Story = StoryObj<typeof meta>;
 export const WithImage: Story = {
   render: () => (
     <Avatar>
-      <AvatarImage src="https://github.com/shadcn.png" alt="Profile" />
-      <AvatarFallback>CN</AvatarFallback>
+      <AvatarImage src="https://github.com/shadcn.png" alt="Architect" />
+      <AvatarFallback>AR</AvatarFallback>
     </Avatar>
   ),
 };
@@ -46,8 +46,8 @@ export const WithImage: Story = {
 export const WithFallback: Story = {
   render: () => (
     <Avatar>
-      <AvatarImage src="https://invalid-url.com/image.png" alt="Profile" />
-      <AvatarFallback>US</AvatarFallback>
+      <AvatarImage src="https://invalid-url.com/image.png" alt="Designer" />
+      <AvatarFallback>DS</AvatarFallback>
     </Avatar>
   ),
 };
@@ -55,7 +55,7 @@ export const WithFallback: Story = {
 export const FallbackOnly: Story = {
   render: () => (
     <Avatar>
-      <AvatarFallback>AB</AvatarFallback>
+      <AvatarFallback>ME</AvatarFallback>
     </Avatar>
   ),
 };
@@ -86,19 +86,19 @@ export const Group: Story = {
   render: () => (
     <div className="flex -space-x-2">
       <Avatar className="border-2 border-background">
-        <AvatarFallback>US</AvatarFallback>
+        <AvatarFallback>AR</AvatarFallback>
       </Avatar>
       <Avatar className="border-2 border-background">
-        <AvatarFallback>JD</AvatarFallback>
+        <AvatarFallback>EN</AvatarFallback>
       </Avatar>
       <Avatar className="border-2 border-background">
-        <AvatarFallback>AB</AvatarFallback>
+        <AvatarFallback>DS</AvatarFallback>
       </Avatar>
       <Avatar className="border-2 border-background">
-        <AvatarFallback>CD</AvatarFallback>
+        <AvatarFallback>PM</AvatarFallback>
       </Avatar>
       <Avatar className="border-2 border-background">
-        <AvatarFallback className="text-xs">+5</AvatarFallback>
+        <AvatarFallback className="text-xs">+3</AvatarFallback>
       </Avatar>
     </div>
   ),
@@ -108,19 +108,19 @@ export const CustomColors: Story = {
   render: () => (
     <div className="flex items-center gap-4">
       <Avatar>
-        <AvatarFallback className="bg-red-500 text-white">RD</AvatarFallback>
+        <AvatarFallback className="bg-red-500 text-white">CP</AvatarFallback>
       </Avatar>
       <Avatar>
-        <AvatarFallback className="bg-blue-500 text-white">BL</AvatarFallback>
+        <AvatarFallback className="bg-blue-500 text-white">BS</AvatarFallback>
       </Avatar>
       <Avatar>
-        <AvatarFallback className="bg-green-500 text-white">GR</AvatarFallback>
+        <AvatarFallback className="bg-green-500 text-white">TB</AvatarFallback>
       </Avatar>
       <Avatar>
-        <AvatarFallback className="bg-purple-500 text-white">PR</AvatarFallback>
+        <AvatarFallback className="bg-purple-500 text-white">CY</AvatarFallback>
       </Avatar>
       <Avatar>
-        <AvatarFallback className="bg-orange-500 text-white">OR</AvatarFallback>
+        <AvatarFallback className="bg-orange-500 text-white">CL</AvatarFallback>
       </Avatar>
     </div>
   ),
@@ -131,19 +131,19 @@ export const WithStatus: Story = {
     <div className="flex items-center gap-4">
       <div className="relative">
         <Avatar>
-          <AvatarFallback>ON</AvatarFallback>
+          <AvatarFallback>AC</AvatarFallback>
         </Avatar>
         <span className="absolute bottom-0 right-0 size-3 rounded-full bg-green-500 border-2 border-background"></span>
       </div>
       <div className="relative">
         <Avatar>
-          <AvatarFallback>AW</AvatarFallback>
+          <AvatarFallback>ED</AvatarFallback>
         </Avatar>
         <span className="absolute bottom-0 right-0 size-3 rounded-full bg-yellow-500 border-2 border-background"></span>
       </div>
       <div className="relative">
         <Avatar>
-          <AvatarFallback>OF</AvatarFallback>
+          <AvatarFallback>ID</AvatarFallback>
         </Avatar>
         <span className="absolute bottom-0 right-0 size-3 rounded-full bg-gray-400 border-2 border-background"></span>
       </div>
@@ -155,13 +155,13 @@ export const Square: Story = {
   render: () => (
     <div className="flex items-center gap-4">
       <Avatar className="rounded-md">
-        <AvatarFallback>SQ</AvatarFallback>
+        <AvatarFallback>KT</AvatarFallback>
       </Avatar>
       <Avatar className="rounded-lg">
-        <AvatarFallback>LG</AvatarFallback>
+        <AvatarFallback>TY</AvatarFallback>
       </Avatar>
       <Avatar className="rounded-none">
-        <AvatarFallback>NO</AvatarFallback>
+        <AvatarFallback>PC</AvatarFallback>
       </Avatar>
     </div>
   ),

@@ -36,15 +36,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
   args: {
-    placeholder: "Enter text...",
+    placeholder: "Enter design name...",
     className: "w-96",
   },
 };
 
 export const WithLabel: Story = {
   args: {
-    label: "Username",
-    placeholder: "Enter username...",
+    label: "Type Name",
+    placeholder: "Enter type name...",
     className: "w-96",
   },
 };
@@ -52,8 +52,8 @@ export const WithLabel: Story = {
 export const Email: Story = {
   args: {
     type: "email",
-    label: "Email",
-    placeholder: "user@example.com",
+    label: "Architect Email",
+    placeholder: "architect@example.com",
     className: "w-96",
   },
 };
@@ -61,7 +61,7 @@ export const Email: Story = {
 export const Password: Story = {
   args: {
     type: "password",
-    label: "Password",
+    label: "Kit Password",
     placeholder: "Enter password...",
     className: "w-96",
   },
@@ -70,17 +70,17 @@ export const Password: Story = {
 export const Number: Story = {
   args: {
     type: "number",
-    label: "Quantity",
+    label: "Piece Count",
     placeholder: "0",
-    defaultValue: "5",
+    defaultValue: "24",
     className: "w-96",
   },
 };
 
 export const Disabled: Story = {
   args: {
-    label: "Disabled Input",
-    placeholder: "This is disabled",
+    label: "Locked Property",
+    placeholder: "This is locked",
     disabled: true,
     className: "w-96",
   },
@@ -88,8 +88,8 @@ export const Disabled: Story = {
 
 export const WithValue: Story = {
   args: {
-    label: "Project Name",
-    defaultValue: "Semio Platform",
+    label: "Design Name",
+    defaultValue: "Nakagin Capsule Tower",
     className: "w-96",
   },
 };

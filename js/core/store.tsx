@@ -4689,14 +4689,7 @@ interface EditorCommandResult<TDiff = any> {
   kitDiff?: KitDiff;
 }
 
-abstract class Editor<
-  TState,
-  TDiff extends EditorDiff<TSelectionDiff>,
-  TSelectionDiff,
-  TEdit extends EditorEdit<TSelectionDiff>,
-  TCommandContext,
-  TCommandResult extends EditorCommandResult<TDiff>
-> {
+abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> {
   public readonly uuid: string;
   public readonly parent: SketchpadStore;
   public readonly yMap: Y.Map<any>;
@@ -4908,9 +4901,7 @@ abstract class Editor<
     if (this.isTransactionActive && (result.diff || result.kitDiff)) {
       const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
       const selection = this.getSelection();
-      const inversedSelectionDiff = result.diff?.selection
-        ? this.inverseSelectionDiff(selection, result.diff.selection)
-        : undefined;
+      const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
       const kitStore = this.kit();
       const kitState = kitStore.snapshot();
       const inversedKitDiff = result.kitDiff ? inverseKitDiff(kitState, result.kitDiff) : undefined;
@@ -5817,12 +5808,6 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
     return result;
   }
-  get isTransactionActive(): boolean {
-    return (this.yMap.get("isTransactionActive") as boolean) || false;
-  }
-  set isTransactionActive(active: boolean) {
-    this.yMap.set("isTransactionActive", active);
-  }
   get presence(): DesignEditorPresence {
     return {
       cursor: {
@@ -5837,14 +5822,6 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   get diff(): KitDiff {
     return {};
   }
-  get currentTransactionStack(): DesignEditorEdit[] {
-    const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
-  get pastTransactionsStack(): DesignEditorEdit[] {
-    const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
 
   kit(): KitStore {
     return this.parent.kitByUuid(this.yMap.get("kit") as string);
@@ -5854,14 +5831,6 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     return this.kit().designByUuid(this.yMap.get("design") as string);
   }
 
-  canUndo(): boolean {
-    return this.pastTransactionsStack.length > 0;
-  }
-
-  canRedo(): boolean {
-    return this.currentTransactionStack.length > 0 && !this.isTransactionActive;
-  }
-
   id(): DesignEditorId {
     return {
       kit: this.kit().id(),
@@ -5869,12 +5838,16 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     } as DesignEditorId;
   }
 
-  hash(state: DesignEditorState): string {
+  protected getSelection(): DesignEditorSelection {
+    return this.selection;
+  }
+
+  protected hash(state: DesignEditorState): string {
     return JSON.stringify(state);
   }
 
-  snapshot = (): DesignEditorState => {
-    const currentData = {
+  protected buildSnapshot(): DesignEditorState {
+    return {
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -5886,17 +5859,13 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
     };
-    const currentHash = this.hash(currentData);
+  }
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
+  protected inverseSelectionDiff(selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff {
+    return inverseDesignEditorSelectionDiff(selection, diff);
+  }
 
-    return this.cache;
-  };
-
-  private applySelectionDiff = (selectionDiff: DesignEditorSelectionDiff) => {
+  protected applySelectionDiff = (selectionDiff: DesignEditorSelectionDiff) => {
     let selection = this.yMap.get("selection") as Y.Map<any>;
     if (!selection) {
       selection = new Y.Map();
@@ -5984,129 +5953,6 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     });
   };
 
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yMap, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yMap, subscribe, true);
-  };
-
-  startTransaction = () => {
-    this.isTransactionActive = true;
-  };
-
-  onTransactionStarted = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  abortTransaction = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack) {
-        currentStack.delete(0, currentStack.length);
-      }
-      this.isTransactionActive = false;
-    }
-  };
-
-  onTransactionAborted = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  finalizeTransaction = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (currentStack && pastStack && currentStack.length > 0) {
-        pastStack.push(currentStack.toArray());
-        currentStack.delete(0, currentStack.length);
-      }
-      this.isTransactionActive = false;
-    }
-  };
-
-  onTransactionFinalized = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  undo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(currentStack.length - 1);
-        currentStack.delete(currentStack.length - 1, 1);
-        if (edit && edit.undo) {
-          edit.undo.diff && this.change(edit.undo.diff);
-          edit.undo.kitDiff && this.kit().change(edit.undo.kitDiff);
-          edit.undo.selectionDiff && this.applySelectionDiff(edit.undo.selectionDiff);
-        }
-      }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(pastStack.length - 1);
-        pastStack.delete(pastStack.length - 1, 1);
-        if (edit && edit.undo) {
-          edit.undo.diff && this.change(edit.undo.diff);
-          edit.undo.kitDiff && this.kit().change(edit.undo.kitDiff);
-          edit.undo.selectionDiff && this.applySelectionDiff(edit.undo.selectionDiff);
-        }
-      }
-    }
-  };
-  onUndone = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-  redo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(0);
-        currentStack.delete(0, 1);
-        if (edit && edit.do) {
-          edit.do.diff && this.change(edit.do.diff);
-          edit.do.kitDiff && this.kit().change(edit.do.kitDiff);
-          edit.do.selectionDiff && this.applySelectionDiff(edit.do.selectionDiff);
-        }
-      }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(0);
-        pastStack.delete(0, 1);
-        if (edit && edit.do) {
-          edit.do.diff && this.change(edit.do.diff);
-          edit.do.kitDiff && this.kit().change(edit.do.kitDiff);
-          edit.do.selectionDiff && this.applySelectionDiff(edit.do.selectionDiff);
-        }
-      }
-    }
-  };
-  onRedone = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     if (command === "semio.designEditor.startTransaction") {
       this.startTransaction();
@@ -6151,46 +5997,13 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       kitStore.change(result.kitDiff);
     }
 
-    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      const inversedSelectionDiff = inverseDesignEditorSelectionDiff(state.selection, result.diff?.selection!);
-      const inversedKitDiff = inverseKitDiff(kitState, result.kitDiff!);
-      const edit: DesignEditorEdit = {
-        do: {
-          kitDiff: result.kitDiff,
-          selectionDiff: result.diff?.selection,
-        },
-        undo: {
-          kitDiff: inversedKitDiff,
-          selectionDiff: inversedSelectionDiff,
-        },
-      };
-      currentStack.push([edit]);
-    }
+    this.recordEdit(state, result);
 
     return result as T;
   }
 
   execute<T>(command: string, ...rest: any[]): Promise<T> {
     return this.executeCommand(command, ...rest);
-  }
-
-  registerCommand(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
-    this.commandRegistry.set(command, callback);
-    return () => {
-      this.commandRegistry.delete(command);
-    };
-  }
-
-  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
-    return this.registerCommand(command, callback);
-  }
-
-  get commands() {
-    return {
-      execute: this.executeCommand.bind(this),
-      register: this.registerCommand.bind(this),
-    };
   }
 }
 

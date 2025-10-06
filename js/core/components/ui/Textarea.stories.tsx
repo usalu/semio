@@ -36,31 +36,31 @@ type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
   args: {
-    placeholder: "Enter text here...",
+    placeholder: "Enter design description...",
     className: "w-96",
   },
 };
 
 export const WithLabel: Story = {
   args: {
-    label: "Description",
-    placeholder: "Enter description...",
+    label: "Type Description",
+    placeholder: "Describe the type...",
     className: "w-96",
   },
 };
 
 export const WithValue: Story = {
   args: {
-    label: "Comments",
-    defaultValue: "This is a pre-filled textarea with some initial content.",
+    label: "Design Notes",
+    defaultValue: "The Nakagin Capsule Tower is a mixed-use residential and office tower designed by architect Kisho Kurokawa.",
     className: "w-96",
   },
 };
 
 export const Disabled: Story = {
   args: {
-    label: "Disabled",
-    placeholder: "This textarea is disabled",
+    label: "Locked Notes",
+    placeholder: "These notes are locked",
     disabled: true,
     className: "w-96",
   },
@@ -68,8 +68,8 @@ export const Disabled: Story = {
 
 export const Invalid: Story = {
   args: {
-    label: "Bio",
-    defaultValue: "Too short",
+    label: "Port Description",
+    defaultValue: "Missing",
     "aria-invalid": true,
     className: "w-96",
   },
@@ -77,8 +77,8 @@ export const Invalid: Story = {
 
 export const WithRows: Story = {
   args: {
-    label: "Long Text",
-    placeholder: "Enter long text...",
+    label: "Kit Documentation",
+    placeholder: "Enter documentation...",
     rows: 8,
     className: "w-96",
   },
@@ -86,7 +86,7 @@ export const WithRows: Story = {
 
 export const AutoHeight: Story = {
   render: () => (
-    <Textarea label="Auto-sizing" placeholder="This textarea will grow with content..." className="w-96" defaultValue="Type more text and this will grow automatically based on the field-sizing-content CSS property." />
+    <Textarea label="Connection Description" placeholder="Describe the connection parameters..." className="w-96" defaultValue="This connection links two capsule pieces with a gap of 10mm, shift of 5mm, and rotation of 45 degrees." />
   ),
 };
 

@@ -39,16 +39,16 @@ export const Single: Story = {
     <div className="w-96">
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
-          <AccordionTrigger>What is Semio?</AccordionTrigger>
-          <AccordionContent>Semio is a parametric design and engineering platform that enables collaborative creation of complex systems.</AccordionContent>
+          <AccordionTrigger>What is a Kit?</AccordionTrigger>
+          <AccordionContent>A Kit is a collection of types, designs, and qualities that define a modular building system with reusable components.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
-          <AccordionTrigger>How does it work?</AccordionTrigger>
-          <AccordionContent>It combines visual programming, parametric modeling, and real-time collaboration to streamline the design process.</AccordionContent>
+          <AccordionTrigger>What is a Type?</AccordionTrigger>
+          <AccordionContent>A Type is a reusable component with representations, ports, and properties that can be instantiated as pieces in a design.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
-          <AccordionTrigger>Who can use it?</AccordionTrigger>
-          <AccordionContent>Engineers, architects, designers, and anyone working on complex parametric designs.</AccordionContent>
+          <AccordionTrigger>What is a Connection?</AccordionTrigger>
+          <AccordionContent>A Connection is a 3D link between two pieces with translation and rotation parameters defining their spatial relationship.</AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
@@ -60,26 +60,26 @@ export const Multiple: Story = {
     <div className="w-96">
       <Accordion type="multiple">
         <AccordionItem value="features">
-          <AccordionTrigger>Features</AccordionTrigger>
+          <AccordionTrigger>Capsule Types</AccordionTrigger>
           <AccordionContent>
             <ul className="list-disc list-inside space-y-1">
-              <li>Parametric modeling</li>
-              <li>Real-time collaboration</li>
-              <li>Version control</li>
-              <li>Export to multiple formats</li>
+              <li>Capsule J</li>
+              <li>Capsule L</li>
+              <li>Capsule P with Balcony</li>
+              <li>Capsule Z variant</li>
             </ul>
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="pricing">
-          <AccordionTrigger>Pricing</AccordionTrigger>
+          <AccordionTrigger>Base Types</AccordionTrigger>
           <AccordionContent>
-            <p>Free for individual use. Contact us for team and enterprise pricing.</p>
+            <p>Base Blob and Base Standard variants available for different foundation requirements.</p>
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="support">
-          <AccordionTrigger>Support</AccordionTrigger>
+          <AccordionTrigger>Tambour Types</AccordionTrigger>
           <AccordionContent>
-            <p>Documentation, community forums, and email support available.</p>
+            <p>Cylindric tambour variants including first storey, last storey, and single storey configurations.</p>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -92,16 +92,16 @@ export const DefaultOpen: Story = {
     <div className="w-96">
       <Accordion type="single" defaultValue="item-2" collapsible>
         <AccordionItem value="item-1">
-          <AccordionTrigger>Closed by default</AccordionTrigger>
-          <AccordionContent>This item starts closed.</AccordionContent>
+          <AccordionTrigger>Design Properties</AccordionTrigger>
+          <AccordionContent>View and edit design-level properties and metadata.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
-          <AccordionTrigger>Open by default</AccordionTrigger>
-          <AccordionContent>This item starts open because its value matches defaultValue.</AccordionContent>
+          <AccordionTrigger>Piece Count</AccordionTrigger>
+          <AccordionContent>This section shows the count of pieces in the design. Currently 24 capsules are used.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
-          <AccordionTrigger>Also closed</AccordionTrigger>
-          <AccordionContent>This item also starts closed.</AccordionContent>
+          <AccordionTrigger>Connection Statistics</AccordionTrigger>
+          <AccordionContent>Overview of connections between pieces in the current design.</AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
@@ -113,33 +113,36 @@ export const WithComplexContent: Story = {
     <div className="w-96">
       <Accordion type="single" collapsible>
         <AccordionItem value="code">
-          <AccordionTrigger>Code Example</AccordionTrigger>
+          <AccordionTrigger>Connection Parameters</AccordionTrigger>
           <AccordionContent>
             <pre className="bg-muted p-2 rounded text-xs">
-              {`function greet(name: string) {
-  return \`Hello, \${name}!\`;
-}`}
+              {`gap: 10mm
+shift: 5mm
+rise: 0mm
+rotation: 45deg
+turn: 0deg
+tilt: 0deg`}
             </pre>
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="table">
-          <AccordionTrigger>Data Table</AccordionTrigger>
+          <AccordionTrigger>Design Qualities</AccordionTrigger>
           <AccordionContent>
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-1">Name</th>
+                  <th className="text-left py-1">Quality</th>
                   <th className="text-left py-1">Value</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Width</td>
-                  <td>100px</td>
+                  <td>Volume</td>
+                  <td>3240m³</td>
                 </tr>
                 <tr>
                   <td>Height</td>
-                  <td>200px</td>
+                  <td>54m</td>
                 </tr>
               </tbody>
             </table>
@@ -155,16 +158,16 @@ export const Disabled: Story = {
     <div className="w-96">
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
-          <AccordionTrigger>Active Item</AccordionTrigger>
-          <AccordionContent>This item is active and can be toggled.</AccordionContent>
+          <AccordionTrigger>Editable Properties</AccordionTrigger>
+          <AccordionContent>These properties can be modified and updated.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2" disabled>
-          <AccordionTrigger>Disabled Item</AccordionTrigger>
-          <AccordionContent>This content won't be accessible.</AccordionContent>
+          <AccordionTrigger>Locked Layer</AccordionTrigger>
+          <AccordionContent>This layer is locked and cannot be modified.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
-          <AccordionTrigger>Another Active Item</AccordionTrigger>
-          <AccordionContent>This item is also active.</AccordionContent>
+          <AccordionTrigger>Type Attributes</AccordionTrigger>
+          <AccordionContent>View and edit type-level attributes and metadata.</AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
