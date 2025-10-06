@@ -1,4 +1,5 @@
 {
+  "guid": "40000000-0000-0000-0000-000000000000",
   "name": "Tambour",
   "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
   "icon": "icons/tambour.svg",
@@ -9,6 +10,7 @@
   "unit": "m",
   "representations": [
     {
+      "guid": "60000000-0000-0000-0000-000000000000",
       "url": "representations/tambour.glb",
       "description": "",
       "tags": [
@@ -17,6 +19,7 @@
       "attributes": []
     },
     {
+      "guid": "70000000-0000-0000-0000-000000000000",
       "url": "representations/tambour_1to500.3dm",
       "description": "",
       "tags": [
@@ -25,6 +28,7 @@
       "attributes": []
     },
     {
+      "guid": "80000000-0000-0000-0000-000000000000",
       "url": "representations/tambour_1to200.3dm",
       "description": "",
       "tags": [
@@ -34,6 +38,7 @@
       "attributes": []
     },
     {
+      "guid": "90000000-0000-0000-0000-000000000000",
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f9222724e5",
       "description": "",
       "tags": [
@@ -43,6 +48,7 @@
       "attributes": []
     },
     {
+      "guid": "a0000000-0000-0000-0000-000000000000",
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b27c179b7d",
       "description": "",
       "tags": [
@@ -53,6 +59,7 @@
       "attributes": []
     },
     {
+      "guid": "b0000000-0000-0000-0000-000000000000",
       "url": "representations/tambour_collider.glb",
       "description": "",
       "tags": [
@@ -64,6 +71,7 @@
   ],
   "ports": [
     {
+      "guid": "c0000000-0000-0000-0000-000000000000",
       "id_": "b",
       "description": "The bottom system center of the elevator.",
       "mandatory": false,
@@ -98,6 +106,7 @@
       ]
     },
     {
+      "guid": "d0000000-0000-0000-0000-000000000000",
       "id_": "t",
       "description": "The top system center of the elevator.",
       "mandatory": false,
@@ -126,6 +135,7 @@
       ]
     },
     {
+      "guid": "e0000000-0000-0000-0000-000000000000",
       "id_": "sl0_d0",
       "description": "The first door of the side plattform in the east facade.",
       "mandatory": false,
@@ -148,6 +158,7 @@
       "attributes": []
     },
     {
+      "guid": "f0000000-0000-0000-0000-000000000000",
       "id_": "sl0_d1",
       "description": "The second door of the side plattform in the north facade.",
       "mandatory": false,
@@ -170,6 +181,7 @@
       "attributes": []
     },
     {
+      "guid": "g0000000-0000-0000-0000-000000000000",
       "id_": "sl0_d2",
       "description": "The third door of the side plattform in the north facade.",
       "mandatory": false,
@@ -192,6 +204,7 @@
       "attributes": []
     },
     {
+      "guid": "h0000000-0000-0000-0000-000000000000",
       "id_": "sl0_d3",
       "description": "The fourth door of the side plattform in the west facade.",
       "mandatory": false,
@@ -214,6 +227,7 @@
       "attributes": []
     },
     {
+      "guid": "i0000000-0000-0000-0000-000000000000",
       "id_": "sl1_d0",
       "description": "The first door of the main plattform in the west facade.",
       "mandatory": false,
@@ -236,6 +250,7 @@
       "attributes": []
     },
     {
+      "guid": "j0000000-0000-0000-0000-000000000000",
       "id_": "sl1_d1",
       "description": "The second door of the main plattform in the south facade.",
       "mandatory": false,
@@ -258,6 +273,7 @@
       "attributes": []
     },
     {
+      "guid": "k0000000-0000-0000-0000-000000000000",
       "id_": "sl2_d0",
       "description": "The first door of the main plattform in the south facade.",
       "mandatory": false,
@@ -280,6 +296,7 @@
       "attributes": []
     },
     {
+      "guid": "l0000000-0000-0000-0000-000000000000",
       "id_": "sl2_d1",
       "description": "The second door of the main plattform in the east facade.",
       "mandatory": false,
@@ -303,91 +320,102 @@
     }
   ],
   "authors": [
-    {
-      "name": "Ueli Saluz",
-      "email": "ueli@semio-tech.com"
-    }
+    "10000000-0000-0000-0000-000000000000"
   ],
   "attributes": [
     {
+      "guid": "m0000000-0000-0000-0000-000000000000",
       "key": "width",
       "value": "5.5",
       "unit": "m",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width "
     },
     {
+      "guid": "n0000000-0000-0000-0000-000000000000",
       "key": "storeys",
       "value": "1",
       "unit": "",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
     },
     {
+      "guid": "o0000000-0000-0000-0000-000000000000",
       "key": "floor height",
       "value": "2.75",
       "unit": "m",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
+      "guid": "p0000000-0000-0000-0000-000000000000",
       "key": "platform",
       "value": "north",
       "unit": "",
       "definition": ""
     },
     {
+      "guid": "q0000000-0000-0000-0000-000000000000",
       "key": "door width",
       "value": "0.8",
       "unit": "m",
       "definition": ""
     },
     {
+      "guid": "r0000000-0000-0000-0000-000000000000",
       "key": "door height",
       "value": "2",
       "unit": "m",
       "definition": ""
     },
     {
+      "guid": "s0000000-0000-0000-0000-000000000000",
       "key": "door offset",
       "value": "1.15",
       "unit": "m",
       "definition": ""
     },
     {
+      "guid": "t0000000-0000-0000-0000-000000000000",
       "key": "effective floor area",
       "value": "24.21",
       "unit": "m²",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
+      "guid": "u0000000-0000-0000-0000-000000000000",
       "key": "construction cost",
       "value": "217800",
       "unit": "€",
       "definition": ""
     },
     {
+      "guid": "v0000000-0000-0000-0000-000000000000",
       "key": "heating energy demand",
       "value": "484",
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "guid": "w0000000-0000-0000-0000-000000000000",
       "key": "cooling energy demand",
       "value": "242",
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "guid": "x0000000-0000-0000-0000-000000000000",
       "key": "technical equipment energy demand",
       "value": "484",
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "guid": "y0000000-0000-0000-0000-000000000000",
       "key": "maintenance expenses",
       "value": "1016",
       "unit": "€/a",
       "definition": ""
     },
     {
+      "guid": "z0000000-0000-0000-0000-000000000000",
       "key": "construction global warming potential",
       "value": "1500",
       "unit": "kgCO2e",

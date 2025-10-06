@@ -1,29 +1,29 @@
-import { FC, useState } from "react";
-import { Author, Design, DesignId, KitId } from "../../../semio";
-import { DesignEditorId, useKitCommands, useSketchpadCommands } from "../../../store";
+import { FC } from "react";
+import { Author, Design } from "../../../semio";
+import { useKit, useKitCommands, useSketchpadCommands } from "../../../store";
 
 import { Tambour } from "@semio/assets";
 import { Button } from "../Button";
 
 const KitEditor: FC = () => {
-  const [isImporting, setIsImporting] = useState<boolean>(true);
+  const kit = useKit();
   const { createDesign, createType, createAuthor } = useKitCommands();
-  const { createDesignEditor, setActiveDesignEditor } = useSketchpadCommands();
+  const { createDesignEditor } = useSketchpadCommands();
 
   const onPopulateKit = async () => {
-    const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
-    const author: Author = { name: "Ueli Saluz", email: "ueli@semio-tech.com" };
-    const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
+    const author: Author = { guid: "10000000-0000-0000-0000-000000000000", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     const design: Design = {
+      guid: "50000000-0000-0000-0000-000000000000",
       name: "Nakagin Capsule Tower",
       unit: "m",
       variant: "",
       view: "",
       pieces: [
         {
+          guid: "30000000-0000-0000-0000-000000000000",
           id_: "p1",
           center: { x: 0, y: 0 },
-          type: { name: "Tambour", variant: "" },
+          type: "40000000-0000-0000-0000-000000000000",
           plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
           isHidden: false,
           isLocked: false,
@@ -36,13 +36,15 @@ const KitEditor: FC = () => {
     await createType(Tambour);
     await createDesign(design);
     await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
-    await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
-    setIsImporting(false);
   };
 
-  if (isImporting) return null;
-
-  return <Button onClick={onPopulateKit}>Populate Kit</Button>;
+  return (
+    <div>
+      <Input label="Kit Name" value={Kit.name} disabled />
+      <Input label="Version" value="1.0.0" disabled />
+      <Button onClick={onPopulateKit}>Populate Kit</Button>
+    </div>
+  );
 };
 
 export default KitEditor;

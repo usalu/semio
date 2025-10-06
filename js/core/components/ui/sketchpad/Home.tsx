@@ -1,4 +1,5 @@
 import { FC, useEffect } from "react";
+import { guid } from "../../../lib/utils";
 import { useKits, useSketchpadCommands } from "../../../store";
 import { Button } from "../Button";
 import { Input } from "../Input";
@@ -60,7 +61,7 @@ const Home: FC = ({}) => {
   }, [addSection, removeSection]);
 
   const onCreateKit = async () => {
-    await createKit({ name: "New Kit", version: "1.0.0" });
+    await createKit({ guid: guid(), name: "New Kit", version: "1.0.0" });
   };
 
   return (

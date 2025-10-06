@@ -23,6 +23,7 @@ import { twMerge } from "tailwind-merge";
 
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
 import { default as animals } from "@semio/assets/lists/animals.json";
+import { v4 as uuidv4 } from "uuid";
 import CONSTANTS from "../constants.json";
 
 // #region Constants
@@ -30,9 +31,12 @@ import CONSTANTS from "../constants.json";
 export const TOLERANCE = CONSTANTS.tolerance;
 
 // #endregion Constants
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const guid = () => uuidv4();
 
 class SeededRandom {
   private seed: number;
