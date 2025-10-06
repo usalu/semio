@@ -54,10 +54,11 @@ export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
 export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
+export type Guid = string;
 
 // #region Ids
 
-export const DesignIdSchema = z.object({ name: z.string(), variant: z.string().optional(), view: z.string().optional() });
+export const DesignIdSchema = z.object({ guid: z.string() });
 
 // #endregion Ids
 
@@ -551,14 +552,14 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 // #region Author
 // https://github.com/usalu/semio#-author-
 
-export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
+export const AuthorSchema = z.object({ guid: z.string(), name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
 export type Author = z.infer<typeof AuthorSchema>;
 export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
 export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 
-export const AuthorIdSchema = AuthorSchema.pick({ email: true });
+export const AuthorIdSchema = AuthorSchema.pick({ guid: true });
 export type AuthorId = z.infer<typeof AuthorIdSchema>;
-export const authorIdToString = (author: AuthorId): string => author.email;
+export const authorIdToString = (author: AuthorId): string => author.guid;
 
 export const AuthorDiffSchema = AuthorSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -852,6 +853,7 @@ const areSameBenchmark = (benchmark1: BenchmarkIdLike, benchmark2: BenchmarkIdLi
 
 // https://github.com/usalu/semio#-quality-
 export const QualitySchema = z.object({
+  guid: z.string(),
   key: z.string(),
   name: z.string(),
   description: z.string().optional(),
@@ -877,9 +879,9 @@ export type Quality = z.infer<typeof QualitySchema>;
 export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
 export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
 
-export const QualityIdSchema = QualitySchema.pick({ key: true });
+export const QualityIdSchema = QualitySchema.pick({ guid: true });
 export type QualityId = z.infer<typeof QualityIdSchema>;
-export const qualityIdToString = (quality: QualityId): string => quality.key;
+export const qualityIdToString = (quality: QualityId): string => quality.guid;
 
 export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true, attributes: true }).extend({
   benchmarks: BenchmarksDiffSchema.optional(),
@@ -1407,7 +1409,7 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
     });
 
     updated.push({
-      id_: { name: type.name, variant: type.variant },
+      id: { guid: type.guid },
       diff: {
         ports: updatedPorts
       }
@@ -1447,6 +1449,7 @@ export const findPort = (ports: Port[], portId: PortIdLike): Port => {
 // #region Type
 // https://github.com/usalu/semio#-type-
 export const TypeSchema = z.object({
+  guid: z.string(),
   name: z.string(),
   variant: z.string().optional(),
   representations: z.array(RepresentationSchema).optional(),
@@ -1468,14 +1471,14 @@ export type Type = z.infer<typeof TypeSchema>;
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
-export const TypeIdSchema = TypeSchema.pick({ name: true, variant: true });
+export const TypeIdSchema = TypeSchema.pick({ guid: true });
 export type TypeId = z.infer<typeof TypeIdSchema>;
-export const typeIdToString = (type: TypeId): string => type.name;
+export const typeIdToString = (type: TypeId): string => type.guid;
 export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
 export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
 export const typeIdLikeToTypeId = (type: TypeIdLike): TypeId => {
-  if (typeof type === "string") return { name: type };
-  return { name: type.name };
+  if (typeof type === "string") return { guid: type };
+  return { guid: type.guid };
 };
 export const TypeShallowSchema = TypeSchema.omit({ representations: true, ports: true }).extend({
   representations: z.array(RepresentationIdSchema).optional(),
@@ -1505,7 +1508,7 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
 
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
-  updated: z.array(z.object({ id_: TypeIdSchema, diff: TypeDiffSchema })).optional(),
+  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
@@ -1513,7 +1516,7 @@ export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 export const areSameType = (type: TypeIdLike, other: TypeIdLike): boolean => {
   const t1 = typeIdLikeToTypeId(type);
   const t2 = typeIdLikeToTypeId(other);
-  return t1.name === t2.name && normalize(t1.variant) === normalize(t2.variant);
+  return t1.guid === t2.guid;
 };
 export const hasSameType = (type: TypeIdLike, others: TypeIdLike[]): boolean => others.some((other) => areSameType(type, other));
 
@@ -1990,6 +1993,7 @@ export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.par
 // https://github.com/usalu/semio#-design-
 
 export const DesignSchema = z.object({
+  guid: z.string(),
   name: z.string(),
   variant: z.string().optional(),
   view: z.string().optional(),
@@ -2018,7 +2022,7 @@ export const serializeDesign = (design: Design): string => JSON.stringify(Design
 export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
 export type DesignId = z.infer<typeof DesignIdSchema>;
-export const designIdToString = (design: DesignId): string => design.name;
+export const designIdToString = (design: DesignId): string => design.guid;
 export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true }).extend({
   pieces: z.array(PieceIdSchema).optional(),
   connections: z.array(ConnectionIdSchema).optional(),
@@ -2028,7 +2032,7 @@ export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections
 export type DesignShallow = z.infer<typeof DesignShallowSchema>;
 export const serializeDesignShallow = (design: DesignShallow): string => JSON.stringify(DesignShallowSchema.parse(design));
 export const deserializeDesignShallow = (json: string): DesignShallow => DesignShallowSchema.parse(JSON.parse(json));
-export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).extend({
+export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
   stats: StatsDiffSchema.optional(),
@@ -2043,8 +2047,9 @@ export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, DesignShallowSchema, DesignDiffSchema, z.string()]);
 export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
 export const designIdLikeToDesignId = (design: DesignIdLike): DesignId => {
-  if (typeof design === "string") return { name: design };
-  return { name: design.name, variant: design.variant, view: design.view };
+  if (typeof design === "string") return { guid: design };
+  if (!design.guid) throw new Error("Design guid is required");
+  return { guid: design.guid };
 };
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
 };
@@ -2788,7 +2793,7 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
 export const areSameDesign = (design: DesignIdLike, other: DesignIdLike): boolean => {
   const d1 = designIdLikeToDesignId(design);
   const d2 = designIdLikeToDesignId(other);
-  return d1.name === d2.name && normalize(d1.variant) === normalize(d2.variant) && normalize(d1.view) === normalize(d2.view);
+  return d1.guid === d2.guid;
 };
 export const hasSameDesign = (design: DesignIdLike, others: DesignIdLike[]): boolean => others.some((other) => areSameDesign(design, other));
 
@@ -2912,7 +2917,7 @@ export const addTypeToKit = (type: Type): KitDiff => ({
 export const setTypeInKit = (type: Type): KitDiff => ({
   types: {
     updated: [{
-      id: { name: type.name, variant: type.variant },
+      id: { guid: type.guid },
       diff: { ...type }
     }]
   }
@@ -3255,7 +3260,7 @@ const getColorForText = (text?: string): string => {
 };
 
 export const colorPortsForTypes = (types: Type[]): TypesDiff => {
-  const updated: { id_: TypeId; diff: TypeDiff }[] = [];
+  const updated: { id: TypeId; diff: TypeDiff }[] = [];
 
   for (const type of types) {
     const coloredPorts: Port[] = [];
@@ -3268,7 +3273,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
     }
 
     updated.push({
-      id_: { name: type.name, variant: type.variant },
+      id: { guid: type.guid },
       diff: {
         ports: coloredPorts
       }

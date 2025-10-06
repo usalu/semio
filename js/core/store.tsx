@@ -771,7 +771,6 @@ type YAuthorUuid = string;
 type YAuthorUuids = Y.Array<YAuthorUuid>;
 
 class AuthorStore {
-  public readonly guid: string;
   private yAuthor: YAuthor;
   private yAttributes: YAttributes;
   private attributes: AttributeStore[];
@@ -779,14 +778,21 @@ class AuthorStore {
   private cacheHash?: string;
 
   constructor(yAuthor: YAuthor, author: Author) {
-    this.guid = uuidv4();
     this.yAuthor = yAuthor;
+    this.guid = author.guid;
     this.name = author.name;
     this.email = author.email;
     this.yAttributes = new Y.Array<YAttribute>();
     this.yAuthor.set("attributes", this.yAttributes);
     this.attributes = new Array();
     author.attributes?.forEach((attribute) => this.createAttribute(attribute));
+  }
+
+  get guid(): string {
+    return this.yAuthor.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yAuthor.set("guid", guid);
   }
 
   get name(): string {
@@ -825,7 +831,7 @@ class AuthorStore {
   }
 
   id(): AuthorId {
-    return { email: this.email };
+    return { guid: this.guid };
   }
 
   hash = (author: Author): string => {
@@ -834,6 +840,7 @@ class AuthorStore {
 
   snapshot = (): Author => {
     const currentData = {
+      guid: this.guid,
       name: this.name,
       email: this.email,
       attributes: this.attributes.map((attribute) => attribute.snapshot()),
@@ -894,15 +901,14 @@ type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
 
 class FileStore {
-  public readonly guid: string;
   private yFile: YFile;
   private cache?: SemioFile;
   private cacheHash?: string;
 
   constructor(yFile: YFile, file: SemioFile) {
-    this.guid = uuidv4();
     this.yFile = yFile;
 
+    this.guid = file.guid;
     this.path = file.path;
     this.remote = file.remote;
     this.size = file.size;
@@ -911,6 +917,13 @@ class FileStore {
     this.updatedAt = file.updatedAt;
     this.createdBy = file.createdBy;
     this.updatedBy = file.updatedBy;
+  }
+
+  get guid(): string {
+    return this.yFile.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yFile.set("guid", guid);
   }
 
   get path(): string {
@@ -952,18 +965,18 @@ class FileStore {
     this.yFile.set("updatedAt", updatedAt?.toISOString() || "");
   }
   get createdBy(): AuthorId | undefined {
-    const email = this.yFile.get("createdBy") as string | undefined;
-    return email ? { email } : undefined;
+    const guid = this.yFile.get("createdBy") as string | undefined;
+    return guid ? { guid } : undefined;
   }
   set createdBy(createdBy: AuthorId | undefined) {
-    this.yFile.set("createdBy", createdBy?.email || "");
+    this.yFile.set("createdBy", createdBy?.guid || "");
   }
   get updatedBy(): AuthorId | undefined {
-    const email = this.yFile.get("updatedBy") as string | undefined;
-    return email ? { email } : undefined;
+    const guid = this.yFile.get("updatedBy") as string | undefined;
+    return guid ? { guid } : undefined;
   }
   set updatedBy(updatedBy: AuthorId | undefined) {
-    this.yFile.set("updatedBy", updatedBy?.email || "");
+    this.yFile.set("updatedBy", updatedBy?.guid || "");
   }
 
   hashFile = (file: SemioFile): string => {
@@ -972,6 +985,7 @@ class FileStore {
 
   snapshot = (): SemioFile => {
     const currentData = {
+      guid: this.guid,
       path: this.path,
       remote: this.remote,
       size: this.size,
@@ -992,7 +1006,7 @@ class FileStore {
   };
 
   id = (): FileId => {
-    return { path: this.path };
+    return { guid: this.guid };
   };
 
   change = (diff: FileDiff) => {
@@ -1138,18 +1152,24 @@ type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
 
 class QualityStore {
-  public readonly guid: string;
   private yQuality: YQuality;
   private cache?: Quality;
   private cacheHash?: string;
 
   constructor(yQuality: YQuality, quality: Quality) {
-    this.guid = uuidv4();
     this.yQuality = yQuality;
+    this.guid = quality.guid;
     this.key = quality.key;
     this.name = quality.name;
     this.unit = quality.unit;
     this.description = quality.description;
+  }
+
+  get guid(): string {
+    return this.yQuality.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yQuality.set("guid", guid);
   }
 
   get key(): string {
@@ -1181,7 +1201,7 @@ class QualityStore {
   }
 
   id(): QualityId {
-    return { key: this.key };
+    return { guid: this.guid };
   }
 
   hash = (quality: Quality): string => {
@@ -1190,6 +1210,7 @@ class QualityStore {
 
   snapshot(): Quality {
     const currentHash = this.hash({
+      guid: this.guid,
       key: this.key,
       name: this.name,
       unit: this.unit,
@@ -1201,6 +1222,7 @@ class QualityStore {
     }
 
     const quality: Quality = {
+      guid: this.guid,
       key: this.key,
       name: this.name,
       unit: this.unit,
@@ -1537,7 +1559,6 @@ type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
 class TypeStore {
-  public readonly guid: string;
   public readonly parent: KitStore;
   private yType: YType;
   private yAttributes: YAttributes;
@@ -1552,12 +1573,12 @@ class TypeStore {
   private cacheHash?: string;
 
   constructor(parent: KitStore, yType: YType, type: Type) {
-    this.guid = uuidv4();
     this.parent = parent;
     this.yType = yType;
     this.representations = new Array();
     this.ports = new Array();
 
+    this.guid = type.guid;
     this.name = type.name;
     this.variant = type.variant;
     this.stock = type.stock;
@@ -1577,7 +1598,7 @@ class TypeStore {
 
     this.authors = type.authors?.map((author) => this.parent.author(author)) || [];
     this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
-    this.authors.forEach((author) => this.yAuthors.push([author.guid]));
+    this.authors.forEach((author) => this.yAuthors.push([author.id().guid]));
 
     this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
     // if (type.representations) {
@@ -1595,6 +1616,13 @@ class TypeStore {
 
     this.yType.set("createdAt", new Date().toISOString());
     this.updated();
+  }
+
+  get guid(): string {
+    return this.yType.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yType.set("guid", guid);
   }
 
   get name(): string {
@@ -1715,7 +1743,7 @@ class TypeStore {
   }
 
   id = (): TypeId => {
-    return { name: this.name, variant: this.variant };
+    return { guid: this.guid };
   };
 
   hash = (type: Type): string => {
@@ -1723,6 +1751,7 @@ class TypeStore {
   };
   snapshot = (): Type => {
     const currentData = {
+      guid: this.guid,
       name: this.name,
       variant: this.variant,
       stock: this.stock,
@@ -1811,7 +1840,7 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id.name === type.name && u.id.variant === type.variant);
+          const update = colorDiff.updated?.find((u) => u.id.guid === type.guid);
           return update ? { ...type, ports: update.diff.ports } : type;
         })
       : diffedKit.types;
@@ -2262,7 +2291,7 @@ export function usePieceStatus(): DiffStatus {
   }
 
   // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find((d) => d.id.name === designScope.id.name && d.id.variant === designScope.id.variant && d.id.view === designScope.id.view);
+  const designDiff = kitDiff.designs.updated.find((d) => d.id.guid === designScope.id.guid);
 
   if (!designDiff?.diff.pieces) {
     return DiffStatus.Unchanged;
@@ -2748,7 +2777,7 @@ export function useConnectionStatus(): DiffStatus {
   }
 
   // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find((d) => d.id.name === designScope.id.name && d.id.variant === designScope.id.variant && d.id.view === designScope.id.view);
+  const designDiff = kitDiff.designs.updated.find((d) => d.id.guid === designScope.id.guid);
 
   if (!designDiff?.diff.connections) {
     return DiffStatus.Unchanged;
@@ -2890,7 +2919,6 @@ type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
 class DesignStore {
-  public readonly guid: string;
   public readonly parent: KitStore;
   private yDesign: YDesign;
   private yPieces: YPieces;
@@ -2914,9 +2942,9 @@ class DesignStore {
   private cacheHash?: string;
 
   constructor(parent: KitStore, yDesign: YDesign, design: Design) {
-    this.guid = uuidv4();
     this.parent = parent;
     this.yDesign = yDesign;
+    this.guid = design.guid;
     this.pieces = new Array();
     this.connections = new Array();
     this.attributes = new Array();
@@ -3012,6 +3040,13 @@ class DesignStore {
 
     this.yDesign.set("createdAt", new Date().toISOString());
     this.updated();
+  }
+
+  get guid(): string {
+    return this.yDesign.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yDesign.set("guid", guid);
   }
 
   get name(): string {
@@ -3171,7 +3206,7 @@ class DesignStore {
   }
 
   id(): DesignId {
-    return { name: this.name, variant: this.variant, view: this.view } as DesignId;
+    return { guid: this.guid };
   }
 
   hash(design: Design): string {
@@ -3180,6 +3215,7 @@ class DesignStore {
 
   snapshot = (): Design => {
     const currentData = {
+      guid: this.guid,
       name: this.name,
       variant: this.variant,
       view: this.view,
