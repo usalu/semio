@@ -6526,6 +6526,15 @@ class SketchpadStore {
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
   private cacheHash?: string;
+  private kitIdsCache?: KitId[];
+  private kitShallowsCache?: KitShallow[];
+  private kitShallowsCacheHash?: string;
+  private readonly kitCreatedSubscribers: Set<Subscribe>;
+  private readonly kitDeletedSubscribers: Set<Subscribe>;
+  private readonly kitEditorCreatedSubscribers: Set<Subscribe>;
+  private readonly kitEditorDeletedSubscribers: Set<Subscribe>;
+  private readonly designEditorCreatedSubscribers: Set<Subscribe>;
+  private readonly designEditorDeletedSubscribers: Set<Subscribe>;
   // private readonly broadcastChannel: BroadcastChannel;
 
   constructor(id?: string, yProviderFactory?: YProviderFactory) {
@@ -6537,6 +6546,12 @@ class SketchpadStore {
     this.kitEditors = new Array();
     this.designEditors = new Array();
     this.commandRegistry = new Map();
+    this.kitCreatedSubscribers = new Set();
+    this.kitDeletedSubscribers = new Set();
+    this.kitEditorCreatedSubscribers = new Set();
+    this.kitEditorDeletedSubscribers = new Set();
+    this.designEditorCreatedSubscribers = new Set();
+    this.designEditorDeletedSubscribers = new Set();
 
     // if (id) {
     //   this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
@@ -6573,7 +6588,6 @@ class SketchpadStore {
       this.ySketchpad.set("mode", Mode.GUEST);
       this.ySketchpad.set("theme", Theme.SYSTEM);
       this.ySketchpad.set("layout", Layout.NORMAL);
-      this.ySketchpad.set("activeDesignEditor", "");
       this.ySketchpad.set(
         "panelVisibility",
         JSON.stringify({
@@ -6613,8 +6627,6 @@ class SketchpadStore {
   };
 
   snapshot = (): SketchpadState => {
-    const activeDesignEditorIdStr = this.ySketchpad.get("activeDesignEditor") as string;
-    const activeDesignEditor = activeDesignEditorIdStr ? (JSON.parse(activeDesignEditorIdStr) as DesignEditorId) : undefined;
     const panelVisibilityStr = this.ySketchpad.get("panelVisibility") as string;
     const panelVisibility = panelVisibilityStr
       ? JSON.parse(panelVisibilityStr)
@@ -6647,7 +6659,6 @@ class SketchpadStore {
       mode: this.ySketchpad.get("mode") as Mode,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
-      activeDesignEditor: activeDesignEditor,
       panelVisibility: panelVisibility,
       editorSettings: editorSettings,
       panelSizes: panelSizes,
@@ -6665,6 +6676,8 @@ class SketchpadStore {
       throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
     }
     this.kits.push(new KitStore(this, kit, this.yProviderFactory));
+    this.kitIdsCache = undefined; // Invalidate cache
+    this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
   createKitEditor = (id: KitEditorId) => {
@@ -6677,6 +6690,7 @@ class SketchpadStore {
       const kitEditor = new KitEditorStore(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), id);
       this.kitEditors.push(kitEditor);
     });
+    this.kitEditorCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
   createDesignEditor = (id: DesignEditorId) => {
@@ -6689,6 +6703,7 @@ class SketchpadStore {
       const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), id);
       this.designEditors.push(designEditor);
     });
+    this.designEditorCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
   change(diff: SketchpadDiff) {
@@ -6697,7 +6712,6 @@ class SketchpadStore {
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
-      if (diff.activeDesignEditor) this.ySketchpad.set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
       if (diff.panelVisibility) {
         const current = JSON.parse((this.ySketchpad.get("panelVisibility") as string) || "{}");
         this.ySketchpad.set("panelVisibility", JSON.stringify({ ...current, ...diff.panelVisibility }));
@@ -6713,23 +6727,78 @@ class SketchpadStore {
     });
   }
 
-  deleteKit = (id: KitIdLike) => {};
+  deleteKit = (id: KitIdLike) => {
+    const index = this.kits.findIndex((k) => areSameKit(k.id(), id));
+    if (index !== -1) {
+      this.kits.splice(index, 1);
+      this.kitIdsCache = undefined; // Invalidate cache
+      this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
+    }
+  };
 
-  deleteKitEditor = (id: KitEditorId) => {};
+  deleteKitEditor = (id: KitEditorId) => {
+    const index = this.kitEditors.findIndex((k) => areSameKitEditor(k.id(), id));
+    if (index !== -1) {
+      this.kitEditors.splice(index, 1);
+      this.yDoc.transact(() => {
+        this.yKitEditors.delete(index, 1);
+      });
+      this.kitEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+    }
+  };
 
-  deleteDesignEditor = (id: DesignEditorId) => {};
+  deleteDesignEditor = (id: DesignEditorId) => {
+    const index = this.designEditors.findIndex((d) => areSameDesignEditor(d.id(), id));
+    if (index !== -1) {
+      this.designEditors.splice(index, 1);
+      this.yDoc.transact(() => {
+        this.yDesignEditors.delete(index, 1);
+      });
+      this.designEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+    }
+  };
 
-  onKitCreated = (subscribe: Subscribe): Unsubscribe => {};
+  onKitCreated = (subscribe: Subscribe): Unsubscribe => {
+    this.kitCreatedSubscribers.add(subscribe);
+    return () => {
+      this.kitCreatedSubscribers.delete(subscribe);
+    };
+  };
 
-  onKitEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
+  onKitEditorCreated = (subscribe: Subscribe): Unsubscribe => {
+    this.kitEditorCreatedSubscribers.add(subscribe);
+    return () => {
+      this.kitEditorCreatedSubscribers.delete(subscribe);
+    };
+  };
 
-  onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {};
+  onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
+    this.designEditorCreatedSubscribers.add(subscribe);
+    return () => {
+      this.designEditorCreatedSubscribers.delete(subscribe);
+    };
+  };
 
-  onKitDeleted = (subscribe: Subscribe): Unsubscribe => {};
+  onKitDeleted = (subscribe: Subscribe): Unsubscribe => {
+    this.kitDeletedSubscribers.add(subscribe);
+    return () => {
+      this.kitDeletedSubscribers.delete(subscribe);
+    };
+  };
 
-  onKitEditorDeleted = (subscribe: Subscribe): Unsubscribe => {};
+  onKitEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
+    this.kitEditorDeletedSubscribers.add(subscribe);
+    return () => {
+      this.kitEditorDeletedSubscribers.delete(subscribe);
+    };
+  };
 
-  onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {};
+  onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
+    this.designEditorDeletedSubscribers.add(subscribe);
+    return () => {
+      this.designEditorDeletedSubscribers.delete(subscribe);
+    };
+  };
 
   onChanged = (subscribe: Subscribe): Unsubscribe => {
     return createObserver(this.ySketchpad, subscribe);
@@ -6812,7 +6881,22 @@ class SketchpadStore {
   }
 
   kitIds(): KitId[] {
-    return this.kits.map((k) => k.id());
+    if (!this.kitIdsCache) {
+      this.kitIdsCache = this.kits.map((k) => k.id());
+    }
+    return this.kitIdsCache;
+  }
+
+  kitShallows(): KitShallow[] {
+    const currentKits = this.kits.map((k) => k.snapshot() as KitShallow);
+    const currentHash = JSON.stringify(currentKits.map((k) => [k.name, k.version, k.description]));
+
+    if (!this.kitShallowsCache || this.kitShallowsCacheHash !== currentHash) {
+      this.kitShallowsCache = currentKits;
+      this.kitShallowsCacheHash = currentHash;
+    }
+
+    return this.kitShallowsCache;
   }
 
   hasKitEditor(kitEditor: KitEditorId): boolean {
@@ -6870,11 +6954,6 @@ const sketchpadCommands = {
   "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
     return {
       diff: { layout },
-    };
-  },
-  "semio.sketchpad.setActiveDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
-    return {
-      diff: { activeDesignEditor: id },
     };
   },
 };
@@ -6952,10 +7031,6 @@ export function useLayout(): Layout {
   return useSketchpad((s) => s.layout) as Layout;
 }
 
-export function useActiveDesignEditor(): DesignId | undefined {
-  return (useSketchpad((s) => s.activeDesignEditor) as DesignEditorId)?.design;
-}
-
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
   return {
@@ -6965,7 +7040,6 @@ export function useSketchpadCommands() {
     createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
     createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-    setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
     togglePanel: (editorType: EditorType, panelKey: string) => {
       const current = store.snapshot().panelVisibility[editorType] || {};
       store.change({
@@ -6997,9 +7071,26 @@ export function useSketchpadCommands() {
 }
 
 export function useKits(): KitShallow[] {
-  return useSketchpadStore()
-    .kitIds()
-    .map((id) => useKit(identitySelector, id));
+  const store = useSketchpadStore();
+
+  const kits = useSyncExternalStore(
+    (onStoreChange) => {
+      const unsubscribeCreated = store.onKitCreated(onStoreChange);
+      const unsubscribeDeleted = store.onKitDeleted(onStoreChange);
+      const unsubscribers = store.kitIds().map((id) => {
+        const kitStore = store.kit(id);
+        return kitStore.onChanged(onStoreChange);
+      });
+      return () => {
+        unsubscribeCreated();
+        unsubscribeDeleted();
+        unsubscribers.forEach((unsub) => unsub());
+      };
+    },
+    () => store.kitShallows(),
+  );
+
+  return kits;
 }
 
 // #endregion Sketchpad

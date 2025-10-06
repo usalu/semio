@@ -7,7 +7,7 @@ import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 
 const Home: FC = ({}) => {
   const kits = useKits();
-  const { createKit } = useSketchpadCommands();
+  const { createKit, navigateToKit } = useSketchpadCommands();
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -67,7 +67,9 @@ const Home: FC = ({}) => {
     <div>
       <Button onClick={onCreateKit}>Create Kit</Button>
       {kits.map((kit) => (
-        <div key={kit.name}>{kit.name}</div>
+        <Button variant="link" key={kit.name} onClick={() => navigateToKit(kit.guid)}>
+          {kit.name}
+        </Button>
       ))}
     </div>
   );
