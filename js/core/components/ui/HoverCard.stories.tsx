@@ -37,6 +37,33 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        <Button variant="link">Kisho Kurokawa</Button>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-80">
+        <div className="flex justify-between space-x-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarFallback>KK</AvatarFallback>
+          </Avatar>
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">Kisho Kurokawa</h4>
+            <p className="text-sm">Lead Architect, Metabolism Movement</p>
+            <p className="text-sm text-muted-foreground">Pioneer of modular architecture and prefabricated construction systems.</p>
+            <div className="flex items-center pt-2">
+              <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
+              <span className="text-xs text-muted-foreground">Nakagin Tower, 1972</span>
+            </div>
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex gap-4">

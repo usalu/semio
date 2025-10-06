@@ -37,44 +37,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Variants: Story = {
-  args: {
-    children: null,
-  },
-  render: () => (
-    <div className="flex gap-8">
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-4">Basic</p>
-        <div className="border p-4">
-          <Tree>
-            <TreeSection label="Types" icon={<Folder size={14} />}>
-              <TreeItem label="Capsule" icon={<File size={12} />} />
-              <TreeItem label="Base" icon={<File size={12} />} />
-              <TreeItem label="Tambour" icon={<File size={12} />} />
-            </TreeSection>
-          </Tree>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-4">Nested</p>
-        <div className="border p-4">
-          <Tree>
-            <TreeSection label="Kit" icon={<Folder size={14} />}>
-              <TreeItem label="Types" icon={<Folder size={12} />}>
-                <TreeItem label="Capsules" icon={<Folder size={12} />}>
-                  <TreeItem label="Capsule J" icon={<File size={12} />} />
-                  <TreeItem label="Capsule L" icon={<File size={12} />} />
-                </TreeItem>
-              </TreeItem>
-            </TreeSection>
-          </Tree>
-        </div>
-      </div>
-    </div>
-  ),
-};
-
-export const Basic: Story = {
+export const Default: Story = {
   args: {
     children: null,
   },
@@ -115,6 +78,43 @@ export const Basic: Story = {
           </TreeItem>
         </TreeSection>
       </Tree>
+    </div>
+  ),
+};
+
+export const Variants: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <div className="flex gap-8">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Basic</p>
+        <div className="border p-4">
+          <Tree>
+            <TreeSection label="Types" icon={<Folder size={14} />}>
+              <TreeItem label="Capsule" icon={<File size={12} />} />
+              <TreeItem label="Base" icon={<File size={12} />} />
+              <TreeItem label="Tambour" icon={<File size={12} />} />
+            </TreeSection>
+          </Tree>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground mb-4">Nested</p>
+        <div className="border p-4">
+          <Tree>
+            <TreeSection label="Kit" icon={<Folder size={14} />}>
+              <TreeItem label="Types" icon={<Folder size={12} />}>
+                <TreeItem label="Capsules" icon={<Folder size={12} />}>
+                  <TreeItem label="Capsule J" icon={<File size={12} />} />
+                  <TreeItem label="Capsule L" icon={<File size={12} />} />
+                </TreeItem>
+              </TreeItem>
+            </TreeSection>
+          </Tree>
+        </div>
+      </div>
     </div>
   ),
 };

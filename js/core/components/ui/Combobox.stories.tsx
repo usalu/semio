@@ -43,6 +43,13 @@ const types = [
   { value: "cluster", label: "Cluster" },
 ];
 
+export const Default: Story = {
+  render: () => {
+    const [value, setValue] = useState("capsule");
+    return <Combobox options={types} value={value} onValueChange={setValue} label="Component Type" placeholder="Select type..." allowClear className="w-96" />;
+  },
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-8 w-96">
@@ -69,13 +76,6 @@ export const Variants: Story = {
       </div>
     </div>
   ),
-};
-
-export const Basic: Story = {
-  render: () => {
-    const [value, setValue] = useState("");
-    return <Combobox options={types} value={value} onValueChange={setValue} placeholder="Select type..." className="w-96" />;
-  },
 };
 
 export const WithLabel: Story = {

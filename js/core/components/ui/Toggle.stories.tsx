@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bold, Italic, Underline } from "lucide-react";
+import { Bold, Italic, Lock, Underline } from "lucide-react";
 import { useState } from "react";
 import { Toggle } from "./Toggle";
 
@@ -35,6 +35,18 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => {
+    const [pressed, setPressed] = useState(true);
+    return (
+      <Toggle pressed={pressed} onPressedChange={setPressed}>
+        <Lock className="h-4 w-4 mr-2" />
+        Lock Layer
+      </Toggle>
+    );
+  },
+};
 
 export const Variants: Story = {
   render: () => (

@@ -34,6 +34,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  args: {
+    label: "Design Description",
+    placeholder: "Describe the design configuration, spatial relationships, and architectural intent...",
+    defaultValue: "The Nakagin Capsule Tower features 140 prefabricated capsules attached to two concrete cores. Each capsule is a self-contained living unit with standardized connection points.",
+    rows: 4,
+    className: "w-96",
+  },
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-4 w-96">
@@ -51,13 +61,6 @@ export const Variants: Story = {
       </div>
     </div>
   ),
-};
-
-export const Basic: Story = {
-  args: {
-    placeholder: "Enter design description...",
-    className: "w-96",
-  },
 };
 
 export const WithLabel: Story = {

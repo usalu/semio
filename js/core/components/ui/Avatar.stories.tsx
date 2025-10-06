@@ -34,6 +34,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Avatar className="h-12 w-12">
+        <AvatarImage src="https://github.com/shadcn.png" alt="Kisho Kurokawa" />
+        <AvatarFallback className="bg-primary text-primary-foreground">KK</AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col">
+        <span className="text-sm font-medium">Kisho Kurokawa</span>
+        <span className="text-xs text-muted-foreground">Lead Architect</span>
+      </div>
+    </div>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex items-center gap-4">
@@ -49,15 +64,6 @@ export const Variants: Story = {
         <AvatarFallback>FO</AvatarFallback>
       </Avatar>
     </div>
-  ),
-};
-
-export const WithImage: Story = {
-  render: () => (
-    <Avatar>
-      <AvatarImage src="https://github.com/shadcn.png" alt="Architect" />
-      <AvatarFallback>AR</AvatarFallback>
-    </Avatar>
   ),
 };
 

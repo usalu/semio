@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, Clipboard, Copy, Eye, Grid, Layers, Move, Redo, RotateCw, Undo } from "lucide-react";
+import { Box, Clipboard, Copy, Eye, Grid, Layers, List, Move, Network, Redo, RotateCw, Undo } from "lucide-react";
 import { ButtonGroup, ButtonGroupItem } from "./ButtonGroup";
 
 const meta = {
@@ -34,6 +34,25 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => (
+    <ButtonGroup defaultValue="model">
+      <ButtonGroupItem value="model">
+        <Box className="h-4 w-4" />
+        Model
+      </ButtonGroupItem>
+      <ButtonGroupItem value="diagram">
+        <Network className="h-4 w-4" />
+        Diagram
+      </ButtonGroupItem>
+      <ButtonGroupItem value="details">
+        <List className="h-4 w-4" />
+        Details
+      </ButtonGroupItem>
+    </ButtonGroup>
+  ),
+};
 
 export const Variants: Story = {
   render: () => (
@@ -49,16 +68,6 @@ export const Variants: Story = {
         <ButtonGroupItem>Outline</ButtonGroupItem>
       </ButtonGroup>
     </div>
-  ),
-};
-
-export const Default: Story = {
-  render: () => (
-    <ButtonGroup>
-      <ButtonGroupItem>Model</ButtonGroupItem>
-      <ButtonGroupItem>Diagram</ButtonGroupItem>
-      <ButtonGroupItem>Details</ButtonGroupItem>
-    </ButtonGroup>
   ),
 };
 

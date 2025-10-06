@@ -34,6 +34,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <div className="relative w-96 h-96 border rounded-md bg-muted/10 p-4">
+      <p className="text-sm font-medium mb-4">Collaborative Cursors</p>
+      <div className="relative w-full h-full">
+        <Cursor color="#3B82F6" x={120} y={80} />
+        <Cursor color="#10B981" x={200} y={150} />
+        <Cursor color="#F59E0B" x={280} y={200} />
+      </div>
+    </div>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex gap-8">

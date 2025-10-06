@@ -36,6 +36,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button size="icon" variant="outline">
+          <Plus />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Add new capsule instance to the design</p>
+      </TooltipContent>
+    </Tooltip>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex gap-8">

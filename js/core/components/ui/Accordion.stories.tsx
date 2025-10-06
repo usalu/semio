@@ -34,6 +34,27 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <div className="w-96">
+      <Accordion type="single" collapsible defaultValue="item-1">
+        <AccordionItem value="item-1">
+          <AccordionTrigger>What is a Kit?</AccordionTrigger>
+          <AccordionContent>A Kit is a collection of types, designs, and qualities that define a modular building system with reusable components. The Metabolism kit, for example, includes capsule types, base types, tambour types, and connection definitions.</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-2">
+          <AccordionTrigger>What is a Type?</AccordionTrigger>
+          <AccordionContent>A Type is a reusable component with representations, ports, and properties that can be instantiated as pieces in a design. Types can include 3D models, metadata, and connection points for assembly.</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-3">
+          <AccordionTrigger>What is a Connection?</AccordionTrigger>
+          <AccordionContent>A Connection is a 3D link between two pieces with translation and rotation parameters defining their spatial relationship. Connections have gap, shift, rise, rotation, turn, and tilt parameters.</AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex gap-4">
@@ -61,27 +82,6 @@ export const Variants: Story = {
           </AccordionItem>
         </Accordion>
       </div>
-    </div>
-  ),
-};
-
-export const Single: Story = {
-  render: () => (
-    <div className="w-96">
-      <Accordion type="single" collapsible>
-        <AccordionItem value="item-1">
-          <AccordionTrigger>What is a Kit?</AccordionTrigger>
-          <AccordionContent>A Kit is a collection of types, designs, and qualities that define a modular building system with reusable components.</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="item-2">
-          <AccordionTrigger>What is a Type?</AccordionTrigger>
-          <AccordionContent>A Type is a reusable component with representations, ports, and properties that can be instantiated as pieces in a design.</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="item-3">
-          <AccordionTrigger>What is a Connection?</AccordionTrigger>
-          <AccordionContent>A Connection is a 3D link between two pieces with translation and rotation parameters defining their spatial relationship.</AccordionContent>
-        </AccordionItem>
-      </Accordion>
     </div>
   ),
 };

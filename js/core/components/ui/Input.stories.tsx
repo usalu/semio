@@ -34,6 +34,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  args: {
+    label: "Design Name",
+    placeholder: "e.g., Nakagin Tower Configuration",
+    defaultValue: "Metabolism Kit - Capsule Cluster",
+    className: "w-96",
+  },
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-4 w-96">
@@ -51,13 +60,6 @@ export const Variants: Story = {
       </div>
     </div>
   ),
-};
-
-export const Basic: Story = {
-  args: {
-    placeholder: "Enter design name...",
-    className: "w-96",
-  },
 };
 
 export const WithLabel: Story = {

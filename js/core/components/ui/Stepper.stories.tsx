@@ -35,6 +35,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => {
+    const [value, setValue] = useState(12);
+    return (
+      <div className="w-96 space-y-2">
+        <label className="text-sm font-medium">Capsule Count</label>
+        <Stepper value={value} onChange={setValue} min={1} max={50} />
+        <p className="text-xs text-muted-foreground">Number of capsule instances in the current design cluster.</p>
+      </div>
+    );
+  },
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-6 w-96">

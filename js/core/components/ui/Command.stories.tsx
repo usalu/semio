@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, Calendar, Circle, CreditCard, Settings, Smile, User } from "lucide-react";
+import { Box, Calendar, Circle, CreditCard, Cylinder, Settings, Smile, User } from "lucide-react";
 import { useState } from "react";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "./Command";
 
@@ -88,24 +88,24 @@ export const Variants: Story = {
   ),
 };
 
-export const Basic: Story = {
+export const Default: Story = {
   render: () => (
     <Command className="rounded-lg border shadow-md w-96">
-      <CommandInput placeholder="Type a command or search..." />
+      <CommandInput placeholder="Search types..." />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Suggestions">
+        <CommandEmpty>No types found.</CommandEmpty>
+        <CommandGroup heading="Types">
           <CommandItem>
-            <Calendar />
-            <span>Calendar</span>
+            <Box />
+            <span>Capsule</span>
           </CommandItem>
           <CommandItem>
-            <Smile />
-            <span>Search Emoji</span>
+            <Circle />
+            <span>Base</span>
           </CommandItem>
           <CommandItem>
-            <Calculator />
-            <span>Calculator</span>
+            <Cylinder />
+            <span>Tambour</span>
           </CommandItem>
         </CommandGroup>
       </CommandList>

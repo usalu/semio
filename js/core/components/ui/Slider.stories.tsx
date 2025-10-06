@@ -35,6 +35,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => {
+    const [value, setValue] = useState([75]);
+    return (
+      <div className="w-96 space-y-4">
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-medium">Capsule Scale Factor</label>
+          <span className="text-sm text-muted-foreground">{value[0]}%</span>
+        </div>
+        <Slider value={value} onValueChange={setValue} min={50} max={150} step={5} />
+        <p className="text-xs text-muted-foreground">Adjust the size of capsule instances relative to the original type dimensions.</p>
+      </div>
+    );
+  },
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-6 w-96">

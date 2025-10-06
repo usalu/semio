@@ -37,6 +37,49 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <Tabs defaultValue="properties" className="w-[600px]">
+      <TabsList>
+        <TabsTrigger value="properties">Properties</TabsTrigger>
+        <TabsTrigger value="connections">Connections</TabsTrigger>
+        <TabsTrigger value="statistics">Statistics</TabsTrigger>
+      </TabsList>
+      <TabsContent value="properties" className="space-y-4">
+        <div className="border p-4 rounded-md space-y-2">
+          <div className="flex justify-between">
+            <span className="text-sm font-medium">Volume</span>
+            <span className="text-sm">25.0 m³</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm font-medium">Area</span>
+            <span className="text-sm">10.0 m²</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm font-medium">Mass</span>
+            <span className="text-sm">3500 kg</span>
+          </div>
+        </div>
+      </TabsContent>
+      <TabsContent value="connections" className="space-y-4">
+        <div className="border p-4 rounded-md space-y-2">
+          <p className="text-sm">3 active connections</p>
+          <p className="text-sm text-muted-foreground">Base → Capsule J (Standard)</p>
+          <p className="text-sm text-muted-foreground">Capsule J → Tambour A</p>
+          <p className="text-sm text-muted-foreground">Tambour A → Capital</p>
+        </div>
+      </TabsContent>
+      <TabsContent value="statistics" className="space-y-4">
+        <div className="border p-4 rounded-md space-y-2">
+          <p className="text-sm">Total pieces: 140</p>
+          <p className="text-sm">Capsule count: 132</p>
+          <p className="text-sm">Total height: 52.4m</p>
+        </div>
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-8">

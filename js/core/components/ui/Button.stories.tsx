@@ -35,6 +35,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <Button size="default" variant="default">
+      <Plus />
+      Add Capsule to Design
+    </Button>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-wrap gap-4">
@@ -46,12 +55,6 @@ export const Variants: Story = {
       <Button variant="link">Link</Button>
     </div>
   ),
-};
-
-export const Default: Story = {
-  args: {
-    children: "Create Design",
-  },
 };
 
 export const Sizes: Story = {

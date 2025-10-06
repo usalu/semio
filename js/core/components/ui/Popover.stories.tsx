@@ -37,6 +37,32 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline">Connection Settings</Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Connection Parameters</h4>
+            <p className="text-sm text-muted-foreground">Configure spatial relationship between pieces.</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm">Gap (mm)</label>
+            <input type="number" defaultValue={0} className="w-full p-2 border rounded" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm">Rotation (°)</label>
+            <input type="number" defaultValue={0} min={0} max={360} className="w-full p-2 border rounded" />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex gap-4">

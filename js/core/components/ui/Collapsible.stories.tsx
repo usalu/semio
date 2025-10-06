@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { ChevronDown } from "lucide-react";
+import { Box, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./Button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
@@ -36,6 +36,36 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => {
+    const [isOpen, setIsOpen] = useState(true);
+    return (
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2">
+        <div className="flex items-center justify-between space-x-4 pb-2">
+          <div className="flex items-center gap-2">
+            <Box className="h-4 w-4" />
+            <h4 className="text-sm font-semibold">Capsule Variants (3)</h4>
+          </div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+              <span className="sr-only">Toggle</span>
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <div className="border rounded-md px-4 py-2 text-sm flex items-center justify-between">
+          <span>Capsule J</span>
+          <span className="text-xs text-muted-foreground">2.5m × 4.0m</span>
+        </div>
+        <CollapsibleContent className="space-y-2">
+          <div className="border rounded-md px-4 py-2 text-sm">Capsule L</div>
+          <div className="border rounded-md px-4 py-2 text-sm">Capsule P</div>
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  },
+};
 
 export const Variants: Story = {
   render: () => (
@@ -84,30 +114,6 @@ export const Variants: Story = {
       </div>
     </div>
   ),
-};
-
-export const Basic: Story = {
-  render: () => {
-    const [isOpen, setIsOpen] = useState(false);
-    return (
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2">
-        <div className="flex items-center justify-between space-x-4">
-          <h4 className="text-sm font-semibold">Capsule Types</h4>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <ChevronDown className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
-              <span className="sr-only">Toggle</span>
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-        <div className="border rounded-md px-4 py-2 text-sm">Capsule J</div>
-        <CollapsibleContent className="space-y-2">
-          <div className="border rounded-md px-4 py-2 text-sm">Capsule L</div>
-          <div className="border rounded-md px-4 py-2 text-sm">Capsule P</div>
-        </CollapsibleContent>
-      </Collapsible>
-    );
-  },
 };
 
 export const DefaultOpen: Story = {

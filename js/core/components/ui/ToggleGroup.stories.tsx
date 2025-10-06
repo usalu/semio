@@ -21,6 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { AlignCenter, AlignLeft, AlignRight, Bold, Box, Circle, Cylinder, Hexagon, Italic, List, Network, Underline } from "lucide-react";
+import { useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
 const meta = {
@@ -34,6 +35,32 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => {
+    const [value, setValue] = useState("model");
+    return (
+      <div className="space-y-2">
+        <label className="text-sm font-medium">View Mode</label>
+        <ToggleGroup type="single" value={value} onValueChange={setValue}>
+          <ToggleGroupItem value="model">
+            <Box className="h-4 w-4 mr-2" />
+            3D Model
+          </ToggleGroupItem>
+          <ToggleGroupItem value="diagram">
+            <Network className="h-4 w-4 mr-2" />
+            Diagram
+          </ToggleGroupItem>
+          <ToggleGroupItem value="list">
+            <List className="h-4 w-4 mr-2" />
+            List
+          </ToggleGroupItem>
+        </ToggleGroup>
+        <p className="text-xs text-muted-foreground">Selected: {value}</p>
+      </div>
+    );
+  },
+};
 
 export const Variants: Story = {
   render: () => (

@@ -37,6 +37,48 @@ type Story = StoryObj<typeof meta>;
 
 const TypeIcons = { Box, Circle, Cylinder, Hexagon };
 
+export const Default: Story = {
+  render: () => (
+    <Select defaultValue="capsule">
+      <SelectTrigger className="w-[220px]">
+        <SelectValue placeholder="Select a type" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Modular Components</SelectLabel>
+          <SelectItem value="capsule">
+            <div className="flex items-center gap-2">
+              <Box className="h-4 w-4" />
+              Capsule
+            </div>
+          </SelectItem>
+          <SelectItem value="base">
+            <div className="flex items-center gap-2">
+              <Circle className="h-4 w-4" />
+              Base
+            </div>
+          </SelectItem>
+          <SelectItem value="tambour">
+            <div className="flex items-center gap-2">
+              <Cylinder className="h-4 w-4" />
+              Tambour
+            </div>
+          </SelectItem>
+        </SelectGroup>
+        <SelectGroup>
+          <SelectLabel>Structural</SelectLabel>
+          <SelectItem value="capital">
+            <div className="flex items-center gap-2">
+              <Hexagon className="h-4 w-4" />
+              Capital
+            </div>
+          </SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-col gap-4">

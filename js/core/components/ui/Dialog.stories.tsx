@@ -37,6 +37,39 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  render: () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Add Capsule to Design</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Capsule Instance</DialogTitle>
+          <DialogDescription>Configure the new capsule piece and its placement in the design.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Capsule Type</label>
+            <select className="w-full p-2 border rounded">
+              <option>Capsule J (Standard)</option>
+              <option>Capsule K (Corner)</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Quantity</label>
+            <input type="number" defaultValue={1} min={1} className="w-full p-2 border rounded" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline">Cancel</Button>
+          <Button>Add to Design</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  ),
+};
+
 export const Variants: Story = {
   render: () => (
     <div className="flex gap-4">

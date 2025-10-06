@@ -20,6 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
+import { Home } from "lucide-react";
 import { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "./Breadcrumb";
 
 const meta = {
@@ -33,6 +34,33 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem tooltip="Browse all kits">
+          <BreadcrumbLink href="/">
+            <Home className="h-4 w-4" />
+            Kits
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem tooltip="Metabolism modular system">
+          <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbLink href="/metabolism/types">Types</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>Capsule J</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  ),
+};
 
 export const Variants: Story = {
   render: () => (
