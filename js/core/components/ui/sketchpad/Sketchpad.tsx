@@ -79,6 +79,7 @@ const SketchpadBase: FC = () => {
   const editorType = useEditorType();
   const visiblePanels = useEditorPanelVisibility();
   const panelSizes = useSketchpad((s) => s.panelSizes);
+  const isFullscreen = useSketchpad((s) => s.isFullscreen);
   const { setTheme, setLayout, setPanelSize } = useSketchpadCommands();
 
   useEffect(() => {
@@ -106,9 +107,11 @@ const SketchpadBase: FC = () => {
 
   return (
     <PanelSectionProvider>
-      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-        <Navbar />
-        <div className="flex-1 flex overflow-hidden relative">
+      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground relative">
+        <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+          <Navbar />
+        </div>
+        <div className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mt-12"}`}>
           {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
           <div className="flex-1 flex flex-col overflow-hidden">
             <Outlet />
@@ -121,8 +124,9 @@ const SketchpadBase: FC = () => {
             </div>
           )}
         </div>
-
-        <Footer />
+        <div className={`absolute bottom-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+          <Footer />
+        </div>
       </div>
     </PanelSectionProvider>
   );

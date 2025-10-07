@@ -16,20 +16,19 @@ const KitEditor: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
 
-  // Add settings section
   useEffect(() => {
-    addSection("settings", {
-      id: "kit-editor-settings",
-      label: "Kit Editor",
+    addSection("details", {
+      id: "kit-editor-details",
+      label: "Kit",
       order: 0,
       defaultOpen: true,
       content: (
         <>
           <TreeItem>
-            <Input label="Kit Name" value={kit.name} disabled />
+            <Input label="Kit Name" value={kit.name} />
           </TreeItem>
           <TreeItem>
-            <Input label="Version" value="1.0.0" disabled />
+            <Input label="Version" value="1.0.0" />
           </TreeItem>
           <TreeItem>
             <Button onClick={onPopulateKit}>Populate Kit</Button>
@@ -39,7 +38,7 @@ const KitEditor: FC = () => {
     });
 
     return () => {
-      removeSection("settings", "kit-editor-settings");
+      removeSection("details", "kit-editor-details");
     };
   }, [kit, addSection, removeSection]);
 

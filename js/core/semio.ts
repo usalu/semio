@@ -30,7 +30,7 @@ import cytoscape from "cytoscape";
 import * as THREE from "three";
 import { z } from "zod";
 import CONSTANTS from "./constants.json";
-import { jaccard, normalize, round } from "./lib/utils";
+import { guid, jaccard, normalize, round } from "./lib/utils";
 
 // #region Constants
 
@@ -2254,7 +2254,7 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
 
   // Create the clustered design
   const clusteredDesign: Design = {
-    guid: crypto.randomUUID(),
+    guid: guid(),
     name: designName,
     unit: originalDesign.unit,
     description: `Clustered design with ${clusteredPieces.length} pieces`,
@@ -2489,35 +2489,21 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
       }) ?? [];
 
     includedDesigns.push({
-      id_: `design-${designIdString}`,
-      designId: { name: designIdString },
+      guid: guid(),
+      designGuid: designIdString,
       type: "connected",
       externalConnections,
-    });
-  });
-
-  // Add fixed designs
-  (design.fixedDesigns || []).forEach((fixedDesign: any) => {
-    const { designId: fixedDesignId, center, plane } = fixedDesign;
-    includedDesigns.push({
-      id: `fixed-design-${fixedDesignId.name}-${fixedDesignId.variant || ""}-${fixedDesignId.view || ""}`,
-      designId: fixedDesignId,
-      type: "fixed",
-      center,
-      plane,
     });
   });
 
   return includedDesigns;
 };
 
-export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
-  const normalizedPieceId = pieceIdLikeToPieceId(piece);
-  const normalizedPortId = portIdLikeToPortId(port);
-  const connections = findPieceConnectionsInDesign(design, piece);
+export const isPortInUse = (design: Design, pieceGuid: string, portGuid: string): boolean => {
+  const connections = findPieceConnectionsInDesign(design, pieceGuid);
   for (const connection of connections) {
-    const isPieceConnected = connection.connected.piece.id_ === normalizedPieceId.id_;
-    const isPortConnected = isPieceConnected ? connection.connected.port.id_ === normalizedPortId.id_ : connection.connecting.port.id_ === normalizedPortId.id_;
+    const isPieceConnected = connection.connected.piece === pieceGuid;
+    const isPortConnected = isPieceConnected ? connection.connected.port === portGuid : connection.connecting.port === portGuid;
     if (isPortConnected) return true;
   }
   return false;
@@ -2527,21 +2513,21 @@ export const isConnectionInDesign = (design: Design, connection: Connection): bo
   return design.connections?.some((c) => areSameConnection(c, connection)) ?? false;
 };
 
-export const findPieceInDesign = (design: Design, pieceId: PieceIdLike): Piece => findPiece(design.pieces ?? [], pieceId);
+export const findPieceInDesign = (design: Design, pieceGuid: string): Piece => findPiece(design.pieces ?? [], pieceGuid);
 
-export const findConnectionInDesign = (design: Design, connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
-  return findConnection(design.connections ?? [], connectionId, strict);
+export const findConnectionInDesign = (design: Design, connectionGuid: string): Connection => {
+  return findConnection(design.connections ?? [], connectionGuid);
 };
 
-export const findConnectionsInDesign = (design: Design, connectionIds: ConnectionIdLike[]): Connection[] => {
-  return connectionIds.map((connectionId) => findConnectionInDesign(design, connectionId));
+export const findConnectionsInDesign = (design: Design, connectionGuids: string[]): Connection[] => {
+  return connectionGuids.map((connectionGuid) => findConnectionInDesign(design, connectionGuid));
 };
 
-export const findPieceConnectionsInDesign = (design: Design, pieceId: PieceIdLike): Connection[] => {
-  return findPieceConnections(design.connections ?? [], pieceId);
+export const findPieceConnectionsInDesign = (design: Design, pieceGuid: string): Connection[] => {
+  return findPieceConnections(design.connections ?? [], pieceGuid);
 };
 
-export const findConnectionPiecesInDesign = (design: Design, connection: Connection | ConnectionId): { connecting: Piece; connected: Piece } => {
+export const findConnectionPiecesInDesign = (design: Design, connection: Connection): { connecting: Piece; connected: Piece } => {
   return {
     connected: findPieceInDesign(design, connection.connected.piece),
     connecting: findPieceInDesign(design, connection.connecting.piece),
@@ -2627,14 +2613,11 @@ export const addTypeToKit = (type: Type): KitDiff => ({
 });
 export const setTypeInKit = (type: Type): KitDiff => ({
   types: {
-    updated: [{
-      id: type.guid,
-      diff: { ...type }
-    }]
+    added: [type]
   }
 });
-export const removeTypeFromKit = (typeId: TypeId): KitDiff => ({
-  types: { removed: [typeId] }
+export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
+  types: { removed: [typeGuid] }
 });
 
 
@@ -2645,61 +2628,20 @@ export const addDesignToKit = (design: Design): KitDiff => ({
 });
 export const setDesignInKit = (design: Design): KitDiff => ({
   designs: {
-    updated: [{
-      id: design.guid,
-      diff: {
-        name: design.name,
-        description: design.description,
-        icon: design.icon,
-        image: design.image,
-        variant: design.variant,
-        view: design.view,
-        location: design.location,
-        unit: design.unit,
-        pieces: design.pieces ? {
-          added: design.pieces
-        } : undefined,
-        connections: design.connections ? {
-          added: design.connections
-        } : undefined,
-        attributes: design.attributes,
-        authors: design.authors
-      }
-    }]
+    added: [design]
   }
 });
-export const removeDesignFromKit = (designId: DesignId): KitDiff => {
-  const normalizedDesignId = designId;
+export const removeDesignFromKit = (designGuid: string): KitDiff => {
   return {
     designs: {
-      removed: [normalizedDesignId]
+      removed: [designGuid]
     }
   };
 };
 
 export const updateDesignInKit = (design: Design): KitDiff => ({
   designs: {
-    updated: [{
-      id: design.guid,
-      diff: {
-        name: design.name,
-        description: design.description,
-        icon: design.icon,
-        image: design.image,
-        variant: design.variant,
-        view: design.view,
-        location: design.location,
-        unit: design.unit,
-        pieces: design.pieces ? {
-          added: design.pieces
-        } : undefined,
-        connections: design.connections ? {
-          added: design.connections
-        } : undefined,
-        attributes: design.attributes,
-        authors: design.authors
-      }
-    }]
+    added: [design]
   }
 });
 
@@ -2710,20 +2652,23 @@ export const findFileInKit = (kit: Kit, filePath: string): File => {
 };
 
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
-export const setFileInKit = (file: File): KitDiff => ({ files: { updated: [{ id: file.path, diff: { ...file } }] } });
+export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
 export const removeFileFromKit = (filePath: string): KitDiff => ({
   files: { removed: [filePath] }
 });
 
-export const setAttributeInKit = (kitId: KitIdLike, attribute: Attribute): KitDiff => ({
+export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
   attributes: [attribute]
 });
 
-export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: DesignId, designPiece: Piece): Design[] => {
-  if (!designPiece.type || designPiece.type.name !== "design") return [];
+export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
+  if (!designPiece.type) return [];
+
+  const pieceType = findTypeInKit(kit, designPiece.type);
+  if (pieceType.name !== "design") return [];
 
   // Parse the current design ID from the piece's type.variant
-  const currentVariant = designPiece.type.variant || "";
+  const currentVariant = pieceType.variant || "";
   const parts = currentVariant.split("-");
   const currentDesignName = parts[0];
   const currentDesignVariant = parts[1] || "";
@@ -2749,79 +2694,73 @@ export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: D
   });
 };
 
-export const areSameKit = (kit: KitIdLike, other: KitIdLike): boolean => {
-  const id = kitIdLikeToKitId(kit);
-  const otherId = kitIdLikeToKitId(other);
-  return id.name === otherId.name && normalize(id.version) === normalize(otherId.version);
+export const areSameKit = (kitGuid: string, otherGuid: string): boolean => {
+  return kitGuid === otherGuid;
 };
-export const hasSameKit = (kit: KitIdLike, others: KitIdLike[]): boolean => others.some((other) => areSameKit(kit, other));
+export const hasSameKit = (kitGuid: string, otherGuids: string[]): boolean => otherGuids.some((other) => areSameKit(kitGuid, other));
 
-export const findTypeInKit = (kit: Kit, typeId: TypeId): Type => {
-  const type = kit.types?.find((t) => t.guid === typeId);
-  if (!type) throw new Error(`Type ${typeId} not found in kit ${kit.name}`);
+export const findTypeInKit = (kit: Kit, typeGuid: string): Type => {
+  const type = kit.types?.find((t) => t.guid === typeGuid);
+  if (!type) throw new Error(`Type ${typeGuid} not found in kit ${kit.name}`);
   return type;
 };
 
-export const findDesignInKit = (kit: Kit, designId: DesignId): Design => {
-  const design = kit.designs?.find((d) => d.guid === designId);
-  if (!design) throw new Error(`Design ${designId} not found in kit ${kit.name}`);
+export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
+  const design = kit.designs?.find((d) => d.guid === designGuid);
+  if (!design) throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
   return design;
 };
 
-export const findPieceTypeInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Type => {
-  const piece = findPieceInDesign(findDesignInKit(kit, designId), pieceId);
-  if (!piece.type) throw new Error(`Piece ${pieceIdLikeToPieceId(pieceId).id_} has no type`);
+export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type => {
+  const piece = findPieceInDesign(findDesignInKit(kit, designGuid), pieceGuid);
+  if (!piece.type) throw new Error(`Piece ${pieceGuid} has no type`);
   return findTypeInKit(kit, piece.type);
 };
 
-export const findParentPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Piece => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
-  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece`);
-  return findPieceInDesign(findDesignInKit(kit, designId), parentPieceId);
+export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => {
+  const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
+  if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece`);
+  return findPieceInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
 
-export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Connection => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
-  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece and connection`);
-  return findConnectionInDesign(findDesignInKit(kit, designId), parentPieceId);
+export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => {
+  const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
+  if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
+  return findConnectionInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
 
-export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Piece[] => {
-  const design = findDesignInKit(kit, designId);
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const metadata = piecesMetadata(kit, designId);
+export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece[] => {
+  const design = findDesignInKit(kit, designGuid);
+  const metadata = piecesMetadata(kit, designGuid);
   const children: Piece[] = [];
   for (const [id, data] of Array.from(metadata)) {
-    if (data.parentPieceId === normalizedPieceId.id_) {
+    if (data.parentPieceId === pieceGuid) {
       children.push(findPieceInDesign(design, id));
     }
   }
   return children;
 };
 
-export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike): Port[] => {
-  const design = findDesignInKit(kit, designId);
-  const piece = findPieceInDesign(design, pieceId);
+export const findUsedPortsByPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Port[] => {
+  const design = findDesignInKit(kit, designGuid);
+  const piece = findPieceInDesign(design, pieceGuid);
   if (!piece.type) return [];
   const type = findTypeInKit(kit, piece.type);
-  const connections = findPieceConnectionsInDesign(design, pieceId);
-  return connections.map((c) => findPortForPieceInConnection(type, c, pieceId));
+  const connections = findPieceConnectionsInDesign(design, pieceGuid);
+  return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid));
 };
 
-export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignId, pieceId: PieceIdLike, variants?: string[]): Type[] => {
-  const design = findDesignInKit(kit, designId);
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const connections = findPieceConnectionsInDesign(design, pieceId);
+export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
+  const design = findDesignInKit(kit, designGuid);
+  const connections = findPieceConnectionsInDesign(design, pieceGuid);
   const requiredPorts: Port[] = [];
   for (const connection of connections) {
     try {
-      const otherPieceId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
+      const otherPieceId = connection.connected.piece === pieceGuid ? connection.connecting.piece : connection.connected.piece;
       const otherPiece = findPieceInDesign(design, otherPieceId);
       if (!otherPiece.type) continue;
-      const otherType = findTypeInKit(kit, otherPiece.type.name);
-      const otherPortId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
+      const otherType = findTypeInKit(kit, otherPiece.type);
+      const otherPortId = connection.connected.piece === pieceGuid ? connection.connecting.port : connection.connected.port;
       const otherPort = findPortInType(otherType, otherPortId || "");
       requiredPorts.push(otherPort);
     } catch (error) {
@@ -2839,24 +2778,23 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignId
   );
 };
 
-export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignId, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
-  const design = findDesignInKit(kit, designId);
-  const normalizedPieceIds = pieceIds.map((id) => (typeof id === "string" ? id : id.id_));
-  const pieces = normalizedPieceIds.map((id) => findPieceInDesign(design, id));
+export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: string, pieceGuids: string[], variants?: string[]): Type[] => {
+  const design = findDesignInKit(kit, designGuid);
+  const pieces = pieceGuids.map((id) => findPieceInDesign(design, id));
   const externalConnections: Array<{
     connection: Connection;
     requiredPort: Port;
   }> = [];
   for (const piece of pieces) {
-    const connections = findPieceConnectionsInDesign(design, piece.id_);
+    const connections = findPieceConnectionsInDesign(design, piece.guid);
     for (const connection of connections) {
-      const otherPieceId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
-      if (!normalizedPieceIds.includes(otherPieceId)) {
+      const otherPieceId = connection.connected.piece === piece.guid ? connection.connecting.piece : connection.connected.piece;
+      if (!pieceGuids.includes(otherPieceId)) {
         try {
           const otherPiece = findPieceInDesign(design, otherPieceId);
           if (!otherPiece.type) continue;
-          const otherType = findTypeInKit(kit, otherPiece.type.name);
-          const otherPortId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
+          const otherType = findTypeInKit(kit, otherPiece.type);
+          const otherPortId = connection.connected.piece === piece.guid ? connection.connecting.port : connection.connected.port;
           const otherPort = findPortInType(otherType, otherPortId || "");
           externalConnections.push({ connection, requiredPort: otherPort });
         } catch (error) {
@@ -2878,7 +2816,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignI
 
 export const piecesMetadata = (
   kit: Kit,
-  designId: DesignId,
+  designGuid: string,
 ): Map<
   string,
   {
@@ -2889,18 +2827,18 @@ export const piecesMetadata = (
     depth: number;
   }
 > => {
-  const design = findDesignInKit(kit, designId);
+  const design = findDesignInKit(kit, designGuid);
   if (!design) {
-    throw new Error(`Design ${designId} not found in kit ${kit.name}`);
+    throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
   }
-  const flattenDiff = flattenDesign(kit, designId);
+  const flattenDiff = flattenDesign(kit, designGuid);
   const flatDesign = applyDesignDiff(design, flattenDiff);
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.id_);
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
   return new Map(
     flatDesign.pieces?.map((p, index) => [
-      p.id_,
+      p.guid,
       {
         plane: p.plane!,
         center: p.center!,
@@ -2967,22 +2905,25 @@ const getColorForText = (text?: string): string => {
 };
 
 export const colorPortsForTypes = (types: Type[]): TypesDiff => {
-  const updated: { id: TypeId; diff: TypeDiff }[] = [];
+  const updated: { id: string; diff: TypeDiff }[] = [];
 
   for (const type of types) {
-    const coloredPorts: Port[] = [];
-    for (const port of type.ports || []) {
-      const coloredPort = setAttribute(port, {
-        key: "semio.color",
-        value: getColorForText(port.family),
-      });
-      coloredPorts.push(coloredPort);
-    }
+    const updatedPorts = (type.ports || []).map((port) => ({
+      ...port,
+      attributes: [
+        ...(port.attributes || []),
+        {
+          guid: guid(),
+          key: "semio.color",
+          value: getColorForText(port.family),
+        }
+      ]
+    }));
 
     updated.push({
-      id: { guid: type.guid },
+      id: type.guid,
       diff: {
-        ports: coloredPorts
+        ports: { added: updatedPorts }
       }
     });
   }
@@ -2990,14 +2931,9 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   return { updated };
 };
 
-// Helper function to parse design ID from design piece variant
-export const parseDesignIdFromVariant = (variant: string): DesignId => {
-  const parts = variant.split("-");
-  return {
-    name: parts[0],
-    variant: parts[1] || undefined,
-    view: parts[2] || undefined,
-  };
+// Helper function to parse design guid from design piece variant
+export const parseDesignIdFromVariant = (variant: string): string => {
+  return variant.split("-")[0];
 };
 
 // File utility functions
@@ -3022,6 +2958,7 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
   }
 
   return {
+    guid: guid(),
     path: url,
     size,
     hash: hash.toString(36),

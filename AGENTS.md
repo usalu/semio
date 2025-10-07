@@ -127,37 +127,65 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── DesignEditor.tsx
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ │ ├── Footer.tsx
+│ │ │ │ │ │ ├── Home.tsx
+│ │ │ │ │ │ ├── KitEditor.tsx
 │ │ │ │ │ │ ├── Model.tsx
 │ │ │ │ │ │ ├── Navbar.tsx
-│ │ │ │ │ │ ├── Workbench.tsx
+│ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ ├── Sketchpad.stories.tsx
 │ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/js
 │ │ │ │ │ │ ├── TypeEditor.tsx
 │ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── Accordion.stories.tsx
 │ │ │ │ │ ├── Accordion.tsx
+│ │ │ │ │ ├── Avatar.stories.tsx
 │ │ │ │ │ ├── Avatar.tsx
+│ │ │ │ │ ├── Breadcrumb.stories.tsx
 │ │ │ │ │ ├── Breadcrumb.tsx
+│ │ │ │ │ ├── Button.stories.tsx
 │ │ │ │ │ ├── Button.tsx
+│ │ │ │ │ ├── ButtonGroup.stories.tsx
+│ │ │ │ │ ├── ButtonGroup.tsx
+│ │ │ │ │ ├── Collapsible.stories.tsx
 │ │ │ │ │ ├── Collapsible.tsx
-│ │ │ │ │ ├── Commands.tsx
+│ │ │ │ │ ├── Combobox.stories.tsx
 │ │ │ │ │ ├── Combobox.tsx
+│ │ │ │ │ ├── Dialog.stories.tsx
 │ │ │ │ │ ├── Dialog.tsx
+│ │ │ │ │ ├── File.stories.tsx
 │ │ │ │ │ ├── File.tsx
+│ │ │ │ │ ├── HoverCard.stories.tsx
 │ │ │ │ │ ├── HoverCard.tsx
+│ │ │ │ │ ├── Icons.stories.tsx
 │ │ │ │ │ ├── Icons.tsx
+│ │ │ │ │ ├── Input.stories.tsx
 │ │ │ │ │ ├── Input.tsx
-│ │ │ │ │ ├── Navbar.tsx
+│ │ │ │ │ ├── Popover.stories.tsx
 │ │ │ │ │ ├── Popover.tsx
+│ │ │ │ │ ├── Resizable.stories.tsx
 │ │ │ │ │ ├── Resizable.tsx
+│ │ │ │ │ ├── ScrollArea.stories.tsx
 │ │ │ │ │ ├── ScrollArea.tsx
+│ │ │ │ │ ├── Select.stories.tsx
 │ │ │ │ │ ├── Select.tsx
+│ │ │ │ │ ├── Slider.stories.tsx
 │ │ │ │ │ ├── Slider.tsx
+│ │ │ │ │ ├── Stepper.stories.tsx
 │ │ │ │ │ ├── Stepper.tsx
+│ │ │ │ │ ├── Tabs.stories.tsx
 │ │ │ │ │ ├── Tabs.tsx
+│ │ │ │ │ ├── Textarea.stories.tsx
 │ │ │ │ │ ├── Textarea.tsx
+│ │ │ │ │ ├── Toggle.stories.tsx
 │ │ │ │ │ ├── Toggle.tsx
+│ │ │ │ │ ├── ToggleCycle.stories.tsx
+│ │ │ │ │ ├── ToggleCycle.tsx
+│ │ │ │ │ ├── ToggleGroup.stories.tsx
 │ │ │ │ │ ├── ToggleGroup.tsx
+│ │ │ │ │ ├── Tooltip.stories.tsx
 │ │ │ │ │ ├── Tooltip.tsx
+│ │ │ │ │ ├── Tree.stories.tsx
 │ │ │ │ │ └── Tree.tsx
 │ │ ├── lib
 │ │ │ └── utils.ts

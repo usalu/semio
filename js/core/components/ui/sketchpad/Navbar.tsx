@@ -19,10 +19,10 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
-import { createContext, FC, ReactNode, useCallback, useContext, useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
+import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { EditorType, SketchpadScope, useEditorCommands, useEditorType, useEditorPanelVisibility, useKits, useNavigation, useSketchpad, useSketchpadCommands, useSketchpadScope } from "../../../store";
+import { EditorType, SketchpadScope, useEditorCommands, useEditorPanelVisibility, useEditorType, useIsFullscreen, useKits, useNavigation, useSketchpadCommands, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
@@ -117,19 +117,22 @@ export const PANEL_CONFIGS: Record<EditorType, PanelDefinition[]> = {
     { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
   ],
   [EditorType.KIT]: [
+    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
   ],
   [EditorType.DESIGN]: [
     { key: "workbench", icon: Wrench, tooltip: "Click to toggle workbench panel", hotkey: "⌘J" },
+    { key: "console", icon: Terminal, tooltip: "Click to toggle console panel", hotkey: "⌘K" },
     { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
   ],
   [EditorType.TYPE]: [
     { key: "workbench", icon: Wrench, tooltip: "Click to toggle workbench panel", hotkey: "⌘J" },
-    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
     { key: "console", icon: Terminal, tooltip: "Click to toggle console panel", hotkey: "⌘K" },
+    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
   ],
 };
@@ -217,7 +220,6 @@ const PanelToggles: FC = ({}) => {
         .filter(([_, isVisible]) => isVisible)
         .map(([key]) => key)}
       onValueChange={(values) => {
-        // Iterate over all panel config keys, not just existing visiblePanels
         panelConfig.forEach(({ key }) => {
           const isCurrentlyVisible = visiblePanels[key] || false;
           const shouldBeVisible = values.includes(key);
@@ -240,10 +242,32 @@ interface NavbarProps {}
 
 const Navbar: FC<NavbarProps> = ({}) => {
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
+  const isFullscreen = useIsFullscreen();
+  const { toggleFullscreen } = useSketchpadCommands();
+  const [isVisible, setIsVisible] = useState(true);
   let navigate = useNavigate();
 
+  useEffect(() => {
+    if (!isFullscreen) {
+      setIsVisible(true);
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Show navbar when mouse is in the top 50px of the screen
+      setIsVisible(e.clientY < 50);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [isFullscreen]);
+
   return (
-    <div id="navbar" className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag]`} style={{ WebkitAppRegion: "drag" }}>
+    <div
+      id="navbar"
+      className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
+      style={{ WebkitAppRegion: "drag" }}
+    >
       <ButtonGroup>
         <ButtonGroupItem value="back" tooltip="Click to go back, hold to see history" onClick={() => navigate(-1)}>
           <ArrowLeft size={16} />
@@ -260,8 +284,8 @@ const Navbar: FC<NavbarProps> = ({}) => {
       {/* <Search /> */}
 
       <PanelToggles />
-      <Toggle variant="outline" tooltip="Click to toggle fullscreen">
-        <Fullscreen />
+      <Toggle variant="outline" tooltip={isFullscreen ? "Click to exit fullscreen" : "Click to enter fullscreen"} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        {isFullscreen ? <Minimize /> : <Fullscreen />}
       </Toggle>
       {onWindowEvents && (
         <div className="flex items-center gap-2 ml-4">
