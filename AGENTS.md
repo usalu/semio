@@ -238,7 +238,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 
 # Hierarchies
 
-Use this hierarchy for code organization (order of appearance of regions,classes, properties, functions, methods, types, statements, constants, …).
+Use this hierarchy for code organization (order of appearance of regions, classes, properties, functions, methods, types, statements, constants, …).
 
 ## 1. Models
 

@@ -22,7 +22,7 @@ import { FC, useEffect } from "react";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
-import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useEditorType, useLayout, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
+import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, TypeScopeProvider, useEditorType, useEditorPanelVisibility, useLayout, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
 import Chat from "./Chat";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
@@ -67,9 +67,9 @@ const TypeRoute: FC = () => {
   // let [searchParams, setSearchParams] = useSearchParams();
 
   return (
-    <DesignScopeProvider guid={guid}>
+    <TypeScopeProvider guid={guid}>
       <Outlet />
-    </DesignScopeProvider>
+    </TypeScopeProvider>
   );
 };
 
@@ -77,7 +77,7 @@ const SketchpadBase: FC = () => {
   const layout = useLayout();
   const theme = useTheme();
   const editorType = useEditorType();
-  const visiblePanels = useSketchpad((s) => s.panelVisibility[editorType]) || {};
+  const visiblePanels = useEditorPanelVisibility();
   const panelSizes = useSketchpad((s) => s.panelSizes);
   const { setTheme, setLayout, setPanelSize } = useSketchpadCommands();
 

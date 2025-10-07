@@ -22,7 +22,7 @@
 import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useState } from "react";
 import { useNavigate } from "react-router";
-import { EditorType, SketchpadScope, useEditorType, useKits, useNavigation, useSketchpad, useSketchpadCommands, useSketchpadScope } from "../../../store";
+import { EditorType, SketchpadScope, useEditorCommands, useEditorType, useEditorPanelVisibility, useKits, useNavigation, useSketchpad, useSketchpadCommands, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
@@ -190,8 +190,8 @@ const Search: FC = ({}) => {
 const PanelToggles: FC = ({}) => {
   const editorType = useEditorType();
   const panelConfig = PANEL_CONFIGS[editorType];
-  const visiblePanels = useSketchpad((s) => s.panelVisibility[editorType]) || {};
-  const { togglePanel } = useSketchpadCommands();
+  const visiblePanels = useEditorPanelVisibility();
+  const { togglePanel } = useEditorCommands();
 
   if (panelConfig.length === 0) return null;
 
@@ -203,11 +203,11 @@ const PanelToggles: FC = ({}) => {
       const exclusivePanels = ["chat", "details", "settings"];
       exclusivePanels.forEach((p) => {
         if (p !== panelKey && visiblePanels[p]) {
-          togglePanel(editorType, p);
+          togglePanel(p as any);
         }
       });
     }
-    togglePanel(editorType, panelKey);
+    togglePanel(panelKey as any);
   };
 
   return (
