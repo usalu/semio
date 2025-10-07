@@ -1059,6 +1059,7 @@ class BenchmarkStore {
 
   snapshot = (): Benchmark => {
     const currentData = {
+      guid: this.guid,
       name: this.name,
       icon: this.icon,
       min: this.min,
@@ -1350,6 +1351,7 @@ class RepresentationStore {
 
   snapshot(): Representation {
     const currentHash = this.hash({
+      guid: this.guid,
       url: this.url,
       description: this.description,
     });
@@ -1359,6 +1361,7 @@ class RepresentationStore {
     }
 
     const representation: Representation = {
+      guid: this.guid,
       url: this.url,
       description: this.description,
     };
@@ -1469,6 +1472,7 @@ class PortStore {
 
   snapshot = (): Port => {
     const currentData = {
+      guid: this.guid,
       id_: this.id_,
       description: this.description,
       family: this.family,
@@ -1872,6 +1876,7 @@ class LayerStore {
 
   snapshot(): Layer {
     const currentHash = this.hash({
+      guid: this.guid,
       path: this.path,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -1884,6 +1889,7 @@ class LayerStore {
     }
 
     const layer: Layer = {
+      guid: this.guid,
       path: this.path,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -2078,6 +2084,7 @@ class PieceStore {
 
   snapshot = (): Piece => {
     const currentData = {
+      guid: this.guid,
       id_: this.localId,
       type: this.type,
       design: this.design,
@@ -2356,6 +2363,7 @@ class GroupStore {
 
   snapshot = (): Group => {
     const currentData = {
+      guid: this.guid,
       pieces: this.pieces,
       color: this.color,
       name: this.name,
@@ -2488,6 +2496,7 @@ class SideStore {
 
   snapshot = (): Side => {
     const currentData = {
+      guid: this.guid,
       piece: this.piece,
       designPiece: this.designPiece,
       port: this.port,
@@ -2645,6 +2654,7 @@ class ConnectionStore {
 
   snapshot = (): Connection => {
     const currentData = {
+      guid: this.guid,
       connected: this.connected.snapshot(),
       connecting: this.connecting.snapshot(),
       gap: this.gap,
@@ -2656,7 +2666,7 @@ class ConnectionStore {
       x: this.x,
       y: this.y,
       description: this.description,
-      attributes: this.attributes.map((attr) => attr.snapshot()),
+      attributes: Array.from(this.attributes.values()).map((attr) => attr.snapshot()),
     };
     const currentHash = this.hash(currentData);
 
@@ -3947,6 +3957,7 @@ class KitStore {
 
   snapshot = (): Kit => {
     const currentData = {
+      guid: this.guid,
       name: this.name,
       version: this.version,
       remote: this.remote,
@@ -3976,6 +3987,7 @@ class KitStore {
 
   change = (diff: KitDiff) => {
     this.yDoc.transact(() => {
+      if (diff.guid) this.guid = diff.guid;
       if (diff.name) this.name = diff.name;
       if (diff.version) this.version = diff.version;
       if (diff.remote) this.remote = diff.remote;
@@ -4082,13 +4094,16 @@ class KitStore {
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    console.group(`Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit store`);
     const context: KitCommandContext = {
       kit: this.snapshot(),
       fileUrls: this.fileUrls,
     };
+    console.log("Context:", context);
     const result = callback(context, ...rest);
+    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
@@ -4098,6 +4113,7 @@ class KitStore {
         this.regularFiles.set(file.name, objectUrl);
       });
     }
+    console.groupEnd();
     return result as T;
   }
 
@@ -4130,14 +4146,14 @@ const kitCommands = {
       diff: { authors: { added: [author] } },
     };
   },
-  "semio.kit.updateAuthor": (context: KitCommandContext, authorId: AuthorId, authorDiff: AuthorDiff): KitCommandResult => {
+  "semio.kit.updateAuthor": (context: KitCommandContext, guid: Guid, diff: AuthorDiff): KitCommandResult => {
     return {
-      diff: { authors: { updated: [{ id: authorId, diff: authorDiff }] } },
+      diff: { authors: { updated: [{ id: guid, diff: diff }] } },
     };
   },
-  "semio.kit.deleteAuthor": (context: KitCommandContext, authorId: AuthorId): KitCommandResult => {
+  "semio.kit.deleteAuthor": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { authors: { removed: [authorId] } },
+      diff: { authors: { removed: [guid] } },
     };
   },
   "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
@@ -4145,14 +4161,14 @@ const kitCommands = {
       diff: { types: { added: [type] } },
     };
   },
-  "semio.kit.updateType": (context: KitCommandContext, typeId: TypeId, typeDiff: TypeDiff): KitCommandResult => {
+  "semio.kit.updateType": (context: KitCommandContext, guid: Guid, diff: TypeDiff): KitCommandResult => {
     return {
-      diff: { types: { updated: [{ id: typeId, diff: typeDiff }] } },
+      diff: { types: { updated: [{ id: guid, diff: diff }] } },
     };
   },
-  "semio.kit.deleteType": (context: KitCommandContext, typeId: TypeId): KitCommandResult => {
+  "semio.kit.deleteType": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { types: { removed: [typeId] } },
+      diff: { types: { removed: [guid] } },
     };
   },
   "semio.kit.createDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
@@ -4160,14 +4176,14 @@ const kitCommands = {
       diff: { designs: { added: [design] } },
     };
   },
-  "semio.kit.updateDesign": (context: KitCommandContext, designId: DesignId, designDiff: DesignDiff): KitCommandResult => {
+  "semio.kit.updateDesign": (context: KitCommandContext, guid: Guid, diff: DesignDiff): KitCommandResult => {
     return {
-      diff: { designs: { updated: [{ id: designId, diff: designDiff }] } },
+      diff: { designs: { updated: [{ id: guid, diff: diff }] } },
     };
   },
-  "semio.kit.deleteDesign": (context: KitCommandContext, designId: DesignId): KitCommandResult => {
+  "semio.kit.deleteDesign": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { designs: { removed: [designId] } },
+      diff: { designs: { removed: [guid] } },
     };
   },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
@@ -4448,13 +4464,13 @@ const kitCommands = {
     })();
     return { diff: {} };
   },
-  "semio.kit.addPiece": (context: KitCommandContext, designId: DesignId, piece: Piece): KitCommandResult => {
+  "semio.kit.addPiece": (context: KitCommandContext, guid: Guid, piece: Piece): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
+              id: guid,
               diff: { pieces: { added: [piece] } },
             },
           ],
@@ -4462,13 +4478,13 @@ const kitCommands = {
       },
     };
   },
-  "semio.kit.addPieces": (context: KitCommandContext, designId: DesignId, pieces: Piece[]): KitCommandResult => {
+  "semio.kit.addPieces": (context: KitCommandContext, guid: Guid, pieces: Piece[]): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
+              id: guid,
               diff: { pieces: { added: pieces } },
             },
           ],
@@ -4476,41 +4492,41 @@ const kitCommands = {
       },
     };
   },
-  "semio.kit.removePiece": (context: KitCommandContext, designId: DesignId, pieceId: PieceId): KitCommandResult => {
+  "semio.kit.removePiece": (context: KitCommandContext, guid: Guid, piece: Guid): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
-              diff: { pieces: { removed: [pieceId] } },
+              id: guid,
+              diff: { pieces: { removed: [piece] } },
             },
           ],
         },
       },
     };
   },
-  "semio.kit.removePieces": (context: KitCommandContext, designId: DesignId, pieceIds: PieceId[]): KitCommandResult => {
+  "semio.kit.removePieces": (context: KitCommandContext, guid: Guid, pieces: Guid[]): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
-              diff: { pieces: { removed: pieceIds } },
+              id: guid,
+              diff: { pieces: { removed: pieces } },
             },
           ],
         },
       },
     };
   },
-  "semio.kit.addConnection": (context: KitCommandContext, designId: DesignId, connection: Connection): KitCommandResult => {
+  "semio.kit.addConnection": (context: KitCommandContext, guid: Guid, connection: Connection): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
+              id: guid,
               diff: { connections: { added: [connection] } },
             },
           ],
@@ -4518,13 +4534,13 @@ const kitCommands = {
       },
     };
   },
-  "semio.kit.addConnections": (context: KitCommandContext, designId: DesignId, connections: Connection[]): KitCommandResult => {
+  "semio.kit.addConnections": (context: KitCommandContext, guid: Guid, connections: Connection[]): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
+              id: guid,
               diff: { connections: { added: connections } },
             },
           ],
@@ -4532,28 +4548,28 @@ const kitCommands = {
       },
     };
   },
-  "semio.kit.removeConnection": (context: KitCommandContext, designId: DesignId, connectionId: ConnectionId): KitCommandResult => {
+  "semio.kit.removeConnection": (context: KitCommandContext, guid: Guid, connection: Guid): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
-              diff: { connections: { removed: [connectionId] } },
+              id: guid,
+              diff: { connections: { removed: [connection] } },
             },
           ],
         },
       },
     };
   },
-  "semio.kit.removeConnections": (context: KitCommandContext, designId: DesignId, connectionIds: ConnectionId[]): KitCommandResult => {
+  "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connections: Guid[]): KitCommandResult => {
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: designId,
-              diff: { connections: { removed: connectionIds } },
+              id: guid,
+              diff: { connections: { removed: connections } },
             },
           ],
         },
@@ -4568,11 +4584,11 @@ export const KitScopeProvider = (props: { guid: string; children: React.ReactNod
   const value = { guid: props.guid };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
-const useKitStoreScope = () => useContext(KitScopeContext);
+const useKitScope = () => useContext(KitScopeContext);
 
 function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore {
   const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
+  const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? guid;
   if (!kitGuid) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with a guid");
   if (!store.hasKit(kitGuid)) throw new Error(`Kit store not found for kit ${kitGuid}`);
@@ -4580,11 +4596,11 @@ function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | K
   return selector ? selector(kitStore) : kitStore;
 }
 
-export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, deep: boolean = false): T | KitShallow | Kit {
+export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, deep: boolean = false): T | KitShallow | Kit {
   if (deep) {
-    return useSyncDeep<Kit, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
+    return useSyncDeep<Kit, T>(useKitStore(identitySelector, guid) as KitStore, selector ? selector : identitySelector);
   }
-  return useSync<KitShallow, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
+  return useSync<KitShallow, T>(useKitStore(identitySelector, guid) as KitStore, selector ? selector : identitySelector, deep);
 }
 
 export function useDiffedKit(): Kit {
@@ -4610,23 +4626,23 @@ export function useKitCommands() {
     updateAuthor: (authorId: AuthorId, authorDiff: AuthorDiff) => store.execute("semio.kit.updateAuthor", authorId, authorDiff),
     deleteAuthor: (authorId: AuthorId) => store.execute("semio.kit.deleteAuthor", authorId),
     createType: (type: Type) => store.execute("semio.kit.createType", type),
-    updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kit.updateType", typeId, typeDiff),
-    deleteType: (typeId: TypeId) => store.execute("semio.kit.deleteType", typeId),
+    updateType: (guid: Guid, diff: TypeDiff) => store.execute("semio.kit.updateType", guid, diff),
+    deleteType: (guid: Guid) => store.execute("semio.kit.deleteType", guid),
     createDesign: (design: Design) => store.execute("semio.kit.createDesign", design),
-    updateDesign: (designId: DesignId, designDiff: DesignDiff) => store.execute("semio.kit.updateDesign", designId, designDiff),
-    deleteDesign: (designId: DesignId) => store.execute("semio.kit.deleteDesign", designId),
+    updateDesign: (guid: Guid, diff: DesignDiff) => store.execute("semio.kit.updateDesign", guid, diff),
+    deleteDesign: (guid: Guid) => store.execute("semio.kit.deleteDesign", guid),
     addFile: (file: SemioFile, blob?: Blob) => store.execute("semio.kit.addFile", file, blob),
     updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => store.execute("semio.kit.updateFile", url, fileDiff, blob),
     removeFile: (url: Url) => store.execute("semio.kit.removeFile", url),
-    addPiece: (designId: DesignId, piece: Piece) => store.execute("semio.kit.addPiece", designId, piece),
-    addPieces: (designId: DesignId, pieces: Piece[]) => store.execute("semio.kit.addPieces", designId, pieces),
-    removePiece: (designId: DesignId, pieceId: PieceId) => store.execute("semio.kit.removePiece", designId, pieceId),
-    removePieces: (designId: DesignId, pieceIds: PieceId[]) => store.execute("semio.kit.removePieces", designId, pieceIds),
-    addConnection: (designId: DesignId, connection: Connection) => store.execute("semio.kit.addConnection", designId, connection),
-    addConnections: (designId: DesignId, connections: Connection[]) => store.execute("semio.kit.addConnections", designId, connections),
-    removeConnection: (designId: DesignId, connectionId: ConnectionId) => store.execute("semio.kit.removeConnection", designId, connectionId),
-    removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => store.execute("semio.kit.removeConnections", designId, connectionIds),
-    deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => store.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
+    addPiece: (design: Guid, piece: Piece) => store.execute("semio.kit.addPiece", design, piece),
+    addPieces: (design: Guid, pieces: Piece[]) => store.execute("semio.kit.addPieces", design, pieces),
+    removePiece: (design: Guid, piece: Guid) => store.execute("semio.kit.removePiece", design, piece),
+    removePieces: (design: Guid, pieces: Guid[]) => store.execute("semio.kit.removePieces", design, pieces),
+    addConnection: (design: Guid, connection: Connection) => store.execute("semio.kit.addConnection", design, connection),
+    addConnections: (design: Guid, connections: Connection[]) => store.execute("semio.kit.addConnections", design, connections),
+    removeConnection: (design: Guid, connection: Guid) => store.execute("semio.kit.removeConnection", design, connection),
+    removeConnections: (design: Guid, connections: Guid[]) => store.execute("semio.kit.removeConnections", design, connections),
+    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => store.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
   };
 }
 
@@ -4915,7 +4931,7 @@ abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelecti
 
 type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitEditor = Y.Map<YKitEditorVal>;
-type YKitEditors = Y.Array<YKitEditor>;
+type YKitEditors = Y.Map<string, YKitEditor>;
 
 export interface KitEditorId {
   kit: KitId;
@@ -5089,12 +5105,6 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     return this.parent.kit(this.yMap.get("kit") as string);
   }
 
-  id(): KitEditorId {
-    return {
-      kit: this.kit().id(),
-    } as KitEditorId;
-  }
-
   // Implement abstract methods from Editor base class
   protected getSelection(): KitEditorSelection {
     return this.selection;
@@ -5180,6 +5190,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
   }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    console.group(`Executing command: "${command}"`);
     if (command === "semio.kitEditor.startTransaction") {
       this.startTransaction();
       return {} as T;
@@ -5206,25 +5217,23 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 
     const kitStore = this.kit();
     const state = this.snapshot();
-    const kitState = kitStore.snapshot();
 
     const context: KitEditorCommandContext = {
       kitEditor: state,
-      kit: kitState,
+      kit: kitStore.snapshot(),
       fileUrls: kitStore.fileUrls,
     };
+    console.log("Context:", context);
     const result = callback(context, ...rest);
-
+    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
     if (result.kitDiff) {
       kitStore.change(result.kitDiff);
     }
-
-    // Use base class recordEdit method
     this.recordEdit(state, result);
-
+    console.groupEnd();
     return result as T;
   }
 
@@ -5495,17 +5504,9 @@ const kitEditorCommands = {
   },
 };
 
-type KitEditorScope = { id: string };
-const KitEditorScopeContext = createContext<KitEditorScope | null>(null);
-export const KitEditorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(KitEditorScopeContext.Provider, { value }, props.children as any);
-};
-const useKitEditorScope = () => useContext(KitEditorScopeContext);
-
 function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore {
   const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
+  const kitScope = useKitScope();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   if (!resolvedKitId) throw new Error("useKitEditorStore must be called within a KitScopeProvider or be directly provided with an id");
   const kitEditorStore = store.kitEditor({ kit: resolvedKitId });
@@ -5571,7 +5572,7 @@ export function useKitEditorCommands() {
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Array<YDesignEditor>;
+type YDesignEditors = Y.Map<string, Y.Map<string, YDesignEditor>>;
 
 export interface DesignEditorSelection {
   pieces?: Guid[];
@@ -5910,6 +5911,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    console.group(`Executing command: "${command}"`);
     if (command === "semio.designEditor.startTransaction") {
       this.startTransaction();
       return {} as T;
@@ -5944,17 +5946,17 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       designId: this.design().guid,
       fileUrls: kitStore.fileUrls,
     };
+    console.log("Context:", context);
     const result = callback(context, ...rest);
-
+    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
     if (result.kitDiff) {
       kitStore.change(result.kitDiff);
     }
-
     this.recordEdit(state, result);
-
+    console.groupEnd();
     return result as T;
   }
 
@@ -6325,7 +6327,7 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
   const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
+  const kitScope = useKitScope();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   if (!resolvedKitId) throw new Error("useDesignEditorStore must be called within a KitScopeProvider or be directly provided with an id");
   const designScope = useDesignScope();
@@ -6379,15 +6381,15 @@ export function useDesignEditorCommands() {
     toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
     addPiece: (piece: Piece) => store.execute("semio.designEditor.addPiece", piece),
     addPieces: (pieces: Piece[]) => store.execute("semio.designEditor.addPieces", pieces),
-    removePiece: (pieceId: PieceId) => store.execute("semio.designEditor.removePiece", pieceId),
-    removePieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.removePieces", pieceIds),
+    removePiece: (piece: Guid) => store.execute("semio.designEditor.removePiece", piece),
+    removePieces: (pieces: Guid[]) => store.execute("semio.designEditor.removePieces", pieces),
     addConnection: (connection: Connection) => store.execute("semio.designEditor.addConnection", connection),
     addConnections: (connections: Connection[]) => store.execute("semio.designEditor.addConnections", connections),
-    removeConnection: (connectionId: ConnectionId) => store.execute("semio.designEditor.removeConnection", connectionId),
-    removeConnections: (connectionIds: ConnectionId[]) => store.execute("semio.designEditor.removeConnections", connectionIds),
-    updatePiece: (pieceId: PieceId, pieceDiff: PieceDiff) => store.execute("semio.designEditor.updatePiece", pieceId, pieceDiff),
+    removeConnection: (connection: Guid) => store.execute("semio.designEditor.removeConnection", connection),
+    removeConnections: (connections: Guid[]) => store.execute("semio.designEditor.removeConnections", connections),
+    updatePiece: (piece: Guid, pieceDiff: PieceDiff) => store.execute("semio.designEditor.updatePiece", piece, pieceDiff),
     updatePieces: (updates: { id: PieceId; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
-    updateConnection: (connectionId: ConnectionId, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connectionId, connectionDiff),
+    updateConnection: (connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connection, connectionDiff),
     updateConnections: (updates: { id: ConnectionId; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
@@ -6430,7 +6432,6 @@ export interface SketchpadChangableState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
-  activeDesignEditor?: DesignEditorId;
   panelVisibility: {
     [EditorType.HOME]: PanelVisibility;
     [EditorType.KIT]: PanelVisibility;
@@ -6450,7 +6451,6 @@ export interface SketchpadDiff {
   mode?: Mode;
   theme?: Theme;
   layout?: Layout;
-  activeDesignEditor?: DesignEditorId;
   panelVisibility?: {
     [EditorType.HOME]?: PanelVisibility;
     [EditorType.KIT]?: PanelVisibility;
@@ -6477,7 +6477,7 @@ class SketchpadStore {
   private readonly yKitEditors: YKitEditors;
   private readonly kitEditors: Map<string, KitEditorStore>;
   private readonly yDesignEditors: YDesignEditors;
-  private readonly designEditors: Map<string, DesignEditorStore>;
+  private readonly designEditors: Map<string, Map<string, DesignEditorStore>>;
   private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
@@ -6536,8 +6536,8 @@ class SketchpadStore {
     // }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
-    this.yKitEditors = this.yDoc.getArray("kitEditors");
-    this.yDesignEditors = this.yDoc.getArray("designEditors");
+    this.yKitEditors = this.yDoc.getMap("kitEditors");
+    this.yDesignEditors = this.yDoc.getMap("designEditors");
     this.yDoc.transact(() => {
       this.ySketchpad.set("navigation", "/");
       this.ySketchpad.set("mode", Mode.GUEST);
@@ -6640,10 +6640,10 @@ class SketchpadStore {
     //   throw new Error(`Kit editor (${id.kit.name}, ${id.kit.version || ""}) already exists.`);
     // }
     this.yDoc.transact(() => {
-      const yKitEditor = new Y.Map<YKitEditorVal>();
-      this.yKitEditors.push([yKitEditor]);
-      const kitEditor = new KitEditorStore(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), id);
       const kitStore = this.kit(id.kit);
+      const yKitEditor = new Y.Map<YKitEditorVal>();
+      this.yKitEditors.set(kitStore.guid, yKitEditor);
+      const kitEditor = new KitEditorStore(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), id);
       this.kitEditors.set(kitStore.guid, kitEditor);
     });
     this.kitEditorCreatedSubscribers.forEach((subscriber) => subscriber());
@@ -6654,12 +6654,25 @@ class SketchpadStore {
       throw new Error(`Design editor (${id.kit.name}, ${id.kit.version || ""}, ${id.design.name}, ${id.design.variant || ""}, ${id.design.view || ""}) already exists.`);
     }
     this.yDoc.transact(() => {
-      const yDesignEditor = new Y.Map<YDesignEditorVal>();
-      this.yDesignEditors.push([yDesignEditor]);
-      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), id);
       const kitStore = this.kit(id.kit);
       const designStore = kitStore.design(id.design);
-      this.designEditors.set(`${kitStore.guid}:${designStore.guid}`, designEditor);
+
+      // Ensure Y.js nested map exists
+      if (!this.yDesignEditors.has(kitStore.guid)) {
+        this.yDesignEditors.set(kitStore.guid, new Y.Map<string, YDesignEditor>());
+      }
+      const yKitMap = this.yDesignEditors.get(kitStore.guid) as Y.Map<string, YDesignEditor>;
+
+      const yDesignEditor = new Y.Map<YDesignEditorVal>();
+      yKitMap.set(designStore.guid, yDesignEditor);
+
+      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), id);
+
+      // Ensure in-memory nested map exists
+      if (!this.designEditors.has(kitStore.guid)) {
+        this.designEditors.set(kitStore.guid, new Map());
+      }
+      this.designEditors.get(kitStore.guid)!.set(designStore.guid, designEditor);
     });
     this.designEditorCreatedSubscribers.forEach((subscriber) => subscriber());
   };
@@ -6694,40 +6707,39 @@ class SketchpadStore {
   };
 
   deleteKitEditor = (id: KitEditorId) => {
-    const kitEditorStore = Array.from(this.kitEditors.entries()).find(([_, k]) => areSameKitEditor(k.id(), id));
-    if (kitEditorStore) {
-      const [guid, editor] = kitEditorStore;
-      this.kitEditors.delete(guid);
-      const index = Array.from(this.yKitEditors.toArray()).findIndex((y) => {
-        const yMap = y as Y.Map<any>;
-        return yMap.get("kit") === guid;
+    const kitStore = this.kit(id.kit);
+    const kitEditor = this.kitEditors.get(kitStore.guid);
+    if (kitEditor) {
+      this.kitEditors.delete(kitStore.guid);
+      this.yDoc.transact(() => {
+        this.yKitEditors.delete(kitStore.guid);
       });
-      if (index !== -1) {
-        this.yDoc.transact(() => {
-          this.yKitEditors.delete(index, 1);
-        });
-      }
       this.kitEditorDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
   deleteDesignEditor = (id: DesignEditorId) => {
-    const designEditorStore = Array.from(this.designEditors.entries()).find(([_, d]) => areSameDesignEditor(d.id(), id));
-    if (designEditorStore) {
-      const [guid, editor] = designEditorStore;
-      this.designEditors.delete(guid);
-      const index = Array.from(this.yDesignEditors.toArray()).findIndex((y) => {
-        const yMap = y as Y.Map<any>;
-        const kitGuid = yMap.get("kit");
-        const designGuid = yMap.get("design");
-        return guid === `${kitGuid}:${designGuid}`;
-      });
-      if (index !== -1) {
+    const kitStore = this.kit(id.kit);
+    const designStore = kitStore.design(id.design);
+    const kitMap = this.designEditors.get(kitStore.guid);
+    if (kitMap) {
+      const designEditor = kitMap.get(designStore.guid);
+      if (designEditor) {
+        kitMap.delete(designStore.guid);
+        if (kitMap.size === 0) {
+          this.designEditors.delete(kitStore.guid);
+        }
         this.yDoc.transact(() => {
-          this.yDesignEditors.delete(index, 1);
+          const yKitMap = this.yDesignEditors.get(kitStore.guid) as Y.Map<string, YDesignEditor> | undefined;
+          if (yKitMap) {
+            yKitMap.delete(designStore.guid);
+            if (yKitMap.size === 0) {
+              this.yDesignEditors.delete(kitStore.guid);
+            }
+          }
         });
+        this.designEditorDeletedSubscribers.forEach((subscriber) => subscriber());
       }
-      this.designEditorDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
@@ -6782,6 +6794,7 @@ class SketchpadStore {
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    console.group(`Executing command: "${command}"`);
     if (command === "semio.sketchpad.createKit") {
       const kit = rest[0] as Kit;
       this.createKit(kit);
@@ -6811,10 +6824,13 @@ class SketchpadStore {
     const context: SketchpadCommandContext = {
       sketchpad: this.snapshot(),
     };
+    console.log("Context:", context);
     const result = callback(context, ...rest);
+    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
+    console.groupEnd();
     return result as T;
   }
 
@@ -6846,7 +6862,7 @@ class SketchpadStore {
 
   kitShallows(): KitShallow[] {
     const currentKits = Array.from(this.kits.values()).map((k) => k.snapshot() as KitShallow);
-    const currentHash = JSON.stringify(currentKits.map((k) => [k.name, k.version, k.description]));
+    const currentHash = JSON.stringify(currentKits);
 
     if (!this.kitShallowsCache || this.kitShallowsCacheHash !== currentHash) {
       this.kitShallowsCache = currentKits;
@@ -6872,18 +6888,26 @@ class SketchpadStore {
   }
 
   hasDesignEditor(designEditor: DesignEditorId): boolean {
+    const allDesignEditors: DesignEditorStore[] = [];
+    for (const kitMap of this.designEditors.values()) {
+      allDesignEditors.push(...Array.from(kitMap.values()));
+    }
     return hasSameDesignEditor(
       designEditor,
-      Array.from(this.designEditors.values()).map((designEditor) => designEditor.id()),
+      allDesignEditors.map((designEditor) => designEditor.id()),
     );
   }
 
-  designEditor(guid: string): DesignEditorStore {
-    return this.designEditors.get(guid)!;
+  designEditor(kitGuid: string, designGuid: string): DesignEditorStore {
+    return this.designEditors.get(kitGuid)?.get(designGuid)!;
   }
 
   designEditorIds(): DesignEditorId[] {
-    return Array.from(this.designEditors.values()).map((d) => d.id());
+    const allDesignEditors: DesignEditorStore[] = [];
+    for (const kitMap of this.designEditors.values()) {
+      allDesignEditors.push(...Array.from(kitMap.values()));
+    }
+    return allDesignEditors.map((d) => d.id());
   }
 }
 
@@ -6988,9 +7012,9 @@ export function useSketchpadCommands() {
     createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
     createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-    navigateToKit: (guid: Guid) => navigate(`/k/${guid}`),
-    navigateToDesign: (guid: Guid) => navigate(`/d/${guid}`),
-    navigateToType: (guid: Guid) => navigate(`/t/${guid}`),
+    navigateToKit: (kit: Guid) => navigate(`/${kit}`),
+    navigateToDesign: (kit: Guid, design: Guid) => navigate(`/${kit}/d/${design}`),
+    navigateToType: (kit: Guid, type: Guid) => navigate(`/${kit}/t/${type}`),
     togglePanel: (editorType: EditorType, panelKey: string) => {
       const current = store.snapshot().panelVisibility[editorType] || {};
       store.change({

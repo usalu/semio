@@ -4,6 +4,7 @@ import { useKit, useKitCommands, useSketchpadCommands } from "../../../store";
 
 import { Tambour } from "@semio/assets";
 import { Button } from "../Button";
+import { Input } from "../Input";
 
 const KitEditor: FC = () => {
   const kit = useKit();
@@ -40,7 +41,7 @@ const KitEditor: FC = () => {
 
   return (
     <div>
-      <Input label="Kit Name" value={Kit.name} disabled />
+      <Input label="Kit Name" value={kit.name} disabled />
       <Input label="Version" value="1.0.0" disabled />
       <Button onClick={onPopulateKit}>Populate Kit</Button>
     </div>
