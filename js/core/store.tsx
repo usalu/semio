@@ -1804,6 +1804,295 @@ export function usePortColoredTypes(): Type[] {
 
 // #endregion Type
 
+// #region Type Editor
+
+type YTypeEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YTypeEditor = Y.Map<YTypeEditorVal>;
+type YTypeEditors = Y.Map<string, YTypeEditor>;
+
+export interface TypeEditorId {
+  type: TypeId;
+}
+export interface TypeEditorSelection {
+  ports?: PortId[];
+  representations?: RepresentationId[];
+}
+export interface TypeEditorSelectionPortsDiff {
+  added?: PortId[];
+  removed?: PortId[];
+}
+export interface TypeEditorSelectionRepresentationsDiff {
+  added?: RepresentationId[];
+  removed?: RepresentationId[];
+}
+export interface TypeEditorSelectionDiff {
+  ports?: TypeEditorSelectionPortsDiff;
+  representations?: TypeEditorSelectionRepresentationsDiff;
+}
+export enum TypeEditorFullscreenPanel {
+  None = "none",
+  Ports = "ports",
+  Representations = "representations",
+}
+export interface TypeEditorPresence {
+  cursor?: Coord;
+  camera?: Camera;
+}
+export interface TypeEditorHover {
+  port?: PortId;
+  representation?: RepresentationId;
+}
+export interface TypeEditorPresenceOther extends TypeEditorPresence {
+  name: string;
+}
+export interface TypeEditorDiff {
+  selection?: TypeEditorSelectionDiff;
+  presence?: TypeEditorPresence;
+  hover?: TypeEditorHover;
+  fullscreenPanel?: TypeEditorFullscreenPanel;
+  panelVisibility?: Partial<PanelVisibility>;
+}
+export interface TypeEditorStep {
+  typeDiff?: TypeDiff;
+  selectionDiff?: TypeEditorSelectionDiff;
+}
+export interface TypeEditorEdit {
+  do: TypeEditorStep;
+  undo: TypeEditorStep;
+}
+export interface TypeEditorState {
+  fullscreenPanel: TypeEditorFullscreenPanel;
+  panelVisibility: PanelVisibility;
+  selection?: TypeEditorSelection;
+  hover?: TypeEditorHover;
+  presence?: TypeEditorPresence;
+  others: TypeEditorPresenceOther[];
+}
+
+export interface TypeEditorCommandContext extends KitCommandContext {
+  typeEditor: TypeEditorState;
+  typeId: TypeId;
+}
+export interface TypeEditorCommandResult {
+  diff?: TypeEditorDiff;
+  typeDiff?: TypeDiff;
+}
+
+function inverseTypeEditorSelectionDiff(selection: TypeEditorSelection, diff: TypeEditorSelectionDiff): TypeEditorSelectionDiff {
+  const inverse: TypeEditorSelectionDiff = {};
+  if (diff.ports) {
+    inverse.ports = {
+      added: diff.ports.removed ?? [],
+      removed: diff.ports.added ?? [],
+    };
+  }
+  if (diff.representations) {
+    inverse.representations = {
+      added: diff.representations.removed ?? [],
+      removed: diff.representations.added ?? [],
+    };
+  }
+  return inverse;
+}
+
+class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult> {
+  private readonly typeId: TypeId;
+
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, typeId: TypeId) {
+    super(parent, yMap, parent.transact.bind(parent));
+    this.typeId = typeId;
+
+    if (!yMap.has("fullscreenPanel")) {
+      yMap.set("fullscreenPanel", TypeEditorFullscreenPanel.None);
+    }
+  }
+
+  type(): TypeStore {
+    return this.parent.kit(this.typeId.kit).type(this.typeId);
+  }
+
+  kit(): KitStore {
+    return this.parent.kit(this.typeId.kit);
+  }
+
+  // TypeEditor-specific getters
+  get fullscreenPanel(): TypeEditorFullscreenPanel {
+    return this.yMap.get("fullscreenPanel") as TypeEditorFullscreenPanel;
+  }
+
+  get panelVisibility(): PanelVisibility {
+    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+    if (!yPanelVisibility) {
+      return {
+        workbench: true,
+        details: true,
+        console: true,
+        chat: true,
+        settings: true,
+      };
+    }
+    return {
+      workbench: yPanelVisibility.get("workbench") ?? true,
+      details: yPanelVisibility.get("details") ?? true,
+      console: yPanelVisibility.get("console") ?? true,
+      chat: yPanelVisibility.get("chat") ?? true,
+      settings: yPanelVisibility.get("settings") ?? true,
+    };
+  }
+
+  get selection(): TypeEditorSelection {
+    const selection = this.yMap.get("selection") as Y.Map<any>;
+    if (!selection) return {};
+
+    const result: TypeEditorSelection = {};
+
+    const ports = selection.get("ports") as Y.Array<string>;
+    if (ports) {
+      result.ports = ports.toArray();
+    }
+
+    const representations = selection.get("representations") as Y.Array<string>;
+    if (representations) {
+      result.representations = representations.toArray();
+    }
+
+    return result;
+  }
+
+  get hover(): TypeEditorHover | undefined {
+    const hover = this.yMap.get("hover") as Y.Map<string>;
+    if (!hover) return undefined;
+
+    const result: TypeEditorHover = {};
+    const port = hover.get("port");
+    if (port) result.port = port;
+    const representation = hover.get("representation");
+    if (representation) result.representation = representation;
+
+    return result;
+  }
+
+  get presence(): TypeEditorPresence | undefined {
+    return undefined;
+  }
+
+  get others(): TypeEditorPresenceOther[] {
+    return [];
+  }
+
+  protected hash(state: TypeEditorState): string {
+    return JSON.stringify(state);
+  }
+
+  protected buildSnapshot(): TypeEditorState {
+    return {
+      fullscreenPanel: this.fullscreenPanel,
+      panelVisibility: this.panelVisibility,
+      selection: this.selection,
+      isTransactionActive: this.isTransactionActive,
+      canUndo: this.canUndo(),
+      canRedo: this.canRedo(),
+      presence: this.presence,
+      others: this.others,
+      diff: this.diff,
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
+    } as any;
+  }
+
+  protected inverseSelectionDiff(selection: TypeEditorSelection, diff: TypeEditorSelectionDiff): TypeEditorSelectionDiff {
+    return inverseTypeEditorSelectionDiff(selection, diff);
+  }
+
+  protected applySelectionDiff = (selectionDiff: TypeEditorSelectionDiff) => {
+    let selection = this.yMap.get("selection") as Y.Map<any>;
+    if (!selection) {
+      selection = new Y.Map();
+      this.yMap.set("selection", selection);
+    }
+
+    if (selectionDiff.ports) {
+      let yPorts = selection.get("ports") as Y.Array<string>;
+      if (!yPorts) {
+        yPorts = new Y.Array<string>();
+        selection.set("ports", yPorts);
+      }
+
+      if (selectionDiff.ports.removed) {
+        for (const portId of selectionDiff.ports.removed) {
+          const index = yPorts.toArray().indexOf(portId);
+          if (index >= 0) yPorts.delete(index, 1);
+        }
+      }
+
+      if (selectionDiff.ports.added) {
+        for (const portId of selectionDiff.ports.added) {
+          if (!yPorts.toArray().includes(portId)) {
+            yPorts.push([portId]);
+          }
+        }
+      }
+    }
+
+    if (selectionDiff.representations) {
+      let yRepresentations = selection.get("representations") as Y.Array<string>;
+      if (!yRepresentations) {
+        yRepresentations = new Y.Array<string>();
+        selection.set("representations", yRepresentations);
+      }
+
+      if (selectionDiff.representations.removed) {
+        for (const repId of selectionDiff.representations.removed) {
+          const index = yRepresentations.toArray().indexOf(repId);
+          if (index >= 0) yRepresentations.delete(index, 1);
+        }
+      }
+
+      if (selectionDiff.representations.added) {
+        for (const repId of selectionDiff.representations.added) {
+          if (!yRepresentations.toArray().includes(repId)) {
+            yRepresentations.push([repId]);
+          }
+        }
+      }
+    }
+  };
+
+  protected getSelection(): TypeEditorSelection {
+    return this.selection;
+  }
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) {
+      throw new Error(`Command "${command}" not found`);
+    }
+    const typeEditor = this.snapshot();
+    const kit = this.kit().snapshot();
+    const context: TypeEditorCommandContext = {
+      kit,
+      typeEditor,
+      typeId: this.typeId,
+    };
+    const result = callback(context, ...rest);
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.typeDiff) {
+      // Apply type diff to the type store
+      // This would require implementing change method in TypeStore
+    }
+    this.recordEdit(typeEditor, result);
+    return result as T;
+  }
+
+  async execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand<T>(command, ...rest);
+  }
+}
+
+// #endregion Type Editor
+
 // #region Layer
 
 type YLayer = Y.Map<string | boolean | YAttributes>;
@@ -4665,6 +4954,7 @@ interface EditorDiff<TSelectionDiff = any> {
   presence?: any;
   hover?: any;
   fullscreenPanel?: any;
+  panelVisibility?: Partial<PanelVisibility>;
 }
 
 interface EditorCommandResult<TDiff = any> {
@@ -4741,6 +5031,18 @@ abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelecti
     this.transact(() => {
       if (diff.fullscreenPanel !== undefined) {
         this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      }
+      if (diff.panelVisibility !== undefined) {
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            yPanelVisibility.set(key, value);
+          }
+        });
       }
       if (diff.selection) {
         this.applySelectionDiff(diff.selection);
@@ -4927,6 +5229,146 @@ abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelecti
 
 // #endregion Editor
 
+// #region Home Store
+
+export interface HomeState {
+  panelVisibility: PanelVisibility;
+}
+
+export interface HomeDiff {
+  panelVisibility?: Partial<PanelVisibility>;
+}
+
+export interface HomeCommandContext {
+  home: HomeState;
+}
+
+export interface HomeCommandResult {
+  diff?: HomeDiff;
+}
+
+class HomeStore {
+  public readonly guid: string;
+  public readonly parent: SketchpadStore;
+  public readonly yMap: Y.Map<any>;
+  protected readonly commandRegistry: Map<string, (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult> = new Map();
+  protected readonly transact: (fn: () => void) => void;
+  protected cache?: HomeState;
+  protected cacheHash?: string;
+
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
+    this.guid = guid();
+    this.parent = parent;
+    this.yMap = yMap;
+    this.transact = transact;
+  }
+
+  get panelVisibility(): PanelVisibility {
+    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+    if (!yPanelVisibility) {
+      return {
+        workbench: true,
+        details: true,
+        console: true,
+        chat: true,
+        settings: true,
+      };
+    }
+    return {
+      workbench: yPanelVisibility.get("workbench") ?? true,
+      details: yPanelVisibility.get("details") ?? true,
+      console: yPanelVisibility.get("console") ?? true,
+      chat: yPanelVisibility.get("chat") ?? true,
+      settings: yPanelVisibility.get("settings") ?? true,
+    };
+  }
+
+  protected hash(state: HomeState): string {
+    return JSON.stringify(state);
+  }
+
+  protected buildSnapshot(): HomeState {
+    return {
+      panelVisibility: this.panelVisibility,
+    };
+  }
+
+  snapshot = (): HomeState => {
+    const currentData = this.buildSnapshot();
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  change = (diff: HomeDiff) => {
+    this.transact(() => {
+      if (diff.panelVisibility !== undefined) {
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            yPanelVisibility.set(key, value);
+          }
+        });
+      }
+    });
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yMap, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yMap, subscribe, true);
+  };
+
+  registerCommand(command: string, callback: (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  register(command: string, callback: (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult): Disposable {
+    return this.registerCommand(command, callback);
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) {
+      throw new Error(`Command "${command}" not found`);
+    }
+    const state = this.snapshot();
+    const context: HomeCommandContext = { home: state };
+    const result = callback(context, ...rest);
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    return result as T;
+  }
+
+  async execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand<T>(command, ...rest);
+  }
+}
+
+// #endregion Home Store
+
 // #region Kit Editor
 
 type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
@@ -4984,6 +5426,7 @@ export interface KitEditorEdit {
 }
 export interface KitEditorState {
   fullscreenPanel: KitEditorFullscreenPanel;
+  panelVisibility: PanelVisibility;
   selection?: KitEditorSelection;
   hover?: KitEditorHover;
   presence?: KitEditorPresence;
@@ -5067,6 +5510,26 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     return this.yMap.get("fullscreenPanel") as KitEditorFullscreenPanel;
   }
 
+  get panelVisibility(): PanelVisibility {
+    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+    if (!yPanelVisibility) {
+      return {
+        workbench: true,
+        details: true,
+        console: true,
+        chat: true,
+        settings: true,
+      };
+    }
+    return {
+      workbench: yPanelVisibility.get("workbench") ?? true,
+      details: yPanelVisibility.get("details") ?? true,
+      console: yPanelVisibility.get("console") ?? true,
+      chat: yPanelVisibility.get("chat") ?? true,
+      settings: yPanelVisibility.get("settings") ?? true,
+    };
+  }
+
   get selection(): KitEditorSelection {
     const selection = this.yMap.get("selection") as Y.Map<any>;
     if (!selection) return {};
@@ -5117,6 +5580,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
   protected buildSnapshot(): KitEditorState {
     return {
       fullscreenPanel: this.fullscreenPanel,
+      panelVisibility: this.panelVisibility,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
       canUndo: this.canUndo(),
@@ -5630,6 +6094,7 @@ export interface DesignEditorEdit {
 }
 export interface DesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
+  panelVisibility: PanelVisibility;
   selection?: DesignEditorSelection;
   hover?: DesignEditorHover;
   presence?: DesignEditorPresence;
@@ -5733,6 +6198,25 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
     this.yMap.set("fullscreenPanel", panel);
   }
+  get panelVisibility(): PanelVisibility {
+    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+    if (!yPanelVisibility) {
+      return {
+        workbench: true,
+        details: true,
+        console: true,
+        chat: true,
+        settings: true,
+      };
+    }
+    return {
+      workbench: yPanelVisibility.get("workbench") ?? true,
+      details: yPanelVisibility.get("details") ?? true,
+      console: yPanelVisibility.get("console") ?? true,
+      chat: yPanelVisibility.get("chat") ?? true,
+      settings: yPanelVisibility.get("settings") ?? true,
+    };
+  }
   get selection(): DesignEditorSelection {
     const selection = this.yMap.get("selection") as Y.Map<any>;
     if (!selection) return {};
@@ -5806,6 +6290,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   protected buildSnapshot(): DesignEditorState {
     return {
       fullscreenPanel: this.fullscreenPanel,
+      panelVisibility: this.panelVisibility,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
       canUndo: this.canUndo(),
@@ -6367,14 +6852,14 @@ export function useDesignEditorCommands() {
     redo: () => store.execute("semio.designEditor.redo"),
     selectAll: () => store.execute("semio.designEditor.selectAll"),
     deselectAll: () => store.execute("semio.designEditor.deselectAll"),
-    selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
-    selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
-    addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
-    removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectPiece: (guid: Guid) => store.execute("semio.designEditor.selectPiece", guid),
+    selectPieces: (guids: Guid[]) => store.execute("semio.designEditor.selectPieces", guids),
+    addPieceToSelection: (guid: Guid) => store.execute("semio.designEditor.addPieceToSelection", guid),
+    removePieceFromSelection: (guid: Guid) => store.execute("semio.designEditor.removePieceFromSelection", guid),
     selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
     addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
     removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
-    selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+    selectPiecePort: (piece: Guid, port: Guid) => store.execute("semio.designEditor.selectPiecePort", piece, port),
     deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
     deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
@@ -6388,9 +6873,9 @@ export function useDesignEditorCommands() {
     removeConnection: (connection: Guid) => store.execute("semio.designEditor.removeConnection", connection),
     removeConnections: (connections: Guid[]) => store.execute("semio.designEditor.removeConnections", connections),
     updatePiece: (piece: Guid, pieceDiff: PieceDiff) => store.execute("semio.designEditor.updatePiece", piece, pieceDiff),
-    updatePieces: (updates: { id: PieceId; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
+    updatePieces: (updates: { id: Guid; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
     updateConnection: (connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connection, connectionDiff),
-    updateConnections: (updates: { id: ConnectionId; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
+    updateConnections: (updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }
@@ -6432,12 +6917,6 @@ export interface SketchpadChangableState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
-  panelVisibility: {
-    [EditorType.HOME]: PanelVisibility;
-    [EditorType.KIT]: PanelVisibility;
-    [EditorType.DESIGN]: PanelVisibility;
-    [EditorType.TYPE]: PanelVisibility;
-  };
   editorSettings: EditorSettings;
   panelSizes: PanelSizes;
 }
@@ -6451,12 +6930,6 @@ export interface SketchpadDiff {
   mode?: Mode;
   theme?: Theme;
   layout?: Layout;
-  panelVisibility?: {
-    [EditorType.HOME]?: PanelVisibility;
-    [EditorType.KIT]?: PanelVisibility;
-    [EditorType.DESIGN]?: PanelVisibility;
-    [EditorType.TYPE]?: PanelVisibility;
-  };
   editorSettings?: EditorSettings;
   panelSizes?: Partial<PanelSizes>;
 }
@@ -6474,6 +6947,7 @@ class SketchpadStore {
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Map<string, KitStore>;
+  private readonly yKits: YKits;
   private readonly yKitEditors: YKitEditors;
   private readonly kitEditors: Map<string, KitEditorStore>;
   private readonly yDesignEditors: YDesignEditors;
@@ -6536,6 +7010,7 @@ class SketchpadStore {
     // }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
+    this.yKits = this.yDoc.getArray("kits");
     this.yKitEditors = this.yDoc.getMap("kitEditors");
     this.yDesignEditors = this.yDoc.getMap("designEditors");
     this.yDoc.transact(() => {
@@ -6543,15 +7018,6 @@ class SketchpadStore {
       this.ySketchpad.set("mode", Mode.GUEST);
       this.ySketchpad.set("theme", Theme.SYSTEM);
       this.ySketchpad.set("layout", Layout.NORMAL);
-      this.ySketchpad.set(
-        "panelVisibility",
-        JSON.stringify({
-          [EditorType.HOME]: {},
-          [EditorType.KIT]: { console: false, settings: false },
-          [EditorType.DESIGN]: { workbench: false, details: false, console: false, chat: false, settings: false },
-          [EditorType.TYPE]: { workbench: false, console: false, settings: false },
-        }),
-      );
       this.ySketchpad.set(
         "editorSettings",
         JSON.stringify({
@@ -6582,15 +7048,6 @@ class SketchpadStore {
   };
 
   snapshot = (): SketchpadState => {
-    const panelVisibilityStr = this.ySketchpad.get("panelVisibility") as string;
-    const panelVisibility = panelVisibilityStr
-      ? JSON.parse(panelVisibilityStr)
-      : {
-          [EditorType.HOME]: { chat: false, settings: false },
-          [EditorType.KIT]: { console: false, settings: false },
-          [EditorType.DESIGN]: { workbench: false, details: false, console: false, chat: false, settings: false },
-          [EditorType.TYPE]: { workbench: false, console: false, settings: false },
-        };
     const editorSettingsStr = this.ySketchpad.get("editorSettings") as string;
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
@@ -6614,7 +7071,6 @@ class SketchpadStore {
       mode: this.ySketchpad.get("mode") as Mode,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
-      panelVisibility: panelVisibility,
       editorSettings: editorSettings,
       panelSizes: panelSizes,
     };
@@ -6627,52 +7083,27 @@ class SketchpadStore {
   };
 
   createKit = (kit: Kit) => {
-    // if (this.hasKit(kit)) {
-    //   throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
-    // }
     const kitStore = new KitStore(this, kit, this.yProviderFactory);
     this.kits.set(kit.guid, kitStore);
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  createKitEditor = (id: KitEditorId) => {
-    // if (this.hasKitEditor(id)) {
-    //   throw new Error(`Kit editor (${id.kit.name}, ${id.kit.version || ""}) already exists.`);
-    // }
+  createKitEditor = (kit: Guid) => {
     this.yDoc.transact(() => {
-      const kitStore = this.kit(id.kit);
+      const kitStore = this.kit(kit);
       const yKitEditor = new Y.Map<YKitEditorVal>();
-      this.yKitEditors.set(kitStore.guid, yKitEditor);
-      const kitEditor = new KitEditorStore(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), id);
-      this.kitEditors.set(kitStore.guid, kitEditor);
+      this.yKitEditors.set(kit, yKitEditor);
+      const kitEditor = new KitEditorStore(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), kit);
+      this.kitEditors.set(kit, kitEditor);
     });
     this.kitEditorCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  createDesignEditor = (id: DesignEditorId) => {
-    if (this.hasDesignEditor(id)) {
-      throw new Error(`Design editor (${id.kit.name}, ${id.kit.version || ""}, ${id.design.name}, ${id.design.variant || ""}, ${id.design.view || ""}) already exists.`);
-    }
+  createDesignEditor = (kit: Guid, design: Guid) => {
     this.yDoc.transact(() => {
-      const kitStore = this.kit(id.kit);
-      const designStore = kitStore.design(id.design);
-
-      // Ensure Y.js nested map exists
-      if (!this.yDesignEditors.has(kitStore.guid)) {
-        this.yDesignEditors.set(kitStore.guid, new Y.Map<string, YDesignEditor>());
-      }
-      const yKitMap = this.yDesignEditors.get(kitStore.guid) as Y.Map<string, YDesignEditor>;
-
       const yDesignEditor = new Y.Map<YDesignEditorVal>();
-      yKitMap.set(designStore.guid, yDesignEditor);
-
-      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), id);
-
-      // Ensure in-memory nested map exists
-      if (!this.designEditors.has(kitStore.guid)) {
-        this.designEditors.set(kitStore.guid, new Map());
-      }
-      this.designEditors.get(kitStore.guid)!.set(designStore.guid, designEditor);
+      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), kit, design);
+      this.designEditors.get(kit)?.set(design, designEditor);
     });
     this.designEditorCreatedSubscribers.forEach((subscriber) => subscriber());
   };
@@ -6683,10 +7114,6 @@ class SketchpadStore {
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
-      if (diff.panelVisibility) {
-        const current = JSON.parse((this.ySketchpad.get("panelVisibility") as string) || "{}");
-        this.ySketchpad.set("panelVisibility", JSON.stringify({ ...current, ...diff.panelVisibility }));
-      }
       if (diff.editorSettings) {
         const current = JSON.parse((this.ySketchpad.get("editorSettings") as string) || "{}");
         this.ySketchpad.set("editorSettings", JSON.stringify({ ...current, ...diff.editorSettings }));
@@ -6698,48 +7125,45 @@ class SketchpadStore {
     });
   }
 
-  deleteKit = (id: KitIdLike) => {
-    const kitStore = Array.from(this.kits.values()).find((k) => areSameKit(k.id(), id));
+  deleteKit = (guid: Guid) => {
+    const kitStore = this.kits.get(guid);
     if (kitStore) {
-      this.kits.delete(kitStore.guid);
+      this.yDoc.transact(() => {
+        this.yKits.delete(guid);
+      });
+      this.kits.delete(guid);
       this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
-  deleteKitEditor = (id: KitEditorId) => {
-    const kitStore = this.kit(id.kit);
-    const kitEditor = this.kitEditors.get(kitStore.guid);
+  deleteKitEditor = (kit: Guid) => {
+    const kitEditor = this.kitEditors.get(kit);
     if (kitEditor) {
-      this.kitEditors.delete(kitStore.guid);
+      this.kitEditors.delete(kit);
       this.yDoc.transact(() => {
-        this.yKitEditors.delete(kitStore.guid);
+        this.yKitEditors.delete(kit);
       });
       this.kitEditorDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
-  deleteDesignEditor = (id: DesignEditorId) => {
-    const kitStore = this.kit(id.kit);
-    const designStore = kitStore.design(id.design);
-    const kitMap = this.designEditors.get(kitStore.guid);
-    if (kitMap) {
-      const designEditor = kitMap.get(designStore.guid);
-      if (designEditor) {
-        kitMap.delete(designStore.guid);
-        if (kitMap.size === 0) {
-          this.designEditors.delete(kitStore.guid);
-        }
-        this.yDoc.transact(() => {
-          const yKitMap = this.yDesignEditors.get(kitStore.guid) as Y.Map<string, YDesignEditor> | undefined;
-          if (yKitMap) {
-            yKitMap.delete(designStore.guid);
-            if (yKitMap.size === 0) {
-              this.yDesignEditors.delete(kitStore.guid);
-            }
-          }
-        });
-        this.designEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+  deleteDesignEditor = (kit: Guid, design: Guid) => {
+    const designEditor = this.designEditors.get(kit)?.get(design);
+    if (designEditor) {
+      this.designEditors.get(kit)?.delete(design);
+      if (this.designEditors.get(kit)?.size === 0) {
+        this.designEditors.delete(kit);
       }
+      this.yDoc.transact(() => {
+        const yKitMap = this.yDesignEditors.get(kit) as Y.Map<string, YDesignEditor> | undefined;
+        if (yKitMap) {
+          yKitMap.delete(design);
+          if (yKitMap.size === 0) {
+            this.yDesignEditors.delete(kit);
+          }
+        }
+      });
+      this.designEditorDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 

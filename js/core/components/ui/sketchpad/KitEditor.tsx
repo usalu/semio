@@ -1,15 +1,47 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { Author, Design } from "../../../semio";
 import { useKit, useKitCommands, useSketchpadCommands } from "../../../store";
 
 import { Tambour } from "@semio/assets";
 import { Button } from "../Button";
 import { Input } from "../Input";
+import { TreeItem } from "../Tree";
+import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 
 const KitEditor: FC = () => {
   const kit = useKit();
   const { createDesign, createType, createAuthor } = useKitCommands();
   const { createDesignEditor } = useSketchpadCommands();
+
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+
+  // Add settings section
+  useEffect(() => {
+    addSection("settings", {
+      id: "kit-editor-settings",
+      label: "Kit Editor",
+      order: 0,
+      defaultOpen: true,
+      content: (
+        <>
+          <TreeItem>
+            <Input label="Kit Name" value={kit.name} disabled />
+          </TreeItem>
+          <TreeItem>
+            <Input label="Version" value="1.0.0" disabled />
+          </TreeItem>
+          <TreeItem>
+            <Button onClick={onPopulateKit}>Populate Kit</Button>
+          </TreeItem>
+        </>
+      ),
+    });
+
+    return () => {
+      removeSection("settings", "kit-editor-settings");
+    };
+  }, [kit, addSection, removeSection]);
 
   const onPopulateKit = async () => {
     const author: Author = { guid: "10000000-0000-0000-0000-000000000000", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
@@ -39,13 +71,7 @@ const KitEditor: FC = () => {
     await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
   };
 
-  return (
-    <div>
-      <Input label="Kit Name" value={kit.name} disabled />
-      <Input label="Version" value="1.0.0" disabled />
-      <Button onClick={onPopulateKit}>Populate Kit</Button>
-    </div>
-  );
+  return <div></div>;
 };
 
 export default KitEditor;

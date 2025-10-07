@@ -124,8 +124,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── ui
 │ │ │ │ ├── sketchpad
 │ │ │ │ │ │ ├── Chat.tsx
-│ │ │ │ │ │ ├── Console.tsx
 │ │ │ │ │ │ ├── DesignEditor.tsx
+│ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Diagram.tsx
 │ │ │ │ │ │ ├── Model.tsx
 │ │ │ │ │ │ ├── Navbar.tsx
