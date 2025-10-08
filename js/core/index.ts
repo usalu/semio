@@ -19,8 +19,13 @@
 
 // #endregion
 
+import "./i18n";
+import i18n from "./i18n";
+
+export { default as LanguageSwitcher } from "./components/ui/LanguageSwitcher";
 export { default as Sketchpad } from "./components/ui/sketchpad/Sketchpad";
 export type { YProviderFactory } from "./store";
+export { i18n };
 
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";

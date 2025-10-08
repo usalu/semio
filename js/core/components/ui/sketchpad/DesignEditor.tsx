@@ -23,15 +23,16 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { Slider } from "@radix-ui/react-slider";
 import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
-import { Input } from "postcss";
 import { Design, DesignId, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, parseDesignIdFromVariant, Piece, TypeId } from "../../../semio";
 import { DesignEditorFullscreenPanel, useDesign, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection, useKit, usePieces, useReplacableDesigns, useReplacableTypes, useSketchpad } from "../../../store";
 import Combobox from "../Combobox";
+import { Input } from "../Input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
 import Stepper from "../Stepper";
 import { Textarea } from "../Textarea";
@@ -42,6 +43,7 @@ import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 import { DesignAvatar, TypeAvatar } from "./Workbench";
 
 const DesignSection: FC = () => {
+  const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const design = useDesign() as Design;
 
@@ -63,43 +65,50 @@ const DesignSection: FC = () => {
 
   return (
     <>
-      <TreeSection label="Design" defaultOpen={true}>
+      <TreeSection label={t("design.title")} defaultOpen={true}>
         <TreeItem>
-          <Input label="Name" value={design.name} onChange={(e) => handleChange({ ...design, name: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input label={t("design.name")} value={design.name} onChange={(e) => handleChange({ ...design, name: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
         </TreeItem>
         <TreeItem>
-          <Textarea label="Description" value={design.description || ""} placeholder="Enter design description..." onChange={(e) => handleChange({ ...design, description: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Textarea
+            label={t("design.description")}
+            value={design.description || ""}
+            placeholder={t("design.descriptionPlaceholder")}
+            onChange={(e) => handleChange({ ...design, description: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
+          />
         </TreeItem>
         <TreeItem>
-          <Input label="Icon" value={design.icon || ""} placeholder="Emoji, name, or URL" onChange={(e) => handleChange({ ...design, icon: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input label={t("design.icon")} value={design.icon || ""} placeholder={t("design.iconPlaceholder")} onChange={(e) => handleChange({ ...design, icon: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
         </TreeItem>
         <TreeItem>
-          <Input label="Image URL" value={design.image || ""} placeholder="URL to design image" onChange={(e) => handleChange({ ...design, image: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input label={t("design.image")} value={design.image || ""} placeholder={t("design.imagePlaceholder")} onChange={(e) => handleChange({ ...design, image: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
         </TreeItem>
         <TreeItem>
-          <Input label="Variant" value={design.variant || ""} placeholder="Design variant" onChange={(e) => handleChange({ ...design, variant: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input label={t("design.variant")} value={design.variant || ""} placeholder={t("design.variantPlaceholder")} onChange={(e) => handleChange({ ...design, variant: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
         </TreeItem>
         <TreeItem>
-          <Input label="View" value={design.view || ""} placeholder="Design view" onChange={(e) => handleChange({ ...design, view: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input label={t("design.view")} value={design.view || ""} placeholder={t("design.viewPlaceholder")} onChange={(e) => handleChange({ ...design, view: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
         </TreeItem>
         <TreeItem>
-          <Input label="Unit" value={design.unit} onChange={(e) => handleChange({ ...design, unit: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input label={t("design.unit")} value={design.unit} onChange={(e) => handleChange({ ...design, unit: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
         </TreeItem>
       </TreeSection>
       {design.location ? (
         <TreeSection
-          label="Location"
+          label={t("design.location")}
           actions={[
             {
               icon: <Minus size={12} />,
               onClick: removeLocation,
-              title: "Remove location",
+              title: t("common.remove"),
             },
           ]}
         >
           <TreeItem>
             <Stepper
-              label="Longitude"
+              label={t("design.longitude")}
               value={design.location.longitude}
               onChange={(value) =>
                 handleChange({
@@ -115,7 +124,7 @@ const DesignSection: FC = () => {
           </TreeItem>
           <TreeItem>
             <Stepper
-              label="Latitude"
+              label={t("design.latitude")}
               value={design.location.latitude}
               onChange={(value) =>
                 handleChange({
@@ -132,12 +141,12 @@ const DesignSection: FC = () => {
         </TreeSection>
       ) : (
         <TreeSection
-          label="Location"
+          label={t("design.location")}
           actions={[
             {
               icon: <Plus size={12} />,
               onClick: addLocation,
-              title: "Add location",
+              title: t("common.add"),
             },
           ]}
         ></TreeSection>
@@ -176,10 +185,10 @@ const DesignSection: FC = () => {
             }}
           >
             {(author, index) => (
-              <TreeItem key={`author-${index}`} label={author.name || `Author ${index + 1}`} sortable={true} sortableId={`author-${index}`} isDragHandle={true}>
+              <TreeItem key={`author-${index}`} label={author.name || `${t("design.author")} ${index + 1}`} sortable={true} sortableId={`author-${index}`} isDragHandle={true}>
                 <TreeItem>
                   <Input
-                    label="Name"
+                    label={t("design.authorName")}
                     value={author.name}
                     onChange={(e) => {
                       const updatedAuthors = [...(design.authors || [])];
@@ -195,7 +204,7 @@ const DesignSection: FC = () => {
                 </TreeItem>
                 <TreeItem>
                   <Input
-                    label="Email"
+                    label={t("design.authorEmail")}
                     value={author.email}
                     onChange={(e) => {
                       const updatedAuthors = [...(design.authors || [])];
@@ -220,7 +229,7 @@ const DesignSection: FC = () => {
                       finalizeTransaction();
                     }}
                     className="text-destructive hover:text-destructive/80 p-1"
-                    title="Remove author"
+                    title={t("common.remove")}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -250,7 +259,7 @@ const DesignSection: FC = () => {
       )}
       {design.attributes && design.attributes.length > 0 ? (
         <TreeSection
-          label="Attributes"
+          label={t("design.attributes")}
           actions={[
             {
               icon: <Plus size={12} />,
@@ -285,7 +294,7 @@ const DesignSection: FC = () => {
               <TreeItem key={`attribute-${index}`} label={attribute.key || `Attribute ${index + 1}`} sortable={true} sortableId={`attribute-${index}`} isDragHandle={true}>
                 <TreeItem>
                   <Input
-                    label="Name"
+                    label={t("design.attributeName")}
                     value={attribute.key}
                     onChange={(e) => {
                       const updatedAttributes = [...(design.attributes || [])];
@@ -301,9 +310,9 @@ const DesignSection: FC = () => {
                 </TreeItem>
                 <TreeItem>
                   <Input
-                    label="Value"
+                    label={t("design.attributeValue")}
                     value={attribute.value || ""}
-                    placeholder="Optional value"
+                    placeholder={t("design.attributeValuePlaceholder")}
                     onChange={(e) => {
                       const updatedAttributes = [...(design.attributes || [])];
                       updatedAttributes[index] = {
@@ -318,9 +327,9 @@ const DesignSection: FC = () => {
                 </TreeItem>
                 <TreeItem>
                   <Input
-                    label="Unit"
+                    label={t("design.attributeUnit")}
                     value={attribute.unit || ""}
-                    placeholder="Optional unit"
+                    placeholder={t("design.attributeUnitPlaceholder")}
                     onChange={(e) => {
                       const updatedAttributes = [...(design.attributes || [])];
                       updatedAttributes[index] = {
@@ -335,9 +344,9 @@ const DesignSection: FC = () => {
                 </TreeItem>
                 <TreeItem>
                   <Input
-                    label="Definition"
+                    label={t("design.attributeDefinition")}
                     value={attribute.definition || ""}
-                    placeholder="Optional definition (text or URL)"
+                    placeholder={t("design.attributeDefinitionPlaceholder")}
                     onChange={(e) => {
                       const updatedAttributes = [...(design.attributes || [])];
                       updatedAttributes[index] = {
@@ -372,7 +381,7 @@ const DesignSection: FC = () => {
         </TreeSection>
       ) : (
         <TreeSection
-          label="Attributes"
+          label={t("design.attributes")}
           actions={[
             {
               icon: <Plus size={12} />,
@@ -389,7 +398,7 @@ const DesignSection: FC = () => {
           ]}
         ></TreeSection>
       )}
-      <TreeSection label="Metadata">
+      <TreeSection label={t("design.metadata")}>
         {design.created && (
           <TreeItem>
             <Input label="Created" value={design.created.toISOString().split("T")[0]} disabled />
@@ -870,7 +879,7 @@ const PiecesSection: FC = () => {
         >
           {isSingle && piece && (
             <TreeItem>
-              <Input label="ID" value={getPieceId(piece)} disabled />
+              <Input label={t("piece.id")} value={getPieceId(piece)} disabled />
             </TreeItem>
           )}
 
@@ -925,7 +934,7 @@ const PiecesSection: FC = () => {
             <>
               <TreeItem>
                 <Combobox
-                  label="Type"
+                  label={t("piece.type")}
                   options={availableTypeNames.map((name) => ({
                     value: name,
                     label: name,
@@ -955,21 +964,21 @@ const PiecesSection: FC = () => {
         </TreeSection>
       )}
       {hasCenter && (
-        <TreeSection label="Center">
+        <TreeSection label={t("piece.center")}>
           <TreeItem>
-            <Stepper label="X" value={isSingle && piece ? piece.center?.x : commonCenterX} onChange={handleCenterXChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper label={t("common.x")} value={isSingle && piece ? piece.center?.x : commonCenterX} onChange={handleCenterXChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
           </TreeItem>
           <TreeItem>
-            <Stepper label="Y" value={isSingle && piece ? piece.center?.y : commonCenterY} onChange={handleCenterYChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper label={t("common.y")} value={isSingle && piece ? piece.center?.y : commonCenterY} onChange={handleCenterYChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
           </TreeItem>
         </TreeSection>
       )}
       {hasPlane && (
-        <TreeSection label="Plane">
-          <TreeSection label="Origin" defaultOpen={true}>
+        <TreeSection label={t("piece.plane")}>
+          <TreeSection label={t("piece.origin")} defaultOpen={true}>
             <TreeItem>
               <Stepper
-                label="X"
+                label={t("common.x")}
                 value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
                 onChange={handlePlaneOriginXChange}
                 onPointerDown={startTransaction}
@@ -980,7 +989,7 @@ const PiecesSection: FC = () => {
             </TreeItem>
             <TreeItem>
               <Stepper
-                label="Y"
+                label={t("common.y")}
                 value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
                 onChange={handlePlaneOriginYChange}
                 onPointerDown={startTransaction}
@@ -991,7 +1000,7 @@ const PiecesSection: FC = () => {
             </TreeItem>
             <TreeItem>
               <Stepper
-                label="Z"
+                label={t("common.z")}
                 value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
                 onChange={handlePlaneOriginZChange}
                 onPointerDown={startTransaction}
@@ -1148,22 +1157,46 @@ const ConnectionsSection: FC<{
           <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
         </TreeItem>
       )}
-      <TreeItem label="Plane">
+      <TreeItem label={t("piece.plane")}>
         <TreeItem label="Translation" defaultOpen={true}>
           <TreeItem>
-            <Stepper label="Gap" value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)} onChange={handleGapChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper
+              label={t("connection.gap")}
+              value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
+              onChange={handleGapChange}
+              onPointerDown={startTransaction}
+              onPointerUp={finalizeTransaction}
+              onPointerCancel={abortTransaction}
+              step={0.1}
+            />
           </TreeItem>
           <TreeItem>
-            <Stepper label="Shift" value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)} onChange={handleShiftChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper
+              label={t("connection.shift")}
+              value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
+              onChange={handleShiftChange}
+              onPointerDown={startTransaction}
+              onPointerUp={finalizeTransaction}
+              onPointerCancel={abortTransaction}
+              step={0.1}
+            />
           </TreeItem>
           <TreeItem>
-            <Stepper label="Rise" value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)} onChange={handleRiseChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper
+              label={t("connection.rise")}
+              value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
+              onChange={handleRiseChange}
+              onPointerDown={startTransaction}
+              onPointerUp={finalizeTransaction}
+              onPointerCancel={abortTransaction}
+              step={0.1}
+            />
           </TreeItem>
         </TreeItem>
         <TreeItem label="Orientation">
           <TreeItem>
             <Slider
-              label="Rotation"
+              label={t("connection.rotation")}
               value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
               onValueChange={([value]) => handleRotationChange(value)}
               onPointerDown={startTransaction}
@@ -1176,7 +1209,7 @@ const ConnectionsSection: FC<{
           </TreeItem>
           <TreeItem>
             <Slider
-              label="Turn"
+              label={t("connection.turn")}
               value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
               onValueChange={([value]) => handleTurnChange(value)}
               onPointerDown={startTransaction}
@@ -1189,7 +1222,7 @@ const ConnectionsSection: FC<{
           </TreeItem>
           <TreeItem>
             <Slider
-              label="Tilt"
+              label={t("connection.tilt")}
               value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
               onValueChange={([value]) => handleTiltChange(value)}
               onPointerDown={startTransaction}
@@ -1241,7 +1274,7 @@ const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId
 
   return (
     <TreeSection label="Port" defaultOpen={true}>
-      <Input label="ID" value={port.id_ || "~default~"} disabled />
+      <Input label={t("piece.id")} value={port.id_ || "~default~"} disabled />
       {port.description && <Textarea label="Description" value={port.description} disabled />}
       {port.family && <Input label="Family" value={port.family} disabled />}
       {port.mandatory !== undefined && <Input label="Mandatory" value={port.mandatory ? "Yes" : "No"} disabled />}
@@ -1256,7 +1289,7 @@ const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId
       {port.attributes &&
         port.attributes.map((attribute: any) => (
           <TreeItem>
-            <Input label="Attributes" value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
+            <Input label={t("design.attributes")} value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
           </TreeItem>
         ))}
     </TreeSection>

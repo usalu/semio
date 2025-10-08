@@ -7018,6 +7018,8 @@ export interface PanelSizes {
 
 export interface SketchpadChangableState {
   navigation: string;
+  navigationHistory: string[];
+  navigationHistoryIndex: number;
   mode: Mode;
   theme: Theme;
   layout: Layout;
@@ -7032,6 +7034,7 @@ export interface SketchpadState extends SketchpadChangableState {
 
 export interface SketchpadDiff {
   navigation?: string;
+  navigationHistoryIndex?: number;
   mode?: Mode;
   theme?: Theme;
   layout?: Layout;
@@ -7132,6 +7135,8 @@ class SketchpadStore {
     this.yDesignEditors = this.yDoc.getMap("designEditors");
     this.yDoc.transact(() => {
       this.ySketchpad.set("navigation", "/");
+      this.ySketchpad.set("navigationHistory", JSON.stringify(["/"]));
+      this.ySketchpad.set("navigationHistoryIndex", 0);
       this.ySketchpad.set("mode", Mode.GUEST);
       this.ySketchpad.set("theme", Theme.SYSTEM);
       this.ySketchpad.set("layout", Layout.NORMAL);
@@ -7184,8 +7189,12 @@ class SketchpadStore {
           settingsWidth: 230,
           consoleHeight: 200,
         };
+    const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
+    const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr) : ["/"];
     const currentValues = {
       navigation: this.ySketchpad.get("navigation") as string,
+      navigationHistory: navigationHistory,
+      navigationHistoryIndex: (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0,
       mode: this.ySketchpad.get("mode") as Mode,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
@@ -7241,7 +7250,32 @@ class SketchpadStore {
 
   change(diff: SketchpadDiff) {
     this.yDoc.transact(() => {
-      if (diff.navigation) this.ySketchpad.set("navigation", diff.navigation);
+      if (diff.navigationHistoryIndex !== undefined) {
+        // History index changed (back/forward navigation)
+        this.ySketchpad.set("navigationHistoryIndex", diff.navigationHistoryIndex);
+      }
+
+      if (diff.navigation) {
+        // Update navigation history when navigation changes
+        const currentHistoryStr = this.ySketchpad.get("navigationHistory") as string;
+        const currentHistory = currentHistoryStr ? JSON.parse(currentHistoryStr) : ["/"];
+        const currentIndex = (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
+
+        // Check if the navigation matches the current index (back/forward navigation)
+        const isHistoryNavigation = currentHistory[currentIndex] === diff.navigation;
+
+        if (!isHistoryNavigation) {
+          // Truncate future history and add new navigation
+          const newHistory = currentHistory.slice(0, currentIndex + 1);
+          if (newHistory[newHistory.length - 1] !== diff.navigation) {
+            newHistory.push(diff.navigation);
+            this.ySketchpad.set("navigationHistory", JSON.stringify(newHistory));
+            this.ySketchpad.set("navigationHistoryIndex", newHistory.length - 1);
+          }
+        }
+
+        this.ySketchpad.set("navigation", diff.navigation);
+      }
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
@@ -7556,6 +7590,36 @@ const sketchpadCommands = {
       diff: { isFullscreen: !context.sketchpad.isFullscreen },
     };
   },
+  "semio.sketchpad.syncNavigation": (context: SketchpadCommandContext, path: string): SketchpadCommandResult => {
+    if (context.sketchpad.navigation !== path) {
+      return {
+        diff: { navigation: path },
+      };
+    }
+    return {};
+  },
+  "semio.sketchpad.navigateBack": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    const { navigationHistory, navigationHistoryIndex } = context.sketchpad;
+    if (navigationHistoryIndex > 0) {
+      return {
+        diff: {
+          navigationHistoryIndex: navigationHistoryIndex - 1,
+        },
+      };
+    }
+    return {};
+  },
+  "semio.sketchpad.navigateForward": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    const { navigationHistory, navigationHistoryIndex } = context.sketchpad;
+    if (navigationHistoryIndex < navigationHistory.length - 1) {
+      return {
+        diff: {
+          navigationHistoryIndex: navigationHistoryIndex + 1,
+        },
+      };
+    }
+    return {};
+  },
 };
 
 const stores: Map<Guid, SketchpadStore> = new Map();
@@ -7634,6 +7698,22 @@ export function useLayout(): Layout {
 
 export function useIsFullscreen(): boolean {
   return useSketchpad((s) => s.isFullscreen) as boolean;
+}
+
+export function useNavigationHistory(): {
+  history: string[];
+  currentIndex: number;
+  canGoBack: boolean;
+  canGoForward: boolean;
+} {
+  const history = useSketchpad((s) => s.navigationHistory) as string[];
+  const currentIndex = useSketchpad((s) => s.navigationHistoryIndex) as number;
+  return {
+    history,
+    currentIndex,
+    canGoBack: currentIndex > 0,
+    canGoForward: currentIndex < history.length - 1,
+  };
 }
 
 export function useEditorPanelVisibility(): PanelVisibility {
@@ -7768,12 +7848,29 @@ export function useSketchpadCommands() {
     setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
     setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
     toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
+    syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
     createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
     createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
     navigateToKit: (kit: Guid) => navigate(`/${kit}`),
     navigateToDesign: (kit: Guid, design: Guid) => navigate(`/${kit}/d/${design}`),
     navigateToType: (kit: Guid, type: Guid) => navigate(`/${kit}/t/${type}`),
+    navigateBack: () => {
+      store.execute("semio.sketchpad.navigateBack");
+      const state = store.snapshot();
+      const targetPath = state.navigationHistory[state.navigationHistoryIndex];
+      if (targetPath) {
+        navigate(targetPath);
+      }
+    },
+    navigateForward: () => {
+      store.execute("semio.sketchpad.navigateForward");
+      const state = store.snapshot();
+      const targetPath = state.navigationHistory[state.navigationHistoryIndex];
+      if (targetPath) {
+        navigate(targetPath);
+      }
+    },
     updateEditorSettings: (editorType: "design" | "type" | "kit", settings: Record<string, any>) => {
       const current = store.snapshot().editorSettings;
       store.change({

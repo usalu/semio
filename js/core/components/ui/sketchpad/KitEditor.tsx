@@ -1,4 +1,5 @@
 import { FC, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Author, Design } from "../../../semio";
 import { useKit, useKitCommands, useSketchpadCommands } from "../../../store";
 
@@ -9,6 +10,7 @@ import { TreeItem } from "../Tree";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 
 const KitEditor: FC = () => {
+  const { t } = useTranslation();
   const kit = useKit();
   const { createDesign, createType, createAuthor } = useKitCommands();
   const { createDesignEditor } = useSketchpadCommands();
@@ -19,19 +21,19 @@ const KitEditor: FC = () => {
   useEffect(() => {
     addSection("details", {
       id: "kit-editor-details",
-      label: "Kit",
+      label: t("kit.name"),
       order: 0,
       defaultOpen: true,
       content: (
         <>
           <TreeItem>
-            <Input label="Kit Name" value={kit.name} />
+            <Input label={t("kit.name")} value={kit.name} />
           </TreeItem>
           <TreeItem>
-            <Input label="Version" value="1.0.0" />
+            <Input label={t("kit.version")} value="1.0.0" />
           </TreeItem>
           <TreeItem>
-            <Button onClick={onPopulateKit}>Populate Kit</Button>
+            <Button onClick={onPopulateKit}>{t("common.create")}</Button>
           </TreeItem>
         </>
       ),

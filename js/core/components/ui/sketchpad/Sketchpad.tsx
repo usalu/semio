@@ -22,7 +22,7 @@ import { FC, useEffect } from "react";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
-import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, TypeScopeProvider, useEditorType, useEditorPanelVisibility, useLayout, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
+import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, TypeScopeProvider, useEditorType, useEditorPanelVisibility, useLayout, useNavigation, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
 import Chat from "./Chat";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
@@ -80,7 +80,13 @@ const SketchpadBase: FC = () => {
   const visiblePanels = useEditorPanelVisibility();
   const panelSizes = useSketchpad((s) => s.panelSizes);
   const isFullscreen = useSketchpad((s) => s.isFullscreen);
-  const { setTheme, setLayout, setPanelSize } = useSketchpadCommands();
+  const { setTheme, setLayout, setPanelSize, syncNavigation } = useSketchpadCommands();
+  const currentPath = useNavigation();
+
+  // Sync React Router location to store navigation
+  useEffect(() => {
+    syncNavigation(currentPath);
+  }, [currentPath, syncNavigation]);
 
   useEffect(() => {
     const root = window.document.documentElement;

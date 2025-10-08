@@ -2,7 +2,9 @@ import { TreeContent, TreeItem, TreeSection } from "../Tree";
 
 import { FingerprintIcon, Laptop, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { FC, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../../store";
+import LanguageSwitcher from "../LanguageSwitcher";
 import { ScrollArea } from "../ScrollArea";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import { Tree } from "../Tree";
@@ -12,6 +14,7 @@ import { ResizablePanelProps } from "./Sketchpad";
 interface SettingsProps extends ResizablePanelProps {}
 
 const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const layout = useLayout();
   const { setTheme, setLayout } = useSketchpadCommands();
@@ -56,10 +59,10 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className="p-1 overflow-hidden min-w-0">
           <Tree className="min-w-0 overflow-hidden">
-            <TreeSection label="General" defaultOpen={true}>
+            <TreeSection label={t("settings.general")} defaultOpen={true}>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label="Theme" type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
+                  <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
                     <ToggleGroupItem value="system">
                       <Laptop />
                     </ToggleGroupItem>
@@ -74,7 +77,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label="Layout" type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+                  <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
                     <ToggleGroupItem value="normal">
                       <MonitorIcon />
                     </ToggleGroupItem>
@@ -82,6 +85,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
                       <FingerprintIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>
+                </TreeContent>
+              </TreeItem>
+              <TreeItem>
+                <TreeContent>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">{t("settings.language")}</label>
+                    <LanguageSwitcher />
+                  </div>
                 </TreeContent>
               </TreeItem>
             </TreeSection>

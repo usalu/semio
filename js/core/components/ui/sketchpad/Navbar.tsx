@@ -21,8 +21,9 @@
 
 import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { EditorType, SketchpadScope, useEditorCommands, useEditorPanelVisibility, useEditorType, useIsFullscreen, useKits, useNavigation, useSketchpadCommands, useSketchpadScope } from "../../../store";
+import { EditorType, SketchpadScope, useEditorCommands, useEditorPanelVisibility, useEditorType, useIsFullscreen, useKits, useNavigation, useNavigationHistory, useSketchpadCommands, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
@@ -111,66 +112,67 @@ export interface PanelDefinition {
   hotkey: string;
 }
 
-export const PANEL_CONFIGS: Record<EditorType, PanelDefinition[]> = {
+export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, PanelDefinition[]> => ({
   [EditorType.HOME]: [
-    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.KIT]: [
-    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.DESIGN]: [
-    { key: "workbench", icon: Wrench, tooltip: "Click to toggle workbench panel", hotkey: "⌘J" },
-    { key: "console", icon: Terminal, tooltip: "Click to toggle console panel", hotkey: "⌘K" },
-    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+    { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "console", icon: Terminal, tooltip: t("panels.console"), hotkey: "⌘K" },
+    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.TYPE]: [
-    { key: "workbench", icon: Wrench, tooltip: "Click to toggle workbench panel", hotkey: "⌘J" },
-    { key: "console", icon: Terminal, tooltip: "Click to toggle console panel", hotkey: "⌘K" },
-    { key: "details", icon: Info, tooltip: "Click to toggle details panel", hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: "Click to toggle chat panel", hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: "Click to toggle settings panel", hotkey: "⌘," },
+    { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "console", icon: Terminal, tooltip: t("panels.console"), hotkey: "⌘K" },
+    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
-};
+});
 
 const Navigation: FC = ({}) => {
+  const { t } = useTranslation();
   let navigate = useNavigate();
   const navigation = useNavigation();
   const kits = useKits();
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem tooltip="Click to go home">
+        <BreadcrumbItem tooltip={t("navbar.home")}>
           <BreadcrumbLink href="/">
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator
-          items={[{ label: "Starter", href: "/metabolism/starter" }]}
-          tooltip="Click to see kits"
+          items={[{ label: t("breadcrumb.starter"), href: "/metabolism/starter" }]}
+          tooltip={t("navbar.kits")}
           onNavigate={(href) => {
             navigate(href);
           }}
         />
-        <BreadcrumbItem tooltip="Click to go to kit">
-          <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
+        <BreadcrumbItem tooltip={t("navbar.kit")}>
+          <BreadcrumbLink href="/metabolism">{t("breadcrumb.metabolism")}</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator
           items={[
-            { label: "Types", href: "/designs/types" },
-            { label: "Representations", href: "/designs/representations" },
+            { label: t("breadcrumb.types"), href: "/designs/types" },
+            { label: t("breadcrumb.representations"), href: "/designs/representations" },
           ]}
-          tooltip="Click to see all artifacts kinds of the kit"
+          tooltip={t("navbar.artifacts")}
           onNavigate={(href) => {
             navigate(href);
           }}
         />
-        <BreadcrumbItem tooltip="Click to go to see all designs of the kit">
-          <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
+        <BreadcrumbItem tooltip={t("navbar.designs")}>
+          <BreadcrumbLink href="/designs">{t("breadcrumb.designs")}</BreadcrumbLink>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -191,8 +193,9 @@ const Search: FC = ({}) => {
 };
 
 const PanelToggles: FC = ({}) => {
+  const { t } = useTranslation();
   const editorType = useEditorType();
-  const panelConfig = PANEL_CONFIGS[editorType];
+  const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
   const { togglePanel } = useEditorCommands();
 
@@ -241,11 +244,16 @@ const PanelToggles: FC = ({}) => {
 interface NavbarProps {}
 
 const Navbar: FC<NavbarProps> = ({}) => {
+  const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
-  const { toggleFullscreen } = useSketchpadCommands();
+  const { toggleFullscreen, navigateBack, navigateForward } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
-  let navigate = useNavigate();
+  const navigate = useNavigate();
+  const currentPath = useNavigation();
+  const { canGoBack, canGoForward } = useNavigationHistory();
+
+  const isAtRoot = currentPath === "/";
 
   useEffect(() => {
     if (!isFullscreen) {
@@ -269,13 +277,13 @@ const Navbar: FC<NavbarProps> = ({}) => {
       style={{ WebkitAppRegion: "drag" }}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" tooltip="Click to go back, hold to see history" onClick={() => navigate(-1)}>
+        <ButtonGroupItem value="back" tooltip={t("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" tooltip="Click to go forward, hold to see history" onClick={() => navigate(1)}>
+        <ButtonGroupItem value="forward" tooltip={t("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="up" tooltip="Click to go up" onClick={() => navigate("/")}>
+        <ButtonGroupItem value="up" tooltip={t("navbar.up")} onClick={() => navigate("/")} disabled={isAtRoot}>
           <ArrowUp size={16} />
         </ButtonGroupItem>
       </ButtonGroup>
@@ -284,19 +292,19 @@ const Navbar: FC<NavbarProps> = ({}) => {
       {/* <Search /> */}
 
       <PanelToggles />
-      <Toggle variant="outline" tooltip={isFullscreen ? "Click to exit fullscreen" : "Click to enter fullscreen"} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+      <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
         {isFullscreen ? <Minimize /> : <Fullscreen />}
       </Toggle>
       {onWindowEvents && (
         <div className="flex items-center gap-2 ml-4">
           <ToggleGroup type="single">
-            <ToggleGroupItem value="minimize" tooltip="Click to minimize" onClick={onWindowEvents.minimize}>
+            <ToggleGroupItem value="minimize" tooltip={t("navbar.minimize")} onClick={onWindowEvents.minimize}>
               <Minus size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="maximize" tooltip="Click to maximize" onClick={onWindowEvents.maximize}>
+            <ToggleGroupItem value="maximize" tooltip={t("navbar.maximize")} onClick={onWindowEvents.maximize}>
               <Square size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="close" tooltip="Click to close" onClick={onWindowEvents.close} className="hover:bg-danger">
+            <ToggleGroupItem value="close" tooltip={t("navbar.close")} onClick={onWindowEvents.close} className="hover:bg-danger">
               <X size={16} />
             </ToggleGroupItem>
           </ToggleGroup>
