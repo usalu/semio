@@ -24,8 +24,21 @@ import * as React from "react";
 
 import { cn } from "@semio/js/lib/utils";
 
-function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+function Select({ label, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & { label?: string }) {
+  const selectElement = <SelectPrimitive.Root data-slot="select" {...props}>{children}</SelectPrimitive.Root>;
+
+  if (label) {
+    return (
+      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          {label}
+        </span>
+        {selectElement}
+      </div>
+    );
+  }
+
+  return selectElement;
 }
 
 function SelectGroup({ ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {

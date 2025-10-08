@@ -51,24 +51,36 @@ const toggleVariants = cva(
 interface ToggleProps extends React.ComponentProps<typeof TogglePrimitive.Root>, VariantProps<typeof toggleVariants> {
   tooltip?: string;
   hotkey?: string;
+  label?: string;
 }
 
-function Toggle({ className, variant, size, tooltip, hotkey, ...props }: ToggleProps) {
+function Toggle({ className, variant, size, tooltip, hotkey, label, ...props }: ToggleProps) {
   const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ variant, size, className }))} {...props} />;
 
-  if (tooltip) {
+  const wrappedToggle = tooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
+      <TooltipContent>
+        {tooltip}
+        {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    toggleElement
+  );
+
+  if (label) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
-        <TooltipContent>
-          {tooltip}
-          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
-        </TooltipContent>
-      </Tooltip>
+      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          {label}
+        </span>
+        {wrappedToggle}
+      </div>
     );
   }
 
-  return toggleElement;
+  return wrappedToggle;
 }
 
 export { Toggle, toggleVariants };

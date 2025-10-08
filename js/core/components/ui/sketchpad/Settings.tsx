@@ -1,15 +1,31 @@
 import { TreeContent, TreeItem, TreeSection } from "../Tree";
 
+import { t } from "i18next";
 import { FingerprintIcon, Laptop, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../../store";
-import LanguageSwitcher from "../LanguageSwitcher";
 import { ScrollArea } from "../ScrollArea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Select";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import { Tree } from "../Tree";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
+
+const LanguageSwitcher: FC = () => {
+  const { i18n } = useTranslation();
+  return (
+    <Select label={t("settings.language")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
+      <SelectTrigger className="w-32">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="en">English</SelectItem>
+        <SelectItem value="de">Deutsch</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
 
 interface SettingsProps extends ResizablePanelProps {}
 
@@ -89,10 +105,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
               <TreeItem>
                 <TreeContent>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">{t("settings.language")}</label>
-                    <LanguageSwitcher />
-                  </div>
+                  <LanguageSwitcher />
                 </TreeContent>
               </TreeItem>
             </TreeSection>

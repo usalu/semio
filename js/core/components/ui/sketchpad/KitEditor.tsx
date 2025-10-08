@@ -6,6 +6,8 @@ import { useKit, useKitCommands, useSketchpadCommands } from "../../../store";
 import { Tambour } from "@semio/assets";
 import { Button } from "../Button";
 import { Input } from "../Input";
+import { ScrollArea } from "../ScrollArea";
+import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import { TreeItem } from "../Tree";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 
@@ -72,7 +74,25 @@ const KitEditor: FC = () => {
     await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
   };
 
-  return <div></div>;
+  return (
+    <>
+      <ScrollArea orientation="horizontal">
+        <ToggleGroup type="multiple" value={kit.name as string[]} onValueChange={(value) => setKitName(value)}>
+          <ToggleGroupItem value="designs">{t("kit.designs")}</ToggleGroupItem>
+          <ToggleGroupItem value="types">{t("kit.types")}</ToggleGroupItem>
+          <ToggleGroupItem value="authors">{t("kit.authors")}</ToggleGroupItem>
+        </ToggleGroup>
+      </ScrollArea>
+      <ScrollArea orientation="horizontal">
+        <ToggleGroup type="multiple" value={kit.name as string[]} onValueChange={(value) => setKitName(value)}>
+          <ToggleGroupItem value="designs">{t("kit.designs")}</ToggleGroupItem>
+          <ToggleGroupItem value="types">{t("kit.types")}</ToggleGroupItem>
+          <ToggleGroupItem value="authors">{t("kit.authors")}</ToggleGroupItem>
+        </ToggleGroup>
+      </ScrollArea>
+      <Input />
+    </>
+  );
 };
 
 export default KitEditor;

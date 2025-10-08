@@ -19,11 +19,11 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { EditorType, SketchpadScope, useEditorCommands, useEditorPanelVisibility, useEditorType, useIsFullscreen, useKits, useNavigation, useNavigationHistory, useSketchpadCommands, useSketchpadScope } from "../../../store";
+import { EditorType, SketchpadScope, useEditorCommands, useEditorPanelVisibility, useEditorType, useIsFullscreen, useIsMobile, useIsNavbarExpanded, useKits, useNavigation, useNavigationHistory, useSketchpadCommands, useSketchpadScope } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
@@ -198,20 +198,33 @@ const PanelToggles: FC = ({}) => {
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
   const { togglePanel } = useEditorCommands();
+  const isMobile = useIsMobile();
 
   if (panelConfig.length === 0) return null;
 
   const handleToggle = (panelKey: string) => {
-    // Handle mutual exclusivity for chat, details, and settings
     const current = visiblePanels[panelKey];
-    if (!current && (panelKey === "chat" || panelKey === "details" || panelKey === "settings")) {
-      // Close the other exclusive panels
-      const exclusivePanels = ["chat", "details", "settings"];
-      exclusivePanels.forEach((p) => {
-        if (p !== panelKey && visiblePanels[p]) {
-          togglePanel(p as any);
-        }
-      });
+
+    if (isMobile) {
+      // On mobile, only one panel can be open at a time
+      if (!current) {
+        // Close all other panels
+        Object.keys(visiblePanels).forEach((p) => {
+          if (p !== panelKey && visiblePanels[p]) {
+            togglePanel(p as any);
+          }
+        });
+      }
+    } else {
+      // Desktop behavior: Handle mutual exclusivity for chat, details, and settings
+      if (!current && (panelKey === "chat" || panelKey === "details" || panelKey === "settings")) {
+        const exclusivePanels = ["chat", "details", "settings"];
+        exclusivePanels.forEach((p) => {
+          if (p !== panelKey && visiblePanels[p]) {
+            togglePanel(p as any);
+          }
+        });
+      }
     }
     togglePanel(panelKey as any);
   };
@@ -247,13 +260,24 @@ const Navbar: FC<NavbarProps> = ({}) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
-  const { toggleFullscreen, navigateBack, navigateForward } = useSketchpadCommands();
+  const isNavbarExpanded = useIsNavbarExpanded();
+  const isMobile = useIsMobile();
+  const { toggleFullscreen, toggleNavbarExpanded, navigateBack, navigateForward, setIsMobile } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
   const navigate = useNavigate();
   const currentPath = useNavigation();
   const { canGoBack, canGoForward } = useNavigationHistory();
 
   const isAtRoot = currentPath === "/";
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, [setIsMobile]);
 
   useEffect(() => {
     if (!isFullscreen) {
@@ -269,6 +293,63 @@ const Navbar: FC<NavbarProps> = ({}) => {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [isFullscreen]);
+
+  if (isMobile) {
+    return (
+      <div
+        id="navbar"
+        className={`w-full bg-background border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"} ${isNavbarExpanded ? "h-auto" : "h-12"}`}
+        style={{ WebkitAppRegion: "drag" }}
+      >
+        <div className="h-12 flex items-center justify-between px-4 gap-2">
+          <ButtonGroupItem value="back" tooltip={t("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
+            <ArrowLeft size={16} />
+          </ButtonGroupItem>
+
+          <PanelToggles />
+
+          <Toggle variant="outline" tooltip={isNavbarExpanded ? t("navbar.collapse") : t("navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+            {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
+          </Toggle>
+        </div>
+
+        {isNavbarExpanded && (
+          <div className="flex flex-col gap-2 px-4 pb-4">
+            <ButtonGroup>
+              <ButtonGroupItem value="forward" tooltip={t("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
+                <ArrowRight size={16} />
+              </ButtonGroupItem>
+              <ButtonGroupItem value="up" tooltip={t("navbar.up")} onClick={() => navigate("/")} disabled={isAtRoot}>
+                <ArrowUp size={16} />
+              </ButtonGroupItem>
+            </ButtonGroup>
+
+            <Navigation />
+
+            <div className="flex gap-2">
+              <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+                {isFullscreen ? <Minimize /> : <Fullscreen />}
+              </Toggle>
+
+              {onWindowEvents && (
+                <ToggleGroup type="single">
+                  <ToggleGroupItem value="minimize" tooltip={t("navbar.minimize")} onClick={onWindowEvents.minimize}>
+                    <Minus size={16} />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="maximize" tooltip={t("navbar.maximize")} onClick={onWindowEvents.maximize}>
+                    <Square size={16} />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="close" tooltip={t("navbar.close")} onClick={onWindowEvents.close} className="hover:bg-danger">
+                    <X size={16} />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

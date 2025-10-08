@@ -40,9 +40,10 @@ interface ToggleCycleProps<T extends string> extends Omit<React.ButtonHTMLAttrib
   items: ToggleCycleItem<T>[];
   tooltip?: string;
   hotkey?: string;
+  label?: string;
 }
 
-export function ToggleCycle<T extends string>({ className, variant = "outline", size = "default", value, onValueChange, items, tooltip, hotkey, ...props }: ToggleCycleProps<T>) {
+export function ToggleCycle<T extends string>({ className, variant = "outline", size = "default", value, onValueChange, items, tooltip, hotkey, label, ...props }: ToggleCycleProps<T>) {
   if (!items || items.length === 0) return null;
 
   // Find the current item or default to first
@@ -69,17 +70,28 @@ export function ToggleCycle<T extends string>({ className, variant = "outline", 
   const activeTooltip = currentItem.tooltip || tooltip;
   const activeHotkey = currentItem.hotkey || hotkey;
 
-  if (activeTooltip) {
+  const wrappedButton = activeTooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+      <TooltipContent>
+        {activeTooltip}
+        {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    buttonElement
+  );
+
+  if (label) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
-        <TooltipContent>
-          {activeTooltip}
-          {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
-        </TooltipContent>
-      </Tooltip>
+      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          {label}
+        </span>
+        {wrappedButton}
+      </div>
     );
   }
 
-  return buttonElement;
+  return wrappedButton;
 }
