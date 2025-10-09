@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { FC, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
 import { useKits, useSketchpadCommands, useSketchpadStore } from "../../../store";
@@ -35,10 +36,11 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
 );
 
 const Home: FC = ({}) => {
+  const { t } = useTranslation();
   const kits = useKits();
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
-  const [selectedKinds, setSelectedKinds] = useState<KitStoreKind[]>(["temporary", "local", "remote"]);
+  const [selectedKinds, setSelectedKinds] = useState<KitStoreKind[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -53,7 +55,7 @@ const Home: FC = ({}) => {
       if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
       else if (kitStore.isLocallyPersisted) type = "local";
 
-      if (!selectedKinds.includes(type)) return;
+      if (selectedKinds.length > 0 && !selectedKinds.includes(type)) return;
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
       const key = kit.name;
@@ -139,17 +141,17 @@ const Home: FC = ({}) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
           <Toggle
             type="withAction"
             pressed={selectedKinds.includes("temporary")}
             onPressedChange={() => toggleKind("temporary")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("temporary")}
-            tooltip="Filter temporary kits"
-            actionTooltip="Create temporary kit"
+            tooltip={selectedKinds.includes("temporary") ? t("home.hideTemporary") : t("home.showTemporary")}
+            actionTooltip={t("home.createTemporary")}
           >
-            Temporary
+            {t("home.temporary")}
           </Toggle>
           <Toggle
             type="withAction"
@@ -157,10 +159,10 @@ const Home: FC = ({}) => {
             onPressedChange={() => toggleKind("local")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("local")}
-            tooltip="Filter local kits"
-            actionTooltip="Create local kit"
+            tooltip={selectedKinds.includes("local") ? t("home.hideLocal") : t("home.showLocal")}
+            actionTooltip={t("home.createLocal")}
           >
-            Local
+            {t("home.local")}
           </Toggle>
           <Toggle
             type="withAction"
@@ -168,22 +170,22 @@ const Home: FC = ({}) => {
             onPressedChange={() => toggleKind("remote")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("remote")}
-            tooltip="Filter remote kits"
-            actionTooltip="Create remote kit"
+            tooltip={selectedKinds.includes("remote") ? t("home.hideRemote") : t("home.showRemote")}
+            actionTooltip={t("home.createRemote")}
           >
-            Remote
+            {t("home.remote")}
           </Toggle>
         </div>
-        <Input className="lg:flex-1 lg:min-w-[200px]" placeholder="Search kits..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
             <tr>
-              <th className="text-left p-2 font-medium">Name</th>
-              <th className="text-left p-2 font-medium">Kind</th>
-              <th className="text-left p-2 font-medium">Last updated</th>
-              <th className="text-left p-2 font-medium">Created</th>
+              <th className="text-left p-2 font-medium">{t("home.name")}</th>
+              <th className="text-left p-2 font-medium">{t("home.kind")}</th>
+              <th className="text-left p-2 font-medium">{t("home.lastUpdated")}</th>
+              <th className="text-left p-2 font-medium">{t("home.created")}</th>
             </tr>
           </thead>
           <tbody>
@@ -204,9 +206,9 @@ const Home: FC = ({}) => {
                     ) : (
                       <span className="w-4 h-4" />
                     )}
-                    <span className="cursor-pointer" onClick={() => navigateToKit(row.kit.guid)}>
+                    <button className="cursor-pointer hover:underline text-left" onClick={() => navigateToKit(row.kit.guid)}>
                       {row.name}
-                    </span>
+                    </button>
                   </div>
                 </td>
                 <td className="p-2 capitalize">{row.type}</td>

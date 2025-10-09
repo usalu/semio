@@ -1,4 +1,5 @@
 import { FC, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
 import { Tree, TreeSection } from "../Tree";
@@ -8,6 +9,7 @@ import { ResizablePanelProps } from "./Sketchpad";
 interface ChatProps extends ResizablePanelProps {}
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
+  const { t } = useTranslation();
   if (!visible) return null;
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -57,7 +59,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
           </Tree>
         </div>
         <div className="p-4 border-t">
-          <Textarea placeholder="Ask a question about the design..." />
+          <Textarea placeholder={t("chat.placeholder")} />
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

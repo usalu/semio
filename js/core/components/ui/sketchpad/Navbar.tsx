@@ -154,11 +154,25 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
   ],
 });
 
-const Navigation: FC = ({}) => {
+const Navigation: FC = ({ }) => {
   const { t } = useTranslation();
   let navigate = useNavigate();
   const navigation = useNavigation();
   const kits = useKits();
+  const kitEditorCommands = useKitEditorCommands();
+  const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);
+  const kitGuid = pathMatch?.[1];
+  const editorTypeChar = pathMatch?.[2];
+  const itemGuid = pathMatch?.[3];
+  const kit = kits.find((k) => k.guid === kitGuid);
+  const kitItems = kits.map((k) => ({ label: k.name, href: `/${k.guid}` }));
+  const artifactKinds = [
+    { label: t("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}` : "/" },
+    { label: t("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}` : "/" },
+    { label: t("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}` : "/" },
+    { label: t("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}` : "/" },
+    { label: t("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}` : "/" },
+  ];
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -167,35 +181,45 @@ const Navigation: FC = ({}) => {
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator
-          items={[{ label: t("breadcrumb.starter"), href: "/metabolism/starter" }]}
-          tooltip={t("navbar.kits")}
-          onNavigate={(href) => {
-            navigate(href);
-          }}
-        />
-        <BreadcrumbItem tooltip={t("navbar.kit")}>
-          <BreadcrumbLink href="/metabolism">{t("breadcrumb.metabolism")}</BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator
-          items={[
-            { label: t("breadcrumb.types"), href: "/designs/types" },
-            { label: t("breadcrumb.representations"), href: "/designs/representations" },
-          ]}
-          tooltip={t("navbar.artifacts")}
-          onNavigate={(href) => {
-            navigate(href);
-          }}
-        />
-        <BreadcrumbItem tooltip={t("navbar.designs")}>
-          <BreadcrumbLink href="/designs">{t("breadcrumb.designs")}</BreadcrumbLink>
-        </BreadcrumbItem>
+        {kitGuid && (
+          <>
+            <BreadcrumbSeparator items={kitItems} tooltip={t("navbar.kits")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={t("navbar.kit")}>
+              <BreadcrumbLink href={`/${kitGuid}`}>{kit?.name || kitGuid}</BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        )}
+        {kitGuid && (
+          <>
+            <BreadcrumbSeparator
+              items={artifactKinds}
+              tooltip={t("navbar.artifacts")}
+              onNavigate={(href) => {
+                navigate(href);
+                const kind = artifactKinds.find((a) => a.href === href)?.kind;
+                if (kind && kitEditorCommands) {
+                  kitEditorCommands.setFilterKinds([kind]);
+                }
+              }}
+            />
+          </>
+        )}
+        {editorTypeChar === "d" && itemGuid && (
+          <BreadcrumbItem tooltip={t("navbar.design")}>
+            <BreadcrumbLink href={`/${kitGuid}/d/${itemGuid}`}>{itemGuid}</BreadcrumbLink>
+          </BreadcrumbItem>
+        )}
+        {editorTypeChar === "t" && itemGuid && (
+          <BreadcrumbItem tooltip={t("navbar.type")}>
+            <BreadcrumbLink href={`/${kitGuid}/t/${itemGuid}`}>{itemGuid}</BreadcrumbLink>
+          </BreadcrumbItem>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );
 };
 
-const Search: FC = ({}) => {
+const Search: FC = ({ }) => {
   return (
     <Command>
       <CommandInput />
@@ -208,7 +232,7 @@ const Search: FC = ({}) => {
   );
 };
 
-const PanelToggles: FC = ({}) => {
+const PanelToggles: FC = ({ }) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -348,9 +372,9 @@ const PanelToggles: FC = ({}) => {
   );
 };
 
-interface NavbarProps {}
+interface NavbarProps { }
 
-const Navbar: FC<NavbarProps> = ({}) => {
+const Navbar: FC<NavbarProps> = ({ }) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();

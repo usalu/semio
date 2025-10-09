@@ -219,7 +219,7 @@ const DesignSectionForm: FC = () => {
       )}
       {design.authors && design.authors.length > 0 ? (
         <TreeSection
-          label="Authors"
+          label={t("design.authors")}
           actions={[
             {
               icon: <Plus size={12} />,
@@ -231,7 +231,7 @@ const DesignSectionForm: FC = () => {
                 });
                 finalizeTransaction();
               },
-              title: "Add author",
+              title: t("design.addAuthor"),
             },
           ]}
         >
@@ -337,7 +337,7 @@ const DesignSectionForm: FC = () => {
                 });
                 finalizeTransaction();
               },
-              title: "Add attribute",
+              title: t("design.addAttribute"),
             },
           ]}
         >
@@ -436,7 +436,7 @@ const DesignSectionForm: FC = () => {
                       finalizeTransaction();
                     }}
                     className="text-destructive hover:text-destructive/80 p-1"
-                    title="Remove attribute"
+                    title={t("design.removeAttribute")}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -459,7 +459,7 @@ const DesignSectionForm: FC = () => {
                 });
                 finalizeTransaction();
               },
-              title: "Add attribute",
+              title: t("design.addAttribute"),
             },
           ]}
         ></TreeSection>
@@ -497,6 +497,7 @@ const PiecesSection: FC = () => {
 };
 
 const PiecesSectionForm: FC = () => {
+  const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
   const design = useDesign() as Design;
   // const metadata = usePiecesMetadata();
@@ -928,14 +929,22 @@ const PiecesSectionForm: FC = () => {
   return (
     <>
       {hasMixedTypes ? (
-        <TreeSection label={`Mixed Selection (${pieces.length})`} defaultOpen={true}>
+        <TreeSection label={t("piece.mixedSelection", { count: pieces.length })} defaultOpen={true}>
           <TreeItem>
-            <p className="text-sm text-muted-foreground">Selection contains both design pieces and regular pieces. Select only design pieces or only regular pieces to edit properties.</p>
+            <p className="text-sm text-muted-foreground">{t("piece.mixedSelectionMessage")}</p>
           </TreeItem>
         </TreeSection>
       ) : (
         <TreeSection
-          label={isDesignPiece ? (isSingle ? "Design Piece" : `Multiple Design Pieces (${pieces.length})`) : isSingle ? "Piece" : `Multiple Pieces (${pieces.length})`}
+          label={
+            isDesignPiece
+              ? isSingle
+                ? t("piece.designPiece")
+                : t("piece.multipleDesignPieces", { count: pieces.length })
+              : isSingle
+                ? t("piece.piece")
+                : t("piece.multiplePieces", { count: pieces.length })
+          }
           defaultOpen={true}
           actions={
             hasUnfixedPieces
@@ -943,7 +952,7 @@ const PiecesSectionForm: FC = () => {
                   {
                     icon: <Pin size={12} />,
                     onClick: fixPieces,
-                    title: isSingle ? "Fix piece" : "Fix pieces",
+                    title: isSingle ? t("piece.fixPiece") : t("piece.fixPieces"),
                   },
                 ]
               : undefined
@@ -960,26 +969,26 @@ const PiecesSectionForm: FC = () => {
             <>
               <TreeItem>
                 <Combobox
-                  label="Design Name"
+                  label={t("design.name")}
                   options={availableDesignNames.map((name) => ({
                     value: name,
                     label: name,
                   }))}
                   value={currentDesignId?.name || ""}
-                  placeholder="Select design"
+                  placeholder={t("common.selectDesign")}
                   onValueChange={handleDesignNameChange}
                 />
               </TreeItem>
               {availableDesignVariants.length > 0 && (
                 <TreeItem>
                   <Combobox
-                    label="Design Variant"
+                    label={t("design.variant")}
                     options={availableDesignVariants.map((variant) => ({
                       value: variant,
                       label: variant,
                     }))}
                     value={currentDesignId?.variant || ""}
-                    placeholder="Select variant"
+                    placeholder={t("common.selectVariant")}
                     onValueChange={handleDesignVariantChange}
                     allowClear={true}
                   />
@@ -988,13 +997,13 @@ const PiecesSectionForm: FC = () => {
               {availableDesignViews.length > 0 && (
                 <TreeItem>
                   <Combobox
-                    label="Design View"
+                    label={t("design.view")}
                     options={availableDesignViews.map((view) => ({
                       value: view,
                       label: view,
                     }))}
                     value={currentDesignId?.view || ""}
-                    placeholder="Select view"
+                    placeholder={t("common.selectView")}
                     onValueChange={handleDesignViewChange}
                     allowClear={true}
                   />
@@ -1012,20 +1021,20 @@ const PiecesSectionForm: FC = () => {
                     label: name,
                   }))}
                   value={isSingle && piece ? piece.type.name : commonTypeName || ""}
-                  placeholder={!isSingle && commonTypeName === undefined ? "Mixed values" : "Select type"}
+                  placeholder={!isSingle && commonTypeName === undefined ? t("common.mixedValues") : t("common.selectType")}
                   onValueChange={handleTypeNameChange}
                 />
               </TreeItem>
               {(hasVariant || availableVariants.length > 0) && (
                 <TreeItem>
                   <Combobox
-                    label="Variant"
+                    label={t("type.variant")}
                     options={availableVariants.map((variant) => ({
                       value: variant,
                       label: variant,
                     }))}
                     value={isSingle && piece ? piece.type.variant || "" : commonTypeVariant || ""}
-                    placeholder={!isSingle && commonTypeVariant === undefined ? "Mixed values" : "Select variant"}
+                    placeholder={!isSingle && commonTypeVariant === undefined ? t("common.mixedValues") : t("common.selectVariant")}
                     onValueChange={handleTypeVariantChange}
                     allowClear={true}
                   />

@@ -1794,9 +1794,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id === type.guid);
-          return update ? { ...type, ports: update.diff.ports } : type;
-        })
+        const update = colorDiff.updated?.find((u) => u.id === type.guid);
+        return update ? { ...type, ports: update.diff.ports } : type;
+      })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -4251,7 +4251,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -4427,7 +4427,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) {}
+                  } catch (error) { }
                 }
               }
             }
@@ -5284,7 +5284,7 @@ export function useTypeEditorOthers(): TypeEditorPresenceOther[] {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -5543,6 +5543,10 @@ export interface KitEditorDiff {
   presence?: KitEditorPresence;
   hover?: KitEditorHover;
   fullscreenPanel?: KitEditorFullscreenPanel;
+  filterKinds?: string[];
+  filterConcepts?: string[];
+  filterSearch?: string;
+  expandedRows?: string[];
 }
 export interface KitEditorStep {
   kitDiff?: KitDiff;
@@ -5559,6 +5563,10 @@ export interface KitEditorState {
   hover?: KitEditorHover;
   presence?: KitEditorPresence;
   others: KitEditorPresenceOther[];
+  filterKinds: string[];
+  filterConcepts: string[];
+  filterSearch: string;
+  expandedRows: string[];
 }
 
 export interface KitEditorCommandContext extends KitCommandContext {
@@ -5628,6 +5636,26 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     yMap.set("currentTransactionStack", new Y.Array<any>());
     yMap.set("pastTransactionsStack", new Y.Array<any>());
 
+    const filterKinds = new Y.Array<string>();
+    if (state?.filterKinds) {
+      filterKinds.push(state.filterKinds);
+    }
+    yMap.set("filterKinds", filterKinds);
+
+    const filterConcepts = new Y.Array<string>();
+    if (state?.filterConcepts) {
+      filterConcepts.push(state.filterConcepts);
+    }
+    yMap.set("filterConcepts", filterConcepts);
+
+    yMap.set("filterSearch", state?.filterSearch || "");
+
+    const expandedRows = new Y.Array<string>();
+    if (state?.expandedRows) {
+      expandedRows.push(state.expandedRows);
+    }
+    yMap.set("expandedRows", expandedRows);
+
     Object.entries(kitEditorCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
     });
@@ -5692,6 +5720,25 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     return [];
   }
 
+  get filterKinds(): string[] {
+    const yFilterKinds = this.yMap.get("filterKinds") as Y.Array<string>;
+    return yFilterKinds ? yFilterKinds.toArray() : [];
+  }
+
+  get filterConcepts(): string[] {
+    const yFilterConcepts = this.yMap.get("filterConcepts") as Y.Array<string>;
+    return yFilterConcepts ? yFilterConcepts.toArray() : [];
+  }
+
+  get filterSearch(): string {
+    return this.yMap.get("filterSearch") as string || "";
+  }
+
+  get expandedRows(): string[] {
+    const yExpandedRows = this.yMap.get("expandedRows") as Y.Array<string>;
+    return yExpandedRows ? yExpandedRows.toArray() : [];
+  }
+
   kit(): KitStore {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
@@ -5718,8 +5765,60 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
+      filterKinds: this.filterKinds,
+      filterConcepts: this.filterConcepts,
+      filterSearch: this.filterSearch,
+      expandedRows: this.expandedRows,
     } as any;
   }
+
+  change = (diff: KitEditorDiff) => {
+    console.log("[KitEditorStore.change] called with diff:", diff);
+    this.transact(() => {
+      console.log("[KitEditorStore.change] inside transact");
+      if (diff.fullscreenPanel !== undefined) {
+        this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      }
+      if (diff.panelVisibility !== undefined) {
+        console.log("[KitEditorStore.change] panelVisibility diff:", diff.panelVisibility);
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        console.log("[KitEditorStore.change] existing yPanelVisibility:", yPanelVisibility ? "exists" : "null", yPanelVisibility?.toJSON());
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+          console.log("[KitEditorStore.change] created new yPanelVisibility");
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            console.log("[KitEditorStore.change] setting", key, "to", value);
+            yPanelVisibility.set(key, value);
+          }
+        });
+        console.log("[KitEditorStore.change] final yPanelVisibility:", yPanelVisibility.toJSON());
+      }
+      if (diff.selection) {
+        this.applySelectionDiff(diff.selection);
+      }
+      if (diff.filterKinds !== undefined) {
+        const yFilterKinds = new Y.Array<string>();
+        yFilterKinds.push(diff.filterKinds);
+        this.yMap.set("filterKinds", yFilterKinds);
+      }
+      if (diff.filterConcepts !== undefined) {
+        const yFilterConcepts = new Y.Array<string>();
+        yFilterConcepts.push(diff.filterConcepts);
+        this.yMap.set("filterConcepts", yFilterConcepts);
+      }
+      if (diff.filterSearch !== undefined) {
+        this.yMap.set("filterSearch", diff.filterSearch);
+      }
+      if (diff.expandedRows !== undefined) {
+        const yExpandedRows = new Y.Array<string>();
+        yExpandedRows.push(diff.expandedRows);
+        this.yMap.set("expandedRows", yExpandedRows);
+      }
+    });
+  };
 
   protected inverseSelectionDiff(selection: KitEditorSelection, diff: KitEditorSelectionDiff): KitEditorSelectionDiff {
     return inverseKitEditorSelectionDiff(selection, diff);
@@ -6094,6 +6193,43 @@ const kitEditorCommands = {
       },
     };
   },
+  "semio.kitEditor.setFilterKinds": (context: KitEditorCommandContext, kinds: string[]): KitEditorCommandResult => {
+    return {
+      diff: {
+        filterKinds: kinds,
+      },
+    };
+  },
+  "semio.kitEditor.setFilterConcepts": (context: KitEditorCommandContext, concepts: string[]): KitEditorCommandResult => {
+    return {
+      diff: {
+        filterConcepts: concepts,
+      },
+    };
+  },
+  "semio.kitEditor.setFilterSearch": (context: KitEditorCommandContext, search: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        filterSearch: search,
+      },
+    };
+  },
+  "semio.kitEditor.setExpandedRows": (context: KitEditorCommandContext, rows: string[]): KitEditorCommandResult => {
+    return {
+      diff: {
+        expandedRows: rows,
+      },
+    };
+  },
+  "semio.kitEditor.toggleExpandedRow": (context: KitEditorCommandContext, rowId: string): KitEditorCommandResult => {
+    const currentRows = context.kitEditor.expandedRows || [];
+    const newRows = currentRows.includes(rowId) ? currentRows.filter((r) => r !== rowId) : [...currentRows, rowId];
+    return {
+      diff: {
+        expandedRows: newRows,
+      },
+    };
+  },
 };
 
 function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore | null {
@@ -6165,6 +6301,11 @@ export function useKitEditorCommands(id?: KitEditorId) {
       updateDesign: noOp,
       updateDesigns: noOp,
       togglePanel: noOp,
+      setFilterKinds: noOp,
+      setFilterConcepts: noOp,
+      setFilterSearch: noOp,
+      setExpandedRows: noOp,
+      toggleExpandedRow: noOp,
       execute: noOp,
     };
   }
@@ -6207,6 +6348,11 @@ export function useKitEditorCommands(id?: KitEditorId) {
         },
       });
     },
+    setFilterKinds: (kinds: string[]) => store.execute("semio.kitEditor.setFilterKinds", kinds),
+    setFilterConcepts: (concepts: string[]) => store.execute("semio.kitEditor.setFilterConcepts", concepts),
+    setFilterSearch: (search: string) => store.execute("semio.kitEditor.setFilterSearch", search),
+    setExpandedRows: (rows: string[]) => store.execute("semio.kitEditor.setExpandedRows", rows),
+    toggleExpandedRow: (rowId: string) => store.execute("semio.kitEditor.toggleExpandedRow", rowId),
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }
@@ -7348,20 +7494,20 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-          design: { snappiness: 10, gridSize: 24 },
-          type: {},
-          kit: {},
-        };
+        design: { snappiness: 10, gridSize: 24 },
+        type: {},
+        kit: {},
+      };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-          workbenchWidth: 230,
-          detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
-          consoleHeight: 200,
-        };
+        workbenchWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr) : ["/"];
     const currentValues = {

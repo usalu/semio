@@ -3,7 +3,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
-import { EditorType, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditorCommands, useKitStore, useSketchpadCommands } from "../../../store";
+import { EditorType, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useSketchpadCommands } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
@@ -59,7 +59,7 @@ const KitDetailsForm: FC = () => {
       return (
         <TreeSection label={t("kit.title")} defaultOpen={true}>
           <TreeItem>
-            <p className="text-sm text-muted-foreground">Kit not available</p>
+            <p className="text-sm text-muted-foreground">{t("kit.notAvailable")}</p>
           </TreeItem>
         </TreeSection>
       );
@@ -152,7 +152,7 @@ const KitDetailsForm: FC = () => {
     return (
       <TreeSection label={t("kit.title")} defaultOpen={true}>
         <TreeItem>
-          <p className="text-sm text-muted-foreground">Kit not found or not loaded</p>
+          <p className="text-sm text-muted-foreground">{t("kit.notFound")}</p>
         </TreeItem>
       </TreeSection>
     );
@@ -168,7 +168,7 @@ const KitEditor: FC = () => {
   } catch (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">No kit loaded</p>
+        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
       </div>
     );
   }
@@ -176,17 +176,19 @@ const KitEditor: FC = () => {
   if (!kit) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">No kit loaded</p>
+        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
       </div>
     );
   }
 
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
-  const [selectedKinds, setSelectedKinds] = useState<ArtifactKind[]>(["designs", "types", "qualities", "files", "authors"]);
-  const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const kitEditorCommands = useKitEditorCommands();
+  const kitEditor = useKitEditor();
+  const selectedKinds = (kitEditor.filterKinds || []) as ArtifactKind[];
+  const selectedConcepts = kitEditor.filterConcepts || [];
+  const searchQuery = kitEditor.filterSearch || "";
+  const expandedRows = new Set(kitEditor.expandedRows || []);
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -220,7 +222,7 @@ const KitEditor: FC = () => {
     const result: TableRow[] = [];
     const formatDate = (date?: Date) => (date instanceof Date ? date.toLocaleDateString() : date ? new Date(date).toLocaleDateString() : "");
 
-    if (selectedKinds.includes("designs")) {
+    if (selectedKinds.length === 0 || selectedKinds.includes("designs")) {
       const designGroups = new Map<string, Design[]>();
       kit.designs?.forEach((design: Design) => {
         const key = design.name;
@@ -304,7 +306,7 @@ const KitEditor: FC = () => {
       });
     }
 
-    if (selectedKinds.includes("types")) {
+    if (selectedKinds.length === 0 || selectedKinds.includes("types")) {
       const typeGroups = new Map<string, Type[]>();
       kit.types?.forEach((type: Type) => {
         const key = type.name;
@@ -357,7 +359,7 @@ const KitEditor: FC = () => {
       });
     }
 
-    if (selectedKinds.includes("authors")) {
+    if (selectedKinds.length === 0 || selectedKinds.includes("authors")) {
       kit.authors?.forEach((author: Author) => {
         if (searchQuery && !author.name.toLowerCase().includes(searchQuery.toLowerCase()) && !author.email.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
@@ -379,12 +381,7 @@ const KitEditor: FC = () => {
   }, [kit, selectedKinds, selectedConcepts, searchQuery, expandedRows]);
 
   const toggleRow = (rowId: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(rowId)) next.delete(rowId);
-      else next.add(rowId);
-      return next;
-    });
+    kitEditorCommands.toggleExpandedRow(rowId);
   };
 
   const handleCreateArtifact = (kind: ArtifactKind) => {
@@ -432,27 +429,29 @@ const KitEditor: FC = () => {
   };
 
   const toggleKind = (kind: ArtifactKind) => {
-    setSelectedKinds((prev) => (prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]));
+    const newKinds = selectedKinds.includes(kind) ? selectedKinds.filter((k) => k !== kind) : [...selectedKinds, kind];
+    kitEditorCommands.setFilterKinds(newKinds);
   };
 
   const toggleConcept = (concept: string) => {
-    setSelectedConcepts((prev) => (prev.includes(concept) ? prev.filter((c) => c !== concept) : [...prev, concept]));
+    const newConcepts = selectedConcepts.includes(concept) ? selectedConcepts.filter((c) => c !== concept) : [...selectedConcepts, concept];
+    kitEditorCommands.setFilterConcepts(newConcepts);
   };
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
           <Toggle
             type="withAction"
             pressed={selectedKinds.includes("designs")}
             onPressedChange={() => toggleKind("designs")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateArtifact("designs")}
-            tooltip="Filter designs"
-            actionTooltip="Create new design"
+            tooltip={selectedKinds.includes("designs") ? t("kitEditor.hideDesigns") : t("kitEditor.showDesigns")}
+            actionTooltip={t("kitEditor.createDesign")}
           >
-            Designs
+            {t("kitEditor.designs")}
           </Toggle>
           <Toggle
             type="withAction"
@@ -460,10 +459,10 @@ const KitEditor: FC = () => {
             onPressedChange={() => toggleKind("types")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateArtifact("types")}
-            tooltip="Filter types"
-            actionTooltip="Create new type"
+            tooltip={selectedKinds.includes("types") ? t("kitEditor.hideTypes") : t("kitEditor.showTypes")}
+            actionTooltip={t("kitEditor.createType")}
           >
-            Types
+            {t("kitEditor.types")}
           </Toggle>
           <Toggle
             type="withAction"
@@ -471,10 +470,10 @@ const KitEditor: FC = () => {
             onPressedChange={() => toggleKind("qualities")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateArtifact("qualities")}
-            tooltip="Filter qualities"
-            actionTooltip="Create new quality"
+            tooltip={selectedKinds.includes("qualities") ? t("kitEditor.hideQualities") : t("kitEditor.showQualities")}
+            actionTooltip={t("kitEditor.createQuality")}
           >
-            Qualities
+            {t("kitEditor.qualities")}
           </Toggle>
           <Toggle
             type="withAction"
@@ -482,10 +481,10 @@ const KitEditor: FC = () => {
             onPressedChange={() => toggleKind("files")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateArtifact("files")}
-            tooltip="Filter files"
-            actionTooltip="Create new file"
+            tooltip={selectedKinds.includes("files") ? t("kitEditor.hideFiles") : t("kitEditor.showFiles")}
+            actionTooltip={t("kitEditor.createFile")}
           >
-            Files
+            {t("kitEditor.files")}
           </Toggle>
           <Toggle
             type="withAction"
@@ -493,27 +492,27 @@ const KitEditor: FC = () => {
             onPressedChange={() => toggleKind("authors")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateArtifact("authors")}
-            tooltip="Filter authors"
-            actionTooltip="Create new author"
+            tooltip={selectedKinds.includes("authors") ? t("kitEditor.hideAuthors") : t("kitEditor.showAuthors")}
+            actionTooltip={t("kitEditor.createAuthor")}
           >
-            Authors
+            {t("kitEditor.authors")}
           </Toggle>
           {allConcepts.length > 0 && allConcepts.map((concept) => (
-            <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)}>
+            <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} tooltip={selectedConcepts.includes(concept) ? t("kitEditor.hideConcept", { concept }) : t("kitEditor.showConcept", { concept })}>
               {concept}
             </Toggle>
           ))}
         </div>
-        <Input className="lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
             <tr>
-              <th className="text-left p-2 font-medium">Name</th>
-              <th className="text-left p-2 font-medium">Authors</th>
-              <th className="text-left p-2 font-medium">Last updated</th>
-              <th className="text-left p-2 font-medium">Created</th>
+              <th className="text-left p-2 font-medium">{t("kitEditor.name")}</th>
+              <th className="text-left p-2 font-medium">{t("kitEditor.kind")}</th>
+              <th className="text-left p-2 font-medium">{t("kitEditor.lastUpdated")}</th>
+              <th className="text-left p-2 font-medium">{t("kitEditor.created")}</th>
             </tr>
           </thead>
           <tbody>
@@ -528,10 +527,15 @@ const KitEditor: FC = () => {
                     ) : (
                       <span className="w-4 h-4" />
                     )}
-                    <span>{row.artifact}</span>
+                    <button className="cursor-pointer hover:underline text-left" onClick={() => {
+                      if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+                      else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+                    }}>
+                      {row.artifact}
+                    </button>
                   </div>
                 </td>
-                <td className="p-2">{row.authors}</td>
+                <td className="p-2 capitalize">{row.kind}</td>
                 <td className="p-2">{row.updatedAt}</td>
                 <td className="p-2">{row.createdAt}</td>
               </tr>

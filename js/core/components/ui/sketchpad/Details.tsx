@@ -1,4 +1,5 @@
 import { FC, ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
@@ -34,6 +35,7 @@ const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
+  const { t } = useTranslation();
   if (!visible) return null;
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -83,9 +85,9 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
               ))}
 
               {sortedSections.length === 0 && (
-                <TreeSection label="No Selection" defaultOpen={true}>
+                <TreeSection label={t("details.noSelection")} defaultOpen={true}>
                   <TreeItem>
-                    <p className="text-sm text-muted-foreground">Select an item to view details</p>
+                    <p className="text-sm text-muted-foreground">{t("details.noSelectionMessage")}</p>
                   </TreeItem>
                 </TreeSection>
               )}
