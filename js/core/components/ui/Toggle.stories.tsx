@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bold, Box, Circle, Cylinder, Hexagon, List, Lock, Network } from "lucide-react";
+import { Bold, Box, Circle, Cylinder, Hexagon, List, Lock, Network, Settings, Trash2, Copy } from "lucide-react";
 import { useState } from "react";
 import { Toggle } from "./Toggle";
 
@@ -128,6 +128,8 @@ export const Dropdown: Story = {
           value={value}
           onValueChange={setValue}
           placeholder="Choose a shape..."
+          tooltip="Toggle shape layer visibility"
+          dropdownTooltip="Change shape type"
           items={[
             { value: "box", label: <Box />, tooltip: "Box shape" },
             { value: "cylinder", label: <Cylinder />, tooltip: "Cylinder shape" },
@@ -197,6 +199,89 @@ export const WithLabel: Story = {
           },
         ]}
       />
+    );
+  },
+};
+
+export const WithAction: Story = {
+  render: () => {
+    const [pressed, setPressed] = useState(false);
+    return (
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Enable Layer with Settings</label>
+        <Toggle
+          type="withAction"
+          pressed={pressed}
+          onPressedChange={setPressed}
+          actionIcon={<Settings className="size-3.5 opacity-50" />}
+          onActionClick={() => alert("Settings clicked!")}
+          tooltip="Toggle layer lock"
+          actionTooltip="Open layer settings"
+        >
+          <Lock />
+          Lock Layer
+        </Toggle>
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>Click the button to toggle the layer {pressed ? "ON" : "OFF"}</p>
+          <p>Click the settings icon to open layer settings</p>
+          <p className="font-medium">Status: Layer is {pressed ? "locked" : "unlocked"}</p>
+        </div>
+      </div>
+    );
+  },
+};
+
+export const WithActionVariants: Story = {
+  render: () => {
+    const [pressed1, setPressed1] = useState(true);
+    const [pressed2, setPressed2] = useState(false);
+    const [pressed3, setPressed3] = useState(true);
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Toggle
+            type="withAction"
+            pressed={pressed1}
+            onPressedChange={setPressed1}
+            actionIcon={<Copy className="size-3.5 opacity-50" />}
+            onActionClick={() => alert("Duplicate layer")}
+            tooltip="Toggle layer visibility"
+            actionTooltip="Duplicate layer"
+          >
+            <Box />
+            Base Layer
+          </Toggle>
+        </div>
+        <div className="space-y-2">
+          <Toggle
+            type="withAction"
+            pressed={pressed2}
+            onPressedChange={setPressed2}
+            actionIcon={<Trash2 className="size-3.5 opacity-50" />}
+            onActionClick={() => alert("Delete layer")}
+            tooltip="Toggle object visibility"
+            actionTooltip="Delete object"
+          >
+            <Cylinder />
+            Object
+          </Toggle>
+        </div>
+        <div className="space-y-2">
+          <Toggle
+            type="withAction"
+            label="Annotations"
+            pressed={pressed3}
+            onPressedChange={setPressed3}
+            actionIcon={<Settings className="size-3.5 opacity-50" />}
+            onActionClick={() => alert("Configure annotations")}
+            tooltip="Annotation visibility"
+            actionTooltip="Configure annotation settings"
+            hotkey="Ctrl+A"
+          >
+            Show
+          </Toggle>
+        </div>
+      </div>
     );
   },
 };

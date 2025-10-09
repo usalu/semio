@@ -29,8 +29,9 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Slider } from "@radix-ui/react-slider";
 import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
-import { Design, DesignId, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, parseDesignIdFromVariant, Piece, TypeId } from "../../../semio";
-import { DesignEditorFullscreenPanel, useDesign, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection, useKit, usePieces, useReplacableDesigns, useReplacableTypes, useSketchpad } from "../../../store";
+import { guid } from "../../../lib/utils";
+import { Design, DesignId, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, parseDesignIdFromVariant, Piece } from "../../../semio";
+import { DesignEditorFullscreenPanel, useDesign, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes, useSketchpad } from "../../../store";
 import Combobox from "../Combobox";
 import { Input } from "../Input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
@@ -45,21 +46,23 @@ import { DesignAvatar, TypeAvatar } from "./Workbench";
 const DesignSection: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const kit = useKit();
+  const kitCommands = useKitCommands();
   const design = useDesign() as Design;
 
-  const handleChange = (updatedDesign: Design) => {
-    setDesign(updatedDesign);
+  const updateDesignField = (diff: any) => {
+    kitCommands.updateDesign(design.guid, diff);
   };
 
   const addLocation = () => {
     startTransaction();
-    handleChange({ ...design, location: { longitude: 0, latitude: 0 } });
+    updateDesignField({ location: { guid: guid(), longitude: 0, latitude: 0 } });
     finalizeTransaction();
   };
 
   const removeLocation = () => {
     startTransaction();
-    handleChange({ ...design, location: undefined });
+    updateDesignField({ location: undefined });
     finalizeTransaction();
   };
 
@@ -67,32 +70,70 @@ const DesignSection: FC = () => {
     <>
       <TreeSection label={t("design.title")} defaultOpen={true}>
         <TreeItem>
-          <Input label={t("design.name")} value={design.name} onChange={(e) => handleChange({ ...design, name: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input lazy label={t("design.name")} value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
         </TreeItem>
         <TreeItem>
           <Textarea
+            lazy
             label={t("design.description")}
             value={design.description || ""}
             placeholder={t("design.descriptionPlaceholder")}
-            onChange={(e) => handleChange({ ...design, description: e.target.value })}
-            onFocus={startTransaction}
-            onBlur={finalizeTransaction}
+            onLazyChange={(value) => updateDesignField({ description: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
           />
         </TreeItem>
         <TreeItem>
-          <Input label={t("design.icon")} value={design.icon || ""} placeholder={t("design.iconPlaceholder")} onChange={(e) => handleChange({ ...design, icon: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input
+            lazy
+            label={t("design.icon")}
+            value={design.icon || ""}
+            placeholder={t("design.iconPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ icon: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
         </TreeItem>
         <TreeItem>
-          <Input label={t("design.image")} value={design.image || ""} placeholder={t("design.imagePlaceholder")} onChange={(e) => handleChange({ ...design, image: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input
+            lazy
+            label={t("design.image")}
+            value={design.image || ""}
+            placeholder={t("design.imagePlaceholder")}
+            onLazyChange={(value) => updateDesignField({ image: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
         </TreeItem>
         <TreeItem>
-          <Input label={t("design.variant")} value={design.variant || ""} placeholder={t("design.variantPlaceholder")} onChange={(e) => handleChange({ ...design, variant: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input
+            lazy
+            label={t("design.variant")}
+            value={design.variant || ""}
+            placeholder={t("design.variantPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ variant: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
         </TreeItem>
         <TreeItem>
-          <Input label={t("design.view")} value={design.view || ""} placeholder={t("design.viewPlaceholder")} onChange={(e) => handleChange({ ...design, view: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input
+            lazy
+            label={t("design.view")}
+            value={design.view || ""}
+            placeholder={t("design.viewPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ view: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
         </TreeItem>
         <TreeItem>
-          <Input label={t("design.unit")} value={design.unit} onChange={(e) => handleChange({ ...design, unit: e.target.value })} onFocus={startTransaction} onBlur={finalizeTransaction} />
+          <Input lazy label={t("design.unit")} value={design.unit || ""} onLazyChange={(value) => updateDesignField({ unit: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
         </TreeItem>
       </TreeSection>
       {design.location ? (
@@ -1386,6 +1427,14 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         });
       }
     }
+
+    return () => {
+      removeSection("details", "design");
+      removeSection("details", "port");
+      removeSection("details", "pieces");
+      removeSection("details", "connections");
+      removeSection("details", "mixed");
+    };
   }, [selection, addSection, removeSection]);
 
   // Add workbench sections

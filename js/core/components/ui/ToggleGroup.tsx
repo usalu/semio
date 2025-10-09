@@ -31,7 +31,7 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariant
   size: "default",
 });
 
-interface ToggleGroupProps extends React.ComponentProps<typeof ToggleGroupPrimitive.Root> {
+interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children"> {
   label?: string;
   children: React.ReactNode;
 }

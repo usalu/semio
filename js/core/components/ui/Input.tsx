@@ -22,7 +22,69 @@ import * as React from "react";
 
 import { cn } from "@semio/js/lib/utils";
 
-function Input({ className, type, label, ...props }: React.ComponentProps<"input"> & { label?: string }) {
+interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
+  label?: string;
+  lazy?: boolean;
+  value?: string | number | readonly string[];
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onLazyChange?: (value: string) => void;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  abortTransaction?: () => void;
+}
+
+function Input({ className, type, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, ...props }: InputProps) {
+  const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isEditing) setLocalValue(externalValue?.toString() || "");
+  }, [externalValue, isEditing]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (lazy) {
+      setLocalValue(e.target.value);
+    } else if (onChange) {
+      onChange(e);
+    }
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (lazy) {
+      setIsEditing(true);
+      startTransaction?.();
+    }
+    props.onFocus?.(e);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (lazy) {
+      setIsEditing(false);
+      onLazyChange?.(localValue);
+      finalizeTransaction?.();
+    }
+    props.onBlur?.(e);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (lazy) {
+      if (e.key === "Enter") {
+        setIsEditing(false);
+        onLazyChange?.(localValue);
+        finalizeTransaction?.();
+        (e.target as HTMLInputElement).blur();
+      } else if (e.key === "Escape") {
+        setIsEditing(false);
+        setLocalValue(externalValue?.toString() || "");
+        abortTransaction?.();
+        (e.target as HTMLInputElement).blur();
+      }
+    }
+    props.onKeyDown?.(e);
+  };
+
+  const inputValue = lazy ? localValue : externalValue;
+
   if (label) {
     return (
       <div className="flex items-center gap-2 min-w-0">
@@ -34,10 +96,14 @@ function Input({ className, type, label, ...props }: React.ComponentProps<"input
             "file:text-foreground placeholder:text-muted-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
             "focus-visible:border-primary",
             "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex-1",
-            // Hide number input arrows
             type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
             className,
           )}
+          value={inputValue}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           {...props}
         />
       </div>
@@ -52,10 +118,14 @@ function Input({ className, type, label, ...props }: React.ComponentProps<"input
         "file:text-foreground placeholder:text-muted-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-primary",
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-        // Hide number input arrows
         type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
         className,
       )}
+      value={inputValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
       {...props}
     />
   );

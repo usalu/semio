@@ -41,33 +41,33 @@ export interface ResizablePanelProps {
 }
 
 const KitRoute: FC = () => {
-  let { guid } = useParams();
+  let { kit } = useParams();
   // let [searchParams, setSearchParams] = useSearchParams();
 
   return (
-    <KitScopeProvider guid={guid}>
+    <KitScopeProvider guid={kit}>
       <Outlet />
     </KitScopeProvider>
   );
 };
 
 const DesignRoute: FC = () => {
-  let { guid } = useParams();
+  let { design } = useParams();
   // let [searchParams, setSearchParams] = useSearchParams();
 
   return (
-    <DesignScopeProvider guid={guid}>
+    <DesignScopeProvider guid={design}>
       <Outlet />
     </DesignScopeProvider>
   );
 };
 
 const TypeRoute: FC = () => {
-  let { guid } = useParams();
+  let { type } = useParams();
   // let [searchParams, setSearchParams] = useSearchParams();
 
   return (
-    <TypeScopeProvider guid={guid}>
+    <TypeScopeProvider guid={type}>
       <Outlet />
     </TypeScopeProvider>
   );
@@ -186,12 +186,12 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
           <Routes>
             <Route element={<SketchpadBase />}>
               <Route index element={<Home />} />
-              <Route path=":guid" element={<KitRoute />}>
+              <Route path=":kit" element={<KitRoute />}>
                 <Route index element={<KitEditor />} />
-                <Route path="d/:guid" element={<DesignRoute />}>
+                <Route path="d/:design" element={<DesignRoute />}>
                   <Route index element={<DesignEditor />} />
                 </Route>
-                <Route path="t/:guid" element={<TypeRoute />}>
+                <Route path="t/:type" element={<TypeRoute />}>
                   <Route index element={<TypeEditor />} />
                 </Route>
               </Route>

@@ -4586,7 +4586,7 @@ export const KitScopeProvider = (props: { guid: string; children: React.ReactNod
 };
 const useKitScope = () => useContext(KitScopeContext);
 
-function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore {
+export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? guid;
@@ -5231,10 +5231,10 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
 function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.id ?? id?.type.kit;
+  const resolvedKitId = kitScope?.guid ?? id?.type.kit;
   if (!resolvedKitId) throw new Error("useTypeEditorStore must be called within a KitScopeProvider or be directly provided with an id");
   const typeScope = useTypeScope();
-  const resolvedTypeId = typeScope?.id ?? id?.type.guid;
+  const resolvedTypeId = typeScope?.guid ?? id?.type.guid;
   if (!resolvedTypeId) throw new Error("useTypeEditorStore must be called within a TypeScopeProvider or be directly provided with an id");
   const typeEditorStore = store.typeEditor(resolvedKitId, resolvedTypeId);
   return selector ? selector(typeEditorStore) : typeEditorStore;
@@ -6909,12 +6909,12 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.id ?? id?.kit;
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
   if (!resolvedKitId) throw new Error("useDesignEditorStore must be called within a KitScopeProvider or be directly provided with an id");
   const designScope = useDesignScope();
-  const resolvedDesignId = designScope?.id ?? id?.design;
+  const resolvedDesignId = designScope?.guid ?? id?.design;
   if (!resolvedDesignId) throw new Error("useDesignEditorStore must be called within a DesignScopeProvider or be directly provided with an id");
-  const designEditorStore = store.designEditor({ kit: resolvedKitId, design: resolvedDesignId });
+  const designEditorStore = store.designEditor(resolvedKitId, resolvedDesignId);
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 

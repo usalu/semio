@@ -75,9 +75,20 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   hotkey?: string;
   label?: string;
   placeholder?: string;
+  dropdownTooltip?: string;
 }
 
-type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleProps<T> | ToggleDropdownProps<T>;
+interface ToggleWithActionProps extends React.ComponentProps<typeof TogglePrimitive.Root> {
+  type: "withAction";
+  actionIcon: React.ReactNode;
+  onActionClick: () => void;
+  tooltip?: string;
+  hotkey?: string;
+  label?: string;
+  actionTooltip?: string;
+}
+
+type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleProps<T> | ToggleDropdownProps<T> | ToggleWithActionProps;
 
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   // Cycle type
@@ -144,9 +155,79 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     return wrappedToggle;
   }
 
+  // WithAction type
+  if ("type" in props && props.type === "withAction") {
+    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, ...restProps } = props;
+
+    const mainContent = tooltip ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="flex items-center gap-2 flex-1 min-w-0">{restProps.children}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {tooltip}
+          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      <span className="flex items-center gap-2 flex-1 min-w-0">{restProps.children}</span>
+    );
+
+    const actionButton = actionTooltip ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="shrink-0 p-0.5 hover:bg-muted z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onActionClick();
+            }}
+          >
+            {actionIcon}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{actionTooltip}</TooltipContent>
+      </Tooltip>
+    ) : (
+      <button
+        type="button"
+        className="shrink-0 p-0.5 hover:bg-muted z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          onActionClick();
+        }}
+      >
+        {actionIcon}
+      </button>
+    );
+
+    const toggleElement = (
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} {...restProps}>
+        {mainContent}
+        {actionButton}
+      </TogglePrimitive.Root>
+    );
+
+    const wrappedToggle = toggleElement;
+
+    if (label) {
+      return (
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+            {label}
+          </span>
+          {wrappedToggle}
+        </div>
+      );
+    }
+
+    return wrappedToggle;
+  }
+
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", pressed, onPressedChange, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", dropdownTooltip, pressed, onPressedChange, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -158,35 +239,61 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       setOpen(false);
     };
 
-    const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} pressed={pressed} onPressedChange={onPressedChange} {...restProps}>
-        <span className="truncate">{currentItem?.label || placeholder}</span>
-        <button
-          type="button"
-          className="shrink-0 p-0.5 hover:bg-muted z-10"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen(!open);
-          }}
-        >
-          <svg className="size-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-          </svg>
-        </button>
-      </TogglePrimitive.Root>
-    );
-
-    const wrappedToggle = tooltip ? (
+    const mainContent = tooltip ? (
       <Tooltip>
-        <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
+        <TooltipTrigger asChild>
+          <span className="truncate flex-1 min-w-0">{currentItem?.label || placeholder}</span>
+        </TooltipTrigger>
         <TooltipContent>
           {tooltip}
           {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
         </TooltipContent>
       </Tooltip>
     ) : (
-      toggleElement
+      <span className="truncate flex-1 min-w-0">{currentItem?.label || placeholder}</span>
     );
+
+    const dropdownButton = dropdownTooltip ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="shrink-0 p-0.5 hover:bg-muted z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            <svg className="size-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{dropdownTooltip}</TooltipContent>
+      </Tooltip>
+    ) : (
+      <button
+        type="button"
+        className="shrink-0 p-0.5 hover:bg-muted z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+      >
+        <svg className="size-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+    );
+
+    const toggleElement = (
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} pressed={pressed} onPressedChange={onPressedChange} {...restProps}>
+        {mainContent}
+        {dropdownButton}
+      </TogglePrimitive.Root>
+    );
+
+    const wrappedToggle = toggleElement;
 
     const dropdownElement = (
       <Popover open={open} onOpenChange={setOpen}>

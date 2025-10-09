@@ -315,6 +315,8 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleExclusivePressedChange}
           value={activeExclusivePanel}
           onValueChange={handleExclusiveValueChange}
+          tooltip={exclusiveConfigs.find((p) => p.key === activeExclusivePanel)?.tooltip}
+          dropdownTooltip={t("navbar.changePanelType")}
           items={exclusiveConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,

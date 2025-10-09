@@ -22,7 +22,64 @@ import * as React from "react";
 
 import { cn } from "@semio/js/lib/utils";
 
-function Textarea({ className, label, ...props }: React.ComponentProps<"textarea"> & { label?: string }) {
+interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange"> {
+  label?: string;
+  lazy?: boolean;
+  value?: string | number | readonly string[];
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onLazyChange?: (value: string) => void;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  abortTransaction?: () => void;
+}
+
+function Textarea({ className, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, ...props }: TextareaProps) {
+  const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isEditing) setLocalValue(externalValue?.toString() || "");
+  }, [externalValue, isEditing]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (lazy) {
+      setLocalValue(e.target.value);
+    } else if (onChange) {
+      onChange(e);
+    }
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    if (lazy) {
+      setIsEditing(true);
+      startTransaction?.();
+    }
+    props.onFocus?.(e);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    if (lazy) {
+      setIsEditing(false);
+      onLazyChange?.(localValue);
+      finalizeTransaction?.();
+    }
+    props.onBlur?.(e);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (lazy) {
+      if (e.key === "Escape") {
+        setIsEditing(false);
+        setLocalValue(externalValue?.toString() || "");
+        abortTransaction?.();
+        (e.target as HTMLTextAreaElement).blur();
+      }
+    }
+    props.onKeyDown?.(e);
+  };
+
+  const textareaValue = lazy ? localValue : externalValue;
+
   if (label) {
     return (
       <div className="flex items-start gap-2 min-w-0">
@@ -35,6 +92,11 @@ function Textarea({ className, label, ...props }: React.ComponentProps<"textarea
             "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm flex-1",
             className,
           )}
+          value={textareaValue}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           {...props}
         />
       </div>
@@ -48,6 +110,11 @@ function Textarea({ className, label, ...props }: React.ComponentProps<"textarea
         "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         className,
       )}
+      value={textareaValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
       {...props}
     />
   );
