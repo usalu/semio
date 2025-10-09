@@ -1,6 +1,6 @@
 // #region Header
 
-// Model.tsx
+// Canvas.tsx
 
 // 2025 Ueli Saluz
 // 2025 AdrianoCelentano
@@ -43,13 +43,13 @@ const Gizmo: FC<GizmoProps> = ({ show = true }) => {
   );
 };
 
-interface ModelInnerProps {
+interface CanvasInnerProps {
   children?: ReactNode;
   showGrid?: boolean;
   showGizmo?: boolean;
 }
 
-const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo = true }) => {
+const CanvasInner: FC<CanvasInnerProps> = ({ children, showGrid = true, showGizmo = true }) => {
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -91,7 +91,7 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
   );
 };
 
-interface ModelProps {
+interface CanvasProps {
   children?: ReactNode;
   showGrid?: boolean;
   showGizmo?: boolean;
@@ -99,14 +99,14 @@ interface ModelProps {
   onPointerMissed?: (e: MouseEvent) => void;
 }
 
-const Model: FC<ModelProps> = ({ children, showGrid = true, showGizmo = true, onDoubleClickCapture, onPointerMissed }) => (
+const Canvas: FC<CanvasProps> = ({ children, showGrid = true, showGizmo = true, onDoubleClickCapture, onPointerMissed }) => (
   <div className="h-full w-full">
     <ThreeCanvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-      <ModelInner showGrid={showGrid} showGizmo={showGizmo}>
+      <CanvasInner showGrid={showGrid} showGizmo={showGizmo}>
         {children}
-      </ModelInner>
+      </CanvasInner>
     </ThreeCanvas>
   </div>
 );
 
-export default Model;
+export default Canvas;

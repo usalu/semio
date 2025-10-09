@@ -27,6 +27,7 @@ import { Input } from "../Input";
 import { Textarea } from "../Textarea";
 import { TreeItem, TreeSection } from "../Tree";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
+import TypeModel from "./TypeModel";
 
 const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -130,13 +131,7 @@ const TypeEditor: FC = () => {
     };
   }, [addSection, removeSection, editorType]);
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto p-4">
-        <p className="text-sm text-muted-foreground">Type editor content</p>
-      </div>
-    </div>
-  );
+  return <TypeModel />;
 };
 
 export default TypeEditor;

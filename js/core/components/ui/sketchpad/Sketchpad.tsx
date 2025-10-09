@@ -43,7 +43,7 @@ import {
 import Chat from "./Chat";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
-import Footer from "./Footer";
+import Footer, { FooterItemProvider } from "./Footer";
 import Home from "./Home";
 import KitEditor from "./KitEditor";
 import Navbar, { PanelSectionProvider } from "./Navbar";
@@ -143,48 +143,50 @@ const SketchpadBase: FC = () => {
 
   return (
     <PanelSectionProvider>
-      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground relative border">
-        <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
-          <Navbar />
-        </div>
-        <div className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mt-12"}`}>
-          {isMobile ? (
-            // Mobile layout: full-screen panel or editor
-            <>
-              {mobileVisiblePanel ? (
-                <div className="absolute inset-0 z-30 bg-background">
-                  {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                  {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                  {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                  {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                </div>
-              ) : (
+      <FooterItemProvider>
+        <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground relative border">
+          <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+            <Navbar />
+          </div>
+          <div className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mt-12"}`}>
+            {isMobile ? (
+              // Mobile layout: full-screen panel or editor
+              <>
+                {mobileVisiblePanel ? (
+                  <div className="absolute inset-0 z-30 bg-background">
+                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <Outlet />
+                  </div>
+                )}
+              </>
+            ) : (
+              // Desktop layout: side-by-side panels
+              <>
+                {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <Outlet />
                 </div>
-              )}
-            </>
-          ) : (
-            // Desktop layout: side-by-side panels
-            <>
-              {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <Outlet />
-              </div>
-              {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
-                <div className="flex">
-                  {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
-                  {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
-                  {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}
-                </div>
-              )}
-            </>
-          )}
+                {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
+                  <div className="flex">
+                    {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
+                    {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
+                    {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <div className={`absolute bottom-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+            <Footer />
+          </div>
         </div>
-        <div className={`absolute bottom-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
-          <Footer />
-        </div>
-      </div>
+      </FooterItemProvider>
     </PanelSectionProvider>
   );
 };

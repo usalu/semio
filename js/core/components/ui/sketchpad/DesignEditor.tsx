@@ -53,8 +53,8 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizab
 import Stepper from "../Stepper";
 import { Textarea } from "../Textarea";
 import { SortableTreeItems, TreeItem, TreeSection } from "../Tree";
+import DesignModel from "./DesignModel";
 import Diagram from "./Diagram";
-import Model from "./Model";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 import { DesignAvatar, TypeAvatar } from "./Workbench";
 
@@ -1640,7 +1640,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           </ResizablePanel>
           <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
           <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={toggleModelFullscreen}>
-            <Model />
+            <DesignModel />
           </ResizablePanel>
         </ResizablePanelGroup>
       </ReactFlowProvider>

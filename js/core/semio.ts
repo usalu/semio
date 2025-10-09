@@ -1316,6 +1316,7 @@ export const TypeSchema = z.object({
   updatedAt: DateProperty(),
   location: LocationSchema.optional(),
   authors: z.array(z.string()).optional(),
+  concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),

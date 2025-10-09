@@ -7,7 +7,7 @@ import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Toggle } from "../Toggle";
 
-type KitStoreType = "temporary" | "local" | "remote";
+type KitStoreKind = "temporary" | "local" | "remote";
 
 type TableRow = {
   id: string;
@@ -16,7 +16,7 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  type: KitStoreType;
+  type: KitStoreKind;
   updatedAt: string;
   createdAt: string;
   kit: KitShallow;
@@ -38,7 +38,7 @@ const Home: FC = ({}) => {
   const kits = useKits();
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
-  const [selectedTypes, setSelectedTypes] = useState<KitStoreType[]>(["temporary", "local", "remote"]);
+  const [selectedKinds, setSelectedKinds] = useState<KitStoreKind[]>(["temporary", "local", "remote"]);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -49,11 +49,11 @@ const Home: FC = ({}) => {
 
     kits.forEach((kit) => {
       const kitStore = store.kit(kit.guid);
-      let type: KitStoreType = "temporary";
+      let type: KitStoreKind = "temporary";
       if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
       else if (kitStore.isLocallyPersisted) type = "local";
 
-      if (!selectedTypes.includes(type)) return;
+      if (!selectedKinds.includes(type)) return;
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
       const key = kit.name;
@@ -63,10 +63,10 @@ const Home: FC = ({}) => {
 
     kitGroups.forEach((groupKits, name) => {
       const parentId = `kit-${name}`;
-      const hasChildren = groupKits.length > 1 || groupKits.some(k => k.version);
+      const hasChildren = groupKits.length > 1 || groupKits.some((k) => k.version);
 
       const kitStore = store.kit(groupKits[0].guid);
-      let type: KitStoreType = "temporary";
+      let type: KitStoreKind = "temporary";
       if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
       else if (kitStore.isLocallyPersisted) type = "local";
 
@@ -85,9 +85,9 @@ const Home: FC = ({}) => {
       if (expandedRows.has(parentId) && hasChildren) {
         groupKits.forEach((kit) => {
           const kitStore = store.kit(kit.guid);
-          let kitType: KitStoreType = "temporary";
-          if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) kitType = "remote";
-          else if (kitStore.isLocallyPersisted) kitType = "local";
+          let kitKind: KitStoreKind = "temporary";
+          if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) kitKind = "remote";
+          else if (kitStore.isLocallyPersisted) kitKind = "local";
 
           const versionId = `${parentId}-${kit.version || "default"}`;
           result.push({
@@ -97,7 +97,7 @@ const Home: FC = ({}) => {
             parentId,
             hasChildren: false,
             isExpanded: false,
-            type: kitType,
+            type: kitKind,
             updatedAt: formatDate(kit.updatedAt),
             createdAt: formatDate(kit.createdAt),
             kit: kit,
@@ -107,9 +107,9 @@ const Home: FC = ({}) => {
     });
 
     return result;
-  }, [kits, store, selectedTypes, searchQuery, expandedRows]);
+  }, [kits, store, selectedKinds, searchQuery, expandedRows]);
 
-  const handleCreateKit = (type: KitStoreType) => {
+  const handleCreateKit = (type: KitStoreKind) => {
     const newKit: Kit = {
       guid: guid(),
       name: "New Kit",
@@ -123,8 +123,8 @@ const Home: FC = ({}) => {
     navigateToKit(newKit.guid);
   };
 
-  const toggleType = (type: KitStoreType) => {
-    setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+  const toggleKind = (type: KitStoreKind) => {
+    setSelectedKinds((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
   };
 
   const toggleRow = (rowId: string) => {
@@ -138,12 +138,12 @@ const Home: FC = ({}) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-2 p-4 border-b">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
         <div className="flex flex-wrap gap-2">
           <Toggle
             type="withAction"
-            pressed={selectedTypes.includes("temporary")}
-            onPressedChange={() => toggleType("temporary")}
+            pressed={selectedKinds.includes("temporary")}
+            onPressedChange={() => toggleKind("temporary")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("temporary")}
             tooltip="Filter temporary kits"
@@ -153,8 +153,8 @@ const Home: FC = ({}) => {
           </Toggle>
           <Toggle
             type="withAction"
-            pressed={selectedTypes.includes("local")}
-            onPressedChange={() => toggleType("local")}
+            pressed={selectedKinds.includes("local")}
+            onPressedChange={() => toggleKind("local")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("local")}
             tooltip="Filter local kits"
@@ -164,8 +164,8 @@ const Home: FC = ({}) => {
           </Toggle>
           <Toggle
             type="withAction"
-            pressed={selectedTypes.includes("remote")}
-            onPressedChange={() => toggleType("remote")}
+            pressed={selectedKinds.includes("remote")}
+            onPressedChange={() => toggleKind("remote")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("remote")}
             tooltip="Filter remote kits"
@@ -174,13 +174,16 @@ const Home: FC = ({}) => {
             Remote
           </Toggle>
         </div>
-        <Input placeholder="Search kits..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input className="lg:flex-1 lg:min-w-[200px]" placeholder="Search kits..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
             <tr>
-              <th className="text-left p-2 font-medium">Kit</th>
+              <th className="text-left p-2 font-medium">Name</th>
+              <th className="text-left p-2 font-medium">Kind</th>
+              <th className="text-left p-2 font-medium">Last updated</th>
+              <th className="text-left p-2 font-medium">Created</th>
             </tr>
           </thead>
           <tbody>
@@ -189,11 +192,11 @@ const Home: FC = ({}) => {
                 <td className="p-2">
                   <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
                     {row.hasChildren ? (
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleRow(row.id);
-                        }} 
+                        }}
                         className="w-4 h-4 flex items-center justify-center hover:bg-muted"
                       >
                         {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -201,14 +204,14 @@ const Home: FC = ({}) => {
                     ) : (
                       <span className="w-4 h-4" />
                     )}
-                    <span 
-                      className="cursor-pointer" 
-                      onClick={() => navigateToKit(row.kit.guid)}
-                    >
+                    <span className="cursor-pointer" onClick={() => navigateToKit(row.kit.guid)}>
                       {row.name}
                     </span>
                   </div>
                 </td>
+                <td className="p-2 capitalize">{row.type}</td>
+                <td className="p-2">{row.updatedAt}</td>
+                <td className="p-2">{row.createdAt}</td>
               </tr>
             ))}
           </tbody>

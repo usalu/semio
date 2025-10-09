@@ -441,7 +441,7 @@ const KitEditor: FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-2 p-4 border-b">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
         <div className="flex flex-wrap gap-2">
           <Toggle
             type="withAction"
@@ -498,17 +498,13 @@ const KitEditor: FC = () => {
           >
             Authors
           </Toggle>
+          {allConcepts.length > 0 && allConcepts.map((concept) => (
+            <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)}>
+              {concept}
+            </Toggle>
+          ))}
         </div>
-        {allConcepts.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {allConcepts.map((concept) => (
-              <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)}>
-                {concept}
-              </Toggle>
-            ))}
-          </div>
-        )}
-        <Input placeholder={t("common.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input className="lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">

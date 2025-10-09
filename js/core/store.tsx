@@ -4758,22 +4758,29 @@ abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelecti
   };
 
   change = (diff: TDiff) => {
+    console.log("[Editor.change] called with diff:", diff);
     this.transact(() => {
+      console.log("[Editor.change] inside transact");
       if (diff.fullscreenPanel !== undefined) {
         this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
       }
       if (diff.panelVisibility !== undefined) {
+        console.log("[Editor.change] panelVisibility diff:", diff.panelVisibility);
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        console.log("[Editor.change] existing yPanelVisibility:", yPanelVisibility ? "exists" : "null", yPanelVisibility?.toJSON());
         if (!yPanelVisibility) {
           yPanelVisibility = new Y.Map<boolean>();
           this.yMap.set("panelVisibility", yPanelVisibility);
+          console.log("[Editor.change] created new yPanelVisibility");
         }
         yPanelVisibility.set("__editor", this.constructor.name as any); // DEBUG: mark which editor owns this
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
+            console.log("[Editor.change] setting", key, "to", value);
             yPanelVisibility.set(key, value);
           }
         });
+        console.log("[Editor.change] final yPanelVisibility:", yPanelVisibility.toJSON());
       }
       if (diff.selection) {
         this.applySelectionDiff(diff.selection);
@@ -5247,14 +5254,14 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   }
 }
 
-function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore {
+function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedKitId = kitScope?.guid ?? id?.type.kit;
-  if (!resolvedKitId) throw new Error("useTypeEditorStore must be called within a KitScopeProvider or be directly provided with an id");
+  if (!resolvedKitId) return null;
   const typeScope = useTypeScope();
   const resolvedTypeId = typeScope?.guid ?? id?.type.guid;
-  if (!resolvedTypeId) throw new Error("useTypeEditorStore must be called within a TypeScopeProvider or be directly provided with an id");
+  if (!resolvedTypeId) return null;
   const typeEditorStore = store.typeEditor(resolvedKitId, resolvedTypeId);
   return selector ? selector(typeEditorStore) : typeEditorStore;
 }
@@ -5275,8 +5282,22 @@ export function useTypeEditorOthers(): TypeEditorPresenceOther[] {
   return useTypeEditor((s) => s.others) as TypeEditorPresenceOther[];
 }
 
-export function useTypeEditorCommands() {
-  const store = useTypeEditorStore() as TypeEditorStore;
+export function useTypeEditorCommands(id?: TypeEditorId) {
+  const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
+  const noOp = () => {};
+  if (!store) {
+    return {
+      startTransaction: noOp,
+      finalizeTransaction: noOp,
+      abortTransaction: noOp,
+      undo: noOp,
+      redo: noOp,
+      selectAll: noOp,
+      deselectAll: noOp,
+      togglePanel: noOp,
+      execute: noOp,
+    };
+  }
   return {
     startTransaction: () => store.execute("semio.typeEditor.startTransaction"),
     finalizeTransaction: () => store.execute("semio.typeEditor.finalizeTransaction"),
@@ -6075,12 +6096,18 @@ const kitEditorCommands = {
   },
 };
 
-function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore {
+function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
+  console.log("[useKitEditorStore] kitScope:", kitScope);
   const resolvedKitId = kitScope?.guid ?? id?.kit;
-  if (!resolvedKitId) throw new Error("useKitEditorStore must be called within a KitScopeProvider or be directly provided with an id");
+  console.log("[useKitEditorStore] resolvedKitId:", resolvedKitId);
+  if (!resolvedKitId) {
+    console.log("[useKitEditorStore] no resolvedKitId, returning null");
+    return null;
+  }
   const kitEditorStore = store.kitEditor(resolvedKitId);
+  console.log("[useKitEditorStore] kitEditorStore:", kitEditorStore);
   return selector ? selector(kitEditorStore) : kitEditorStore;
 }
 
@@ -6100,8 +6127,47 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
   return useKitEditor((s) => s.others) as KitEditorPresenceOther[];
 }
 
-export function useKitEditorCommands() {
-  const store = useKitEditorStore() as KitEditorStore;
+export function useKitEditorCommands(id?: KitEditorId) {
+  const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
+  console.log("[useKitEditorCommands] store:", store);
+  const noOp = () => { console.log("[useKitEditorCommands] noOp called"); };
+  if (!store) {
+    console.log("[useKitEditorCommands] no store, returning noOps");
+    return {
+      startTransaction: noOp,
+      finalizeTransaction: noOp,
+      abortTransaction: noOp,
+      undo: noOp,
+      redo: noOp,
+      selectAll: noOp,
+      deselectAll: noOp,
+      selectType: noOp,
+      selectTypes: noOp,
+      addTypeToSelection: noOp,
+      removeTypeFromSelection: noOp,
+      selectDesign: noOp,
+      selectDesigns: noOp,
+      addDesignToSelection: noOp,
+      removeDesignFromSelection: noOp,
+      deleteSelected: noOp,
+      toggleTypesFullscreen: noOp,
+      toggleDesignsFullscreen: noOp,
+      addType: noOp,
+      addTypes: noOp,
+      removeType: noOp,
+      removeTypes: noOp,
+      addDesign: noOp,
+      addDesigns: noOp,
+      removeDesign: noOp,
+      removeDesigns: noOp,
+      updateType: noOp,
+      updateTypes: noOp,
+      updateDesign: noOp,
+      updateDesigns: noOp,
+      togglePanel: noOp,
+      execute: noOp,
+    };
+  }
   return {
     startTransaction: () => store.execute("semio.kitEditor.startTransaction"),
     finalizeTransaction: () => store.execute("semio.kitEditor.finalizeTransaction"),
@@ -6153,6 +6219,10 @@ type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNum
 type YDesignEditor = Y.Map<YDesignEditorVal>;
 type YDesignEditors = Y.Map<string, Y.Map<string, YDesignEditor>>;
 
+export interface DesignEditorId {
+  kit: KitId;
+  design: DesignId;
+}
 export interface DesignEditorSelection {
   pieces?: Guid[];
   connections?: Guid[];
@@ -6498,6 +6568,18 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   change = (diff: DesignEditorDiff) => {
     this.transact(() => {
       if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
+      if (diff.panelVisibility !== undefined) {
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            yPanelVisibility.set(key, value);
+          }
+        });
+      }
       if (diff.selection) {
         this.applySelectionDiff(diff.selection);
       }
@@ -6925,15 +7007,26 @@ export const DesignEditorScopeProvider = (props: { id: string; children: React.R
 };
 const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
-function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
+function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
+  console.log("[useDesignEditorStore] kitScope:", kitScope);
   const resolvedKitId = kitScope?.guid ?? id?.kit;
-  if (!resolvedKitId) throw new Error("useDesignEditorStore must be called within a KitScopeProvider or be directly provided with an id");
+  console.log("[useDesignEditorStore] resolvedKitId:", resolvedKitId);
+  if (!resolvedKitId) {
+    console.log("[useDesignEditorStore] no resolvedKitId, returning null");
+    return null;
+  }
   const designScope = useDesignScope();
+  console.log("[useDesignEditorStore] designScope:", designScope);
   const resolvedDesignId = designScope?.guid ?? id?.design;
-  if (!resolvedDesignId) throw new Error("useDesignEditorStore must be called within a DesignScopeProvider or be directly provided with an id");
+  console.log("[useDesignEditorStore] resolvedDesignId:", resolvedDesignId);
+  if (!resolvedDesignId) {
+    console.log("[useDesignEditorStore] no resolvedDesignId, returning null");
+    return null;
+  }
   const designEditorStore = store.designEditor(resolvedKitId, resolvedDesignId);
+  console.log("[useDesignEditorStore] designEditorStore:", designEditorStore);
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
@@ -6957,8 +7050,51 @@ export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor((s) => s.others) as DesignEditorPresenceOther[];
 }
 
-export function useDesignEditorCommands() {
-  const store = useDesignEditorStore() as DesignEditorStore;
+export function useDesignEditorCommands(id?: DesignEditorId) {
+  console.log("[useDesignEditorCommands] CALLED");
+  const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
+  console.log("[useDesignEditorCommands] store:", store);
+  console.log("[useDesignEditorCommands] store type:", typeof store);
+  console.log("[useDesignEditorCommands] store truthiness:", !!store);
+  const noOp = () => { console.log("[useDesignEditorCommands] noOp called"); };
+  if (!store) {
+    console.log("[useDesignEditorCommands] no store (falsy check passed), returning noOps");
+    return {
+      startTransaction: noOp,
+      finalizeTransaction: noOp,
+      abortTransaction: noOp,
+      undo: noOp,
+      redo: noOp,
+      selectAll: noOp,
+      deselectAll: noOp,
+      selectPiece: noOp,
+      selectPieces: noOp,
+      addPieceToSelection: noOp,
+      removePieceFromSelection: noOp,
+      selectConnection: noOp,
+      addConnectionToSelection: noOp,
+      removeConnectionFromSelection: noOp,
+      selectPiecePort: noOp,
+      deselectPiecePort: noOp,
+      deleteSelected: noOp,
+      toggleDiagramFullscreen: noOp,
+      toggleModelFullscreen: noOp,
+      addPiece: noOp,
+      addPieces: noOp,
+      removePiece: noOp,
+      removePieces: noOp,
+      addConnection: noOp,
+      addConnections: noOp,
+      removeConnection: noOp,
+      removeConnections: noOp,
+      updatePiece: noOp,
+      updatePieces: noOp,
+      updateConnection: noOp,
+      updateConnections: noOp,
+      togglePanel: noOp,
+      execute: noOp,
+    };
+  }
   return {
     startTransaction: () => store.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
@@ -6992,12 +7128,25 @@ export function useDesignEditorCommands() {
     updateConnection: (connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connection, connectionDiff),
     updateConnections: (updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
     togglePanel: (panelKey: keyof PanelVisibility) => {
+      console.log("[useDesignEditorCommands.togglePanel] called with panelKey:", panelKey);
+      console.log("[useDesignEditorCommands.togglePanel] store:", store);
+      console.log("[useDesignEditorCommands.togglePanel] store.guid:", store.guid);
+      console.log("[useDesignEditorCommands.togglePanel] store.yMap:", store.yMap);
+      console.log("[useDesignEditorCommands.togglePanel] typeof store.change:", typeof store.change);
+      console.log("[useDesignEditorCommands.togglePanel] store.change:", store.change);
       const current = store.snapshot().panelVisibility;
-      store.change({
-        panelVisibility: {
-          [panelKey]: !current[panelKey],
-        },
-      });
+      console.log("[useDesignEditorCommands.togglePanel] current panelVisibility:", current);
+      console.log("[useDesignEditorCommands.togglePanel] calling store.change...");
+      try {
+        store.change({
+          panelVisibility: {
+            [panelKey]: !current[panelKey],
+          },
+        });
+      } catch (error) {
+        console.error("[useDesignEditorCommands.togglePanel] ERROR in store.change:", error);
+      }
+      console.log("[useDesignEditorCommands.togglePanel] after store.change, new panelVisibility:", store.snapshot().panelVisibility);
     },
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
@@ -7803,6 +7952,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
   });
 
   useEffect(() => {
+    console.log("[useEditorPanelVisibility] effect running", { editorType, kitGuid, itemGuid, navigation });
     try {
       let editor: any;
       switch (editorType) {
@@ -7824,6 +7974,8 @@ export function useEditorPanelVisibility(): PanelVisibility {
         default:
       }
 
+      console.log("[useEditorPanelVisibility] editor found:", !!editor);
+
       if (editor) {
         const unsubscribe = editor.onChangedDeep(() => {
           const newPanelVisibility = editor.snapshot().panelVisibility || {
@@ -7832,6 +7984,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
             chat: true,
             settings: true,
           };
+          console.log("[useEditorPanelVisibility] panel visibility changed:", newPanelVisibility);
           setPanelVisibility(newPanelVisibility);
         });
 
@@ -7841,6 +7994,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
           chat: true,
           settings: true,
         };
+        console.log("[useEditorPanelVisibility] setting initial panel visibility:", initialPanelVisibility);
         setPanelVisibility(initialPanelVisibility);
 
         return unsubscribe;
@@ -7886,13 +8040,31 @@ export function useEditorCommands() {
 
     return {
       togglePanel: (panelKey: keyof PanelVisibility) => {
-        if (!editor) return;
+        console.log("[useEditorCommands] togglePanel called", { panelKey, editorType, editor: !!editor, kitGuid, itemGuid });
+        if (!editor) {
+          console.error("[useEditorCommands] togglePanel: no editor found!");
+          return;
+        }
+        console.log("[useEditorCommands] editor type:", editor.constructor.name);
+        console.log("[useEditorCommands] editor.change type:", typeof editor.change);
+        console.log("[useEditorCommands] editor.change is:", editor.change);
+        console.log("[useEditorCommands] editor has change:", 'change' in editor);
+        console.log("[useEditorCommands] editor keys:", Object.keys(editor));
+        console.log("[useEditorCommands] editor proto:", Object.getPrototypeOf(editor));
+        console.log("[useEditorCommands] editor proto.change:", Object.getPrototypeOf(editor)?.change);
         const current = editor.snapshot().panelVisibility;
-        editor.change({
-          panelVisibility: {
-            [panelKey]: !current[panelKey],
-          },
-        });
+        console.log("[useEditorCommands] current panelVisibility:", current);
+        console.log("[useEditorCommands] calling editor.change...");
+        try {
+          editor.change({
+            panelVisibility: {
+              [panelKey]: !current[panelKey],
+            },
+          });
+        } catch (e) {
+          console.error("[useEditorCommands] ERROR calling editor.change:", e);
+        }
+        console.log("[useEditorCommands] after change, new panelVisibility:", editor.snapshot().panelVisibility);
       },
       execute: (command: string, ...args: any[]) => {
         if (!editor) return;

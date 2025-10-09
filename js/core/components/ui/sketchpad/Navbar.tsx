@@ -22,22 +22,25 @@
 import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Wrench, X } from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   EditorType,
   PanelVisibility,
   SketchpadScope,
-  useEditorCommands,
+  useDesignEditorCommands,
   useEditorPanelVisibility,
   useEditorType,
+  useHomeCommands,
   useIsFullscreen,
   useIsMobile,
   useIsNavbarExpanded,
+  useKitEditorCommands,
   useKits,
   useNavigation,
   useNavigationHistory,
   useSketchpadCommands,
   useSketchpadScope,
+  useTypeEditorCommands,
 } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
@@ -207,10 +210,27 @@ const Search: FC = ({}) => {
 
 const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
+  const { kit, design, type } = useParams();
   const editorType = useEditorType();
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
-  const { togglePanel } = useEditorCommands();
+  const homeCommands = useHomeCommands();
+  const kitEditorCommands = useKitEditorCommands(kit ? { kit } : undefined);
+  const designEditorCommands = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
+  const typeEditorCommands = useTypeEditorCommands(type ? { type } : undefined);
+  console.log("[PanelToggles] editorType:", editorType);
+  console.log("[PanelToggles] homeCommands:", homeCommands);
+  console.log("[PanelToggles] kitEditorCommands:", kitEditorCommands);
+  console.log("[PanelToggles] designEditorCommands:", designEditorCommands);
+  console.log("[PanelToggles] typeEditorCommands:", typeEditorCommands);
+  const commands = {
+    [EditorType.HOME]: homeCommands,
+    [EditorType.KIT]: kitEditorCommands,
+    [EditorType.DESIGN]: designEditorCommands,
+    [EditorType.TYPE]: typeEditorCommands,
+  };
+  console.log("[PanelToggles] commands:", commands);
+  console.log("[PanelToggles] selected command:", commands[editorType]);
   const isMobile = useIsMobile();
 
   if (panelConfig.length === 0) return null;
@@ -225,6 +245,10 @@ const PanelToggles: FC = ({}) => {
   const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
+    console.log("[Navbar handleToggle] called with panelKey:", panelKey, "current state:", visiblePanels[panelKey]);
+    console.log("[Navbar handleToggle] editorType:", editorType);
+    const togglePanel = commands[editorType]?.togglePanel || (() => { console.log("[PanelToggles] fallback no-op called"); });
+    console.log("[Navbar handleToggle] togglePanel function:", togglePanel);
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -247,10 +271,12 @@ const PanelToggles: FC = ({}) => {
         });
       }
     }
+    console.log("[Navbar handleToggle] calling togglePanel:", panelKey);
     togglePanel(panelKey);
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
+    const togglePanel = commands[editorType]?.togglePanel || (() => { console.log("[PanelToggles] fallback no-op called"); });
     if (pressed) {
       // Open the currently selected panel if not already open
       if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
@@ -266,6 +292,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleExclusiveValueChange = (value: string | undefined) => {
+    const togglePanel = commands[editorType]?.togglePanel || (() => { console.log("[PanelToggles] fallback no-op called"); });
     if (!value) return;
 
     // Close all exclusive panels and open the selected one
