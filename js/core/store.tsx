@@ -3693,14 +3693,10 @@ class KitStore {
   private cache?: Kit;
   private cacheHash?: string;
 
-  constructor(parent: SketchpadStore, kit: Kit, yProviderFactory?: YProviderFactory) {
+  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, yProviderFactory?: YProviderFactory) {
     this.parent = parent;
-    this.yProviderFactory = yProviderFactory;
+    this.yProviderFactory = remote ? yProviderFactory : undefined;
     this.yDoc = new Y.Doc();
-
-    if (yProviderFactory) {
-      yProviderFactory(this.yDoc, this.name + "@" + this.version);
-    }
 
     this.commandRegistry = new Map();
     this.regularFiles = new Map();
@@ -3744,6 +3740,14 @@ class KitStore {
       this.yKit.set("createdAt", new Date().toISOString());
       this.updated();
     });
+
+    if (local) {
+      this.persistence = new IndexeddbPersistence(`semio-kit-${kit.guid}`, this.yDoc);
+    }
+
+    if (remote && yProviderFactory) {
+      yProviderFactory(this.yDoc, this.name + "@" + this.version);
+    }
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -3833,6 +3837,18 @@ class KitStore {
 
   get fileUrls(): Map<Url, Url> {
     return this.regularFiles;
+  }
+
+  get isLocallyPersisted(): boolean {
+    return !!this.persistence;
+  }
+
+  get isRemotelySynced(): boolean {
+    return !!this.yProviderFactory;
+  }
+
+  get isTemporary(): boolean {
+    return !this.isLocallyPersisted && !this.isRemotelySynced;
   }
 
   updated(): void {
@@ -7218,8 +7234,8 @@ class SketchpadStore {
     return this.cache;
   };
 
-  createKit = (kit: Kit) => {
-    const kitStore = new KitStore(this, kit, this.yProviderFactory);
+  createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
+    const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory);
     this.kits.set(kit.guid, kitStore);
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
@@ -7397,8 +7413,10 @@ class SketchpadStore {
     if (command === "semio.sketchpad.createKit") {
       console.group(`Executing (special) command: "${command}"`);
       const kit = rest[0] as Kit;
-      console.log("Kit:", kit);
-      this.createKit(kit);
+      const local = rest[1] as boolean | undefined;
+      const remote = rest[2] as boolean | undefined;
+      console.log("Kit:", kit, "Local:", local, "Remote:", remote);
+      this.createKit(kit, local, remote);
       console.groupEnd();
       return {} as T;
     }
@@ -7683,7 +7701,7 @@ export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: 
 };
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 
-function useSketchpadStore(id?: string): SketchpadStore {
+export function useSketchpadStore(id?: string): SketchpadStore {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
@@ -7889,7 +7907,7 @@ export function useSketchpadCommands() {
     toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
     setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),
     syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
-    createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
+    createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
     createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
     navigateToKit: (kit: Guid) => navigate(`/${kit}`),
