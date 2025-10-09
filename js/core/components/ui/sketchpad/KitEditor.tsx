@@ -3,7 +3,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
-import { useKit, useKitCommands, useKitEditorCommands, useKitStore, useSketchpadCommands } from "../../../store";
+import { EditorType, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditorCommands, useKitStore, useSketchpadCommands } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
@@ -39,14 +39,36 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-export const KitDetailsSection: FC = () => {
-  const { t } = useTranslation();
-  const { startTransaction, finalizeTransaction, abortTransaction } = useKitEditorCommands();
-  const kit = useKit() as Kit;
-  const kitStore = useKitStore() as any;
+const KitDetails: FC = () => {
+  const isInKitScope = useIsInKitScope();
 
-  return (
-    <>
+  if (!isInKitScope) {
+    return null;
+  }
+
+  return <KitDetailsForm />;
+};
+
+const KitDetailsForm: FC = () => {
+  const { t } = useTranslation();
+
+  try {
+    const kit = useKit() as Kit;
+
+    if (!kit) {
+      return (
+        <TreeSection label={t("kit.title")} defaultOpen={true}>
+          <TreeItem>
+            <p className="text-sm text-muted-foreground">Kit not available</p>
+          </TreeItem>
+        </TreeSection>
+      );
+    }
+
+    const kitStore = useKitStore() as any;
+    const { startTransaction, finalizeTransaction, abortTransaction } = useKitEditorCommands();
+
+    return (
       <TreeSection label={t("kit.title")} defaultOpen={true}>
         <TreeItem>
           <Input lazy label={t("kit.name")} value={kit.name} onLazyChange={(value) => kitStore.change({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
@@ -124,13 +146,41 @@ export const KitDetailsSection: FC = () => {
           />
         </TreeItem>
       </TreeSection>
-    </>
-  );
+    );
+  } catch (error) {
+    console.error("Error rendering kit details:", error);
+    return (
+      <TreeSection label={t("kit.title")} defaultOpen={true}>
+        <TreeItem>
+          <p className="text-sm text-muted-foreground">Kit not found or not loaded</p>
+        </TreeItem>
+      </TreeSection>
+    );
+  }
 };
 
 const KitEditor: FC = () => {
   const { t } = useTranslation();
-  const kit = useKit() as Kit;
+
+  let kit: Kit | null = null;
+  try {
+    kit = useKit() as Kit;
+  } catch (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">No kit loaded</p>
+      </div>
+    );
+  }
+
+  if (!kit) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">No kit loaded</p>
+      </div>
+    );
+  }
+
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const [selectedKinds, setSelectedKinds] = useState<ArtifactKind[]>(["designs", "types", "qualities", "files", "authors"]);
@@ -140,6 +190,7 @@ const KitEditor: FC = () => {
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const editorType = useEditorType();
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
@@ -148,18 +199,22 @@ const KitEditor: FC = () => {
   }, [kit.designs]);
 
   useEffect(() => {
-    removeSection("details", "kit");
+    if (editorType !== EditorType.KIT) {
+      return;
+    }
+
     addSection("details", {
       id: "kit",
       label: "Kit",
       order: 0,
       defaultOpen: true,
-      content: <KitDetailsSection />,
+      content: () => <KitDetails />,
     });
+
     return () => {
       removeSection("details", "kit");
     };
-  }, [addSection, removeSection]);
+  }, [addSection, removeSection, editorType]);
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -459,7 +514,7 @@ const KitEditor: FC = () => {
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
             <tr>
-              <th className="text-left p-2 font-medium">Artifact</th>
+              <th className="text-left p-2 font-medium">Name</th>
               <th className="text-left p-2 font-medium">Authors</th>
               <th className="text-left p-2 font-medium">Last updated</th>
               <th className="text-left p-2 font-medium">Created</th>

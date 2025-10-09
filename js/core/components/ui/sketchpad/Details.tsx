@@ -1,11 +1,37 @@
-import { FC, useState } from "react";
+import { FC, ReactNode, useState } from "react";
+import { useParams } from "react-router";
 
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
+import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface DetailsProps extends ResizablePanelProps {}
+
+const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
+  const { kit, design, type } = useParams();
+
+  if (design && kit) {
+    return (
+      <KitScopeProvider guid={kit}>
+        <DesignScopeProvider guid={design}>{children}</DesignScopeProvider>
+      </KitScopeProvider>
+    );
+  }
+  if (type && kit) {
+    return (
+      <KitScopeProvider guid={kit}>
+        <TypeScopeProvider guid={type}>{children}</TypeScopeProvider>
+      </KitScopeProvider>
+    );
+  }
+  if (kit) {
+    return <KitScopeProvider guid={kit}>{children}</KitScopeProvider>;
+  }
+
+  return <>{children}</>;
+};
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
@@ -48,21 +74,23 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     >
       <ScrollArea className="h-full">
         <div className="p-1 overflow-hidden min-w-0">
-          <Tree className="min-w-0 overflow-hidden">
-            {sortedSections.map((section) => (
-              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {section.content}
-              </TreeSection>
-            ))}
+          <ScopedContent>
+            <Tree className="min-w-0 overflow-hidden">
+              {sortedSections.map((section) => (
+                <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                  {typeof section.content === "function" ? section.content() : section.content}
+                </TreeSection>
+              ))}
 
-            {sortedSections.length === 0 && (
-              <TreeSection label="No Selection" defaultOpen={true}>
-                <TreeItem>
-                  <p className="text-sm text-muted-foreground">Select an item to view details</p>
-                </TreeItem>
-              </TreeSection>
-            )}
-          </Tree>
+              {sortedSections.length === 0 && (
+                <TreeSection label="No Selection" defaultOpen={true}>
+                  <TreeItem>
+                    <p className="text-sm text-muted-foreground">Select an item to view details</p>
+                  </TreeItem>
+                </TreeSection>
+              )}
+            </Tree>
+          </ScopedContent>
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

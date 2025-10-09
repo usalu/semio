@@ -12,7 +12,10 @@ type KitStoreType = "temporary" | "local" | "remote";
 type TableRow = {
   id: string;
   name: string;
-  version: string;
+  level: number;
+  parentId?: string;
+  hasChildren: boolean;
+  isExpanded: boolean;
   type: KitStoreType;
   updatedAt: string;
   createdAt: string;
@@ -25,16 +28,24 @@ const ChevronRight: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const ChevronDown: FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
 const Home: FC = ({}) => {
   const kits = useKits();
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
   const [selectedTypes, setSelectedTypes] = useState<KitStoreType[]>(["temporary", "local", "remote"]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
     const formatDate = (date?: Date) => (date instanceof Date ? date.toLocaleDateString() : date ? new Date(date).toLocaleDateString() : "");
+    const kitGroups = new Map<string, KitShallow[]>();
 
     kits.forEach((kit) => {
       const kitStore = store.kit(kit.guid);
@@ -45,19 +56,58 @@ const Home: FC = ({}) => {
       if (!selectedTypes.includes(type)) return;
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
+      const key = kit.name;
+      if (!kitGroups.has(key)) kitGroups.set(key, []);
+      kitGroups.get(key)!.push(kit);
+    });
+
+    kitGroups.forEach((groupKits, name) => {
+      const parentId = `kit-${name}`;
+      const hasChildren = groupKits.length > 1 || groupKits.some(k => k.version);
+
+      const kitStore = store.kit(groupKits[0].guid);
+      let type: KitStoreType = "temporary";
+      if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
+      else if (kitStore.isLocallyPersisted) type = "local";
+
       result.push({
-        id: kit.guid,
-        name: kit.name,
-        version: kit.version || "",
+        id: parentId,
+        name: name,
+        level: 0,
+        hasChildren,
+        isExpanded: expandedRows.has(parentId),
         type,
-        updatedAt: formatDate(kit.updatedAt),
-        createdAt: formatDate(kit.createdAt),
-        kit: kit,
+        updatedAt: "",
+        createdAt: "",
+        kit: groupKits[0],
       });
+
+      if (expandedRows.has(parentId) && hasChildren) {
+        groupKits.forEach((kit) => {
+          const kitStore = store.kit(kit.guid);
+          let kitType: KitStoreType = "temporary";
+          if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) kitType = "remote";
+          else if (kitStore.isLocallyPersisted) kitType = "local";
+
+          const versionId = `${parentId}-${kit.version || "default"}`;
+          result.push({
+            id: versionId,
+            name: kit.version || "(default)",
+            level: 1,
+            parentId,
+            hasChildren: false,
+            isExpanded: false,
+            type: kitType,
+            updatedAt: formatDate(kit.updatedAt),
+            createdAt: formatDate(kit.createdAt),
+            kit: kit,
+          });
+        });
+      }
     });
 
     return result;
-  }, [kits, store, selectedTypes, searchQuery]);
+  }, [kits, store, selectedTypes, searchQuery, expandedRows]);
 
   const handleCreateKit = (type: KitStoreType) => {
     const newKit: Kit = {
@@ -75,6 +125,15 @@ const Home: FC = ({}) => {
 
   const toggleType = (type: KitStoreType) => {
     setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+  };
+
+  const toggleRow = (rowId: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId);
+      else next.add(rowId);
+      return next;
+    });
   };
 
   return (
@@ -121,21 +180,35 @@ const Home: FC = ({}) => {
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
             <tr>
-              <th className="text-left p-2 font-medium">Name</th>
-              <th className="text-left p-2 font-medium">Version</th>
-              <th className="text-left p-2 font-medium">Type</th>
-              <th className="text-left p-2 font-medium">Last updated</th>
-              <th className="text-left p-2 font-medium">Created</th>
+              <th className="text-left p-2 font-medium">Kit</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b hover:bg-muted/50 cursor-pointer" onClick={() => navigateToKit(row.id)}>
-                <td className="p-2">{row.name}</td>
-                <td className="p-2">{row.version}</td>
-                <td className="p-2 capitalize">{row.type}</td>
-                <td className="p-2">{row.updatedAt}</td>
-                <td className="p-2">{row.createdAt}</td>
+              <tr key={row.id} className="border-b hover:bg-muted/50">
+                <td className="p-2">
+                  <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
+                    {row.hasChildren ? (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRow(row.id);
+                        }} 
+                        className="w-4 h-4 flex items-center justify-center hover:bg-muted"
+                      >
+                        {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                      </button>
+                    ) : (
+                      <span className="w-4 h-4" />
+                    )}
+                    <span 
+                      className="cursor-pointer" 
+                      onClick={() => navigateToKit(row.kit.guid)}
+                    >
+                      {row.name}
+                    </span>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

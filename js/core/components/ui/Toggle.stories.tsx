@@ -81,6 +81,22 @@ export const WithTooltip: Story = {
   },
 };
 
+export const WithValueBasedTooltip: Story = {
+  render: () => {
+    const [pressed, setPressed] = useState(false);
+    return (
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Lock Layer (Hover to see tooltip change)</label>
+        <Toggle pressed={pressed} onPressedChange={setPressed} tooltip="Click to lock layer" tooltipPressed="Click to unlock layer" hotkey="Ctrl+L">
+          <Lock />
+          {pressed ? "Locked" : "Unlocked"}
+        </Toggle>
+        <p className="text-xs text-muted-foreground">Current state: {pressed ? "Locked" : "Unlocked"}</p>
+      </div>
+    );
+  },
+};
+
 export const Disabled: Story = {
   args: {
     disabled: true,
@@ -280,6 +296,64 @@ export const WithActionVariants: Story = {
           >
             Show
           </Toggle>
+        </div>
+      </div>
+    );
+  },
+};
+
+export const AllTypesWithValueBasedTooltips: Story = {
+  render: () => {
+    const [standardPressed, setStandardPressed] = useState(false);
+    const [cycleValue, setCycleValue] = useState<"model" | "diagram" | "list">("model");
+    const [dropdownPressed, setDropdownPressed] = useState(false);
+    const [dropdownValue, setDropdownValue] = useState<string>("box");
+
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Standard Toggle (value-based tooltip)</p>
+          <Toggle pressed={standardPressed} onPressedChange={setStandardPressed} tooltip="Enable layer" tooltipPressed="Disable layer" hotkey="Ctrl+E">
+            <Lock />
+            {standardPressed ? "Enabled" : "Disabled"}
+          </Toggle>
+          <p className="text-xs text-muted-foreground">Tooltip changes based on pressed state</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Cycle Toggle (value-based tooltip)</p>
+          <Toggle
+            type="cycle"
+            value={cycleValue}
+            onValueChange={setCycleValue}
+            items={[
+              { value: "model", label: <Box />, tooltip: "Currently in 3D Model view" },
+              { value: "diagram", label: <Network />, tooltip: "Currently in Diagram view" },
+              { value: "list", label: <List />, tooltip: "Currently in List view" },
+            ]}
+          />
+          <p className="text-xs text-muted-foreground">Tooltip shows current view mode: {cycleValue}</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Dropdown Toggle (value-based tooltip)</p>
+          <Toggle
+            type="dropdown"
+            pressed={dropdownPressed}
+            onPressedChange={setDropdownPressed}
+            value={dropdownValue}
+            onValueChange={setDropdownValue}
+            dropdownTooltip="Change shape"
+            items={[
+              { value: "box", label: <Box />, tooltip: "Box shape selected" },
+              { value: "cylinder", label: <Cylinder />, tooltip: "Cylinder shape selected" },
+              { value: "hexagon", label: <Hexagon />, tooltip: "Hexagon shape selected" },
+              { value: "circle", label: <Circle />, tooltip: "Circle shape selected" },
+            ]}
+          />
+          <p className="text-xs text-muted-foreground">
+            Tooltip shows selected shape: {dropdownValue} ({dropdownPressed ? "enabled" : "disabled"})
+          </p>
         </div>
       </div>
     );

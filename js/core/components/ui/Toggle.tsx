@@ -49,14 +49,15 @@ export interface ToggleItem<T extends string> {
   hotkey?: string;
 }
 
-interface ToggleStandardProps extends React.ComponentProps<typeof TogglePrimitive.Root> {
+interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type?: "default";
   tooltip?: string;
+  tooltipPressed?: string;
   hotkey?: string;
   label?: string;
 }
 
-interface ToggleCycleProps<T extends string> extends React.ComponentProps<typeof TogglePrimitive.Root> {
+interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type: "cycle";
   value?: T;
   onValueChange?: (value: T) => void;
@@ -66,7 +67,7 @@ interface ToggleCycleProps<T extends string> extends React.ComponentProps<typeof
   label?: string;
 }
 
-interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "pressed" | "onPressedChange"> {
+interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type: "dropdown";
   value?: T;
   onValueChange?: (value: T) => void;
@@ -78,7 +79,7 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   dropdownTooltip?: string;
 }
 
-interface ToggleWithActionProps extends React.ComponentProps<typeof TogglePrimitive.Root> {
+interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type: "withAction";
   actionIcon: React.ReactNode;
   onActionClick: () => void;
@@ -93,7 +94,7 @@ type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleP
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   // Cycle type
   if ("type" in props && props.type === "cycle") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, pressed, onPressedChange, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, hotkey, label, pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -157,7 +158,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // WithAction type
   if ("type" in props && props.type === "withAction") {
-    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, ...restProps } = props;
+    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, type, ...restProps } = props;
 
     const mainContent = tooltip ? (
       <Tooltip>
@@ -227,7 +228,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", dropdownTooltip, pressed, onPressedChange, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", dropdownTooltip, pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -239,14 +240,17 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       setOpen(false);
     };
 
-    const mainContent = tooltip ? (
+    const activeTooltip = currentItem?.tooltip || tooltip;
+    const activeHotkey = currentItem?.hotkey || hotkey;
+
+    const mainContent = activeTooltip ? (
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="truncate flex-1 min-w-0">{currentItem?.label || placeholder}</span>
         </TooltipTrigger>
         <TooltipContent>
-          {tooltip}
-          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+          {activeTooltip}
+          {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
         </TooltipContent>
       </Tooltip>
     ) : (
@@ -352,15 +356,17 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   // Standard toggle
-  const { className, tooltip, hotkey, label, ...restProps } = props as ToggleStandardProps;
+  const { className, tooltip, tooltipPressed, hotkey, label, type, pressed, ...restProps } = props as ToggleStandardProps;
 
-  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), className)} {...restProps} />;
+  const activeTooltip = (pressed && tooltipPressed) ? tooltipPressed : tooltip;
 
-  const wrappedToggle = tooltip ? (
+  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), className)} pressed={pressed} {...restProps} />;
+
+  const wrappedToggle = activeTooltip ? (
     <Tooltip>
       <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
       <TooltipContent>
-        {tooltip}
+        {activeTooltip}
         {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
       </TooltipContent>
     </Tooltip>

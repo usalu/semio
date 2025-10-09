@@ -19,12 +19,13 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Terminal, Wrench, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Wrench, X } from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import {
   EditorType,
+  PanelVisibility,
   SketchpadScope,
   useEditorCommands,
   useEditorPanelVisibility,
@@ -47,7 +48,7 @@ import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 export interface PanelSection {
   id: string;
   label: string;
-  content: ReactNode;
+  content: ReactNode | (() => ReactNode);
   defaultOpen?: boolean;
   order?: number;
   actions?: Array<{
@@ -138,14 +139,12 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
   ],
   [EditorType.DESIGN]: [
     { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
-    { key: "console", icon: Terminal, tooltip: t("panels.console"), hotkey: "⌘K" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.TYPE]: [
     { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
-    { key: "console", icon: Terminal, tooltip: t("panels.console"), hotkey: "⌘K" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
@@ -216,52 +215,52 @@ const PanelToggles: FC = ({}) => {
 
   if (panelConfig.length === 0) return null;
 
-  // Separate exclusive panels (details, chat, settings) from regular toggles
+  // Exclusive panels: only one can be open at a time (details, chat, settings)
   const exclusivePanels = ["details", "chat", "settings"];
   const exclusiveConfigs = panelConfig.filter((p) => exclusivePanels.includes(p.key));
   const regularConfigs = panelConfig.filter((p) => !exclusivePanels.includes(p.key));
 
   // Find currently active exclusive panel
-  const activeExclusivePanel = exclusiveConfigs.find((p) => visiblePanels[p.key])?.key || exclusiveConfigs[0]?.key || "";
-  const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key]);
+  const activeExclusivePanel = exclusiveConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || exclusiveConfigs[0]?.key || "";
+  const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
-  const handleToggle = (panelKey: string) => {
+  const handleToggle = (panelKey: keyof PanelVisibility) => {
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
       // On mobile, only one panel can be open at a time
       if (!current) {
         // Close all other panels
-        Object.keys(visiblePanels).forEach((p) => {
+        (Object.keys(visiblePanels) as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
-            togglePanel(p as any);
+            togglePanel(p);
           }
         });
       }
     } else {
-      // Desktop behavior: Handle mutual exclusivity for chat, details, and settings
+      // Desktop behavior: Handle mutual exclusivity for details, chat, and settings
       if (!current && exclusivePanels.includes(panelKey)) {
-        exclusivePanels.forEach((p) => {
+        (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
-            togglePanel(p as any);
+            togglePanel(p);
           }
         });
       }
     }
-    togglePanel(panelKey as any);
+    togglePanel(panelKey);
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
     if (pressed) {
       // Open the currently selected panel if not already open
-      if (!visiblePanels[activeExclusivePanel]) {
-        handleToggle(activeExclusivePanel);
+      if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
+        handleToggle(activeExclusivePanel as keyof PanelVisibility);
       }
     } else {
       // Close the currently open exclusive panel
-      const openPanel = exclusiveConfigs.find((p) => visiblePanels[p.key]);
+      const openPanel = exclusiveConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
-        togglePanel(openPanel.key as any);
+        togglePanel(openPanel.key as keyof PanelVisibility);
       }
     }
   };
@@ -270,42 +269,34 @@ const PanelToggles: FC = ({}) => {
     if (!value) return;
 
     // Close all exclusive panels and open the selected one
-    exclusivePanels.forEach((p) => {
+    (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
       const isOpen = visiblePanels[p];
       const shouldOpen = p === value;
 
       if (isOpen && !shouldOpen) {
-        togglePanel(p as any);
+        togglePanel(p);
       } else if (!isOpen && shouldOpen) {
-        togglePanel(p as any);
+        togglePanel(p);
       }
     });
   };
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Regular toggles (workbench, console) */}
-      {regularConfigs.length > 0 && (
-        <ToggleGroup
-          type="multiple"
-          value={regularConfigs.filter((p) => visiblePanels[p.key]).map((p) => p.key)}
-          onValueChange={(values) => {
-            regularConfigs.forEach(({ key }) => {
-              const isCurrentlyVisible = visiblePanels[key] || false;
-              const shouldBeVisible = values.includes(key);
-              if (isCurrentlyVisible !== shouldBeVisible) {
-                handleToggle(key);
-              }
-            });
+    <ToggleGroup type="multiple" value={[...regularConfigs.filter((p) => visiblePanels[p.key as keyof PanelVisibility]).map((p) => p.key), ...(isAnyExclusivePanelOpen ? [activeExclusivePanel] : [])]}>
+      {/* Regular toggles (workbench) */}
+      {regularConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
+        <ToggleGroupItem
+          key={key}
+          value={key}
+          tooltip={tooltip}
+          hotkey={hotkey}
+          onClick={() => {
+            handleToggle(key as keyof PanelVisibility);
           }}
         >
-          {regularConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
-            <ToggleGroupItem key={key} value={key} tooltip={tooltip} hotkey={hotkey}>
-              <Icon />
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      )}
+          <Icon />
+        </ToggleGroupItem>
+      ))}
 
       {/* Dropdown toggle for exclusive panels (details, chat, settings) */}
       {exclusiveConfigs.length > 0 && (
@@ -317,6 +308,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleExclusiveValueChange}
           tooltip={exclusiveConfigs.find((p) => p.key === activeExclusivePanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
+          className={regularConfigs.length > 0 ? "border-0 border-l" : "border-0"}
           items={exclusiveConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -325,7 +317,7 @@ const PanelToggles: FC = ({}) => {
           }))}
         />
       )}
-    </div>
+    </ToggleGroup>
   );
 };
 

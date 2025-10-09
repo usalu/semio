@@ -22,13 +22,23 @@
 import { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Type } from "../../../semio";
-import { useKitCommands, useType, useTypeEditorCommands } from "../../../store";
+import { EditorType, useEditorType, useIsInTypeScope, useKitCommands, useType, useTypeEditorCommands } from "../../../store";
 import { Input } from "../Input";
 import { Textarea } from "../Textarea";
 import { TreeItem, TreeSection } from "../Tree";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 
-const TypeSection: FC = () => {
+const TypeDetails: FC = () => {
+  const isInTypeScope = useIsInTypeScope();
+
+  if (!isInTypeScope) {
+    return null;
+  }
+
+  return <TypeDetailsForm />;
+};
+
+const TypeDetailsForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
@@ -39,86 +49,86 @@ const TypeSection: FC = () => {
   };
 
   return (
-    <>
-      <TreeSection label={t("type.title")} defaultOpen={true}>
+    <TreeSection label={t("type.title")} defaultOpen={true}>
+      <TreeItem>
+        <Input lazy label={t("type.name")} value={type.name} onLazyChange={(value) => updateTypeField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+      </TreeItem>
+      <TreeItem>
+        <Textarea
+          lazy
+          label={t("type.description")}
+          value={type.description || ""}
+          placeholder={t("type.descriptionPlaceholder")}
+          onLazyChange={(value) => updateTypeField({ description: value })}
+          startTransaction={startTransaction}
+          finalizeTransaction={finalizeTransaction}
+          abortTransaction={abortTransaction}
+        />
+      </TreeItem>
+      <TreeItem>
+        <Input
+          lazy
+          label={t("type.icon")}
+          value={type.icon || ""}
+          placeholder={t("type.iconPlaceholder")}
+          onLazyChange={(value) => updateTypeField({ icon: value })}
+          startTransaction={startTransaction}
+          finalizeTransaction={finalizeTransaction}
+          abortTransaction={abortTransaction}
+        />
+      </TreeItem>
+      <TreeItem>
+        <Input
+          lazy
+          label={t("type.image")}
+          value={type.image || ""}
+          placeholder={t("type.imagePlaceholder")}
+          onLazyChange={(value) => updateTypeField({ image: value })}
+          startTransaction={startTransaction}
+          finalizeTransaction={finalizeTransaction}
+          abortTransaction={abortTransaction}
+        />
+      </TreeItem>
+      <TreeItem>
+        <Input
+          lazy
+          label={t("type.variant")}
+          value={type.variant || ""}
+          placeholder={t("type.variantPlaceholder")}
+          onLazyChange={(value) => updateTypeField({ variant: value })}
+          startTransaction={startTransaction}
+          finalizeTransaction={finalizeTransaction}
+          abortTransaction={abortTransaction}
+        />
+      </TreeItem>
+      {type.unit !== undefined && (
         <TreeItem>
-          <Input lazy label={t("type.name")} value={type.name} onLazyChange={(value) => updateTypeField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          <Input lazy label={t("type.unit")} value={type.unit} onLazyChange={(value) => updateTypeField({ unit: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
         </TreeItem>
-        <TreeItem>
-          <Textarea
-            lazy
-            label={t("type.description")}
-            value={type.description || ""}
-            placeholder={t("type.descriptionPlaceholder")}
-            onLazyChange={(value) => updateTypeField({ description: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
-        </TreeItem>
-        <TreeItem>
-          <Input
-            lazy
-            label={t("type.icon")}
-            value={type.icon || ""}
-            placeholder={t("type.iconPlaceholder")}
-            onLazyChange={(value) => updateTypeField({ icon: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
-        </TreeItem>
-        <TreeItem>
-          <Input
-            lazy
-            label={t("type.image")}
-            value={type.image || ""}
-            placeholder={t("type.imagePlaceholder")}
-            onLazyChange={(value) => updateTypeField({ image: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
-        </TreeItem>
-        <TreeItem>
-          <Input
-            lazy
-            label={t("type.variant")}
-            value={type.variant || ""}
-            placeholder={t("type.variantPlaceholder")}
-            onLazyChange={(value) => updateTypeField({ variant: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
-        </TreeItem>
-        {type.unit !== undefined && (
-          <TreeItem>
-            <Input lazy label={t("type.unit")} value={type.unit} onLazyChange={(value) => updateTypeField({ unit: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
-          </TreeItem>
-        )}
-      </TreeSection>
-    </>
+      )}
+    </TreeSection>
   );
 };
 
 const TypeEditor: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const editorType = useEditorType();
 
   useEffect(() => {
-    removeSection("details", "type");
+    if (editorType !== EditorType.TYPE) return;
+
     addSection("details", {
       id: "type",
       label: "Type",
       order: 0,
       defaultOpen: true,
-      content: <TypeSection />,
+      content: () => <TypeDetails />,
     });
     return () => {
       removeSection("details", "type");
     };
-  }, [addSection, removeSection]);
+  }, [addSection, removeSection, editorType]);
 
   return (
     <div className="flex flex-col h-full">

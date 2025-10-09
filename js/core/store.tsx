@@ -1771,6 +1771,7 @@ export const TypeScopeProvider = (props: { guid: string; children: React.ReactNo
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
 const useTypeScope = () => useContext(TypeScopeContext);
+export const useIsInTypeScope = () => useTypeScope() !== null;
 
 function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore {
   const kitStore = useKitStore() as KitStore;
@@ -3455,6 +3456,7 @@ export const DesignScopeProvider = (props: { guid: string; children: React.React
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
 const useDesignScope = () => useContext(DesignScopeContext);
+export const useIsInDesignScope = () => useDesignScope() !== null;
 
 function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string): T | DesignStore {
   const kitStore = useKitStore() as KitStore;
@@ -4601,6 +4603,7 @@ export const KitScopeProvider = (props: { guid: string; children: React.ReactNod
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
 const useKitScope = () => useContext(KitScopeContext);
+export const useIsInKitScope = () => useKitScope() !== null;
 
 export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore {
   const store = useSketchpadStore();
@@ -6075,9 +6078,9 @@ const kitEditorCommands = {
 function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.id ?? id?.kit;
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
   if (!resolvedKitId) throw new Error("useKitEditorStore must be called within a KitScopeProvider or be directly provided with an id");
-  const kitEditorStore = store.kitEditor({ kit: resolvedKitId });
+  const kitEditorStore = store.kitEditor(resolvedKitId);
   return selector ? selector(kitEditorStore) : kitEditorStore;
 }
 
@@ -7010,7 +7013,6 @@ type YSketchpad = Y.Map<YSketchpadVal>;
 export interface PanelVisibility {
   workbench?: boolean;
   details?: boolean;
-  console?: boolean;
   chat?: boolean;
   settings?: boolean;
 }
@@ -7267,7 +7269,14 @@ class SketchpadStore {
         yKitMap.set(design, yDesignEditor);
       }
       const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), { kit, design });
-      this.designEditors.get(kit)?.set(design, designEditor);
+
+      // Ensure the design editors map exists for this kit
+      let designEditorsMap = this.designEditors.get(kit);
+      if (!designEditorsMap) {
+        designEditorsMap = new Map();
+        this.designEditors.set(kit, designEditorsMap);
+      }
+      designEditorsMap.set(design, designEditor);
     });
     this.designEditorCreatedSubscribers.forEach((subscriber) => subscriber());
   };
@@ -7517,6 +7526,9 @@ class SketchpadStore {
   kitEditor(guid: string): KitEditorStore {
     let editor = this.kitEditors.get(guid);
     if (!editor) {
+      if (!this.hasKit(guid)) {
+        throw new Error(`Cannot create kit editor: Kit with guid ${guid} does not exist`);
+      }
       this.createKitEditor(guid);
       editor = this.kitEditors.get(guid)!;
     }
@@ -7786,7 +7798,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
   const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
     workbench: true,
     details: true,
-    console: true,
     chat: true,
     settings: true,
   });
@@ -7818,7 +7829,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
           const newPanelVisibility = editor.snapshot().panelVisibility || {
             workbench: true,
             details: true,
-            console: true,
             chat: true,
             settings: true,
           };
@@ -7828,7 +7838,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
         const initialPanelVisibility = editor.snapshot().panelVisibility || {
           workbench: true,
           details: true,
-          console: true,
           chat: true,
           settings: true,
         };
@@ -7870,9 +7879,6 @@ export function useEditorCommands() {
         case EditorType.TYPE:
           if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
           break;
-      }
-
-      if (editor) {
       }
     } catch (e) {
       console.error("Error getting editor in useEditorCommands:", e);

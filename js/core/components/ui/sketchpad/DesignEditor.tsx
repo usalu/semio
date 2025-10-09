@@ -31,7 +31,22 @@ import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react"
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { guid } from "../../../lib/utils";
 import { Design, DesignId, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, parseDesignIdFromVariant, Piece } from "../../../semio";
-import { DesignEditorFullscreenPanel, useDesign, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes, useSketchpad } from "../../../store";
+import {
+  DesignEditorFullscreenPanel,
+  EditorType,
+  useDesign,
+  useDesignEditorCommands,
+  useDesignEditorFullscreen,
+  useDesignEditorSelection,
+  useEditorType,
+  useIsInDesignScope,
+  useKit,
+  useKitCommands,
+  usePieces,
+  useReplacableDesigns,
+  useReplacableTypes,
+  useSketchpad,
+} from "../../../store";
 import Combobox from "../Combobox";
 import { Input } from "../Input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
@@ -44,6 +59,12 @@ import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 import { DesignAvatar, TypeAvatar } from "./Workbench";
 
 const DesignSection: FC = () => {
+  const isInDesignScope = useIsInDesignScope();
+  if (!isInDesignScope) return null;
+  return <DesignSectionForm />;
+};
+
+const DesignSectionForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const kit = useKit();
@@ -52,6 +73,10 @@ const DesignSection: FC = () => {
 
   const updateDesignField = (diff: any) => {
     kitCommands.updateDesign(design.guid, diff);
+  };
+
+  const handleChange = (updatedDesign: any) => {
+    kitCommands.updateDesign(design.guid, updatedDesign);
   };
 
   const addLocation = () => {
@@ -466,6 +491,12 @@ const DesignSection: FC = () => {
 };
 
 const PiecesSection: FC = () => {
+  const isInDesignScope = useIsInDesignScope();
+  if (!isInDesignScope) return null;
+  return <PiecesSectionForm />;
+};
+
+const PiecesSectionForm: FC = () => {
   const { startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
   const design = useDesign() as Design;
   // const metadata = usePiecesMetadata();
@@ -1066,6 +1097,15 @@ const ConnectionsSection: FC<{
   connections: ConnectionId[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
+  const isInDesignScope = useIsInDesignScope();
+  if (!isInDesignScope) return null;
+  return <ConnectionsSectionForm connections={connections} sectionLabel={sectionLabel} />;
+};
+
+const ConnectionsSectionForm: FC<{
+  connections: ConnectionId[];
+  sectionLabel?: string;
+}> = ({ connections, sectionLabel }) => {
   const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const design = useDesign();
   const connectionObjects = connections.map((conn) => {
@@ -1289,6 +1329,12 @@ const ConnectionsSection: FC<{
 };
 
 const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId }) => {
+  const isInDesignScope = useIsInDesignScope();
+  if (!isInDesignScope) return null;
+  return <PortSectionForm pieceId={pieceId} portId={portId} />;
+};
+
+const PortSectionForm: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId }) => {
   const design = useDesign();
   const kit = useKit();
 
@@ -1363,8 +1409,13 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   useHotkeys("ctrl+y", () => redo());
   useHotkeys("ctrl+shift+z", () => redo());
 
+  const editorType = useEditorType();
+
   // Add/remove details panel sections based on selection
   useEffect(() => {
+    // Only register sections if we're in the design editor
+    if (editorType !== EditorType.DESIGN) return;
+
     const hasPieces = (selection.pieces || []).length > 0;
     const hasConnections = (selection.connections || []).length > 0;
     const hasPortSelected = selection.port !== undefined;
@@ -1384,15 +1435,17 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         label: "Design",
         order: 0,
         defaultOpen: true,
-        content: <DesignSection />,
+        content: () => <DesignSection />,
       });
     } else if (hasPortSelected) {
+      const portPieceId = selection.port!.piece;
+      const portId = selection.port!.port;
       addSection("details", {
         id: "port",
         label: "Port",
         order: 1,
         defaultOpen: true,
-        content: <PortSection pieceId={selection.port!.piece} portId={selection.port!.port} />,
+        content: () => <PortSection pieceId={portPieceId} portId={portId} />,
       });
     } else {
       if (hasPieces) {
@@ -1401,16 +1454,17 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           label: selection.pieces!.length === 1 ? "Piece" : `Pieces (${selection.pieces!.length})`,
           order: 2,
           defaultOpen: true,
-          content: <PiecesSection />,
+          content: () => <PiecesSection />,
         });
       }
       if (hasConnections) {
+        const conns = selection.connections!;
         addSection("details", {
           id: "connections",
-          label: selection.connections!.length === 1 ? "Connection" : `Connections (${selection.connections!.length})`,
+          label: conns.length === 1 ? "Connection" : `Connections (${conns.length})`,
           order: 3,
           defaultOpen: true,
-          content: <ConnectionsSection connections={selection.connections!} />,
+          content: () => <ConnectionsSection connections={conns} />,
         });
       }
       if (hasPieces && hasConnections) {
@@ -1419,7 +1473,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           label: "Mixed Selection",
           order: 4,
           defaultOpen: true,
-          content: (
+          content: () => (
             <TreeItem>
               <p className="text-sm text-muted-foreground">Select only pieces or only connections to edit details.</p>
             </TreeItem>
@@ -1435,7 +1489,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
       removeSection("details", "connections");
       removeSection("details", "mixed");
     };
-  }, [selection, addSection, removeSection]);
+  }, [selection, addSection, removeSection, editorType]);
 
   // Add workbench sections
   useEffect(() => {

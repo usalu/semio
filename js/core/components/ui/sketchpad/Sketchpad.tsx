@@ -22,7 +22,24 @@ import { FC, useEffect } from "react";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
-import { DesignScopeProvider, KitScopeProvider, Layout, SketchpadScopeProvider, Theme, TypeScopeProvider, useEditorType, useEditorPanelVisibility, useIsMobile, useLayout, useNavigation, useSketchpad, useSketchpadCommands, useTheme, WindowEvents, YProviderFactory } from "../../../store";
+import {
+  DesignScopeProvider,
+  KitScopeProvider,
+  Layout,
+  SketchpadScopeProvider,
+  Theme,
+  TypeScopeProvider,
+  useEditorPanelVisibility,
+  useEditorType,
+  useIsMobile,
+  useLayout,
+  useNavigation,
+  useSketchpad,
+  useSketchpadCommands,
+  useTheme,
+  WindowEvents,
+  YProviderFactory,
+} from "../../../store";
 import Chat from "./Chat";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
@@ -126,7 +143,7 @@ const SketchpadBase: FC = () => {
 
   return (
     <PanelSectionProvider>
-      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground relative">
+      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground relative border">
         <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
           <Navbar />
         </div>
