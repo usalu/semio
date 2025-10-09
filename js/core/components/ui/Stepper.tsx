@@ -147,7 +147,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
   const canStepUp = max === undefined || internalValue < max;
 
   return (
-    <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+    <div className="flex items-center gap-2 min-w-0">
       {label && (
         <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
           {label}

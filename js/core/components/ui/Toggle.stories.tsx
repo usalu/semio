@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bold, Italic, Lock, Underline } from "lucide-react";
+import { Bold, Box, Circle, Cylinder, Hexagon, List, Lock, Network } from "lucide-react";
 import { useState } from "react";
 import { Toggle } from "./Toggle";
 
@@ -41,52 +41,10 @@ export const Default: Story = {
     const [pressed, setPressed] = useState(true);
     return (
       <Toggle pressed={pressed} onPressedChange={setPressed}>
-        <Lock className="h-4 w-4 mr-2" />
-        Lock Layer
+        <Lock />
       </Toggle>
     );
   },
-};
-
-export const Variants: Story = {
-  render: () => (
-    <div className="flex gap-8">
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-4">Default</p>
-        {(() => {
-          const [pressed, setPressed] = useState(false);
-          return (
-            <Toggle pressed={pressed} onPressedChange={setPressed}>
-              <Bold />
-            </Toggle>
-          );
-        })()}
-      </div>
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-4">Outline</p>
-        {(() => {
-          const [pressed, setPressed] = useState(false);
-          return (
-            <Toggle variant="outline" pressed={pressed} onPressedChange={setPressed}>
-              <Italic />
-            </Toggle>
-          );
-        })()}
-      </div>
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-4">With Text</p>
-        {(() => {
-          const [pressed, setPressed] = useState(false);
-          return (
-            <Toggle pressed={pressed} onPressedChange={setPressed}>
-              <Underline />
-              Underline
-            </Toggle>
-          );
-        })()}
-      </div>
-    </div>
-  ),
 };
 
 export const Basic: Story = {
@@ -102,11 +60,11 @@ export const Basic: Story = {
 
 export const WithText: Story = {
   render: () => {
-    const [pressed, setPressed] = useState(false);
+    const [pressed, setPressed] = useState(true);
     return (
       <Toggle pressed={pressed} onPressedChange={setPressed}>
-        <Bold />
-        Bold
+        <Lock className="h-4 w-4 mr-2" />
+        Lock Layer
       </Toggle>
     );
   },
@@ -123,36 +81,6 @@ export const WithTooltip: Story = {
   },
 };
 
-export const Outline: Story = {
-  render: () => {
-    const [pressed, setPressed] = useState(false);
-    return (
-      <Toggle variant="outline" pressed={pressed} onPressedChange={setPressed}>
-        <Italic />
-      </Toggle>
-    );
-  },
-};
-
-export const Sizes: Story = {
-  render: () => {
-    const [pressed, setPressed] = useState(false);
-    return (
-      <div className="flex items-center gap-4">
-        <Toggle size="sm" pressed={pressed} onPressedChange={setPressed}>
-          <Bold />
-        </Toggle>
-        <Toggle size="default" pressed={pressed} onPressedChange={setPressed}>
-          <Bold />
-        </Toggle>
-        <Toggle size="lg" pressed={pressed} onPressedChange={setPressed}>
-          <Bold />
-        </Toggle>
-      </div>
-    );
-  },
-};
-
 export const Disabled: Story = {
   args: {
     disabled: true,
@@ -164,24 +92,111 @@ export const Disabled: Story = {
   },
 };
 
-export const Multiple: Story = {
+export const Cycle: Story = {
   render: () => {
-    const [bold, setBold] = useState(false);
-    const [italic, setItalic] = useState(false);
-    const [underline, setUnderline] = useState(false);
-
+    const [value, setValue] = useState<"model" | "diagram" | "list">("model");
     return (
-      <div className="flex gap-2">
-        <Toggle pressed={bold} onPressedChange={setBold} tooltip="Bold" hotkey="Ctrl+B">
-          <Bold />
-        </Toggle>
-        <Toggle pressed={italic} onPressedChange={setItalic} tooltip="Italic" hotkey="Ctrl+I">
-          <Italic />
-        </Toggle>
-        <Toggle pressed={underline} onPressedChange={setUnderline} tooltip="Underline" hotkey="Ctrl+U">
-          <Underline />
-        </Toggle>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">View Mode (Click to cycle)</label>
+        <Toggle
+          type="cycle"
+          value={value}
+          onValueChange={setValue}
+          items={[
+            { value: "model", label: <Box />, tooltip: "3D Model View" },
+            { value: "diagram", label: <Network />, tooltip: "Diagram View" },
+            { value: "list", label: <List />, tooltip: "List View" },
+          ]}
+        />
+        <p className="text-xs text-muted-foreground">Selected: {value}</p>
       </div>
+    );
+  },
+};
+
+export const Dropdown: Story = {
+  render: () => {
+    const [pressed, setPressed] = useState(false);
+    const [value, setValue] = useState<string | undefined>("box");
+    return (
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Enable Shape Layer</label>
+        <Toggle
+          type="dropdown"
+          pressed={pressed}
+          onPressedChange={setPressed}
+          value={value}
+          onValueChange={setValue}
+          placeholder="Choose a shape..."
+          items={[
+            { value: "box", label: <Box />, tooltip: "Box shape" },
+            { value: "cylinder", label: <Cylinder />, tooltip: "Cylinder shape" },
+            { value: "hexagon", label: <Hexagon />, tooltip: "Hexagon shape" },
+            { value: "circle", label: <Circle />, tooltip: "Circle shape" },
+          ]}
+        />
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>
+            Click the button to toggle {value || "shape"} {pressed ? "ON" : "OFF"}
+          </p>
+          <p>Click the chevron to change which shape to toggle</p>
+          <p className="font-medium">
+            Status: {value || "none"} is {pressed ? "enabled" : "disabled"}
+          </p>
+        </div>
+      </div>
+    );
+  },
+};
+
+export const WithLabel: Story = {
+  render: () => {
+    const [pressed, setPressed] = useState(true);
+    const [value, setValue] = useState<"model" | "diagram" | "list">("diagram");
+    return (
+      <Toggle
+        type="dropdown"
+        label="View Mode"
+        pressed={pressed}
+        onPressedChange={setPressed}
+        value={value}
+        onValueChange={setValue}
+        items={[
+          {
+            value: "model",
+            label: (
+              <>
+                <Box className="h-4 w-4 mr-2" />
+                3D Model
+              </>
+            ),
+            tooltip: "3D Model View",
+            hotkey: "Ctrl+1",
+          },
+          {
+            value: "diagram",
+            label: (
+              <>
+                <Network className="h-4 w-4 mr-2" />
+                Diagram
+              </>
+            ),
+            tooltip: "Diagram View",
+            hotkey: "Ctrl+2",
+          },
+          {
+            value: "list",
+            label: (
+              <>
+                <List className="h-4 w-4 mr-2" />
+                List
+              </>
+            ),
+            tooltip: "List View",
+            hotkey: "Ctrl+3",
+          },
+        ]}
+      />
     );
   },
 };

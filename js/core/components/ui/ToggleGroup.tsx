@@ -27,20 +27,27 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui
 import { cn } from "@semio/js/lib/utils";
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
-  size: "default",
   variant: "default",
+  size: "default",
 });
 
-function ToggleGroup({ className, variant, size, label, children, ...props }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants> & { label?: string }) {
+interface ToggleGroupProps extends React.ComponentProps<typeof ToggleGroupPrimitive.Root> {
+  label?: string;
+  children: React.ReactNode;
+}
+
+function ToggleGroup({ className, label, children, ...restProps }: ToggleGroupProps) {
+  const variant = "default";
+  const size = "default";
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} data-size={size} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...props}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} data-size={size} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...restProps}>
       <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
 
   if (label) {
     return (
-      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
         {toggleGroupElement}
       </div>
@@ -53,29 +60,26 @@ function ToggleGroup({ className, variant, size, label, children, ...props }: Re
 function ToggleGroupItem({
   className,
   children,
-  variant,
-  size,
   tooltip,
   hotkey,
   ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants> & {
-    tooltip?: string;
-    hotkey?: string;
-  }) {
+}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
+  tooltip?: string;
+  hotkey?: string;
+}) {
   const context = React.useContext(ToggleGroupContext);
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
-      data-variant={context.variant || variant}
-      data-size={context.size || size}
+      data-variant={context.variant}
+      data-size={context.size}
       className={cn(
         toggleVariants({
-          variant: context.variant || variant,
-          size: context.size || size,
+          variant: context.variant,
+          size: context.size,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-primary data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l",
+        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-primary border-0 border-l first:border-l-0",
         className,
       )}
       {...props}

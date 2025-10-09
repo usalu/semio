@@ -23,7 +23,21 @@ import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Hom
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { EditorType, SketchpadScope, useEditorCommands, useEditorPanelVisibility, useEditorType, useIsFullscreen, useIsMobile, useIsNavbarExpanded, useKits, useNavigation, useNavigationHistory, useSketchpadCommands, useSketchpadScope } from "../../../store";
+import {
+  EditorType,
+  SketchpadScope,
+  useEditorCommands,
+  useEditorPanelVisibility,
+  useEditorType,
+  useIsFullscreen,
+  useIsMobile,
+  useIsNavbarExpanded,
+  useKits,
+  useNavigation,
+  useNavigationHistory,
+  useSketchpadCommands,
+  useSketchpadScope,
+} from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
@@ -202,6 +216,15 @@ const PanelToggles: FC = ({}) => {
 
   if (panelConfig.length === 0) return null;
 
+  // Separate exclusive panels (details, chat, settings) from regular toggles
+  const exclusivePanels = ["details", "chat", "settings"];
+  const exclusiveConfigs = panelConfig.filter((p) => exclusivePanels.includes(p.key));
+  const regularConfigs = panelConfig.filter((p) => !exclusivePanels.includes(p.key));
+
+  // Find currently active exclusive panel
+  const activeExclusivePanel = exclusiveConfigs.find((p) => visiblePanels[p.key])?.key || exclusiveConfigs[0]?.key || "";
+  const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key]);
+
   const handleToggle = (panelKey: string) => {
     const current = visiblePanels[panelKey];
 
@@ -217,8 +240,7 @@ const PanelToggles: FC = ({}) => {
       }
     } else {
       // Desktop behavior: Handle mutual exclusivity for chat, details, and settings
-      if (!current && (panelKey === "chat" || panelKey === "details" || panelKey === "settings")) {
-        const exclusivePanels = ["chat", "details", "settings"];
+      if (!current && exclusivePanels.includes(panelKey)) {
         exclusivePanels.forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
             togglePanel(p as any);
@@ -229,28 +251,79 @@ const PanelToggles: FC = ({}) => {
     togglePanel(panelKey as any);
   };
 
+  const handleExclusivePressedChange = (pressed: boolean) => {
+    if (pressed) {
+      // Open the currently selected panel if not already open
+      if (!visiblePanels[activeExclusivePanel]) {
+        handleToggle(activeExclusivePanel);
+      }
+    } else {
+      // Close the currently open exclusive panel
+      const openPanel = exclusiveConfigs.find((p) => visiblePanels[p.key]);
+      if (openPanel) {
+        togglePanel(openPanel.key as any);
+      }
+    }
+  };
+
+  const handleExclusiveValueChange = (value: string | undefined) => {
+    if (!value) return;
+
+    // Close all exclusive panels and open the selected one
+    exclusivePanels.forEach((p) => {
+      const isOpen = visiblePanels[p];
+      const shouldOpen = p === value;
+
+      if (isOpen && !shouldOpen) {
+        togglePanel(p as any);
+      } else if (!isOpen && shouldOpen) {
+        togglePanel(p as any);
+      }
+    });
+  };
+
   return (
-    <ToggleGroup
-      type="multiple"
-      value={Object.entries(visiblePanels)
-        .filter(([_, isVisible]) => isVisible)
-        .map(([key]) => key)}
-      onValueChange={(values) => {
-        panelConfig.forEach(({ key }) => {
-          const isCurrentlyVisible = visiblePanels[key] || false;
-          const shouldBeVisible = values.includes(key);
-          if (isCurrentlyVisible !== shouldBeVisible) {
-            handleToggle(key);
-          }
-        });
-      }}
-    >
-      {panelConfig.map(({ key, icon: Icon, tooltip, hotkey }) => (
-        <ToggleGroupItem key={key} value={key} tooltip={tooltip} hotkey={hotkey}>
-          <Icon />
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
+    <div className="flex items-center gap-2">
+      {/* Regular toggles (workbench, console) */}
+      {regularConfigs.length > 0 && (
+        <ToggleGroup
+          type="multiple"
+          value={regularConfigs.filter((p) => visiblePanels[p.key]).map((p) => p.key)}
+          onValueChange={(values) => {
+            regularConfigs.forEach(({ key }) => {
+              const isCurrentlyVisible = visiblePanels[key] || false;
+              const shouldBeVisible = values.includes(key);
+              if (isCurrentlyVisible !== shouldBeVisible) {
+                handleToggle(key);
+              }
+            });
+          }}
+        >
+          {regularConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
+            <ToggleGroupItem key={key} value={key} tooltip={tooltip} hotkey={hotkey}>
+              <Icon />
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      )}
+
+      {/* Dropdown toggle for exclusive panels (details, chat, settings) */}
+      {exclusiveConfigs.length > 0 && (
+        <Toggle
+          type="dropdown"
+          pressed={isAnyExclusivePanelOpen}
+          onPressedChange={handleExclusivePressedChange}
+          value={activeExclusivePanel}
+          onValueChange={handleExclusiveValueChange}
+          items={exclusiveConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+            value: key,
+            label: <Icon />,
+            tooltip,
+            hotkey,
+          }))}
+        />
+      )}
+    </div>
   );
 };
 
@@ -286,7 +359,6 @@ const Navbar: FC<NavbarProps> = ({}) => {
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Show navbar when mouse is in the top 50px of the screen
       setIsVisible(e.clientY < 50);
     };
 
@@ -308,7 +380,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
 
           <PanelToggles />
 
-          <Toggle variant="outline" tooltip={isNavbarExpanded ? t("navbar.collapse") : t("navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+          <Toggle tooltip={isNavbarExpanded ? t("navbar.collapse") : t("navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
             {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
           </Toggle>
         </div>
@@ -327,7 +399,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
             <Navigation />
 
             <div className="flex gap-2">
-              <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+              <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
                 {isFullscreen ? <Minimize /> : <Fullscreen />}
               </Toggle>
 

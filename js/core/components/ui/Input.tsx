@@ -25,7 +25,7 @@ import { cn } from "@semio/js/lib/utils";
 function Input({ className, type, label, ...props }: React.ComponentProps<"input"> & { label?: string }) {
   if (label) {
     return (
-      <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
         <input
           type={type}

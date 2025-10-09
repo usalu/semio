@@ -189,9 +189,24 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ └── Tree.tsx
 │ │ ├── lib
 │ │ │ └── utils.ts
+│ │ ├── locales
+│ │ │ ├── de.json
+│ │ │ └── en.json
+│ │ ├── components.json
+│ │ ├── constants.json
+│ │ ├── eslint.config.ts
+│ │ ├── globals.css
+│ │ ├── i18n.ts
+│ │ ├── index.ts
+│ │ ├── package.json
+│ │ ├── postcss.config.ts
 │ │ ├── semio.ts # all domain logic
 │ │ ├── store.ts # react hooks for state (uses yjs)
-│ │ └── package.json
+│ │ ├── tailwind.config.ts
+│ │ ├── theme.css
+│ │ ├── tsconfig.json
+│ │ ├── vite.config.ts
+│ │ └── vitest.workspace.ts
 │ ├── docs
 │ ├── play
 │ ├── playground

@@ -57,16 +57,6 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-4">
-      <Button size="sm">Add Port</Button>
-      <Button size="default">Create Type</Button>
-      <Button size="lg">Export Design</Button>
-    </div>
-  ),
-};
-
 export const WithIcons: Story = {
   render: () => (
     <div className="flex flex-wrap gap-4">
@@ -90,16 +80,16 @@ export const WithIcons: Story = {
 export const IconOnly: Story = {
   render: () => (
     <div className="flex flex-wrap gap-4">
-      <Button size="icon">
+      <Button className="size-9">
         <Plus />
       </Button>
-      <Button size="icon" variant="default">
+      <Button variant="default" className="size-9">
         <Settings />
       </Button>
-      <Button size="icon" variant="ghost">
+      <Button variant="ghost" className="size-9">
         <Mail />
       </Button>
-      <Button size="icon" variant="destructive">
+      <Button variant="destructive" className="size-9">
         <Trash2 />
       </Button>
     </div>

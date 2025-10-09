@@ -20,8 +20,9 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { AlignCenter, AlignLeft, AlignRight, Bold, Box, Circle, Cylinder, Hexagon, Italic, List, Network, Underline } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Bold, Box, Circle, Cylinder, Hexagon, Italic, List, Lock, Network, Underline } from "lucide-react";
 import { useState } from "react";
+import { Toggle } from "./Toggle";
 import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
 const meta = {
@@ -145,44 +146,6 @@ export const WithTooltips: Story = {
   ),
 };
 
-export const Outline: Story = {
-  render: () => (
-    <ToggleGroup type="single" variant="outline">
-      <ToggleGroupItem value="left">
-        <AlignLeft />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="center">
-        <AlignCenter />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="right">
-        <AlignRight />
-      </ToggleGroupItem>
-    </ToggleGroup>
-  ),
-};
-
-export const Sizes: Story = {
-  render: () => (
-    <div className="flex flex-col items-start gap-4">
-      <ToggleGroup type="single" size="sm">
-        <ToggleGroupItem value="left">Left</ToggleGroupItem>
-        <ToggleGroupItem value="center">Center</ToggleGroupItem>
-        <ToggleGroupItem value="right">Right</ToggleGroupItem>
-      </ToggleGroup>
-      <ToggleGroup type="single" size="default">
-        <ToggleGroupItem value="left">Left</ToggleGroupItem>
-        <ToggleGroupItem value="center">Center</ToggleGroupItem>
-        <ToggleGroupItem value="right">Right</ToggleGroupItem>
-      </ToggleGroup>
-      <ToggleGroup type="single" size="lg">
-        <ToggleGroupItem value="left">Left</ToggleGroupItem>
-        <ToggleGroupItem value="center">Center</ToggleGroupItem>
-        <ToggleGroupItem value="right">Right</ToggleGroupItem>
-      </ToggleGroup>
-    </div>
-  ),
-};
-
 export const WithText: Story = {
   render: () => (
     <ToggleGroup type="multiple">
@@ -232,4 +195,141 @@ export const DefaultValue: Story = {
       </ToggleGroupItem>
     </ToggleGroup>
   ),
+};
+
+export const AllTypes: Story = {
+  render: () => {
+    const [alignment, setAlignment] = useState<string>("left");
+    const [textFormat, setTextFormat] = useState<string[]>([]);
+    const [shape, setShape] = useState<string>("box");
+
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Single Selection (Alignment)</p>
+          <ToggleGroup type="single" value={alignment} onValueChange={(val) => val && setAlignment(val)}>
+            <ToggleGroupItem value="left" tooltip="Align Left">
+              <AlignLeft />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="center" tooltip="Align Center">
+              <AlignCenter />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="right" tooltip="Align Right">
+              <AlignRight />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <p className="text-xs text-muted-foreground">Selected: {alignment}</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Multiple Selection (Text Format)</p>
+          <ToggleGroup type="multiple" value={textFormat} onValueChange={setTextFormat}>
+            <ToggleGroupItem value="bold" tooltip="Bold" hotkey="Ctrl+B">
+              <Bold />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="italic" tooltip="Italic" hotkey="Ctrl+I">
+              <Italic />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="underline" tooltip="Underline" hotkey="Ctrl+U">
+              <Underline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <p className="text-xs text-muted-foreground">Selected: {textFormat.join(", ") || "none"}</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">With Text Labels</p>
+          <ToggleGroup type="single" value={shape} onValueChange={(val) => val && setShape(val)}>
+            <ToggleGroupItem value="box">
+              <Box className="h-4 w-4 mr-2" />
+              Box
+            </ToggleGroupItem>
+            <ToggleGroupItem value="cylinder">
+              <Cylinder className="h-4 w-4 mr-2" />
+              Cylinder
+            </ToggleGroupItem>
+            <ToggleGroupItem value="hexagon">
+              <Hexagon className="h-4 w-4 mr-2" />
+              Hexagon
+            </ToggleGroupItem>
+            <ToggleGroupItem value="circle">
+              <Circle className="h-4 w-4 mr-2" />
+              Circle
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <p className="text-xs text-muted-foreground">Selected: {shape}</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Disabled State</p>
+          <ToggleGroup type="single" disabled defaultValue="center">
+            <ToggleGroupItem value="left">
+              <AlignLeft />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="center">
+              <AlignCenter />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="right">
+              <AlignRight />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </div>
+    );
+  },
+};
+
+export const MixedToggleTypes: Story = {
+  render: () => {
+    const [locked, setLocked] = useState(false);
+    const [viewMode, setViewMode] = useState<"model" | "diagram" | "list">("model");
+    const [shapePressed, setShapePressed] = useState(false);
+    const [shape, setShape] = useState<string>("box");
+
+    return (
+      <div className="space-y-4">
+        <p className="text-sm font-medium">Mixed Toggle Types in a Visual Group</p>
+        <div className="flex w-fit items-center border overflow-hidden">
+          {/* Standard Toggle */}
+          <Toggle pressed={locked} onPressedChange={setLocked} tooltip="Lock Layer" className="border-0 border-l first:border-l-0">
+            <Lock />
+          </Toggle>
+
+          {/* Cycle Toggle */}
+          <Toggle
+            type="cycle"
+            value={viewMode}
+            onValueChange={setViewMode}
+            items={[
+              { value: "model", label: <Box />, tooltip: "3D Model View" },
+              { value: "diagram", label: <Network />, tooltip: "Diagram View" },
+              { value: "list", label: <List />, tooltip: "List View" },
+            ]}
+            className="border-0 border-l"
+          />
+
+          {/* Dropdown Toggle */}
+          <Toggle
+            type="dropdown"
+            pressed={shapePressed}
+            onPressedChange={setShapePressed}
+            value={shape}
+            onValueChange={setShape}
+            items={[
+              { value: "box", label: <Box />, tooltip: "Box shape" },
+              { value: "cylinder", label: <Cylinder />, tooltip: "Cylinder shape" },
+              { value: "hexagon", label: <Hexagon />, tooltip: "Hexagon shape" },
+              { value: "circle", label: <Circle />, tooltip: "Circle shape" },
+            ]}
+            className="border-0 border-l"
+          />
+        </div>
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>Locked: {locked ? "Yes" : "No"}</p>
+          <p>View Mode: {viewMode}</p>
+          <p>Shape: {shape} ({shapePressed ? "enabled" : "disabled"})</p>
+        </div>
+      </div>
+    );
+  },
 };
