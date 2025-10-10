@@ -5,18 +5,19 @@ import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeSection } from "@semio/js/components/ui/Tree";
-import { DesignId, TypeId } from "../../../semio";
+import { Design, Kit, Type } from "../../../semio";
 import { useKit } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
-  typeId: TypeId;
+  typeId: Type;
   showHoverCard?: boolean;
+  kitGuid?: string;
 }
 
-export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false }) => {
-  const kit = useKit();
+export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false, kitGuid }) => {
+  const kit = useKit(undefined, kitGuid) as Kit;
   const type = kit.types?.find((t) => t.name === typeId.name && (t.variant || undefined) === typeId.variant);
 
   const { attributes, listeners, setNodeRef } = useDraggable({
@@ -55,13 +56,14 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false 
 };
 
 interface DesignAvatarProps {
-  designId: DesignId;
+  designId: Design;
   showHoverCard?: boolean;
   isActive?: boolean;
+  kitGuid?: string;
 }
 
-export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false }) => {
-  const kit = useKit();
+export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false, kitGuid }) => {
+  const kit = useKit(undefined, kitGuid) as Kit;
   const design = kit.designs?.find((d) => d.name === designId.name && (d.variant || undefined) === designId.variant && (d.view || undefined) === designId.view);
 
   const { attributes, listeners, setNodeRef } = useDraggable({

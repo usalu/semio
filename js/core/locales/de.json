@@ -8,11 +8,15 @@
         "kit": "Zum Kit gehen",
         "artifacts": "Alle Artefakte anzeigen",
         "designs": "Alle Designs anzeigen",
+        "design": "Zum Design gehen",
+        "type": "Zum Typ gehen",
         "fullscreen": "Vollbild aktivieren",
         "exitFullscreen": "Vollbild verlassen",
         "minimize": "Fenster minimieren",
         "maximize": "Fenster maximieren",
         "close": "Fenster schließen",
+        "collapse": "Navigationsleiste einklappen",
+        "expand": "Navigationsleiste ausklappen",
         "changePanelType": "Panel-Typ ändern"
     },
     "panels": {
@@ -207,7 +211,10 @@
         "metabolism": "Metabolism",
         "types": "Typen",
         "representations": "Darstellungen",
-        "designs": "Designs"
+        "designs": "Designs",
+        "qualities": "Qualitäten",
+        "files": "Dateien",
+        "authors": "Autoren"
     },
     "settings": {
         "general": "Allgemein",
@@ -223,6 +230,16 @@
         "noSelectionMessage": "Wählen Sie ein Element aus, um Details anzuzeigen"
     },
     "type": {
-        "variant": "Variante"
+        "title": "Typ",
+        "name": "Name",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "Typ-Beschreibung eingeben...",
+        "icon": "Symbol",
+        "iconPlaceholder": "Emoji, Name oder URL",
+        "image": "Bild-URL",
+        "imagePlaceholder": "URL zum Typ-Bild",
+        "variant": "Variante",
+        "variantPlaceholder": "Typ-Variante",
+        "unit": "Einheit"
     }
 }

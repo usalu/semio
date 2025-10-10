@@ -23,6 +23,7 @@ import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Hom
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
+import { Design, Type } from "../../../semio";
 import {
   EditorType,
   PanelVisibility,
@@ -159,25 +160,59 @@ const Navigation: FC = ({ }) => {
   let navigate = useNavigate();
   const navigation = useNavigation();
   const kits = useKits();
-  const kitEditorCommands = useKitEditorCommands();
   const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);
   const kitGuid = pathMatch?.[1];
   const editorTypeChar = pathMatch?.[2];
   const itemGuid = pathMatch?.[3];
   const kit = kits.find((k) => k.guid === kitGuid);
+  const kitEditorCommands = useKitEditorCommands(kitGuid ? { kit: kitGuid } : undefined);
   const kitItems = kits.map((k) => ({ label: k.name, href: `/${k.guid}` }));
   const artifactKinds = [
-    { label: t("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}` : "/" },
-    { label: t("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}` : "/" },
-    { label: t("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}` : "/" },
-    { label: t("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}` : "/" },
-    { label: t("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}` : "/" },
+    { label: t("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}?kind=designs` : "/?kind=designs" },
+    { label: t("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}?kind=types` : "/?kind=types" },
+    { label: t("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}?kind=qualities` : "/?kind=qualities" },
+    { label: t("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}?kind=files` : "/?kind=files" },
+    { label: t("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}?kind=authors` : "/?kind=authors" },
   ];
+
+  // Find design or type for displaying hierarchy
+  let design: Design | undefined;
+  let type: Type | undefined;
+  if (kit && itemGuid) {
+    if (editorTypeChar === "d") {
+      design = kit.designs?.find((d) => d.guid === itemGuid);
+    } else if (editorTypeChar === "t") {
+      type = kit.types?.find((t) => t.guid === itemGuid);
+    }
+  }
+
+  // Build hierarchical display for design: NAME - VARIANT - VIEW
+  const designLabel = design
+    ? [design.name, design.variant, design.view].filter(Boolean).join(" - ")
+    : itemGuid;
+
+  // Build hierarchical display for type: NAME - VARIANT
+  const typeLabel = type
+    ? [type.name, type.variant].filter(Boolean).join(" - ")
+    : itemGuid;
+
+  // Create dropdown items for designs when in design editor
+  const designItems = kit?.designs?.map((d) => ({
+    label: [d.name, d.variant, d.view].filter(Boolean).join(" - "),
+    href: `/${kitGuid}/d/${d.guid}`,
+  })) || [];
+
+  // Create dropdown items for types when in type editor
+  const typeItems = kit?.types?.map((t) => ({
+    label: [t.name, t.variant].filter(Boolean).join(" - "),
+    href: `/${kitGuid}/t/${t.guid}`,
+  })) || [];
+
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem tooltip={t("navbar.home")}>
-          <BreadcrumbLink href="/">
+          <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
@@ -185,18 +220,21 @@ const Navigation: FC = ({ }) => {
           <>
             <BreadcrumbSeparator items={kitItems} tooltip={t("navbar.kits")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={t("navbar.kit")}>
-              <BreadcrumbLink href={`/${kitGuid}`}>{kit?.name || kitGuid}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}`)} style={{ cursor: "pointer" }}>
+                {kit?.name || kitGuid}
+              </BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
-        {kitGuid && (
+        {kitGuid && !itemGuid && (
           <>
             <BreadcrumbSeparator
               items={artifactKinds}
               tooltip={t("navbar.artifacts")}
               onNavigate={(href) => {
-                navigate(href);
                 const kind = artifactKinds.find((a) => a.href === href)?.kind;
+                const pathWithoutQuery = href.split('?')[0];
+                navigate(pathWithoutQuery);
                 if (kind && kitEditorCommands) {
                   kitEditorCommands.setFilterKinds([kind]);
                 }
@@ -205,14 +243,76 @@ const Navigation: FC = ({ }) => {
           </>
         )}
         {editorTypeChar === "d" && itemGuid && (
-          <BreadcrumbItem tooltip={t("navbar.design")}>
-            <BreadcrumbLink href={`/${kitGuid}/d/${itemGuid}`}>{itemGuid}</BreadcrumbLink>
-          </BreadcrumbItem>
+          <>
+            <BreadcrumbSeparator
+              items={artifactKinds}
+              tooltip={t("navbar.artifacts")}
+              onNavigate={(href) => {
+                const kind = artifactKinds.find((a) => a.href === href)?.kind;
+                const pathWithoutQuery = href.split('?')[0];
+                navigate(pathWithoutQuery);
+                if (kind && kitEditorCommands) {
+                  setTimeout(() => kitEditorCommands.setFilterKinds([kind]), 0);
+                }
+              }}
+            />
+            <BreadcrumbItem tooltip={t("breadcrumb.designs")}>
+              <BreadcrumbLink onClick={() => {
+                navigate(`/${kitGuid}`);
+                if (kitEditorCommands) {
+                  kitEditorCommands.setFilterKinds(["designs"]);
+                }
+              }} style={{ cursor: "pointer" }}>
+                {t("breadcrumb.designs")}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={designItems}
+              tooltip={t("navbar.selectDesign")}
+              onNavigate={(href) => navigate(href)}
+            />
+            <BreadcrumbItem tooltip={t("navbar.design")}>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}/d/${itemGuid}`)} style={{ cursor: "pointer" }}>
+                {designLabel}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
         )}
         {editorTypeChar === "t" && itemGuid && (
-          <BreadcrumbItem tooltip={t("navbar.type")}>
-            <BreadcrumbLink href={`/${kitGuid}/t/${itemGuid}`}>{itemGuid}</BreadcrumbLink>
-          </BreadcrumbItem>
+          <>
+            <BreadcrumbSeparator
+              items={artifactKinds}
+              tooltip={t("navbar.artifacts")}
+              onNavigate={(href) => {
+                const kind = artifactKinds.find((a) => a.href === href)?.kind;
+                const pathWithoutQuery = href.split('?')[0];
+                navigate(pathWithoutQuery);
+                if (kind && kitEditorCommands) {
+                  setTimeout(() => kitEditorCommands.setFilterKinds([kind]), 0);
+                }
+              }}
+            />
+            <BreadcrumbItem tooltip={t("breadcrumb.types")}>
+              <BreadcrumbLink onClick={() => {
+                navigate(`/${kitGuid}`);
+                if (kitEditorCommands) {
+                  kitEditorCommands.setFilterKinds(["types"]);
+                }
+              }} style={{ cursor: "pointer" }}>
+                {t("breadcrumb.types")}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={typeItems}
+              tooltip={t("navbar.selectType")}
+              onNavigate={(href) => navigate(href)}
+            />
+            <BreadcrumbItem tooltip={t("navbar.type")}>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}/t/${itemGuid}`)} style={{ cursor: "pointer" }}>
+                {typeLabel}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
         )}
       </BreadcrumbList>
     </Breadcrumb>

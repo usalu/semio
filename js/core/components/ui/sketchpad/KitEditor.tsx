@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
@@ -497,11 +497,17 @@ const KitEditor: FC = () => {
           >
             {t("kitEditor.authors")}
           </Toggle>
-          {allConcepts.length > 0 && allConcepts.map((concept) => (
-            <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} tooltip={selectedConcepts.includes(concept) ? t("kitEditor.hideConcept", { concept }) : t("kitEditor.showConcept", { concept })}>
-              {concept}
-            </Toggle>
-          ))}
+          {allConcepts.length > 0 &&
+            allConcepts.map((concept) => (
+              <Toggle
+                key={concept}
+                pressed={selectedConcepts.includes(concept)}
+                onPressedChange={() => toggleConcept(concept)}
+                tooltip={selectedConcepts.includes(concept) ? t("kitEditor.hideConcept", { concept }) : t("kitEditor.showConcept", { concept })}
+              >
+                {concept}
+              </Toggle>
+            ))}
         </div>
         <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>
@@ -527,10 +533,13 @@ const KitEditor: FC = () => {
                     ) : (
                       <span className="w-4 h-4" />
                     )}
-                    <button className="cursor-pointer hover:underline text-left" onClick={() => {
-                      if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-                      else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-                    }}>
+                    <button
+                      className="cursor-pointer hover:underline text-left"
+                      onClick={() => {
+                        if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+                        else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+                      }}
+                    >
                       {row.artifact}
                     </button>
                   </div>

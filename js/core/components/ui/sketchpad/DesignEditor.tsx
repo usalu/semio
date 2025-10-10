@@ -30,7 +30,7 @@ import { Slider } from "@radix-ui/react-slider";
 import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { guid } from "../../../lib/utils";
-import { Design, DesignId, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, parseDesignIdFromVariant, Piece } from "../../../semio";
+import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece } from "../../../semio";
 import {
   DesignEditorFullscreenPanel,
   EditorType,
@@ -936,15 +936,7 @@ const PiecesSectionForm: FC = () => {
         </TreeSection>
       ) : (
         <TreeSection
-          label={
-            isDesignPiece
-              ? isSingle
-                ? t("piece.designPiece")
-                : t("piece.multipleDesignPieces", { count: pieces.length })
-              : isSingle
-                ? t("piece.piece")
-                : t("piece.multiplePieces", { count: pieces.length })
-          }
+          label={isDesignPiece ? (isSingle ? t("piece.designPiece") : t("piece.multipleDesignPieces", { count: pieces.length })) : isSingle ? t("piece.piece") : t("piece.multiplePieces", { count: pieces.length })}
           defaultOpen={true}
           actions={
             hasUnfixedPieces
@@ -1400,11 +1392,11 @@ const DesignEditor: FC<DesignEditorProps> = () => {
 
   const selection = useDesignEditorSelection();
   const design = useDesign();
-  const kit = useKit();
+  const kit = useKit() as Kit;
   const editorSettings = useSketchpad((s) => s.editorSettings);
 
-  const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<TypeId | null>(null);
-  const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<DesignId | null>(null);
+  const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<Design | null>(null);
+  const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<Design | null>(null);
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
@@ -1531,7 +1523,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
             <TreeItem key={name} label={name} defaultOpen={false}>
               <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                 {variants.map((type: any) => (
-                  <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} />
+                  <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} kitGuid={kit.guid} />
                 ))}
               </div>
             </TreeItem>
@@ -1551,7 +1543,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
             <TreeItem key={name} label={name} defaultOpen={false}>
               <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                 {designs.map((design: any) => (
-                  <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} />
+                  <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} kitGuid={kit.guid} />
                 ))}
               </div>
             </TreeItem>

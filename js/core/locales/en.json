@@ -8,11 +8,15 @@
         "kit": "Go to kit",
         "artifacts": "View all artifacts",
         "designs": "View all designs",
+        "design": "Go to design",
+        "type": "Go to type",
         "fullscreen": "Enter fullscreen",
         "exitFullscreen": "Exit fullscreen",
         "minimize": "Minimize window",
         "maximize": "Maximize window",
         "close": "Close window",
+        "collapse": "Collapse navbar",
+        "expand": "Expand navbar",
         "changePanelType": "Change panel type"
     },
     "panels": {
@@ -207,7 +211,10 @@
         "metabolism": "Metabolism",
         "types": "Types",
         "representations": "Representations",
-        "designs": "Designs"
+        "designs": "Designs",
+        "qualities": "Qualities",
+        "files": "Files",
+        "authors": "Authors"
     },
     "settings": {
         "general": "General",
@@ -223,6 +230,16 @@
         "noSelectionMessage": "Select an item to view details"
     },
     "type": {
-        "variant": "Variant"
+        "title": "Type",
+        "name": "Name",
+        "description": "Description",
+        "descriptionPlaceholder": "Enter type description...",
+        "icon": "Icon",
+        "iconPlaceholder": "Emoji, name, or URL",
+        "image": "Image URL",
+        "imagePlaceholder": "URL to type image",
+        "variant": "Variant",
+        "variantPlaceholder": "Type variant",
+        "unit": "Unit"
     }
 }
