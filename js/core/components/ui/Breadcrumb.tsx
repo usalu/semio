@@ -70,7 +70,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
 }
 
 interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
-  items?: { label: string; href: string }[];
+  items?: { label: React.ReactNode; href: string; tooltip?: string }[];
   onNavigate?: (href: string) => void;
   tooltip?: string;
 }
@@ -123,12 +123,23 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
         </DropdownMenuPrimitive.Trigger>
       )}
       <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-background-level-3 min-w-[8rem] overflow-hidden border p-1">
-          {items.map((item, index) => (
-            <DropdownMenuPrimitive.Item key={index} className="text-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center px-2 py-1.5 text-sm outline-none" onClick={() => handleSelect(item.href)}>
-              {item.label}
-            </DropdownMenuPrimitive.Item>
-          ))}
+        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-background-level-3 w-auto overflow-hidden border p-1">
+          {items.map((item, index) => {
+            const menuItem = (
+              <DropdownMenuPrimitive.Item key={index} className="text-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center px-2 py-1.5 text-sm outline-none whitespace-nowrap" onClick={() => handleSelect(item.href)}>
+                {item.label}
+              </DropdownMenuPrimitive.Item>
+            );
+            if (item.tooltip) {
+              return (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
+                  <TooltipContent>{item.tooltip}</TooltipContent>
+                </Tooltip>
+              );
+            }
+            return menuItem;
+          })}
         </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
     </DropdownMenuPrimitive.Root>

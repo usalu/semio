@@ -19,10 +19,11 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Fullscreen, Home, Info, MessageCircle, Minimize, Minus, Settings, Square, Wrench, X } from "lucide-react";
-import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Fullscreen, HardDrive, Home, Info, Layout, MessageCircle, Minimize, Minus, Settings, Square, User, Wrench, X } from "lucide-react";
+import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
+import { generateUniqueName } from "../../../lib/utils";
 import { Design, Type } from "../../../semio";
 import {
   EditorType,
@@ -35,12 +36,14 @@ import {
   useIsFullscreen,
   useIsMobile,
   useIsNavbarExpanded,
+  useKitCommandsSafe,
   useKitEditorCommands,
   useKits,
   useNavigation,
   useNavigationHistory,
   useSketchpadCommands,
   useSketchpadScope,
+  useSketchpadStore,
   useTypeEditorCommands,
 } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
@@ -155,58 +158,295 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
   ],
 });
 
-const Navigation: FC = ({ }) => {
+const Navigation: FC = ({}) => {
   const { t } = useTranslation();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const navigation = useNavigation();
+  const [searchParams] = useSearchParams();
   const kits = useKits();
+
+  // Parse URL: /{kitGuid} or /{kitGuid}/[dt]/{itemGuid}
   const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);
   const kitGuid = pathMatch?.[1];
-  const editorTypeChar = pathMatch?.[2];
+  const editorType = pathMatch?.[2]; // 'd' or 't'
   const itemGuid = pathMatch?.[3];
+
+  const isDesignEditor = editorType === "d" && itemGuid;
+  const isTypeEditor = editorType === "t" && itemGuid;
+  const isKitEditor = kitGuid && !itemGuid;
+
+  // Get filtered artifact kind from search params
+  const filteredKind = searchParams.get("k") as string | null;
+
   const kit = kits.find((k) => k.guid === kitGuid);
-  const kitEditorCommands = useKitEditorCommands(kitGuid ? { kit: kitGuid } : undefined);
-  const kitItems = kits.map((k) => ({ label: k.name, href: `/${k.guid}` }));
-  const artifactKinds = [
-    { label: t("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}?kind=designs` : "/?kind=designs" },
-    { label: t("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}?kind=types` : "/?kind=types" },
-    { label: t("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}?kind=qualities` : "/?kind=qualities" },
-    { label: t("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}?kind=files` : "/?kind=files" },
-    { label: t("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}?kind=authors` : "/?kind=authors" },
+  const store = useSketchpadStore();
+
+  // Determine kit storage kind
+  const kitKind = useMemo(() => {
+    if (!kitGuid || !store.hasKit(kitGuid)) return undefined;
+    const kitStore = store.kit(kitGuid);
+    if (!kitStore) return undefined;
+    if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) return "remote";
+    if (kitStore.isLocallyPersisted) return "local";
+    return "temporary";
+  }, [kitGuid, store]);
+
+  // Kit kind items for breadcrumb
+  const kitKindItems = [
+    { label: <Clock size={16} />, tooltip: t("breadcrumb.temporary"), href: "/?k=temporary" },
+    { label: <HardDrive size={16} />, tooltip: t("breadcrumb.local"), href: "/?k=local" },
+    { label: <Cloud size={16} />, tooltip: t("breadcrumb.remote"), href: "/?k=remote" },
   ];
 
-  // Find design or type for displaying hierarchy
-  let design: Design | undefined;
-  let type: Type | undefined;
-  if (kit && itemGuid) {
-    if (editorTypeChar === "d") {
-      design = kit.designs?.find((d) => d.guid === itemGuid);
-    } else if (editorTypeChar === "t") {
-      type = kit.types?.find((t) => t.guid === itemGuid);
+  // Filter kits by kind for the kit selector
+  const kitItemsWithCreate = useMemo(() => {
+    const items = kits
+      .filter((k) => {
+        if (!kitKind) return true;
+        const ks = store.kit(k.guid);
+        const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
+        return kKind === kitKind;
+      })
+      .map((k) => ({ label: k.name, href: `/${k.guid}` }));
+
+    // Add create option
+    items.push({ label: "+ " + t("navbar.createKit"), href: "#create-kit" });
+    return items;
+  }, [kits, kitKind, store, t]);
+
+  // Use safe kit commands that returns null when not in kit scope
+  const kitCommands = useKitCommandsSafe();
+  const sketchpadCommands = useSketchpadCommands();
+
+  const artifactKinds = [
+    { label: <Layout size={16} />, tooltip: t("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}?k=designs` : "/?k=designs" },
+    { label: <Box size={16} />, tooltip: t("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}?k=types` : "/?k=types" },
+    { label: <Award size={16} />, tooltip: t("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}?k=qualities` : "/?k=qualities" },
+    { label: <FileText size={16} />, tooltip: t("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}?k=files` : "/?k=files" },
+    { label: <User size={16} />, tooltip: t("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}?k=authors` : "/?k=authors" },
+  ];
+
+  // Get all designs and types as full objects (needed for create handlers)
+  const allDesigns: Design[] = useMemo(() => {
+    if (!kit?.designs) return [];
+    return (kit.designs as any[]).filter((d): d is Design => typeof d === "object" && d.guid !== undefined);
+  }, [kit?.designs]);
+
+  const allTypes: Type[] = useMemo(() => {
+    if (!kit?.types) return [];
+    return (kit.types as any[]).filter((t): t is Type => typeof t === "object" && t.guid !== undefined);
+  }, [kit?.types]);
+
+  // Create handlers for various entity types
+  const handleCreateKit = useCallback(() => {
+    const guid = crypto.randomUUID();
+    const now = new Date();
+    const existingNames = kits.map((k) => k.name);
+    const uniqueName = generateUniqueName(t("kit.defaultName"), existingNames);
+    sketchpadCommands.createKit({
+      guid,
+      name: uniqueName,
+      version: "1.0.0",
+      createdAt: now,
+      updatedAt: now,
+    });
+    navigate(`/${guid}`);
+  }, [navigate, sketchpadCommands, kits, t]);
+
+  const handleCreateDesign = useCallback(
+    (name?: string) => {
+      console.log("[Navbar] handleCreateDesign called", { name, kitCommands: !!kitCommands });
+      if (!kitCommands) {
+        console.warn("[Navbar] kitCommands is null, cannot create design");
+        return;
+      }
+      const guid = crypto.randomUUID();
+      const existingNames = allDesigns.map((d) => d.name);
+      const uniqueName = name || generateUniqueName(t("design.defaultName"), existingNames);
+      console.log("[Navbar] Creating design with name:", uniqueName);
+      kitCommands.createDesign({ guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
+      navigate(`/${kitGuid}/d/${guid}`);
+    },
+    [kitCommands, kitGuid, navigate, allDesigns, t],
+  );
+
+  const handleCreateType = useCallback(
+    (name?: string) => {
+      if (!kitCommands) return;
+      const guid = crypto.randomUUID();
+      const existingNames = allTypes.map((t) => t.name);
+      const uniqueName = name || generateUniqueName(t("type.defaultName"), existingNames);
+      kitCommands.createType({ guid, name: uniqueName, variant: "", ports: [] });
+      navigate(`/${kitGuid}/t/${guid}`);
+    },
+    [kitCommands, kitGuid, navigate, allTypes, t],
+  );
+
+  const handleCreateVariant = useCallback(
+    (designOrType: Design | Type, isType: boolean) => {
+      console.log("[Navbar] handleCreateVariant called", { designOrType, isType, kitCommands: !!kitCommands });
+      if (!kitCommands) {
+        console.warn("[Navbar] kitCommands is null, cannot create variant");
+        return;
+      }
+      const guid = crypto.randomUUID();
+      if (!isType) {
+        const d = designOrType as Design;
+        const existingVariants = allDesigns.filter((design) => design.name === d.name).map((design) => design.variant || "");
+        console.log("[Navbar] Creating design variant", { name: d.name, existingVariants });
+        const uniqueVariant = generateUniqueName(d.name, existingVariants);
+        console.log("[Navbar] Unique variant name:", uniqueVariant);
+        kitCommands.createDesign({
+          guid,
+          name: d.name,
+          variant: uniqueVariant,
+          view: "",
+          pieces: [],
+          connections: [],
+        });
+        navigate(`/${kitGuid}/d/${guid}`);
+      } else {
+        const typeObj = designOrType as Type;
+        const existingVariants = allTypes.filter((type) => type.name === typeObj.name).map((type) => type.variant || "");
+        const uniqueVariant = generateUniqueName(typeObj.name, existingVariants);
+        kitCommands.createType({
+          guid,
+          name: typeObj.name,
+          variant: uniqueVariant,
+          ports: [],
+        });
+        navigate(`/${kitGuid}/t/${guid}`);
+      }
+    },
+    [kitCommands, kitGuid, navigate, allDesigns, allTypes],
+  );
+
+  const handleCreateView = useCallback(
+    (design: Design) => {
+      console.log("[Navbar] handleCreateView called", { design, kitCommands: !!kitCommands });
+      if (!kitCommands) {
+        console.warn("[Navbar] kitCommands is null, cannot create view");
+        return;
+      }
+      const guid = crypto.randomUUID();
+      const existingViews = allDesigns.filter((d) => d.name === design.name && (d.variant || "") === (design.variant || "")).map((d) => d.view || "");
+      console.log("[Navbar] Creating design view", { name: design.name, variant: design.variant, existingViews });
+      const uniqueView = generateUniqueName(design.name, existingViews);
+      console.log("[Navbar] Unique view name:", uniqueView);
+      kitCommands.createDesign({
+        guid,
+        name: design.name,
+        variant: design.variant,
+        view: uniqueView,
+        pieces: [],
+        connections: [],
+      });
+      navigate(`/${kitGuid}/d/${guid}`);
+    },
+    [kitCommands, kitGuid, navigate, allDesigns],
+  );
+
+  // Create handler for filtered artifact kinds
+  const handleCreate = useCallback(() => {
+    if (!kit || !filteredKind || !kitCommands) return;
+
+    switch (filteredKind) {
+      case "designs":
+        handleCreateDesign();
+        break;
+      case "types":
+        handleCreateType();
+        break;
+      case "authors":
+        const guid = crypto.randomUUID();
+        kitCommands.createAuthor({ guid, name: "New Author", email: "" });
+        break;
+      case "qualities":
+        // TODO: Add createQuality command
+        break;
+      case "files":
+        // TODO: Add createFile command
+        break;
     }
-  }
+  }, [kit, filteredKind, kitCommands, handleCreateDesign, handleCreateType]);
 
-  // Build hierarchical display for design: NAME - VARIANT - VIEW
-  const designLabel = design
-    ? [design.name, design.variant, design.view].filter(Boolean).join(" - ")
-    : itemGuid;
+  // Find current design or type
+  const design = isDesignEditor ? allDesigns.find((d) => d.guid === itemGuid) : undefined;
+  const type = isTypeEditor ? allTypes.find((t) => t.guid === itemGuid) : undefined;
 
-  // Build hierarchical display for type: NAME - VARIANT
-  const typeLabel = type
-    ? [type.name, type.variant].filter(Boolean).join(" - ")
-    : itemGuid;
+  // Build breadcrumb items for designs
+  const designNameItems = useMemo(() => {
+    const nameMap = new Map<string, Design>();
+    allDesigns.forEach((d) => {
+      if (!nameMap.has(d.name)) nameMap.set(d.name, d);
+    });
+    const items = Array.from(nameMap.entries()).map(([name, d]) => ({
+      label: name,
+      href: `/${kitGuid}/d/${d.guid}`,
+    }));
+    items.push({ label: "+ " + t("navbar.createDesign"), href: "#create-design" });
+    return items;
+  }, [allDesigns, kitGuid, t]);
 
-  // Create dropdown items for designs when in design editor
-  const designItems = kit?.designs?.map((d) => ({
-    label: [d.name, d.variant, d.view].filter(Boolean).join(" - "),
-    href: `/${kitGuid}/d/${d.guid}`,
-  })) || [];
+  const designVariantItems = useMemo(() => {
+    if (!design) return [];
+    const variants = new Map<string, Design>();
+    allDesigns.forEach((d) => {
+      if (d.name === design.name) {
+        const key = d.variant || "";
+        if (!variants.has(key)) variants.set(key, d);
+      }
+    });
+    const items = Array.from(variants.entries()).map(([variant, d]) => ({
+      label: variant || "Default",
+      href: `/${kitGuid}/d/${d.guid}`,
+    }));
+    items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
+    return items;
+  }, [design, allDesigns, kitGuid, t]);
 
-  // Create dropdown items for types when in type editor
-  const typeItems = kit?.types?.map((t) => ({
-    label: [t.name, t.variant].filter(Boolean).join(" - "),
-    href: `/${kitGuid}/t/${t.guid}`,
-  })) || [];
+  const designViewItems = useMemo(() => {
+    if (!design) return [];
+    const items = allDesigns
+      .filter((d) => d.name === design.name && (d.variant || "") === (design.variant || ""))
+      .map((d) => ({
+        label: d.view || "Default",
+        href: `/${kitGuid}/d/${d.guid}`,
+      }));
+    items.push({ label: "+ " + t("navbar.createView"), href: "#create-view" });
+    return items;
+  }, [design, allDesigns, kitGuid, t]);
+
+  // Build breadcrumb items for types
+  const typeNameItems = useMemo(() => {
+    const nameMap = new Map<string, Type>();
+    allTypes.forEach((t) => {
+      if (!nameMap.has(t.name)) nameMap.set(t.name, t);
+    });
+    const items = Array.from(nameMap.entries()).map(([name, t]) => ({
+      label: name,
+      href: `/${kitGuid}/t/${t.guid}`,
+    }));
+    items.push({ label: "+ " + t("navbar.createType"), href: "#create-type" });
+    return items;
+  }, [allTypes, kitGuid, t]);
+
+  const typeVariantItems = useMemo(() => {
+    if (!type) return [];
+    const variants = new Map<string, Type>();
+    allTypes.forEach((t) => {
+      if (t.name === type.name) {
+        const key = t.variant || "";
+        if (!variants.has(key)) variants.set(key, t);
+      }
+    });
+    const items = Array.from(variants.entries()).map(([variant, t]) => ({
+      label: variant || "Default",
+      href: `/${kitGuid}/t/${t.guid}`,
+    }));
+    items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
+    return items;
+  }, [type, allTypes, kitGuid, t]);
 
   return (
     <Breadcrumb>
@@ -216,9 +456,24 @@ const Navigation: FC = ({ }) => {
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {kitGuid && (
+        {kitGuid && kitKind && (
           <>
-            <BreadcrumbSeparator items={kitItems} tooltip={t("navbar.kits")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbSeparator items={kitKindItems} tooltip={t("navbar.kitKinds")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={t(`breadcrumb.${kitKind}`)}>
+              <BreadcrumbLink onClick={() => navigate(`/?k=${kitKind}`)} style={{ cursor: "pointer" }}>
+                {kitKind === "temporary" && <Clock size={16} />}
+                {kitKind === "local" && <HardDrive size={16} />}
+                {kitKind === "remote" && <Cloud size={16} />}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={kitItemsWithCreate}
+              tooltip={t("navbar.kits")}
+              onNavigate={(href) => {
+                if (href === "#create-kit") handleCreateKit();
+                else navigate(href);
+              }}
+            />
             <BreadcrumbItem tooltip={t("navbar.kit")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}`)} style={{ cursor: "pointer" }}>
                 {kit?.name || kitGuid}
@@ -226,91 +481,109 @@ const Navigation: FC = ({ }) => {
             </BreadcrumbItem>
           </>
         )}
-        {kitGuid && !itemGuid && (
+        {isKitEditor && filteredKind && (
           <>
             <BreadcrumbSeparator
-              items={artifactKinds}
+              items={[...artifactKinds, { label: "+ " + t("navbar.create"), href: "#create" }]}
               tooltip={t("navbar.artifacts")}
               onNavigate={(href) => {
-                const kind = artifactKinds.find((a) => a.href === href)?.kind;
-                const pathWithoutQuery = href.split('?')[0];
-                navigate(pathWithoutQuery);
-                if (kind && kitEditorCommands) {
-                  kitEditorCommands.setFilterKinds([kind]);
+                if (href === "#create") {
+                  handleCreate();
+                } else {
+                  navigate(href);
                 }
               }}
             />
+            <BreadcrumbItem tooltip={t(`breadcrumb.${filteredKind}`)}>
+              <BreadcrumbLink style={{ cursor: "default" }}>
+                {filteredKind === "designs" && <Layout size={16} />}
+                {filteredKind === "types" && <Box size={16} />}
+                {filteredKind === "qualities" && <Award size={16} />}
+                {filteredKind === "files" && <FileText size={16} />}
+                {filteredKind === "authors" && <User size={16} />}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
           </>
         )}
-        {editorTypeChar === "d" && itemGuid && (
+        {isKitEditor && !filteredKind && (
           <>
-            <BreadcrumbSeparator
-              items={artifactKinds}
-              tooltip={t("navbar.artifacts")}
-              onNavigate={(href) => {
-                const kind = artifactKinds.find((a) => a.href === href)?.kind;
-                const pathWithoutQuery = href.split('?')[0];
-                navigate(pathWithoutQuery);
-                if (kind && kitEditorCommands) {
-                  setTimeout(() => kitEditorCommands.setFilterKinds([kind]), 0);
-                }
-              }}
-            />
+            <BreadcrumbSeparator items={artifactKinds} tooltip={t("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+          </>
+        )}
+        {isDesignEditor && design && (
+          <>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={t("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={t("breadcrumb.designs")}>
-              <BreadcrumbLink onClick={() => {
-                navigate(`/${kitGuid}`);
-                if (kitEditorCommands) {
-                  kitEditorCommands.setFilterKinds(["designs"]);
-                }
-              }} style={{ cursor: "pointer" }}>
-                {t("breadcrumb.designs")}
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs`)} style={{ cursor: "pointer" }}>
+                <Layout size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
-              items={designItems}
+              items={designNameItems}
               tooltip={t("navbar.selectDesign")}
-              onNavigate={(href) => navigate(href)}
+              onNavigate={(href) => {
+                if (href === "#create-design") handleCreateDesign();
+                else navigate(href);
+              }}
             />
             <BreadcrumbItem tooltip={t("navbar.design")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}/d/${itemGuid}`)} style={{ cursor: "pointer" }}>
-                {designLabel}
-              </BreadcrumbLink>
+              <BreadcrumbLink style={{ cursor: "default" }}>{design.name}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={designVariantItems}
+              tooltip={t("navbar.selectVariant")}
+              onNavigate={(href) => {
+                console.log("[Navbar] Variant breadcrumb navigate", { href, design });
+                if (href === "#create-variant") handleCreateVariant(design, false);
+                else navigate(href);
+              }}
+            />
+            <BreadcrumbItem tooltip={t("navbar.variant")}>
+              <BreadcrumbLink style={{ cursor: "default" }}>{design.variant || <span className="italic opacity-70">Default</span>}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={designViewItems}
+              tooltip={t("navbar.selectView")}
+              onNavigate={(href) => {
+                console.log("[Navbar] View breadcrumb navigate", { href, design });
+                if (href === "#create-view") handleCreateView(design);
+                else navigate(href);
+              }}
+            />
+            <BreadcrumbItem tooltip={t("navbar.view")}>
+              <BreadcrumbLink style={{ cursor: "default" }}>{design.view || <span className="italic opacity-70">Default</span>}</BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
-        {editorTypeChar === "t" && itemGuid && (
+        {isTypeEditor && type && (
           <>
-            <BreadcrumbSeparator
-              items={artifactKinds}
-              tooltip={t("navbar.artifacts")}
-              onNavigate={(href) => {
-                const kind = artifactKinds.find((a) => a.href === href)?.kind;
-                const pathWithoutQuery = href.split('?')[0];
-                navigate(pathWithoutQuery);
-                if (kind && kitEditorCommands) {
-                  setTimeout(() => kitEditorCommands.setFilterKinds([kind]), 0);
-                }
-              }}
-            />
+            <BreadcrumbSeparator items={artifactKinds} tooltip={t("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={t("breadcrumb.types")}>
-              <BreadcrumbLink onClick={() => {
-                navigate(`/${kitGuid}`);
-                if (kitEditorCommands) {
-                  kitEditorCommands.setFilterKinds(["types"]);
-                }
-              }} style={{ cursor: "pointer" }}>
-                {t("breadcrumb.types")}
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types`)} style={{ cursor: "pointer" }}>
+                <Box size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
-              items={typeItems}
+              items={typeNameItems}
               tooltip={t("navbar.selectType")}
-              onNavigate={(href) => navigate(href)}
+              onNavigate={(href) => {
+                if (href === "#create-type") handleCreateType();
+                else navigate(href);
+              }}
             />
             <BreadcrumbItem tooltip={t("navbar.type")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}/t/${itemGuid}`)} style={{ cursor: "pointer" }}>
-                {typeLabel}
-              </BreadcrumbLink>
+              <BreadcrumbLink style={{ cursor: "default" }}>{type.name}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={typeVariantItems}
+              tooltip={t("navbar.selectVariant")}
+              onNavigate={(href) => {
+                if (href === "#create-variant") handleCreateVariant(type, true);
+                else navigate(href);
+              }}
+            />
+            <BreadcrumbItem tooltip={t("navbar.variant")}>
+              <BreadcrumbLink style={{ cursor: "default" }}>{type.variant || <span className="italic opacity-70">Default</span>}</BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
@@ -319,7 +592,7 @@ const Navigation: FC = ({ }) => {
   );
 };
 
-const Search: FC = ({ }) => {
+const Search: FC = ({}) => {
   return (
     <Command>
       <CommandInput />
@@ -332,7 +605,7 @@ const Search: FC = ({ }) => {
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -341,20 +614,13 @@ const PanelToggles: FC = ({ }) => {
   const homeCommands = useHomeCommands();
   const kitEditorCommands = useKitEditorCommands(kit ? { kit } : undefined);
   const designEditorCommands = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
-  const typeEditorCommands = useTypeEditorCommands(type ? { type } : undefined);
-  console.log("[PanelToggles] editorType:", editorType);
-  console.log("[PanelToggles] homeCommands:", homeCommands);
-  console.log("[PanelToggles] kitEditorCommands:", kitEditorCommands);
-  console.log("[PanelToggles] designEditorCommands:", designEditorCommands);
-  console.log("[PanelToggles] typeEditorCommands:", typeEditorCommands);
+  const typeEditorCommands = useTypeEditorCommands(kit && type ? { kit, type } : undefined);
   const commands = {
     [EditorType.HOME]: homeCommands,
     [EditorType.KIT]: kitEditorCommands,
     [EditorType.DESIGN]: designEditorCommands,
     [EditorType.TYPE]: typeEditorCommands,
   };
-  console.log("[PanelToggles] commands:", commands);
-  console.log("[PanelToggles] selected command:", commands[editorType]);
   const isMobile = useIsMobile();
 
   if (panelConfig.length === 0) return null;
@@ -369,16 +635,11 @@ const PanelToggles: FC = ({ }) => {
   const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    console.log("[Navbar handleToggle] called with panelKey:", panelKey, "current state:", visiblePanels[panelKey]);
-    console.log("[Navbar handleToggle] editorType:", editorType);
-    const togglePanel = commands[editorType]?.togglePanel || (() => { console.log("[PanelToggles] fallback no-op called"); });
-    console.log("[Navbar handleToggle] togglePanel function:", togglePanel);
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
-      // On mobile, only one panel can be open at a time
       if (!current) {
-        // Close all other panels
         (Object.keys(visiblePanels) as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
             togglePanel(p);
@@ -386,7 +647,6 @@ const PanelToggles: FC = ({ }) => {
         });
       }
     } else {
-      // Desktop behavior: Handle mutual exclusivity for details, chat, and settings
       if (!current && exclusivePanels.includes(panelKey)) {
         (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
@@ -395,19 +655,16 @@ const PanelToggles: FC = ({ }) => {
         });
       }
     }
-    console.log("[Navbar handleToggle] calling togglePanel:", panelKey);
     togglePanel(panelKey);
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { console.log("[PanelToggles] fallback no-op called"); });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
-      // Open the currently selected panel if not already open
       if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
         handleToggle(activeExclusivePanel as keyof PanelVisibility);
       }
     } else {
-      // Close the currently open exclusive panel
       const openPanel = exclusiveConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
         togglePanel(openPanel.key as keyof PanelVisibility);
@@ -416,10 +673,9 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleExclusiveValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { console.log("[PanelToggles] fallback no-op called"); });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
-    // Close all exclusive panels and open the selected one
     (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
       const isOpen = visiblePanels[p];
       const shouldOpen = p === value;
@@ -472,9 +728,9 @@ const PanelToggles: FC = ({ }) => {
   );
 };
 
-interface NavbarProps { }
+interface NavbarProps {}
 
-const Navbar: FC<NavbarProps> = ({ }) => {
+const Navbar: FC<NavbarProps> = ({}) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
@@ -571,7 +827,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
   return (
     <div
       id="navbar"
-      className={`w-full h-12 bg-background border-b flex items-center justify-between px-4 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
+      className={`w-full h-12 bg-background border-b flex items-center gap-4 px-4 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
       style={{ WebkitAppRegion: "drag" }}
     >
       <ButtonGroup>
@@ -587,14 +843,13 @@ const Navbar: FC<NavbarProps> = ({ }) => {
       </ButtonGroup>
 
       <Navigation />
-      {/* <Search /> */}
 
-      <PanelToggles />
-      <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
-        {isFullscreen ? <Minimize /> : <Fullscreen />}
-      </Toggle>
-      {onWindowEvents && (
-        <div className="flex items-center gap-2 ml-4">
+      <div className="flex items-center gap-4 ml-auto">
+        <PanelToggles />
+        <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          {isFullscreen ? <Minimize /> : <Fullscreen />}
+        </Toggle>
+        {onWindowEvents && (
           <ToggleGroup type="single">
             <ToggleGroupItem value="minimize" tooltip={t("navbar.minimize")} onClick={onWindowEvents.minimize}>
               <Minus size={16} />
@@ -606,8 +861,8 @@ const Navbar: FC<NavbarProps> = ({ }) => {
               <X size={16} />
             </ToggleGroupItem>
           </ToggleGroup>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

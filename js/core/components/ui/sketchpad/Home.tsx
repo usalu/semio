@@ -1,9 +1,10 @@
-import { Plus } from "lucide-react";
-import { FC, useMemo, useState } from "react";
+import { Clock, Cloud, HardDrive, Plus } from "lucide-react";
+import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { guid } from "../../../lib/utils";
+import { useNavigate, useSearchParams } from "react-router";
+import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
-import { useKits, useSketchpadCommands, useSketchpadStore } from "../../../store";
+import { useKits, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Toggle } from "../Toggle";
@@ -37,12 +38,24 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
 
 const Home: FC = ({}) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const navigation = useNavigation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
-  const [selectedKinds, setSelectedKinds] = useState<KitStoreKind[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Derive kind from URL path
+  const pathMatch = navigation.match(/^\/([^?]+)/);
+  const kindFromPath = pathMatch?.[1] as KitStoreKind | undefined;
+  const selectedKind = ["temporary", "local", "remote"].includes(kindFromPath || "") ? kindFromPath : undefined;
+
+  // Get search query from URL
+  const searchQuery = searchParams.get("q") || "";
+
+  // Get expanded rows from search params
+  const expandedRowsParam = searchParams.getAll("e");
+  const expandedRows = new Set(expandedRowsParam);
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -55,7 +68,7 @@ const Home: FC = ({}) => {
       if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
       else if (kitStore.isLocallyPersisted) type = "local";
 
-      if (selectedKinds.length > 0 && !selectedKinds.includes(type)) return;
+      if (selectedKind && selectedKind !== type) return;
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
       const key = kit.name;
@@ -109,12 +122,14 @@ const Home: FC = ({}) => {
     });
 
     return result;
-  }, [kits, store, selectedKinds, searchQuery, expandedRows]);
+  }, [kits, store, selectedKind, searchQuery, expandedRows]);
 
   const handleCreateKit = (type: KitStoreKind) => {
+    const existingNames = kits.map((k) => k.name);
+    const uniqueName = generateUniqueName(t("kit.defaultName"), existingNames);
     const newKit: Kit = {
       guid: guid(),
-      name: "New Kit",
+      name: uniqueName,
       version: "1.0.0",
       types: [],
       designs: [],
@@ -126,16 +141,40 @@ const Home: FC = ({}) => {
   };
 
   const toggleKind = (type: KitStoreKind) => {
-    setSelectedKinds((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+    if (selectedKind === type) {
+      // If already selected, go back to root
+      navigate("/");
+    } else {
+      // Navigate to the selected kind
+      const params = new URLSearchParams(searchParams);
+      navigate(`/${type}?${params.toString()}`);
+    }
   };
 
   const toggleRow = (rowId: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(rowId)) next.delete(rowId);
-      else next.add(rowId);
-      return next;
-    });
+    const newParams = new URLSearchParams(searchParams);
+    const currentRows = newParams.getAll("e");
+
+    if (currentRows.includes(rowId)) {
+      // Remove row
+      newParams.delete("e");
+      currentRows.filter((r) => r !== rowId).forEach((r) => newParams.append("e", r));
+    } else {
+      // Add row
+      newParams.append("e", rowId);
+    }
+
+    setSearchParams(newParams);
+  };
+
+  const handleSearchChange = (value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set("q", value);
+    } else {
+      newParams.delete("q");
+    }
+    setSearchParams(newParams);
   };
 
   return (
@@ -144,46 +183,46 @@ const Home: FC = ({}) => {
         <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
           <Toggle
             type="withAction"
-            pressed={selectedKinds.includes("temporary")}
+            pressed={selectedKind === "temporary"}
             onPressedChange={() => toggleKind("temporary")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("temporary")}
-            tooltip={selectedKinds.includes("temporary") ? t("home.hideTemporary") : t("home.showTemporary")}
+            tooltip={selectedKind === "temporary" ? t("home.hideTemporary") : t("home.showTemporary")}
             actionTooltip={t("home.createTemporary")}
           >
-            {t("home.temporary")}
+            <Clock className="size-4" />
           </Toggle>
           <Toggle
             type="withAction"
-            pressed={selectedKinds.includes("local")}
+            pressed={selectedKind === "local"}
             onPressedChange={() => toggleKind("local")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("local")}
-            tooltip={selectedKinds.includes("local") ? t("home.hideLocal") : t("home.showLocal")}
+            tooltip={selectedKind === "local" ? t("home.hideLocal") : t("home.showLocal")}
             actionTooltip={t("home.createLocal")}
           >
-            {t("home.local")}
+            <HardDrive className="size-4" />
           </Toggle>
           <Toggle
             type="withAction"
-            pressed={selectedKinds.includes("remote")}
+            pressed={selectedKind === "remote"}
             onPressedChange={() => toggleKind("remote")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("remote")}
-            tooltip={selectedKinds.includes("remote") ? t("home.hideRemote") : t("home.showRemote")}
+            tooltip={selectedKind === "remote" ? t("home.hideRemote") : t("home.showRemote")}
             actionTooltip={t("home.createRemote")}
           >
-            {t("home.remote")}
+            <Cloud className="size-4" />
           </Toggle>
         </div>
-        <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
             <tr>
               <th className="text-left p-2 font-medium">{t("home.name")}</th>
-              <th className="text-left p-2 font-medium">{t("home.kind")}</th>
+              {!selectedKind && <th className="text-left p-2 font-medium">{t("home.kind")}</th>}
               <th className="text-left p-2 font-medium">{t("home.lastUpdated")}</th>
               <th className="text-left p-2 font-medium">{t("home.created")}</th>
             </tr>
@@ -211,7 +250,13 @@ const Home: FC = ({}) => {
                     </button>
                   </div>
                 </td>
-                <td className="p-2 capitalize">{row.type}</td>
+                {!selectedKind && (
+                  <td className="p-2">
+                    {row.type === "temporary" && <Clock className="size-4" />}
+                    {row.type === "local" && <HardDrive className="size-4" />}
+                    {row.type === "remote" && <Cloud className="size-4" />}
+                  </td>
+                )}
                 <td className="p-2">{row.updatedAt}</td>
                 <td className="p-2">{row.createdAt}</td>
               </tr>

@@ -111,3 +111,12 @@ export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean 
   if (!a || !b) return false;
   return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
 };
+
+export const generateUniqueName = (baseName: string, existingNames: string[]): string => {
+  if (!existingNames.includes(baseName)) return baseName;
+  let counter = 2;
+  while (existingNames.includes(`${baseName} ${counter}`)) {
+    counter++;
+  }
+  return `${baseName} ${counter}`;
+};

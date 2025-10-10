@@ -28,6 +28,7 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
+- Whenever adding ui elements ALWAYS use i18n setups and provide translations for the existing languages.
 
 ## Styling
 

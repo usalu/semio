@@ -135,6 +135,18 @@ export type Transact = (fn: () => void) => void;
 export type Url = string;
 export type SketchpadId = string;
 export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
+export type KitId = Guid;
+export type TypeId = Guid;
+export type DesignId = Guid;
+export type PieceId = Guid;
+export type PortId = Guid;
+export type ConnectionId = Guid;
+export type AuthorId = Guid;
+export type QualityId = Guid;
+export type BenchmarkId = Guid;
+export type PropId = Guid;
+export type LayerId = string;
+export type RepresentationId = Guid;
 
 type YUuid = string;
 type YUuidArray = Y.Array<YUuid>;
@@ -1794,9 +1806,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-        const update = colorDiff.updated?.find((u) => u.id === type.guid);
-        return update ? { ...type, ports: update.diff.ports } : type;
-      })
+          const update = colorDiff.updated?.find((u) => u.id === type.guid);
+          return update ? { ...type, ports: update.diff.ports } : type;
+        })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -4251,7 +4263,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -4427,7 +4439,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) { }
+                  } catch (error) {}
                 }
               }
             }
@@ -4634,6 +4646,43 @@ export function useDesigns(): Design[] {
 
 export function useFileUrls(): Map<Url, Url> {
   return (useKitStore() as KitStore).fileUrls();
+}
+
+export function useKitCommandsSafe() {
+  const store = useSketchpadStore();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid;
+
+  if (!kitGuid || !store.hasKit(kitGuid)) {
+    return null;
+  }
+
+  const kitStore = store.kit(kitGuid);
+  return {
+    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+    exportKit: () => kitStore.execute("semio.kit.export"),
+    createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", author),
+    updateAuthor: (authorId: AuthorId, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", authorId, authorDiff),
+    deleteAuthor: (authorId: AuthorId) => kitStore.execute("semio.kit.deleteAuthor", authorId),
+    createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
+    updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", guid, diff),
+    deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", guid),
+    createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
+    updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", guid, diff),
+    deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", guid),
+    addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
+    removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
+    addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", design, piece),
+    addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", design, pieces),
+    removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", design, piece),
+    removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", design, pieces),
+    addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", design, connection),
+    addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", design, connections),
+    removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", design, connection),
+    removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", design, connections),
+    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
+  };
 }
 
 export function useKitCommands() {
@@ -4974,6 +5023,7 @@ type YTypeEditor = Y.Map<YTypeEditorVal>;
 type YTypeEditors = Y.Map<string, YTypeEditor>;
 
 export interface TypeEditorId {
+  kit: KitId;
   type: TypeId;
 }
 export interface TypeEditorSelection {
@@ -5257,10 +5307,10 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
 function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.guid ?? id?.type.kit;
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
   if (!resolvedKitId) return null;
   const typeScope = useTypeScope();
-  const resolvedTypeId = typeScope?.guid ?? id?.type.guid;
+  const resolvedTypeId = typeScope?.guid ?? id?.type;
   if (!resolvedTypeId) return null;
   const typeEditorStore = store.typeEditor(resolvedKitId, resolvedTypeId);
   return selector ? selector(typeEditorStore) : typeEditorStore;
@@ -5284,7 +5334,7 @@ export function useTypeEditorOthers(): TypeEditorPresenceOther[] {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -5543,8 +5593,6 @@ export interface KitEditorDiff {
   presence?: KitEditorPresence;
   hover?: KitEditorHover;
   fullscreenPanel?: KitEditorFullscreenPanel;
-  filterKinds?: string[];
-  filterConcepts?: string[];
   filterSearch?: string;
   expandedRows?: string[];
 }
@@ -5563,8 +5611,6 @@ export interface KitEditorState {
   hover?: KitEditorHover;
   presence?: KitEditorPresence;
   others: KitEditorPresenceOther[];
-  filterKinds: string[];
-  filterConcepts: string[];
   filterSearch: string;
   expandedRows: string[];
 }
@@ -5635,18 +5681,6 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     yMap.set("diff", new Y.Map<any>());
     yMap.set("currentTransactionStack", new Y.Array<any>());
     yMap.set("pastTransactionsStack", new Y.Array<any>());
-
-    const filterKinds = new Y.Array<string>();
-    if (state?.filterKinds) {
-      filterKinds.push(state.filterKinds);
-    }
-    yMap.set("filterKinds", filterKinds);
-
-    const filterConcepts = new Y.Array<string>();
-    if (state?.filterConcepts) {
-      filterConcepts.push(state.filterConcepts);
-    }
-    yMap.set("filterConcepts", filterConcepts);
 
     yMap.set("filterSearch", state?.filterSearch || "");
 
@@ -5720,18 +5754,8 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     return [];
   }
 
-  get filterKinds(): string[] {
-    const yFilterKinds = this.yMap.get("filterKinds") as Y.Array<string>;
-    return yFilterKinds ? yFilterKinds.toArray() : [];
-  }
-
-  get filterConcepts(): string[] {
-    const yFilterConcepts = this.yMap.get("filterConcepts") as Y.Array<string>;
-    return yFilterConcepts ? yFilterConcepts.toArray() : [];
-  }
-
   get filterSearch(): string {
-    return this.yMap.get("filterSearch") as string || "";
+    return (this.yMap.get("filterSearch") as string) || "";
   }
 
   get expandedRows(): string[] {
@@ -5765,8 +5789,6 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
-      filterKinds: this.filterKinds,
-      filterConcepts: this.filterConcepts,
       filterSearch: this.filterSearch,
       expandedRows: this.expandedRows,
     } as any;
@@ -5798,16 +5820,6 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
       }
       if (diff.selection) {
         this.applySelectionDiff(diff.selection);
-      }
-      if (diff.filterKinds !== undefined) {
-        const yFilterKinds = new Y.Array<string>();
-        yFilterKinds.push(diff.filterKinds);
-        this.yMap.set("filterKinds", yFilterKinds);
-      }
-      if (diff.filterConcepts !== undefined) {
-        const yFilterConcepts = new Y.Array<string>();
-        yFilterConcepts.push(diff.filterConcepts);
-        this.yMap.set("filterConcepts", yFilterConcepts);
       }
       if (diff.filterSearch !== undefined) {
         this.yMap.set("filterSearch", diff.filterSearch);
@@ -6193,20 +6205,6 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.setFilterKinds": (context: KitEditorCommandContext, kinds: string[]): KitEditorCommandResult => {
-    return {
-      diff: {
-        filterKinds: kinds,
-      },
-    };
-  },
-  "semio.kitEditor.setFilterConcepts": (context: KitEditorCommandContext, concepts: string[]): KitEditorCommandResult => {
-    return {
-      diff: {
-        filterConcepts: concepts,
-      },
-    };
-  },
   "semio.kitEditor.setFilterSearch": (context: KitEditorCommandContext, search: string): KitEditorCommandResult => {
     return {
       diff: {
@@ -6266,7 +6264,9 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
   console.log("[useKitEditorCommands] store:", store);
-  const noOp = () => { console.log("[useKitEditorCommands] noOp called"); };
+  const noOp = () => {
+    console.log("[useKitEditorCommands] noOp called");
+  };
   if (!store) {
     console.log("[useKitEditorCommands] no store, returning noOps");
     return {
@@ -6301,8 +6301,6 @@ export function useKitEditorCommands(id?: KitEditorId) {
       updateDesign: noOp,
       updateDesigns: noOp,
       togglePanel: noOp,
-      setFilterKinds: noOp,
-      setFilterConcepts: noOp,
       setFilterSearch: noOp,
       setExpandedRows: noOp,
       toggleExpandedRow: noOp,
@@ -6348,8 +6346,6 @@ export function useKitEditorCommands(id?: KitEditorId) {
         },
       });
     },
-    setFilterKinds: (kinds: string[]) => store.execute("semio.kitEditor.setFilterKinds", kinds),
-    setFilterConcepts: (concepts: string[]) => store.execute("semio.kitEditor.setFilterConcepts", concepts),
     setFilterSearch: (search: string) => store.execute("semio.kitEditor.setFilterSearch", search),
     setExpandedRows: (rows: string[]) => store.execute("semio.kitEditor.setExpandedRows", rows),
     toggleExpandedRow: (rowId: string) => store.execute("semio.kitEditor.toggleExpandedRow", rowId),
@@ -7202,7 +7198,9 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
   console.log("[useDesignEditorCommands] store:", store);
   console.log("[useDesignEditorCommands] store type:", typeof store);
   console.log("[useDesignEditorCommands] store truthiness:", !!store);
-  const noOp = () => { console.log("[useDesignEditorCommands] noOp called"); };
+  const noOp = () => {
+    console.log("[useDesignEditorCommands] noOp called");
+  };
   if (!store) {
     console.log("[useDesignEditorCommands] no store (falsy check passed), returning noOps");
     return {
@@ -7494,20 +7492,20 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-        design: { snappiness: 10, gridSize: 24 },
-        type: {},
-        kit: {},
-      };
+          design: { snappiness: 10, gridSize: 24 },
+          type: {},
+          kit: {},
+        };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        workbenchWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+          workbenchWidth: 230,
+          detailsWidth: 230,
+          chatWidth: 230,
+          settingsWidth: 230,
+          consoleHeight: 200,
+        };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr) : ["/"];
     const currentValues = {
@@ -8194,7 +8192,7 @@ export function useEditorCommands() {
         console.log("[useEditorCommands] editor type:", editor.constructor.name);
         console.log("[useEditorCommands] editor.change type:", typeof editor.change);
         console.log("[useEditorCommands] editor.change is:", editor.change);
-        console.log("[useEditorCommands] editor has change:", 'change' in editor);
+        console.log("[useEditorCommands] editor has change:", "change" in editor);
         console.log("[useEditorCommands] editor keys:", Object.keys(editor));
         console.log("[useEditorCommands] editor proto:", Object.getPrototypeOf(editor));
         console.log("[useEditorCommands] editor proto.change:", Object.getPrototypeOf(editor)?.change);

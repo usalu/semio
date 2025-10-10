@@ -1,9 +1,10 @@
-import { Plus } from "lucide-react";
+import { Award, Box, FileText, Layout, Plus, User } from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { guid } from "../../../lib/utils";
+import { useNavigate, useSearchParams } from "react-router";
+import { generateUniqueName, guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
-import { EditorType, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useSketchpadCommands } from "../../../store";
+import { EditorType, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useNavigation, useSketchpadCommands } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
@@ -161,6 +162,9 @@ const KitDetailsForm: FC = () => {
 
 const KitEditor: FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const navigation = useNavigation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   let kit: Kit | null = null;
   try {
@@ -185,10 +189,19 @@ const KitEditor: FC = () => {
   const sketchpadCommands = useSketchpadCommands();
   const kitEditorCommands = useKitEditorCommands();
   const kitEditor = useKitEditor();
-  const selectedKinds = (kitEditor.filterKinds || []) as ArtifactKind[];
-  const selectedConcepts = kitEditor.filterConcepts || [];
-  const searchQuery = kitEditor.filterSearch || "";
-  const expandedRows = new Set(kitEditor.expandedRows || []);
+
+  // Derive artifact kind from search params
+  const selectedKind = searchParams.get("k") as ArtifactKind | null;
+
+  // Get name/variant/view filters from search params
+  const selectedName = searchParams.get("name");
+  const selectedVariant = searchParams.get("variant");
+  const selectedView = searchParams.get("view");
+
+  // Get concepts and search from search params
+  const selectedConcepts = searchParams.getAll("c");
+  const searchQuery = searchParams.get("q") || "";
+  const expandedRows = new Set(searchParams.getAll("e"));
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -199,6 +212,51 @@ const KitEditor: FC = () => {
     kit.designs?.forEach((d: Design) => d.concepts?.forEach((c: string) => conceptSet.add(c)));
     return Array.from(conceptSet).sort();
   }, [kit.designs]);
+
+  // Collect unique names for the selected kind (or unified when no kind selected)
+  const uniqueNames = useMemo(() => {
+    const nameSet = new Set<string>();
+    if (!selectedKind || selectedKind === "designs") {
+      kit.designs?.forEach((d: Design) => nameSet.add(d.name));
+    }
+    if (!selectedKind || selectedKind === "types") {
+      kit.types?.forEach((t: Type) => nameSet.add(t.name));
+    }
+    return Array.from(nameSet).sort();
+  }, [kit.designs, kit.types, selectedKind]);
+
+  // Collect unique variants for the selected name
+  const uniqueVariants = useMemo(() => {
+    if (!selectedName) return [];
+    const variantSet = new Set<string>();
+    if (!selectedKind || selectedKind === "designs") {
+      kit.designs?.forEach((d: Design) => {
+        if (d.name === selectedName) {
+          variantSet.add(d.variant || "");
+        }
+      });
+    }
+    if (!selectedKind || selectedKind === "types") {
+      kit.types?.forEach((t: Type) => {
+        if (t.name === selectedName) {
+          variantSet.add(t.variant || "");
+        }
+      });
+    }
+    return Array.from(variantSet).sort();
+  }, [kit.designs, kit.types, selectedKind, selectedName]);
+
+  // Collect unique views for the selected name and variant (only for designs)
+  const uniqueViews = useMemo(() => {
+    if (!selectedName || !selectedVariant || selectedKind !== "designs") return [];
+    const viewSet = new Set<string>();
+    kit.designs?.forEach((d: Design) => {
+      if (d.name === selectedName && (d.variant || "") === selectedVariant) {
+        viewSet.add(d.view || "");
+      }
+    });
+    return Array.from(viewSet).sort();
+  }, [kit.designs, selectedKind, selectedName, selectedVariant]);
 
   useEffect(() => {
     if (editorType !== EditorType.KIT) {
@@ -222,7 +280,7 @@ const KitEditor: FC = () => {
     const result: TableRow[] = [];
     const formatDate = (date?: Date) => (date instanceof Date ? date.toLocaleDateString() : date ? new Date(date).toLocaleDateString() : "");
 
-    if (selectedKinds.length === 0 || selectedKinds.includes("designs")) {
+    if (!selectedKind || selectedKind === "designs") {
       const designGroups = new Map<string, Design[]>();
       kit.designs?.forEach((design: Design) => {
         const key = design.name;
@@ -231,9 +289,16 @@ const KitEditor: FC = () => {
       });
 
       designGroups.forEach((designs, name) => {
+        // Apply name filter
+        if (selectedName && name !== selectedName) return;
+
         const filteredDesigns = designs.filter((d) => {
           if (selectedConcepts.length > 0 && !d.concepts?.some((c) => selectedConcepts.includes(c))) return false;
           if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+          // Apply variant filter
+          if (selectedVariant && (d.variant || "") !== selectedVariant) return false;
+          // Apply view filter
+          if (selectedView && (d.view || "") !== selectedView) return false;
           return true;
         });
 
@@ -306,7 +371,7 @@ const KitEditor: FC = () => {
       });
     }
 
-    if (selectedKinds.length === 0 || selectedKinds.includes("types")) {
+    if (!selectedKind || selectedKind === "types") {
       const typeGroups = new Map<string, Type[]>();
       kit.types?.forEach((type: Type) => {
         const key = type.name;
@@ -315,8 +380,13 @@ const KitEditor: FC = () => {
       });
 
       typeGroups.forEach((types, name) => {
+        // Apply name filter
+        if (selectedName && name !== selectedName) return;
+
         const filteredTypes = types.filter((t) => {
           if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+          // Apply variant filter
+          if (selectedVariant && (t.variant || "") !== selectedVariant) return false;
           return true;
         });
 
@@ -359,7 +429,7 @@ const KitEditor: FC = () => {
       });
     }
 
-    if (selectedKinds.length === 0 || selectedKinds.includes("authors")) {
+    if (!selectedKind || selectedKind === "authors") {
       kit.authors?.forEach((author: Author) => {
         if (searchQuery && !author.name.toLowerCase().includes(searchQuery.toLowerCase()) && !author.email.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
@@ -378,7 +448,7 @@ const KitEditor: FC = () => {
     }
 
     return result;
-  }, [kit, selectedKinds, selectedConcepts, searchQuery, expandedRows]);
+  }, [kit, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows]);
 
   const toggleRow = (rowId: string) => {
     kitEditorCommands.toggleExpandedRow(rowId);
@@ -387,9 +457,11 @@ const KitEditor: FC = () => {
   const handleCreateArtifact = (kind: ArtifactKind) => {
     switch (kind) {
       case "designs": {
+        const existingNames = (kit.designs || []).map((d: Design) => d.name);
+        const uniqueName = generateUniqueName(t("design.defaultName"), existingNames);
         const newDesign: Design = {
           guid: guid(),
-          name: "New Design",
+          name: uniqueName,
           variant: "",
           view: "",
           pieces: [],
@@ -400,9 +472,11 @@ const KitEditor: FC = () => {
         break;
       }
       case "types": {
+        const existingNames = (kit.types || []).map((t: Type) => t.name);
+        const uniqueName = generateUniqueName(t("type.defaultName"), existingNames);
         const newType: Type = {
           guid: guid(),
-          name: "New Type",
+          name: uniqueName,
           variant: "",
           ports: [],
         };
@@ -429,74 +503,138 @@ const KitEditor: FC = () => {
   };
 
   const toggleKind = (kind: ArtifactKind) => {
-    const newKinds = selectedKinds.includes(kind) ? selectedKinds.filter((k) => k !== kind) : [...selectedKinds, kind];
-    kitEditorCommands.setFilterKinds(newKinds);
+    const params = new URLSearchParams(searchParams);
+    if (selectedKind === kind) {
+      // If already selected, remove filter
+      params.delete("k");
+    } else {
+      // Set the selected kind
+      params.set("k", kind);
+    }
+    navigate(`/${kit.guid}?${params.toString()}`);
   };
 
   const toggleConcept = (concept: string) => {
-    const newConcepts = selectedConcepts.includes(concept) ? selectedConcepts.filter((c) => c !== concept) : [...selectedConcepts, concept];
-    kitEditorCommands.setFilterConcepts(newConcepts);
+    const newParams = new URLSearchParams(searchParams);
+    const currentConcepts = newParams.getAll("c");
+
+    if (currentConcepts.includes(concept)) {
+      // Remove concept
+      newParams.delete("c");
+      currentConcepts.filter((c) => c !== concept).forEach((c) => newParams.append("c", c));
+    } else {
+      // Add concept
+      newParams.append("c", concept);
+    }
+
+    setSearchParams(newParams);
+  };
+
+  const toggleName = (name: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (selectedName === name) {
+      params.delete("name");
+      params.delete("variant");
+      params.delete("view");
+    } else {
+      params.set("name", name);
+      params.delete("variant");
+      params.delete("view");
+    }
+    setSearchParams(params);
+  };
+
+  const toggleVariant = (variant: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (selectedVariant === variant) {
+      params.delete("variant");
+      params.delete("view");
+    } else {
+      params.set("variant", variant);
+      params.delete("view");
+    }
+    setSearchParams(params);
+  };
+
+  const toggleView = (view: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (selectedView === view) {
+      params.delete("view");
+    } else {
+      params.set("view", view);
+    }
+    setSearchParams(params);
   };
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
         <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
-          <Toggle
-            type="withAction"
-            pressed={selectedKinds.includes("designs")}
-            onPressedChange={() => toggleKind("designs")}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
-            onActionClick={() => handleCreateArtifact("designs")}
-            tooltip={selectedKinds.includes("designs") ? t("kitEditor.hideDesigns") : t("kitEditor.showDesigns")}
-            actionTooltip={t("kitEditor.createDesign")}
-          >
-            {t("kitEditor.designs")}
-          </Toggle>
-          <Toggle
-            type="withAction"
-            pressed={selectedKinds.includes("types")}
-            onPressedChange={() => toggleKind("types")}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
-            onActionClick={() => handleCreateArtifact("types")}
-            tooltip={selectedKinds.includes("types") ? t("kitEditor.hideTypes") : t("kitEditor.showTypes")}
-            actionTooltip={t("kitEditor.createType")}
-          >
-            {t("kitEditor.types")}
-          </Toggle>
-          <Toggle
-            type="withAction"
-            pressed={selectedKinds.includes("qualities")}
-            onPressedChange={() => toggleKind("qualities")}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
-            onActionClick={() => handleCreateArtifact("qualities")}
-            tooltip={selectedKinds.includes("qualities") ? t("kitEditor.hideQualities") : t("kitEditor.showQualities")}
-            actionTooltip={t("kitEditor.createQuality")}
-          >
-            {t("kitEditor.qualities")}
-          </Toggle>
-          <Toggle
-            type="withAction"
-            pressed={selectedKinds.includes("files")}
-            onPressedChange={() => toggleKind("files")}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
-            onActionClick={() => handleCreateArtifact("files")}
-            tooltip={selectedKinds.includes("files") ? t("kitEditor.hideFiles") : t("kitEditor.showFiles")}
-            actionTooltip={t("kitEditor.createFile")}
-          >
-            {t("kitEditor.files")}
-          </Toggle>
-          <Toggle
-            type="withAction"
-            pressed={selectedKinds.includes("authors")}
-            onPressedChange={() => toggleKind("authors")}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
-            onActionClick={() => handleCreateArtifact("authors")}
-            tooltip={selectedKinds.includes("authors") ? t("kitEditor.hideAuthors") : t("kitEditor.showAuthors")}
-            actionTooltip={t("kitEditor.createAuthor")}
-          >
-            {t("kitEditor.authors")}
-          </Toggle>
+          {(!selectedKind || selectedKind === "designs") && (
+            <Toggle
+              type="withAction"
+              pressed={selectedKind === "designs"}
+              onPressedChange={() => toggleKind("designs")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateArtifact("designs")}
+              tooltip={selectedKind === "designs" ? t("kitEditor.hideDesigns") : t("kitEditor.showDesigns")}
+              actionTooltip={t("kitEditor.createDesign")}
+            >
+              <Layout className="size-4" />
+            </Toggle>
+          )}
+          {(!selectedKind || selectedKind === "types") && (
+            <Toggle
+              type="withAction"
+              pressed={selectedKind === "types"}
+              onPressedChange={() => toggleKind("types")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateArtifact("types")}
+              tooltip={selectedKind === "types" ? t("kitEditor.hideTypes") : t("kitEditor.showTypes")}
+              actionTooltip={t("kitEditor.createType")}
+            >
+              <Box className="size-4" />
+            </Toggle>
+          )}
+          {(!selectedKind || selectedKind === "qualities") && (
+            <Toggle
+              type="withAction"
+              pressed={selectedKind === "qualities"}
+              onPressedChange={() => toggleKind("qualities")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateArtifact("qualities")}
+              tooltip={selectedKind === "qualities" ? t("kitEditor.hideQualities") : t("kitEditor.showQualities")}
+              actionTooltip={t("kitEditor.createQuality")}
+            >
+              <Award className="size-4" />
+            </Toggle>
+          )}
+          {(!selectedKind || selectedKind === "files") && (
+            <Toggle
+              type="withAction"
+              pressed={selectedKind === "files"}
+              onPressedChange={() => toggleKind("files")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateArtifact("files")}
+              tooltip={selectedKind === "files" ? t("kitEditor.hideFiles") : t("kitEditor.showFiles")}
+              actionTooltip={t("kitEditor.createFile")}
+            >
+              <FileText className="size-4" />
+            </Toggle>
+          )}
+          {(!selectedKind || selectedKind === "authors") && (
+            <Toggle
+              type="withAction"
+              pressed={selectedKind === "authors"}
+              onPressedChange={() => toggleKind("authors")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateArtifact("authors")}
+              tooltip={selectedKind === "authors" ? t("kitEditor.hideAuthors") : t("kitEditor.showAuthors")}
+              actionTooltip={t("kitEditor.createAuthor")}
+            >
+              <User className="size-4" />
+            </Toggle>
+          )}
           {allConcepts.length > 0 &&
             allConcepts.map((concept) => (
               <Toggle
@@ -508,6 +646,24 @@ const KitEditor: FC = () => {
                 {concept}
               </Toggle>
             ))}
+          {uniqueNames.length > 0 &&
+            uniqueNames.map((name) => (
+              <Toggle key={name} pressed={selectedName === name} onPressedChange={() => toggleName(name)}>
+                {name}
+              </Toggle>
+            ))}
+          {uniqueVariants.length > 0 &&
+            uniqueVariants.map((variant) => (
+              <Toggle key={variant} pressed={selectedVariant === variant} onPressedChange={() => toggleVariant(variant)}>
+                {variant}
+              </Toggle>
+            ))}
+          {uniqueViews.length > 0 &&
+            uniqueViews.map((view) => (
+              <Toggle key={view} pressed={selectedView === view} onPressedChange={() => toggleView(view)}>
+                {view}
+              </Toggle>
+            ))}
         </div>
         <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>
@@ -516,7 +672,7 @@ const KitEditor: FC = () => {
           <thead className="sticky top-0 bg-background border-b">
             <tr>
               <th className="text-left p-2 font-medium">{t("kitEditor.name")}</th>
-              <th className="text-left p-2 font-medium">{t("kitEditor.kind")}</th>
+              {!selectedKind && <th className="text-left p-2 font-medium">{t("kitEditor.kind")}</th>}
               <th className="text-left p-2 font-medium">{t("kitEditor.lastUpdated")}</th>
               <th className="text-left p-2 font-medium">{t("kitEditor.created")}</th>
             </tr>
@@ -544,7 +700,15 @@ const KitEditor: FC = () => {
                     </button>
                   </div>
                 </td>
-                <td className="p-2 capitalize">{row.kind}</td>
+                {!selectedKind && (
+                  <td className="p-2">
+                    {row.kind === "designs" && <Layout className="size-4" />}
+                    {row.kind === "types" && <Box className="size-4" />}
+                    {row.kind === "qualities" && <Award className="size-4" />}
+                    {row.kind === "files" && <FileText className="size-4" />}
+                    {row.kind === "authors" && <User className="size-4" />}
+                  </td>
+                )}
                 <td className="p-2">{row.updatedAt}</td>
                 <td className="p-2">{row.createdAt}</td>
               </tr>
