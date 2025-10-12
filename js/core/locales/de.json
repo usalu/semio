@@ -43,6 +43,7 @@
         "title": "Kit",
         "name": "Name",
         "version": "Version",
+        "defaultVersion": "Standardversion",
         "defaultName": "Neues Kit",
         "description": "Beschreibung",
         "descriptionPlaceholder": "Kit-Beschreibung eingeben...",
@@ -62,7 +63,7 @@
     "design": {
         "title": "Design",
         "name": "Name",
-        "defaultName": "UNBENANNT",
+        "defaultName": "Neues Design",
         "description": "Beschreibung",
         "descriptionPlaceholder": "Design-Beschreibung eingeben...",
         "icon": "Symbol",
@@ -71,10 +72,12 @@
         "imagePlaceholder": "URL zum Design-Bild",
         "variant": "Variante",
         "variantPlaceholder": "Design-Variante",
-        "defaultVariant": "Neue Variante",
+        "defaultVariant": "Standardvariante",
+        "newVariant": "Neue Variante",
         "view": "Ansicht",
         "viewPlaceholder": "Design-Ansicht",
-        "defaultView": "Neue Ansicht",
+        "defaultView": "Standardansicht",
+        "newView": "Neue Ansicht",
         "unit": "Einheit",
         "location": "Standort",
         "longitude": "Längengrad",
@@ -226,15 +229,15 @@
     "breadcrumb": {
         "starter": "Starter",
         "metabolism": "Metabolism",
-        "temporary": "Temporär",
-        "local": "Lokal",
-        "remote": "Remote",
-        "types": "Typen",
-        "representations": "Darstellungen",
-        "designs": "Designs",
-        "qualities": "Qualitäten",
-        "files": "Dateien",
-        "authors": "Autoren"
+        "temporary": "Alle temporären Kits anzeigen",
+        "local": "Alle lokalen Kits anzeigen",
+        "remote": "Alle Remote-Kits anzeigen",
+        "types": "Alle Typen anzeigen",
+        "representations": "Alle Darstellungen anzeigen",
+        "designs": "Alle Designs anzeigen",
+        "qualities": "Alle Qualitäten anzeigen",
+        "files": "Alle Dateien anzeigen",
+        "authors": "Alle Autoren anzeigen"
     },
     "settings": {
         "general": "Allgemein",
@@ -252,7 +255,7 @@
     "type": {
         "title": "Typ",
         "name": "Name",
-        "defaultName": "UNBENANNT",
+        "defaultName": "Neuer Typ",
         "description": "Beschreibung",
         "descriptionPlaceholder": "Typ-Beschreibung eingeben...",
         "icon": "Symbol",
@@ -261,7 +264,8 @@
         "imagePlaceholder": "URL zum Typ-Bild",
         "variant": "Variante",
         "variantPlaceholder": "Typ-Variante",
-        "defaultVariant": "Neue Variante",
+        "defaultVariant": "Standardvariante",
+        "newVariant": "Neue Variante",
         "unit": "Einheit"
     }
 }

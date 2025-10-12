@@ -1806,9 +1806,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id === type.guid);
-          return update ? { ...type, ports: update.diff.ports } : type;
-        })
+        const update = colorDiff.updated?.find((u) => u.id === type.guid);
+        return update ? { ...type, ports: update.diff.ports } : type;
+      })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -4263,7 +4263,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -4439,7 +4439,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) {}
+                  } catch (error) { }
                 }
               }
             }
@@ -5064,6 +5064,7 @@ export interface TypeEditorDiff {
   hover?: TypeEditorHover;
   fullscreenPanel?: TypeEditorFullscreenPanel;
   panelVisibility?: Partial<PanelVisibility>;
+  camera?: Camera;
 }
 export interface TypeEditorStep {
   typeDiff?: TypeDiff;
@@ -5080,6 +5081,7 @@ export interface TypeEditorState {
   hover?: TypeEditorHover;
   presence?: TypeEditorPresence;
   others: TypeEditorPresenceOther[];
+  camera?: Camera;
 }
 
 export interface TypeEditorCommandContext extends KitCommandContext {
@@ -5111,8 +5113,8 @@ function inverseTypeEditorSelectionDiff(selection: TypeEditorSelection, diff: Ty
 class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult> {
   private readonly typeId: TypeId;
 
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, typeId: TypeId) {
-    super(parent, yMap, parent.transact.bind(parent));
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, typeId: TypeId) {
+    super(parent, yMap, transact);
     this.typeId = typeId;
 
     if (!yMap.has("fullscreenPanel")) {
@@ -5193,6 +5195,11 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     return [];
   }
 
+  get camera(): Camera | undefined {
+    const cameraStr = this.yMap.get("camera") as string | undefined;
+    return cameraStr ? JSON.parse(cameraStr) : undefined;
+  }
+
   protected hash(state: TypeEditorState): string {
     return JSON.stringify(state);
   }
@@ -5210,6 +5217,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
+      camera: this.camera,
     } as any;
   }
 
@@ -5275,6 +5283,38 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     return this.selection;
   }
 
+  change = (diff: TypeEditorDiff) => {
+    this.transact(() => {
+      if (diff.fullscreenPanel) {
+        this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      }
+      if (diff.panelVisibility !== undefined) {
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            yPanelVisibility.set(key, value);
+          }
+        });
+      }
+      if (diff.selection) {
+        this.applySelectionDiff(diff.selection);
+      }
+      if (diff.presence) {
+        // Handle presence changes if needed
+      }
+      if (diff.hover) {
+        // Handle hover changes if needed
+      }
+      if (diff.camera) {
+        this.yMap.set("camera", JSON.stringify(diff.camera));
+      }
+    });
+  };
+
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) {
@@ -5332,9 +5372,13 @@ export function useTypeEditorOthers(): TypeEditorPresenceOther[] {
   return useTypeEditor((s) => s.others) as TypeEditorPresenceOther[];
 }
 
+export function useTypeEditorCamera(): Camera | undefined {
+  return useTypeEditor((s) => s.camera) as Camera | undefined;
+}
+
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -5345,6 +5389,7 @@ export function useTypeEditorCommands(id?: TypeEditorId) {
       selectAll: noOp,
       deselectAll: noOp,
       togglePanel: noOp,
+      setCamera: noOp,
       execute: noOp,
     };
   }
@@ -5363,6 +5408,9 @@ export function useTypeEditorCommands(id?: TypeEditorId) {
           [panelKey]: !current[panelKey],
         },
       });
+    },
+    setCamera: (camera: Camera) => {
+      store.change({ camera });
     },
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
@@ -5593,6 +5641,7 @@ export interface KitEditorDiff {
   presence?: KitEditorPresence;
   hover?: KitEditorHover;
   fullscreenPanel?: KitEditorFullscreenPanel;
+  panelVisibility?: Partial<PanelVisibility>;
   filterSearch?: string;
   expandedRows?: string[];
 }
@@ -5825,9 +5874,13 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
         this.yMap.set("filterSearch", diff.filterSearch);
       }
       if (diff.expandedRows !== undefined) {
-        const yExpandedRows = new Y.Array<string>();
+        let yExpandedRows = this.yMap.get("expandedRows") as Y.Array<string>;
+        if (!yExpandedRows) {
+          yExpandedRows = new Y.Array<string>();
+          this.yMap.set("expandedRows", yExpandedRows);
+        }
+        yExpandedRows.delete(0, yExpandedRows.length);
         yExpandedRows.push(diff.expandedRows);
-        this.yMap.set("expandedRows", yExpandedRows);
       }
     });
   };
@@ -6396,6 +6449,8 @@ export enum DesignEditorFullscreenPanel {
 export interface DesignEditorPresence {
   cursor?: Coord;
   camera?: Camera;
+  diagramCenter?: Coord;
+  diagramScale?: number;
 }
 export interface DesignEditorHover {
   piece?: Guid;
@@ -6410,6 +6465,10 @@ export interface DesignEditorDiff {
   presence?: DesignEditorPresence;
   hover?: DesignEditorHover;
   fullscreenPanel?: DesignEditorFullscreenPanel;
+  panelVisibility?: Partial<PanelVisibility>;
+  camera?: Camera;
+  diagramCenter?: Coord;
+  diagramScale?: number;
 }
 export interface DesignEditorStep {
   kitDiff?: KitDiff;
@@ -6426,6 +6485,9 @@ export interface DesignEditorState {
   hover?: DesignEditorHover;
   presence?: DesignEditorPresence;
   others: DesignEditorPresenceOther[];
+  camera?: Camera;
+  diagramCenter?: Coord;
+  diagramScale?: number;
 }
 
 export interface DesignEditorCommandContext extends KitCommandContext {
@@ -6598,6 +6660,20 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     return {};
   }
 
+  get camera(): Camera | undefined {
+    const cameraStr = this.yMap.get("camera") as string | undefined;
+    return cameraStr ? JSON.parse(cameraStr) : undefined;
+  }
+
+  get diagramCenter(): Coord | undefined {
+    const centerStr = this.yMap.get("diagramCenter") as string | undefined;
+    return centerStr ? JSON.parse(centerStr) : undefined;
+  }
+
+  get diagramScale(): number | undefined {
+    return this.yMap.get("diagramScale") as number | undefined;
+  }
+
   kit(): KitStore {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
@@ -6627,6 +6703,9 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
+      camera: this.camera,
+      diagramCenter: this.diagramCenter,
+      diagramScale: this.diagramScale,
     };
   }
 
@@ -6730,6 +6809,15 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       }
       if (diff.hover) {
         // Handle hover changes if needed
+      }
+      if (diff.camera) {
+        this.yMap.set("camera", JSON.stringify(diff.camera));
+      }
+      if (diff.diagramCenter) {
+        this.yMap.set("diagramCenter", JSON.stringify(diff.diagramCenter));
+      }
+      if (diff.diagramScale !== undefined) {
+        this.yMap.set("diagramScale", diff.diagramScale);
       }
     });
   };
@@ -7139,6 +7227,27 @@ const designEditorCommands = {
       },
     };
   },
+  "semio.designEditor.setCamera": (context: DesignEditorCommandContext, camera: Camera): DesignEditorCommandResult => {
+    return {
+      diff: {
+        camera,
+      },
+    };
+  },
+  "semio.designEditor.setDiagramCenter": (context: DesignEditorCommandContext, center: Coord): DesignEditorCommandResult => {
+    return {
+      diff: {
+        diagramCenter: center,
+      },
+    };
+  },
+  "semio.designEditor.setDiagramScale": (context: DesignEditorCommandContext, scale: number): DesignEditorCommandResult => {
+    return {
+      diff: {
+        diagramScale: scale,
+      },
+    };
+  },
 };
 
 type DesignEditorScope = { id: string };
@@ -7192,6 +7301,18 @@ export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor((s) => s.others) as DesignEditorPresenceOther[];
 }
 
+export function useDesignEditorCamera(): Camera | undefined {
+  return useDesignEditor((s) => s.camera) as Camera | undefined;
+}
+
+export function useDesignEditorDiagramCenter(): Coord | undefined {
+  return useDesignEditor((s) => s.diagramCenter) as Coord | undefined;
+}
+
+export function useDesignEditorDiagramScale(): number | undefined {
+  return useDesignEditor((s) => s.diagramScale) as number | undefined;
+}
+
 export function useDesignEditorCommands(id?: DesignEditorId) {
   console.log("[useDesignEditorCommands] CALLED");
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
@@ -7236,6 +7357,9 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
       updateConnection: noOp,
       updateConnections: noOp,
       togglePanel: noOp,
+      setCamera: noOp,
+      setDiagramCenter: noOp,
+      setDiagramScale: noOp,
       execute: noOp,
     };
   }
@@ -7271,6 +7395,9 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     updatePieces: (updates: { id: Guid; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
     updateConnection: (connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connection, connectionDiff),
     updateConnections: (updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
+    setCamera: (camera: Camera) => store.execute("semio.designEditor.setCamera", camera),
+    setDiagramCenter: (center: Coord) => store.execute("semio.designEditor.setDiagramCenter", center),
+    setDiagramScale: (scale: number) => store.execute("semio.designEditor.setDiagramScale", scale),
     togglePanel: (panelKey: keyof PanelVisibility) => {
       console.log("[useDesignEditorCommands.togglePanel] called with panelKey:", panelKey);
       console.log("[useDesignEditorCommands.togglePanel] store:", store);
@@ -7492,20 +7619,20 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-          design: { snappiness: 10, gridSize: 24 },
-          type: {},
-          kit: {},
-        };
+        design: { snappiness: 10, gridSize: 24 },
+        type: {},
+        kit: {},
+      };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-          workbenchWidth: 230,
-          detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
-          consoleHeight: 200,
-        };
+        workbenchWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr) : ["/"];
     const currentValues = {
@@ -7841,7 +7968,7 @@ class SketchpadStore {
         yTypeEditor = new Y.Map<YTypeEditorVal>();
         this.yTypeEditors.set(key, yTypeEditor);
       }
-      const typeEditor = new TypeEditorStore(this, yTypeEditor, typeId);
+      const typeEditor = new TypeEditorStore(this, yTypeEditor, this.yDoc.transact.bind(this.yDoc), typeId);
       this.typeEditors.set(key, typeEditor);
     });
     this.typeEditorCreatedSubscribers.forEach((subscriber) => subscriber());

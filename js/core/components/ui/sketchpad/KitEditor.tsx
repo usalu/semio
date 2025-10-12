@@ -1,10 +1,13 @@
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS } from "date-fns/locale";
 import { Award, Box, FileText, Layout, Plus, User } from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
+import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
-import { EditorType, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useNavigation, useSketchpadCommands } from "../../../store";
+import { EditorType, KitEditorState, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useNavigation, useSketchpadCommands } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
@@ -188,7 +191,7 @@ const KitEditor: FC = () => {
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitEditorCommands = useKitEditorCommands();
-  const kitEditor = useKitEditor();
+  const kitEditor = useKitEditor() as KitEditorState;
 
   // Derive artifact kind from search params
   const selectedKind = searchParams.get("k") as ArtifactKind | null;
@@ -201,7 +204,8 @@ const KitEditor: FC = () => {
   // Get concepts and search from search params
   const selectedConcepts = searchParams.getAll("c");
   const searchQuery = searchParams.get("q") || "";
-  const expandedRows = new Set(searchParams.getAll("e"));
+  const expandedRowsArray = kitEditor?.expandedRows || [];
+  const expandedRows = new Set(expandedRowsArray);
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -278,7 +282,13 @@ const KitEditor: FC = () => {
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
-    const formatDate = (date?: Date) => (date instanceof Date ? date.toLocaleDateString() : date ? new Date(date).toLocaleDateString() : "");
+    const locale = i18n.language === "de" ? de : enUS;
+    const formatDate = (date?: Date) => {
+      if (!date) return "";
+      const parsedDate = date instanceof Date ? date : new Date(date);
+      if (isNaN(parsedDate.getTime())) return "";
+      return formatDistanceToNow(parsedDate, { addSuffix: true, locale });
+    };
 
     if (!selectedKind || selectedKind === "designs") {
       const designGroups = new Map<string, Design[]>();
@@ -304,66 +314,77 @@ const KitEditor: FC = () => {
 
         if (filteredDesigns.length === 0) return;
 
-        const parentId = `design-${name}`;
-        const hasChildren = filteredDesigns.some((d) => d.variant || d.view);
+        // Find the default design (default variant and default view)
+        const defaultDesign = filteredDesigns.find((d) => (!d.variant || d.variant === "") && (!d.view || d.view === ""));
 
+        // Group by variant
+        const variantGroups = new Map<string, Design[]>();
+        filteredDesigns.forEach((design) => {
+          const variantKey = design.variant || "";
+          if (!variantGroups.has(variantKey)) variantGroups.set(variantKey, []);
+          variantGroups.get(variantKey)!.push(design);
+        });
+
+        const hasMultipleVariants = variantGroups.size > 1 || (variantGroups.size === 1 && Array.from(variantGroups.keys())[0] !== "");
+
+        const parentId = `design-${name}`;
+
+        // Parent row shows the default variant and default view
         result.push({
           id: parentId,
           kind: "designs",
           artifact: name,
-          authors: "",
-          updatedAt: "",
-          createdAt: "",
+          authors: defaultDesign?.authors?.join(", ") || "",
+          updatedAt: defaultDesign ? formatDate(defaultDesign.updatedAt) : "",
+          createdAt: defaultDesign ? formatDate(defaultDesign.createdAt) : "",
           level: 0,
-          hasChildren,
+          hasChildren: hasMultipleVariants,
           isExpanded: expandedRows.has(parentId),
-          data: filteredDesigns[0],
+          data: defaultDesign || filteredDesigns[0],
         });
 
-        if (expandedRows.has(parentId)) {
-          const variantGroups = new Map<string, Design[]>();
-          filteredDesigns.forEach((design) => {
-            const variantKey = design.variant || "";
-            if (!variantGroups.has(variantKey)) variantGroups.set(variantKey, []);
-            variantGroups.get(variantKey)!.push(design);
-          });
-
+        // Only show variant rows if there are non-default variants
+        if (expandedRows.has(parentId) && hasMultipleVariants) {
           variantGroups.forEach((variantDesigns, variant) => {
+            // Skip default variant as it's shown in parent row
+            if (variant === "") return;
+
             const variantId = `${parentId}-${variant}`;
-            const hasViewChildren = variantDesigns.some((d) => d.view);
+            const viewGroups = variantDesigns.filter((d) => d.view && d.view !== "");
+            const hasMultipleViews = viewGroups.length > 0;
+            const defaultViewDesign = variantDesigns.find((d) => !d.view || d.view === "");
 
             result.push({
               id: variantId,
               kind: "designs",
-              artifact: variant || "(default)",
-              authors: "",
-              updatedAt: "",
-              createdAt: "",
+              artifact: `Variant: ${variant}`,
+              authors: defaultViewDesign?.authors?.join(", ") || "",
+              updatedAt: defaultViewDesign ? formatDate(defaultViewDesign.updatedAt) : "",
+              createdAt: defaultViewDesign ? formatDate(defaultViewDesign.createdAt) : "",
               level: 1,
               parentId,
-              hasChildren: hasViewChildren,
+              hasChildren: hasMultipleViews,
               isExpanded: expandedRows.has(variantId),
-              data: variantDesigns[0],
+              data: defaultViewDesign || variantDesigns[0],
             });
 
-            if (expandedRows.has(variantId) && hasViewChildren) {
-              variantDesigns.forEach((design) => {
-                if (design.view) {
-                  const viewId = `${variantId}-${design.view}`;
-                  result.push({
-                    id: viewId,
-                    kind: "designs",
-                    artifact: design.view,
-                    authors: design.authors?.join(", ") || "",
-                    updatedAt: formatDate(design.updatedAt),
-                    createdAt: formatDate(design.createdAt),
-                    level: 2,
-                    parentId: variantId,
-                    hasChildren: false,
-                    isExpanded: false,
-                    data: design,
-                  });
-                }
+            // Only show view rows for non-default views
+            if (expandedRows.has(variantId) && hasMultipleViews) {
+              viewGroups.forEach((design) => {
+                const viewId = `${variantId}-${design.view}`;
+                result.push({
+                  id: viewId,
+                  kind: "designs",
+                  artifact: `View: ${design.view}`,
+                  authors: design.authors?.join(", ") || "",
+                  updatedAt: formatDate(design.updatedAt),
+                  createdAt: formatDate(design.createdAt),
+                  level: 2,
+                  parentId: variantId,
+                  hasChildren: false,
+                  isExpanded: false,
+                  data: design,
+                });
               });
             }
           });
@@ -392,29 +413,39 @@ const KitEditor: FC = () => {
 
         if (filteredTypes.length === 0) return;
 
-        const parentId = `type-${name}`;
-        const hasChildren = filteredTypes.length > 1 || filteredTypes.some((t) => t.variant);
+        // Find the default type (default variant)
+        const defaultType = filteredTypes.find((t) => !t.variant || t.variant === "");
 
+        // Check if there are non-default variants
+        const hasMultipleVariants = filteredTypes.some((t) => t.variant && t.variant !== "");
+
+        const parentId = `type-${name}`;
+
+        // Parent row shows the default variant
         result.push({
           id: parentId,
           kind: "types",
           artifact: name,
-          authors: "",
-          updatedAt: "",
-          createdAt: "",
+          authors: defaultType?.authors?.join(", ") || "",
+          updatedAt: defaultType ? formatDate(defaultType.updatedAt) : "",
+          createdAt: defaultType ? formatDate(defaultType.createdAt) : "",
           level: 0,
-          hasChildren,
+          hasChildren: hasMultipleVariants,
           isExpanded: expandedRows.has(parentId),
-          data: filteredTypes[0],
+          data: defaultType || filteredTypes[0],
         });
 
-        if (expandedRows.has(parentId) && hasChildren) {
+        // Only show variant rows if there are non-default variants
+        if (expandedRows.has(parentId) && hasMultipleVariants) {
           filteredTypes.forEach((type) => {
-            const variantId = `${parentId}-${type.variant || "default"}`;
+            // Skip default variant as it's shown in parent row
+            if (!type.variant || type.variant === "") return;
+
+            const variantId = `${parentId}-${type.variant}`;
             result.push({
               id: variantId,
               kind: "types",
-              artifact: type.variant || "(default)",
+              artifact: `Variant: ${type.variant}`,
               authors: type.authors?.join(", ") || "",
               updatedAt: formatDate(type.updatedAt),
               createdAt: formatDate(type.createdAt),
@@ -646,24 +677,44 @@ const KitEditor: FC = () => {
                 {concept}
               </Toggle>
             ))}
-          {uniqueNames.length > 0 &&
+          {!selectedName &&
+            uniqueNames.length > 0 &&
             uniqueNames.map((name) => (
               <Toggle key={name} pressed={selectedName === name} onPressedChange={() => toggleName(name)}>
                 {name}
               </Toggle>
             ))}
-          {uniqueVariants.length > 0 &&
+          {selectedName && (
+            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+              {selectedName}
+            </Toggle>
+          )}
+          {!selectedVariant &&
+            selectedName &&
+            uniqueVariants.length > 0 &&
             uniqueVariants.map((variant) => (
               <Toggle key={variant} pressed={selectedVariant === variant} onPressedChange={() => toggleVariant(variant)}>
-                {variant}
+                {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
               </Toggle>
             ))}
-          {uniqueViews.length > 0 &&
+          {selectedVariant && (
+            <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
+              {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
+            </Toggle>
+          )}
+          {!selectedView &&
+            selectedVariant !== null &&
+            uniqueViews.length > 0 &&
             uniqueViews.map((view) => (
               <Toggle key={view} pressed={selectedView === view} onPressedChange={() => toggleView(view)}>
-                {view}
+                {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
               </Toggle>
             ))}
+          {selectedView && (
+            <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
+              {selectedView || <span className="italic opacity-50">{t("design.defaultView")}</span>}
+            </Toggle>
+          )}
         </div>
         <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>

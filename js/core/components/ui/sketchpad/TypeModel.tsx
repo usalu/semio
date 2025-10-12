@@ -19,9 +19,21 @@
 
 // #endregion
 
-import { FC } from "react";
+import { FC, useCallback } from "react";
+import { useTypeEditorCamera, useTypeEditorCommands } from "../../../store";
 import Model from "./Model";
 
-const TypeModel: FC = () => <Model />;
+const TypeModel: FC = () => {
+  const { setCamera } = useTypeEditorCommands();
+  const camera = useTypeEditorCamera();
+  const onCameraChange = useCallback(
+    (newCamera: import("../../../semio").Camera) => {
+      setCamera(newCamera);
+    },
+    [setCamera],
+  );
+
+  return <Model camera={camera} onCameraChange={onCameraChange} />;
+};
 
 export default TypeModel;

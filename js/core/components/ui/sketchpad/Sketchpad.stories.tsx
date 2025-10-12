@@ -30,7 +30,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="w-full h-[800px]">
+      <div className="w-full h-[750px]">
         <Story />
       </div>
     ),
@@ -40,8 +40,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Metabolism: Story = {
-  args: {
-    id: "usalu/metabolism",
-  },
+export const Default: Story = {
+  args: {},
 };

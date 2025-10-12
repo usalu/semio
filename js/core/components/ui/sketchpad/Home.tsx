@@ -1,7 +1,10 @@
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS } from "date-fns/locale";
 import { Clock, Cloud, HardDrive, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
+import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
 import { useKits, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../../store";
@@ -45,10 +48,9 @@ const Home: FC = ({}) => {
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
 
-  // Derive kind from URL path
-  const pathMatch = navigation.match(/^\/([^?]+)/);
-  const kindFromPath = pathMatch?.[1] as KitStoreKind | undefined;
-  const selectedKind = ["temporary", "local", "remote"].includes(kindFromPath || "") ? kindFromPath : undefined;
+  // Get kind from search params instead of path
+  const kindParam = searchParams.get("k");
+  const selectedKind = ["temporary", "local", "remote"].includes(kindParam || "") ? (kindParam as KitStoreKind) : undefined;
 
   // Get search query from URL
   const searchQuery = searchParams.get("q") || "";
@@ -59,7 +61,13 @@ const Home: FC = ({}) => {
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
-    const formatDate = (date?: Date) => (date instanceof Date ? date.toLocaleDateString() : date ? new Date(date).toLocaleDateString() : "");
+    const locale = i18n.language === "de" ? de : enUS;
+    const formatDate = (date?: Date) => {
+      if (!date) return "";
+      const parsedDate = date instanceof Date ? date : new Date(date);
+      if (isNaN(parsedDate.getTime())) return "";
+      return formatDistanceToNow(parsedDate, { addSuffix: true, locale });
+    };
     const kitGroups = new Map<string, KitShallow[]>();
 
     kits.forEach((kit) => {
@@ -130,7 +138,7 @@ const Home: FC = ({}) => {
     const newKit: Kit = {
       guid: guid(),
       name: uniqueName,
-      version: "1.0.0",
+      version: "",
       types: [],
       designs: [],
     };
@@ -141,14 +149,15 @@ const Home: FC = ({}) => {
   };
 
   const toggleKind = (type: KitStoreKind) => {
+    const newParams = new URLSearchParams(searchParams);
     if (selectedKind === type) {
-      // If already selected, go back to root
-      navigate("/");
+      // If already selected, remove the filter
+      newParams.delete("k");
     } else {
-      // Navigate to the selected kind
-      const params = new URLSearchParams(searchParams);
-      navigate(`/${type}?${params.toString()}`);
+      // Set the kind filter
+      newParams.set("k", type);
     }
+    setSearchParams(newParams);
   };
 
   const toggleRow = (rowId: string) => {

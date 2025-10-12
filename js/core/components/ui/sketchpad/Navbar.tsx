@@ -24,7 +24,7 @@ import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMe
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { generateUniqueName } from "../../../lib/utils";
-import { Design, Type } from "../../../semio";
+import { Author, AuthorDiff, Connection, Design, DesignDiff, FileDiff, Guid, Piece, File as SemioFile, Type, TypeDiff } from "../../../semio";
 import {
   EditorType,
   PanelVisibility,
@@ -158,7 +158,7 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
   ],
 });
 
-const Navigation: FC = ({}) => {
+const Navigation: FC = ({ }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -214,9 +214,37 @@ const Navigation: FC = ({}) => {
     return items;
   }, [kits, kitKind, store, t]);
 
-  // Use safe kit commands that returns null when not in kit scope
-  const kitCommands = useKitCommandsSafe();
   const sketchpadCommands = useSketchpadCommands();
+
+  const kitCommands = useMemo(() => {
+    if (!kitGuid || !store.hasKit(kitGuid)) return null;
+    const kitStore = store.kit(kitGuid);
+    return {
+      importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+      exportKit: () => kitStore.execute("semio.kit.export"),
+      createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", author),
+      updateAuthor: (authorId: string, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", authorId, authorDiff),
+      deleteAuthor: (authorId: string) => kitStore.execute("semio.kit.deleteAuthor", authorId),
+      createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
+      updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", guid, diff),
+      deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", guid),
+      createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
+      updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", guid, diff),
+      deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", guid),
+      addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
+      updateFile: (url: string, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
+      removeFile: (url: string) => kitStore.execute("semio.kit.removeFile", url),
+      addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", design, piece),
+      addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", design, pieces),
+      removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", design, piece),
+      removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", design, pieces),
+      addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", design, connection),
+      addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", design, connections),
+      removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", design, connection),
+      removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", design, connections),
+      deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
+    };
+  }, [kitGuid, store]);
 
   const artifactKinds = [
     { label: <Layout size={16} />, tooltip: t("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}?k=designs` : "/?k=designs" },
@@ -246,7 +274,7 @@ const Navigation: FC = ({}) => {
     sketchpadCommands.createKit({
       guid,
       name: uniqueName,
-      version: "1.0.0",
+      version: "",
       createdAt: now,
       updatedAt: now,
     });
@@ -294,7 +322,7 @@ const Navigation: FC = ({}) => {
         const d = designOrType as Design;
         const existingVariants = allDesigns.filter((design) => design.name === d.name).map((design) => design.variant || "");
         console.log("[Navbar] Creating design variant", { name: d.name, existingVariants });
-        const uniqueVariant = generateUniqueName(d.name, existingVariants);
+        const uniqueVariant = generateUniqueName(t("design.newVariant"), existingVariants);
         console.log("[Navbar] Unique variant name:", uniqueVariant);
         kitCommands.createDesign({
           guid,
@@ -308,7 +336,7 @@ const Navigation: FC = ({}) => {
       } else {
         const typeObj = designOrType as Type;
         const existingVariants = allTypes.filter((type) => type.name === typeObj.name).map((type) => type.variant || "");
-        const uniqueVariant = generateUniqueName(typeObj.name, existingVariants);
+        const uniqueVariant = generateUniqueName(t("type.newVariant"), existingVariants);
         kitCommands.createType({
           guid,
           name: typeObj.name,
@@ -331,7 +359,7 @@ const Navigation: FC = ({}) => {
       const guid = crypto.randomUUID();
       const existingViews = allDesigns.filter((d) => d.name === design.name && (d.variant || "") === (design.variant || "")).map((d) => d.view || "");
       console.log("[Navbar] Creating design view", { name: design.name, variant: design.variant, existingViews });
-      const uniqueView = generateUniqueName(design.name, existingViews);
+      const uniqueView = generateUniqueName(t("design.newView"), existingViews);
       console.log("[Navbar] Unique view name:", uniqueView);
       kitCommands.createDesign({
         guid,
@@ -398,7 +426,7 @@ const Navigation: FC = ({}) => {
       }
     });
     const items = Array.from(variants.entries()).map(([variant, d]) => ({
-      label: variant || "Default",
+      label: variant || t("design.defaultVariant"),
       href: `/${kitGuid}/d/${d.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
@@ -410,7 +438,7 @@ const Navigation: FC = ({}) => {
     const items = allDesigns
       .filter((d) => d.name === design.name && (d.variant || "") === (design.variant || ""))
       .map((d) => ({
-        label: d.view || "Default",
+        label: d.view || t("design.defaultView"),
         href: `/${kitGuid}/d/${d.guid}`,
       }));
     items.push({ label: "+ " + t("navbar.createView"), href: "#create-view" });
@@ -440,9 +468,9 @@ const Navigation: FC = ({}) => {
         if (!variants.has(key)) variants.set(key, t);
       }
     });
-    const items = Array.from(variants.entries()).map(([variant, t]) => ({
-      label: variant || "Default",
-      href: `/${kitGuid}/t/${t.guid}`,
+    const items = Array.from(variants.entries()).map(([variant, typeObj]) => ({
+      label: variant || t("type.defaultVariant"),
+      href: `/${kitGuid}/t/${typeObj.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
     return items;
@@ -484,15 +512,9 @@ const Navigation: FC = ({}) => {
         {isKitEditor && filteredKind && (
           <>
             <BreadcrumbSeparator
-              items={[...artifactKinds, { label: "+ " + t("navbar.create"), href: "#create" }]}
+              items={artifactKinds}
               tooltip={t("navbar.artifacts")}
-              onNavigate={(href) => {
-                if (href === "#create") {
-                  handleCreate();
-                } else {
-                  navigate(href);
-                }
-              }}
+              onNavigate={(href) => navigate(href)}
             />
             <BreadcrumbItem tooltip={t(`breadcrumb.${filteredKind}`)}>
               <BreadcrumbLink style={{ cursor: "default" }}>
@@ -527,7 +549,7 @@ const Navigation: FC = ({}) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.design")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{design.name}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}`)} style={{ cursor: "pointer" }}>{design.name}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
@@ -539,7 +561,7 @@ const Navigation: FC = ({}) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.variant")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{design.variant || <span className="italic opacity-70">Default</span>}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>{design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
@@ -551,7 +573,7 @@ const Navigation: FC = ({}) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.view")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{design.view || <span className="italic opacity-70">Default</span>}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)} style={{ cursor: "pointer" }}>{design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}</BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
@@ -572,7 +594,7 @@ const Navigation: FC = ({}) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.type")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{type.name}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}`)} style={{ cursor: "pointer" }}>{type.name}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
@@ -583,7 +605,7 @@ const Navigation: FC = ({}) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.variant")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{type.variant || <span className="italic opacity-70">Default</span>}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}`)} style={{ cursor: "pointer" }}>{type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}</BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
@@ -592,7 +614,7 @@ const Navigation: FC = ({}) => {
   );
 };
 
-const Search: FC = ({}) => {
+const Search: FC = ({ }) => {
   return (
     <Command>
       <CommandInput />
@@ -605,16 +627,17 @@ const Search: FC = ({}) => {
   );
 };
 
-const PanelToggles: FC = ({}) => {
+const PanelToggles: FC = ({ }) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
   const homeCommands = useHomeCommands();
-  const kitEditorCommands = useKitEditorCommands(kit ? { kit } : undefined);
-  const designEditorCommands = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
-  const typeEditorCommands = useTypeEditorCommands(kit && type ? { kit, type } : undefined);
+  const isValidKit = kit && !["temporary", "local", "remote"].includes(kit);
+  const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit } : undefined);
+  const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
+  const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
   const commands = {
     [EditorType.HOME]: homeCommands,
     [EditorType.KIT]: kitEditorCommands,
@@ -635,7 +658,7 @@ const PanelToggles: FC = ({}) => {
   const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -659,7 +682,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
         handleToggle(activeExclusivePanel as keyof PanelVisibility);
@@ -673,7 +696,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleExclusiveValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (!value) return;
 
     (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -728,9 +751,9 @@ const PanelToggles: FC = ({}) => {
   );
 };
 
-interface NavbarProps {}
+interface NavbarProps { }
 
-const Navbar: FC<NavbarProps> = ({}) => {
+const Navbar: FC<NavbarProps> = ({ }) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
@@ -827,7 +850,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   return (
     <div
       id="navbar"
-      className={`w-full h-12 bg-background border-b flex items-center gap-4 px-4 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
+      className={`w-full h-12 bg-background border-b flex items-center gap-2 px-4 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
       style={{ WebkitAppRegion: "drag" }}
     >
       <ButtonGroup>
@@ -844,7 +867,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
 
       <Navigation />
 
-      <div className="flex items-center gap-4 ml-auto">
+      <div className="flex items-center gap-2 ml-auto">
         <PanelToggles />
         <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           {isFullscreen ? <Minimize /> : <Fullscreen />}

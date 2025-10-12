@@ -29,6 +29,7 @@ import {
   DesignEditorPresenceOther,
   PieceScopeProvider,
   useDesign,
+  useDesignEditorCamera,
   useDesignEditorCommands,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
@@ -280,8 +281,9 @@ const ModelDesign: FC = () => {
 };
 
 const DesignModel: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
+  const { deselectAll, toggleModelFullscreen, setCamera } = useDesignEditorCommands();
   const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Model;
+  const camera = useDesignEditorCamera();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -295,9 +297,15 @@ const DesignModel: FC = () => {
     },
     [deselectAll],
   );
+  const onCameraChange = useCallback(
+    (newCamera: import("../../../semio").Camera) => {
+      setCamera(newCamera);
+    },
+    [setCamera],
+  );
 
   return (
-    <Model showGizmo={fullscreen} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+    <Model showGizmo={fullscreen} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
       <ModelDesign />
     </Model>
   );

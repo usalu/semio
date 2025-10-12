@@ -19,7 +19,7 @@ import {
   ViewportPortal,
   XYPosition,
 } from "@xyflow/react";
-import React, { FC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 
 import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Piece, Port, TOLERANCE, Type } from "../../../semio";
 
@@ -30,7 +30,10 @@ import {
   PieceScopeProvider,
   useClusterableGroups,
   useDesign,
+  useDesignEditorCamera,
   useDesignEditorCommands,
+  useDesignEditorDiagramCenter,
+  useDesignEditorDiagramScale,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
   useDesignEditorSelection,
@@ -809,6 +812,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     updatePieces,
     updateConnections,
     addPiece,
+    setDiagramCenter,
+    setDiagramScale,
   } = useDesignEditorCommands();
 
   const { updateDesign } = useKitCommands();
@@ -816,6 +821,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const selection = useDesignEditorSelection();
   const fullscreenPanel = useDesignEditorFullscreen();
   const others = useDesignEditorOthers();
+  const savedDiagramCenter = useDesignEditorDiagramCenter();
+  const savedDiagramScale = useDesignEditorDiagramScale();
 
   // const design = useDiffedDesign();
   const design = useDesign();
@@ -837,6 +844,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   } | null>(null);
   const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
   const fullscreen = fullscreenPanel === DesignEditorFullscreenPanel.Diagram;
+  const viewportRestoredRef = useRef(false);
+  const isUpdatingViewportRef = useRef(false);
 
   // Set the React Flow instance ref for use in DesignEditor
   useEffect(() => {
@@ -854,6 +863,26 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [dragState, abortTransaction]);
+
+  useEffect(() => {
+    if (!viewportRestoredRef.current && savedDiagramCenter && savedDiagramScale !== undefined) {
+      isUpdatingViewportRef.current = true;
+      setTimeout(() => {
+        reactFlowInstance.setViewport({ x: savedDiagramCenter.x, y: savedDiagramCenter.y, zoom: savedDiagramScale });
+        viewportRestoredRef.current = true;
+        setTimeout(() => {
+          isUpdatingViewportRef.current = false;
+        }, 100);
+      }, 0);
+    }
+  }, [savedDiagramCenter, savedDiagramScale, reactFlowInstance]);
+
+  const onMove = useCallback(() => {
+    if (isUpdatingViewportRef.current) return;
+    const viewport = reactFlowInstance.getViewport();
+    setDiagramCenter({ x: viewport.x, y: viewport.y });
+    setDiagramScale(viewport.zoom);
+  }, [reactFlowInstance, setDiagramCenter, setDiagramScale]);
 
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
@@ -1505,7 +1534,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         elementsSelectable={false}
         minZoom={0.1}
         maxZoom={12}
-        fitView
+        fitView={!savedDiagramCenter && !savedDiagramScale}
         zoomOnDoubleClick={false}
         panOnDrag={[0]}
         proOptions={{ hideAttribution: true }}
@@ -1517,6 +1546,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         onPaneClick={onPaneClick}
         onDoubleClick={onDoubleClick}
         onConnect={onConnect}
+        onMove={onMove}
         connectionLineComponent={ConnectionConnectionLine}
         className="bg-background"
       >

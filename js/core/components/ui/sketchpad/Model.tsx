@@ -21,9 +21,10 @@
 // #endregion
 
 import { GizmoHelper, GizmoViewport, Grid, OrbitControls, OrthographicCamera } from "@react-three/drei";
-import { Canvas as ThreeCanvas } from "@react-three/fiber";
-import React, { FC, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
+import React, { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { Camera } from "../../../semio";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -47,9 +48,11 @@ interface ModelInnerProps {
   children?: ReactNode;
   showGrid?: boolean;
   showGizmo?: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
 }
 
-const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo = true }) => {
+const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange }) => {
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -70,18 +73,60 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
     return () => observer.disconnect();
   }, []);
 
-  const camera = useRef<THREE.OrthographicCamera>(null);
+  const cameraRef = useRef<THREE.OrthographicCamera>(null);
+  const controlsRef = useRef<any>(null);
+  const cameraRestoredRef = useRef(false);
+  const isUpdatingCameraRef = useRef(false);
+  const prevCameraStringRef = useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
+
+  useEffect(() => {
+    const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
+    if (prevCameraStringRef.current !== currentCameraString) {
+      cameraRestoredRef.current = false;
+      prevCameraStringRef.current = currentCameraString;
+    }
+    if (!cameraRestoredRef.current && initialCamera && cameraRef.current && controlsRef.current) {
+      isUpdatingCameraRef.current = true;
+      cameraRef.current.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
+      cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
+      const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
+      controlsRef.current.target.copy(target);
+      cameraRef.current.updateProjectionMatrix();
+      controlsRef.current.update();
+      cameraRestoredRef.current = true;
+      setTimeout(() => {
+        isUpdatingCameraRef.current = false;
+      }, 100);
+    }
+  }, [initialCamera]);
+
+  const handleChange = useCallback(() => {
+    if (isUpdatingCameraRef.current) return;
+    if (cameraRef.current && controlsRef.current && onCameraChange) {
+      const position = cameraRef.current.position;
+      const target = controlsRef.current.target;
+      const forward = new THREE.Vector3().subVectors(target, position).normalize();
+      const up = cameraRef.current.up;
+      onCameraChange({
+        position: { x: position.x, y: position.y, z: position.z },
+        forward: { x: forward.x, y: forward.y, z: forward.z },
+        up: { x: up.x, y: up.y, z: up.z },
+      });
+    }
+  }, [onCameraChange]);
 
   return (
     <>
-      <OrthographicCamera ref={camera} />
+      <OrthographicCamera ref={cameraRef} />
       <OrbitControls
+        ref={controlsRef}
         makeDefault
         mouseButtons={{
           LEFT: THREE.MOUSE.ROTATE,
           MIDDLE: undefined,
           RIGHT: undefined,
         }}
+        onChange={handleChange}
       />
       <ambientLight intensity={1} />
       {children}
@@ -95,14 +140,16 @@ interface ModelProps {
   children?: ReactNode;
   showGrid?: boolean;
   showGizmo?: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
   onDoubleClickCapture?: (e: React.MouseEvent) => void;
   onPointerMissed?: (e: MouseEvent) => void;
 }
 
-const Model: FC<ModelProps> = ({ children, showGrid = true, showGizmo = true, onDoubleClickCapture, onPointerMissed }) => (
+const Model: FC<ModelProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed }) => (
   <div className="h-full w-full">
     <ThreeCanvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-      <ModelInner showGrid={showGrid} showGizmo={showGizmo}>
+      <ModelInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
         {children}
       </ModelInner>
     </ThreeCanvas>
