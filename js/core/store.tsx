@@ -21,6 +21,7 @@
 
 import JSZip from "jszip";
 import React, { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
@@ -101,7 +102,7 @@ import {
 
 // #region Constants
 
-export enum Mode {
+export enum Access {
   USER = "user",
   GUEST = "guest",
 }
@@ -117,10 +118,10 @@ export enum Layout {
   TOUCH = "touch",
 }
 
-export enum Tooltip {
-  NONE = "none",
-  CONCISE = "concise",
-  EXTENSIVE = "extensive",
+export enum Mode {
+  BEGINNER = "beginner",
+  NORMAL = "normal",
+  EXPERT = "expert",
 }
 
 export enum EditorType {
@@ -178,21 +179,21 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
   }
 }
 
-export interface Synchronizable<TModel> {
+export interface Synchronizable<TAccessl> {
   onChanged: (subscribe: Subscribe) => Unsubscribe;
   onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-  snapshot: () => TModel;
+  snapshot: () => TAccessl;
 }
 
 const identitySelector = (state: any) => state;
 
-function useSync<TModel, TSelected = TModel>(store: Synchronizable<TModel>, selector?: (state: TModel) => TSelected, deep: boolean = false): TModel | TSelected {
+function useSync<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl>, selector?: (state: TAccessl) => TSelected, deep: boolean = false): TAccessl | TSelected {
   const state = deep ? useSyncExternalStore(store.onChangedDeep, store.snapshot) : useSyncExternalStore(store.onChanged, store.snapshot);
   return selector ? selector(state) : state;
 }
 
-function useSyncDeep<TModel, TSelected = TModel>(store: Synchronizable<TModel>, selector?: (state: TModel) => TSelected): TModel | TSelected {
-  const state = useSyncExternalStore(store.onChangedDeep, store.snapshot) as TModel;
+function useSyncDeep<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl>, selector?: (state: TAccessl) => TSelected): TAccessl | TSelected {
+  const state = useSyncExternalStore(store.onChangedDeep, store.snapshot) as TAccessl;
   return selector ? selector(state) : state;
 }
 
@@ -1812,9 +1813,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-        const update = colorDiff.updated?.find((u) => u.id === type.guid);
-        return update ? { ...type, ports: update.diff.ports } : type;
-      })
+          const update = colorDiff.updated?.find((u) => u.id === type.guid);
+          return update ? { ...type, ports: update.diff.ports } : type;
+        })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -4267,7 +4268,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -4443,7 +4444,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) { }
+                  } catch (error) {}
                 }
               }
             }
@@ -5375,7 +5376,7 @@ export function useTypeEditorCamera(): Camera | undefined {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -5987,7 +5988,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 }
 
 const kitEditorCommands = {
-  "semio.kitEditor.setMode": (context: KitEditorCommandContext, mode: Mode): KitEditorCommandResult => {
+  "semio.kitEditor.setAccess": (context: KitEditorCommandContext, access: Access): KitEditorCommandResult => {
     return { diff: {} };
   },
   "semio.kitEditor.setTheme": (context: KitEditorCommandContext, theme: Theme): KitEditorCommandResult => {
@@ -6300,7 +6301,7 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -6424,7 +6425,7 @@ export interface DesignEditorSelectionDiff {
 export enum DesignEditorFullscreenPanel {
   None = "none",
   Diagram = "diagram",
-  Model = "model",
+  Accessl = "accessl",
 }
 export interface DesignEditorPresence {
   cursor?: Coord;
@@ -6881,7 +6882,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 }
 
 const designEditorCommands = {
-  "semio.designEditor.setMode": (context: DesignEditorCommandContext, mode: Mode): DesignEditorCommandResult => {
+  "semio.designEditor.setAccess": (context: DesignEditorCommandContext, access: Access): DesignEditorCommandResult => {
     return { diff: {} };
   },
   "semio.designEditor.setTheme": (context: DesignEditorCommandContext, theme: Theme): DesignEditorCommandResult => {
@@ -6899,9 +6900,9 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.toggleModelFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+  "semio.designEditor.toggleAccesslFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     const currentPanel = context.designEditor.fullscreenPanel;
-    const newPanel = currentPanel === DesignEditorFullscreenPanel.Model ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Model;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Accessl ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Accessl;
     return {
       diff: {
         fullscreenPanel: newPanel,
@@ -7311,7 +7312,7 @@ export function useDesignEditorDiagramScale(): number | undefined {
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7332,7 +7333,7 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
       deselectPiecePort: noOp,
       deleteSelected: noOp,
       toggleDiagramFullscreen: noOp,
-      toggleModelFullscreen: noOp,
+      toggleAccesslFullscreen: noOp,
       addPiece: noOp,
       addPieces: noOp,
       removePiece: noOp,
@@ -7371,7 +7372,7 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
     deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
-    toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
+    toggleAccesslFullscreen: () => store.execute("semio.designEditor.toggleAccesslFullscreen"),
     addPiece: (piece: Piece) => store.execute("semio.designEditor.addPiece", piece),
     addPieces: (pieces: Piece[]) => store.execute("semio.designEditor.addPieces", pieces),
     removePiece: (piece: Guid) => store.execute("semio.designEditor.removePiece", piece),
@@ -7438,10 +7439,10 @@ export interface SketchpadChangableState {
   navigation: string;
   navigationHistory: string[];
   navigationHistoryIndex: number;
-  mode: Mode;
+  access: Access;
   theme: Theme;
   layout: Layout;
-  tooltip: Tooltip;
+  mode: Mode;
   editorSettings: EditorSettings;
   panelSizes: PanelSizes;
   isFullscreen: boolean;
@@ -7456,10 +7457,10 @@ export interface SketchpadState extends SketchpadChangableState {
 export interface SketchpadDiff {
   navigation?: string;
   navigationHistoryIndex?: number;
-  mode?: Mode;
+  access?: Access;
   theme?: Theme;
   layout?: Layout;
-  tooltip?: Tooltip;
+  mode?: Mode;
   editorSettings?: EditorSettings;
   panelSizes?: Partial<PanelSizes>;
   isFullscreen?: boolean;
@@ -7550,8 +7551,8 @@ class SketchpadStore {
       if (!this.ySketchpad.has("navigationHistoryIndex")) {
         this.ySketchpad.set("navigationHistoryIndex", 0);
       }
-      if (!this.ySketchpad.has("mode")) {
-        this.ySketchpad.set("mode", Mode.GUEST);
+      if (!this.ySketchpad.has("access")) {
+        this.ySketchpad.set("access", Access.GUEST);
       }
       if (!this.ySketchpad.has("theme")) {
         this.ySketchpad.set("theme", Theme.SYSTEM);
@@ -7559,8 +7560,8 @@ class SketchpadStore {
       if (!this.ySketchpad.has("layout")) {
         this.ySketchpad.set("layout", Layout.NORMAL);
       }
-      if (!this.ySketchpad.has("tooltip")) {
-        this.ySketchpad.set("tooltip", Tooltip.EXTENSIVE);
+      if (!this.ySketchpad.has("mode")) {
+        this.ySketchpad.set("mode", Mode.NORMAL);
       }
       if (!this.ySketchpad.has("isFullscreen")) {
         this.ySketchpad.set("isFullscreen", false);
@@ -7609,30 +7610,30 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-        design: { snappiness: 10, gridSize: 24 },
-        type: {},
-        kit: {},
-      };
+          design: { snappiness: 10, gridSize: 24 },
+          type: {},
+          kit: {},
+        };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        workbenchWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+          workbenchWidth: 230,
+          detailsWidth: 230,
+          chatWidth: 230,
+          settingsWidth: 230,
+          consoleHeight: 200,
+        };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr) : ["/"];
     const currentValues = {
       navigation: this.ySketchpad.get("navigation") as string,
       navigationHistory: navigationHistory,
       navigationHistoryIndex: (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0,
-      mode: this.ySketchpad.get("mode") as Mode,
+      access: this.ySketchpad.get("access") as Access,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
-      tooltip: (this.ySketchpad.get("tooltip") as Tooltip) ?? Tooltip.EXTENSIVE,
+      mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.NORMAL,
       editorSettings: editorSettings,
       panelSizes: panelSizes,
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
@@ -7720,10 +7721,10 @@ class SketchpadStore {
 
         this.ySketchpad.set("navigation", diff.navigation);
       }
-      if (diff.mode) this.ySketchpad.set("mode", diff.mode);
+      if (diff.access) this.ySketchpad.set("access", diff.access);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
-      if (diff.tooltip) this.ySketchpad.set("tooltip", diff.tooltip);
+      if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", diff.isFullscreen);
       if (diff.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", diff.isNavbarExpanded);
       if (diff.isMobile !== undefined) this.ySketchpad.set("isMobile", diff.isMobile);
@@ -8033,9 +8034,9 @@ const sketchpadCommands = {
       diff: { theme },
     };
   },
-  "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
+  "semio.sketchpad.setAccess": (context: SketchpadCommandContext, access: Access): SketchpadCommandResult => {
     return {
-      diff: { mode },
+      diff: { access },
     };
   },
   "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
@@ -8043,9 +8044,9 @@ const sketchpadCommands = {
       diff: { layout },
     };
   },
-  "semio.sketchpad.setTooltip": (context: SketchpadCommandContext, tooltip: Tooltip): SketchpadCommandResult => {
+  "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
     return {
-      diff: { tooltip },
+      diff: { mode },
     };
   },
   "semio.sketchpad.toggleFullscreen": (context: SketchpadCommandContext): SketchpadCommandResult => {
@@ -8159,8 +8160,8 @@ export function useEditorType(): EditorType {
   return useMemo(() => getEditorTypeFromPath(navigation), [navigation]);
 }
 
-export function useMode(): Mode {
-  return useSketchpad((s) => s.mode) as Mode;
+export function useAccess(): Access {
+  return useSketchpad((s) => s.access) as Access;
 }
 
 export function useTheme(): Theme {
@@ -8171,8 +8172,21 @@ export function useLayout(): Layout {
   return useSketchpad((s) => s.layout) as Layout;
 }
 
-export function useTooltip(): Tooltip {
-  return useSketchpad((s) => s.tooltip) as Tooltip;
+export function useMode(): Mode {
+  return useSketchpad((s) => s.mode) as Mode;
+}
+
+export function useTooltip(): (key: string) => string | undefined {
+  const { t } = useTranslation();
+  const mode = useMode();
+  return (key: string) => {
+    if (mode === Mode.EXPERT) return undefined;
+    if (mode === Mode.BEGINNER) {
+      const extensiveKey = `${key}.extensive`;
+      return t(extensiveKey) !== extensiveKey ? t(extensiveKey) : t(key);
+    }
+    return t(key);
+  };
 }
 
 export function useIsFullscreen(): boolean {
@@ -8332,10 +8346,10 @@ export function useSketchpadCommands() {
   const store = useSketchpadStore();
   const navigate = useNavigate();
   return {
-    setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
+    setAccess: (access: Access) => store.execute("semio.sketchpad.setAccess", access),
     setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
     setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
-    setTooltip: (tooltip: Tooltip) => store.execute("semio.sketchpad.setTooltip", tooltip),
+    setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
     toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
     toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
     setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),

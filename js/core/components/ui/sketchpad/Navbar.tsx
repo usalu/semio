@@ -164,7 +164,7 @@ const Navigation: FC = ({ }) => {
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
   const kits = useKits();
-  const tooltipLevel = useTooltip();
+  const tooltip = useTooltip();
 
   // Parse URL: /{kitGuid} or /{kitGuid}/[dt]/{itemGuid}
   const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);

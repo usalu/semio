@@ -4,7 +4,7 @@ import { t } from "i18next";
 import { CircleOffIcon, FingerprintIcon, Laptop, MessageSquareTextIcon, MonitorIcon, MoonIcon, SunIcon, TextIcon } from "lucide-react";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Layout, Theme, Tooltip, useLayout, useSketchpadCommands, useTheme, useTooltip } from "../../../store";
+import { Access, Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../../store";
 import { ScrollArea } from "../ScrollArea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Select";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
@@ -33,8 +33,8 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const layout = useLayout();
-  const tooltip = useTooltip();
-  const { setTheme, setLayout, setTooltip } = useSketchpadCommands();
+  const mode = useMode();
+  const { setTheme, setLayout, setMode } = useSketchpadCommands();
   const sections = usePanelSections("settings");
 
   const [isResizeHovered, setIsResizeHovered] = useState(false);
@@ -106,14 +106,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label={t("settings.tooltip")} type="single" value={tooltip} onValueChange={(value: string) => setTooltip(value as Tooltip)}>
-                    <ToggleGroupItem value={Tooltip.NONE}>
+                  <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setTooltipMode(value as Access)}>
+                    <ToggleGroupItem value={Access.BEGINNER}>
                       <CircleOffIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Tooltip.CONCISE}>
+                    <ToggleGroupItem value={Access.NORMAL}>
                       <TextIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Tooltip.EXTENSIVE}>
+                    <ToggleGroupItem value={Access.EXPERT}>
                       <MessageSquareTextIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>

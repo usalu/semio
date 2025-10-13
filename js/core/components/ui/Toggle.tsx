@@ -29,15 +29,21 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./Tooltip";
 import { Popover, PopoverAnchor, PopoverContent } from "./Popover";
 
 const toggleVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-2 text-sm font-medium hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary data-[state=on]:hover:text-primary-foreground h-9 px-2 min-w-9",
+  "text-foreground inline-flex items-center justify-center gap-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary data-[state=on]:hover:text-primary-foreground h-9 px-2 min-w-9",
   {
     variants: {
       variant: {
-        default: "border bg-transparent hover:bg-accent hover:text-accent-foreground",
+        default: "border bg-transparent hover:bg-hover-background",
+      },
+      level: {
+        background: "hover:bg-hover-background",
+        panel: "hover:bg-hover-panel",
+        temporary: "hover:bg-hover-temporary",
       },
     },
     defaultVariants: {
       variant: "default",
+      level: "background",
     },
   },
 );
@@ -55,6 +61,7 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
   tooltipPressed?: string;
   hotkey?: string;
   label?: string;
+  level?: "background" | "panel" | "temporary";
 }
 
 interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
@@ -65,6 +72,7 @@ interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<t
   tooltip?: string;
   hotkey?: string;
   label?: string;
+  level?: "background" | "panel" | "temporary";
 }
 
 interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
@@ -77,6 +85,7 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   label?: string;
   placeholder?: string;
   dropdownTooltip?: string;
+  level?: "background" | "panel" | "temporary";
 }
 
 interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
@@ -87,6 +96,7 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   hotkey?: string;
   label?: string;
   actionTooltip?: string;
+  level?: "background" | "panel" | "temporary";
 }
 
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleProps<T> | ToggleDropdownProps<T> | ToggleWithActionProps;
@@ -94,7 +104,7 @@ type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleP
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   // Cycle type
   if ("type" in props && props.type === "cycle") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, hotkey, label, level = "background", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -113,7 +123,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const toggleElement = (
       <TogglePrimitive.Root
         data-slot="toggle"
-        className={cn(toggleVariants(), className)}
+        className={cn(toggleVariants({ level }), className)}
         pressed={pressed}
         onPressedChange={(newPressed) => {
           onPressedChange?.(newPressed);
@@ -158,7 +168,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // WithAction type
   if ("type" in props && props.type === "withAction") {
-    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, type, ...restProps } = props;
+    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, level = "background", type, ...restProps } = props;
 
     const mainContent = tooltip ? (
       <Tooltip>
@@ -204,7 +214,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} {...restProps}>
         {mainContent}
         {actionButton}
       </TogglePrimitive.Root>
@@ -228,7 +238,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", dropdownTooltip, pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", dropdownTooltip, level = "background", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -291,7 +301,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} pressed={pressed} onPressedChange={onPressedChange} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} pressed={pressed} onPressedChange={onPressedChange} {...restProps}>
         {mainContent}
         {dropdownButton}
       </TogglePrimitive.Root>
@@ -356,11 +366,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   // Standard toggle
-  const { className, tooltip, tooltipPressed, hotkey, label, type, pressed, ...restProps } = props as ToggleStandardProps;
+  const { className, tooltip, tooltipPressed, hotkey, label, level = "background", type, pressed, ...restProps } = props as ToggleStandardProps;
 
   const activeTooltip = (pressed && tooltipPressed) ? tooltipPressed : tooltip;
 
-  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants(), className)} pressed={pressed} {...restProps} />;
+  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), className)} pressed={pressed} {...restProps} />;
 
   const wrappedToggle = activeTooltip ? (
     <Tooltip>

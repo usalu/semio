@@ -29,16 +29,22 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+        default: "border bg-background hover:bg-hover-background",
         primary: "bg-primary text-primary-foreground hover:bg-primary/90",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        ghost: "hover:bg-hover-background",
         link: "text-primary underline-offset-4 hover:underline",
+      },
+      level: {
+        background: "hover:bg-hover-background",
+        panel: "hover:bg-hover-panel",
+        temporary: "hover:bg-hover-temporary",
       },
     },
     defaultVariants: {
       variant: "default",
+      level: "background",
     },
   },
 );
@@ -48,10 +54,10 @@ type ButtonProps = React.ComponentProps<"button"> &
     asChild?: boolean;
   };
 
-function Button({ className, variant, asChild = false, ...props }: ButtonProps) {
+function Button({ className, variant, level, asChild = false, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
 
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, className }))} {...props} />;
+  return <Comp data-slot="button" className={cn(buttonVariants({ variant, level, className }))} {...props} />;
 }
 
 export { Button, buttonVariants };

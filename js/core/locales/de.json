@@ -297,7 +297,7 @@
         "general": "Allgemein",
         "theme": "Thema",
         "layout": "Layout",
-        "tooltip": "Tooltip",
+        "mode": "Modus",
         "language": "Sprache"
     },
     "chat": {
