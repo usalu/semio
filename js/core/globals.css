@@ -65,15 +65,15 @@
     --text-9xl--line-height: 1;
     --background: var(--color-light);
     --panel: var(--color-light-7-9);
-    --temporary: var(--color-gray-800);
+    --temporary: var(--color-light-5-7);
     --foreground: var(--color-dark);
     --muted: var(--color-light-8-9);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-gray-800);
     --accent-foreground: var(--color-dark);
-    --hover-background: var(--color-gray-800);
-    --hover-panel: var(--color-gray-700);
-    --hover-temporary: var(--color-gray-600);
+    --hover-base: var(--color-gray-700);
+    --hover-panel: var(--color-gray-600);
+    --hover-temporary: var(--color-light-gray-gray);
     --border-color: var(--color-foreground);
 
     * {
@@ -440,15 +440,15 @@
 .dark {
   --background: var(--color-dark);
   --panel: var(--color-dark-7-9);
-  --temporary: var(--color-gray-200);
+  --temporary: var(--color-dark-5-7);
   --foreground: var(--color-light);
   --muted: var(--color-dark-8-9);
   --muted-foreground: var(--color-gray);
   --accent: var(--color-gray-200);
   --accent-foreground: var(--color-light);
-  --hover-background: var(--color-gray-200);
-  --hover-panel: var(--color-gray-300);
-  --hover-temporary: var(--color-gray-400);
+  --hover-base: var(--color-gray-300);
+  --hover-panel: var(--color-gray-400);
+  --hover-temporary: var(--color-dark-dark-gray-2);
 
   /* * {
     cursor:
@@ -673,7 +673,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-hover-background: var(--hover-background);
+  --color-hover-base: var(--hover-base);
   --color-hover-panel: var(--hover-panel);
   --color-hover-temporary: var(--hover-temporary);
   --color-popover: var(--temporary);

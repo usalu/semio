@@ -10,11 +10,12 @@ interface ChatProps extends ResizablePanelProps {}
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
-  if (!visible) return null;
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
   const sections = usePanelSections("chat");
+
+  if (!visible) return null;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,7 +45,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
+      className={`absolute top-4 right-4 bottom-4 z-20 bg-panel text-foreground border
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
       style={{ width: `${width}px` }}
     >
@@ -53,7 +54,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
           <Tree>
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {section.content}
+                {typeof section.content === "function" ? section.content() : section.content}
               </TreeSection>
             ))}
           </Tree>

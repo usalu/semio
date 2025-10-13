@@ -19,8 +19,15 @@
 
 // #endregion
 import type { Preview } from "@storybook/react-vite";
+import { withTheme } from "./withTheme";
 
 import "../globals.css";
+
+enum Theme {
+  SYSTEM = "system",
+  LIGHT = "light",
+  DARK = "dark",
+}
 
 const preview: Preview = {
   parameters: {
@@ -30,13 +37,26 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    darkMode: {
-      current: "auto",
-      dark: { appBg: "-var(--color-dark)" },
-      light: { appBg: "-var(--color-dark)" },
+  },
+  globalTypes: {
+    theme: {
+      description: "Global theme for components",
+      toolbar: {
+        title: "Theme",
+        icon: "circlehollow",
+        items: [
+          { value: Theme.SYSTEM, title: "System", icon: "browser" },
+          { value: Theme.LIGHT, title: "Light", icon: "sun" },
+          { value: Theme.DARK, title: "Dark", icon: "moon" },
+        ],
+        dynamicTitle: true,
+      },
     },
   },
-
+  initialGlobals: {
+    theme: Theme.SYSTEM,
+  },
+  decorators: [withTheme],
   tags: ["autodocs"],
 };
 

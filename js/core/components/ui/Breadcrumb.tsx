@@ -117,18 +117,18 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
         </Tooltip>
       ) : (
         <DropdownMenuPrimitive.Trigger asChild>
-          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer hover:bg-accent px-1 flex items-center transition-colors", className)} {...props}>
+          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer hover:bg-hover-base px-1 flex items-center transition-colors", className)} {...props}>
             {open ? <ChevronDown /> : <ChevronRight />}
           </li>
         </DropdownMenuPrimitive.Trigger>
       )}
       <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-background-level-3 w-auto overflow-hidden border p-1">
+        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-1">
           {items.map((item, index) => {
             const menuItem = (
               <DropdownMenuPrimitive.Item
                 key={index}
-                className="text-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-pointer items-center px-1 py-1 text-sm outline-none whitespace-nowrap"
+                className="text-foreground focus:bg-hover-temporary relative flex cursor-pointer items-center px-1 py-1 text-sm outline-none whitespace-nowrap"
                 onClick={() => handleSelect(item.href)}
               >
                 {item.label}

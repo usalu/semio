@@ -28,16 +28,16 @@ import { cn } from "@semio/js/lib/utils";
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
   variant: "default",
-  level: "background",
+  level: "base",
 });
 
 interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children"> {
   label?: string;
   children: React.ReactNode;
-  level?: "background" | "panel" | "temporary";
+  level?: "base" | "panel" | "temporary";
 }
 
-function ToggleGroup({ className, label, level = "background", children, ...restProps }: ToggleGroupProps) {
+function ToggleGroup({ className, label, level = "base", children, ...restProps }: ToggleGroupProps) {
   const variant = "default";
   const toggleGroupElement = (
     <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...restProps}>

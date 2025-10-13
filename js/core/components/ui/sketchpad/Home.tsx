@@ -5,7 +5,7 @@ import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
-import { generateUniqueName, getTooltip, guid } from "../../../lib/utils";
+import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
 import { useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../../store";
 import { Input } from "../Input";
@@ -39,7 +39,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({ }) => {
+const Home: FC = ({}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -47,7 +47,7 @@ const Home: FC = ({ }) => {
   const kits = useKits();
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
-  const tooltipLevel = useTooltip();
+  const tooltip = useTooltip();
 
   // Get kind from search params instead of path
   const kindParam = searchParams.get("k");
@@ -197,8 +197,8 @@ const Home: FC = ({ }) => {
             onPressedChange={() => toggleKind("temporary")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("temporary")}
-            tooltip={selectedKind === "temporary" ? getTooltip(t, "home.hideTemporary", tooltipLevel) : getTooltip(t, "home.showTemporary", tooltipLevel)}
-            actionTooltip={getTooltip(t, "home.createTemporary", tooltipLevel)}
+            tooltip={selectedKind === "temporary" ? tooltip("home.hideTemporary") : tooltip("home.showTemporary")}
+            actionTooltip={tooltip("home.createTemporary")}
           >
             <Clock className="size-4" />
           </Toggle>
@@ -208,8 +208,8 @@ const Home: FC = ({ }) => {
             onPressedChange={() => toggleKind("local")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("local")}
-            tooltip={selectedKind === "local" ? getTooltip(t, "home.hideLocal", tooltipLevel) : getTooltip(t, "home.showLocal", tooltipLevel)}
-            actionTooltip={getTooltip(t, "home.createLocal", tooltipLevel)}
+            tooltip={selectedKind === "local" ? tooltip("home.hideLocal") : tooltip("home.showLocal")}
+            actionTooltip={tooltip("home.createLocal")}
           >
             <HardDrive className="size-4" />
           </Toggle>
@@ -219,8 +219,8 @@ const Home: FC = ({ }) => {
             onPressedChange={() => toggleKind("remote")}
             actionIcon={<Plus className="size-3.5 opacity-50" />}
             onActionClick={() => handleCreateKit("remote")}
-            tooltip={selectedKind === "remote" ? getTooltip(t, "home.hideRemote", tooltipLevel) : getTooltip(t, "home.showRemote", tooltipLevel)}
-            actionTooltip={getTooltip(t, "home.createRemote", tooltipLevel)}
+            tooltip={selectedKind === "remote" ? tooltip("home.hideRemote") : tooltip("home.showRemote")}
+            actionTooltip={tooltip("home.createRemote")}
           >
             <Cloud className="size-4" />
           </Toggle>

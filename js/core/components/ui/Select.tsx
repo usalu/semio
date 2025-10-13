@@ -52,14 +52,14 @@ function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.V
 function SelectTrigger({
   className,
   size = "default",
-  level = "background",
+  level = "base",
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
-  level?: "background" | "panel" | "temporary";
+  level?: "base" | "panel" | "temporary";
 }) {
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-background";
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"

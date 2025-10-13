@@ -27,14 +27,14 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
   return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-2", className)} {...props} />;
 }
 
-function TabsList({ className, level = "background", ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: "background" | "panel" | "temporary" }) {
+function TabsList({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: "base" | "panel" | "temporary" }) {
   const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-background";
   return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-9 w-fit items-center justify-center p-[3px]", bgClass, className)} {...props} />;
 }
 
-function TabsTrigger({ className, level = "background", ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: "background" | "panel" | "temporary" }) {
+function TabsTrigger({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: "base" | "panel" | "temporary" }) {
   const activeBgClass = level === "panel" ? "data-[state=active]:bg-panel" : level === "temporary" ? "data-[state=active]:bg-temporary" : "data-[state=active]:bg-background";
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-background";
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"

@@ -110,11 +110,12 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = 
 interface WorkbenchProps extends ResizablePanelProps {}
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
-  if (!visible) return null;
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
   const sections = usePanelSections("workbench");
+
+  if (!visible) return null;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -144,7 +145,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
+      className={`absolute top-4 left-4 bottom-4 z-20 bg-panel text-foreground border
                 ${isResizing || isResizeHovered ? "border-r-primary" : "border-r"}`}
       style={{ width: `${width}px` }}
     >
@@ -153,7 +154,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
           <Tree>
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {section.content}
+                {typeof section.content === "function" ? section.content() : section.content}
               </TreeSection>
             ))}
           </Tree>

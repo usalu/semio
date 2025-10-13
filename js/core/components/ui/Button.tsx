@@ -29,22 +29,22 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background hover:bg-hover-background",
+        default: "border bg-background hover:bg-hover-base",
         primary: "bg-primary text-primary-foreground hover:bg-primary/90",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        ghost: "hover:bg-hover-background",
+        ghost: "hover:bg-hover-base",
         link: "text-primary underline-offset-4 hover:underline",
       },
       level: {
-        background: "hover:bg-hover-background",
+        base: "hover:bg-hover-base",
         panel: "hover:bg-hover-panel",
         temporary: "hover:bg-hover-temporary",
       },
     },
     defaultVariants: {
       variant: "default",
-      level: "background",
+      level: "base",
     },
   },
 );

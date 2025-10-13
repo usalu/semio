@@ -36,11 +36,12 @@ const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
-  if (!visible) return null;
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
   const sections = usePanelSections("details");
+
+  if (!visible) return null;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,7 +71,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border min-w-0 overflow-hidden
+      className={`absolute top-4 right-4 bottom-4 z-20 bg-panel text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
       style={{ width: `${width}px` }}
     >

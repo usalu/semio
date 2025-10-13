@@ -23,7 +23,7 @@ import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clo
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { generateUniqueName, getTooltip } from "../../../lib/utils";
+import { generateUniqueName } from "../../../lib/utils";
 import { Author, AuthorDiff, Connection, Design, DesignDiff, FileDiff, Guid, Piece, File as SemioFile, Type, TypeDiff } from "../../../semio";
 import {
   EditorType,
@@ -158,7 +158,7 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
   ],
 });
 
-const Navigation: FC = ({ }) => {
+const Navigation: FC = ({}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -194,9 +194,9 @@ const Navigation: FC = ({ }) => {
 
   // Kit kind items for breadcrumb
   const kitKindItems = [
-    { label: <Clock size={16} />, tooltip: getTooltip(t, "breadcrumb.temporary", tooltipLevel), href: "/?k=temporary" },
-    { label: <HardDrive size={16} />, tooltip: getTooltip(t, "breadcrumb.local", tooltipLevel), href: "/?k=local" },
-    { label: <Cloud size={16} />, tooltip: getTooltip(t, "breadcrumb.remote", tooltipLevel), href: "/?k=remote" },
+    { label: <Clock size={16} />, tooltip: tooltip("breadcrumb.temporary"), href: "/?k=temporary" },
+    { label: <HardDrive size={16} />, tooltip: tooltip("breadcrumb.local"), href: "/?k=local" },
+    { label: <Cloud size={16} />, tooltip: tooltip("breadcrumb.remote"), href: "/?k=remote" },
   ];
 
   // Filter kits by kind for the kit selector
@@ -248,11 +248,11 @@ const Navigation: FC = ({ }) => {
   }, [kitGuid, store]);
 
   const artifactKinds = [
-    { label: <Layout size={16} />, tooltip: getTooltip(t, "breadcrumb.designs", tooltipLevel), kind: "designs", href: kitGuid ? `/${kitGuid}?k=designs` : "/?k=designs" },
-    { label: <Box size={16} />, tooltip: getTooltip(t, "breadcrumb.types", tooltipLevel), kind: "types", href: kitGuid ? `/${kitGuid}?k=types` : "/?k=types" },
-    { label: <Award size={16} />, tooltip: getTooltip(t, "breadcrumb.qualities", tooltipLevel), kind: "qualities", href: kitGuid ? `/${kitGuid}?k=qualities` : "/?k=qualities" },
-    { label: <FileText size={16} />, tooltip: getTooltip(t, "breadcrumb.files", tooltipLevel), kind: "files", href: kitGuid ? `/${kitGuid}?k=files` : "/?k=files" },
-    { label: <User size={16} />, tooltip: getTooltip(t, "breadcrumb.authors", tooltipLevel), kind: "authors", href: kitGuid ? `/${kitGuid}?k=authors` : "/?k=authors" },
+    { label: <Layout size={16} />, tooltip: tooltip("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}?k=designs` : "/?k=designs" },
+    { label: <Box size={16} />, tooltip: tooltip("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}?k=types` : "/?k=types" },
+    { label: <Award size={16} />, tooltip: tooltip("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}?k=qualities` : "/?k=qualities" },
+    { label: <FileText size={16} />, tooltip: tooltip("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}?k=files` : "/?k=files" },
+    { label: <User size={16} />, tooltip: tooltip("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}?k=authors` : "/?k=authors" },
   ];
 
   // Get all designs and types as full objects (needed for create handlers)
@@ -480,15 +480,15 @@ const Navigation: FC = ({ }) => {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem tooltip={getTooltip(t, "navbar.home", tooltipLevel)}>
+        <BreadcrumbItem tooltip={tooltip("navbar.home")}>
           <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
         {kitGuid && kitKind && (
           <>
-            <BreadcrumbSeparator items={kitKindItems} tooltip={getTooltip(t, "navbar.kitKinds", tooltipLevel)} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={getTooltip(t, `breadcrumb.${kitKind}`, tooltipLevel)}>
+            <BreadcrumbSeparator items={kitKindItems} tooltip={tooltip("navbar.kitKinds")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind}`)}>
               <BreadcrumbLink onClick={() => navigate(`/?k=${kitKind}`)} style={{ cursor: "pointer" }}>
                 {kitKind === "temporary" && <Clock size={16} />}
                 {kitKind === "local" && <HardDrive size={16} />}
@@ -497,13 +497,13 @@ const Navigation: FC = ({ }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={kitItemsWithCreate}
-              tooltip={getTooltip(t, "navbar.kits", tooltipLevel)}
+              tooltip={tooltip("navbar.kits")}
               onNavigate={(href) => {
                 if (href === "#create-kit") handleCreateKit();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={getTooltip(t, "navbar.kit", tooltipLevel)}>
+            <BreadcrumbItem tooltip={tooltip("navbar.kit")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}`)} style={{ cursor: "pointer" }}>
                 {kit?.name || kitGuid}
               </BreadcrumbLink>
@@ -512,8 +512,8 @@ const Navigation: FC = ({ }) => {
         )}
         {isKitEditor && filteredKind && (
           <>
-            <BreadcrumbSeparator items={artifactKinds} tooltip={getTooltip(t, "navbar.artifacts", tooltipLevel)} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={getTooltip(t, `breadcrumb.${filteredKind}`, tooltipLevel)}>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`)}>
               <BreadcrumbLink style={{ cursor: "default" }}>
                 {filteredKind === "designs" && <Layout size={16} />}
                 {filteredKind === "types" && <Box size={16} />}
@@ -526,54 +526,54 @@ const Navigation: FC = ({ }) => {
         )}
         {isKitEditor && !filteredKind && (
           <>
-            <BreadcrumbSeparator items={artifactKinds} tooltip={getTooltip(t, "navbar.artifacts", tooltipLevel)} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
           </>
         )}
         {isDesignEditor && design && (
           <>
-            <BreadcrumbSeparator items={artifactKinds} tooltip={getTooltip(t, "navbar.artifacts", tooltipLevel)} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={getTooltip(t, "breadcrumb.designs", tooltipLevel)}>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.designs")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs`)} style={{ cursor: "pointer" }}>
                 <Layout size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designNameItems}
-              tooltip={getTooltip(t, "navbar.selectDesign", tooltipLevel)}
+              tooltip={tooltip("navbar.selectDesign")}
               onNavigate={(href) => {
                 if (href === "#create-design") handleCreateDesign();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={getTooltip(t, "navbar.design", tooltipLevel)}>
+            <BreadcrumbItem tooltip={tooltip("navbar.design")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}`)} style={{ cursor: "pointer" }}>
                 {design.name}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
-              tooltip={getTooltip(t, "navbar.selectVariant", tooltipLevel)}
+              tooltip={tooltip("navbar.selectVariant")}
               onNavigate={(href) => {
                 console.log("[Navbar] Variant breadcrumb navigate", { href, design });
                 if (href === "#create-variant") handleCreateVariant(design, false);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={getTooltip(t, "navbar.variant", tooltipLevel)}>
+            <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>
                 {design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
-              tooltip={getTooltip(t, "navbar.selectView", tooltipLevel)}
+              tooltip={tooltip("navbar.selectView")}
               onNavigate={(href) => {
                 console.log("[Navbar] View breadcrumb navigate", { href, design });
                 if (href === "#create-view") handleCreateView(design);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={getTooltip(t, "navbar.view", tooltipLevel)}>
+            <BreadcrumbItem tooltip={tooltip("navbar.view")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)} style={{ cursor: "pointer" }}>
                 {design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}
               </BreadcrumbLink>
@@ -582,34 +582,34 @@ const Navigation: FC = ({ }) => {
         )}
         {isTypeEditor && type && (
           <>
-            <BreadcrumbSeparator items={artifactKinds} tooltip={getTooltip(t, "navbar.artifacts", tooltipLevel)} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={getTooltip(t, "breadcrumb.types", tooltipLevel)}>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.types")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types`)} style={{ cursor: "pointer" }}>
                 <Box size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeNameItems}
-              tooltip={getTooltip(t, "navbar.selectType", tooltipLevel)}
+              tooltip={tooltip("navbar.selectType")}
               onNavigate={(href) => {
                 if (href === "#create-type") handleCreateType();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={getTooltip(t, "navbar.type", tooltipLevel)}>
+            <BreadcrumbItem tooltip={tooltip("navbar.type")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}`)} style={{ cursor: "pointer" }}>
                 {type.name}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
-              tooltip={getTooltip(t, "navbar.selectVariant", tooltipLevel)}
+              tooltip={tooltip("navbar.selectVariant")}
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(type, true);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={getTooltip(t, "navbar.variant", tooltipLevel)}>
+            <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
               <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}`)} style={{ cursor: "pointer" }}>
                 {type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}
               </BreadcrumbLink>
@@ -621,7 +621,7 @@ const Navigation: FC = ({ }) => {
   );
 };
 
-const Search: FC = ({ }) => {
+const Search: FC = ({}) => {
   return (
     <Command>
       <CommandInput />
@@ -634,7 +634,7 @@ const Search: FC = ({ }) => {
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -665,7 +665,7 @@ const PanelToggles: FC = ({ }) => {
   const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -689,7 +689,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
         handleToggle(activeExclusivePanel as keyof PanelVisibility);
@@ -703,7 +703,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleExclusiveValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -758,15 +758,15 @@ const PanelToggles: FC = ({ }) => {
   );
 };
 
-interface NavbarProps { }
+interface NavbarProps {}
 
-const Navbar: FC<NavbarProps> = ({ }) => {
+const Navbar: FC<NavbarProps> = ({}) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isMobile = useIsMobile();
-  const tooltipLevel = useTooltip();
+  const tooltip = useTooltip();
   const { toggleFullscreen, toggleNavbarExpanded, navigateBack, navigateForward, setIsMobile } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
   const navigate = useNavigate();
@@ -806,13 +806,13 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         style={{ WebkitAppRegion: "drag" }}
       >
         <div className="h-12 flex items-center justify-between px-1 gap-1">
-          <ButtonGroupItem value="back" tooltip={getTooltip(t, "navbar.back", tooltipLevel)} onClick={navigateBack} disabled={!canGoBack}>
+          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
 
           <PanelToggles />
 
-          <Toggle tooltip={getTooltip(t, isNavbarExpanded ? "navbar.collapse" : "navbar.expand", tooltipLevel)} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+          <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
             {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
           </Toggle>
         </div>
@@ -820,10 +820,10 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         {isNavbarExpanded && (
           <div className="flex flex-col gap-1 px-1 pb-1">
             <ButtonGroup>
-              <ButtonGroupItem value="forward" tooltip={getTooltip(t, "navbar.forward", tooltipLevel)} onClick={navigateForward} disabled={!canGoForward}>
+              <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
                 <ArrowRight size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="up" tooltip={getTooltip(t, "navbar.up", tooltipLevel)} onClick={() => navigate("/")} disabled={isAtRoot}>
+              <ButtonGroupItem value="up" tooltip={tooltip("navbar.up")} onClick={() => navigate("/")} disabled={isAtRoot}>
                 <ArrowUp size={16} />
               </ButtonGroupItem>
             </ButtonGroup>
@@ -831,19 +831,19 @@ const Navbar: FC<NavbarProps> = ({ }) => {
             <Navigation />
 
             <div className="flex gap-1">
-              <Toggle tooltip={getTooltip(t, isFullscreen ? "navbar.exitFullscreen" : "navbar.fullscreen", tooltipLevel)} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+              <Toggle tooltip={tooltip(isFullscreen ? "navbar.exitFullscreen" : "navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
                 {isFullscreen ? <Minimize /> : <Fullscreen />}
               </Toggle>
 
               {onWindowEvents && (
                 <ToggleGroup type="single">
-                  <ToggleGroupItem value="minimize" tooltip={getTooltip(t, "navbar.minimize", tooltipLevel)} onClick={onWindowEvents.minimize}>
+                  <ToggleGroupItem value="minimize" tooltip={tooltip("navbar.minimize")} onClick={onWindowEvents.minimize}>
                     <Minus size={16} />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="maximize" tooltip={getTooltip(t, "navbar.maximize", tooltipLevel)} onClick={onWindowEvents.maximize}>
+                  <ToggleGroupItem value="maximize" tooltip={tooltip("navbar.maximize")} onClick={onWindowEvents.maximize}>
                     <Square size={16} />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="close" tooltip={getTooltip(t, "navbar.close", tooltipLevel)} onClick={onWindowEvents.close} className="hover:bg-danger">
+                  <ToggleGroupItem value="close" tooltip={tooltip("navbar.close")} onClick={onWindowEvents.close} className="hover:bg-danger">
                     <X size={16} />
                   </ToggleGroupItem>
                 </ToggleGroup>

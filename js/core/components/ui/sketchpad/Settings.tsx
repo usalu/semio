@@ -4,7 +4,7 @@ import { t } from "i18next";
 import { CircleOffIcon, FingerprintIcon, Laptop, MessageSquareTextIcon, MonitorIcon, MoonIcon, SunIcon, TextIcon } from "lucide-react";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Access, Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../../store";
+import { Layout, Mode, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
 import { ScrollArea } from "../ScrollArea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Select";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
@@ -16,7 +16,7 @@ const LanguageSwitcher: FC = () => {
   const { i18n } = useTranslation();
   return (
     <Select label={t("settings.language")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
-      <SelectTrigger className="w-32">
+      <SelectTrigger className="w-32" level="panel">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -69,7 +69,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border min-w-0 overflow-hidden
+      className={`absolute top-4 right-4 bottom-4 z-20 bg-panel text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
       style={{ width: `${width}px` }}
     >
@@ -79,7 +79,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
             <TreeSection label={t("settings.general")} defaultOpen={true}>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)}>
+                  <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
                     <ToggleGroupItem value={Theme.SYSTEM}>
                       <Laptop />
                     </ToggleGroupItem>
@@ -94,7 +94,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)}>
+                  <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
                     <ToggleGroupItem value={Layout.NORMAL}>
                       <MonitorIcon />
                     </ToggleGroupItem>
@@ -106,14 +106,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setTooltipMode(value as Access)}>
-                    <ToggleGroupItem value={Access.BEGINNER}>
+                  <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
+                    <ToggleGroupItem value={Mode.BEGINNER}>
                       <CircleOffIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Access.NORMAL}>
+                    <ToggleGroupItem value={Mode.NORMAL}>
                       <TextIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Access.EXPERT}>
+                    <ToggleGroupItem value={Mode.EXPERT}>
                       <MessageSquareTextIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>
@@ -128,7 +128,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
 
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {section.content}
+                {typeof section.content === "function" ? section.content() : section.content}
               </TreeSection>
             ))}
           </Tree>
