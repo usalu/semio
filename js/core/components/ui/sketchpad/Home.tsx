@@ -229,7 +229,7 @@ const Home: FC = ({}) => {
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
-          <thead className="sticky top-0 bg-background border-b">
+          <thead className="sticky top-0 border-b">
             <tr className="h-9">
               <th className="text-left p-1 font-medium">{t("home.name")}</th>
               {!selectedKind && <th className="text-left p-1 font-medium">{t("home.kind")}</th>}

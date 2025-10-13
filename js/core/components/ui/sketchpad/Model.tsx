@@ -75,19 +75,21 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
 
   const cameraRef = useRef<THREE.OrthographicCamera>(null);
   const controlsRef = useRef<any>(null);
-  const cameraRestoredRef = useRef(false);
   const isUpdatingCameraRef = useRef(false);
   const prevCameraStringRef = useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
+  const cameraRestoredRef = useRef(false);
+  const restoredCameraStringRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
-    console.log('[Camera] Model effect - hasCamera:', !!initialCamera, 'restored:', cameraRestoredRef.current);
     if (prevCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
       prevCameraStringRef.current = currentCameraString;
     }
+    if (restoredCameraStringRef.current !== currentCameraString) {
+      cameraRestoredRef.current = false;
+    }
     if (!cameraRestoredRef.current && initialCamera && cameraRef.current && controlsRef.current) {
-      // Check if the camera data is valid (forward vector has length)
       const forwardLength = Math.sqrt(
         initialCamera.forward.x * initialCamera.forward.x +
         initialCamera.forward.y * initialCamera.forward.y +
@@ -95,12 +97,10 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
       );
 
       if (forwardLength < 0.01) {
-        console.log('[Camera] SKIP restore - invalid forward vector');
-        cameraRestoredRef.current = true; // Mark as "restored" so we don't keep trying
+        cameraRestoredRef.current = true;
         return;
       }
 
-      console.log('[Camera] RESTORE camera:', initialCamera);
       isUpdatingCameraRef.current = true;
       cameraRef.current.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
       cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
@@ -109,35 +109,21 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
       cameraRef.current.updateProjectionMatrix();
       controlsRef.current.update();
       cameraRestoredRef.current = true;
+      restoredCameraStringRef.current = currentCameraString;
       setTimeout(() => {
         isUpdatingCameraRef.current = false;
       }, 100);
     }
   }, [initialCamera]);
 
-  const handleChange = useCallback(() => {
-    console.log('[Camera] handleChange called', {
-      isUpdating: isUpdatingCameraRef.current,
-      hasCameraRef: !!cameraRef.current,
-      hasControlsRef: !!controlsRef.current,
-      hasOnCameraChange: !!onCameraChange
-    });
-    if (isUpdatingCameraRef.current) {
-      console.log('[Camera] SKIP - isUpdating');
-      return;
-    }
+  const handleEnd = useCallback(() => {
+    if (isUpdatingCameraRef.current) return;
     if (cameraRef.current && controlsRef.current && onCameraChange) {
       const position = cameraRef.current.position;
       const target = controlsRef.current.target;
       const forwardVec = new THREE.Vector3().subVectors(target, position);
 
-      console.log('[Camera] handleChange - position:', position, 'target:', target, 'forwardLength:', forwardVec.length());
-
-      // Don't save camera if the forward vector is too small (invalid state)
-      if (forwardVec.lengthSq() < 0.0001) {
-        console.log('[Camera] SKIP - forward vector too small');
-        return;
-      }
+      if (forwardVec.lengthSq() < 0.0001) return;
 
       const forward = forwardVec.normalize();
       const up = cameraRef.current.up;
@@ -146,7 +132,6 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
         forward: { x: forward.x, y: forward.y, z: forward.z },
         up: { x: up.x, y: up.y, z: up.z },
       };
-      console.log('[Camera] SAVE camera:', newCamera);
       onCameraChange(newCamera);
     }
   }, [onCameraChange]);
@@ -162,7 +147,7 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
           MIDDLE: undefined,
           RIGHT: undefined,
         }}
-        onChange={handleChange}
+        onEnd={handleEnd}
       />
       <ambientLight intensity={1} />
       {children}

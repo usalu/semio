@@ -802,7 +802,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
     return (
       <div
         id="navbar"
-        className={`w-full bg-background border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"} ${isNavbarExpanded ? "h-auto" : "h-12"}`}
+        className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"} ${isNavbarExpanded ? "h-auto" : "h-12"}`}
         style={{ WebkitAppRegion: "drag" }}
       >
         <div className="h-12 flex items-center justify-between px-1 gap-1">
@@ -858,7 +858,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   return (
     <div
       id="navbar"
-      className={`w-full h-12 bg-background border-b flex items-center gap-1 px-1 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
+      className={`w-full h-12 border-b flex items-center gap-1 px-1 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
       style={{ WebkitAppRegion: "drag" }}
     >
       <ButtonGroup>

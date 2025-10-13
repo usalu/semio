@@ -30,7 +30,6 @@ import {
   PieceScopeProvider,
   useClusterableGroups,
   useDesign,
-  useDesignEditorCamera,
   useDesignEditorCommands,
   useDesignEditorDiagramCenter,
   useDesignEditorDiagramScale,
@@ -109,7 +108,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-primary/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <button onClick={() => onCluster(groupPieceIds)} className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-primary/90 transition-colors">
+              <button onClick={() => onCluster(groupPieceIds)} className="bg-primary text-primary-foreground px-3 py-1 text-sm font-medium hover:bg-primary/90 transition-colors">
                 Cluster
               </button>
             </div>
@@ -168,7 +167,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-secondary/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <button onClick={() => onExpand({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-secondary/90 transition-colors">
+              <button onClick={() => onExpand({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 text-sm font-medium hover:bg-secondary/90 transition-colors">
                 Expand
               </button>
             </div>
@@ -191,7 +190,7 @@ const PresenceDiagram: FC<DesignEditorPresenceOther> = ({ name, cursor, camera }
           zIndex: 1000,
         }}
       >
-        <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs shadow-lg">
+        <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs">
           <div className="w-2 h-2 bg-primary-foreground rounded-full"></div>
           {name}
         </div>
@@ -884,7 +883,6 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     setDiagramScale(viewport.zoom);
   }, [reactFlowInstance, setDiagramCenter, setDiagramScale]);
 
-
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
@@ -1550,8 +1548,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         connectionLineComponent={ConnectionConnectionLine}
         className="bg-background"
       >
-        {fullscreen && <Controls className="border border-border bg-background rounded-md shadow-sm" showZoom={false} showInteractive={false} />}
-        {fullscreen && <MiniMap className="border border-border bg-background rounded-md shadow-sm" maskColor="var(--accent)" bgColor="var(--background)" nodeComponent={MiniMapNode} />}
+        {fullscreen && <Controls className="border border-border " showZoom={false} showInteractive={false} />}
+        {fullscreen && <MiniMap className="border border-border " maskColor="var(--accent)" bgColor="var(--background)" nodeComponent={MiniMapNode} />}
         <ViewportPortal>⌞</ViewportPortal>
         {others.map((presence, idx) => (
           <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.x || 0}-${presence.cursor?.y || 0}`} {...presence} />

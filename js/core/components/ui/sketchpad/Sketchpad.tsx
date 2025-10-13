@@ -144,7 +144,7 @@ const SketchpadBase: FC = () => {
   return (
     <PanelSectionProvider>
       <FooterItemProvider>
-        <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground relative border">
+        <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
           <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
             <Navbar />
           </div>
@@ -153,7 +153,7 @@ const SketchpadBase: FC = () => {
               // Mobile layout: full-screen panel or editor
               <>
                 {mobileVisiblePanel ? (
-                  <div className="absolute inset-0 z-30 bg-background">
+                  <div className="absolute inset-0 z-30">
                     {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
                     {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
                     {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth} onWidthChange={() => {}} />}

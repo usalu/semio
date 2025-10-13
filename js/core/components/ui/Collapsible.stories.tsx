@@ -54,13 +54,13 @@ export const Default: Story = {
             </Button>
           </CollapsibleTrigger>
         </div>
-        <div className="border rounded-md px-4 py-2 text-sm flex items-center justify-between">
+        <div className="border px-4 py-2 text-sm flex items-center justify-between">
           <span>Capsule J</span>
           <span className="text-xs text-muted-foreground">2.5m × 4.0m</span>
         </div>
         <CollapsibleContent className="space-y-2">
-          <div className="border rounded-md px-4 py-2 text-sm">Capsule L</div>
-          <div className="border rounded-md px-4 py-2 text-sm">Capsule P</div>
+          <div className="border px-4 py-2 text-sm">Capsule L</div>
+          <div className="border px-4 py-2 text-sm">Capsule P</div>
         </CollapsibleContent>
       </Collapsible>
     );
@@ -85,10 +85,10 @@ export const Variants: Story = {
                   </Button>
                 </CollapsibleTrigger>
               </div>
-              <div className="border rounded-md px-4 py-2 text-sm">Capsule J</div>
+              <div className="border px-4 py-2 text-sm">Capsule J</div>
               <CollapsibleContent className="space-y-2">
-                <div className="border rounded-md px-4 py-2 text-sm">Capsule L</div>
-                <div className="border rounded-md px-4 py-2 text-sm">Capsule P</div>
+                <div className="border px-4 py-2 text-sm">Capsule L</div>
+                <div className="border px-4 py-2 text-sm">Capsule P</div>
               </CollapsibleContent>
             </Collapsible>
           );
@@ -106,9 +106,9 @@ export const Variants: Story = {
               </Button>
             </CollapsibleTrigger>
           </div>
-          <div className="border rounded-md px-4 py-2 text-sm">Blob Base</div>
+          <div className="border px-4 py-2 text-sm">Blob Base</div>
           <CollapsibleContent className="space-y-2">
-            <div className="border rounded-md px-4 py-2 text-sm">Standard Base</div>
+            <div className="border px-4 py-2 text-sm">Standard Base</div>
           </CollapsibleContent>
         </Collapsible>
       </div>
@@ -130,9 +130,9 @@ export const DefaultOpen: Story = {
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="space-y-2">
-          <div className="border rounded-md px-4 py-2 text-sm">Piece Count: 24</div>
-          <div className="border rounded-md px-4 py-2 text-sm">Connection Count: 48</div>
-          <div className="border rounded-md px-4 py-2 text-sm">Total Volume: 3240m³</div>
+          <div className="border px-4 py-2 text-sm">Piece Count: 24</div>
+          <div className="border px-4 py-2 text-sm">Connection Count: 48</div>
+          <div className="border px-4 py-2 text-sm">Total Volume: 3240m³</div>
         </CollapsibleContent>
       </Collapsible>
     );

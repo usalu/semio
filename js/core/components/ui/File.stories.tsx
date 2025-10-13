@@ -160,7 +160,7 @@ export const Placeholder: Story = {
     src: "",
   },
   render: () => (
-    <div className="w-96 h-96 border rounded-md flex items-center justify-center bg-muted/20">
+    <div className="w-96 h-96 border flex items-center justify-center bg-muted/20">
       <div className="text-center space-y-2">
         <p className="text-sm font-medium">3D Model Viewer</p>
         <p className="text-xs text-muted-foreground">Provide a .glb or .gltf file to display</p>

@@ -174,19 +174,3 @@ export const WithStatus: Story = {
     </div>
   ),
 };
-
-export const Square: Story = {
-  render: () => (
-    <div className="flex items-center gap-4">
-      <Avatar className="rounded-md">
-        <AvatarFallback>KT</AvatarFallback>
-      </Avatar>
-      <Avatar className="rounded-lg">
-        <AvatarFallback>TY</AvatarFallback>
-      </Avatar>
-      <Avatar className="rounded-none">
-        <AvatarFallback>PC</AvatarFallback>
-      </Avatar>
-    </div>
-  ),
-};

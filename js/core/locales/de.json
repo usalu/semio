@@ -296,8 +296,16 @@
     "settings": {
         "general": "Allgemein",
         "theme": "Thema",
+        "theme.system": "System-Thema",
+        "theme.light": "Helles Thema",
+        "theme.dark": "Dunkles Thema",
         "layout": "Layout",
+        "layout.normal": "Normales Layout",
+        "layout.touch": "Touch-Layout",
         "mode": "Modus",
+        "mode.beginner": "Anfänger-Modus",
+        "mode.normal": "Normaler Modus",
+        "mode.expert": "Experten-Modus",
         "language": "Sprache"
     },
     "chat": {

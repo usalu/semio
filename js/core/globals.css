@@ -63,7 +63,7 @@
     --text-8xl--line-height: 1;
     --text-9xl: 7.2rem;
     --text-9xl--line-height: 1;
-    --background: var(--color-light);
+    --base: var(--color-light);
     --panel: var(--color-light-7-9);
     --temporary: var(--color-light-5-7);
     --foreground: var(--color-dark);
@@ -438,7 +438,7 @@
 }
 
 .dark {
-  --background: var(--color-dark);
+  --base: var(--color-dark);
   --panel: var(--color-dark-7-9);
   --temporary: var(--color-dark-5-7);
   --foreground: var(--color-light);
@@ -665,7 +665,7 @@
 /* } */
 
 @theme inline {
-  --color-background: var(--background);
+  --color-base: var(--base);
   --color-panel: var(--panel);
   --color-temporary: var(--temporary);
   --color-foreground: var(--foreground);

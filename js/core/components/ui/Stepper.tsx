@@ -162,7 +162,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
           onTouchStart={handleMouseDown(-step)}
           onTouchEnd={handleMouseUp}
           disabled={!canStepDown}
-          className="h-9 w-9 border border-r-0 rounded-l-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="h-9 w-9 border border-r-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           <Minus className="h-4 w-4" />
         </button>
@@ -175,7 +175,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
           onTouchStart={handleMouseDown(step)}
           onTouchEnd={handleMouseUp}
           disabled={!canStepUp}
-          className="h-9 w-9 border border-l-0 rounded-r-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="h-9 w-9 border border-l-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           <Plus className="h-4 w-4" />
         </button>

@@ -69,7 +69,7 @@ const Footer: FC = ({}) => {
   }, [isFullscreen]);
 
   return (
-    <footer className={`h-5 bg-background border-t flex items-center transition-transform duration-200 ${isFullscreen && !isVisible ? "translate-y-full" : "translate-y-0"}`}>
+    <footer className={`h-5 bg-base border-t flex items-center transition-transform duration-200 ${isFullscreen && !isVisible ? "translate-y-full" : "translate-y-0"}`}>
       {items.map((item, index) => (
         <div key={item.id} className="flex items-center h-full">
           {index > 0 && <div className="h-full w-px bg-border" />}

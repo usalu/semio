@@ -80,13 +80,13 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               <TreeItem>
                 <TreeContent>
                   <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
-                    <ToggleGroupItem value={Theme.SYSTEM}>
+                    <ToggleGroupItem value={Theme.SYSTEM} tooltip={t("settings.theme.system")}>
                       <Laptop />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Theme.LIGHT}>
+                    <ToggleGroupItem value={Theme.LIGHT} tooltip={t("settings.theme.light")}>
                       <SunIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Theme.DARK}>
+                    <ToggleGroupItem value={Theme.DARK} tooltip={t("settings.theme.dark")}>
                       <MoonIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>
@@ -95,10 +95,10 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               <TreeItem>
                 <TreeContent>
                   <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
-                    <ToggleGroupItem value={Layout.NORMAL}>
+                    <ToggleGroupItem value={Layout.NORMAL} tooltip={t("settings.layout.normal")}>
                       <MonitorIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Layout.TOUCH}>
+                    <ToggleGroupItem value={Layout.TOUCH} tooltip={t("settings.layout.touch")}>
                       <FingerprintIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>
@@ -107,13 +107,13 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               <TreeItem>
                 <TreeContent>
                   <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
-                    <ToggleGroupItem value={Mode.BEGINNER}>
+                    <ToggleGroupItem value={Mode.BEGINNER} tooltip={t("settings.mode.beginner")}>
                       <CircleOffIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Mode.NORMAL}>
+                    <ToggleGroupItem value={Mode.NORMAL} tooltip={t("settings.mode.normal")}>
                       <TextIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value={Mode.EXPERT}>
+                    <ToggleGroupItem value={Mode.EXPERT} tooltip={t("settings.mode.expert")}>
                       <MessageSquareTextIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>

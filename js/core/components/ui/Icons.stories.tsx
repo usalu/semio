@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <div className="relative w-96 h-96 border rounded-md bg-muted/10 p-4">
+    <div className="relative w-96 h-96 border bg-muted/10 p-4">
       <p className="text-sm font-medium mb-4">Collaborative Cursors</p>
       <div className="relative w-full h-full">
         <Cursor color="#3B82F6" x={120} y={80} />
@@ -52,13 +52,13 @@ export const Variants: Story = {
     <div className="flex gap-8">
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Default</p>
-        <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+        <div className="relative w-64 h-64 border bg-muted/20">
           <Cursor color="#000000" x={50} y={50} />
         </div>
       </div>
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Color Variants</p>
-        <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+        <div className="relative w-64 h-64 border bg-muted/20">
           <Cursor color="#FF0000" x={20} y={20} />
           <Cursor color="#00FF00" x={80} y={80} />
           <Cursor color="#0000FF" x={140} y={140} />
@@ -70,7 +70,7 @@ export const Variants: Story = {
 
 export const DefaultCursor: Story = {
   render: () => (
-    <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+    <div className="relative w-64 h-64 border bg-muted/20">
       <Cursor color="#000000" x={50} y={50} />
     </div>
   ),
@@ -78,7 +78,7 @@ export const DefaultCursor: Story = {
 
 export const ColorVariants: Story = {
   render: () => (
-    <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+    <div className="relative w-64 h-64 border bg-muted/20">
       <Cursor color="#FF0000" x={20} y={20} />
       <Cursor color="#00FF00" x={80} y={80} />
       <Cursor color="#0000FF" x={140} y={140} />
@@ -88,7 +88,7 @@ export const ColorVariants: Story = {
 
 export const MultipleCursors: Story = {
   render: () => (
-    <div className="relative w-96 h-96 border rounded-md bg-muted/20">
+    <div className="relative w-96 h-96 border bg-muted/20">
       <Cursor color="#FF6B6B" x={50} y={50} />
       <Cursor color="#4ECDC4" x={150} y={100} />
       <Cursor color="#45B7D1" x={250} y={150} />
@@ -100,16 +100,16 @@ export const MultipleCursors: Story = {
 
 export const Positioned: Story = {
   render: () => (
-    <div className="relative w-64 h-64 border rounded-md bg-muted/20">
+    <div className="relative w-64 h-64 border bg-muted/20">
       <Cursor color="#8B5CF6" x={100} y={120} />
-      <div className="absolute left-24 top-32 ml-6 mt-1 bg-background border rounded px-2 py-1 text-xs">User A</div>
+      <div className="absolute left-24 top-32 ml-6 mt-1 border rounded px-2 py-1 text-xs">User A</div>
     </div>
   ),
 };
 
 export const WithLabels: Story = {
   render: () => (
-    <div className="relative w-96 h-64 border rounded-md bg-muted/20">
+    <div className="relative w-96 h-64 border bg-muted/20">
       <Cursor color="#EF4444" x={50} y={50} />
       <div className="absolute left-12 top-12 ml-6 mt-1 bg-red-500 text-white rounded px-2 py-1 text-xs">Alice</div>
 

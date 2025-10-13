@@ -41,8 +41,7 @@ export const Default: Story = {
         <div>
           <h4 className="text-sm font-semibold mb-2">Nakagin Capsule Tower</h4>
           <p className="text-sm text-muted-foreground mb-4">
-            The Nakagin Capsule Tower Building is a mixed-use residential and office tower in Tokyo, Japan designed by architect Kisho Kurokawa.
-            Completed in 1972, the building is a rare remaining example of Japanese Metabolism architecture.
+            The Nakagin Capsule Tower Building is a mixed-use residential and office tower in Tokyo, Japan designed by architect Kisho Kurokawa. Completed in 1972, the building is a rare remaining example of Japanese Metabolism architecture.
           </p>
         </div>
         <div>
@@ -58,15 +57,13 @@ export const Default: Story = {
         <div>
           <h4 className="text-sm font-semibold mb-2">Structural System</h4>
           <p className="text-sm text-muted-foreground">
-            Each capsule was designed to be replaceable and fully self-contained with built-in bathroom and storage.
-            The capsules were attached to two interconnected concrete towers with high-tension bolts, allowing for individual replacement.
+            Each capsule was designed to be replaceable and fully self-contained with built-in bathroom and storage. The capsules were attached to two interconnected concrete towers with high-tension bolts, allowing for individual replacement.
           </p>
         </div>
         <div>
           <h4 className="text-sm font-semibold mb-2">Historical Context</h4>
           <p className="text-sm text-muted-foreground">
-            The Metabolism movement emerged in 1960s Japan, proposing buildings that could adapt to changing needs through modular, replaceable components.
-            The Nakagin Tower represents one of the few built realizations of these principles.
+            The Metabolism movement emerged in 1960s Japan, proposing buildings that could adapt to changing needs through modular, replaceable components. The Nakagin Tower represents one of the few built realizations of these principles.
           </p>
         </div>
       </div>
@@ -142,11 +139,11 @@ export const LongText: Story = {
 
 export const Horizontal: Story = {
   render: () => (
-    <ScrollArea className="w-96 border rounded-md whitespace-nowrap">
+    <ScrollArea className="w-96 border whitespace-nowrap">
       <div className="p-4">
         <div className="flex gap-4">
           {Array.from({ length: 20 }, (_, i) => (
-            <div key={i} className="inline-flex h-20 w-40 items-center justify-center rounded-md border bg-muted">
+            <div key={i} className="inline-flex h-20 w-40 items-center justify-center border bg-muted">
               Card {i + 1}
             </div>
           ))}

@@ -6665,9 +6665,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
   get camera(): Camera | undefined {
     const cameraStr = this.yMap.get("camera") as string | undefined;
-    const camera = cameraStr ? JSON.parse(cameraStr) : undefined;
-    console.log("[Camera] GET design:", this.yMap.get("design"), "camera:", camera);
-    return camera;
+    return cameraStr ? JSON.parse(cameraStr) : undefined;
   }
 
   get diagramCenter(): Coord | undefined {
@@ -6816,7 +6814,6 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
         // Handle hover changes if needed
       }
       if (diff.camera) {
-        console.log("[Camera] SET design:", this.yMap.get("design"), "camera:", diff.camera);
         this.yMap.set("camera", JSON.stringify(diff.camera));
       }
       if (diff.diagramCenter) {
