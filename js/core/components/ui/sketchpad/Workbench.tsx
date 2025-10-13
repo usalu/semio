@@ -6,7 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/compone
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeSection } from "@semio/js/components/ui/Tree";
 import { Design, Kit, Type } from "../../../semio";
-import { useKit } from "../../../store";
+import { useIsMobile, useKit } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
@@ -112,6 +112,7 @@ interface WorkbenchProps extends ResizablePanelProps {}
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const isMobile = useIsMobile();
 
   const sections = usePanelSections("workbench");
 
@@ -150,7 +151,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
-        <div className="p-1">
+        <div className={isMobile ? "p-2" : "p-1"}>
           <Tree>
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>

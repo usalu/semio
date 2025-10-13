@@ -82,7 +82,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
-        <div className="p-1 overflow-hidden min-w-0">
+        <div className={`${isMobile ? "p-2" : "p-1"} overflow-hidden min-w-0`}>
           <Tree className="min-w-0 overflow-hidden">
             <TreeSection label={t("settings.general")} defaultOpen={true}>
               <TreeItem>

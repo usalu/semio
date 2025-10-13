@@ -4,7 +4,7 @@ import { useParams } from "react-router";
 
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeContent, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider } from "../../../store";
+import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useIsMobile } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
@@ -38,6 +38,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const isMobile = useIsMobile();
 
   const sections = usePanelSections("details");
 
@@ -76,7 +77,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
-        <div className="p-1 overflow-hidden min-w-0">
+        <div className={`${isMobile ? "p-2" : "p-1"} overflow-hidden min-w-0`}>
           <ScopedContent>
             <Tree className="min-w-0 overflow-hidden">
               {sortedSections.map((section) => (

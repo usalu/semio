@@ -1514,7 +1514,7 @@ export interface DesignEditorProps {}
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   const fullscreenPanel = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece } = useDesignEditorCommands();
 
   const selection = useDesignEditorSelection();
   const design = useDesign();
@@ -1772,11 +1772,11 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <ReactFlowProvider>
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
+          <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
             <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
           </ResizablePanel>
           <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
-          <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={toggleModelFullscreen}>
+          <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`}>
             <DesignModel />
           </ResizablePanel>
         </ResizablePanelGroup>

@@ -53,8 +53,6 @@ interface ModelInnerProps {
 }
 
 const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange }) => {
-  console.log('[ORIGIN] ModelInner render - initialCamera:', initialCamera);
-  
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -122,8 +120,6 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
         return;
       }
 
-      console.log('[ORIGIN] Restoring camera:', initialCamera);
-      
       requestAnimationFrame(() => {
         if (!cameraRef.current || !controlsRef.current) return;
         
@@ -138,10 +134,7 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
         cameraRef.current.updateProjectionMatrix();
         controlsRef.current.update();
         
-        console.log('[ORIGIN] Camera restored - position:', cameraRef.current.position.x, cameraRef.current.position.y, cameraRef.current.position.z);
-        
         setTimeout(() => {
-          console.log('[ORIGIN] Clearing isUpdatingCameraRef');
           isUpdatingCameraRef.current = false;
         }, 300);
       });
@@ -149,8 +142,6 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
       cameraRestoredRef.current = true;
       restoredCameraStringRef.current = currentCameraString;
     } else {
-      console.log('[ORIGIN] Setting default camera position');
-      
       requestAnimationFrame(() => {
         if (!cameraRef.current || !controlsRef.current) return;
         
@@ -161,7 +152,6 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
         controlsRef.current.update();
         
         setTimeout(() => {
-          console.log('[ORIGIN] Clearing isUpdatingCameraRef');
           isUpdatingCameraRef.current = false;
         }, 300);
       });
@@ -172,23 +162,13 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
   }, [initialCamera]);
 
   const handleEnd = useCallback(() => {
-    console.log('[ORIGIN] handleEnd called - isUpdating:', isUpdatingCameraRef.current);
-    if (isUpdatingCameraRef.current) {
-      console.log('[ORIGIN] Skipping handleEnd - camera is being restored');
-      return;
-    }
+    if (isUpdatingCameraRef.current) return;
     if (cameraRef.current && controlsRef.current && onCameraChange) {
-      console.log('[ORIGIN] Camera position:', cameraRef.current.position.x, cameraRef.current.position.y, cameraRef.current.position.z);
-      console.log('[ORIGIN] Controls target:', controlsRef.current.target.x, controlsRef.current.target.y, controlsRef.current.target.z);
-      
       const position = cameraRef.current.position;
       const target = controlsRef.current.target;
       const forwardVec = new THREE.Vector3().subVectors(target, position);
 
-      if (forwardVec.lengthSq() < 0.0001) {
-        console.log('[ORIGIN] Skipping - forward vector too small');
-        return;
-      }
+      if (forwardVec.lengthSq() < 0.0001) return;
 
       const forward = forwardVec.normalize();
       const up = cameraRef.current.up;
@@ -197,7 +177,6 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
         forward: { x: forward.x, y: forward.y, z: forward.z },
         up: { x: up.x, y: up.y, z: up.z },
       };
-      console.log('[ORIGIN] Saving camera - position:', position.x, position.y, position.z, 'forward:', forward.x, forward.y, forward.z);
       onCameraChange(newCamera);
     }
   }, [onCameraChange]);
@@ -233,8 +212,8 @@ interface ModelProps {
 }
 
 const Model: FC<ModelProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed }) => (
-  <div className="h-full w-full">
-    <ThreeCanvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+  <div className="h-full w-full" onDoubleClick={onDoubleClickCapture}>
+    <ThreeCanvas onPointerMissed={onPointerMissed}>
       <ModelInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
         {children}
       </ModelInner>

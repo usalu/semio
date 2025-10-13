@@ -18,7 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { FC, useEffect, useRef } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
@@ -32,6 +32,7 @@ import {
   useEditorPanelVisibility,
   useEditorType,
   useIsMobile,
+  useIsNavbarExpanded,
   useLayout,
   useNavigation,
   useSketchpad,
@@ -97,12 +98,15 @@ const SketchpadBase: FC = () => {
   const visiblePanels = useEditorPanelVisibility();
   const panelSizes = useSketchpad((s) => s.panelSizes);
   const isFullscreen = useSketchpad((s) => s.isFullscreen);
+  const isNavbarExpanded = useIsNavbarExpanded();
   const isMobile = useIsMobile();
   const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile } = useSketchpadCommands();
   const currentPath = useNavigation();
 
   // Store the desktop layout preference when not on mobile
   const desktopLayoutRef = useRef<Layout>(layout);
+  const navbarRef = useRef<HTMLDivElement>(null);
+  const [navbarHeight, setNavbarHeight] = useState(48); // Default 48px (h-12)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -163,6 +167,26 @@ const SketchpadBase: FC = () => {
     }
   }, [theme, layout, setTheme, setLayout]);
 
+  // Track navbar height for mobile layout adjustments
+  useEffect(() => {
+    if (!isMobile || !navbarRef.current) return;
+
+    const updateHeight = () => {
+      if (navbarRef.current) {
+        setNavbarHeight(navbarRef.current.offsetHeight);
+      }
+    };
+
+    // Update height initially and when expanded state changes
+    updateHeight();
+
+    // Use ResizeObserver to track height changes
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(navbarRef.current);
+
+    return () => observer.disconnect();
+  }, [isMobile, isNavbarExpanded]);
+
   // Get the single visible panel on mobile
   const mobileVisiblePanel = isMobile ? Object.entries(visiblePanels).find(([_, isVisible]) => isVisible)?.[0] : null;
 
@@ -170,10 +194,13 @@ const SketchpadBase: FC = () => {
     <PanelSectionProvider>
       <FooterItemProvider>
         <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
-          <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+          <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
             <Navbar />
           </div>
-          <div className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mt-12 mb-5"}`}>
+          <div
+            className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mb-5"}`}
+            style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}
+          >
             {isMobile ? (
               // Mobile layout: full-screen panel or editor
               <>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
 import { Tree, TreeSection } from "../Tree";
+import { useIsMobile } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
@@ -12,6 +13,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const isMobile = useIsMobile();
 
   const sections = usePanelSections("chat");
 
@@ -50,7 +52,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
-        <div className="p-1">
+        <div className={isMobile ? "p-2" : "p-1"}>
           <Tree>
             {sortedSections.map((section) => (
               <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
@@ -59,7 +61,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
             ))}
           </Tree>
         </div>
-        <div className="p-1 border-t">
+        <div className={`${isMobile ? "p-2" : "p-1"} border-t`}>
           <Textarea placeholder={t("chat.placeholder")} />
         </div>
       </ScrollArea>

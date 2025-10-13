@@ -281,15 +281,14 @@ const ModelDesign: FC = () => {
 };
 
 const DesignModel: FC = () => {
-  const { deselectAll, toggleModelFullscreen, setCamera } = useDesignEditorCommands();
-  const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Model;
+  const { deselectAll, toggleAccesslFullscreen, setCamera } = useDesignEditorCommands();
+  const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Accessl;
   const camera = useDesignEditorCamera();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation();
-      toggleModelFullscreen();
+      toggleAccesslFullscreen();
     },
-    [toggleModelFullscreen],
+    [toggleAccesslFullscreen],
   );
   const onPointerMissed = useCallback(
     (e: MouseEvent) => {

@@ -134,15 +134,25 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
                 {item.label}
               </DropdownMenuPrimitive.Item>
             );
-            if (item.tooltip) {
+
+            const wrappedItem = item.tooltip ? (
+              <Tooltip key={index}>
+                <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
+                <TooltipContent>{item.tooltip}</TooltipContent>
+              </Tooltip>
+            ) : menuItem;
+
+            // Add separator after each item except the last one
+            if (index < items.length - 1) {
               return (
-                <Tooltip key={index}>
-                  <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
-                  <TooltipContent>{item.tooltip}</TooltipContent>
-                </Tooltip>
+                <React.Fragment key={index}>
+                  {wrappedItem}
+                  <DropdownMenuPrimitive.Separator className="h-px bg-border my-1" />
+                </React.Fragment>
               );
             }
-            return menuItem;
+
+            return wrappedItem;
           })}
         </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
