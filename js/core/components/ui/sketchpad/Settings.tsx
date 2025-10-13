@@ -1,8 +1,8 @@
 import { TreeContent, TreeItem, TreeSection } from "../Tree";
 
 import { t } from "i18next";
-import { CircleOffIcon, FingerprintIcon, Laptop, MessageSquareTextIcon, MonitorIcon, MoonIcon, SunIcon, TextIcon } from "lucide-react";
-import { FC, useState } from "react";
+import { BrainCircuit, FingerprintIcon, GraduationCap, Laptop, MonitorIcon, MoonIcon, Sparkles, SunIcon } from "lucide-react";
+import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout, Mode, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
 import { ScrollArea } from "../ScrollArea";
@@ -27,7 +27,7 @@ const LanguageSwitcher: FC = () => {
   );
 };
 
-interface SettingsProps extends ResizablePanelProps {}
+interface SettingsProps extends ResizablePanelProps { }
 
 const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
@@ -36,9 +36,17 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const mode = useMode();
   const { setTheme, setLayout, setMode } = useSketchpadCommands();
   const sections = usePanelSections("settings");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -69,7 +77,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-panel text-foreground border min-w-0 overflow-hidden
+      className={`h-full z-20 bg-panel text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
       style={{ width: `${width}px` }}
     >
@@ -92,29 +100,31 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
                   </ToggleGroup>
                 </TreeContent>
               </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
-                    <ToggleGroupItem value={Layout.NORMAL} tooltip={t("settings.layout.normal")}>
-                      <MonitorIcon />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value={Layout.TOUCH} tooltip={t("settings.layout.touch")}>
-                      <FingerprintIcon />
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </TreeContent>
-              </TreeItem>
+              {!isMobile && (
+                <TreeItem>
+                  <TreeContent>
+                    <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
+                      <ToggleGroupItem value={Layout.NORMAL} tooltip={t("settings.layout.normal")}>
+                        <MonitorIcon />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value={Layout.TOUCH} tooltip={t("settings.layout.touch")}>
+                        <FingerprintIcon />
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </TreeContent>
+                </TreeItem>
+              )}
               <TreeItem>
                 <TreeContent>
                   <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
                     <ToggleGroupItem value={Mode.BEGINNER} tooltip={t("settings.mode.beginner")}>
-                      <CircleOffIcon />
+                      <GraduationCap />
                     </ToggleGroupItem>
                     <ToggleGroupItem value={Mode.NORMAL} tooltip={t("settings.mode.normal")}>
-                      <TextIcon />
+                      <Sparkles />
                     </ToggleGroupItem>
                     <ToggleGroupItem value={Mode.EXPERT} tooltip={t("settings.mode.expert")}>
-                      <MessageSquareTextIcon />
+                      <BrainCircuit />
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </TreeContent>

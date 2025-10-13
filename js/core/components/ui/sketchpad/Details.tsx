@@ -8,7 +8,7 @@ import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider } from "../../
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
-interface DetailsProps extends ResizablePanelProps {}
+interface DetailsProps extends ResizablePanelProps { }
 
 const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
   const { kit, design, type } = useParams();
@@ -71,7 +71,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-panel text-foreground border min-w-0 overflow-hidden
+      className={`h-full z-20 bg-panel text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
       style={{ width: `${width}px` }}
     >

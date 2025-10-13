@@ -6,7 +6,7 @@ import { Tree, TreeSection } from "../Tree";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
-interface ChatProps extends ResizablePanelProps {}
+interface ChatProps extends ResizablePanelProps { }
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
@@ -45,7 +45,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-panel text-foreground border
+      className={`h-full z-20 bg-panel text-foreground border
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
       style={{ width: `${width}px` }}
     >

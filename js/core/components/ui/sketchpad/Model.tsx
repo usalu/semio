@@ -53,6 +53,8 @@ interface ModelInnerProps {
 }
 
 const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange }) => {
+  console.log('[ORIGIN] ModelInner render - initialCamera:', initialCamera);
+  
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -73,15 +75,28 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
     return () => observer.disconnect();
   }, []);
 
-  const cameraRef = useRef<THREE.OrthographicCamera>(null);
+  const { camera: threeCamera, gl, size } = useThree();
   const controlsRef = useRef<any>(null);
   const isUpdatingCameraRef = useRef(false);
   const prevCameraStringRef = useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
   const cameraRestoredRef = useRef(false);
   const restoredCameraStringRef = useRef<string | undefined>(undefined);
+  
+  const cameraRef = useRef<THREE.OrthographicCamera>(threeCamera as THREE.OrthographicCamera);
 
   useEffect(() => {
+    const cam = cameraRef.current;
+    if (cam && cam instanceof THREE.OrthographicCamera) {
+      cam.zoom = 50;
+      cam.updateProjectionMatrix();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    
     const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
+    
     if (prevCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
       prevCameraStringRef.current = currentCameraString;
@@ -89,7 +104,12 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
     if (restoredCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
     }
-    if (!cameraRestoredRef.current && initialCamera && cameraRef.current && controlsRef.current) {
+    
+    if (cameraRestoredRef.current) return;
+    
+    isUpdatingCameraRef.current = true;
+    
+    if (initialCamera) {
       const forwardLength = Math.sqrt(
         initialCamera.forward.x * initialCamera.forward.x +
         initialCamera.forward.y * initialCamera.forward.y +
@@ -98,32 +118,77 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
 
       if (forwardLength < 0.01) {
         cameraRestoredRef.current = true;
+        isUpdatingCameraRef.current = false;
         return;
       }
 
-      isUpdatingCameraRef.current = true;
-      cameraRef.current.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
-      cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
-      const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
-      controlsRef.current.target.copy(target);
-      cameraRef.current.updateProjectionMatrix();
-      controlsRef.current.update();
+      console.log('[ORIGIN] Restoring camera:', initialCamera);
+      
+      requestAnimationFrame(() => {
+        if (!cameraRef.current || !controlsRef.current) return;
+        
+        cameraRef.current.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
+        cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
+        const target = new THREE.Vector3(
+          initialCamera.position.x + initialCamera.forward.x,
+          initialCamera.position.y + initialCamera.forward.y,
+          initialCamera.position.z + initialCamera.forward.z
+        );
+        controlsRef.current.target.copy(target);
+        cameraRef.current.updateProjectionMatrix();
+        controlsRef.current.update();
+        
+        console.log('[ORIGIN] Camera restored - position:', cameraRef.current.position.x, cameraRef.current.position.y, cameraRef.current.position.z);
+        
+        setTimeout(() => {
+          console.log('[ORIGIN] Clearing isUpdatingCameraRef');
+          isUpdatingCameraRef.current = false;
+        }, 300);
+      });
+      
       cameraRestoredRef.current = true;
       restoredCameraStringRef.current = currentCameraString;
-      setTimeout(() => {
-        isUpdatingCameraRef.current = false;
-      }, 100);
+    } else {
+      console.log('[ORIGIN] Setting default camera position');
+      
+      requestAnimationFrame(() => {
+        if (!cameraRef.current || !controlsRef.current) return;
+        
+        cameraRef.current.position.set(10, 10, 10);
+        cameraRef.current.up.set(0, 1, 0);
+        controlsRef.current.target.set(0, 0, 0);
+        cameraRef.current.updateProjectionMatrix();
+        controlsRef.current.update();
+        
+        setTimeout(() => {
+          console.log('[ORIGIN] Clearing isUpdatingCameraRef');
+          isUpdatingCameraRef.current = false;
+        }, 300);
+      });
+      
+      cameraRestoredRef.current = true;
+      restoredCameraStringRef.current = currentCameraString;
     }
   }, [initialCamera]);
 
   const handleEnd = useCallback(() => {
-    if (isUpdatingCameraRef.current) return;
+    console.log('[ORIGIN] handleEnd called - isUpdating:', isUpdatingCameraRef.current);
+    if (isUpdatingCameraRef.current) {
+      console.log('[ORIGIN] Skipping handleEnd - camera is being restored');
+      return;
+    }
     if (cameraRef.current && controlsRef.current && onCameraChange) {
+      console.log('[ORIGIN] Camera position:', cameraRef.current.position.x, cameraRef.current.position.y, cameraRef.current.position.z);
+      console.log('[ORIGIN] Controls target:', controlsRef.current.target.x, controlsRef.current.target.y, controlsRef.current.target.z);
+      
       const position = cameraRef.current.position;
       const target = controlsRef.current.target;
       const forwardVec = new THREE.Vector3().subVectors(target, position);
 
-      if (forwardVec.lengthSq() < 0.0001) return;
+      if (forwardVec.lengthSq() < 0.0001) {
+        console.log('[ORIGIN] Skipping - forward vector too small');
+        return;
+      }
 
       const forward = forwardVec.normalize();
       const up = cameraRef.current.up;
@@ -132,16 +197,16 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
         forward: { x: forward.x, y: forward.y, z: forward.z },
         up: { x: up.x, y: up.y, z: up.z },
       };
+      console.log('[ORIGIN] Saving camera - position:', position.x, position.y, position.z, 'forward:', forward.x, forward.y, forward.z);
       onCameraChange(newCamera);
     }
   }, [onCameraChange]);
 
   return (
     <>
-      <OrthographicCamera ref={cameraRef} position={[10, 10, 10]} zoom={50} />
       <OrbitControls
         ref={controlsRef}
-        makeDefault
+        enableDamping={false}
         mouseButtons={{
           LEFT: THREE.MOUSE.ROTATE,
           MIDDLE: undefined,

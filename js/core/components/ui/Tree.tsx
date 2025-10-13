@@ -41,7 +41,7 @@ const IndentationLines: FC<{ level: number; isLastAtLevel: boolean[]; showLines:
     <div className="absolute left-0 top-0 bottom-0 pointer-events-none">
       {Array.from({ length: level }, (_, i) => (
         <div key={i} className="absolute top-0 bottom-0" style={{ left: `${i * 0.75 + 0.375}rem` }}>
-          {!isLastAtLevel[i] && <div className="w-px h-full bg-border" />}
+          {!isLastAtLevel[i] && <div className="w-px h-full bg-muted-foreground/40" />}
         </div>
       ))}
     </div>
@@ -118,7 +118,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   if (!hasChildren) {
     return (
       <div
-        className={`relative flex items-center gap-1 py-1 hover:bg-muted select-none overflow-hidden group min-w-0 ${className}`}
+        className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 ${className}`}
         style={{ paddingLeft: `${level * 0.75}rem` }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -153,7 +153,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
-          className={`relative flex items-center gap-1 py-1 hover:bg-muted cursor-pointer select-none overflow-hidden group min-w-0 ${className}`}
+          className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel cursor-pointer select-none overflow-hidden group min-w-0 ${className}`}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -202,7 +202,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
     paddingLeft: `${level * 0.75}rem`,
   };
 
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0";
+  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel cursor-pointer select-none overflow-hidden min-w-0";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -296,7 +296,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const [open, setOpen] = useState(defaultOpen);
   const hasChildren = Boolean(children);
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0";
+  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel cursor-pointer select-none overflow-hidden min-w-0";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 

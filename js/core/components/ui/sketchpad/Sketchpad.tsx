@@ -18,7 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { FC, useEffect } from "react";
+import { FC, useEffect, useRef } from "react";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
@@ -101,6 +101,9 @@ const SketchpadBase: FC = () => {
   const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile } = useSketchpadCommands();
   const currentPath = useNavigation();
 
+  // Store the desktop layout preference when not on mobile
+  const desktopLayoutRef = useRef<Layout>(layout);
+
   useEffect(() => {
     const checkMobile = () => {
       updateIsMobile(window.innerWidth < 768);
@@ -109,6 +112,28 @@ const SketchpadBase: FC = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, [updateIsMobile]);
+
+  // Handle layout switching based on mobile state
+  useEffect(() => {
+    if (isMobile) {
+      // Save current layout before switching to mobile
+      if (layout !== Layout.TOUCH) {
+        desktopLayoutRef.current = layout;
+      }
+      // Force touch layout on mobile
+      if (layout !== Layout.TOUCH) {
+        setLayout(Layout.TOUCH);
+      }
+    } else {
+      // Restore desktop layout when switching back from mobile
+      if (layout === Layout.TOUCH && desktopLayoutRef.current !== Layout.TOUCH) {
+        setLayout(desktopLayoutRef.current);
+      } else if (!isMobile && layout !== Layout.TOUCH) {
+        // Update the saved desktop layout when user changes it on desktop
+        desktopLayoutRef.current = layout;
+      }
+    }
+  }, [isMobile, layout, setLayout]);
 
   // Sync React Router location to store navigation
   useEffect(() => {
@@ -148,16 +173,16 @@ const SketchpadBase: FC = () => {
           <div className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
             <Navbar />
           </div>
-          <div className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mt-12"}`}>
+          <div className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mt-12 mb-5"}`}>
             {isMobile ? (
               // Mobile layout: full-screen panel or editor
               <>
                 {mobileVisiblePanel ? (
-                  <div className="absolute inset-0 z-30">
-                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
-                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth} onWidthChange={() => {}} />}
+                  <div className="absolute inset-1 z-30">
+                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col overflow-hidden">
@@ -168,12 +193,16 @@ const SketchpadBase: FC = () => {
             ) : (
               // Desktop layout: side-by-side panels
               <>
-                {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
+                {visiblePanels.workbench && (
+                  <div className="absolute left-1 top-1 bottom-1 z-20">
+                    <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />
+                  </div>
+                )}
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <Outlet />
                 </div>
                 {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
-                  <div className="flex">
+                  <div className="absolute right-1 top-1 bottom-1 z-20 flex">
                     {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
                     {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
                     {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}

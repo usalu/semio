@@ -1,13 +1,13 @@
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { Clock, Cloud, HardDrive, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock, Cloud, HardDrive, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
-import { useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../../store";
+import { useHome, useHomeCommands, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Toggle } from "../Toggle";
@@ -48,6 +48,8 @@ const Home: FC = ({}) => {
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
   const tooltip = useTooltip();
+  const homeState = useHome() as any;
+  const homeCommands = useHomeCommands();
 
   // Get kind from search params instead of path
   const kindParam = searchParams.get("k");
@@ -59,6 +61,10 @@ const Home: FC = ({}) => {
   // Get expanded rows from search params
   const expandedRowsParam = searchParams.getAll("e");
   const expandedRows = new Set(expandedRowsParam);
+
+  const selection = homeState?.selection?.kits || [];
+  const sortColumn = homeState?.sortColumn;
+  const sortDirection = homeState?.sortDirection || "asc";
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -130,8 +136,56 @@ const Home: FC = ({}) => {
       }
     });
 
+    if (sortColumn) {
+      const topLevelRows = result.filter((r) => r.level === 0);
+      const childRows = result.filter((r) => r.level > 0);
+      topLevelRows.sort((a, b) => {
+        let comparison = 0;
+        switch (sortColumn) {
+          case "name":
+            comparison = a.name.localeCompare(b.name);
+            break;
+          case "type":
+            comparison = a.type.localeCompare(b.type);
+            break;
+          case "updatedAt":
+            comparison = a.updatedAt.localeCompare(b.updatedAt);
+            break;
+          case "createdAt":
+            comparison = a.createdAt.localeCompare(b.createdAt);
+            break;
+        }
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+      const sortedResult: TableRow[] = [];
+      topLevelRows.forEach((parent) => {
+        sortedResult.push(parent);
+        const children = childRows.filter((c) => c.parentId === parent.id);
+        children.sort((a, b) => {
+          let comparison = 0;
+          switch (sortColumn) {
+            case "name":
+              comparison = a.name.localeCompare(b.name);
+              break;
+            case "type":
+              comparison = a.type.localeCompare(b.type);
+              break;
+            case "updatedAt":
+              comparison = a.updatedAt.localeCompare(b.updatedAt);
+              break;
+            case "createdAt":
+              comparison = a.createdAt.localeCompare(b.createdAt);
+              break;
+          }
+          return sortDirection === "asc" ? comparison : -comparison;
+        });
+        sortedResult.push(...children);
+      });
+      return sortedResult;
+    }
+
     return result;
-  }, [kits, store, selectedKind, searchQuery, expandedRows]);
+  }, [kits, store, selectedKind, searchQuery, expandedRows, sortColumn, sortDirection]);
 
   const handleCreateKit = (type: KitStoreKind) => {
     const existingNames = kits.map((k) => k.name);
@@ -187,10 +241,40 @@ const Home: FC = ({}) => {
     setSearchParams(newParams);
   };
 
+  const handleRowClick = (kitId: string, e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      const currentIndex = rows.findIndex((r) => r.kit.guid === kitId);
+      if (selection.length > 0) {
+        const lastSelectedId = selection[selection.length - 1];
+        const lastIndex = rows.findIndex((r) => r.kit.guid === lastSelectedId);
+        if (lastIndex !== -1 && currentIndex !== -1) {
+          const start = Math.min(lastIndex, currentIndex);
+          const end = Math.max(lastIndex, currentIndex);
+          const rangeIds = rows.slice(start, end + 1).map((r) => r.kit.guid);
+          homeCommands.selectKits(rangeIds);
+        }
+      } else {
+        homeCommands.selectKit(kitId);
+      }
+    } else if (e.metaKey || e.ctrlKey) {
+      if (selection.includes(kitId)) {
+        homeCommands.removeKitFromSelection(kitId);
+      } else {
+        homeCommands.addKitToSelection(kitId);
+      }
+    } else {
+      homeCommands.selectKit(kitId);
+    }
+  };
+
+  const handleSortClick = (column: "name" | "type" | "updatedAt" | "createdAt") => {
+    homeCommands.toggleSort(column);
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-1 p-1 border-b">
-        <div className="flex flex-wrap gap-1 lg:flex-shrink-0">
+      <div className="flex items-center gap-1 p-1 border-b">
+        <div className="flex flex-wrap gap-1 flex-shrink-0">
           <Toggle
             type="withAction"
             pressed={selectedKind === "temporary"}
@@ -225,21 +309,94 @@ const Home: FC = ({}) => {
             <Cloud className="size-4" />
           </Toggle>
         </div>
-        <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+        <Input className="flex-1 min-w-0" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 border-b">
             <tr className="h-9">
-              <th className="text-left p-1 font-medium">{t("home.name")}</th>
-              {!selectedKind && <th className="text-left p-1 font-medium">{t("home.kind")}</th>}
-              <th className="text-left p-1 font-medium">{t("home.lastUpdated")}</th>
-              <th className="text-left p-1 font-medium">{t("home.created")}</th>
+              <th className="text-left p-1 font-medium relative group">
+                <div className="flex items-center justify-between w-full">
+                  <span>{t("home.name")}</span>
+                  <Toggle
+                    type="dropdown"
+                    value={sortColumn === "name" ? sortDirection : "asc"}
+                    onValueChange={(value) => {
+                      homeCommands.setSortColumn("name");
+                      homeCommands.setSortDirection(value as "asc" | "desc");
+                    }}
+                    items={[
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                    ]}
+                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                  />
+                </div>
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+              </th>
+              {!selectedKind && (
+                <th className="text-left p-1 font-medium relative group">
+                  <div className="flex items-center justify-between w-full">
+                    <span>{t("home.kind")}</span>
+                    <Toggle
+                      type="dropdown"
+                      value={sortColumn === "type" ? sortDirection : "asc"}
+                      onValueChange={(value) => {
+                        homeCommands.setSortColumn("type");
+                        homeCommands.setSortDirection(value as "asc" | "desc");
+                      }}
+                      items={[
+                        { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                        { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                      ]}
+                      className="border-0 h-auto px-1 py-0.5 min-w-0"
+                    />
+                  </div>
+                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                </th>
+              )}
+              <th className="text-left p-1 font-medium relative group">
+                <div className="flex items-center justify-between w-full">
+                  <span>{t("home.lastUpdated")}</span>
+                  <Toggle
+                    type="dropdown"
+                    value={sortColumn === "updatedAt" ? sortDirection : "asc"}
+                    onValueChange={(value) => {
+                      homeCommands.setSortColumn("updatedAt");
+                      homeCommands.setSortDirection(value as "asc" | "desc");
+                    }}
+                    items={[
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                    ]}
+                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                  />
+                </div>
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+              </th>
+              <th className="text-left p-1 font-medium relative group">
+                <div className="flex items-center justify-between w-full">
+                  <span>{t("home.created")}</span>
+                  <Toggle
+                    type="dropdown"
+                    value={sortColumn === "createdAt" ? sortDirection : "asc"}
+                    onValueChange={(value) => {
+                      homeCommands.setSortColumn("createdAt");
+                      homeCommands.setSortDirection(value as "asc" | "desc");
+                    }}
+                    items={[
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                    ]}
+                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                  />
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b hover:bg-muted/50">
+              <tr key={row.id} className={`border-b hover:bg-muted/50 cursor-pointer ${selection.includes(row.kit.guid) ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row.kit.guid, e)}>
                 <td className="p-1">
                   <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
                     {row.hasChildren ? (
@@ -255,9 +412,15 @@ const Home: FC = ({}) => {
                     ) : (
                       <span className="w-4 h-4" />
                     )}
-                    <button className="cursor-pointer hover:underline text-left" onClick={() => navigateToKit(row.kit.guid)}>
+                    <a
+                      className="cursor-pointer hover:underline text-left"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToKit(row.kit.guid);
+                      }}
+                    >
                       {row.name}
-                    </button>
+                    </a>
                   </div>
                 </td>
                 {!selectedKind && (

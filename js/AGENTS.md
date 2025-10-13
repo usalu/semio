@@ -6,6 +6,8 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 
 ## Rules
 
+### General
+
 - NEVER remove functionality! Not even to get the code to work quickly.
 - ALWAYS be thorough.
 - NEVER create scripts to automate manual tasks.
@@ -30,12 +32,17 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
+- Whenever adding ui elements ALWAYS use i18n setups and provide translations for the existing languages.
+- ALWAYS add `[ORIGIN] ` prefix to temporary logs so that `\[*\]*` can be used to filter them out.
 
-## Styling
+### Styling
 
+- NEVER use hardcoded (hex, rgb, …) or standard colors. All theme colors are explicitly defined.
+- ALWAYS use colors for light mode. Dark mode is automatically derived. There are scales for the following number of colors: 2 (dark, light), 3 (dark, gray, light), 4 (dark, dark-gray-gray, light-gray-gray, light), 5 (dark, dark-gray, gray, light-gray, light), 6 (dark, dark-gray-gray, gray, light-gray-gray, light), 7 (dark, dark-6-7, dark-5-7, gray, light-5-7, light-6-7, light), 8 (dark, d-d-d-g, dark-gray, d-g-g-g, light-gray, l-g-g-g, l-l-l-g, light), 9 (dark, dark-8-9, dark-7-9, dark-gray, gray, light-gray, light-7-9, light-8-9, light), 10 (gray-100, gray-200, gray-300, gray-400, gray, gray-600, gray-700, gray-800, gray-900, light), 11 (dark, gray-100, dark-gray-gray, dark-gray, gray, light-gray, light-gray-gray, light-light-gray, l-l-l-g, gray-900, light). ALWAYS pick the one with the highest contrast.
+- NEVER use hardcoded pixels. ALWAYS use the existing ui frameworks with relative units.
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
-- NEVER use hardcoded or standard colors. All theme colors are explicitly defined.
+- Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
 
 ## Glossary
 
@@ -258,6 +265,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
 - ALWAYS be light and darkmode compatible.
 - ALWAYS use colors defined in `@theme inline {…}` from `@semio/js/globals.css`.
+- ALWAYS add tooltips (normal and extensive) to all ui elements.
 
 ### Styling
 
@@ -274,11 +282,17 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 3. As user mode in a desktop app (electron).
    Sketchpad has a local store in yjs which syncs with indexeddb and the backend provider.
 
-# Guidelines
+### Rules
+
+#### General
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - State managment ALWAYS is in store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
 - There is a transaction mechanism for kits. Every editor transaction is an extended kit transaction. The undo redo manager is on editor level and stores the diff of the transaction along with the editor state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
+
+#### Styling
+
+- NEVER use colors and spacing directly. ALWAYS use semantic variables from global.css. Only global.css uses colors and pixels directly.
 
 # Hierarchies
 

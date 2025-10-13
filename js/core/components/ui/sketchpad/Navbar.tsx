@@ -19,7 +19,32 @@
 
 // #endregion
 
-import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Fullscreen, HardDrive, Home, Info, Layout, MessageCircle, Minimize, Minus, Settings, Square, User, Wrench, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Award,
+  Box,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Cloud,
+  FileText,
+  Fullscreen,
+  HardDrive,
+  Home,
+  Info,
+  Layout,
+  MessageCircle,
+  Minimize,
+  Minus,
+  Search as SearchIcon,
+  Settings,
+  Square,
+  User,
+  Wrench,
+  X,
+} from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
@@ -48,7 +73,7 @@ import {
 } from "../../../store";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
-import { Command, CommandInput, CommandItem, CommandList, CommandShortcut } from "../Command";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandList } from "../Command";
 import { Toggle } from "../Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 
@@ -158,7 +183,7 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
   ],
 });
 
-const Navigation: FC = ({}) => {
+const Navigation: FC = ({ }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -478,7 +503,7 @@ const Navigation: FC = ({}) => {
   }, [type, allTypes, kitGuid, t]);
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="flex-1 min-w-0">
       <BreadcrumbList>
         <BreadcrumbItem tooltip={tooltip("navbar.home")}>
           <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
@@ -621,20 +646,28 @@ const Navigation: FC = ({}) => {
   );
 };
 
-const Search: FC = ({}) => {
+const Search: FC = ({ }) => {
+  const { t } = useTranslation();
+  const tooltip = useTooltip();
+  const [open, setOpen] = useState(false);
+
   return (
-    <Command>
-      <CommandInput />
-      <CommandList>
-        <CommandItem>
-          <CommandShortcut>Ctrl+K</CommandShortcut>
-        </CommandItem>
-      </CommandList>
-    </Command>
+    <>
+      <Toggle tooltip={tooltip("navbar.search")} pressed={open} onPressedChange={setOpen}>
+        <SearchIcon size={16} />
+      </Toggle>
+      <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={open} onOpenChange={setOpen}>
+        <CommandInput placeholder={t("navbar.searchPlaceholder")} />
+        <CommandList>
+          <CommandEmpty>{t("navbar.noResults")}</CommandEmpty>
+          <CommandGroup heading={t("navbar.suggestions")}>{/* TODO: Add command items here */}</CommandGroup>
+        </CommandList>
+      </CommandDialog>
+    </>
   );
 };
 
-const PanelToggles: FC = ({}) => {
+const PanelToggles: FC = ({ }) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -665,7 +698,7 @@ const PanelToggles: FC = ({}) => {
   const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -689,7 +722,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
         handleToggle(activeExclusivePanel as keyof PanelVisibility);
@@ -703,7 +736,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleExclusiveValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (!value) return;
 
     (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -758,9 +791,9 @@ const PanelToggles: FC = ({}) => {
   );
 };
 
-interface NavbarProps {}
+interface NavbarProps { }
 
-const Navbar: FC<NavbarProps> = ({}) => {
+const Navbar: FC<NavbarProps> = ({ }) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
@@ -806,9 +839,11 @@ const Navbar: FC<NavbarProps> = ({}) => {
         style={{ WebkitAppRegion: "drag" }}
       >
         <div className="h-12 flex items-center justify-between px-1 gap-1">
-          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
-            <ArrowLeft size={16} />
-          </ButtonGroupItem>
+          <ButtonGroup>
+            <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
+              <ArrowLeft size={16} />
+            </ButtonGroupItem>
+          </ButtonGroup>
 
           <PanelToggles />
 
@@ -876,8 +911,9 @@ const Navbar: FC<NavbarProps> = ({}) => {
       <Navigation />
 
       <div className="flex items-center gap-1 ml-auto">
+        <Search />
         <PanelToggles />
-        <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           {isFullscreen ? <Minimize /> : <Fullscreen />}
         </Toggle>
         {onWindowEvents && (

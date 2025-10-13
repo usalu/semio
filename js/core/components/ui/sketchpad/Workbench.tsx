@@ -145,7 +145,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
   return (
     <div
-      className={`absolute top-4 left-4 bottom-4 z-20 bg-panel text-foreground border
+      className={`h-full z-20 bg-panel text-foreground border
                 ${isResizing || isResizeHovered ? "border-r-primary" : "border-r"}`}
       style={{ width: `${width}px` }}
     >

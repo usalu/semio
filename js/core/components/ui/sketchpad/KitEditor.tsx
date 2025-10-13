@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { Award, Box, FileText, Layout, Plus, User } from "lucide-react";
+import { ArrowDown, ArrowUp, Award, Box, FileText, Layout, Plus, User } from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
@@ -226,6 +226,13 @@ const KitEditor: FC = () => {
   const expandedRowsArray = kitEditor?.expandedRows || [];
   const expandedRows = new Set(expandedRowsArray);
 
+  const selection = {
+    types: kitEditor?.selection?.types || [],
+    designs: kitEditor?.selection?.designs || [],
+  };
+  const sortColumn = kitEditor?.sortColumn;
+  const sortDirection = kitEditor?.sortDirection || "asc";
+
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const editorType = useEditorType();
@@ -345,6 +352,9 @@ const KitEditor: FC = () => {
         });
 
         const hasMultipleVariants = variantGroups.size > 1 || (variantGroups.size === 1 && Array.from(variantGroups.keys())[0] !== "");
+        const defaultVariantDesigns = variantGroups.get("") || [];
+        const defaultVariantNonDefaultViews = defaultVariantDesigns.filter((d) => d.view && d.view !== "");
+        const hasDefaultVariantViews = defaultVariantNonDefaultViews.length > 0;
 
         const parentId = `design-${name}`;
 
@@ -357,56 +367,78 @@ const KitEditor: FC = () => {
           updatedAt: defaultDesign ? formatDate(defaultDesign.updatedAt) : "",
           createdAt: defaultDesign ? formatDate(defaultDesign.createdAt) : "",
           level: 0,
-          hasChildren: hasMultipleVariants,
+          hasChildren: hasMultipleVariants || hasDefaultVariantViews,
           isExpanded: expandedRows.has(parentId),
           data: defaultDesign || filteredDesigns[0],
         });
 
-        // Only show variant rows if there are non-default variants
-        if (expandedRows.has(parentId) && hasMultipleVariants) {
-          variantGroups.forEach((variantDesigns, variant) => {
-            // Skip default variant as it's shown in parent row
-            if (variant === "") return;
-
-            const variantId = `${parentId}-${variant}`;
-            const viewGroups = variantDesigns.filter((d) => d.view && d.view !== "");
-            const hasMultipleViews = viewGroups.length > 0;
-            const defaultViewDesign = variantDesigns.find((d) => !d.view || d.view === "");
-
-            result.push({
-              id: variantId,
-              kind: "designs",
-              artifact: `Variant: ${variant}`,
-              authors: defaultViewDesign?.authors?.join(", ") || "",
-              updatedAt: defaultViewDesign ? formatDate(defaultViewDesign.updatedAt) : "",
-              createdAt: defaultViewDesign ? formatDate(defaultViewDesign.createdAt) : "",
-              level: 1,
-              parentId,
-              hasChildren: hasMultipleViews,
-              isExpanded: expandedRows.has(variantId),
-              data: defaultViewDesign || variantDesigns[0],
-            });
-
-            // Only show view rows for non-default views
-            if (expandedRows.has(variantId) && hasMultipleViews) {
-              viewGroups.forEach((design) => {
-                const viewId = `${variantId}-${design.view}`;
-                result.push({
-                  id: viewId,
-                  kind: "designs",
-                  artifact: `View: ${design.view}`,
-                  authors: design.authors?.join(", ") || "",
-                  updatedAt: formatDate(design.updatedAt),
-                  createdAt: formatDate(design.createdAt),
-                  level: 2,
-                  parentId: variantId,
-                  hasChildren: false,
-                  isExpanded: false,
-                  data: design,
-                });
+        if (expandedRows.has(parentId)) {
+          // Show views for default variant if they exist
+          if (hasDefaultVariantViews) {
+            defaultVariantNonDefaultViews.forEach((design) => {
+              const viewId = `${parentId}-default-${design.view}`;
+              result.push({
+                id: viewId,
+                kind: "designs",
+                artifact: `View: ${design.view}`,
+                authors: design.authors?.join(", ") || "",
+                updatedAt: formatDate(design.updatedAt),
+                createdAt: formatDate(design.createdAt),
+                level: 1,
+                parentId,
+                hasChildren: false,
+                isExpanded: false,
+                data: design,
               });
-            }
-          });
+            });
+          }
+
+          // Only show variant rows if there are non-default variants
+          if (hasMultipleVariants) {
+            variantGroups.forEach((variantDesigns, variant) => {
+              // Skip default variant as it's shown in parent row
+              if (variant === "") return;
+
+              const variantId = `${parentId}-${variant}`;
+              const viewGroups = variantDesigns.filter((d) => d.view && d.view !== "");
+              const hasMultipleViews = viewGroups.length > 0;
+              const defaultViewDesign = variantDesigns.find((d) => !d.view || d.view === "");
+
+              result.push({
+                id: variantId,
+                kind: "designs",
+                artifact: `Variant: ${variant}`,
+                authors: defaultViewDesign?.authors?.join(", ") || "",
+                updatedAt: defaultViewDesign ? formatDate(defaultViewDesign.updatedAt) : "",
+                createdAt: defaultViewDesign ? formatDate(defaultViewDesign.createdAt) : "",
+                level: 1,
+                parentId,
+                hasChildren: hasMultipleViews,
+                isExpanded: expandedRows.has(variantId),
+                data: defaultViewDesign || variantDesigns[0],
+              });
+
+              // Only show view rows for non-default views
+              if (expandedRows.has(variantId) && hasMultipleViews) {
+                viewGroups.forEach((design) => {
+                  const viewId = `${variantId}-${design.view}`;
+                  result.push({
+                    id: viewId,
+                    kind: "designs",
+                    artifact: `View: ${design.view}`,
+                    authors: design.authors?.join(", ") || "",
+                    updatedAt: formatDate(design.updatedAt),
+                    createdAt: formatDate(design.createdAt),
+                    level: 2,
+                    parentId: variantId,
+                    hasChildren: false,
+                    isExpanded: false,
+                    data: design,
+                  });
+                });
+              }
+            });
+          }
         }
       });
     }
@@ -497,8 +529,88 @@ const KitEditor: FC = () => {
       });
     }
 
+    if (sortColumn) {
+      const level0Rows = result.filter((r) => r.level === 0);
+      const level1Rows = result.filter((r) => r.level === 1);
+      const level2Rows = result.filter((r) => r.level === 2);
+      level0Rows.sort((a, b) => {
+        let comparison = 0;
+        switch (sortColumn) {
+          case "artifact":
+            comparison = a.artifact.localeCompare(b.artifact);
+            break;
+          case "kind":
+            comparison = a.kind.localeCompare(b.kind);
+            break;
+          case "authors":
+            comparison = a.authors.localeCompare(b.authors);
+            break;
+          case "updatedAt":
+            comparison = a.updatedAt.localeCompare(b.updatedAt);
+            break;
+          case "createdAt":
+            comparison = a.createdAt.localeCompare(b.createdAt);
+            break;
+        }
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+      const sortedResult: TableRow[] = [];
+      level0Rows.forEach((parent) => {
+        sortedResult.push(parent);
+        const children = level1Rows.filter((c) => c.parentId === parent.id);
+        children.sort((a, b) => {
+          let comparison = 0;
+          switch (sortColumn) {
+            case "artifact":
+              comparison = a.artifact.localeCompare(b.artifact);
+              break;
+            case "kind":
+              comparison = a.kind.localeCompare(b.kind);
+              break;
+            case "authors":
+              comparison = a.authors.localeCompare(b.authors);
+              break;
+            case "updatedAt":
+              comparison = a.updatedAt.localeCompare(b.updatedAt);
+              break;
+            case "createdAt":
+              comparison = a.createdAt.localeCompare(b.createdAt);
+              break;
+          }
+          return sortDirection === "asc" ? comparison : -comparison;
+        });
+        children.forEach((child) => {
+          sortedResult.push(child);
+          const grandchildren = level2Rows.filter((gc) => gc.parentId === child.id);
+          grandchildren.sort((a, b) => {
+            let comparison = 0;
+            switch (sortColumn) {
+              case "artifact":
+                comparison = a.artifact.localeCompare(b.artifact);
+                break;
+              case "kind":
+                comparison = a.kind.localeCompare(b.kind);
+                break;
+              case "authors":
+                comparison = a.authors.localeCompare(b.authors);
+                break;
+              case "updatedAt":
+                comparison = a.updatedAt.localeCompare(b.updatedAt);
+                break;
+              case "createdAt":
+                comparison = a.createdAt.localeCompare(b.createdAt);
+                break;
+            }
+            return sortDirection === "asc" ? comparison : -comparison;
+          });
+          sortedResult.push(...grandchildren);
+        });
+      });
+      return sortedResult;
+    }
+
     return result;
-  }, [kit, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows]);
+  }, [kit, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
 
   const toggleRow = (rowId: string) => {
     kitEditorCommands.toggleExpandedRow(rowId);
@@ -616,10 +728,74 @@ const KitEditor: FC = () => {
     setSearchParams(params);
   };
 
+  const handleRowClick = (row: TableRow, e: React.MouseEvent) => {
+    if (row.kind === "designs") {
+      const designId = (row.data as Design).guid;
+      if (e.shiftKey) {
+        const currentIndex = rows.findIndex((r) => r.kind === "designs" && (r.data as Design).guid === designId);
+        if (selection.designs.length > 0) {
+          const lastSelectedId = selection.designs[selection.designs.length - 1];
+          const lastIndex = rows.findIndex((r) => r.kind === "designs" && (r.data as Design).guid === lastSelectedId);
+          if (lastIndex !== -1 && currentIndex !== -1) {
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+            const rangeIds = rows
+              .slice(start, end + 1)
+              .filter((r) => r.kind === "designs")
+              .map((r) => (r.data as Design).guid);
+            kitEditorCommands.selectDesigns(rangeIds);
+          }
+        } else {
+          kitEditorCommands.selectDesign(designId);
+        }
+      } else if (e.metaKey || e.ctrlKey) {
+        if (selection.designs.includes(designId)) {
+          kitEditorCommands.removeDesignFromSelection(designId);
+        } else {
+          kitEditorCommands.addDesignToSelection(designId);
+        }
+      } else {
+        kitEditorCommands.selectDesign(designId);
+      }
+    } else if (row.kind === "types") {
+      const typeId = (row.data as Type).guid;
+      if (e.shiftKey) {
+        const currentIndex = rows.findIndex((r) => r.kind === "types" && (r.data as Type).guid === typeId);
+        if (selection.types.length > 0) {
+          const lastSelectedId = selection.types[selection.types.length - 1];
+          const lastIndex = rows.findIndex((r) => r.kind === "types" && (r.data as Type).guid === lastSelectedId);
+          if (lastIndex !== -1 && currentIndex !== -1) {
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+            const rangeIds = rows
+              .slice(start, end + 1)
+              .filter((r) => r.kind === "types")
+              .map((r) => (r.data as Type).guid);
+            kitEditorCommands.selectTypes(rangeIds);
+          }
+        } else {
+          kitEditorCommands.selectType(typeId);
+        }
+      } else if (e.metaKey || e.ctrlKey) {
+        if (selection.types.includes(typeId)) {
+          kitEditorCommands.removeTypeFromSelection(typeId);
+        } else {
+          kitEditorCommands.addTypeToSelection(typeId);
+        }
+      } else {
+        kitEditorCommands.selectType(typeId);
+      }
+    }
+  };
+
+  const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
+    kitEditorCommands.toggleSort(column);
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-1 p-1 border-b">
-        <div className="flex flex-wrap gap-1 lg:flex-shrink-0">
+      <div className="flex items-center gap-1 p-1 border-b">
+        <div className="flex flex-wrap gap-1 flex-shrink-0">
           {(!selectedKind || selectedKind === "designs") && (
             <Toggle
               type="withAction"
@@ -735,54 +911,137 @@ const KitEditor: FC = () => {
             </Toggle>
           )}
         </div>
-        <Input className="w-full lg:w-auto lg:flex-1 lg:min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
+        <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 border-b">
             <tr className="h-9">
-              <th className="text-left p-1 font-medium">{t("kitEditor.name")}</th>
-              {!selectedKind && <th className="text-left p-1 font-medium">{t("kitEditor.kind")}</th>}
-              <th className="text-left p-1 font-medium">{t("kitEditor.lastUpdated")}</th>
-              <th className="text-left p-1 font-medium">{t("kitEditor.created")}</th>
+              <th className="text-left p-1 font-medium relative group">
+                <div className="flex items-center justify-between w-full">
+                  <span>{t("kitEditor.name")}</span>
+                  <Toggle
+                    type="dropdown"
+                    value={sortColumn === "artifact" ? sortDirection : "asc"}
+                    onValueChange={(value) => {
+                      kitEditorCommands.setSortColumn("artifact");
+                      kitEditorCommands.setSortDirection(value as "asc" | "desc");
+                    }}
+                    items={[
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                    ]}
+                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                  />
+                </div>
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+              </th>
+              {!selectedKind && (
+                <th className="text-left p-1 font-medium relative group">
+                  <div className="flex items-center justify-between w-full">
+                    <span>{t("kitEditor.kind")}</span>
+                    <Toggle
+                      type="dropdown"
+                      value={sortColumn === "kind" ? sortDirection : "asc"}
+                      onValueChange={(value) => {
+                        kitEditorCommands.setSortColumn("kind");
+                        kitEditorCommands.setSortDirection(value as "asc" | "desc");
+                      }}
+                      items={[
+                        { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                        { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                      ]}
+                      className="border-0 h-auto px-1 py-0.5 min-w-0"
+                    />
+                  </div>
+                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                </th>
+              )}
+              <th className="text-left p-1 font-medium relative group">
+                <div className="flex items-center justify-between w-full">
+                  <span>{t("kitEditor.lastUpdated")}</span>
+                  <Toggle
+                    type="dropdown"
+                    value={sortColumn === "updatedAt" ? sortDirection : "asc"}
+                    onValueChange={(value) => {
+                      kitEditorCommands.setSortColumn("updatedAt");
+                      kitEditorCommands.setSortDirection(value as "asc" | "desc");
+                    }}
+                    items={[
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                    ]}
+                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                  />
+                </div>
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+              </th>
+              <th className="text-left p-1 font-medium relative group">
+                <div className="flex items-center justify-between w-full">
+                  <span>{t("kitEditor.created")}</span>
+                  <Toggle
+                    type="dropdown"
+                    value={sortColumn === "createdAt" ? sortDirection : "asc"}
+                    onValueChange={(value) => {
+                      kitEditorCommands.setSortColumn("createdAt");
+                      kitEditorCommands.setSortDirection(value as "asc" | "desc");
+                    }}
+                    items={[
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                    ]}
+                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                  />
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b hover:bg-muted/50">
-                <td className="p-1">
-                  <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
-                    {row.hasChildren ? (
-                      <button onClick={() => toggleRow(row.id)} className="w-4 h-4 flex items-center justify-center hover:bg-muted">
-                        {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                      </button>
-                    ) : (
-                      <span className="w-4 h-4" />
-                    )}
-                    <button
-                      className="cursor-pointer hover:underline text-left"
-                      onClick={() => {
-                        if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-                        else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-                      }}
-                    >
-                      {row.artifact}
-                    </button>
-                  </div>
-                </td>
-                {!selectedKind && (
+            {rows.map((row) => {
+              const isSelected = (row.kind === "designs" && selection.designs.includes((row.data as Design).guid)) || (row.kind === "types" && selection.types.includes((row.data as Type).guid));
+              return (
+                <tr key={row.id} className={`border-b hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row, e)}>
                   <td className="p-1">
-                    {row.kind === "designs" && <Layout className="size-4" />}
-                    {row.kind === "types" && <Box className="size-4" />}
-                    {row.kind === "qualities" && <Award className="size-4" />}
-                    {row.kind === "files" && <FileText className="size-4" />}
-                    {row.kind === "authors" && <User className="size-4" />}
+                    <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
+                      {row.hasChildren ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRow(row.id);
+                          }}
+                          className="w-4 h-4 flex items-center justify-center hover:bg-muted"
+                        >
+                          {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+                      ) : (
+                        <span className="w-4 h-4" />
+                      )}
+                      <a
+                        className="cursor-pointer hover:underline text-left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+                          else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+                        }}
+                      >
+                        {row.artifact}
+                      </a>
+                    </div>
                   </td>
-                )}
-                <td className="p-1">{row.updatedAt}</td>
-                <td className="p-1">{row.createdAt}</td>
-              </tr>
-            ))}
+                  {!selectedKind && (
+                    <td className="p-1">
+                      {row.kind === "designs" && <Layout className="size-4" />}
+                      {row.kind === "types" && <Box className="size-4" />}
+                      {row.kind === "qualities" && <Award className="size-4" />}
+                      {row.kind === "files" && <FileText className="size-4" />}
+                      {row.kind === "authors" && <User className="size-4" />}
+                    </td>
+                  )}
+                  <td className="p-1">{row.updatedAt}</td>
+                  <td className="p-1">{row.createdAt}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </ScrollArea>

@@ -5425,12 +5425,30 @@ const useTypeEditorScope = () => useContext(TypeEditorScopeContext);
 
 // #region Home Store
 
+export interface HomeSelection {
+  kits?: KitId[];
+}
+
+export interface HomeSelectionDiff {
+  added?: KitId[];
+  removed?: KitId[];
+}
+
+export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
+export type HomeSortDirection = "asc" | "desc";
+
 export interface HomeState {
   panelVisibility: PanelVisibility;
+  selection?: HomeSelection;
+  sortColumn?: HomeSortColumn;
+  sortDirection?: HomeSortDirection;
 }
 
 export interface HomeDiff {
   panelVisibility?: Partial<PanelVisibility>;
+  selection?: HomeSelectionDiff;
+  sortColumn?: HomeSortColumn;
+  sortDirection?: HomeSortDirection;
 }
 
 export interface HomeCommandContext {
@@ -5477,6 +5495,22 @@ class HomeStore {
     };
   }
 
+  get selection(): HomeSelection | undefined {
+    const yKits = this.yMap.get("selectedKits") as Y.Array<string>;
+    if (!yKits || yKits.length === 0) return undefined;
+    return {
+      kits: yKits.toArray(),
+    };
+  }
+
+  get sortColumn(): HomeSortColumn | undefined {
+    return this.yMap.get("sortColumn") as HomeSortColumn | undefined;
+  }
+
+  get sortDirection(): HomeSortDirection | undefined {
+    return this.yMap.get("sortDirection") as HomeSortDirection | undefined;
+  }
+
   protected hash(state: HomeState): string {
     return JSON.stringify(state);
   }
@@ -5484,6 +5518,9 @@ class HomeStore {
   protected buildSnapshot(): HomeState {
     return {
       panelVisibility: this.panelVisibility,
+      selection: this.selection,
+      sortColumn: this.sortColumn,
+      sortDirection: this.sortDirection,
     };
   }
 
@@ -5507,12 +5544,40 @@ class HomeStore {
           yPanelVisibility = new Y.Map<boolean>();
           this.yMap.set("panelVisibility", yPanelVisibility);
         }
-        yPanelVisibility.set("__editor", "HOME" as any); // DEBUG: mark which editor owns this
+        yPanelVisibility.set("__editor", "HOME" as any);
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
             yPanelVisibility.set(key, value);
           }
         });
+      }
+      if (diff.selection !== undefined) {
+        let yKits = this.yMap.get("selectedKits") as Y.Array<string>;
+        if (!yKits) {
+          yKits = new Y.Array<string>();
+          this.yMap.set("selectedKits", yKits);
+        }
+        if (diff.selection.removed) {
+          diff.selection.removed.forEach((kitId) => {
+            const index = yKits.toArray().indexOf(kitId);
+            if (index !== -1) {
+              yKits.delete(index, 1);
+            }
+          });
+        }
+        if (diff.selection.added) {
+          diff.selection.added.forEach((kitId) => {
+            if (!yKits.toArray().includes(kitId)) {
+              yKits.push([kitId]);
+            }
+          });
+        }
+      }
+      if (diff.sortColumn !== undefined) {
+        this.yMap.set("sortColumn", diff.sortColumn);
+      }
+      if (diff.sortDirection !== undefined) {
+        this.yMap.set("sortDirection", diff.sortDirection);
       }
     });
   };
@@ -5589,6 +5654,69 @@ export function useHomeCommands() {
         },
       });
     },
+    selectKit: (kitId: KitId) => {
+      const current = store.snapshot();
+      store.change({
+        selection: {
+          removed: current.selection?.kits ?? [],
+          added: [kitId],
+        },
+      });
+    },
+    addKitToSelection: (kitId: KitId) => {
+      store.change({
+        selection: {
+          added: [kitId],
+        },
+      });
+    },
+    removeKitFromSelection: (kitId: KitId) => {
+      store.change({
+        selection: {
+          removed: [kitId],
+        },
+      });
+    },
+    selectKits: (kitIds: KitId[]) => {
+      const current = store.snapshot();
+      store.change({
+        selection: {
+          removed: current.selection?.kits ?? [],
+          added: kitIds,
+        },
+      });
+    },
+    deselectAll: () => {
+      const current = store.snapshot();
+      store.change({
+        selection: {
+          removed: current.selection?.kits ?? [],
+        },
+      });
+    },
+    setSortColumn: (column: HomeSortColumn) => {
+      store.change({
+        sortColumn: column,
+      });
+    },
+    setSortDirection: (direction: HomeSortDirection) => {
+      store.change({
+        sortDirection: direction,
+      });
+    },
+    toggleSort: (column: HomeSortColumn) => {
+      const current = store.snapshot();
+      if (current.sortColumn === column) {
+        store.change({
+          sortDirection: current.sortDirection === "asc" ? "desc" : "asc",
+        });
+      } else {
+        store.change({
+          sortColumn: column,
+          sortDirection: "asc",
+        });
+      }
+    },
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }
@@ -5634,6 +5762,9 @@ export interface KitEditorHover {
 export interface KitEditorPresenceOther extends KitEditorPresence {
   name: string;
 }
+export type KitEditorSortColumn = "artifact" | "kind" | "authors" | "updatedAt" | "createdAt";
+export type KitEditorSortDirection = "asc" | "desc";
+
 export interface KitEditorDiff {
   selection?: KitEditorSelectionDiff;
   presence?: KitEditorPresence;
@@ -5642,6 +5773,8 @@ export interface KitEditorDiff {
   panelVisibility?: Partial<PanelVisibility>;
   filterSearch?: string;
   expandedRows?: string[];
+  sortColumn?: KitEditorSortColumn;
+  sortDirection?: KitEditorSortDirection;
 }
 export interface KitEditorStep {
   kitDiff?: KitDiff;
@@ -5660,6 +5793,8 @@ export interface KitEditorState {
   others: KitEditorPresenceOther[];
   filterSearch: string;
   expandedRows: string[];
+  sortColumn?: KitEditorSortColumn;
+  sortDirection?: KitEditorSortDirection;
 }
 
 export interface KitEditorCommandContext extends KitCommandContext {
@@ -5810,6 +5945,14 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     return yExpandedRows ? yExpandedRows.toArray() : [];
   }
 
+  get sortColumn(): KitEditorSortColumn | undefined {
+    return this.yMap.get("sortColumn") as KitEditorSortColumn | undefined;
+  }
+
+  get sortDirection(): KitEditorSortDirection | undefined {
+    return this.yMap.get("sortDirection") as KitEditorSortDirection | undefined;
+  }
+
   kit(): KitStore {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
@@ -5838,6 +5981,8 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
       pastTransactionsStack: this.pastTransactionsStack,
       filterSearch: this.filterSearch,
       expandedRows: this.expandedRows,
+      sortColumn: this.sortColumn,
+      sortDirection: this.sortDirection,
     } as any;
   }
 
@@ -5872,6 +6017,12 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
         }
         yExpandedRows.delete(0, yExpandedRows.length);
         yExpandedRows.push(diff.expandedRows);
+      }
+      if (diff.sortColumn !== undefined) {
+        this.yMap.set("sortColumn", diff.sortColumn);
+      }
+      if (diff.sortDirection !== undefined) {
+        this.yMap.set("sortDirection", diff.sortDirection);
       }
     });
   };
@@ -6270,6 +6421,36 @@ const kitEditorCommands = {
       },
     };
   },
+  "semio.kitEditor.setSortColumn": (context: KitEditorCommandContext, column: KitEditorSortColumn): KitEditorCommandResult => {
+    return {
+      diff: {
+        sortColumn: column,
+      },
+    };
+  },
+  "semio.kitEditor.setSortDirection": (context: KitEditorCommandContext, direction: KitEditorSortDirection): KitEditorCommandResult => {
+    return {
+      diff: {
+        sortDirection: direction,
+      },
+    };
+  },
+  "semio.kitEditor.toggleSort": (context: KitEditorCommandContext, column: KitEditorSortColumn): KitEditorCommandResult => {
+    const current = context.kitEditor;
+    if (current.sortColumn === column) {
+      return {
+        diff: {
+          sortDirection: current.sortDirection === "asc" ? "desc" : "asc",
+        },
+      };
+    }
+    return {
+      diff: {
+        sortColumn: column,
+        sortDirection: "asc",
+      },
+    };
+  },
 };
 
 function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore | null {
@@ -6338,6 +6519,9 @@ export function useKitEditorCommands(id?: KitEditorId) {
       setFilterSearch: noOp,
       setExpandedRows: noOp,
       toggleExpandedRow: noOp,
+      setSortColumn: noOp,
+      setSortDirection: noOp,
+      toggleSort: noOp,
       execute: noOp,
     };
   }
@@ -6383,6 +6567,9 @@ export function useKitEditorCommands(id?: KitEditorId) {
     setFilterSearch: (search: string) => store.execute("semio.kitEditor.setFilterSearch", search),
     setExpandedRows: (rows: string[]) => store.execute("semio.kitEditor.setExpandedRows", rows),
     toggleExpandedRow: (rowId: string) => store.execute("semio.kitEditor.toggleExpandedRow", rowId),
+    setSortColumn: (column: KitEditorSortColumn) => store.execute("semio.kitEditor.setSortColumn", column),
+    setSortDirection: (direction: KitEditorSortDirection) => store.execute("semio.kitEditor.setSortDirection", direction),
+    toggleSort: (column: KitEditorSortColumn) => store.execute("semio.kitEditor.toggleSort", column),
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }
@@ -6861,7 +7048,9 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       designId: this.design().guid,
       fileUrls: kitStore.fileUrls,
     };
+    console.log("Context:", context);
     const result = callback(context, ...rest);
+    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
