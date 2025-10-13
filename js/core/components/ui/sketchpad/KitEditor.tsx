@@ -5,9 +5,9 @@ import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
-import { generateUniqueName, guid } from "../../../lib/utils";
+import { generateUniqueName, getTooltip, guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
-import { EditorType, KitEditorState, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useNavigation, useSketchpadCommands } from "../../../store";
+import { EditorType, KitEditorState, useEditorType, useIsInKitScope, useKit, useKitCommands, useKitEditor, useKitEditorCommands, useKitStore, useNavigation, useSketchpadCommands, useTooltip } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
@@ -186,6 +186,7 @@ const KitEditor: FC = () => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const tooltipLevel = useTooltip();
 
   let kit: Kit | null = null;
   try {
@@ -626,8 +627,8 @@ const KitEditor: FC = () => {
               onPressedChange={() => toggleKind("designs")}
               actionIcon={<Plus className="size-3.5 opacity-50" />}
               onActionClick={() => handleCreateArtifact("designs")}
-              tooltip={selectedKind === "designs" ? t("kitEditor.hideDesigns") : t("kitEditor.showDesigns")}
-              actionTooltip={t("kitEditor.createDesign")}
+              tooltip={selectedKind === "designs" ? getTooltip(t, "kitEditor.hideDesigns", tooltipLevel) : getTooltip(t, "kitEditor.showDesigns", tooltipLevel)}
+              actionTooltip={getTooltip(t, "kitEditor.createDesign", tooltipLevel)}
             >
               <Layout className="size-4" />
             </Toggle>
@@ -639,8 +640,8 @@ const KitEditor: FC = () => {
               onPressedChange={() => toggleKind("types")}
               actionIcon={<Plus className="size-3.5 opacity-50" />}
               onActionClick={() => handleCreateArtifact("types")}
-              tooltip={selectedKind === "types" ? t("kitEditor.hideTypes") : t("kitEditor.showTypes")}
-              actionTooltip={t("kitEditor.createType")}
+              tooltip={selectedKind === "types" ? getTooltip(t, "kitEditor.hideTypes", tooltipLevel) : getTooltip(t, "kitEditor.showTypes", tooltipLevel)}
+              actionTooltip={getTooltip(t, "kitEditor.createType", tooltipLevel)}
             >
               <Box className="size-4" />
             </Toggle>
@@ -652,8 +653,8 @@ const KitEditor: FC = () => {
               onPressedChange={() => toggleKind("qualities")}
               actionIcon={<Plus className="size-3.5 opacity-50" />}
               onActionClick={() => handleCreateArtifact("qualities")}
-              tooltip={selectedKind === "qualities" ? t("kitEditor.hideQualities") : t("kitEditor.showQualities")}
-              actionTooltip={t("kitEditor.createQuality")}
+              tooltip={selectedKind === "qualities" ? getTooltip(t, "kitEditor.hideQualities", tooltipLevel) : getTooltip(t, "kitEditor.showQualities", tooltipLevel)}
+              actionTooltip={getTooltip(t, "kitEditor.createQuality", tooltipLevel)}
             >
               <Award className="size-4" />
             </Toggle>
@@ -665,8 +666,8 @@ const KitEditor: FC = () => {
               onPressedChange={() => toggleKind("files")}
               actionIcon={<Plus className="size-3.5 opacity-50" />}
               onActionClick={() => handleCreateArtifact("files")}
-              tooltip={selectedKind === "files" ? t("kitEditor.hideFiles") : t("kitEditor.showFiles")}
-              actionTooltip={t("kitEditor.createFile")}
+              tooltip={selectedKind === "files" ? getTooltip(t, "kitEditor.hideFiles", tooltipLevel) : getTooltip(t, "kitEditor.showFiles", tooltipLevel)}
+              actionTooltip={getTooltip(t, "kitEditor.createFile", tooltipLevel)}
             >
               <FileText className="size-4" />
             </Toggle>
@@ -678,8 +679,8 @@ const KitEditor: FC = () => {
               onPressedChange={() => toggleKind("authors")}
               actionIcon={<Plus className="size-3.5 opacity-50" />}
               onActionClick={() => handleCreateArtifact("authors")}
-              tooltip={selectedKind === "authors" ? t("kitEditor.hideAuthors") : t("kitEditor.showAuthors")}
-              actionTooltip={t("kitEditor.createAuthor")}
+              tooltip={selectedKind === "authors" ? getTooltip(t, "kitEditor.hideAuthors", tooltipLevel) : getTooltip(t, "kitEditor.showAuthors", tooltipLevel)}
+              actionTooltip={getTooltip(t, "kitEditor.createAuthor", tooltipLevel)}
             >
               <User className="size-4" />
             </Toggle>

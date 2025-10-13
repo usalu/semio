@@ -117,6 +117,12 @@ export enum Layout {
   TOUCH = "touch",
 }
 
+export enum Tooltip {
+  NONE = "none",
+  CONCISE = "concise",
+  EXTENSIVE = "extensive",
+}
+
 export enum EditorType {
   HOME = "home",
   KIT = "kit",
@@ -7435,6 +7441,7 @@ export interface SketchpadChangableState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
+  tooltip: Tooltip;
   editorSettings: EditorSettings;
   panelSizes: PanelSizes;
   isFullscreen: boolean;
@@ -7452,6 +7459,7 @@ export interface SketchpadDiff {
   mode?: Mode;
   theme?: Theme;
   layout?: Layout;
+  tooltip?: Tooltip;
   editorSettings?: EditorSettings;
   panelSizes?: Partial<PanelSizes>;
   isFullscreen?: boolean;
@@ -7551,6 +7559,9 @@ class SketchpadStore {
       if (!this.ySketchpad.has("layout")) {
         this.ySketchpad.set("layout", Layout.NORMAL);
       }
+      if (!this.ySketchpad.has("tooltip")) {
+        this.ySketchpad.set("tooltip", Tooltip.EXTENSIVE);
+      }
       if (!this.ySketchpad.has("isFullscreen")) {
         this.ySketchpad.set("isFullscreen", false);
       }
@@ -7621,6 +7632,7 @@ class SketchpadStore {
       mode: this.ySketchpad.get("mode") as Mode,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
+      tooltip: (this.ySketchpad.get("tooltip") as Tooltip) ?? Tooltip.EXTENSIVE,
       editorSettings: editorSettings,
       panelSizes: panelSizes,
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
@@ -7711,6 +7723,7 @@ class SketchpadStore {
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", diff.layout);
+      if (diff.tooltip) this.ySketchpad.set("tooltip", diff.tooltip);
       if (diff.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", diff.isFullscreen);
       if (diff.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", diff.isNavbarExpanded);
       if (diff.isMobile !== undefined) this.ySketchpad.set("isMobile", diff.isMobile);
@@ -8030,6 +8043,11 @@ const sketchpadCommands = {
       diff: { layout },
     };
   },
+  "semio.sketchpad.setTooltip": (context: SketchpadCommandContext, tooltip: Tooltip): SketchpadCommandResult => {
+    return {
+      diff: { tooltip },
+    };
+  },
   "semio.sketchpad.toggleFullscreen": (context: SketchpadCommandContext): SketchpadCommandResult => {
     return {
       diff: { isFullscreen: !context.sketchpad.isFullscreen },
@@ -8151,6 +8169,10 @@ export function useTheme(): Theme {
 
 export function useLayout(): Layout {
   return useSketchpad((s) => s.layout) as Layout;
+}
+
+export function useTooltip(): Tooltip {
+  return useSketchpad((s) => s.tooltip) as Tooltip;
 }
 
 export function useIsFullscreen(): boolean {
@@ -8313,6 +8335,7 @@ export function useSketchpadCommands() {
     setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
     setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
     setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
+    setTooltip: (tooltip: Tooltip) => store.execute("semio.sketchpad.setTooltip", tooltip),
     toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
     toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
     setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),

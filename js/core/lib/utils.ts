@@ -25,6 +25,8 @@ import { default as adjectives } from "@semio/assets/lists/adjectives.json";
 import { default as animals } from "@semio/assets/lists/animals.json";
 import { v4 as uuidv4 } from "uuid";
 import CONSTANTS from "../constants.json";
+import { Tooltip } from "../store";
+import { TFunction } from "i18next";
 
 // #region Constants
 
@@ -34,6 +36,15 @@ export const TOLERANCE = CONSTANTS.tolerance;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function getTooltip(t: TFunction, key: string, tooltipLevel: Tooltip): string | undefined {
+  if (tooltipLevel === Tooltip.NONE) return undefined;
+  if (tooltipLevel === Tooltip.EXTENSIVE) {
+    const extensiveKey = `${key}.extensive`;
+    if (t(extensiveKey) !== extensiveKey) return t(extensiveKey);
+  }
+  return t(key);
 }
 
 export const guid = () => uuidv4();

@@ -1,10 +1,10 @@
 import { TreeContent, TreeItem, TreeSection } from "../Tree";
 
 import { t } from "i18next";
-import { FingerprintIcon, Laptop, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { CircleOffIcon, FingerprintIcon, Laptop, MessageSquareTextIcon, MonitorIcon, MoonIcon, SunIcon, TextIcon } from "lucide-react";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../../store";
+import { Layout, Theme, Tooltip, useLayout, useSketchpadCommands, useTheme, useTooltip } from "../../../store";
 import { ScrollArea } from "../ScrollArea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Select";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
@@ -33,7 +33,8 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const layout = useLayout();
-  const { setTheme, setLayout } = useSketchpadCommands();
+  const tooltip = useTooltip();
+  const { setTheme, setLayout, setTooltip } = useSketchpadCommands();
   const sections = usePanelSections("settings");
 
   const [isResizeHovered, setIsResizeHovered] = useState(false);
@@ -78,14 +79,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
             <TreeSection label={t("settings.general")} defaultOpen={true}>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value) => setTheme(value as Theme)}>
-                    <ToggleGroupItem value="system">
+                  <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)}>
+                    <ToggleGroupItem value={Theme.SYSTEM}>
                       <Laptop />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="light">
+                    <ToggleGroupItem value={Theme.LIGHT}>
                       <SunIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="dark">
+                    <ToggleGroupItem value={Theme.DARK}>
                       <MoonIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>
@@ -93,12 +94,27 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
               <TreeItem>
                 <TreeContent>
-                  <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value) => setLayout(value as Layout)}>
-                    <ToggleGroupItem value="normal">
+                  <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)}>
+                    <ToggleGroupItem value={Layout.NORMAL}>
                       <MonitorIcon />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="touch">
+                    <ToggleGroupItem value={Layout.TOUCH}>
                       <FingerprintIcon />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </TreeContent>
+              </TreeItem>
+              <TreeItem>
+                <TreeContent>
+                  <ToggleGroup label={t("settings.tooltip")} type="single" value={tooltip} onValueChange={(value: string) => setTooltip(value as Tooltip)}>
+                    <ToggleGroupItem value={Tooltip.NONE}>
+                      <CircleOffIcon />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value={Tooltip.CONCISE}>
+                      <TextIcon />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value={Tooltip.EXTENSIVE}>
+                      <MessageSquareTextIcon />
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </TreeContent>
