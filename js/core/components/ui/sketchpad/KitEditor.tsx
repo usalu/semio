@@ -12,7 +12,7 @@ import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Textarea } from "../Textarea";
 import { Toggle } from "../Toggle";
-import { TreeItem, TreeSection } from "../Tree";
+import { TreeContent, TreeItem, TreeSection } from "../Tree";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
 
 type ArtifactKind = "designs" | "types" | "qualities" | "files" | "authors";
@@ -63,7 +63,9 @@ const KitDetailsForm: FC = () => {
       return (
         <TreeSection label={t("kit.title")} defaultOpen={true}>
           <TreeItem>
-            <p className="text-sm text-muted-foreground">{t("kit.notAvailable")}</p>
+            <TreeContent>
+              <p className="text-sm text-muted-foreground">{t("kit.notAvailable")}</p>
+            </TreeContent>
           </TreeItem>
         </TreeSection>
       );
@@ -75,79 +77,93 @@ const KitDetailsForm: FC = () => {
     return (
       <TreeSection label={t("kit.title")} defaultOpen={true}>
         <TreeItem>
-          <Input lazy label={t("kit.name")} value={kit.name} onLazyChange={(value) => kitStore.change({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          <TreeContent>
+            <Input lazy label={t("kit.name")} value={kit.name} onLazyChange={(value) => kitStore.change({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("kit.version")}
-            value={kit.version || ""}
-            placeholder={t("kit.versionPlaceholder")}
-            onLazyChange={(value) => kitStore.change({ version: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("kit.version")}
+              value={kit.version || ""}
+              placeholder={t("kit.versionPlaceholder")}
+              onLazyChange={(value) => kitStore.change({ version: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Textarea
-            lazy
-            label={t("kit.description")}
-            value={kit.description || ""}
-            placeholder={t("kit.descriptionPlaceholder")}
-            onLazyChange={(value) => kitStore.change({ description: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Textarea
+              lazy
+              label={t("kit.description")}
+              value={kit.description || ""}
+              placeholder={t("kit.descriptionPlaceholder")}
+              onLazyChange={(value) => kitStore.change({ description: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("kit.icon")}
-            value={kit.icon || ""}
-            placeholder={t("kit.iconPlaceholder")}
-            onLazyChange={(value) => kitStore.change({ icon: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("kit.icon")}
+              value={kit.icon || ""}
+              placeholder={t("kit.iconPlaceholder")}
+              onLazyChange={(value) => kitStore.change({ icon: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("kit.image")}
-            value={kit.image || ""}
-            placeholder={t("kit.imagePlaceholder")}
-            onLazyChange={(value) => kitStore.change({ image: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("kit.image")}
+              value={kit.image || ""}
+              placeholder={t("kit.imagePlaceholder")}
+              onLazyChange={(value) => kitStore.change({ image: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("kit.homepage")}
-            value={kit.homepage || ""}
-            placeholder={t("kit.homepagePlaceholder")}
-            onLazyChange={(value) => kitStore.change({ homepage: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("kit.homepage")}
+              value={kit.homepage || ""}
+              placeholder={t("kit.homepagePlaceholder")}
+              onLazyChange={(value) => kitStore.change({ homepage: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("kit.license")}
-            value={kit.license || ""}
-            placeholder={t("kit.licensePlaceholder")}
-            onLazyChange={(value) => kitStore.change({ license: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("kit.license")}
+              value={kit.license || ""}
+              placeholder={t("kit.licensePlaceholder")}
+              onLazyChange={(value) => kitStore.change({ license: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
       </TreeSection>
     );
@@ -156,7 +172,9 @@ const KitDetailsForm: FC = () => {
     return (
       <TreeSection label={t("kit.title")} defaultOpen={true}>
         <TreeItem>
-          <p className="text-sm text-muted-foreground">{t("kit.notFound")}</p>
+          <TreeContent>
+            <p className="text-sm text-muted-foreground">{t("kit.notFound")}</p>
+          </TreeContent>
         </TreeItem>
       </TreeSection>
     );
@@ -599,8 +617,8 @@ const KitEditor: FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
-        <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-1 p-1 border-b">
+        <div className="flex flex-wrap gap-1 lg:flex-shrink-0">
           {(!selectedKind || selectedKind === "designs") && (
             <Toggle
               type="withAction"
@@ -721,17 +739,17 @@ const KitEditor: FC = () => {
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
-            <tr>
-              <th className="text-left p-2 font-medium">{t("kitEditor.name")}</th>
-              {!selectedKind && <th className="text-left p-2 font-medium">{t("kitEditor.kind")}</th>}
-              <th className="text-left p-2 font-medium">{t("kitEditor.lastUpdated")}</th>
-              <th className="text-left p-2 font-medium">{t("kitEditor.created")}</th>
+            <tr className="h-9">
+              <th className="text-left p-1 font-medium">{t("kitEditor.name")}</th>
+              {!selectedKind && <th className="text-left p-1 font-medium">{t("kitEditor.kind")}</th>}
+              <th className="text-left p-1 font-medium">{t("kitEditor.lastUpdated")}</th>
+              <th className="text-left p-1 font-medium">{t("kitEditor.created")}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.id} className="border-b hover:bg-muted/50">
-                <td className="p-2">
+                <td className="p-1">
                   <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
                     {row.hasChildren ? (
                       <button onClick={() => toggleRow(row.id)} className="w-4 h-4 flex items-center justify-center hover:bg-muted">
@@ -752,7 +770,7 @@ const KitEditor: FC = () => {
                   </div>
                 </td>
                 {!selectedKind && (
-                  <td className="p-2">
+                  <td className="p-1">
                     {row.kind === "designs" && <Layout className="size-4" />}
                     {row.kind === "types" && <Box className="size-4" />}
                     {row.kind === "qualities" && <Award className="size-4" />}
@@ -760,8 +778,8 @@ const KitEditor: FC = () => {
                     {row.kind === "authors" && <User className="size-4" />}
                   </td>
                 )}
-                <td className="p-2">{row.updatedAt}</td>
-                <td className="p-2">{row.createdAt}</td>
+                <td className="p-1">{row.updatedAt}</td>
+                <td className="p-1">{row.createdAt}</td>
               </tr>
             ))}
           </tbody>

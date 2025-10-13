@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
-import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
+import { Tree, TreeContent, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
@@ -87,7 +87,9 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
               {sortedSections.length === 0 && (
                 <TreeSection label={t("details.noSelection")} defaultOpen={true}>
                   <TreeItem>
-                    <p className="text-sm text-muted-foreground">{t("details.noSelectionMessage")}</p>
+                    <TreeContent>
+                      <p className="text-sm text-muted-foreground">{t("details.noSelectionMessage")}</p>
+                    </TreeContent>
                   </TreeItem>
                 </TreeSection>
               )}

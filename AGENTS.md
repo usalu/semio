@@ -29,9 +29,11 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
 - Whenever adding ui elements ALWAYS use i18n setups and provide translations for the existing languages.
+- ALWAYS add `[ORIGIN] ` prefix to temporary logs so that `\[*\]*` can be used to filter them out.
 
 ## Styling
 
+- NEVER use hardcoded pixels. ALWAYS use the existing ui frameworks with relative units.
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - NEVER use hardcoded or standard colors. All theme colors are explicitly defined.

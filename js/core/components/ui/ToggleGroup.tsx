@@ -28,7 +28,6 @@ import { cn } from "@semio/js/lib/utils";
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
   variant: "default",
-  size: "default",
 });
 
 interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children"> {
@@ -38,10 +37,9 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 
 function ToggleGroup({ className, label, children, ...restProps }: ToggleGroupProps) {
   const variant = "default";
-  const size = "default";
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} data-size={size} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...restProps}>
-      <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...restProps}>
+      <ToggleGroupContext.Provider value={{ variant }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
 
@@ -73,11 +71,9 @@ function ToggleGroupItem({
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
       data-variant={context.variant}
-      data-size={context.size}
       className={cn(
         toggleVariants({
           variant: context.variant,
-          size: context.size,
         }),
         "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-primary border-0 border-l first:border-l-0",
         className,

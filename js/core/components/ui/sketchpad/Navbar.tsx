@@ -36,7 +36,6 @@ import {
   useIsFullscreen,
   useIsMobile,
   useIsNavbarExpanded,
-  useKitCommandsSafe,
   useKitEditorCommands,
   useKits,
   useNavigation,
@@ -511,11 +510,7 @@ const Navigation: FC = ({ }) => {
         )}
         {isKitEditor && filteredKind && (
           <>
-            <BreadcrumbSeparator
-              items={artifactKinds}
-              tooltip={t("navbar.artifacts")}
-              onNavigate={(href) => navigate(href)}
-            />
+            <BreadcrumbSeparator items={artifactKinds} tooltip={t("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={t(`breadcrumb.${filteredKind}`)}>
               <BreadcrumbLink style={{ cursor: "default" }}>
                 {filteredKind === "designs" && <Layout size={16} />}
@@ -549,7 +544,9 @@ const Navigation: FC = ({ }) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.design")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}`)} style={{ cursor: "pointer" }}>{design.name}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}`)} style={{ cursor: "pointer" }}>
+                {design.name}
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
@@ -561,7 +558,9 @@ const Navigation: FC = ({ }) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.variant")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>{design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>
+                {design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
@@ -573,7 +572,9 @@ const Navigation: FC = ({ }) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.view")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)} style={{ cursor: "pointer" }}>{design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)} style={{ cursor: "pointer" }}>
+                {design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}
+              </BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
@@ -594,7 +595,9 @@ const Navigation: FC = ({ }) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.type")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}`)} style={{ cursor: "pointer" }}>{type.name}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}`)} style={{ cursor: "pointer" }}>
+                {type.name}
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
@@ -605,7 +608,9 @@ const Navigation: FC = ({ }) => {
               }}
             />
             <BreadcrumbItem tooltip={t("navbar.variant")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}`)} style={{ cursor: "pointer" }}>{type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}</BreadcrumbLink>
+              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}`)} style={{ cursor: "pointer" }}>
+                {type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}
+              </BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
@@ -797,7 +802,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         className={`w-full bg-background border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"} ${isNavbarExpanded ? "h-auto" : "h-12"}`}
         style={{ WebkitAppRegion: "drag" }}
       >
-        <div className="h-12 flex items-center justify-between px-4 gap-2">
+        <div className="h-12 flex items-center justify-between px-1 gap-1">
           <ButtonGroupItem value="back" tooltip={t("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
@@ -810,7 +815,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         </div>
 
         {isNavbarExpanded && (
-          <div className="flex flex-col gap-2 px-4 pb-4">
+          <div className="flex flex-col gap-1 px-1 pb-1">
             <ButtonGroup>
               <ButtonGroupItem value="forward" tooltip={t("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
                 <ArrowRight size={16} />
@@ -822,7 +827,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
 
             <Navigation />
 
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
                 {isFullscreen ? <Minimize /> : <Fullscreen />}
               </Toggle>
@@ -850,7 +855,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
   return (
     <div
       id="navbar"
-      className={`w-full h-12 bg-background border-b flex items-center gap-2 px-4 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
+      className={`w-full h-12 bg-background border-b flex items-center gap-1 px-1 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
       style={{ WebkitAppRegion: "drag" }}
     >
       <ButtonGroup>
@@ -867,7 +872,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
 
       <Navigation />
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-1 ml-auto">
         <PanelToggles />
         <Toggle variant="outline" tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           {isFullscreen ? <Minimize /> : <Fullscreen />}

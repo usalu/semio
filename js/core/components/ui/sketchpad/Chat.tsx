@@ -58,7 +58,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
             ))}
           </Tree>
         </div>
-        <div className="p-4 border-t">
+        <div className="p-1 border-t">
           <Textarea placeholder={t("chat.placeholder")} />
         </div>
       </ScrollArea>

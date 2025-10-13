@@ -39,7 +39,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({}) => {
+const Home: FC = ({ }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -188,8 +188,8 @@ const Home: FC = ({}) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2 p-4 border-b">
-        <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-1 p-1 border-b">
+        <div className="flex flex-wrap gap-1 lg:flex-shrink-0">
           <Toggle
             type="withAction"
             pressed={selectedKind === "temporary"}
@@ -229,17 +229,17 @@ const Home: FC = ({}) => {
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background border-b">
-            <tr>
-              <th className="text-left p-2 font-medium">{t("home.name")}</th>
-              {!selectedKind && <th className="text-left p-2 font-medium">{t("home.kind")}</th>}
-              <th className="text-left p-2 font-medium">{t("home.lastUpdated")}</th>
-              <th className="text-left p-2 font-medium">{t("home.created")}</th>
+            <tr className="h-9">
+              <th className="text-left p-1 font-medium">{t("home.name")}</th>
+              {!selectedKind && <th className="text-left p-1 font-medium">{t("home.kind")}</th>}
+              <th className="text-left p-1 font-medium">{t("home.lastUpdated")}</th>
+              <th className="text-left p-1 font-medium">{t("home.created")}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.id} className="border-b hover:bg-muted/50">
-                <td className="p-2">
+                <td className="p-1">
                   <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
                     {row.hasChildren ? (
                       <button
@@ -260,14 +260,14 @@ const Home: FC = ({}) => {
                   </div>
                 </td>
                 {!selectedKind && (
-                  <td className="p-2">
+                  <td className="p-1">
                     {row.type === "temporary" && <Clock className="size-4" />}
                     {row.type === "local" && <HardDrive className="size-4" />}
                     {row.type === "remote" && <Cloud className="size-4" />}
                   </td>
                 )}
-                <td className="p-2">{row.updatedAt}</td>
-                <td className="p-2">{row.createdAt}</td>
+                <td className="p-1">{row.updatedAt}</td>
+                <td className="p-1">{row.createdAt}</td>
               </tr>
             ))}
           </tbody>

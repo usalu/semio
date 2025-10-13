@@ -52,7 +52,7 @@ import { Input } from "../Input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
 import Stepper from "../Stepper";
 import { Textarea } from "../Textarea";
-import { SortableTreeItems, TreeItem, TreeSection } from "../Tree";
+import { SortableTreeItems, TreeContent, TreeItem, TreeSection } from "../Tree";
 import DesignModel from "./DesignModel";
 import Diagram from "./Diagram";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
@@ -95,70 +95,92 @@ const DesignSectionForm: FC = () => {
     <>
       <TreeSection label={t("design.title")} defaultOpen={true}>
         <TreeItem>
-          <Input lazy label={t("design.name")} value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          <TreeContent>
+            <Input lazy label={t("design.name")} value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Textarea
-            lazy
-            label={t("design.description")}
-            value={design.description || ""}
-            placeholder={t("design.descriptionPlaceholder")}
-            onLazyChange={(value) => updateDesignField({ description: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Textarea
+              lazy
+              label={t("design.description")}
+              value={design.description || ""}
+              placeholder={t("design.descriptionPlaceholder")}
+              onLazyChange={(value) => updateDesignField({ description: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("design.icon")}
-            value={design.icon || ""}
-            placeholder={t("design.iconPlaceholder")}
-            onLazyChange={(value) => updateDesignField({ icon: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("design.icon")}
+              value={design.icon || ""}
+              placeholder={t("design.iconPlaceholder")}
+              onLazyChange={(value) => updateDesignField({ icon: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("design.image")}
-            value={design.image || ""}
-            placeholder={t("design.imagePlaceholder")}
-            onLazyChange={(value) => updateDesignField({ image: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("design.image")}
+              value={design.image || ""}
+              placeholder={t("design.imagePlaceholder")}
+              onLazyChange={(value) => updateDesignField({ image: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("design.variant")}
-            value={design.variant || ""}
-            placeholder={t("design.variantPlaceholder")}
-            onLazyChange={(value) => updateDesignField({ variant: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("design.variant")}
+              value={design.variant || ""}
+              placeholder={t("design.variantPlaceholder")}
+              onLazyChange={(value) => updateDesignField({ variant: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input
-            lazy
-            label={t("design.view")}
-            value={design.view || ""}
-            placeholder={t("design.viewPlaceholder")}
-            onLazyChange={(value) => updateDesignField({ view: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("design.view")}
+              value={design.view || ""}
+              placeholder={t("design.viewPlaceholder")}
+              onLazyChange={(value) => updateDesignField({ view: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Input lazy label={t("design.unit")} value={design.unit || ""} onLazyChange={(value) => updateDesignField({ unit: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          <TreeContent>
+            <Input
+              lazy
+              label={t("design.unit")}
+              value={design.unit || ""}
+              onLazyChange={(value) => updateDesignField({ unit: value })}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+            />
+          </TreeContent>
         </TreeItem>
       </TreeSection>
       {design.location ? (
@@ -173,36 +195,40 @@ const DesignSectionForm: FC = () => {
           ]}
         >
           <TreeItem>
-            <Stepper
-              label={t("design.longitude")}
-              value={design.location.longitude}
-              onChange={(value) =>
-                handleChange({
-                  ...design,
-                  location: { ...design.location!, longitude: value },
-                })
-              }
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              step={0.000001}
-            />
+            <TreeContent>
+              <Stepper
+                label={t("design.longitude")}
+                value={design.location.longitude}
+                onChange={(value) =>
+                  handleChange({
+                    ...design,
+                    location: { ...design.location!, longitude: value },
+                  })
+                }
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.000001}
+              />
+            </TreeContent>
           </TreeItem>
           <TreeItem>
-            <Stepper
-              label={t("design.latitude")}
-              value={design.location.latitude}
-              onChange={(value) =>
-                handleChange({
-                  ...design,
-                  location: { ...design.location!, latitude: value },
-                })
-              }
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              step={0.000001}
-            />
+            <TreeContent>
+              <Stepper
+                label={t("design.latitude")}
+                value={design.location.latitude}
+                onChange={(value) =>
+                  handleChange({
+                    ...design,
+                    location: { ...design.location!, latitude: value },
+                  })
+                }
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.000001}
+              />
+            </TreeContent>
           </TreeItem>
         </TreeSection>
       ) : (
@@ -253,52 +279,58 @@ const DesignSectionForm: FC = () => {
             {(author, index) => (
               <TreeItem key={`author-${index}`} label={author.name || `${t("design.author")} ${index + 1}`} sortable={true} sortableId={`author-${index}`} isDragHandle={true}>
                 <TreeItem>
-                  <Input
-                    label={t("design.authorName")}
-                    value={author.name}
-                    onChange={(e) => {
-                      const updatedAuthors = [...(design.authors || [])];
-                      updatedAuthors[index] = {
-                        ...author,
-                        name: e.target.value,
-                      };
-                      handleChange({ ...design, authors: updatedAuthors });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
+                  <TreeContent>
+                    <Input
+                      label={t("design.authorName")}
+                      value={author.name}
+                      onChange={(e) => {
+                        const updatedAuthors = [...(design.authors || [])];
+                        updatedAuthors[index] = {
+                          ...author,
+                          name: e.target.value,
+                        };
+                        handleChange({ ...design, authors: updatedAuthors });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
                 </TreeItem>
                 <TreeItem>
-                  <Input
-                    label={t("design.authorEmail")}
-                    value={author.email}
-                    onChange={(e) => {
-                      const updatedAuthors = [...(design.authors || [])];
-                      updatedAuthors[index] = {
-                        ...author,
-                        email: e.target.value,
-                      };
-                      handleChange({ ...design, authors: updatedAuthors });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
+                  <TreeContent>
+                    <Input
+                      label={t("design.authorEmail")}
+                      value={author.email}
+                      onChange={(e) => {
+                        const updatedAuthors = [...(design.authors || [])];
+                        updatedAuthors[index] = {
+                          ...author,
+                          email: e.target.value,
+                        };
+                        handleChange({ ...design, authors: updatedAuthors });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
                 </TreeItem>
                 <TreeItem>
-                  <button
-                    onClick={() => {
-                      startTransaction();
-                      handleChange({
-                        ...design,
-                        authors: design.authors?.filter((_: any, i: number) => i !== index),
-                      });
-                      finalizeTransaction();
-                    }}
-                    className="text-destructive hover:text-destructive/80 p-1"
-                    title={t("common.remove")}
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  <TreeContent>
+                    <button
+                      onClick={() => {
+                        startTransaction();
+                        handleChange({
+                          ...design,
+                          authors: design.authors?.filter((_: any, i: number) => i !== index),
+                        });
+                        finalizeTransaction();
+                      }}
+                      className="text-destructive hover:text-destructive/80 p-1"
+                      title={t("common.remove")}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </TreeContent>
                 </TreeItem>
               </TreeItem>
             )}
@@ -359,87 +391,97 @@ const DesignSectionForm: FC = () => {
             {(attribute, index) => (
               <TreeItem key={`attribute-${index}`} label={attribute.key || `Attribute ${index + 1}`} sortable={true} sortableId={`attribute-${index}`} isDragHandle={true}>
                 <TreeItem>
-                  <Input
-                    label={t("design.attributeName")}
-                    value={attribute.key}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        key: e.target.value,
-                      };
-                      handleChange({ ...design, attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeName")}
+                      value={attribute.key}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          key: e.target.value,
+                        };
+                        handleChange({ ...design, attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
                 </TreeItem>
                 <TreeItem>
-                  <Input
-                    label={t("design.attributeValue")}
-                    value={attribute.value || ""}
-                    placeholder={t("design.attributeValuePlaceholder")}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        value: e.target.value,
-                      };
-                      handleChange({ ...design, attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeValue")}
+                      value={attribute.value || ""}
+                      placeholder={t("design.attributeValuePlaceholder")}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          value: e.target.value,
+                        };
+                        handleChange({ ...design, attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
                 </TreeItem>
                 <TreeItem>
-                  <Input
-                    label={t("design.attributeUnit")}
-                    value={attribute.unit || ""}
-                    placeholder={t("design.attributeUnitPlaceholder")}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        unit: e.target.value,
-                      };
-                      handleChange({ ...design, attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeUnit")}
+                      value={attribute.unit || ""}
+                      placeholder={t("design.attributeUnitPlaceholder")}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          unit: e.target.value,
+                        };
+                        handleChange({ ...design, attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
                 </TreeItem>
                 <TreeItem>
-                  <Input
-                    label={t("design.attributeDefinition")}
-                    value={attribute.definition || ""}
-                    placeholder={t("design.attributeDefinitionPlaceholder")}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        definition: e.target.value,
-                      };
-                      handleChange({ ...design, attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeDefinition")}
+                      value={attribute.definition || ""}
+                      placeholder={t("design.attributeDefinitionPlaceholder")}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          definition: e.target.value,
+                        };
+                        handleChange({ ...design, attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
                 </TreeItem>
                 <TreeItem>
-                  <button
-                    onClick={() => {
-                      startTransaction();
-                      handleChange({
-                        ...design,
-                        attributes: design.attributes?.filter((_: any, i: number) => i !== index),
-                      });
-                      finalizeTransaction();
-                    }}
-                    className="text-destructive hover:text-destructive/80 p-1"
-                    title={t("design.removeAttribute")}
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  <TreeContent>
+                    <button
+                      onClick={() => {
+                        startTransaction();
+                        handleChange({
+                          ...design,
+                          attributes: design.attributes?.filter((_: any, i: number) => i !== index),
+                        });
+                        finalizeTransaction();
+                      }}
+                      className="text-destructive hover:text-destructive/80 p-1"
+                      title={t("design.removeAttribute")}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </TreeContent>
                 </TreeItem>
               </TreeItem>
             )}
@@ -467,22 +509,30 @@ const DesignSectionForm: FC = () => {
       <TreeSection label={t("design.metadata")}>
         {design.created && (
           <TreeItem>
-            <Input label="Created" value={design.created.toISOString().split("T")[0]} disabled />
+            <TreeContent>
+              <Input label="Created" value={design.created.toISOString().split("T")[0]} disabled />
+            </TreeContent>
           </TreeItem>
         )}
         {design.updated && (
           <TreeItem>
-            <Input label="Updated" value={design.updated.toISOString().split("T")[0]} disabled />
+            <TreeContent>
+              <Input label="Updated" value={design.updated.toISOString().split("T")[0]} disabled />
+            </TreeContent>
           </TreeItem>
         )}
         {design.pieces && design.pieces.length > 0 && (
           <TreeItem>
-            <Input label="Pieces" value={`${design.pieces.length} pieces`} disabled />
+            <TreeContent>
+              <Input label="Pieces" value={`${design.pieces.length} pieces`} disabled />
+            </TreeContent>
           </TreeItem>
         )}
         {design.connections && design.connections.length > 0 && (
           <TreeItem>
-            <Input label="Connections" value={`${design.connections.length} connections`} disabled />
+            <TreeContent>
+              <Input label="Connections" value={`${design.connections.length} connections`} disabled />
+            </TreeContent>
           </TreeItem>
         )}
       </TreeSection>
@@ -931,7 +981,9 @@ const PiecesSectionForm: FC = () => {
       {hasMixedTypes ? (
         <TreeSection label={t("piece.mixedSelection", { count: pieces.length })} defaultOpen={true}>
           <TreeItem>
-            <p className="text-sm text-muted-foreground">{t("piece.mixedSelectionMessage")}</p>
+            <TreeContent>
+              <p className="text-sm text-muted-foreground">{t("piece.mixedSelectionMessage")}</p>
+            </TreeContent>
           </TreeItem>
         </TreeSection>
       ) : (
@@ -952,7 +1004,9 @@ const PiecesSectionForm: FC = () => {
         >
           {isSingle && piece && (
             <TreeItem>
-              <Input label={t("piece.id")} value={getPieceId(piece)} disabled />
+              <TreeContent>
+                <Input label={t("piece.id")} value={getPieceId(piece)} disabled />
+              </TreeContent>
             </TreeItem>
           )}
 
@@ -960,45 +1014,51 @@ const PiecesSectionForm: FC = () => {
             // Design piece fields
             <>
               <TreeItem>
-                <Combobox
-                  label={t("design.name")}
-                  options={availableDesignNames.map((name) => ({
-                    value: name,
-                    label: name,
-                  }))}
-                  value={currentDesignId?.name || ""}
-                  placeholder={t("common.selectDesign")}
-                  onValueChange={handleDesignNameChange}
-                />
+                <TreeContent>
+                  <Combobox
+                    label={t("design.name")}
+                    options={availableDesignNames.map((name) => ({
+                      value: name,
+                      label: name,
+                    }))}
+                    value={currentDesignId?.name || ""}
+                    placeholder={t("common.selectDesign")}
+                    onValueChange={handleDesignNameChange}
+                  />
+                </TreeContent>
               </TreeItem>
               {availableDesignVariants.length > 0 && (
                 <TreeItem>
-                  <Combobox
-                    label={t("design.variant")}
-                    options={availableDesignVariants.map((variant) => ({
-                      value: variant,
-                      label: variant,
-                    }))}
-                    value={currentDesignId?.variant || ""}
-                    placeholder={t("common.selectVariant")}
-                    onValueChange={handleDesignVariantChange}
-                    allowClear={true}
-                  />
+                  <TreeContent>
+                    <Combobox
+                      label={t("design.variant")}
+                      options={availableDesignVariants.map((variant) => ({
+                        value: variant,
+                        label: variant,
+                      }))}
+                      value={currentDesignId?.variant || ""}
+                      placeholder={t("common.selectVariant")}
+                      onValueChange={handleDesignVariantChange}
+                      allowClear={true}
+                    />
+                  </TreeContent>
                 </TreeItem>
               )}
               {availableDesignViews.length > 0 && (
                 <TreeItem>
-                  <Combobox
-                    label={t("design.view")}
-                    options={availableDesignViews.map((view) => ({
-                      value: view,
-                      label: view,
-                    }))}
-                    value={currentDesignId?.view || ""}
-                    placeholder={t("common.selectView")}
-                    onValueChange={handleDesignViewChange}
-                    allowClear={true}
-                  />
+                  <TreeContent>
+                    <Combobox
+                      label={t("design.view")}
+                      options={availableDesignViews.map((view) => ({
+                        value: view,
+                        label: view,
+                      }))}
+                      value={currentDesignId?.view || ""}
+                      placeholder={t("common.selectView")}
+                      onValueChange={handleDesignViewChange}
+                      allowClear={true}
+                    />
+                  </TreeContent>
                 </TreeItem>
               )}
             </>
@@ -1006,30 +1066,34 @@ const PiecesSectionForm: FC = () => {
             // Regular piece fields
             <>
               <TreeItem>
-                <Combobox
-                  label={t("piece.type")}
-                  options={availableTypeNames.map((name) => ({
-                    value: name,
-                    label: name,
-                  }))}
-                  value={isSingle && piece ? piece.type.name : commonTypeName || ""}
-                  placeholder={!isSingle && commonTypeName === undefined ? t("common.mixedValues") : t("common.selectType")}
-                  onValueChange={handleTypeNameChange}
-                />
+                <TreeContent>
+                  <Combobox
+                    label={t("piece.type")}
+                    options={availableTypeNames.map((name) => ({
+                      value: name,
+                      label: name,
+                    }))}
+                    value={isSingle && piece ? piece.type.name : commonTypeName || ""}
+                    placeholder={!isSingle && commonTypeName === undefined ? t("common.mixedValues") : t("common.selectType")}
+                    onValueChange={handleTypeNameChange}
+                  />
+                </TreeContent>
               </TreeItem>
               {(hasVariant || availableVariants.length > 0) && (
                 <TreeItem>
-                  <Combobox
-                    label={t("type.variant")}
-                    options={availableVariants.map((variant) => ({
-                      value: variant,
-                      label: variant,
-                    }))}
-                    value={isSingle && piece ? piece.type.variant || "" : commonTypeVariant || ""}
-                    placeholder={!isSingle && commonTypeVariant === undefined ? t("common.mixedValues") : t("common.selectVariant")}
-                    onValueChange={handleTypeVariantChange}
-                    allowClear={true}
-                  />
+                  <TreeContent>
+                    <Combobox
+                      label={t("type.variant")}
+                      options={availableVariants.map((variant) => ({
+                        value: variant,
+                        label: variant,
+                      }))}
+                      value={isSingle && piece ? piece.type.variant || "" : commonTypeVariant || ""}
+                      placeholder={!isSingle && commonTypeVariant === undefined ? t("common.mixedValues") : t("common.selectVariant")}
+                      onValueChange={handleTypeVariantChange}
+                      allowClear={true}
+                    />
+                  </TreeContent>
                 </TreeItem>
               )}
             </>
@@ -1039,10 +1103,30 @@ const PiecesSectionForm: FC = () => {
       {hasCenter && (
         <TreeSection label={t("piece.center")}>
           <TreeItem>
-            <Stepper label={t("common.x")} value={isSingle && piece ? piece.center?.x : commonCenterX} onChange={handleCenterXChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <TreeContent>
+              <Stepper
+                label={t("common.x")}
+                value={isSingle && piece ? piece.center?.x : commonCenterX}
+                onChange={handleCenterXChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
           </TreeItem>
           <TreeItem>
-            <Stepper label={t("common.y")} value={isSingle && piece ? piece.center?.y : commonCenterY} onChange={handleCenterYChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <TreeContent>
+              <Stepper
+                label={t("common.y")}
+                value={isSingle && piece ? piece.center?.y : commonCenterY}
+                onChange={handleCenterYChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
           </TreeItem>
         </TreeSection>
       )}
@@ -1050,37 +1134,43 @@ const PiecesSectionForm: FC = () => {
         <TreeSection label={t("piece.plane")}>
           <TreeSection label={t("piece.origin")} defaultOpen={true}>
             <TreeItem>
-              <Stepper
-                label={t("common.x")}
-                value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
-                onChange={handlePlaneOriginXChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                step={0.1}
-              />
+              <TreeContent>
+                <Stepper
+                  label={t("common.x")}
+                  value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
+                  onChange={handlePlaneOriginXChange}
+                  onPointerDown={startTransaction}
+                  onPointerUp={finalizeTransaction}
+                  onPointerCancel={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
             </TreeItem>
             <TreeItem>
-              <Stepper
-                label={t("common.y")}
-                value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
-                onChange={handlePlaneOriginYChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                step={0.1}
-              />
+              <TreeContent>
+                <Stepper
+                  label={t("common.y")}
+                  value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
+                  onChange={handlePlaneOriginYChange}
+                  onPointerDown={startTransaction}
+                  onPointerUp={finalizeTransaction}
+                  onPointerCancel={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
             </TreeItem>
             <TreeItem>
-              <Stepper
-                label={t("common.z")}
-                value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
-                onChange={handlePlaneOriginZChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                step={0.1}
-              />
+              <TreeContent>
+                <Stepper
+                  label={t("common.z")}
+                  value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
+                  onChange={handlePlaneOriginZChange}
+                  onPointerDown={startTransaction}
+                  onPointerUp={finalizeTransaction}
+                  onPointerCancel={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
             </TreeItem>
           </TreeSection>
         </TreeSection>
@@ -1208,27 +1298,39 @@ const ConnectionsSectionForm: FC<{
         <>
           <TreeItem label="Connecting">
             <TreeItem>
-              <Input label="Piece ID" value={connection!.connecting.piece.id_} disabled />
+              <TreeContent>
+                <Input label="Piece ID" value={connection!.connecting.piece.id_} disabled />
+              </TreeContent>
             </TreeItem>
             <TreeItem>
-              <Input label="Port ID" value={connection!.connecting.port.id_} disabled />
+              <TreeContent>
+                <Input label="Port ID" value={connection!.connecting.port.id_} disabled />
+              </TreeContent>
             </TreeItem>
             {connection!.connecting.designPiece && (
               <TreeItem>
-                <Input label="Design Piece ID" value={connection!.connecting.designPiece.id_} disabled />
+                <TreeContent>
+                  <Input label="Design Piece ID" value={connection!.connecting.designPiece.id_} disabled />
+                </TreeContent>
               </TreeItem>
             )}
           </TreeItem>
           <TreeItem label="Connected">
             <TreeItem>
-              <Input label="Piece ID" value={connection!.connected.piece.id_} disabled />
+              <TreeContent>
+                <Input label="Piece ID" value={connection!.connected.piece.id_} disabled />
+              </TreeContent>
             </TreeItem>
             <TreeItem>
-              <Input label="Port ID" value={connection!.connected.port.id_} disabled />
+              <TreeContent>
+                <Input label="Port ID" value={connection!.connected.port.id_} disabled />
+              </TreeContent>
             </TreeItem>
             {connection!.connected.designPiece && (
               <TreeItem>
-                <Input label="Design Piece ID" value={connection!.connected.designPiece.id_} disabled />
+                <TreeContent>
+                  <Input label="Design Piece ID" value={connection!.connected.designPiece.id_} disabled />
+                </TreeContent>
               </TreeItem>
             )}
           </TreeItem>
@@ -1236,93 +1338,111 @@ const ConnectionsSectionForm: FC<{
       )}
       {!isSingle && (
         <TreeItem>
-          <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
+          <TreeContent>
+            <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
+          </TreeContent>
         </TreeItem>
       )}
       <TreeItem label={t("piece.plane")}>
         <TreeItem label="Translation" defaultOpen={true}>
           <TreeItem>
-            <Stepper
-              label={t("connection.gap")}
-              value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
-              onChange={handleGapChange}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              step={0.1}
-            />
+            <TreeContent>
+              <Stepper
+                label={t("connection.gap")}
+                value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
+                onChange={handleGapChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
           </TreeItem>
           <TreeItem>
-            <Stepper
-              label={t("connection.shift")}
-              value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
-              onChange={handleShiftChange}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              step={0.1}
-            />
+            <TreeContent>
+              <Stepper
+                label={t("connection.shift")}
+                value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
+                onChange={handleShiftChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
           </TreeItem>
           <TreeItem>
-            <Stepper
-              label={t("connection.rise")}
-              value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
-              onChange={handleRiseChange}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              step={0.1}
-            />
+            <TreeContent>
+              <Stepper
+                label={t("connection.rise")}
+                value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
+                onChange={handleRiseChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
           </TreeItem>
         </TreeItem>
         <TreeItem label="Orientation">
           <TreeItem>
-            <Slider
-              label={t("connection.rotation")}
-              value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
-              onValueChange={([value]) => handleRotationChange(value)}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              min={-180}
-              max={180}
-              step={1}
-            />
+            <TreeContent>
+              <Slider
+                label={t("connection.rotation")}
+                value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
+                onValueChange={([value]) => handleRotationChange(value)}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                min={-180}
+                max={180}
+                step={1}
+              />
+            </TreeContent>
           </TreeItem>
           <TreeItem>
-            <Slider
-              label={t("connection.turn")}
-              value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
-              onValueChange={([value]) => handleTurnChange(value)}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              min={-180}
-              max={180}
-              step={1}
-            />
+            <TreeContent>
+              <Slider
+                label={t("connection.turn")}
+                value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
+                onValueChange={([value]) => handleTurnChange(value)}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                min={-180}
+                max={180}
+                step={1}
+              />
+            </TreeContent>
           </TreeItem>
           <TreeItem>
-            <Slider
-              label={t("connection.tilt")}
-              value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
-              onValueChange={([value]) => handleTiltChange(value)}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
-              min={-180}
-              max={180}
-              step={1}
-            />
+            <TreeContent>
+              <Slider
+                label={t("connection.tilt")}
+                value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
+                onValueChange={([value]) => handleTiltChange(value)}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                min={-180}
+                max={180}
+                step={1}
+              />
+            </TreeContent>
           </TreeItem>
         </TreeItem>
       </TreeItem>
       <TreeItem label="Diagram">
         <TreeItem>
-          <Stepper label="X Offset" value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)} onChange={handleXOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          <TreeContent>
+            <Stepper label="X Offset" value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)} onChange={handleXOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          </TreeContent>
         </TreeItem>
         <TreeItem>
-          <Stepper label="Y Offset" value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)} onChange={handleYOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          <TreeContent>
+            <Stepper label="Y Offset" value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)} onChange={handleYOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          </TreeContent>
         </TreeItem>
       </TreeItem>
     </TreeSection>
@@ -1354,7 +1474,9 @@ const PortSectionForm: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, po
     return (
       <TreeSection label="Port" defaultOpen={true}>
         <TreeItem>
-          <p className="text-sm text-muted-foreground">Port not found</p>
+          <TreeContent>
+            <p className="text-sm text-muted-foreground">Port not found</p>
+          </TreeContent>
         </TreeItem>
       </TreeSection>
     );
@@ -1371,13 +1493,17 @@ const PortSectionForm: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, po
       {port.compatibleFamilies &&
         port.compatibleFamilies.map((family: string) => (
           <TreeItem>
-            <Input label="Compatible Families" value={family} disabled />
+            <TreeContent>
+              <Input label="Compatible Families" value={family} disabled />
+            </TreeContent>
           </TreeItem>
         ))}
       {port.attributes &&
         port.attributes.map((attribute: any) => (
           <TreeItem>
-            <Input label={t("design.attributes")} value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
+            <TreeContent>
+              <Input label={t("design.attributes")} value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
+            </TreeContent>
           </TreeItem>
         ))}
     </TreeSection>
@@ -1476,7 +1602,9 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           defaultOpen: true,
           content: () => (
             <TreeItem>
-              <p className="text-sm text-muted-foreground">Select only pieces or only connections to edit details.</p>
+              <TreeContent>
+                <p className="text-sm text-muted-foreground">Select only pieces or only connections to edit details.</p>
+              </TreeContent>
             </TreeItem>
           ),
         });
@@ -1521,11 +1649,13 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         <>
           {Object.entries(typesByName).map(([name, variants]) => (
             <TreeItem key={name} label={name} defaultOpen={false}>
-              <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                {variants.map((type: any) => (
-                  <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} kitGuid={kit.guid} />
-                ))}
-              </div>
+              <TreeContent>
+                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
+                  {variants.map((type: any) => (
+                    <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} kitGuid={kit.guid} />
+                  ))}
+                </div>
+              </TreeContent>
             </TreeItem>
           ))}
         </>
@@ -1541,11 +1671,13 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         <>
           {Object.entries(designsByName).map(([name, designs]) => (
             <TreeItem key={name} label={name} defaultOpen={false}>
-              <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                {designs.map((design: any) => (
-                  <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} kitGuid={kit.guid} />
-                ))}
-              </div>
+              <TreeContent>
+                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
+                  {designs.map((design: any) => (
+                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} kitGuid={kit.guid} />
+                  ))}
+                </div>
+              </TreeContent>
             </TreeItem>
           ))}
         </>
@@ -1568,12 +1700,16 @@ const DesignEditor: FC<DesignEditorProps> = () => {
       content: (
         <>
           <TreeItem>
-            <div className="flex flex-col gap-2">
-              <label>Snappiness: {editorSettings.design?.snappiness}</label>
-              <input type="range" min="0" max="20" value={editorSettings.design?.snappiness || 10} className="w-full" readOnly />
-            </div>
+            <TreeContent>
+              <div className="flex flex-col gap-1">
+                <label>Snappiness: {editorSettings.design?.snappiness}</label>
+                <input type="range" min="0" max="20" value={editorSettings.design?.snappiness || 10} className="w-full" readOnly />
+              </div>
+            </TreeContent>
           </TreeItem>
-          <TreeItem>Grid Size: {editorSettings.design?.gridSize || 24}px</TreeItem>
+          <TreeItem>
+            <TreeContent>Grid Size: {editorSettings.design?.gridSize || 24}px</TreeContent>
+          </TreeItem>
         </>
       ),
     });

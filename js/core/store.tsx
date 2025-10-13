@@ -4131,9 +4131,7 @@ class KitStore {
       kit: this.snapshot(),
       fileUrls: this.fileUrls,
     };
-    console.log("Context:", context);
     const result = callback(context, ...rest);
-    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
@@ -4807,29 +4805,22 @@ abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelecti
   };
 
   change = (diff: TDiff) => {
-    console.log("[Editor.change] called with diff:", diff);
     this.transact(() => {
-      console.log("[Editor.change] inside transact");
       if (diff.fullscreenPanel !== undefined) {
         this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
       }
       if (diff.panelVisibility !== undefined) {
-        console.log("[Editor.change] panelVisibility diff:", diff.panelVisibility);
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-        console.log("[Editor.change] existing yPanelVisibility:", yPanelVisibility ? "exists" : "null", yPanelVisibility?.toJSON());
         if (!yPanelVisibility) {
           yPanelVisibility = new Y.Map<boolean>();
           this.yMap.set("panelVisibility", yPanelVisibility);
-          console.log("[Editor.change] created new yPanelVisibility");
         }
         yPanelVisibility.set("__editor", this.constructor.name as any); // DEBUG: mark which editor owns this
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
-            console.log("[Editor.change] setting", key, "to", value);
             yPanelVisibility.set(key, value);
           }
         });
-        console.log("[Editor.change] final yPanelVisibility:", yPanelVisibility.toJSON());
       }
       if (diff.selection) {
         this.applySelectionDiff(diff.selection);
@@ -5844,28 +5835,21 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
   }
 
   change = (diff: KitEditorDiff) => {
-    console.log("[KitEditorStore.change] called with diff:", diff);
     this.transact(() => {
-      console.log("[KitEditorStore.change] inside transact");
       if (diff.fullscreenPanel !== undefined) {
         this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
       }
       if (diff.panelVisibility !== undefined) {
-        console.log("[KitEditorStore.change] panelVisibility diff:", diff.panelVisibility);
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-        console.log("[KitEditorStore.change] existing yPanelVisibility:", yPanelVisibility ? "exists" : "null", yPanelVisibility?.toJSON());
         if (!yPanelVisibility) {
           yPanelVisibility = new Y.Map<boolean>();
           this.yMap.set("panelVisibility", yPanelVisibility);
-          console.log("[KitEditorStore.change] created new yPanelVisibility");
         }
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
-            console.log("[KitEditorStore.change] setting", key, "to", value);
             yPanelVisibility.set(key, value);
           }
         });
-        console.log("[KitEditorStore.change] final yPanelVisibility:", yPanelVisibility.toJSON());
       }
       if (diff.selection) {
         this.applySelectionDiff(diff.selection);
@@ -5979,9 +5963,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
       kit: kitStore.snapshot(),
       fileUrls: kitStore.fileUrls,
     };
-    console.log("Context:", context);
     const result = callback(context, ...rest);
-    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
@@ -6286,15 +6268,11 @@ const kitEditorCommands = {
 function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitEditorId): T | KitEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  console.log("[useKitEditorStore] kitScope:", kitScope);
   const resolvedKitId = kitScope?.guid ?? id?.kit;
-  console.log("[useKitEditorStore] resolvedKitId:", resolvedKitId);
   if (!resolvedKitId) {
-    console.log("[useKitEditorStore] no resolvedKitId, returning null");
     return null;
   }
   const kitEditorStore = store.kitEditor(resolvedKitId);
-  console.log("[useKitEditorStore] kitEditorStore:", kitEditorStore);
   return selector ? selector(kitEditorStore) : kitEditorStore;
 }
 
@@ -6316,12 +6294,8 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
-  console.log("[useKitEditorCommands] store:", store);
-  const noOp = () => {
-    console.log("[useKitEditorCommands] noOp called");
-  };
+  const noOp = () => { };
   if (!store) {
-    console.log("[useKitEditorCommands] no store, returning noOps");
     return {
       startTransaction: noOp,
       finalizeTransaction: noOp,
@@ -6547,34 +6521,56 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     yMap.set("kit", kit.guid);
     yMap.set("design", design.guid);
 
-    yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+    // Only initialize if not already set (preserve existing values when reopening)
+    if (!yMap.has("fullscreenPanel")) {
+      yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+    }
 
-    const selection = new Y.Map<any>();
-    const selectedPieces = new Y.Array<Guid>();
-    if (state?.selection.pieces) {
-      selectedPieces.push(state?.selection.pieces.map((piece) => pieceIdToString(piece)) || []);
+    // Only initialize selection if not already set
+    if (!yMap.has("selection")) {
+      const selection = new Y.Map<any>();
+      const selectedPieces = new Y.Array<Guid>();
+      if (state?.selection.pieces) {
+        selectedPieces.push(state?.selection.pieces.map((piece) => pieceIdToString(piece)) || []);
+      }
+      const selectedConnections = new Y.Array<Guid>();
+      if (state?.selection.connections) {
+        selectedConnections.push(state?.selection.connections.map((connection) => connectionIdToString(connection)) || []);
+      }
+      const selectionPort = new Y.Map<any>();
+      if (state?.selection.port) {
+        selectionPort.set("piece", pieceIdToString(state?.selection.port.piece!));
+        selectionPort.set("port", portIdToString(state?.selection.port.port!));
+        selectionPort.set("designPiece", pieceIdToString(state?.selection.port.designPiece!));
+      }
+      selection.set("pieces", selectedPieces);
+      selection.set("connections", selectedConnections);
+      selection.set("port", selectionPort);
+      yMap.set("selection", selection);
     }
-    const selectedConnections = new Y.Array<Guid>();
-    if (state?.selection.connections) {
-      selectedConnections.push(state?.selection.connections.map((connection) => connectionIdToString(connection)) || []);
-    }
-    const selectionPort = new Y.Map<any>();
-    if (state?.selection.port) {
-      selectionPort.set("piece", pieceIdToString(state?.selection.port.piece!));
-      selectionPort.set("port", portIdToString(state?.selection.port.port!));
-      selectionPort.set("designPiece", pieceIdToString(state?.selection.port.designPiece!));
-    }
-    selection.set("pieces", selectedPieces);
-    selection.set("connections", selectedConnections);
-    selection.set("port", selectionPort);
-    yMap.set("selection", selection);
 
-    yMap.set("isTransactionActive", false);
-    yMap.set("presence", new Y.Map<any>());
-    yMap.set("others", new Y.Array<any>());
-    yMap.set("diff", new Y.Map<any>());
-    yMap.set("currentTransactionStack", new Y.Array<any>());
-    yMap.set("pastTransactionsStack", new Y.Array<any>());
+    // Only initialize these if not already set
+    if (!yMap.has("isTransactionActive")) {
+      yMap.set("isTransactionActive", false);
+    }
+    if (!yMap.has("presence")) {
+      yMap.set("presence", new Y.Map<any>());
+    }
+    if (!yMap.has("others")) {
+      yMap.set("others", new Y.Array<any>());
+    }
+    if (!yMap.has("diff")) {
+      yMap.set("diff", new Y.Map<any>());
+    }
+    if (!yMap.has("currentTransactionStack")) {
+      yMap.set("currentTransactionStack", new Y.Array<any>());
+    }
+    if (!yMap.has("pastTransactionsStack")) {
+      yMap.set("pastTransactionsStack", new Y.Array<any>());
+    }
+
+    // Camera, diagramCenter, and diagramScale are already handled by their getters/setters
+    // and will be preserved automatically if they exist in the yMap
 
     Object.entries(designEditorCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -6662,7 +6658,9 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
   get camera(): Camera | undefined {
     const cameraStr = this.yMap.get("camera") as string | undefined;
-    return cameraStr ? JSON.parse(cameraStr) : undefined;
+    const camera = cameraStr ? JSON.parse(cameraStr) : undefined;
+    console.log("[Camera] GET design:", this.yMap.get("design"), "camera:", camera);
+    return camera;
   }
 
   get diagramCenter(): Coord | undefined {
@@ -6811,6 +6809,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
         // Handle hover changes if needed
       }
       if (diff.camera) {
+        console.log("[Camera] SET design:", this.yMap.get("design"), "camera:", diff.camera);
         this.yMap.set("camera", JSON.stringify(diff.camera));
       }
       if (diff.diagramCenter) {
@@ -6858,9 +6857,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       designId: this.design().guid,
       fileUrls: kitStore.fileUrls,
     };
-    console.log("Context:", context);
     const result = callback(context, ...rest);
-    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
@@ -7261,23 +7258,16 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  console.log("[useDesignEditorStore] kitScope:", kitScope);
   const resolvedKitId = kitScope?.guid ?? id?.kit;
-  console.log("[useDesignEditorStore] resolvedKitId:", resolvedKitId);
   if (!resolvedKitId) {
-    console.log("[useDesignEditorStore] no resolvedKitId, returning null");
     return null;
   }
   const designScope = useDesignScope();
-  console.log("[useDesignEditorStore] designScope:", designScope);
   const resolvedDesignId = designScope?.guid ?? id?.design;
-  console.log("[useDesignEditorStore] resolvedDesignId:", resolvedDesignId);
   if (!resolvedDesignId) {
-    console.log("[useDesignEditorStore] no resolvedDesignId, returning null");
     return null;
   }
   const designEditorStore = store.designEditor(resolvedKitId, resolvedDesignId);
-  console.log("[useDesignEditorStore] designEditorStore:", designEditorStore);
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
@@ -7314,16 +7304,9 @@ export function useDesignEditorDiagramScale(): number | undefined {
 }
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
-  console.log("[useDesignEditorCommands] CALLED");
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  console.log("[useDesignEditorCommands] store:", store);
-  console.log("[useDesignEditorCommands] store type:", typeof store);
-  console.log("[useDesignEditorCommands] store truthiness:", !!store);
-  const noOp = () => {
-    console.log("[useDesignEditorCommands] noOp called");
-  };
+  const noOp = () => { };
   if (!store) {
-    console.log("[useDesignEditorCommands] no store (falsy check passed), returning noOps");
     return {
       startTransaction: noOp,
       finalizeTransaction: noOp,
@@ -7399,15 +7382,7 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     setDiagramCenter: (center: Coord) => store.execute("semio.designEditor.setDiagramCenter", center),
     setDiagramScale: (scale: number) => store.execute("semio.designEditor.setDiagramScale", scale),
     togglePanel: (panelKey: keyof PanelVisibility) => {
-      console.log("[useDesignEditorCommands.togglePanel] called with panelKey:", panelKey);
-      console.log("[useDesignEditorCommands.togglePanel] store:", store);
-      console.log("[useDesignEditorCommands.togglePanel] store.guid:", store.guid);
-      console.log("[useDesignEditorCommands.togglePanel] store.yMap:", store.yMap);
-      console.log("[useDesignEditorCommands.togglePanel] typeof store.change:", typeof store.change);
-      console.log("[useDesignEditorCommands.togglePanel] store.change:", store.change);
       const current = store.snapshot().panelVisibility;
-      console.log("[useDesignEditorCommands.togglePanel] current panelVisibility:", current);
-      console.log("[useDesignEditorCommands.togglePanel] calling store.change...");
       try {
         store.change({
           panelVisibility: {
@@ -7417,7 +7392,6 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
       } catch (error) {
         console.error("[useDesignEditorCommands.togglePanel] ERROR in store.change:", error);
       }
-      console.log("[useDesignEditorCommands.togglePanel] after store.change, new panelVisibility:", store.snapshot().panelVisibility);
     },
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
@@ -7542,32 +7516,13 @@ class SketchpadStore {
     this.designEditorCreatedSubscribers = new Set();
     this.designEditorDeletedSubscribers = new Set();
 
-    // if (id) {
-    //   this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
-    //   this.persistence!.doc.on("update", () => {
-    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID });
-    //   });
-    //   this.broadcastChannel.addEventListener("message", (msg) => {
-    //     console.log("message", msg);
-    //     const { data } = msg;
-    //     if (data.client !== this.yDoc.clientID) {
-    //     }
-    //   });
-    // } else {
-    //   this.yDoc.on("update", (update: Uint8Array) => {
-    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID, update });
-    //   });
-    //   this.broadcastChannel.addEventListener("message", (msg) => {
-    //     const { data } = msg;
-    //     if (data.client !== this.yDoc.clientID) {
-    //       Y.applyUpdate(this.yDoc, data.update);
-    //     }
-    //   });
-    // }
+    if (id) {
+      this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
+    }
 
-    // if (yProviderFactory) {
-    //   yProviderFactory(this.yDoc, id);
-    // }
+    if (yProviderFactory) {
+      yProviderFactory(this.yDoc, id);
+    }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
     this.yKits = this.yDoc.getArray("kits");
@@ -7575,34 +7530,58 @@ class SketchpadStore {
     this.yKitEditors = this.yDoc.getMap("kitEditors");
     this.yTypeEditors = this.yDoc.getMap("typeEditors");
     this.yDesignEditors = this.yDoc.getMap("designEditors");
+
+    // Only initialize sketchpad settings if they don't exist (preserve on reload)
     this.yDoc.transact(() => {
-      this.ySketchpad.set("navigation", "/");
-      this.ySketchpad.set("navigationHistory", JSON.stringify(["/"]));
-      this.ySketchpad.set("navigationHistoryIndex", 0);
-      this.ySketchpad.set("mode", Mode.GUEST);
-      this.ySketchpad.set("theme", Theme.SYSTEM);
-      this.ySketchpad.set("layout", Layout.NORMAL);
-      this.ySketchpad.set("isFullscreen", false);
-      this.ySketchpad.set("isNavbarExpanded", false);
-      this.ySketchpad.set("isMobile", false);
-      this.ySketchpad.set(
-        "editorSettings",
-        JSON.stringify({
-          design: { snappiness: 10, gridSize: 24 },
-          type: {},
-          kit: {},
-        }),
-      );
-      this.ySketchpad.set(
-        "panelSizes",
-        JSON.stringify({
-          workbenchWidth: 230,
-          detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
-          consoleHeight: 200,
-        }),
-      );
+      if (!this.ySketchpad.has("navigation")) {
+        this.ySketchpad.set("navigation", "/");
+      }
+      if (!this.ySketchpad.has("navigationHistory")) {
+        this.ySketchpad.set("navigationHistory", JSON.stringify(["/"]));
+      }
+      if (!this.ySketchpad.has("navigationHistoryIndex")) {
+        this.ySketchpad.set("navigationHistoryIndex", 0);
+      }
+      if (!this.ySketchpad.has("mode")) {
+        this.ySketchpad.set("mode", Mode.GUEST);
+      }
+      if (!this.ySketchpad.has("theme")) {
+        this.ySketchpad.set("theme", Theme.SYSTEM);
+      }
+      if (!this.ySketchpad.has("layout")) {
+        this.ySketchpad.set("layout", Layout.NORMAL);
+      }
+      if (!this.ySketchpad.has("isFullscreen")) {
+        this.ySketchpad.set("isFullscreen", false);
+      }
+      if (!this.ySketchpad.has("isNavbarExpanded")) {
+        this.ySketchpad.set("isNavbarExpanded", false);
+      }
+      if (!this.ySketchpad.has("isMobile")) {
+        this.ySketchpad.set("isMobile", false);
+      }
+      if (!this.ySketchpad.has("editorSettings")) {
+        this.ySketchpad.set(
+          "editorSettings",
+          JSON.stringify({
+            design: { snappiness: 10, gridSize: 24 },
+            type: {},
+            kit: {},
+          }),
+        );
+      }
+      if (!this.ySketchpad.has("panelSizes")) {
+        this.ySketchpad.set(
+          "panelSizes",
+          JSON.stringify({
+            workbenchWidth: 230,
+            detailsWidth: 230,
+            chatWidth: 230,
+            settingsWidth: 230,
+            consoleHeight: 200,
+          }),
+        );
+      }
     });
 
     Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
@@ -7844,7 +7823,6 @@ class SketchpadStore {
       const kit = rest[0] as Kit;
       const local = rest[1] as boolean | undefined;
       const remote = rest[2] as boolean | undefined;
-      console.log("Kit:", kit, "Local:", local, "Remote:", remote);
       this.createKit(kit, local, remote);
       console.groupEnd();
       return {} as T;
@@ -7852,7 +7830,6 @@ class SketchpadStore {
     if (command === "semio.sketchpad.createKitEditor") {
       console.group(`Executing (special) command: "${command}"`);
       const id = rest[0] as KitEditorId;
-      console.log("KitEditorId:", id);
       this.createKitEditor(id);
       console.groupEnd();
       return {} as T;
@@ -7881,9 +7858,7 @@ class SketchpadStore {
     const context: SketchpadCommandContext = {
       sketchpad: this.snapshot(),
     };
-    console.log("Context:", context);
     const result = callback(context, ...rest);
-    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
@@ -8124,9 +8099,11 @@ export type WindowEvents = {
 export type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory; onWindowEvents?: WindowEvents };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
-  const id = props.id || guid();
+  // Use useMemo to ensure the ID is stable across re-renders when props.id is undefined
+  const id = useMemo(() => props.id || guid(), [props.id]);
+
   if (!stores.has(id)) {
-    const store = new SketchpadStore(props.id, props?.yProviderFactory);
+    const store = new SketchpadStore(id, props?.yProviderFactory);
     stores.set(id, store);
   }
   return React.createElement(SketchpadScopeContext.Provider, { value: { id, onWindowEvents: props.onWindowEvents } }, props.children as any);
@@ -8223,7 +8200,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
   });
 
   useEffect(() => {
-    console.log("[useEditorPanelVisibility] effect running", { editorType, kitGuid, itemGuid, navigation });
     try {
       let editor: any;
       switch (editorType) {
@@ -8245,8 +8221,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
         default:
       }
 
-      console.log("[useEditorPanelVisibility] editor found:", !!editor);
-
       if (editor) {
         const unsubscribe = editor.onChangedDeep(() => {
           const newPanelVisibility = editor.snapshot().panelVisibility || {
@@ -8255,7 +8229,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
             chat: true,
             settings: true,
           };
-          console.log("[useEditorPanelVisibility] panel visibility changed:", newPanelVisibility);
           setPanelVisibility(newPanelVisibility);
         });
 
@@ -8265,7 +8238,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
           chat: true,
           settings: true,
         };
-        console.log("[useEditorPanelVisibility] setting initial panel visibility:", initialPanelVisibility);
         setPanelVisibility(initialPanelVisibility);
 
         return unsubscribe;
@@ -8311,21 +8283,11 @@ export function useEditorCommands() {
 
     return {
       togglePanel: (panelKey: keyof PanelVisibility) => {
-        console.log("[useEditorCommands] togglePanel called", { panelKey, editorType, editor: !!editor, kitGuid, itemGuid });
         if (!editor) {
           console.error("[useEditorCommands] togglePanel: no editor found!");
           return;
         }
-        console.log("[useEditorCommands] editor type:", editor.constructor.name);
-        console.log("[useEditorCommands] editor.change type:", typeof editor.change);
-        console.log("[useEditorCommands] editor.change is:", editor.change);
-        console.log("[useEditorCommands] editor has change:", "change" in editor);
-        console.log("[useEditorCommands] editor keys:", Object.keys(editor));
-        console.log("[useEditorCommands] editor proto:", Object.getPrototypeOf(editor));
-        console.log("[useEditorCommands] editor proto.change:", Object.getPrototypeOf(editor)?.change);
         const current = editor.snapshot().panelVisibility;
-        console.log("[useEditorCommands] current panelVisibility:", current);
-        console.log("[useEditorCommands] calling editor.change...");
         try {
           editor.change({
             panelVisibility: {
@@ -8335,7 +8297,6 @@ export function useEditorCommands() {
         } catch (e) {
           console.error("[useEditorCommands] ERROR calling editor.change:", e);
         }
-        console.log("[useEditorCommands] after change, new panelVisibility:", editor.snapshot().panelVisibility);
       },
       execute: (command: string, ...args: any[]) => {
         if (!editor) return;
