@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
-import { useHome, useHomeCommands, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../../store";
+import { useHome, useHomeCommands, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../../store";
 import { Input } from "../Input";
 import { ScrollArea } from "../ScrollArea";
 import { Toggle } from "../Toggle";
@@ -50,6 +50,7 @@ const Home: FC = ({}) => {
   const tooltip = useTooltip();
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
+  const isMobile = useIsMobile();
 
   // Get kind from search params instead of path
   const kindParam = searchParams.get("k");
@@ -58,6 +59,10 @@ const Home: FC = ({}) => {
   // Get search query from URL
   const searchQuery = searchParams.get("q") || "";
 
+  // Get name/version filters from search params
+  const selectedName = searchParams.get("name");
+  const selectedVersion = searchParams.get("version");
+
   // Get expanded rows from search params
   const expandedRowsParam = searchParams.getAll("e");
   const expandedRows = new Set(expandedRowsParam);
@@ -65,6 +70,33 @@ const Home: FC = ({}) => {
   const selection = homeState?.selection?.kits || [];
   const sortColumn = homeState?.sortColumn;
   const sortDirection = homeState?.sortDirection || "asc";
+
+  // Collect unique names
+  const uniqueNames = useMemo(() => {
+    const nameSet = new Set<string>();
+    kits.forEach((kit) => {
+      const kitStore = store.kit(kit.guid);
+      let type: KitStoreKind = "temporary";
+      if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
+      else if (kitStore.isLocallyPersisted) type = "local";
+
+      if (selectedKind && selectedKind !== type) return;
+      nameSet.add(kit.name);
+    });
+    return Array.from(nameSet).sort();
+  }, [kits, store, selectedKind]);
+
+  // Collect unique versions for the selected name
+  const uniqueVersions = useMemo(() => {
+    if (!selectedName) return [];
+    const versionSet = new Set<string>();
+    kits.forEach((kit) => {
+      if (kit.name === selectedName) {
+        versionSet.add(kit.version || "");
+      }
+    });
+    return Array.from(versionSet).sort();
+  }, [kits, selectedName]);
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -85,6 +117,8 @@ const Home: FC = ({}) => {
 
       if (selectedKind && selectedKind !== type) return;
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+      if (selectedName && kit.name !== selectedName) return;
+      if (selectedVersion && (kit.version || "") !== selectedVersion) return;
 
       const key = kit.name;
       if (!kitGroups.has(key)) kitGroups.set(key, []);
@@ -185,7 +219,7 @@ const Home: FC = ({}) => {
     }
 
     return result;
-  }, [kits, store, selectedKind, searchQuery, expandedRows, sortColumn, sortDirection]);
+  }, [kits, store, selectedKind, searchQuery, selectedName, selectedVersion, expandedRows, sortColumn, sortDirection]);
 
   const handleCreateKit = (type: KitStoreKind) => {
     const existingNames = kits.map((k) => k.name);
@@ -213,6 +247,28 @@ const Home: FC = ({}) => {
       newParams.set("k", type);
     }
     setSearchParams(newParams);
+  };
+
+  const toggleName = (name: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (selectedName === name) {
+      params.delete("name");
+      params.delete("version");
+    } else {
+      params.set("name", name);
+      params.delete("version");
+    }
+    setSearchParams(params);
+  };
+
+  const toggleVersion = (version: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (selectedVersion === version) {
+      params.delete("version");
+    } else {
+      params.set("version", version);
+    }
+    setSearchParams(params);
   };
 
   const toggleRow = (rowId: string) => {
@@ -271,6 +327,142 @@ const Home: FC = ({}) => {
     homeCommands.toggleSort(column);
   };
 
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Three-line filter layout for mobile */}
+        <div className="flex flex-col border-b">
+          {/* Line 1: Kind toggles with horizontal scroll */}
+          <div className="border-b overflow-x-auto">
+            <div className="flex gap-1 p-1 w-max">
+              <Toggle
+                type="withAction"
+                pressed={selectedKind === "temporary"}
+                onPressedChange={() => toggleKind("temporary")}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit("temporary")}
+                tooltip={selectedKind === "temporary" ? tooltip("home.hideTemporary") : tooltip("home.showTemporary")}
+                actionTooltip={tooltip("home.createTemporary")}
+              >
+                <Clock className="size-4" />
+              </Toggle>
+              <Toggle
+                type="withAction"
+                pressed={selectedKind === "local"}
+                onPressedChange={() => toggleKind("local")}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit("local")}
+                tooltip={selectedKind === "local" ? tooltip("home.hideLocal") : tooltip("home.showLocal")}
+                actionTooltip={tooltip("home.createLocal")}
+              >
+                <HardDrive className="size-4" />
+              </Toggle>
+              <Toggle
+                type="withAction"
+                pressed={selectedKind === "remote"}
+                onPressedChange={() => toggleKind("remote")}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit("remote")}
+                tooltip={selectedKind === "remote" ? tooltip("home.hideRemote") : tooltip("home.showRemote")}
+                actionTooltip={tooltip("home.createRemote")}
+              >
+                <Cloud className="size-4" />
+              </Toggle>
+            </div>
+          </div>
+
+          {/* Line 2: Name and version toggles with horizontal scroll */}
+          <div className="border-b overflow-x-auto">
+            <div className="flex gap-1 p-1 w-max">
+              {!selectedName &&
+                uniqueNames.length > 0 &&
+                uniqueNames.map((name) => (
+                  <Toggle key={name} pressed={selectedName === name} onPressedChange={() => toggleName(name)}>
+                    {name}
+                  </Toggle>
+                ))}
+              {selectedName && (
+                <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+                  {selectedName}
+                </Toggle>
+              )}
+              {!selectedVersion &&
+                selectedName &&
+                uniqueVersions.length > 0 &&
+                uniqueVersions.map((version) => (
+                  <Toggle key={version} pressed={selectedVersion === version} onPressedChange={() => toggleVersion(version)}>
+                    {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+                  </Toggle>
+                ))}
+              {selectedVersion && (
+                <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
+                  {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+                </Toggle>
+              )}
+            </div>
+          </div>
+
+          {/* Line 3: Search and sorting */}
+          <div className="flex items-center gap-1 p-1">
+            <Input className="flex-1 min-w-0" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+            <Toggle
+              type="dropdown"
+              value={sortColumn === "name" ? sortDirection : "asc"}
+              onValueChange={(value) => {
+                homeCommands.setSortColumn("name");
+                homeCommands.setSortDirection(value as "asc" | "desc");
+              }}
+              items={[
+                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+              ]}
+              tooltip={t("home.sortByName")}
+            />
+          </div>
+        </div>
+
+        {/* Simplified table - only name column, no headers */}
+        <ScrollArea className="flex-1">
+          <div className="flex flex-col">
+            {rows.map((row) => (
+              <div key={row.id} className={`border-b p-2 hover:bg-muted/50 cursor-pointer ${selection.includes(row.kit.guid) ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row.kit.guid, e)}>
+                <div className="flex items-center gap-2" style={{ paddingLeft: `${row.level * 16}px` }}>
+                  {row.hasChildren ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRow(row.id);
+                      }}
+                      className="w-5 h-5 flex items-center justify-center hover:bg-muted shrink-0"
+                    >
+                      {row.isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+                  ) : (
+                    <span className="w-5 h-5 shrink-0" />
+                  )}
+                  <div className="shrink-0">
+                    {row.type === "temporary" && <Clock className="size-4" />}
+                    {row.type === "local" && <HardDrive className="size-4" />}
+                    {row.type === "remote" && <Cloud className="size-4" />}
+                  </div>
+                  <a
+                    className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateToKit(row.kit.guid);
+                    }}
+                  >
+                    {row.name}
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-1 p-1 border-b">
@@ -308,6 +500,31 @@ const Home: FC = ({}) => {
           >
             <Cloud className="size-4" />
           </Toggle>
+          {!selectedName &&
+            uniqueNames.length > 0 &&
+            uniqueNames.map((name) => (
+              <Toggle key={name} pressed={selectedName === name} onPressedChange={() => toggleName(name)}>
+                {name}
+              </Toggle>
+            ))}
+          {selectedName && (
+            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+              {selectedName}
+            </Toggle>
+          )}
+          {!selectedVersion &&
+            selectedName &&
+            uniqueVersions.length > 0 &&
+            uniqueVersions.map((version) => (
+              <Toggle key={version} pressed={selectedVersion === version} onPressedChange={() => toggleVersion(version)}>
+                {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+              </Toggle>
+            ))}
+          {selectedVersion && (
+            <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
+              {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+            </Toggle>
+          )}
         </div>
         <Input className="flex-1 min-w-0" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
       </div>

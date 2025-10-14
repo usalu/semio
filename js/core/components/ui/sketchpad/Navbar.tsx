@@ -912,6 +912,9 @@ const Navbar: FC<NavbarProps> = ({ }) => {
             <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
               <ArrowRight size={16} />
             </ButtonGroupItem>
+            <ButtonGroupItem value="up" tooltip={tooltip("navbar.up")} onClick={() => navigate("/")} disabled={isAtRoot}>
+              <ArrowUp size={16} />
+            </ButtonGroupItem>
           </ButtonGroup>
 
           {/* Single dropdown toggle for all panels on mobile */}
@@ -937,6 +940,9 @@ const Navbar: FC<NavbarProps> = ({ }) => {
             <Toggle tooltip={tooltip("navbar.search")} pressed={searchOpen} onPressedChange={setSearchOpen}>
               <SearchIcon size={16} />
             </Toggle>
+            <Toggle tooltip={tooltip(isFullscreen ? "navbar.exitFullscreen" : "navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+              {isFullscreen ? <Minimize size={16} /> : <Fullscreen size={16} />}
+            </Toggle>
             <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
               {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
             </Toggle>
@@ -946,15 +952,6 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         {/* Expanded navbar content */}
         {isNavbarExpanded && (
           <div className="flex flex-col gap-1 px-1 pb-1">
-            <div className="flex justify-between gap-1">
-              <Toggle tooltip={tooltip(isFullscreen ? "navbar.exitFullscreen" : "navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
-                {isFullscreen ? <Minimize size={16} /> : <Fullscreen size={16} />}
-              </Toggle>
-              <Toggle tooltip={tooltip("navbar.up")} pressed={false} onPressedChange={() => navigate("/")} disabled={isAtRoot}>
-                <ArrowUp size={16} />
-              </Toggle>
-            </div>
-
             <Navigation />
 
             {onWindowEvents && (

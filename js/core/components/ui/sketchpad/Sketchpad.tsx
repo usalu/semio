@@ -167,9 +167,9 @@ const SketchpadBase: FC = () => {
     }
   }, [theme, layout, setTheme, setLayout]);
 
-  // Track navbar height for mobile layout adjustments
+  // Track navbar height for layout adjustments
   useEffect(() => {
-    if (!isMobile || !navbarRef.current) return;
+    if (!navbarRef.current) return;
 
     const updateHeight = () => {
       if (navbarRef.current) {
@@ -198,7 +198,7 @@ const SketchpadBase: FC = () => {
             <Navbar />
           </div>
           <div
-            className={`flex-1 flex overflow-hidden relative ${isFullscreen ? "" : "mb-5"}`}
+            className="flex-1 flex overflow-hidden relative"
             style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}
           >
             {isMobile ? (
@@ -221,7 +221,7 @@ const SketchpadBase: FC = () => {
               // Desktop layout: side-by-side panels
               <>
                 {visiblePanels.workbench && (
-                  <div className="absolute left-1 top-1 bottom-1 z-20">
+                  <div className="absolute left-1 top-0 bottom-1 z-20">
                     <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />
                   </div>
                 )}
@@ -229,7 +229,7 @@ const SketchpadBase: FC = () => {
                   <Outlet />
                 </div>
                 {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
-                  <div className="absolute right-1 top-1 bottom-1 z-20 flex">
+                  <div className="absolute right-1 top-0 bottom-1 z-20 flex">
                     {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
                     {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
                     {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}

@@ -876,7 +876,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     }
   }, [savedDiagramCenter, savedDiagramScale, reactFlowInstance]);
 
-  const onMove = useCallback(() => {
+  const onMoveEnd = useCallback(() => {
     if (isUpdatingViewportRef.current) return;
     const viewport = reactFlowInstance.getViewport();
     setDiagramCenter({ x: viewport.x, y: viewport.y });
@@ -1544,7 +1544,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         onPaneClick={onPaneClick}
         onDoubleClick={onDoubleClick}
         onConnect={onConnect}
-        onMove={onMove}
+        onMoveEnd={onMoveEnd}
         connectionLineComponent={ConnectionConnectionLine}
         className="bg-background"
       >
