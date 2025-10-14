@@ -910,6 +910,7 @@ const KitEditor: FC = () => {
                 </Toggle>
               )}
               {!selectedView &&
+                selectedName &&
                 selectedVariant !== null &&
                 uniqueViews.length > 0 &&
                 uniqueViews.map((view) => (
@@ -1098,6 +1099,7 @@ const KitEditor: FC = () => {
             </Toggle>
           )}
           {!selectedView &&
+            selectedName &&
             selectedVariant !== null &&
             uniqueViews.length > 0 &&
             uniqueViews.map((view) => (

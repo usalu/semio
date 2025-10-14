@@ -11,34 +11,28 @@ import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
-  typeId: Type | { name: string; variant?: string };
+  type: Type;
   showHoverCard?: boolean;
-  kitGuid?: string;
 }
 
-export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false, kitGuid }) => {
-  const kit = useKit(undefined, kitGuid) as Kit;
-  const type = kit.types?.find((t) => t.name === typeId.name && (t.variant || undefined) === typeId.variant);
-
+export const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `type-${typeId.name}-${typeId.variant || ""}`,
+    id: `type-${type.name}-${type.variant || ""}`,
   });
 
-  const displayVariant = typeId.variant || typeId.name;
+  const displayVariant = type.variant || type.name;
   const avatar = (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
-      <Avatar className="cursor-grab">
-        <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
-      </Avatar>
-    </div>
+    <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing select-none">
+      <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+    </Avatar>
   );
 
-  if (!showHoverCard || !type) {
+  if (!showHoverCard) {
     return avatar;
   }
 
   return (
-    <HoverCard>
+    <HoverCard openDelay={500}>
       <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="space-y-1">
@@ -57,34 +51,24 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false,
 };
 
 interface DesignAvatarProps {
-  designId: Design | { name: string; variant?: string; view?: string };
+  design: Design;
   showHoverCard?: boolean;
   isActive?: boolean;
-  kitGuid?: string;
 }
 
-export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false, kitGuid }) => {
-  const kit = useKit(undefined, kitGuid) as Kit;
-  const design = kit.designs?.find((d) => d.name === designId.name && (d.variant || undefined) === designId.variant && (d.view || undefined) === designId.view);
-
+export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false, isActive = false }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `design-${designId.name}-${designId.variant || ""}-${designId.view || ""}`,
+    id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
     disabled: isActive,
   });
-
-  if (!design) {
-    return null;
-  }
 
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
-      <Avatar className={`${isActive ? "cursor-default opacity-50" : "cursor-grab"}`}>
-        <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
-      </Avatar>
-    </div>
+    <Avatar ref={setNodeRef} {...listeners} {...attributes} className={`select-none ${isActive ? "cursor-default opacity-50" : "cursor-grab active:cursor-grabbing"}`}>
+      <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+    </Avatar>
   );
 
   if (!showHoverCard) {
@@ -92,7 +76,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = 
   }
 
   return (
-    <HoverCard>
+    <HoverCard openDelay={500}>
       <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="space-y-1">
@@ -109,7 +93,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = 
   );
 };
 
-interface WorkbenchProps extends ResizablePanelProps {}
+interface WorkbenchProps extends ResizablePanelProps { }
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);

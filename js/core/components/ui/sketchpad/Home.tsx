@@ -3,7 +3,7 @@ import { de, enUS } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Clock, Cloud, HardDrive, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
@@ -39,7 +39,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({ }) => {
+const Home: FC = ({}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();

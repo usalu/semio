@@ -71,7 +71,7 @@ import {
   useTooltip,
   useTypeEditorCommands,
 } from "../../../store";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
+import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../Breadcrumb";
 import { ButtonGroup, ButtonGroupItem } from "../ButtonGroup";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandList } from "../Command";
 import { Toggle } from "../Toggle";
@@ -210,6 +210,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
+
+  console.log("[Navbar] Path parsing:", {
+    navigation,
+    pathParts,
+    isKitsPath,
+    homeKind,
+    homeName,
+    homeVersion,
+    searchParamsString: searchParams.toString()
+  });
 
   // Kit editor (/kits/:kitGuid or /kits/:kitGuid/designs/:design or /kits/:kitGuid/types/:type)
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
@@ -477,7 +487,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       }
     });
     const items = Array.from(variants.entries()).map(([variant, d]) => ({
-      label: variant || t("design.defaultVariant"),
+      label: variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>,
       href: `/kits/${kitGuid}/designs/${d.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
@@ -489,7 +499,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     const items = allDesigns
       .filter((d) => d.name === design.name && (d.variant || "") === (design.variant || ""))
       .map((d) => ({
-        label: d.view || t("design.defaultView"),
+        label: d.view || <span className="italic opacity-70">{t("design.defaultView")}</span>,
         href: `/kits/${kitGuid}/designs/${d.guid}`,
       }));
     items.push({ label: "+ " + t("navbar.createView"), href: "#create-view" });
@@ -520,12 +530,108 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       }
     });
     const items = Array.from(variants.entries()).map(([variant, typeObj]) => ({
-      label: variant || t("type.defaultVariant"),
+      label: variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>,
       href: `/kits/${kitGuid}/types/${typeObj.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
     return items;
   }, [type, allTypes, kitGuid, t]);
+
+  // Build breadcrumb items for kit versions
+  const kitVersionItems = useMemo(() => {
+    if (!kit?.name) return [];
+    // Get all kits with the same name
+    const sameNameKits = kits.filter((k) => k.name === kit.name);
+    return sameNameKits.map((k) => ({
+      label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
+      href: `/kits/${k.guid}`,
+    }));
+  }, [kit, kits, t]);
+
+  // Build breadcrumb items for home page kits filtered by kind
+  const homeKitsForKind = useMemo(() => {
+    if (!homeKind) return [];
+    return kits
+      .filter((k) => {
+        const ks = store.kit(k.guid);
+        const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
+        return kKind === homeKind;
+      })
+      .map((k) => ({
+        label: k.name,
+        href: `/kits?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
+      }));
+  }, [homeKind, kits, store]);
+
+  // Build breadcrumb items for home page versions filtered by name
+  const homeVersionsForName = useMemo(() => {
+    if (!homeName || !homeKind) return [];
+    return kits
+      .filter((k) => k.name === homeName)
+      .map((k) => ({
+        label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
+        href: k.version || "",
+      }));
+  }, [homeName, homeKind, kits, t]);
+
+  // Build breadcrumb items for filtered names in kit editor
+  const filteredNameItems = useMemo(() => {
+    if (!kit || !filteredKind) return [];
+    const nameSet = new Set<string>();
+
+    if (filteredKind === "designs") {
+      allDesigns.forEach((d) => nameSet.add(d.name));
+    } else if (filteredKind === "types") {
+      allTypes.forEach((t) => nameSet.add(t.name));
+    }
+
+    return Array.from(nameSet).map((name) => ({
+      label: name,
+      href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(name)}`,
+    }));
+  }, [kit, filteredKind, allDesigns, allTypes, kitGuid]);
+
+  // Build breadcrumb items for filtered variants in kit editor
+  const filteredVariantItems = useMemo(() => {
+    if (!kit || !filteredKind || !filteredName) return [];
+    const variantSet = new Set<string>();
+
+    if (filteredKind === "designs") {
+      allDesigns.forEach((d) => {
+        if (d.name === filteredName) {
+          variantSet.add(d.variant || "");
+        }
+      });
+    } else if (filteredKind === "types") {
+      allTypes.forEach((t) => {
+        if (t.name === filteredName) {
+          variantSet.add(t.variant || "");
+        }
+      });
+    }
+
+    return Array.from(variantSet).map((variant) => ({
+      label: variant || <span className="italic opacity-70">{filteredKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>,
+      href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(variant)}`,
+    }));
+  }, [kit, filteredKind, filteredName, allDesigns, allTypes, kitGuid, t]);
+
+  // Build breadcrumb items for filtered views in kit editor
+  const filteredViewItems = useMemo(() => {
+    if (!kit || filteredKind !== "designs" || !filteredName || filteredVariant === null) return [];
+    const viewSet = new Set<string>();
+
+    allDesigns.forEach((d) => {
+      if (d.name === filteredName && (d.variant || "") === filteredVariant) {
+        viewSet.add(d.view || "");
+      }
+    });
+
+    return Array.from(viewSet).map((view) => ({
+      label: view || <span className="italic opacity-70">{t("design.defaultView")}</span>,
+      href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(view)}`,
+    }));
+  }, [kit, filteredKind, filteredName, filteredVariant, allDesigns, kitGuid, t]);
 
   // Determine if we're at root or if a kind filter is active
   const isAtRoot = navigation === "/";
@@ -554,19 +660,32 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 {(kitKind === "remote" || homeKind === "remote") && <Cloud size={16} />}
               </BreadcrumbLink>
             </BreadcrumbItem>
+
+            {/* Show kits dropdown when on home page with kind selected */}
+            {!kitGuid && (
+              <BreadcrumbSeparator
+                items={homeKitsForKind}
+                tooltip={tooltip("navbar.kits")}
+                onNavigate={(href) => navigate(href)}
+              />
+            )}
+
             {homeName && (
               <>
-                <BreadcrumbSeparator />
                 <BreadcrumbItem tooltip={tooltip("navbar.kitName")}>
                   <BreadcrumbLink onClick={() => navigate(`/kits?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
                     {homeName}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
+                <BreadcrumbSeparator
+                  items={homeVersionsForName}
+                  tooltip={tooltip("navbar.versions")}
+                  onNavigate={(version) => navigate(`/kits?kind=${homeKind}&name=${encodeURIComponent(homeName)}&version=${encodeURIComponent(version)}`)}
+                />
               </>
             )}
             {homeVersion && (
               <>
-                <BreadcrumbSeparator />
                 <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
                   <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
                 </BreadcrumbItem>
@@ -587,7 +706,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     {kit?.name || kitGuid}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator
+                  items={kitVersionItems}
+                  tooltip={tooltip("navbar.versions")}
+                  onNavigate={(href) => {
+                    if (href.startsWith("/kits/")) navigate(href);
+                    else navigate(`/kits?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}&version=${encodeURIComponent(href)}`);
+                  }}
+                />
                 <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
                   <BreadcrumbLink onClick={() => navigate(`/kits?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}&version=${encodeURIComponent(kit?.version || "")}`)} style={{ cursor: "pointer" }}>
                     {kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}
@@ -611,29 +737,42 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     {filteredKind === "authors" && <User size={16} />}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
+                <BreadcrumbBreak />
+                <BreadcrumbSeparator
+                  items={filteredNameItems}
+                  tooltip={tooltip("navbar.selectName")}
+                  onNavigate={(href) => navigate(href)}
+                />
                 {filteredName !== null && (
                   <>
-                    <BreadcrumbSeparator />
                     <BreadcrumbItem tooltip={tooltip("navbar.name")}>
                       <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}`)} style={{ cursor: "pointer" }}>
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
+                    <BreadcrumbSeparator
+                      items={filteredVariantItems}
+                      tooltip={tooltip("navbar.selectVariant")}
+                      onNavigate={(href) => navigate(href)}
+                    />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && (
                   <>
-                    <BreadcrumbSeparator />
                     <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
                       <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}`)} style={{ cursor: "pointer" }}>
                         {filteredVariant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
+                    <BreadcrumbSeparator
+                      items={filteredViewItems}
+                      tooltip={tooltip("navbar.selectView")}
+                      onNavigate={(href) => navigate(href)}
+                    />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && filteredView !== null && (
                   <>
-                    <BreadcrumbSeparator />
                     <BreadcrumbItem tooltip={tooltip("navbar.view")}>
                       <BreadcrumbLink
                         onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(filteredView)}`)}
@@ -656,6 +795,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 <Layout size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
+            <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={designNameItems}
               tooltip={tooltip("navbar.selectDesign")}

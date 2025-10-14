@@ -201,19 +201,16 @@ const SketchpadBase: FC = () => {
           <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
             <Navbar />
           </div>
-          <div
-            className="flex-1 flex overflow-hidden relative"
-            style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}
-          >
+          <div className="flex-1 flex overflow-hidden relative" style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}>
             {isMobile ? (
               // Mobile layout: full-screen panel or editor
               <>
                 {mobileVisiblePanel ? (
                   <div className="absolute inset-1 z-30">
-                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
-                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
-                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
-                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
+                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col overflow-hidden">

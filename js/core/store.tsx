@@ -1813,9 +1813,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-        const update = colorDiff.updated?.find((u) => u.id === type.guid);
-        return update ? { ...type, ports: update.diff.ports } : type;
-      })
+          const update = colorDiff.updated?.find((u) => u.id === type.guid);
+          return update ? { ...type, ports: update.diff.ports } : type;
+        })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -4268,7 +4268,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -4444,7 +4444,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) { }
+                  } catch (error) {}
                 }
               }
             }
@@ -5376,7 +5376,7 @@ export function useTypeEditorCamera(): Camera | undefined {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -6482,7 +6482,7 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7498,7 +7498,7 @@ export function useDesignEditorDiagramScale(): number | undefined {
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7796,24 +7796,24 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-        design: { snappiness: 10, gridSize: 24 },
-        type: {},
-        kit: {},
-      };
+          design: { snappiness: 10, gridSize: 24 },
+          type: {},
+          kit: {},
+        };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        workbenchWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+          workbenchWidth: 230,
+          detailsWidth: 230,
+          chatWidth: 230,
+          settingsWidth: 230,
+          consoleHeight: 200,
+        };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const currentValues = {
-      navigation: migratePath(this.ySketchpad.get("navigation") as string || "/"),
+      navigation: migratePath((this.ySketchpad.get("navigation") as string) || "/"),
       navigationHistory: navigationHistory,
       navigationHistoryIndex: (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0,
       access: this.ySketchpad.get("access") as Access,
@@ -8426,9 +8426,9 @@ export function useEditorPanelVisibility(): PanelVisibility {
   const store = useSketchpadStore();
 
   // Parse the navigation path to get IDs
-  const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);
+  const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
-  const editorTypeChar = pathMatch?.[2]; // 'd' for design, 't' for type
+  const editorKind = pathMatch?.[2];
   const itemGuid = pathMatch?.[3];
 
   const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
@@ -8495,7 +8495,7 @@ export function useEditorCommands() {
   const store = useSketchpadStore();
 
   // Parse the navigation path to get IDs
-  const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);
+  const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
   const itemGuid = pathMatch?.[3];
 

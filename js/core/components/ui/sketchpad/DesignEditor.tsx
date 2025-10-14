@@ -30,7 +30,7 @@ import { Slider } from "@radix-ui/react-slider";
 import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { guid } from "../../../lib/utils";
-import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece } from "../../../semio";
+import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece, Type } from "../../../semio";
 import {
   DesignEditorFullscreenPanel,
   EditorType,
@@ -781,24 +781,24 @@ const PiecesSectionForm: FC = () => {
       setPiece(
         piece!.plane
           ? {
-              ...piece!,
-              plane: {
-                ...piece!.plane,
-                origin: { ...piece!.plane.origin, x: value },
-              },
-            }
+            ...piece!,
+            plane: {
+              ...piece!.plane,
+              origin: { ...piece!.plane.origin, x: value },
+            },
+          }
           : piece!,
       );
     } else {
       const updatedPieces = pieces.map((piece) =>
         piece.plane
           ? {
-              ...piece,
-              plane: {
-                ...piece.plane,
-                origin: { ...piece.plane.origin, x: value },
-              },
-            }
+            ...piece,
+            plane: {
+              ...piece.plane,
+              origin: { ...piece.plane.origin, x: value },
+            },
+          }
           : piece,
       );
       setPieces(updatedPieces);
@@ -811,24 +811,24 @@ const PiecesSectionForm: FC = () => {
       setPiece(
         piece!.plane
           ? {
-              ...piece!,
-              plane: {
-                ...piece!.plane,
-                origin: { ...piece!.plane.origin, y: value },
-              },
-            }
+            ...piece!,
+            plane: {
+              ...piece!.plane,
+              origin: { ...piece!.plane.origin, y: value },
+            },
+          }
           : piece!,
       );
     } else {
       const updatedPieces = pieces.map((piece) =>
         piece.plane
           ? {
-              ...piece,
-              plane: {
-                ...piece.plane,
-                origin: { ...piece.plane.origin, y: value },
-              },
-            }
+            ...piece,
+            plane: {
+              ...piece.plane,
+              origin: { ...piece.plane.origin, y: value },
+            },
+          }
           : piece,
       );
       setPieces(updatedPieces);
@@ -841,24 +841,24 @@ const PiecesSectionForm: FC = () => {
       setPiece(
         piece!.plane
           ? {
-              ...piece!,
-              plane: {
-                ...piece!.plane,
-                origin: { ...piece!.plane.origin, z: value },
-              },
-            }
+            ...piece!,
+            plane: {
+              ...piece!.plane,
+              origin: { ...piece!.plane.origin, z: value },
+            },
+          }
           : piece!,
       );
     } else {
       const updatedPieces = pieces.map((piece) =>
         piece.plane
           ? {
-              ...piece,
-              plane: {
-                ...piece.plane,
-                origin: { ...piece.plane.origin, z: value },
-              },
-            }
+            ...piece,
+            plane: {
+              ...piece.plane,
+              origin: { ...piece.plane.origin, z: value },
+            },
+          }
           : piece,
       );
       setPieces(updatedPieces);
@@ -886,13 +886,13 @@ const PiecesSectionForm: FC = () => {
     () =>
       commonTypeName && !isDesignPiece
         ? [
-            ...new Set(
-              allReplacableTypes
-                .filter((t) => t.name === commonTypeName)
-                .map((t) => t.variant)
-                .filter((v): v is string => Boolean(v)),
-            ),
-          ]
+          ...new Set(
+            allReplacableTypes
+              .filter((t) => t.name === commonTypeName)
+              .map((t) => t.variant)
+              .filter((v): v is string => Boolean(v)),
+          ),
+        ]
         : [],
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
@@ -906,24 +906,24 @@ const PiecesSectionForm: FC = () => {
   // Get available design variants and views
   const availableDesignVariants = currentDesignId
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === currentDesignId.name)
-            .map((d) => d.variant)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === currentDesignId.name)
+          .map((d) => d.variant)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   const availableDesignViews = currentDesignId
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === currentDesignId.name && (d.variant || "") === (currentDesignId.variant || ""))
-            .map((d) => d.view)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === currentDesignId.name && (d.variant || "") === (currentDesignId.variant || ""))
+          .map((d) => d.view)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   let parentConnection: Connection | null = null;
@@ -937,7 +937,7 @@ const PiecesSectionForm: FC = () => {
           connected: { piece: { id_: getPieceId(piece) } },
           connecting: { piece: { id_: pieceMetadata.parentPieceId } },
         });
-      } catch {}
+      } catch { }
     }
 
     // For design pieces, also check for external connections
@@ -993,12 +993,12 @@ const PiecesSectionForm: FC = () => {
           actions={
             hasUnfixedPieces
               ? [
-                  {
-                    icon: <Pin size={12} />,
-                    onClick: fixPieces,
-                    title: isSingle ? t("piece.fixPiece") : t("piece.fixPieces"),
-                  },
-                ]
+                {
+                  icon: <Pin size={12} />,
+                  onClick: fixPieces,
+                  title: isSingle ? t("piece.fixPiece") : t("piece.fixPieces"),
+                },
+              ]
               : undefined
           }
         >
@@ -1197,6 +1197,7 @@ const ConnectionsSectionForm: FC<{
   connections: ConnectionId[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
+  const { t } = useTranslation();
   const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const design = useDesign();
   const connectionObjects = connections.map((conn) => {
@@ -1296,44 +1297,40 @@ const ConnectionsSectionForm: FC<{
     <TreeSection label={sectionLabel || (isSingle ? "Connection" : `Multiple Connections (${connections.length})`)} defaultOpen={true}>
       {isSingle && (
         <>
-          <TreeItem label="Connecting">
-            <TreeItem>
-              <TreeContent>
-                <Input label="Piece ID" value={connection!.connecting.piece.id_} disabled />
-              </TreeContent>
-            </TreeItem>
-            <TreeItem>
-              <TreeContent>
-                <Input label="Port ID" value={connection!.connecting.port.id_} disabled />
-              </TreeContent>
-            </TreeItem>
-            {connection!.connecting.designPiece && (
-              <TreeItem>
-                <TreeContent>
-                  <Input label="Design Piece ID" value={connection!.connecting.designPiece.id_} disabled />
-                </TreeContent>
-              </TreeItem>
-            )}
+          <TreeItem>
+            <TreeContent>
+              <Input label="Connecting Piece ID" value={connection!.connecting.piece.id_} disabled />
+            </TreeContent>
           </TreeItem>
-          <TreeItem label="Connected">
-            <TreeItem>
-              <TreeContent>
-                <Input label="Piece ID" value={connection!.connected.piece.id_} disabled />
-              </TreeContent>
-            </TreeItem>
-            <TreeItem>
-              <TreeContent>
-                <Input label="Port ID" value={connection!.connected.port.id_} disabled />
-              </TreeContent>
-            </TreeItem>
-            {connection!.connected.designPiece && (
-              <TreeItem>
-                <TreeContent>
-                  <Input label="Design Piece ID" value={connection!.connected.designPiece.id_} disabled />
-                </TreeContent>
-              </TreeItem>
-            )}
+          <TreeItem>
+            <TreeContent>
+              <Input label="Connecting Port ID" value={connection!.connecting.port.id_} disabled />
+            </TreeContent>
           </TreeItem>
+          {connection!.connecting.designPiece && (
+            <TreeItem>
+              <TreeContent>
+                <Input label="Connecting Design Piece ID" value={connection!.connecting.designPiece.id_} disabled />
+              </TreeContent>
+            </TreeItem>
+          )}
+          <TreeItem>
+            <TreeContent>
+              <Input label="Connected Piece ID" value={connection!.connected.piece.id_} disabled />
+            </TreeContent>
+          </TreeItem>
+          <TreeItem>
+            <TreeContent>
+              <Input label="Connected Port ID" value={connection!.connected.port.id_} disabled />
+            </TreeContent>
+          </TreeItem>
+          {connection!.connected.designPiece && (
+            <TreeItem>
+              <TreeContent>
+                <Input label="Connected Design Piece ID" value={connection!.connected.designPiece.id_} disabled />
+              </TreeContent>
+            </TreeItem>
+          )}
         </>
       )}
       {!isSingle && (
@@ -1343,107 +1340,105 @@ const ConnectionsSectionForm: FC<{
           </TreeContent>
         </TreeItem>
       )}
-      <TreeItem label={t("piece.plane")}>
-        <TreeItem label="Translation" defaultOpen={true}>
-          <TreeItem>
-            <TreeContent>
-              <Stepper
-                label={t("connection.gap")}
-                value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
-                onChange={handleGapChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                step={0.1}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Stepper
-                label={t("connection.shift")}
-                value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
-                onChange={handleShiftChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                step={0.1}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Stepper
-                label={t("connection.rise")}
-                value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
-                onChange={handleRiseChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                step={0.1}
-              />
-            </TreeContent>
-          </TreeItem>
-        </TreeItem>
-        <TreeItem label="Orientation">
-          <TreeItem>
-            <TreeContent>
-              <Slider
-                label={t("connection.rotation")}
-                value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
-                onValueChange={([value]) => handleRotationChange(value)}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                min={-180}
-                max={180}
-                step={1}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Slider
-                label={t("connection.turn")}
-                value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
-                onValueChange={([value]) => handleTurnChange(value)}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                min={-180}
-                max={180}
-                step={1}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Slider
-                label={t("connection.tilt")}
-                value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
-                onValueChange={([value]) => handleTiltChange(value)}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
-                min={-180}
-                max={180}
-                step={1}
-              />
-            </TreeContent>
-          </TreeItem>
-        </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Stepper
+            label={t("connection.gap")}
+            value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
+            onChange={handleGapChange}
+            onPointerDown={startTransaction}
+            onPointerUp={finalizeTransaction}
+            onPointerCancel={abortTransaction}
+            step={0.1}
+          />
+        </TreeContent>
       </TreeItem>
-      <TreeItem label="Diagram">
-        <TreeItem>
-          <TreeContent>
-            <Stepper label="X Offset" value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)} onChange={handleXOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Stepper label="Y Offset" value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)} onChange={handleYOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
-          </TreeContent>
-        </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Stepper
+            label={t("connection.shift")}
+            value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
+            onChange={handleShiftChange}
+            onPointerDown={startTransaction}
+            onPointerUp={finalizeTransaction}
+            onPointerCancel={abortTransaction}
+            step={0.1}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Stepper
+            label={t("connection.rise")}
+            value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
+            onChange={handleRiseChange}
+            onPointerDown={startTransaction}
+            onPointerUp={finalizeTransaction}
+            onPointerCancel={abortTransaction}
+            step={0.1}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs">{t("connection.rotation")}</label>
+            <Slider
+              value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
+              onValueChange={([value]) => handleRotationChange(value)}
+              onPointerDown={startTransaction}
+              onPointerUp={finalizeTransaction}
+              onPointerCancel={abortTransaction}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </div>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs">{t("connection.turn")}</label>
+            <Slider
+              value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
+              onValueChange={([value]) => handleTurnChange(value)}
+              onPointerDown={startTransaction}
+              onPointerUp={finalizeTransaction}
+              onPointerCancel={abortTransaction}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </div>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs">{t("connection.tilt")}</label>
+            <Slider
+              value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
+              onValueChange={([value]) => handleTiltChange(value)}
+              onPointerDown={startTransaction}
+              onPointerUp={finalizeTransaction}
+              onPointerCancel={abortTransaction}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </div>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Stepper label="X Offset" value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)} onChange={handleXOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Stepper label="Y Offset" value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)} onChange={handleYOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+        </TreeContent>
       </TreeItem>
     </TreeSection>
   );
@@ -1510,7 +1505,7 @@ const PortSectionForm: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, po
   );
 };
 
-export interface DesignEditorProps {}
+export interface DesignEditorProps { }
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   const fullscreenPanel = useDesignEditorFullscreen();
@@ -1521,8 +1516,8 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const kit = useKit() as Kit;
   const editorSettings = useSketchpad((s) => s.editorSettings);
 
-  const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<{ name: string; variant?: string } | null>(null);
-  const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<{ name: string; variant?: string; view?: string } | null>(null);
+  const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
+  const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
@@ -1559,7 +1554,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     if (!hasSelection) {
       addSection("details", {
         id: "design",
-        label: "Design",
+        label: "Properties",
         order: 0,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -1652,7 +1647,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
               <TreeContent>
                 <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                   {variants.map((type: any) => (
-                    <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} kitGuid={kit.guid} />
+                    <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
                   ))}
                 </div>
               </TreeContent>
@@ -1674,7 +1669,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
               <TreeContent>
                 <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                   {designs.map((design: any) => (
-                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} kitGuid={kit.guid} />
+                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} />
                   ))}
                 </div>
               </TreeContent>
@@ -1727,13 +1722,15 @@ const DesignEditor: FC<DesignEditorProps> = () => {
       const parts = id.replace("type-", "").split("-");
       const name = parts[0];
       const variant = parts.slice(1).join("-") || undefined;
-      setActiveDraggedTypeId({ name, variant });
+      const type = kit.types?.find((t) => t.name === name && (t.variant || undefined) === variant);
+      if (type) setActiveDraggedType(type);
     } else if (id.startsWith("design-")) {
       const parts = id.replace("design-", "").split("-");
       const name = parts[0];
       const variant = parts[1] || undefined;
       const view = parts[2] || undefined;
-      setActiveDraggedDesignId({ name, variant, view });
+      const design = kit.designs?.find((d) => d.name === name && (d.variant || undefined) === variant && (d.view || undefined) === view);
+      if (design) setActiveDraggedDesign(design);
     }
   };
 
@@ -1750,20 +1747,20 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         y: event.activatorEvent.clientY + delta.y,
       });
 
-      if (activeDraggedTypeId) {
+      if (activeDraggedType) {
         startTransaction();
         const piece = {
           guid: guid(),
-          type: `${activeDraggedTypeId.name}${activeDraggedTypeId.variant ? `-${activeDraggedTypeId.variant}` : ""}`,
+          type: `${activeDraggedType.name}${activeDraggedType.variant ? `-${activeDraggedType.variant}` : ""}`,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
         addPiece(piece);
         finalizeTransaction();
-      } else if (activeDraggedDesignId) {
+      } else if (activeDraggedDesign) {
         startTransaction();
         const piece = {
           guid: guid(),
-          design: `${activeDraggedDesignId.name}${activeDraggedDesignId.variant ? `-${activeDraggedDesignId.variant}` : ""}${activeDraggedDesignId.view ? `-${activeDraggedDesignId.view}` : ""}`,
+          design: `${activeDraggedDesign.name}${activeDraggedDesign.variant ? `-${activeDraggedDesign.variant}` : ""}${activeDraggedDesign.view ? `-${activeDraggedDesign.view}` : ""}`,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
         addPiece(piece);
@@ -1771,8 +1768,8 @@ const DesignEditor: FC<DesignEditorProps> = () => {
       }
     }
 
-    setActiveDraggedTypeId(null);
-    setActiveDraggedDesignId(null);
+    setActiveDraggedType(null);
+    setActiveDraggedDesign(null);
   };
 
   return (
@@ -1791,8 +1788,8 @@ const DesignEditor: FC<DesignEditorProps> = () => {
 
       {createPortal(
         <DragOverlay>
-          {activeDraggedTypeId && <TypeAvatar typeId={activeDraggedTypeId} />}
-          {activeDraggedDesignId && <DesignAvatar designId={activeDraggedDesignId} />}
+          {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
+          {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
         </DragOverlay>,
         document.body,
       )}

@@ -31,7 +31,7 @@ function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
 }
 
 function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
-  return <ol data-slot="breadcrumb-list" className={cn("flex items-stretch text-xs break-words border overflow-hidden", className)} {...props} />;
+  return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words border overflow-hidden", className)} {...props} />;
 }
 
 function BreadcrumbItem({ className, tooltip, children, ...props }: React.ComponentProps<"li"> & { tooltip?: string }) {
@@ -169,4 +169,8 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span"
   );
 }
 
-export { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator };
+function BreadcrumbBreak({ className, ...props }: React.ComponentProps<"li">) {
+  return <li data-slot="breadcrumb-break" role="presentation" aria-hidden="true" className={cn("basis-full h-0 md:hidden", className)} {...props} />;
+}
+
+export { Breadcrumb, BreadcrumbBreak, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator };
