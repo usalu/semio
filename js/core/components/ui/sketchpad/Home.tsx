@@ -3,7 +3,7 @@ import { de, enUS } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Clock, Cloud, HardDrive, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Kit, KitShallow } from "../../../semio";
@@ -39,7 +39,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({}) => {
+const Home: FC = ({ }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -52,16 +52,13 @@ const Home: FC = ({}) => {
   const homeCommands = useHomeCommands();
   const isMobile = useIsMobile();
 
-  // Get kind from search params instead of path
-  const kindParam = searchParams.get("k");
-  const selectedKind = ["temporary", "local", "remote"].includes(kindParam || "") ? (kindParam as KitStoreKind) : undefined;
-
-  // Get search query from URL
-  const searchQuery = searchParams.get("q") || "";
-
-  // Get name/version filters from search params
+  // Get filters from search params (?kind=&name=&version=)
+  const selectedKind = searchParams.get("kind") as KitStoreKind | null;
   const selectedName = searchParams.get("name");
   const selectedVersion = searchParams.get("version");
+
+  // Get search query from URL search params
+  const searchQuery = searchParams.get("q") || "";
 
   // Get expanded rows from search params
   const expandedRowsParam = searchParams.getAll("e");
@@ -240,35 +237,37 @@ const Home: FC = ({}) => {
   const toggleKind = (type: KitStoreKind) => {
     const newParams = new URLSearchParams(searchParams);
     if (selectedKind === type) {
-      // If already selected, remove the filter
-      newParams.delete("k");
+      newParams.delete("kind");
+      newParams.delete("name");
+      newParams.delete("version");
     } else {
-      // Set the kind filter
-      newParams.set("k", type);
+      newParams.set("kind", type);
+      newParams.delete("name");
+      newParams.delete("version");
     }
     setSearchParams(newParams);
   };
 
   const toggleName = (name: string) => {
-    const params = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
     if (selectedName === name) {
-      params.delete("name");
-      params.delete("version");
+      newParams.delete("name");
+      newParams.delete("version");
     } else {
-      params.set("name", name);
-      params.delete("version");
+      newParams.set("name", name);
+      newParams.delete("version");
     }
-    setSearchParams(params);
+    setSearchParams(newParams);
   };
 
   const toggleVersion = (version: string) => {
-    const params = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
     if (selectedVersion === version) {
-      params.delete("version");
+      newParams.delete("version");
     } else {
-      params.set("version", version);
+      newParams.set("version", version);
     }
-    setSearchParams(params);
+    setSearchParams(newParams);
   };
 
   const toggleRow = (rowId: string) => {

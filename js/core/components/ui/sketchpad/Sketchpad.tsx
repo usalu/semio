@@ -59,8 +59,10 @@ export interface ResizablePanelProps {
 }
 
 const KitRoute: FC = () => {
-  let { kit } = useParams();
-  // let [searchParams, setSearchParams] = useSearchParams();
+  let params = useParams();
+  const { kit } = params;
+
+  if (!kit) return null;
 
   return (
     <KitScopeProvider guid={kit}>
@@ -71,7 +73,8 @@ const KitRoute: FC = () => {
 
 const DesignRoute: FC = () => {
   let { design } = useParams();
-  // let [searchParams, setSearchParams] = useSearchParams();
+
+  if (!design) return null;
 
   return (
     <DesignScopeProvider guid={design}>
@@ -82,7 +85,8 @@ const DesignRoute: FC = () => {
 
 const TypeRoute: FC = () => {
   let { type } = useParams();
-  // let [searchParams, setSearchParams] = useSearchParams();
+
+  if (!type) return null;
 
   return (
     <TypeScopeProvider guid={type}>
@@ -206,10 +210,10 @@ const SketchpadBase: FC = () => {
               <>
                 {mobileVisiblePanel ? (
                   <div className="absolute inset-1 z-30">
-                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                    {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
+                    {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
+                    {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
+                    {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col overflow-hidden">
@@ -261,12 +265,13 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
           <Routes>
             <Route element={<SketchpadBase />}>
               <Route index element={<Home />} />
-              <Route path=":kit" element={<KitRoute />}>
+              <Route path="kits" element={<Home />} />
+              <Route path="kits/:kit" element={<KitRoute />}>
                 <Route index element={<KitEditor />} />
-                <Route path="d/:design" element={<DesignRoute />}>
+                <Route path="designs/:design" element={<DesignRoute />}>
                   <Route index element={<DesignEditor />} />
                 </Route>
-                <Route path="t/:type" element={<TypeRoute />}>
+                <Route path="types/:type" element={<TypeRoute />}>
                   <Route index element={<TypeEditor />} />
                 </Route>
               </Route>

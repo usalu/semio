@@ -20,7 +20,7 @@
 
 // #endregion
 
-import { GizmoHelper, GizmoViewport, Grid, OrbitControls, OrthographicCamera } from "@react-three/drei";
+import { GizmoHelper, GizmoViewport, Grid, OrbitControls } from "@react-three/drei";
 import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
 import React, { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -79,7 +79,7 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
   const prevCameraStringRef = useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
   const cameraRestoredRef = useRef(false);
   const restoredCameraStringRef = useRef<string | undefined>(undefined);
-  
+
   const cameraRef = useRef<THREE.OrthographicCamera>(threeCamera as THREE.OrthographicCamera);
 
   useEffect(() => {
@@ -92,9 +92,9 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
 
   useEffect(() => {
     if (!cameraRef.current || !controlsRef.current) return;
-    
+
     const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
-    
+
     if (prevCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
       prevCameraStringRef.current = currentCameraString;
@@ -102,17 +102,13 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
     if (restoredCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
     }
-    
+
     if (cameraRestoredRef.current) return;
-    
+
     isUpdatingCameraRef.current = true;
-    
+
     if (initialCamera) {
-      const forwardLength = Math.sqrt(
-        initialCamera.forward.x * initialCamera.forward.x +
-        initialCamera.forward.y * initialCamera.forward.y +
-        initialCamera.forward.z * initialCamera.forward.z
-      );
+      const forwardLength = Math.sqrt(initialCamera.forward.x * initialCamera.forward.x + initialCamera.forward.y * initialCamera.forward.y + initialCamera.forward.z * initialCamera.forward.z);
 
       if (forwardLength < 0.01) {
         cameraRestoredRef.current = true;
@@ -122,40 +118,36 @@ const ModelInner: FC<ModelInnerProps> = ({ children, showGrid = true, showGizmo 
 
       requestAnimationFrame(() => {
         if (!cameraRef.current || !controlsRef.current) return;
-        
+
         cameraRef.current.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
         cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
-        const target = new THREE.Vector3(
-          initialCamera.position.x + initialCamera.forward.x,
-          initialCamera.position.y + initialCamera.forward.y,
-          initialCamera.position.z + initialCamera.forward.z
-        );
+        const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
         controlsRef.current.target.copy(target);
         cameraRef.current.updateProjectionMatrix();
         controlsRef.current.update();
-        
+
         setTimeout(() => {
           isUpdatingCameraRef.current = false;
         }, 300);
       });
-      
+
       cameraRestoredRef.current = true;
       restoredCameraStringRef.current = currentCameraString;
     } else {
       requestAnimationFrame(() => {
         if (!cameraRef.current || !controlsRef.current) return;
-        
+
         cameraRef.current.position.set(10, 10, 10);
         cameraRef.current.up.set(0, 1, 0);
         controlsRef.current.target.set(0, 0, 0);
         cameraRef.current.updateProjectionMatrix();
         controlsRef.current.update();
-        
+
         setTimeout(() => {
           isUpdatingCameraRef.current = false;
         }, 300);
       });
-      
+
       cameraRestoredRef.current = true;
       restoredCameraStringRef.current = currentCameraString;
     }

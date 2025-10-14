@@ -3,7 +3,7 @@ import { de, enUS } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Award, Box, FileText, Layout, Plus, User } from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid } from "../../../lib/utils";
 import { Author, Design, Kit, Quality, File as SemioFile, Type } from "../../../semio";
@@ -185,6 +185,7 @@ const KitEditor: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
+  const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const tooltip = useTooltip();
 
@@ -213,10 +214,8 @@ const KitEditor: FC = () => {
   const kitEditor = useKitEditor() as KitEditorState;
   const isMobile = useIsMobile();
 
-  // Derive artifact kind from search params
-  const selectedKind = searchParams.get("k") as ArtifactKind | null;
-
-  // Get name/variant/view filters from search params
+  // Get filters from search params (?kind=&name=&variant=&view=)
+  const selectedKind = searchParams.get("kind") as ArtifactKind | null;
   const selectedName = searchParams.get("name");
   const selectedVariant = searchParams.get("variant");
   const selectedView = searchParams.get("view");
@@ -666,15 +665,19 @@ const KitEditor: FC = () => {
   };
 
   const toggleKind = (kind: ArtifactKind) => {
-    const params = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
     if (selectedKind === kind) {
-      // If already selected, remove filter
-      params.delete("k");
+      newParams.delete("kind");
+      newParams.delete("name");
+      newParams.delete("variant");
+      newParams.delete("view");
     } else {
-      // Set the selected kind
-      params.set("k", kind);
+      newParams.set("kind", kind);
+      newParams.delete("name");
+      newParams.delete("variant");
+      newParams.delete("view");
     }
-    navigate(`/${kit.guid}?${params.toString()}`);
+    setSearchParams(newParams);
   };
 
   const toggleConcept = (concept: string) => {
@@ -682,11 +685,9 @@ const KitEditor: FC = () => {
     const currentConcepts = newParams.getAll("c");
 
     if (currentConcepts.includes(concept)) {
-      // Remove concept
       newParams.delete("c");
       currentConcepts.filter((c) => c !== concept).forEach((c) => newParams.append("c", c));
     } else {
-      // Add concept
       newParams.append("c", concept);
     }
 
@@ -694,39 +695,39 @@ const KitEditor: FC = () => {
   };
 
   const toggleName = (name: string) => {
-    const params = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
     if (selectedName === name) {
-      params.delete("name");
-      params.delete("variant");
-      params.delete("view");
+      newParams.delete("name");
+      newParams.delete("variant");
+      newParams.delete("view");
     } else {
-      params.set("name", name);
-      params.delete("variant");
-      params.delete("view");
+      newParams.set("name", name);
+      newParams.delete("variant");
+      newParams.delete("view");
     }
-    setSearchParams(params);
+    setSearchParams(newParams);
   };
 
   const toggleVariant = (variant: string) => {
-    const params = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
     if (selectedVariant === variant) {
-      params.delete("variant");
-      params.delete("view");
+      newParams.delete("variant");
+      newParams.delete("view");
     } else {
-      params.set("variant", variant);
-      params.delete("view");
+      newParams.set("variant", variant);
+      newParams.delete("view");
     }
-    setSearchParams(params);
+    setSearchParams(newParams);
   };
 
   const toggleView = (view: string) => {
-    const params = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams);
     if (selectedView === view) {
-      params.delete("view");
+      newParams.delete("view");
     } else {
-      params.set("view", view);
+      newParams.set("view", view);
     }
-    setSearchParams(params);
+    setSearchParams(newParams);
   };
 
   const handleRowClick = (row: TableRow, e: React.MouseEvent) => {

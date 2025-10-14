@@ -11,7 +11,7 @@ import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
-  typeId: Type;
+  typeId: Type | { name: string; variant?: string };
   showHoverCard?: boolean;
   kitGuid?: string;
 }
@@ -26,10 +26,11 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false,
 
   const displayVariant = typeId.variant || typeId.name;
   const avatar = (
-    <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
-      {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-      <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
-    </Avatar>
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <Avatar className="cursor-grab">
+        <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+    </div>
   );
 
   if (!showHoverCard || !type) {
@@ -56,7 +57,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false,
 };
 
 interface DesignAvatarProps {
-  designId: Design;
+  designId: Design | { name: string; variant?: string; view?: string };
   showHoverCard?: boolean;
   isActive?: boolean;
   kitGuid?: string;
@@ -79,10 +80,11 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = 
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <Avatar ref={setNodeRef} {...listeners} {...attributes} className={`${isActive ? "cursor-default opacity-50" : "cursor-grab"}`}>
-      {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-      <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
-    </Avatar>
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <Avatar className={`${isActive ? "cursor-default opacity-50" : "cursor-grab"}`}>
+        <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+    </div>
   );
 
   if (!showHoverCard) {

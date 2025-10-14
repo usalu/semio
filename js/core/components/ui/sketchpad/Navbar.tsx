@@ -197,18 +197,37 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const isMobile = useIsMobile();
   const isNavbarExpanded = useIsNavbarExpanded();
 
-  // Parse URL: /{kitGuid} or /{kitGuid}/[dt]/{itemGuid}
-  const pathMatch = navigation.match(/^\/([^/]+)(?:\/([dt])\/([^/]+))?/);
-  const kitGuid = pathMatch?.[1];
-  const editorType = pathMatch?.[2]; // 'd' or 't'
-  const itemGuid = pathMatch?.[3];
+  // Parse URL path parts
+  const pathParts = navigation.split("/").filter((p) => p);
 
-  const isDesignEditor = editorType === "d" && itemGuid;
-  const isTypeEditor = editorType === "t" && itemGuid;
-  const isKitEditor = kitGuid && !itemGuid;
+  // Determine what kind of page we're on
+  const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
-  // Get filtered artifact kind from search params
-  const filteredKind = searchParams.get("k") as string | null;
+  // Check if we're in the /kits path
+  const isKitsPath = pathParts[0] === "kits";
+
+  // Home page filters (?kind=&name=&version=)
+  const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
+  const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
+  const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
+
+  // Kit editor (/kits/:kitGuid or /kits/:kitGuid/designs/:design or /kits/:kitGuid/types/:type)
+  const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
+
+  // Check if we're in design or type editor
+  const secondPart = pathParts[2];
+  const thirdPart = pathParts[3];
+  const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
+  const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
+  const itemGuid = isDesignEditor || isTypeEditor ? thirdPart : null;
+
+  // Get artifact kind filters for kit editor (?kind=&name=&variant=&view=)
+  const filteredKind = kitGuid && !isDesignEditor && !isTypeEditor ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("name") : null;
+  const filteredVariant = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("variant") : null;
+  const filteredView = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("view") : null;
+
+  const isKitEditor = kitGuid && !isDesignEditor && !isTypeEditor;
 
   const kit = kits.find((k) => k.guid === kitGuid);
   const store = useSketchpadStore();
@@ -225,9 +244,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   // Kit kind items for breadcrumb
   const kitKindItems = [
-    { label: <Clock size={16} />, tooltip: tooltip("breadcrumb.temporary"), href: "/?k=temporary" },
-    { label: <HardDrive size={16} />, tooltip: tooltip("breadcrumb.local"), href: "/?k=local" },
-    { label: <Cloud size={16} />, tooltip: tooltip("breadcrumb.remote"), href: "/?k=remote" },
+    { label: <Clock size={16} />, tooltip: tooltip("breadcrumb.temporary"), href: "/kits?kind=temporary" },
+    { label: <HardDrive size={16} />, tooltip: tooltip("breadcrumb.local"), href: "/kits?kind=local" },
+    { label: <Cloud size={16} />, tooltip: tooltip("breadcrumb.remote"), href: "/kits?kind=remote" },
   ];
 
   // Filter kits by kind for the kit selector
@@ -239,7 +258,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
         return kKind === kitKind;
       })
-      .map((k) => ({ label: k.name, href: `/${k.guid}` }));
+      .map((k) => ({ label: k.name, href: `/kits/${k.guid}` }));
 
     // Add create option
     items.push({ label: "+ " + t("navbar.createKit"), href: "#create-kit" });
@@ -279,11 +298,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   }, [kitGuid, store]);
 
   const artifactKinds = [
-    { label: <Layout size={16} />, tooltip: tooltip("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/${kitGuid}?k=designs` : "/?k=designs" },
-    { label: <Box size={16} />, tooltip: tooltip("breadcrumb.types"), kind: "types", href: kitGuid ? `/${kitGuid}?k=types` : "/?k=types" },
-    { label: <Award size={16} />, tooltip: tooltip("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/${kitGuid}?k=qualities` : "/?k=qualities" },
-    { label: <FileText size={16} />, tooltip: tooltip("breadcrumb.files"), kind: "files", href: kitGuid ? `/${kitGuid}?k=files` : "/?k=files" },
-    { label: <User size={16} />, tooltip: tooltip("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/${kitGuid}?k=authors` : "/?k=authors" },
+    { label: <Layout size={16} />, tooltip: tooltip("breadcrumb.designs"), kind: "designs", href: kitGuid ? `/kits/${kitGuid}?kind=designs` : "/kits?kind=designs" },
+    { label: <Box size={16} />, tooltip: tooltip("breadcrumb.types"), kind: "types", href: kitGuid ? `/kits/${kitGuid}?kind=types` : "/kits?kind=types" },
+    { label: <Award size={16} />, tooltip: tooltip("breadcrumb.qualities"), kind: "qualities", href: kitGuid ? `/kits/${kitGuid}?kind=qualities` : "/kits?kind=qualities" },
+    { label: <FileText size={16} />, tooltip: tooltip("breadcrumb.files"), kind: "files", href: kitGuid ? `/kits/${kitGuid}?kind=files` : "/kits?kind=files" },
+    { label: <User size={16} />, tooltip: tooltip("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/kits/${kitGuid}?kind=authors` : "/kits?kind=authors" },
   ];
 
   // Get all designs and types as full objects (needed for create handlers)
@@ -310,7 +329,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       createdAt: now,
       updatedAt: now,
     });
-    navigate(`/${guid}`);
+    navigate(`/kits/${guid}`);
   }, [navigate, sketchpadCommands, kits, t]);
 
   const handleCreateDesign = useCallback(
@@ -325,7 +344,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const uniqueName = name || generateUniqueName(t("design.defaultName"), existingNames);
       console.log("[Navbar] Creating design with name:", uniqueName);
       kitCommands.createDesign({ guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
-      navigate(`/${kitGuid}/d/${guid}`);
+      navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allDesigns, t],
   );
@@ -337,7 +356,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const existingNames = allTypes.map((t) => t.name);
       const uniqueName = name || generateUniqueName(t("type.defaultName"), existingNames);
       kitCommands.createType({ guid, name: uniqueName, variant: "", ports: [] });
-      navigate(`/${kitGuid}/t/${guid}`);
+      navigate(`/kits/${kitGuid}/types/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allTypes, t],
   );
@@ -364,7 +383,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
           pieces: [],
           connections: [],
         });
-        navigate(`/${kitGuid}/d/${guid}`);
+        navigate(`/kits/${kitGuid}/designs/${guid}`);
       } else {
         const typeObj = designOrType as Type;
         const existingVariants = allTypes.filter((type) => type.name === typeObj.name).map((type) => type.variant || "");
@@ -375,7 +394,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
           variant: uniqueVariant,
           ports: [],
         });
-        navigate(`/${kitGuid}/t/${guid}`);
+        navigate(`/kits/${kitGuid}/types/${guid}`);
       }
     },
     [kitCommands, kitGuid, navigate, allDesigns, allTypes],
@@ -401,7 +420,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         pieces: [],
         connections: [],
       });
-      navigate(`/${kitGuid}/d/${guid}`);
+      navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allDesigns],
   );
@@ -442,7 +461,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     });
     const items = Array.from(nameMap.entries()).map(([name, d]) => ({
       label: name,
-      href: `/${kitGuid}/d/${d.guid}`,
+      href: `/kits/${kitGuid}/designs/${d.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createDesign"), href: "#create-design" });
     return items;
@@ -459,7 +478,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     });
     const items = Array.from(variants.entries()).map(([variant, d]) => ({
       label: variant || t("design.defaultVariant"),
-      href: `/${kitGuid}/d/${d.guid}`,
+      href: `/kits/${kitGuid}/designs/${d.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
     return items;
@@ -471,7 +490,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       .filter((d) => d.name === design.name && (d.variant || "") === (design.variant || ""))
       .map((d) => ({
         label: d.view || t("design.defaultView"),
-        href: `/${kitGuid}/d/${d.guid}`,
+        href: `/kits/${kitGuid}/designs/${d.guid}`,
       }));
     items.push({ label: "+ " + t("navbar.createView"), href: "#create-view" });
     return items;
@@ -485,7 +504,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     });
     const items = Array.from(nameMap.entries()).map(([name, t]) => ({
       label: name,
-      href: `/${kitGuid}/t/${t.guid}`,
+      href: `/kits/${kitGuid}/types/${t.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createType"), href: "#create-type" });
     return items;
@@ -502,69 +521,138 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     });
     const items = Array.from(variants.entries()).map(([variant, typeObj]) => ({
       label: variant || t("type.defaultVariant"),
-      href: `/${kitGuid}/t/${typeObj.guid}`,
+      href: `/kits/${kitGuid}/types/${typeObj.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
     return items;
   }, [type, allTypes, kitGuid, t]);
 
+  // Determine if we're at root or if a kind filter is active
+  const isAtRoot = navigation === "/";
+  const hasKindFilter = filteredKind || (kitGuid && kitKind);
+
   return (
     <Breadcrumb className="flex-1 min-w-0">
       <BreadcrumbList>
+        {/* Always show Home icon with dropdown to select kinds */}
         <BreadcrumbItem tooltip={tooltip("navbar.home")}>
           <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {kitGuid && kitKind && (
+
+        {/* Show separator with kind selector dropdown */}
+        <BreadcrumbSeparator items={kitKindItems} tooltip={tooltip("navbar.kitKinds")} onNavigate={(href) => navigate(href)} />
+
+        {/* If viewing a kit (or we have a selected home kind), show the kind breadcrumb */}
+        {(kitGuid && kitKind) || homeKind ? (
           <>
-            <BreadcrumbSeparator items={kitKindItems} tooltip={tooltip("navbar.kitKinds")} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind}`)}>
-              <BreadcrumbLink onClick={() => navigate(`/?k=${kitKind}`)} style={{ cursor: "pointer" }}>
-                {kitKind === "temporary" && <Clock size={16} />}
-                {kitKind === "local" && <HardDrive size={16} />}
-                {kitKind === "remote" && <Cloud size={16} />}
+            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind || homeKind}`)}>
+              <BreadcrumbLink onClick={() => navigate(`/kits?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
+                {(kitKind === "temporary" || homeKind === "temporary") && <Clock size={16} />}
+                {(kitKind === "local" || homeKind === "local") && <HardDrive size={16} />}
+                {(kitKind === "remote" || homeKind === "remote") && <Cloud size={16} />}
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={kitItemsWithCreate}
-              tooltip={tooltip("navbar.kits")}
-              onNavigate={(href) => {
-                if (href === "#create-kit") handleCreateKit();
-                else navigate(href);
-              }}
-            />
-            <BreadcrumbItem tooltip={tooltip("navbar.kit")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}`)} style={{ cursor: "pointer" }}>
-                {kit?.name || kitGuid}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
+            {homeName && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem tooltip={tooltip("navbar.kitName")}>
+                  <BreadcrumbLink onClick={() => navigate(`/kits?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
+                    {homeName}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+            {homeVersion && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
+                  <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+            {kitGuid && (
+              <>
+                <BreadcrumbSeparator
+                  items={kitItemsWithCreate}
+                  tooltip={tooltip("navbar.kits")}
+                  onNavigate={(href) => {
+                    if (href === "#create-kit") handleCreateKit();
+                    else navigate(href);
+                  }}
+                />
+                <BreadcrumbItem tooltip={tooltip("navbar.kit")}>
+                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}`)} style={{ cursor: "pointer" }}>
+                    {kit?.name || kitGuid}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
+                  <BreadcrumbLink onClick={() => navigate(`/kits?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}&version=${encodeURIComponent(kit?.version || "")}`)} style={{ cursor: "pointer" }}>
+                    {kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
           </>
-        )}
-        {isKitEditor && filteredKind && (
+        ) : null}
+        {isKitEditor && (
           <>
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`)}>
-              <BreadcrumbLink style={{ cursor: "default" }}>
-                {filteredKind === "designs" && <Layout size={16} />}
-                {filteredKind === "types" && <Box size={16} />}
-                {filteredKind === "qualities" && <Award size={16} />}
-                {filteredKind === "files" && <FileText size={16} />}
-                {filteredKind === "authors" && <User size={16} />}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        )}
-        {isKitEditor && !filteredKind && (
-          <>
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            {filteredKind && (
+              <>
+                <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`)}>
+                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }}>
+                    {filteredKind === "designs" && <Layout size={16} />}
+                    {filteredKind === "types" && <Box size={16} />}
+                    {filteredKind === "qualities" && <Award size={16} />}
+                    {filteredKind === "files" && <FileText size={16} />}
+                    {filteredKind === "authors" && <User size={16} />}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {filteredName !== null && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem tooltip={tooltip("navbar.name")}>
+                      <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}`)} style={{ cursor: "pointer" }}>
+                        {filteredName}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </>
+                )}
+                {filteredName !== null && filteredVariant !== null && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
+                      <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}`)} style={{ cursor: "pointer" }}>
+                        {filteredVariant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </>
+                )}
+                {filteredName !== null && filteredVariant !== null && filteredView !== null && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem tooltip={tooltip("navbar.view")}>
+                      <BreadcrumbLink
+                        onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(filteredView)}`)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {filteredView || <span className="italic opacity-70">{t("design.defaultView")}</span>}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </>
+                )}
+              </>
+            )}
           </>
         )}
         {isDesignEditor && design && (
           <>
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={tooltip("breadcrumb.designs")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs`)} style={{ cursor: "pointer" }}>
+              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }}>
                 <Layout size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -577,9 +665,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.design")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}`)} style={{ cursor: "pointer" }}>
-                {design.name}
-              </BreadcrumbLink>
+              <BreadcrumbLink style={{ cursor: "default" }}>{design.name}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
@@ -591,7 +677,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>
+              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>
                 {design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -605,44 +691,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.view")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)} style={{ cursor: "pointer" }}>
+              <BreadcrumbLink
+                onClick={() => navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)}
+                style={{ cursor: "pointer" }}
+              >
                 {design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        )}
-        {isTypeEditor && type && (
-          <>
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.types")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types`)} style={{ cursor: "pointer" }}>
-                <Box size={16} />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={typeNameItems}
-              tooltip={tooltip("navbar.selectType")}
-              onNavigate={(href) => {
-                if (href === "#create-type") handleCreateType();
-                else navigate(href);
-              }}
-            />
-            <BreadcrumbItem tooltip={tooltip("navbar.type")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}`)} style={{ cursor: "pointer" }}>
-                {type.name}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={typeVariantItems}
-              tooltip={tooltip("navbar.selectVariant")}
-              onNavigate={(href) => {
-                if (href === "#create-variant") handleCreateVariant(type, true);
-                else navigate(href);
-              }}
-            />
-            <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
-              <BreadcrumbLink onClick={() => navigate(`/${kitGuid}?k=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}`)} style={{ cursor: "pointer" }}>
-                {type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}
               </BreadcrumbLink>
             </BreadcrumbItem>
           </>
@@ -652,7 +705,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   );
 };
 
-const Search: FC = ({ }) => {
+const Search: FC = ({}) => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
   const [open, setOpen] = useState(false);
@@ -673,7 +726,7 @@ const Search: FC = ({ }) => {
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -704,7 +757,7 @@ const PanelToggles: FC = ({ }) => {
   const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -728,7 +781,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleExclusivePressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
         handleToggle(activeExclusivePanel as keyof PanelVisibility);
@@ -742,7 +795,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleExclusiveValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -797,9 +850,9 @@ const PanelToggles: FC = ({ }) => {
   );
 };
 
-interface NavbarProps { }
+interface NavbarProps {}
 
-const Navbar: FC<NavbarProps> = ({ }) => {
+const Navbar: FC<NavbarProps> = ({}) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
@@ -838,7 +891,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
   const isAnyPanelOpen = panelConfig.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleMobilePanelToggle = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       // Open the active panel if none is open
       if (activePanel && !visiblePanels[activePanel as keyof PanelVisibility]) {
@@ -857,7 +910,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
   };
 
   const handleMobilePanelChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     // Close all other panels and open the selected one
@@ -898,11 +951,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
 
   if (isMobile) {
     return (
-      <div
-        id="navbar"
-        className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
-        style={{ WebkitAppRegion: "drag" }}
-      >
+      <div id="navbar" className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`} style={{ WebkitAppRegion: "drag" }}>
         {/* Unexpanded navbar */}
         <div className="h-12 flex items-center justify-between px-1 gap-1">
           <ButtonGroup>

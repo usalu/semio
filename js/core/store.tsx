@@ -1813,9 +1813,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id === type.guid);
-          return update ? { ...type, ports: update.diff.ports } : type;
-        })
+        const update = colorDiff.updated?.find((u) => u.id === type.guid);
+        return update ? { ...type, ports: update.diff.ports } : type;
+      })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -4268,7 +4268,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -4444,7 +4444,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) {}
+                  } catch (error) { }
                 }
               }
             }
@@ -5376,7 +5376,7 @@ export function useTypeEditorCamera(): Camera | undefined {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -6482,7 +6482,7 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7498,7 +7498,7 @@ export function useDesignEditorDiagramScale(): number | undefined {
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7796,24 +7796,24 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-          design: { snappiness: 10, gridSize: 24 },
-          type: {},
-          kit: {},
-        };
+        design: { snappiness: 10, gridSize: 24 },
+        type: {},
+        kit: {},
+      };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-          workbenchWidth: 230,
-          detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
-          consoleHeight: 200,
-        };
+        workbenchWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
-    const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr) : ["/"];
+    const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const currentValues = {
-      navigation: this.ySketchpad.get("navigation") as string,
+      navigation: migratePath(this.ySketchpad.get("navigation") as string || "/"),
       navigationHistory: navigationHistory,
       navigationHistoryIndex: (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0,
       access: this.ySketchpad.get("access") as Access,
@@ -8251,9 +8251,10 @@ const sketchpadCommands = {
     };
   },
   "semio.sketchpad.syncNavigation": (context: SketchpadCommandContext, path: string): SketchpadCommandResult => {
-    if (context.sketchpad.navigation !== path) {
+    const migratedPath = migratePath(path);
+    if (context.sketchpad.navigation !== migratedPath) {
       return {
-        diff: { navigation: path },
+        diff: { navigation: migratedPath },
       };
     }
     return {};
@@ -8333,11 +8334,27 @@ export function useNavigation(): string {
   return location.pathname;
 }
 
+function migratePath(path: string): string {
+  if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
+    return path.replace(/^\/kit\/([^/]+)\/design\/([^/]+)/, "/kits/$1/designs/$2");
+  }
+  if (path.match(/^\/kit\/([^/]+)\/type\/([^/]+)/)) {
+    return path.replace(/^\/kit\/([^/]+)\/type\/([^/]+)/, "/kits/$1/types/$2");
+  }
+  if (path.match(/^\/kit\/([^/]+)/)) {
+    return path.replace(/^\/kit\/([^/]+)/, "/kits/$1");
+  }
+  if (path.match(/^\/kit\?/)) {
+    return path.replace(/^\/kit\?/, "/kits?");
+  }
+  return path;
+}
+
 export function getEditorTypeFromPath(path: string): EditorType {
-  if (path === "/") return EditorType.HOME;
-  if (path.match(/^\/[^/]+\/d\/[^/]+/)) return EditorType.DESIGN;
-  if (path.match(/^\/[^/]+\/t\/[^/]+/)) return EditorType.TYPE;
-  if (path.match(/^\/[^/]+$/)) return EditorType.KIT;
+  if (path === "/" || path === "/kits") return EditorType.HOME;
+  if (path.match(/^\/kits\/[^/]+\/designs\/[^/]+/)) return EditorType.DESIGN;
+  if (path.match(/^\/kits\/[^/]+\/types\/[^/]+/)) return EditorType.TYPE;
+  if (path.match(/^\/kits\/[^/]+$/)) return EditorType.KIT;
   return EditorType.HOME;
 }
 
@@ -8543,9 +8560,9 @@ export function useSketchpadCommands() {
     createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
     createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-    navigateToKit: (kit: Guid) => navigate(`/${kit}`),
-    navigateToDesign: (kit: Guid, design: Guid) => navigate(`/${kit}/d/${design}`),
-    navigateToType: (kit: Guid, type: Guid) => navigate(`/${kit}/t/${type}`),
+    navigateToKit: (kit: Guid) => navigate(`/kits/${kit}`),
+    navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
+    navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
     navigateBack: () => {
       store.execute("semio.sketchpad.navigateBack");
       const state = store.snapshot();

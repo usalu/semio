@@ -1514,15 +1514,15 @@ export interface DesignEditorProps {}
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   const fullscreenPanel = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction } = useDesignEditorCommands();
 
   const selection = useDesignEditorSelection();
   const design = useDesign();
   const kit = useKit() as Kit;
   const editorSettings = useSketchpad((s) => s.editorSettings);
 
-  const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<Design | null>(null);
-  const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<Design | null>(null);
+  const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<{ name: string; variant?: string } | null>(null);
+  const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<{ name: string; variant?: string; view?: string } | null>(null);
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
@@ -1726,11 +1726,14 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     if (id.startsWith("type-")) {
       const parts = id.replace("type-", "").split("-");
       const name = parts[0];
-      const variant = parts[1] || undefined;
+      const variant = parts.slice(1).join("-") || undefined;
       setActiveDraggedTypeId({ name, variant });
     } else if (id.startsWith("design-")) {
-      const designName = id.replace("design-", "");
-      setActiveDraggedDesignId({ name: designName, variant: "", view: "" });
+      const parts = id.replace("design-", "").split("-");
+      const name = parts[0];
+      const variant = parts[1] || undefined;
+      const view = parts[2] || undefined;
+      setActiveDraggedDesignId({ name, variant, view });
     }
   };
 
@@ -1748,19 +1751,23 @@ const DesignEditor: FC<DesignEditorProps> = () => {
       });
 
       if (activeDraggedTypeId) {
+        startTransaction();
         const piece = {
-          id_: `piece-${Date.now()}`,
-          type: activeDraggedTypeId,
+          guid: guid(),
+          type: `${activeDraggedTypeId.name}${activeDraggedTypeId.variant ? `-${activeDraggedTypeId.variant}` : ""}`,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
-        addPiece(piece).catch(() => {});
+        addPiece(piece);
+        finalizeTransaction();
       } else if (activeDraggedDesignId) {
+        startTransaction();
         const piece = {
-          id_: `design-${Date.now()}`,
-          design: activeDraggedDesignId,
+          guid: guid(),
+          design: `${activeDraggedDesignId.name}${activeDraggedDesignId.variant ? `-${activeDraggedDesignId.variant}` : ""}${activeDraggedDesignId.view ? `-${activeDraggedDesignId.view}` : ""}`,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
-        addPiece(piece).catch(() => {});
+        addPiece(piece);
+        finalizeTransaction();
       }
     }
 
