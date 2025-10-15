@@ -128,74 +128,88 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── graphql
 ├── js
 │ ├── ai
-│ ├── core # @semio/js: all shared js code (ui, domain logic, configs, …)
+│ ├── desktop
+│ ├── docs
+│ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
 │ │ ├── components
 │ │ │ ├── ui
-│ │ │ │ ├── sketchpad
-│ │ │ │ │ │ ├── Chat.tsx
-│ │ │ │ │ │ ├── DesignEditor.tsx
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ │ ├── Home.tsx
-│ │ │ │ │ │ ├── KitEditor.tsx
-│ │ │ │ │ │ ├── Model.tsx
-│ │ │ │ │ │ ├── Navbar.tsx
-│ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ ├── Sketchpad.stories.tsx
-│ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/js
-│ │ │ │ │ │ ├── TypeEditor.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── Accordion.stories.tsx
-│ │ │ │ │ ├── Accordion.tsx
-│ │ │ │ │ ├── Avatar.stories.tsx
-│ │ │ │ │ ├── Avatar.tsx
-│ │ │ │ │ ├── Breadcrumb.stories.tsx
-│ │ │ │ │ ├── Breadcrumb.tsx
-│ │ │ │ │ ├── Button.stories.tsx
-│ │ │ │ │ ├── Button.tsx
-│ │ │ │ │ ├── ButtonGroup.stories.tsx
-│ │ │ │ │ ├── ButtonGroup.tsx
-│ │ │ │ │ ├── Collapsible.stories.tsx
-│ │ │ │ │ ├── Collapsible.tsx
-│ │ │ │ │ ├── Combobox.stories.tsx
-│ │ │ │ │ ├── Combobox.tsx
-│ │ │ │ │ ├── Dialog.stories.tsx
-│ │ │ │ │ ├── Dialog.tsx
-│ │ │ │ │ ├── File.stories.tsx
-│ │ │ │ │ ├── File.tsx
-│ │ │ │ │ ├── HoverCard.stories.tsx
-│ │ │ │ │ ├── HoverCard.tsx
-│ │ │ │ │ ├── Icons.stories.tsx
-│ │ │ │ │ ├── Icons.tsx
-│ │ │ │ │ ├── Input.stories.tsx
-│ │ │ │ │ ├── Input.tsx
+│ │ │ │ ├── elements
+│ │ │ │ │ ├── aggregation
+│ │ │ │ │ │ ├── Accordion.stories.tsx
+│ │ │ │ │ │ ├── Accordion.tsx
+│ │ │ │ │ │ ├── Collapsible.stories.tsx
+│ │ │ │ │ │ ├── Collapsible.tsx
+│ │ │ │ │ │ ├── Dialog.stories.tsx
+│ │ │ │ │ │ ├── Dialog.tsx
+│ │ │ │ │ │ ├── Resizable.stories.tsx
+│ │ │ │ │ │ ├── Resizable.tsx
+│ │ │ │ │ │ ├── ScrollArea.stories.tsx
+│ │ │ │ │ │ ├── ScrollArea.tsx
+│ │ │ │ │ │ ├── Tabs.stories.tsx
+│ │ │ │ │ │ ├── Tabs.tsx
+│ │ │ │ │ │ ├── Tree.stories.tsx
+│ │ │ │ │ │ └── Tree.tsx
+│ │ │ │ │ ├── display
+│ │ │ │ │ │ ├── Avatar.stories.tsx
+│ │ │ │ │ │ ├── Avatar.tsx
+│ │ │ │ │ │ ├── HoverCard.stories.tsx
+│ │ │ │ │ │ ├── HoverCard.tsx
+│ │ │ │ │ │ ├── Icons.stories.tsx
+│ │ │ │ │ │ ├── Icons.tsx
+│ │ │ │ │ │ ├── Tooltip.stories.tsx
+│ │ │ │ │ │ └── Tooltip.tsx
+│ │ │ │ │ ├── input
+│ │ │ │ │ │ ├── Button.stories.tsx
+│ │ │ │ │ │ ├── Button.tsx
+│ │ │ │ │ │ ├── ButtonGroup.stories.tsx
+│ │ │ │ │ │ ├── ButtonGroup.tsx
+│ │ │ │ │ │ ├── Combobox.stories.tsx
+│ │ │ │ │ │ ├── Combobox.tsx
+│ │ │ │ │ │ ├── Input.stories.tsx
+│ │ │ │ │ │ ├── Input.tsx
+│ │ │ │ │ │ ├── Select.stories.tsx
+│ │ │ │ │ │ ├── Select.tsx
+│ │ │ │ │ │ ├── Slider.stories.tsx
+│ │ │ │ │ │ ├── Slider.tsx
+│ │ │ │ │ │ ├── Stepper.stories.tsx
+│ │ │ │ │ │ ├── Stepper.tsx
+│ │ │ │ │ │ ├── Textarea.stories.tsx
+│ │ │ │ │ │ ├── Textarea.tsx
+│ │ │ │ │ │ ├── Toggle.stories.tsx
+│ │ │ │ │ │ ├── Toggle.tsx
+│ │ │ │ │ │ ├── ToggleCycle.stories.tsx
+│ │ │ │ │ │ ├── ToggleCycle.tsx
+│ │ │ │ │ │ ├── ToggleGroup.stories.tsx
+│ │ │ │ │ │ └── ToggleGroup.tsx
+│ │ │ │ │ ├── navigation
+│ │ │ │ │ │ ├── Breadcrumb.stories.tsx
+│ │ │ │ │ │ └── Breadcrumb.tsx
 │ │ │ │ │ ├── Popover.stories.tsx
 │ │ │ │ │ ├── Popover.tsx
-│ │ │ │ │ ├── Resizable.stories.tsx
-│ │ │ │ │ ├── Resizable.tsx
-│ │ │ │ │ ├── ScrollArea.stories.tsx
-│ │ │ │ │ ├── ScrollArea.tsx
-│ │ │ │ │ ├── Select.stories.tsx
-│ │ │ │ │ ├── Select.tsx
-│ │ │ │ │ ├── Slider.stories.tsx
-│ │ │ │ │ ├── Slider.tsx
-│ │ │ │ │ ├── Stepper.stories.tsx
-│ │ │ │ │ ├── Stepper.tsx
-│ │ │ │ │ ├── Tabs.stories.tsx
-│ │ │ │ │ ├── Tabs.tsx
-│ │ │ │ │ ├── Textarea.stories.tsx
-│ │ │ │ │ ├── Textarea.tsx
-│ │ │ │ │ ├── Toggle.stories.tsx
-│ │ │ │ │ ├── Toggle.tsx
-│ │ │ │ │ ├── ToggleCycle.stories.tsx
-│ │ │ │ │ ├── ToggleCycle.tsx
-│ │ │ │ │ ├── ToggleGroup.stories.tsx
-│ │ │ │ │ ├── ToggleGroup.tsx
-│ │ │ │ │ ├── Tooltip.stories.tsx
-│ │ │ │ │ ├── Tooltip.tsx
-│ │ │ │ │ ├── Tree.stories.tsx
-│ │ │ │ │ └── Tree.tsx
+│ │ │ │ │ ├── Scene.stories.tsx
+│ │ │ │ │ └── Scene.tsx
+│ │ │ │ ├── sketchpad
+│ │ │ │ │ ├── editors
+│ │ │ │ │ │ ├── design
+│ │ │ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ │ ├── kit
+│ │ │ │ │ │ │ └── Editor.tsx
+│ │ │ │ │ │ │── type
+│ │ │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ ├── DesignEditor.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ ├── Chat.tsx
+│ │ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ │ ├── Settings.tsx
+│ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── Footer.tsx
+│ │ │ │ │ ├── Home.tsx
+│ │ │ │ │ ├── Navbar.tsx
+│ │ │ │ │ ├── Sketchpad.stories.tsx
+│ │ │ │ │ └── Sketchpad.tsx # main component of @semio/js
 │ │ ├── lib
 │ │ │ └── utils.ts
 │ │ ├── locales
@@ -216,10 +230,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── tsconfig.json
 │ │ ├── vite.config.ts
 │ │ └── vitest.workspace.ts
-│ ├── docs
-│ ├── play
-│ ├── playground
-│ └── sketchpad
+│ └── play
 ├── jsonschema
 ├── liveblocks
 ├── meta
@@ -258,7 +269,7 @@ In general, if the user talks about an old file, then probably there is the same
 
 ## js
 
-Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and sketchpad (@semio/sketchpad) that runs in electron.
+Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and desktop (@semio/desktop) that runs in electron.
 
 ### Rules
 

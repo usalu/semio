@@ -7,7 +7,7 @@
     "assets/icons",
     "assets",
     "py/engine",
-    "js/core",
+    "js/js",
     "js/docs",
     "js/play",
     "js/sketchpad",
@@ -25,7 +25,7 @@
     "engine": "npx nx dev @semio/engine",
     "js": "npx nx dev @semio/js",
     "play": "npx nx dev @semio/play",
-    "sketchpad": "npx nx dev @semio/sketchpad",
+    "sketchpad": "npx nx dev @semio/desktop",
     "docs": "npx nx dev @semio/docs"
   },
   "devDependencies": {

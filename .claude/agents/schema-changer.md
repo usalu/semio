@@ -9,13 +9,15 @@ Your only task is implement schema changes.
 
 Every of those files is affected:
 
+<!-- TODO: Update js js -->
+
 ├── engineering
 │ ├── dataarchitecture.pu # blueprint for sql schemas
 │ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
 │ └── softwarearchitecture.txt # blueprint for object-oriented code
 ├── js
 │ ├── ai
-│ ├── core # @semio/js: all shared js code (ui, domain logic, configs, …)
+│ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
 │ │ ├── semio.ts # all domain logic
 │ │ ├── store.ts # react hooks for state (uses yjs)
 │ │ ├── components

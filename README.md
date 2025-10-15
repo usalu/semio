@@ -119,7 +119,7 @@ Let me walk you through 🚶
    - [🐍 Python](#-python-)
 1. [📦 Components](#-components-)
    - [🟨 @semio/js](#-semiojs-)
-   - [✏️ @semio/sketchpad](#️-semiosketchpad-)
+   - [✏️ @semio/desktop](#️-semiodesktop-)
    - [📚 @semio/docs](#-semiodocs-)
    - [🎛️ @semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 @semio/assistant](#-semioassistant-)
@@ -612,7 +612,7 @@ Before every [release](#-release-) the [repo](#-repo-) is archived and then all 
 We have two different types of tags:
 
 - `rYY.MM-V` for [releases](#-release-) (e.g `r21.06-1`,`r23.07-2`,`r24.12-1`, `r25.07-1`, …)
-- `COMPONENT-vMAJOR.MINOR.PATCH` for [components](#-components-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#️-semioengine-), [`sketchpad-v1.0.0`](#-semiosketchpad-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
+- `COMPONENT-vMAJOR.MINOR.PATCH` for [components](#-components-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#️-semioengine-), [`sketchpad-v1.0.0`](#-semiodesktop-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
 
 ### 🌿 Branch [↑](#-gitstyle-)
 
@@ -1021,7 +1021,7 @@ A component is a piece of software which is packaged independently 🏝️
 
 The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
-## ✏️ [@semio/sketchpad](https://github.com/usalu/semio/tree/main/js/sketchpad) [↑](#-components-)
+## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/sketchpad) [↑](#-components-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1464,7 +1464,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>      
         <br />
-        <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
+        <a href="#-semiodesktop-" title="✏️@semio/desktop"><sub>✏️<sub></a>
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
         <a href="#%EF%B8%8F-semioplay-" title="🎛️@semio/play"><sub>🎛️<sub></a>

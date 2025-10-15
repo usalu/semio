@@ -1,0 +1,56 @@
+// #region Header
+
+// Tabs.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import * as React from "react";
+
+import { cn } from "../../../../lib/utils";
+
+function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-2", className)} {...props} />;
+}
+
+function TabsList({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: "base" | "panel" | "temporary" }) {
+  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-background";
+  return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-9 w-fit items-center justify-center p-[3px]", bgClass, className)} {...props} />;
+}
+
+function TabsTrigger({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: "base" | "panel" | "temporary" }) {
+  const activeBgClass = level === "panel" ? "data-[state=active]:bg-panel" : level === "temporary" ? "data-[state=active]:bg-temporary" : "data-[state=active]:bg-background";
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
+  return (
+    <TabsPrimitive.Trigger
+      data-slot="tabs-trigger"
+      className={cn(
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        activeBgClass,
+        hoverClass,
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
+  return <TabsPrimitive.Content data-slot="tabs-content" className={cn("flex-1 outline-none", className)} {...props} />;
+}
+
+export { Tabs, TabsContent, TabsList, TabsTrigger };

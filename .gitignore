@@ -492,7 +492,7 @@ FodyWeavers.xsd
 !.vscode/extensions.json
 !.vscode/*.code-workspace
 !js/**/public
-!js/core/lib
+!js/js/lib
 !.axoCover/settings.json
 !**/[Pp]ackages/build/
 !rb/lib

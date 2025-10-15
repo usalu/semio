@@ -8,7 +8,7 @@
 /* @import "tailwindcss/utilities.css" layer(utilities); */
 /* @import "@semio/js/theme.css"; */
 
-@import "tailwindcss" source("../core");
+@import "tailwindcss" source("../js");
 @import "@semio/js/globals.css";
 @import "@xyflow/react/dist/style.css";
 

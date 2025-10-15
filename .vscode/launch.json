@@ -46,7 +46,7 @@
         "run-many",
         "-t",
         "dev",
-        "--projects=@semio/js,@semio/docs,@semio/sketchpad"
+        "--projects=@semio/js,@semio/docs,@semio/desktop"
       ],
       // "postDebugTask": "kill dev",
       "cwd": "${workspaceFolder}",
@@ -59,7 +59,7 @@
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:6006",
-      "webRoot": "${workspaceRoot}/js/core"
+      "webRoot": "${workspaceRoot}/js/js"
     },
     {
       "name": "dev play",
@@ -87,7 +87,7 @@
       "runtimeArgs": [
         "nx",
         "dev",
-        "@semio/sketchpad"
+        "@semio/desktop"
       ],
       // "postDebugTask": "kill dev",
       "cwd": "${workspaceFolder}",
@@ -135,7 +135,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "build everything js",
+      "name": "build js",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -144,13 +144,13 @@
         "run-many",
         "-t",
         "build",
-        "--projects=@semio/js,@semio/docs,@semio/sketchpad"
+        "--projects=@semio/js,@semio/docs,@semio/desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "build js core",
+      "name": "build js js",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -183,7 +183,7 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "@semio/sketchpad"
+        "@semio/desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

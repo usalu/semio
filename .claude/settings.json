@@ -13,14 +13,14 @@
       "Edit(py/engine.py)",
       "Read(py\\engine.py)",
       "Edit(py\\engine.py)",
-      "Read(js/core/semio.ts)",
-      "Edit(js/core/semio.ts)",
-      "Read(js\\core\\semio.ts)",
-      "Edit(js\\core\\semio.ts)",
-      "Read(js/core/components/**)",
-      "Edit(js/core/components/**)",
-      "Read(js\\core\\components/**)",
-      "Edit(js\\core\\components/**)"
+      "Read(js/js/semio.ts)",
+      "Edit(js/js/semio.ts)",
+      "Read(js\\js\\semio.ts)",
+      "Edit(js\\js\\semio.ts)",
+      "Read(js/js/components/**)",
+      "Edit(js/js/components/**)",
+      "Read(js\\js\\components/**)",
+      "Edit(js\\js\\components/**)"
     ],
     "deny": [
       "Read(./.env)",

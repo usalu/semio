@@ -258,7 +258,7 @@ In general, if the user talks about an old file, then probably there is the same
 
 ## js
 
-Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and sketchpad (@semio/sketchpad) that runs in electron.
+Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and sketchpad (@semio/desktop) that runs in electron.
 
 ### Rules
 
