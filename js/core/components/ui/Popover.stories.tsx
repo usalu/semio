@@ -51,11 +51,11 @@ export const Default: Story = {
           </div>
           <div className="space-y-2">
             <label className="text-sm">Gap (mm)</label>
-            <input type="number" defaultValue={0} className="w-full p-2 border rounded" />
+            <input type="number" defaultValue={0} className="w-full p-2 border" />
           </div>
           <div className="space-y-2">
             <label className="text-sm">Rotation (°)</label>
-            <input type="number" defaultValue={0} min={0} max={360} className="w-full p-2 border rounded" />
+            <input type="number" defaultValue={0} min={0} max={360} className="w-full p-2 border" />
           </div>
         </div>
       </PopoverContent>

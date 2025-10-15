@@ -102,7 +102,7 @@ export const Positioned: Story = {
   render: () => (
     <div className="relative w-64 h-64 border bg-muted/20">
       <Cursor color="#8B5CF6" x={100} y={120} />
-      <div className="absolute left-24 top-32 ml-6 mt-1 border rounded px-2 py-1 text-xs">User A</div>
+      <div className="absolute left-24 top-32 ml-6 mt-1 border px-2 py-1 text-xs">User A</div>
     </div>
   ),
 };

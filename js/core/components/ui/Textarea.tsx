@@ -83,7 +83,7 @@ function Textarea({ className, label, lazy, value: externalValue, onChange, onLa
   if (label) {
     return (
       <div className="flex items-start gap-2 min-w-0">
-        <span className="text-sm font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate" title={label}>
+        <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate" title={label}>
           {label}
         </span>
         <textarea

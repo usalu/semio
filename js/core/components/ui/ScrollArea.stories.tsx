@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <ScrollArea className="h-96 w-[600px] border rounded-md">
+    <ScrollArea className="h-96 w-[600px] border">
       <div className="p-4 space-y-4">
         <div>
           <h4 className="text-sm font-semibold mb-2">Nakagin Capsule Tower</h4>
@@ -76,7 +76,7 @@ export const Variants: Story = {
     <div className="flex gap-8">
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Vertical</p>
-        <ScrollArea className="h-72 w-80 border rounded-md">
+        <ScrollArea className="h-72 w-80 border">
           <div className="p-4 space-y-2">
             <h4 className="text-sm font-medium mb-4">Types</h4>
             {Array.from({ length: 30 }, (_, i) => (
@@ -89,7 +89,7 @@ export const Variants: Story = {
       </div>
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Horizontal</p>
-        <ScrollArea className="w-96 h-32 border rounded-md" orientation="horizontal">
+        <ScrollArea className="w-96 h-32 border" orientation="horizontal">
           <div className="p-4 flex space-x-4">
             {Array.from({ length: 20 }, (_, i) => (
               <div key={i} className="text-sm whitespace-nowrap">
@@ -105,7 +105,7 @@ export const Variants: Story = {
 
 export const Vertical: Story = {
   render: () => (
-    <ScrollArea className="h-72 w-96 border rounded-md">
+    <ScrollArea className="h-72 w-96 border">
       <div className="p-4 space-y-4">
         <h4 className="text-sm font-medium">Scroll down to see more content</h4>
         {Array.from({ length: 50 }, (_, i) => (
@@ -120,7 +120,7 @@ export const Vertical: Story = {
 
 export const LongText: Story = {
   render: () => (
-    <ScrollArea className="h-64 w-96 border rounded-md">
+    <ScrollArea className="h-64 w-96 border">
       <div className="p-4">
         <h4 className="mb-4 text-sm font-medium">Design Documentation</h4>
         <div className="text-sm space-y-4">
@@ -155,7 +155,7 @@ export const Horizontal: Story = {
 
 export const CodeBlock: Story = {
   render: () => (
-    <ScrollArea className="h-72 w-96 border rounded-md">
+    <ScrollArea className="h-72 w-96 border">
       <pre className="p-4 text-sm">
         {`// Connection calculation
 function calculateConnection(piece1, piece2, port1, port2) {
@@ -206,7 +206,7 @@ function validateDesign(design) {
 
 export const List: Story = {
   render: () => (
-    <ScrollArea className="h-80 w-96 border rounded-md">
+    <ScrollArea className="h-80 w-96 border">
       <div className="p-4">
         <h4 className="mb-4 text-sm font-medium">Kit Resources</h4>
         <div className="space-y-2">
@@ -229,7 +229,7 @@ export const List: Story = {
             "LICENSE.txt",
             "preview.png",
           ].map((file) => (
-            <div key={file} className="flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer text-sm">
+            <div key={file} className="flex items-center gap-2 p-2 hover:bg-accent cursor-pointer text-sm">
               <span className="font-mono">{file}</span>
             </div>
           ))}
@@ -241,7 +241,7 @@ export const List: Story = {
 
 export const BothDirections: Story = {
   render: () => (
-    <ScrollArea className="h-72 w-96 border rounded-md">
+    <ScrollArea className="h-72 w-96 border">
       <div className="p-4" style={{ width: "800px" }}>
         <h4 className="mb-4 text-sm font-medium">Wide Table</h4>
         <table className="w-full text-sm">

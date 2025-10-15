@@ -48,7 +48,7 @@ function ToggleGroup({ className, label, level = "base", children, ...restProps 
   if (label) {
     return (
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
+        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
         {toggleGroupElement}
       </div>
     );

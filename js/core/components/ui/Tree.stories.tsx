@@ -124,7 +124,7 @@ export const WithActions: Story = {
     children: null,
   },
   render: () => (
-    <div className="w-80 h-96 border rounded-lg p-4">
+    <div className="w-80 h-96 border p-4">
       <Tree>
         <TreeSection
           label="Pieces"
@@ -161,7 +161,7 @@ export const DeepNesting: Story = {
     children: null,
   },
   render: () => (
-    <div className="w-80 h-96 border rounded-lg p-4">
+    <div className="w-80 h-96 border p-4">
       <Tree>
         <TreeSection label="Nakagin Tower" icon={<Folder size={14} />}>
           <TreeItem label="Ground Floor" icon={<Folder size={12} />}>
@@ -191,7 +191,7 @@ export const WithoutLines: Story = {
     showLines: false,
   },
   render: () => (
-    <div className="w-80 h-96 border rounded-lg p-4">
+    <div className="w-80 h-96 border p-4">
       <Tree showLines={false}>
         <TreeSection label="Types" icon={<Folder size={14} />}>
           <TreeItem label="Capsule" icon={<File size={12} />}>
@@ -217,7 +217,7 @@ export const SortableExample: Story = {
     ];
 
     return (
-      <div className="w-80 h-96 border rounded-lg p-4">
+      <div className="w-80 h-96 border p-4">
         <Tree>
           <TreeSection label="Sortable Pieces" icon={<Folder size={14} />}>
             <SortableTreeItems

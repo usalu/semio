@@ -33,7 +33,7 @@ const toggleVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-transparent hover:bg-hover-base",
+        default: "bg-transparent",
       },
       level: {
         base: "hover:bg-hover-base",
@@ -155,7 +155,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     if (label) {
       return (
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
             {label}
           </span>
           {wrappedToggle}
@@ -216,7 +216,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground [&:hover:not(:has(button:hover))_button]:border-transparent [&_button]:bg-transparent", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} {...restProps}>
         {mainContent}
         {actionButton}
       </TogglePrimitive.Root>
@@ -227,7 +227,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     if (label) {
       return (
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
             {label}
           </span>
           {wrappedToggle}
@@ -326,17 +326,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           <div className="flex flex-col">
             {items.map((item) => {
               const isSelected = item.value === value;
+              const itemHoverClass = level === "panel" ? "hover:bg-hover-panel focus:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary focus:bg-hover-temporary" : "hover:bg-hover-base focus:bg-hover-base";
               const itemButton = (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => handleSelect(item.value)}
-                  className={cn(
-                    "flex items-center justify-center text-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground outline-none transition-colors",
-                    toggleVariants(),
-                    "border-0 min-w-0 w-auto",
-                    isSelected && "bg-primary/10 font-medium",
-                  )}
+                  className={cn("flex items-center justify-center text-sm outline-none transition-colors", toggleVariants({ level }), "border-0 min-w-0 w-auto", itemHoverClass, isSelected && "bg-primary/10 font-medium")}
                 >
                   {item.label}
                 </button>
@@ -364,7 +360,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     if (label) {
       return (
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
             {label}
           </span>
           {dropdownElement}
@@ -397,7 +393,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if (label) {
     return (
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
           {label}
         </span>
         {wrappedToggle}

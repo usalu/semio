@@ -268,7 +268,7 @@ const ModelDesign: FC = () => {
       <group>
         {/* <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}> */}
         {flatDesign.pieces?.map((piece: Piece, index: number) => (
-          <PieceScopeProvider key={`piece-${piece.id_}`} id={{ id_: piece.id_ }}>
+          <PieceScopeProvider key={`piece-${piece.id_}`} guid={piece.guid}>
             <ModelPiece />
           </PieceScopeProvider>
         ))}

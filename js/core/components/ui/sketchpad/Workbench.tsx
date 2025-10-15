@@ -5,29 +5,20 @@ import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeSection } from "@semio/js/components/ui/Tree";
-import { Design, Type } from "../../../semio";
-import { DesignId, TypeId, useIsMobile } from "../../../store";
+import { Design, Guid, Type } from "../../../semio";
+import { useDesign, useIsMobile, useType } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
-  typeId?: TypeId;
-  type?: Type;
+  typeId: Guid;
   showHoverCard?: boolean;
 }
 
-export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHoverCard = false }) => {
-  const type = typeProp;
-  
-  if (!type) {
-    console.warn("[ORIGIN] TypeAvatar requires a type prop, received:", { typeId, typeProp });
-    return null;
-  }
-  
-  const dragId = `type-${type.name}-${type.variant || ""}`;
+export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false }) => {
+  const type = useType(undefined, typeId) as Type;
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: dragId,
-    data: { type },
+    id: `type-${type.name}-${type.variant || ""}`,
   });
 
   const displayVariant = type.variant || type.name;
@@ -67,23 +58,15 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 };
 
 interface DesignAvatarProps {
-  designId?: DesignId;
-  design?: Design;
+  designId: Guid;
   showHoverCard?: boolean;
   isActive?: boolean;
 }
 
-export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
-  const design = designProp;
-  
-  if (!design) {
-    console.warn("[ORIGIN] DesignAvatar requires a design prop");
-    return null;
-  }
-  
+export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false }) => {
+  const design = useDesign(undefined, designId) as Design;
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
-    data: { design },
     disabled: isActive,
   });
 
@@ -124,7 +107,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   );
 };
 
-interface WorkbenchProps extends ResizablePanelProps { }
+interface WorkbenchProps extends ResizablePanelProps {}
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);

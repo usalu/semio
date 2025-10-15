@@ -20,7 +20,7 @@
 // #endregion
 
 import { DragEndEvent } from "@dnd-kit/core";
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 
@@ -29,7 +29,7 @@ import { Slider } from "@radix-ui/react-slider";
 import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { guid } from "../../../lib/utils";
-import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece, Type } from "../../../semio";
+import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, Guid, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece } from "../../../semio";
 import {
   DesignEditorFullscreenPanel,
   EditorType,
@@ -47,7 +47,6 @@ import {
   useSketchpad,
 } from "../../../store";
 import Combobox from "../Combobox";
-import { useDragDrop } from "./DragDropContext";
 import { Input } from "../Input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
 import Stepper from "../Stepper";
@@ -56,6 +55,7 @@ import { SortableTreeItems, TreeContent, TreeItem, TreeSection } from "../Tree";
 import DesignModel from "./DesignModel";
 import Diagram from "./Diagram";
 import { useAddPanelSection, useRemovePanelSection } from "./Navbar";
+import { useDragDrop } from "./Sketchpad";
 import { DesignAvatar, TypeAvatar } from "./Workbench";
 
 const DesignSection: FC = () => {
@@ -170,19 +170,11 @@ const DesignSectionForm: FC = () => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            label={t("design.unit")}
-            value={design.unit || ""}
-            onLazyChange={(value) => updateDesignField({ unit: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
-          />
+          <Input lazy label={t("design.unit")} value={design.unit || ""} onLazyChange={(value) => updateDesignField({ unit: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
         </TreeContent>
       </TreeItem>
       {design.location ? (
-        <TreeItem
+        <TreeSection
           label={t("design.location")}
           actions={[
             {
@@ -228,9 +220,9 @@ const DesignSectionForm: FC = () => {
               />
             </TreeContent>
           </TreeItem>
-        </TreeItem>
+        </TreeSection>
       ) : (
-        <TreeItem
+        <TreeSection
           label={t("design.location")}
           actions={[
             {
@@ -239,10 +231,10 @@ const DesignSectionForm: FC = () => {
               title: t("common.add"),
             },
           ]}
-        ></TreeItem>
+        ></TreeSection>
       )}
       {design.authors && design.authors.length > 0 ? (
-        <TreeItem
+        <TreeSection
           label={t("design.authors")}
           actions={[
             {
@@ -333,9 +325,9 @@ const DesignSectionForm: FC = () => {
               </TreeItem>
             )}
           </SortableTreeItems>
-        </TreeItem>
+        </TreeSection>
       ) : (
-        <TreeItem
+        <TreeSection
           label="Authors"
           actions={[
             {
@@ -351,10 +343,10 @@ const DesignSectionForm: FC = () => {
               title: "Add author",
             },
           ]}
-        ></TreeItem>
+        ></TreeSection>
       )}
       {design.attributes && design.attributes.length > 0 ? (
-        <TreeItem
+        <TreeSection
           label={t("design.attributes")}
           actions={[
             {
@@ -484,9 +476,9 @@ const DesignSectionForm: FC = () => {
               </TreeItem>
             )}
           </SortableTreeItems>
-        </TreeItem>
+        </TreeSection>
       ) : (
-        <TreeItem
+        <TreeSection
           label={t("design.attributes")}
           actions={[
             {
@@ -502,20 +494,20 @@ const DesignSectionForm: FC = () => {
               title: t("design.addAttribute"),
             },
           ]}
-        ></TreeItem>
+        ></TreeSection>
       )}
       <TreeItem label={t("design.metadata")}>
-        {design.created && (
+        {design.createdAt && (
           <TreeItem>
             <TreeContent>
-              <Input label="Created" value={design.created.toISOString().split("T")[0]} disabled />
+              <Input label="Created" value={design.createdAt.toISOString().split("T")[0]} disabled />
             </TreeContent>
           </TreeItem>
         )}
-        {design.updated && (
+        {design.updatedAt && (
           <TreeItem>
             <TreeContent>
-              <Input label="Updated" value={design.updated.toISOString().split("T")[0]} disabled />
+              <Input label="Updated" value={design.updatedAt.toISOString().split("T")[0]} disabled />
             </TreeContent>
           </TreeItem>
         )}
@@ -1338,15 +1330,7 @@ const ConnectionsSectionForm: FC<{
       )}
       <TreeItem>
         <TreeContent>
-          <Stepper
-            label={t("connection.gap")}
-            value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
-            onChange={handleGapChange}
-            onPointerDown={startTransaction}
-            onPointerUp={finalizeTransaction}
-            onPointerCancel={abortTransaction}
-            step={0.1}
-          />
+          <Stepper label={t("connection.gap")} value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)} onChange={handleGapChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
         </TreeContent>
       </TreeItem>
       <TreeItem>

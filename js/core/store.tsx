@@ -35,7 +35,6 @@ import {
   Attribute,
   Author,
   AuthorDiff,
-  AuthorId,
   Benchmark,
   BenchmarkDiff,
   Camera,
@@ -47,7 +46,6 @@ import {
   CoordDiff,
   Design,
   DesignDiff,
-  DesignId,
   DesignShallow,
   DiffStatus,
   FileDiff,
@@ -84,7 +82,6 @@ import {
   PropDiff,
   Quality,
   QualityDiff,
-  QualityId,
   Representation,
   RepresentationDiff,
   File as SemioFile,
@@ -142,18 +139,6 @@ export type Transact = (fn: () => void) => void;
 export type Url = string;
 export type SketchpadId = string;
 export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
-export type KitId = Guid;
-export type TypeId = Guid;
-export type DesignId = Guid;
-export type PieceId = Guid;
-export type PortId = Guid;
-export type ConnectionId = Guid;
-export type AuthorId = Guid;
-export type QualityId = Guid;
-export type BenchmarkId = Guid;
-export type PropId = Guid;
-export type LayerId = string;
-export type RepresentationId = Guid;
 
 type YUuid = string;
 type YUuidArray = Y.Array<YUuid>;
@@ -865,7 +850,7 @@ function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string):
   return selector ? selector(authorStore) : authorStore;
 }
 
-export function useAuthor<T>(selector?: (author: Author) => T, id?: AuthorId, deep: boolean = false): T | Author {
+export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author {
   return useSync<Author, T>(useAuthorStore(identitySelector, id) as AuthorStore, selector ? selector : identitySelector, deep);
 }
 
@@ -940,16 +925,16 @@ class FileStore {
   set updatedAt(updatedAt: Date | undefined) {
     this.yFile.set("updatedAt", updatedAt?.toISOString() || "");
   }
-  get createdBy(): AuthorId | undefined {
+  get createdBy(): Guid | undefined {
     return this.yFile.get("createdBy") as string | undefined;
   }
-  set createdBy(createdBy: AuthorId | undefined) {
+  set createdBy(createdBy: Guid | undefined) {
     this.yFile.set("createdBy", createdBy || "");
   }
-  get updatedBy(): AuthorId | undefined {
+  get updatedBy(): Guid | undefined {
     return this.yFile.get("updatedBy") as string | undefined;
   }
-  set updatedBy(updatedBy: AuthorId | undefined) {
+  set updatedBy(updatedBy: Guid | undefined) {
     this.yFile.set("updatedBy", updatedBy || "");
   }
 
@@ -1096,7 +1081,7 @@ class BenchmarkStore {
     return this.cache;
   };
 
-  id = (): BenchmarkId => {
+  id = (): Guid => {
     return { name: this.name };
   };
 
@@ -1176,7 +1161,7 @@ class QualityStore {
     this.yQuality.set("description", description || "");
   }
 
-  id(): QualityId {
+  id(): Guid {
     return this.guid;
   }
 
@@ -1266,7 +1251,7 @@ class PropStore {
     this.yProp.set("unit", unit || "");
   }
 
-  id(): PropId {
+  id(): Guid {
     return { key: this.key };
   }
 
@@ -1720,6 +1705,10 @@ class TypeStore {
     return p;
   }
 
+  id(): Guid {
+    return this.guid;
+  }
+
   hash = (type: Type): string => {
     return JSON.stringify(type);
   };
@@ -1802,7 +1791,7 @@ function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T |
   return selector ? selector(typeStore) : typeStore;
 }
 
-export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
+export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type {
   return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
 }
 
@@ -2029,22 +2018,22 @@ class PieceStore {
   set localId(localId: string) {
     this.yPiece.set("id_", localId);
   }
-  get type(): TypeId | undefined {
+  get type(): Guid | undefined {
     const typeUuid = this.yPiece.get("type") as string;
     return typeUuid ? this.parent.parent.type(typeUuid).id() : undefined;
   }
-  set type(type: TypeId | undefined) {
+  set type(type: Guid | undefined) {
     if (type) {
       this.yPiece.set("type", this.parent.parent.type(type).guid);
     } else {
       this.yPiece.delete("type");
     }
   }
-  get design(): DesignId | undefined {
+  get design(): Guid | undefined {
     const designUuid = this.yPiece.get("design") as string;
     return designUuid ? this.parent.parent.design(designUuid).id() : undefined;
   }
-  set design(design: DesignId | undefined) {
+  set design(design: Guid | undefined) {
     if (design) {
       this.yPiece.set("design", this.parent.parent.design(design).guid);
     } else {
@@ -2096,6 +2085,10 @@ class PieceStore {
 
   attribute(guid: string): AttributeStore {
     return this.attributes.get(guid)!;
+  }
+
+  id(): Guid {
+    return this.guid;
   }
 
   public hash(piece: Piece): string {
@@ -2229,7 +2222,7 @@ function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T
   return selector ? selector(pieceStore) : pieceStore;
 }
 
-export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
+export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece {
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
 
@@ -2354,12 +2347,12 @@ class GroupStore {
     this.yGroup.set("description", description || "");
   }
 
-  get pieces(): PieceId[] {
+  get pieces(): Guid[] {
     const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
     if (!yPieces) return [];
     return yPieces.toArray().map((id_) => ({ id_ }));
   }
-  set pieces(pieces: PieceId[]) {
+  set pieces(pieces: Guid[]) {
     const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
     if (yPieces) {
       yPieces.delete(0, yPieces.length);
@@ -2446,8 +2439,8 @@ class SideStore {
 
     // Store port UUID - need to find it through the piece's type
     if (pieceStore) {
-      const typeId = pieceStore.type;
-      const typeStore = this.parent.parent.type(typeId);
+      const Guid = pieceStore.type;
+      const typeStore = this.parent.parent.type(Guid);
       const portStore = typeStore.ports.get(side.port.id_);
       if (portStore) {
         this.ySide.set("port", portStore.guid);
@@ -2462,23 +2455,23 @@ class SideStore {
     this.ySide.set("guid", guid);
   }
 
-  get piece(): PieceId {
+  get piece(): Guid {
     const pieceUuid = this.ySide.get("piece") as string;
     return this.parent.piece(pieceUuid).id();
   }
-  set piece(piece: PieceId) {
+  set piece(piece: Guid) {
     const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), piece));
     if (pieceStore) {
       this.ySide.set("piece", pieceStore.guid);
     }
   }
 
-  get designPiece(): PieceId | undefined {
+  get designPiece(): Guid | undefined {
     const designPieceUuid = this.ySide.get("designPiece") as string | undefined;
     if (!designPieceUuid) return undefined;
     return this.parent.piece(designPieceUuid).id();
   }
-  set designPiece(designPiece: PieceId | undefined) {
+  set designPiece(designPiece: Guid | undefined) {
     if (designPiece) {
       const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), designPiece));
       if (designPieceStore) {
@@ -2489,21 +2482,21 @@ class SideStore {
     }
   }
 
-  get port(): PortId {
+  get port(): Guid {
     const portUuid = this.ySide.get("port") as string;
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
-    const typeId = pieceStore.type;
-    const typeStore = this.parent.parent.type(typeId);
+    const Guid = pieceStore.type;
+    const typeStore = this.parent.parent.type(Guid);
     const portStore = typeStore.port(portUuid);
     return portStore.id();
   }
-  set port(port: PortId) {
+  set port(port: Guid) {
     // Find the port through the piece's type
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
-    const typeId = pieceStore.type;
-    const typeStore = this.parent.parent.type(typeId);
+    const Guid = pieceStore.type;
+    const typeStore = this.parent.parent.type(Guid);
     const portStore = typeStore.ports.get(port.id_);
     if (portStore) {
       this.ySide.set("port", portStore.guid);
@@ -2668,6 +2661,10 @@ class ConnectionStore {
     this.yConnection.set("y", y);
   }
 
+  id(): Guid {
+    return this.guid;
+  }
+
   hash = (connection: Connection): string => {
     return JSON.stringify(connection);
   };
@@ -2751,7 +2748,7 @@ function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: 
   return selector ? selector(connectionStore) : connectionStore;
 }
 
-export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
+export function useConnection<T>(selector?: (connection: Connection) => T, id?: Guid, deep: boolean = false): T | Connection {
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
 }
 
@@ -3193,6 +3190,10 @@ class DesignStore {
     return a;
   }
 
+  id(): Guid {
+    return this.guid;
+  }
+
   hash(design: Design): string {
     return JSON.stringify(design);
   }
@@ -3260,8 +3261,8 @@ class DesignStore {
           });
         }
         if (diff.pieces.removed) {
-          diff.pieces.removed.forEach((pieceId) => {
-            const pieceIndex = this.pieces.findIndex((p) => areSamePiece(p.id(), pieceId));
+          diff.pieces.removed.forEach((Guid) => {
+            const pieceIndex = this.pieces.findIndex((p) => areSamePiece(p.id(), Guid));
             if (pieceIndex !== -1) {
               this.pieces.splice(pieceIndex, 1);
               this.yPieces!.delete(pieceIndex, 1);
@@ -3296,8 +3297,8 @@ class DesignStore {
           });
         }
         if (diff.connections.removed) {
-          diff.connections.removed.forEach((connectionId) => {
-            const connectionIndex = this.connections.findIndex((c) => c.id.id_ === connectionId.id_ || c.id.id_ === connectionId);
+          diff.connections.removed.forEach((Guid) => {
+            const connectionIndex = this.connections.findIndex((c) => c.id.id_ === Guid.id_ || c.id.id_ === Guid);
             if (connectionIndex !== -1) {
               this.connections.splice(connectionIndex, 1);
               this.yConnections.delete(connectionIndex, 1);
@@ -3487,7 +3488,7 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
   return selector ? selector(designStore) : designStore;
 }
 
-export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
+export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: Guid, deep: boolean = false): T | DesignShallow | Design {
   if (deep) {
     return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
   }
@@ -3585,7 +3586,7 @@ export function usePieceDiffStatuses(): DiffStatus[] {
   }, [flatDesign]);
 }
 
-export function usePiecesFromIds(pieceIds: PieceId[]) {
+export function usePiecesFromIds(pieceIds: Guid[]) {
   const design = useDesign();
   const includedDesigns = useIncludedDesigns();
   const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
@@ -3606,14 +3607,11 @@ export function usePiecesFromIds(pieceIds: PieceId[]) {
             id_: pieceIdString,
             type: {
               name: "design",
-              variant:
-                includedDesign.type === "fixed"
-                  ? `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}`
-                  : includedDesign.designId.name,
+              variant: includedDesign.type === "fixed" ? `${includedDesign.Guid.name}${includedDesign.Guid.variant ? `-${includedDesign.Guid.variant}` : ""}${includedDesign.Guid.view ? `-${includedDesign.Guid.view}` : ""}` : includedDesign.Guid.name,
             },
             center: includedDesign.center,
             plane: includedDesign.plane,
-            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
+            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.Guid.name}`,
           };
         }
 
@@ -3631,28 +3629,28 @@ export function usePiecesFromIds(pieceIds: PieceId[]) {
   }, [pieceIds, design, includedDesignMap]);
 }
 
-export function useReplacableTypes(pieceIds: PieceId[], selectedVariants?: string[]) {
+export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
   const kit = useKit();
   const design = useDesign();
-  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  const Guid = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
 
   return useMemo(() => {
     if (pieceIds.length === 1) {
-      return findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0], selectedVariants);
+      return findReplacableTypesForPieceInDesign(kit, Guid, pieceIds[0], selectedVariants);
     } else {
-      return findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants);
+      return findReplacableTypesForPiecesInDesign(kit, Guid, pieceIds, selectedVariants);
     }
-  }, [kit, designId, pieceIds, selectedVariants]);
+  }, [kit, Guid, pieceIds, selectedVariants]);
 }
 
 export function useReplacableDesigns(piece: Piece) {
   const kit = useKit();
   const design = useDesign();
-  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  const Guid = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
 
   return useMemo(() => {
-    return findReplacableDesignsForDesignPiece(kit, designId, piece);
-  }, [kit, designId, piece]);
+    return findReplacableDesignsForDesignPiece(kit, Guid, piece);
+  }, [kit, Guid, piece]);
 }
 
 export function useExplodeableDesignNodes(nodes: any[], selection: any) {
@@ -3660,8 +3658,8 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
   return useMemo(() => {
     return nodes.filter((node) => {
       if (node.type !== "design") return false;
-      const pieceId = node.data.piece.id_;
-      if (!selection.pieces?.some((p: any) => p.id_ === pieceId)) return false;
+      const Guid = node.data.piece.id_;
+      if (!selection.pieces?.some((p: any) => p.id_ === Guid)) return false;
       const designName = (node.data.piece as any).type?.variant;
       if (!designName) return false;
       if (!kit?.designs?.find((d) => d.name === designName)) return false;
@@ -4044,8 +4042,8 @@ class KitStore {
           });
         }
         if (diff.authors.removed) {
-          diff.authors.removed.forEach((authorId) => {
-            const authorGuid = typeof authorId === "string" ? authorId : authorId.email;
+          diff.authors.removed.forEach((Guid) => {
+            const authorGuid = typeof Guid === "string" ? Guid : Guid.email;
             if (this.authors.has(authorGuid)) {
               this.authors.delete(authorGuid);
               // Find and delete from Y.Array
@@ -4073,13 +4071,13 @@ class KitStore {
           });
         }
         if (diff.types.removed) {
-          diff.types.removed.forEach((typeId) => {
-            if (this.types.has(typeId)) {
-              this.types.delete(typeId);
+          diff.types.removed.forEach((Guid) => {
+            if (this.types.has(Guid)) {
+              this.types.delete(Guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yTypes).findIndex((yType: any) => {
                 const yMap = yType[0] as Y.Map<any>;
-                return yMap.get("guid") === typeId;
+                return yMap.get("guid") === Guid;
               });
               if (index !== -1) {
                 this.yTypes.delete(index, 1);
@@ -4101,13 +4099,13 @@ class KitStore {
           });
         }
         if (diff.designs.removed) {
-          diff.designs.removed.forEach((designId) => {
-            if (this.designs.has(designId)) {
-              this.designs.delete(designId);
+          diff.designs.removed.forEach((Guid) => {
+            if (this.designs.has(Guid)) {
+              this.designs.delete(Guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yDesigns).findIndex((yDesign: any) => {
                 const yMap = yDesign[0] as Y.Map<any>;
-                return yMap.get("guid") === designId;
+                return yMap.get("guid") === Guid;
               });
               if (index !== -1) {
                 this.yDesigns.delete(index, 1);
@@ -4408,12 +4406,12 @@ const kitCommands = {
         const nowIso = new Date().toISOString();
         kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", nowIso, nowIso]);
         kitStmt.free();
-        const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-        insertQualities(kit.attributes, "kit_id", kitId);
+        const Guid = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+        insertQualities(kit.attributes, "kit_id", Guid);
 
         if (kit.concepts) {
           const conceptStmt = db.prepare('INSERT INTO concept (name, "order", kit_id) VALUES (?, ?, ?)');
-          kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, kitId]));
+          kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, Guid]));
           conceptStmt.free();
         }
 
@@ -4424,7 +4422,7 @@ const kitCommands = {
           const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
           for (const type of kit.types) {
-            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit, nowIso, nowIso, kitId]);
+            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit, nowIso, nowIso, Guid]);
             const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
             insertQualities(type.attributes, "type_id", typeDbId);
             insertAuthors(type.authors, "type_id", typeDbId);
@@ -4667,8 +4665,8 @@ export function useKitCommandsSafe() {
     importKit: (url: string) => kitStore.execute("semio.kit.import", url),
     exportKit: () => kitStore.execute("semio.kit.export"),
     createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", author),
-    updateAuthor: (authorId: AuthorId, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", authorId, authorDiff),
-    deleteAuthor: (authorId: AuthorId) => kitStore.execute("semio.kit.deleteAuthor", authorId),
+    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", Guid, authorDiff),
+    deleteAuthor: (Guid: Guid) => kitStore.execute("semio.kit.deleteAuthor", Guid),
     createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
     updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", guid, diff),
     deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", guid),
@@ -4696,8 +4694,8 @@ export function useKitCommands() {
     importKit: (url: string) => store.execute("semio.kit.import", url),
     exportKit: () => store.execute("semio.kit.export"),
     createAuthor: (author: Author) => store.execute("semio.kit.createAuthor", author),
-    updateAuthor: (authorId: AuthorId, authorDiff: AuthorDiff) => store.execute("semio.kit.updateAuthor", authorId, authorDiff),
-    deleteAuthor: (authorId: AuthorId) => store.execute("semio.kit.deleteAuthor", authorId),
+    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => store.execute("semio.kit.updateAuthor", Guid, authorDiff),
+    deleteAuthor: (Guid: Guid) => store.execute("semio.kit.deleteAuthor", Guid),
     createType: (type: Type) => store.execute("semio.kit.createType", type),
     updateType: (guid: Guid, diff: TypeDiff) => store.execute("semio.kit.updateType", guid, diff),
     deleteType: (guid: Guid) => store.execute("semio.kit.deleteType", guid),
@@ -5021,20 +5019,20 @@ type YTypeEditor = Y.Map<YTypeEditorVal>;
 type YTypeEditors = Y.Map<string, YTypeEditor>;
 
 export interface TypeEditorId {
-  kit: KitId;
-  type: TypeId;
+  kit: Guid;
+  type: Guid;
 }
 export interface TypeEditorSelection {
-  ports?: PortId[];
-  representations?: RepresentationId[];
+  ports?: Guid[];
+  representations?: Guid[];
 }
 export interface TypeEditorSelectionPortsDiff {
-  added?: PortId[];
-  removed?: PortId[];
+  added?: Guid[];
+  removed?: Guid[];
 }
 export interface TypeEditorSelectionRepresentationsDiff {
-  added?: RepresentationId[];
-  removed?: RepresentationId[];
+  added?: Guid[];
+  removed?: Guid[];
 }
 export interface TypeEditorSelectionDiff {
   ports?: TypeEditorSelectionPortsDiff;
@@ -5050,8 +5048,8 @@ export interface TypeEditorPresence {
   camera?: Camera;
 }
 export interface TypeEditorHover {
-  port?: PortId;
-  representation?: RepresentationId;
+  port?: Guid;
+  representation?: Guid;
 }
 export interface TypeEditorPresenceOther extends TypeEditorPresence {
   name: string;
@@ -5084,7 +5082,7 @@ export interface TypeEditorState {
 
 export interface TypeEditorCommandContext extends KitCommandContext {
   typeEditor: TypeEditorState;
-  typeId: TypeId;
+  Guid: Guid;
 }
 export interface TypeEditorCommandResult {
   diff?: TypeEditorDiff;
@@ -5109,11 +5107,11 @@ function inverseTypeEditorSelectionDiff(selection: TypeEditorSelection, diff: Ty
 }
 
 class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult> {
-  private readonly typeId: TypeId;
+  private readonly Guid: Guid;
 
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, typeId: TypeId) {
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, Guid: Guid) {
     super(parent, yMap, transact);
-    this.typeId = typeId;
+    this.Guid = Guid;
 
     if (!yMap.has("fullscreenPanel")) {
       yMap.set("fullscreenPanel", TypeEditorFullscreenPanel.None);
@@ -5121,11 +5119,11 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   }
 
   type(): TypeStore {
-    return this.parent.kit(this.typeId.kit).type(this.typeId);
+    return this.parent.kit(this.Guid.kit).type(this.Guid);
   }
 
   kit(): KitStore {
-    return this.parent.kit(this.typeId.kit);
+    return this.parent.kit(this.Guid.kit);
   }
 
   // TypeEditor-specific getters
@@ -5238,16 +5236,16 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
       }
 
       if (selectionDiff.ports.removed) {
-        for (const portId of selectionDiff.ports.removed) {
-          const index = yPorts.toArray().indexOf(portId);
+        for (const Guid of selectionDiff.ports.removed) {
+          const index = yPorts.toArray().indexOf(Guid);
           if (index >= 0) yPorts.delete(index, 1);
         }
       }
 
       if (selectionDiff.ports.added) {
-        for (const portId of selectionDiff.ports.added) {
-          if (!yPorts.toArray().includes(portId)) {
-            yPorts.push([portId]);
+        for (const Guid of selectionDiff.ports.added) {
+          if (!yPorts.toArray().includes(Guid)) {
+            yPorts.push([Guid]);
           }
         }
       }
@@ -5323,7 +5321,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     const context: TypeEditorCommandContext = {
       kit,
       typeEditor,
-      typeId: this.typeId,
+      Guid: this.Guid,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -5426,12 +5424,12 @@ const useTypeEditorScope = () => useContext(TypeEditorScopeContext);
 // #region Home Store
 
 export interface HomeSelection {
-  kits?: KitId[];
+  kits?: Guid[];
 }
 
 export interface HomeSelectionDiff {
-  added?: KitId[];
-  removed?: KitId[];
+  added?: Guid[];
+  removed?: Guid[];
 }
 
 export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
@@ -5558,17 +5556,17 @@ class HomeStore {
           this.yMap.set("selectedKits", yKits);
         }
         if (diff.selection.removed) {
-          diff.selection.removed.forEach((kitId) => {
-            const index = yKits.toArray().indexOf(kitId);
+          diff.selection.removed.forEach((Guid) => {
+            const index = yKits.toArray().indexOf(Guid);
             if (index !== -1) {
               yKits.delete(index, 1);
             }
           });
         }
         if (diff.selection.added) {
-          diff.selection.added.forEach((kitId) => {
-            if (!yKits.toArray().includes(kitId)) {
-              yKits.push([kitId]);
+          diff.selection.added.forEach((Guid) => {
+            if (!yKits.toArray().includes(Guid)) {
+              yKits.push([Guid]);
             }
           });
         }
@@ -5654,30 +5652,30 @@ export function useHomeCommands() {
         },
       });
     },
-    selectKit: (kitId: KitId) => {
+    selectKit: (Guid: Guid) => {
       const current = store.snapshot();
       store.change({
         selection: {
           removed: current.selection?.kits ?? [],
-          added: [kitId],
+          added: [Guid],
         },
       });
     },
-    addKitToSelection: (kitId: KitId) => {
+    addKitToSelection: (Guid: Guid) => {
       store.change({
         selection: {
-          added: [kitId],
+          added: [Guid],
         },
       });
     },
-    removeKitFromSelection: (kitId: KitId) => {
+    removeKitFromSelection: (Guid: Guid) => {
       store.change({
         selection: {
-          removed: [kitId],
+          removed: [Guid],
         },
       });
     },
-    selectKits: (kitIds: KitId[]) => {
+    selectKits: (kitIds: Guid[]) => {
       const current = store.snapshot();
       store.change({
         selection: {
@@ -5728,19 +5726,19 @@ type YKitEditor = Y.Map<YKitEditorVal>;
 type YKitEditors = Y.Map<string, YKitEditor>;
 
 export interface KitEditorId {
-  kit: KitId;
+  kit: Guid;
 }
 export interface KitEditorSelection {
-  types?: TypeId[];
-  designs?: DesignId[];
+  types?: Guid[];
+  designs?: Guid[];
 }
 export interface KitEditorSelectionTypesDiff {
-  added?: TypeId[];
-  removed?: TypeId[];
+  added?: Guid[];
+  removed?: Guid[];
 }
 export interface KitEditorSelectionDesignsDiff {
-  added?: DesignId[];
-  removed?: DesignId[];
+  added?: Guid[];
+  removed?: Guid[];
 }
 export interface KitEditorSelectionDiff {
   types?: KitEditorSelectionTypesDiff;
@@ -5756,8 +5754,8 @@ export interface KitEditorPresence {
   camera?: Camera;
 }
 export interface KitEditorHover {
-  type?: TypeId;
-  design?: DesignId;
+  type?: Guid;
+  design?: Guid;
 }
 export interface KitEditorPresenceOther extends KitEditorPresence {
   name: string;
@@ -6195,21 +6193,21 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.selectType": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+  "semio.kitEditor.selectType": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     const currentSelection = context.kitEditor.selection;
     return {
       diff: {
         selection: {
           types: {
             removed: currentSelection?.types ?? [],
-            added: [typeId],
+            added: [Guid],
           },
           designs: { removed: currentSelection?.designs ?? [] },
         },
       },
     };
   },
-  "semio.kitEditor.selectTypes": (context: KitEditorCommandContext, typeIds: TypeId[]): KitEditorCommandResult => {
+  "semio.kitEditor.selectTypes": (context: KitEditorCommandContext, typeIds: Guid[]): KitEditorCommandResult => {
     const currentSelection = context.kitEditor.selection;
     return {
       diff: {
@@ -6223,25 +6221,25 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.addTypeToSelection": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+  "semio.kitEditor.addTypeToSelection": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     return {
       diff: {
         selection: {
-          types: { added: [typeId] },
+          types: { added: [Guid] },
         },
       },
     };
   },
-  "semio.kitEditor.removeTypeFromSelection": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+  "semio.kitEditor.removeTypeFromSelection": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     return {
       diff: {
         selection: {
-          types: { removed: [typeId] },
+          types: { removed: [Guid] },
         },
       },
     };
   },
-  "semio.kitEditor.selectDesign": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+  "semio.kitEditor.selectDesign": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     const currentSelection = context.kitEditor.selection;
     return {
       diff: {
@@ -6249,13 +6247,13 @@ const kitEditorCommands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: {
             removed: currentSelection?.designs ?? [],
-            added: [designId],
+            added: [Guid],
           },
         },
       },
     };
   },
-  "semio.kitEditor.selectDesigns": (context: KitEditorCommandContext, designIds: DesignId[]): KitEditorCommandResult => {
+  "semio.kitEditor.selectDesigns": (context: KitEditorCommandContext, designIds: Guid[]): KitEditorCommandResult => {
     const currentSelection = context.kitEditor.selection;
     return {
       diff: {
@@ -6269,20 +6267,20 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.addDesignToSelection": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+  "semio.kitEditor.addDesignToSelection": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     return {
       diff: {
         selection: {
-          designs: { added: [designId] },
+          designs: { added: [Guid] },
         },
       },
     };
   },
-  "semio.kitEditor.removeDesignFromSelection": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+  "semio.kitEditor.removeDesignFromSelection": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     return {
       diff: {
         selection: {
-          designs: { removed: [designId] },
+          designs: { removed: [Guid] },
         },
       },
     };
@@ -6318,15 +6316,15 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.removeType": (context: KitEditorCommandContext, typeId: TypeId): KitEditorCommandResult => {
+  "semio.kitEditor.removeType": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
-        types: { removed: [typeId] },
+        types: { removed: [Guid] },
       },
     };
   },
-  "semio.kitEditor.removeTypes": (context: KitEditorCommandContext, typeIds: TypeId[]): KitEditorCommandResult => {
+  "semio.kitEditor.removeTypes": (context: KitEditorCommandContext, typeIds: Guid[]): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
@@ -6350,15 +6348,15 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.removeDesign": (context: KitEditorCommandContext, designId: DesignId): KitEditorCommandResult => {
+  "semio.kitEditor.removeDesign": (context: KitEditorCommandContext, Guid: Guid): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
-        designs: { removed: [designId] },
+        designs: { removed: [Guid] },
       },
     };
   },
-  "semio.kitEditor.removeDesigns": (context: KitEditorCommandContext, designIds: DesignId[]): KitEditorCommandResult => {
+  "semio.kitEditor.removeDesigns": (context: KitEditorCommandContext, designIds: Guid[]): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
@@ -6366,15 +6364,15 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.updateType": (context: KitEditorCommandContext, typeId: TypeId, typeDiff: TypeDiff): KitEditorCommandResult => {
+  "semio.kitEditor.updateType": (context: KitEditorCommandContext, Guid: Guid, typeDiff: TypeDiff): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
-        types: { updated: [{ id: typeId, diff: typeDiff }] },
+        types: { updated: [{ id: Guid, diff: typeDiff }] },
       },
     };
   },
-  "semio.kitEditor.updateTypes": (context: KitEditorCommandContext, updates: { id: TypeId; diff: TypeDiff }[]): KitEditorCommandResult => {
+  "semio.kitEditor.updateTypes": (context: KitEditorCommandContext, updates: { id: Guid; diff: TypeDiff }[]): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
@@ -6382,15 +6380,15 @@ const kitEditorCommands = {
       },
     };
   },
-  "semio.kitEditor.updateDesign": (context: KitEditorCommandContext, designId: DesignId, designDiff: DesignDiff): KitEditorCommandResult => {
+  "semio.kitEditor.updateDesign": (context: KitEditorCommandContext, Guid: Guid, designDiff: DesignDiff): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
-        designs: { updated: [{ id: designId, diff: designDiff }] },
+        designs: { updated: [{ id: Guid, diff: designDiff }] },
       },
     };
   },
-  "semio.kitEditor.updateDesigns": (context: KitEditorCommandContext, updates: { id: DesignId; diff: DesignDiff }[]): KitEditorCommandResult => {
+  "semio.kitEditor.updateDesigns": (context: KitEditorCommandContext, updates: { id: Guid; diff: DesignDiff }[]): KitEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
@@ -6533,29 +6531,29 @@ export function useKitEditorCommands(id?: KitEditorId) {
     redo: () => store.execute("semio.kitEditor.redo"),
     selectAll: () => store.execute("semio.kitEditor.selectAll"),
     deselectAll: () => store.execute("semio.kitEditor.deselectAll"),
-    selectType: (typeId: TypeId) => store.execute("semio.kitEditor.selectType", typeId),
-    selectTypes: (typeIds: TypeId[]) => store.execute("semio.kitEditor.selectTypes", typeIds),
-    addTypeToSelection: (typeId: TypeId) => store.execute("semio.kitEditor.addTypeToSelection", typeId),
-    removeTypeFromSelection: (typeId: TypeId) => store.execute("semio.kitEditor.removeTypeFromSelection", typeId),
-    selectDesign: (designId: DesignId) => store.execute("semio.kitEditor.selectDesign", designId),
-    selectDesigns: (designIds: DesignId[]) => store.execute("semio.kitEditor.selectDesigns", designIds),
-    addDesignToSelection: (designId: DesignId) => store.execute("semio.kitEditor.addDesignToSelection", designId),
-    removeDesignFromSelection: (designId: DesignId) => store.execute("semio.kitEditor.removeDesignFromSelection", designId),
+    selectType: (Guid: Guid) => store.execute("semio.kitEditor.selectType", Guid),
+    selectTypes: (typeIds: Guid[]) => store.execute("semio.kitEditor.selectTypes", typeIds),
+    addTypeToSelection: (Guid: Guid) => store.execute("semio.kitEditor.addTypeToSelection", Guid),
+    removeTypeFromSelection: (Guid: Guid) => store.execute("semio.kitEditor.removeTypeFromSelection", Guid),
+    selectDesign: (Guid: Guid) => store.execute("semio.kitEditor.selectDesign", Guid),
+    selectDesigns: (designIds: Guid[]) => store.execute("semio.kitEditor.selectDesigns", designIds),
+    addDesignToSelection: (Guid: Guid) => store.execute("semio.kitEditor.addDesignToSelection", Guid),
+    removeDesignFromSelection: (Guid: Guid) => store.execute("semio.kitEditor.removeDesignFromSelection", Guid),
     deleteSelected: () => store.execute("semio.kitEditor.deleteSelected"),
     toggleTypesFullscreen: () => store.execute("semio.kitEditor.toggleTypesFullscreen"),
     toggleDesignsFullscreen: () => store.execute("semio.kitEditor.toggleDesignsFullscreen"),
     addType: (type: Type) => store.execute("semio.kitEditor.addType", type),
     addTypes: (types: Type[]) => store.execute("semio.kitEditor.addTypes", types),
-    removeType: (typeId: TypeId) => store.execute("semio.kitEditor.removeType", typeId),
-    removeTypes: (typeIds: TypeId[]) => store.execute("semio.kitEditor.removeTypes", typeIds),
+    removeType: (Guid: Guid) => store.execute("semio.kitEditor.removeType", Guid),
+    removeTypes: (typeIds: Guid[]) => store.execute("semio.kitEditor.removeTypes", typeIds),
     addDesign: (design: Design) => store.execute("semio.kitEditor.addDesign", design),
     addDesigns: (designs: Design[]) => store.execute("semio.kitEditor.addDesigns", designs),
-    removeDesign: (designId: DesignId) => store.execute("semio.kitEditor.removeDesign", designId),
-    removeDesigns: (designIds: DesignId[]) => store.execute("semio.kitEditor.removeDesigns", designIds),
-    updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kitEditor.updateType", typeId, typeDiff),
-    updateTypes: (updates: { id: TypeId; diff: TypeDiff }[]) => store.execute("semio.kitEditor.updateTypes", updates),
-    updateDesign: (designId: DesignId, designDiff: DesignDiff) => store.execute("semio.kitEditor.updateDesign", designId, designDiff),
-    updateDesigns: (updates: { id: DesignId; diff: DesignDiff }[]) => store.execute("semio.kitEditor.updateDesigns", updates),
+    removeDesign: (Guid: Guid) => store.execute("semio.kitEditor.removeDesign", Guid),
+    removeDesigns: (designIds: Guid[]) => store.execute("semio.kitEditor.removeDesigns", designIds),
+    updateType: (Guid: Guid, typeDiff: TypeDiff) => store.execute("semio.kitEditor.updateType", Guid, typeDiff),
+    updateTypes: (updates: { id: Guid; diff: TypeDiff }[]) => store.execute("semio.kitEditor.updateTypes", updates),
+    updateDesign: (Guid: Guid, designDiff: DesignDiff) => store.execute("semio.kitEditor.updateDesign", Guid, designDiff),
+    updateDesigns: (updates: { id: Guid; diff: DesignDiff }[]) => store.execute("semio.kitEditor.updateDesigns", updates),
     togglePanel: (panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
@@ -6583,8 +6581,8 @@ type YDesignEditor = Y.Map<YDesignEditorVal>;
 type YDesignEditors = Y.Map<string, Y.Map<string, YDesignEditor>>;
 
 export interface DesignEditorId {
-  kit: KitId;
-  design: DesignId;
+  kit: Guid;
+  design: Guid;
 }
 export interface DesignEditorSelection {
   pieces?: Guid[];
@@ -6660,7 +6658,7 @@ export interface DesignEditorState {
 
 export interface DesignEditorCommandContext extends KitCommandContext {
   designEditor: DesignEditorState;
-  designId: DesignId;
+  Guid: Guid;
 }
 export interface DesignEditorCommandResult {
   diff?: DesignEditorDiff;
@@ -6822,13 +6820,13 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     if (port) {
       const piece = port.get("piece");
       const designPiece = port.get("designPiece");
-      const portId = port.get("port");
+      const Guid = port.get("port");
 
-      if (piece && portId) {
+      if (piece && Guid) {
         result.port = {
           piece: { id_: piece },
           designPiece: designPiece ? { id_: designPiece } : undefined,
-          port: { id_: portId },
+          port: { id_: Guid },
         };
       }
     }
@@ -7045,7 +7043,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     const context: DesignEditorCommandContext = {
       designEditor: state,
       kit: kitState,
-      designId: this.design().guid,
+      Guid: this.design().guid,
       fileUrls: kitStore.fileUrls,
     };
     console.log("Context:", context);
@@ -7096,7 +7094,7 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.selectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    const design = findDesignInKit(context.kit, context.designId)!;
+    const design = findDesignInKit(context.kit, context.Guid)!;
     const currentSelection = context.designEditor.selection;
     return {
       diff: {
@@ -7124,14 +7122,14 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.selectPiece": (context: DesignEditorCommandContext, pieceId: Guid): DesignEditorCommandResult => {
+  "semio.designEditor.selectPiece": (context: DesignEditorCommandContext, Guid: Guid): DesignEditorCommandResult => {
     const currentSelection = context.designEditor.selection;
     return {
       diff: {
         selection: {
           pieces: {
             removed: currentSelection.pieces ?? [],
-            added: [pieceId],
+            added: [Guid],
           },
           connections: { removed: currentSelection.connections ?? [] },
         },
@@ -7152,28 +7150,28 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.addPieceToSelection": (context: DesignEditorCommandContext, pieceId: Guid): DesignEditorCommandResult => {
+  "semio.designEditor.addPieceToSelection": (context: DesignEditorCommandContext, Guid: Guid): DesignEditorCommandResult => {
     return {
       diff: {
         selection: {
-          pieces: { added: [pieceId] },
+          pieces: { added: [Guid] },
         },
       },
     };
   },
-  "semio.designEditor.removePieceFromSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+  "semio.designEditor.removePieceFromSelection": (context: DesignEditorCommandContext, Guid: Guid): DesignEditorCommandResult => {
     return {
       diff: {
         selection: {
-          pieces: { removed: [pieceId] },
+          pieces: { removed: [Guid] },
         },
       },
     };
   },
-  "semio.designEditor.selectPiecePort": (context: DesignEditorCommandContext, pieceId: PieceId, portId: PortId): DesignEditorCommandResult => {
+  "semio.designEditor.selectPiecePort": (context: DesignEditorCommandContext, pieceGuid: Guid, portGuid: Guid): DesignEditorCommandResult => {
     return {
       diff: {
-        selection: { port: { piece: pieceId, port: portId } },
+        selection: { port: { piece: pieceGuid, port: portGuid } },
       },
     };
   },
@@ -7197,7 +7195,7 @@ const designEditorCommands = {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { pieces: { removed: selection.pieces }, connections: { removed: selection.connections } },
             },
           ],
@@ -7212,7 +7210,7 @@ const designEditorCommands = {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { pieces: { added: [piece] } },
             },
           ],
@@ -7227,7 +7225,7 @@ const designEditorCommands = {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { pieces: { added: pieces } },
             },
           ],
@@ -7235,29 +7233,29 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.removePiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+  "semio.designEditor.removePiece": (context: DesignEditorCommandContext, Guid: Guid): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
-              diff: { pieces: { removed: [pieceId] } },
+              id: context.Guid,
+              diff: { pieces: { removed: [Guid] } },
             },
           ],
         },
       },
     };
   },
-  "semio.designEditor.removePieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+  "semio.designEditor.removePieces": (context: DesignEditorCommandContext, pieceIds: Guid[]): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { pieces: { removed: pieceIds } },
             },
           ],
@@ -7272,7 +7270,7 @@ const designEditorCommands = {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { connections: { added: [connection] } },
             },
           ],
@@ -7287,7 +7285,7 @@ const designEditorCommands = {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { connections: { added: connections } },
             },
           ],
@@ -7295,29 +7293,29 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId): DesignEditorCommandResult => {
+  "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, Guid: Guid): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
-              diff: { connections: { removed: [connectionId] } },
+              id: context.Guid,
+              diff: { connections: { removed: [Guid] } },
             },
           ],
         },
       },
     };
   },
-  "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: ConnectionId[]): DesignEditorCommandResult => {
+  "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: Guid[]): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { connections: { removed: connectionIds } },
             },
           ],
@@ -7325,29 +7323,29 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.updatePiece": (context: DesignEditorCommandContext, pieceId: PieceId, pieceDiff: PieceDiff): DesignEditorCommandResult => {
+  "semio.designEditor.updatePiece": (context: DesignEditorCommandContext, Guid: Guid, pieceDiff: PieceDiff): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
-              diff: { pieces: { updated: [{ id: pieceId, diff: pieceDiff }] } },
+              id: context.Guid,
+              diff: { pieces: { updated: [{ id: Guid, diff: pieceDiff }] } },
             },
           ],
         },
       },
     };
   },
-  "semio.designEditor.updatePieces": (context: DesignEditorCommandContext, updates: { id: PieceId; diff: PieceDiff }[]): DesignEditorCommandResult => {
+  "semio.designEditor.updatePieces": (context: DesignEditorCommandContext, updates: { id: Guid; diff: PieceDiff }[]): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { pieces: { updated: updates } },
             },
           ],
@@ -7355,29 +7353,29 @@ const designEditorCommands = {
       },
     };
   },
-  "semio.designEditor.updateConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId, connectionDiff: ConnectionDiff): DesignEditorCommandResult => {
+  "semio.designEditor.updateConnection": (context: DesignEditorCommandContext, Guid: Guid, connectionDiff: ConnectionDiff): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
-              diff: { connections: { updated: [{ id: connectionId, diff: connectionDiff }] } },
+              id: context.Guid,
+              diff: { connections: { updated: [{ id: Guid, diff: connectionDiff }] } },
             },
           ],
         },
       },
     };
   },
-  "semio.designEditor.updateConnections": (context: DesignEditorCommandContext, updates: { id: ConnectionId; diff: ConnectionDiff }[]): DesignEditorCommandResult => {
+  "semio.designEditor.updateConnections": (context: DesignEditorCommandContext, updates: { id: Guid; diff: ConnectionDiff }[]): DesignEditorCommandResult => {
     return {
       diff: {},
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.designId,
+              id: context.Guid,
               diff: { connections: { updated: updates } },
             },
           ],
@@ -8043,9 +8041,9 @@ class SketchpadStore {
     }
     if (command === "semio.sketchpad.importKit") {
       console.group(`Executing (special) command: "${command}"`);
-      const kitId = rest[0] as KitId;
+      const Guid = rest[0] as Guid;
       const url = rest[1] as string;
-      const kitStore = this.kits.get(kitIdToString(kitId));
+      const kitStore = this.kits.get(kitIdToString(Guid));
       if (kitStore) {
         await kitStore.execute("semio.kit.import", url);
       }
@@ -8135,7 +8133,7 @@ class SketchpadStore {
   }
 
   createTypeEditor = (kit: Guid, type: Guid) => {
-    const typeId: TypeId = { kit, guid: type };
+    const Guid: Guid = { kit, guid: type };
     const key = `${kit}:${type}`;
     this.yDoc.transact(() => {
       let yTypeEditor = this.yTypeEditors.get(key) as Y.Map<YTypeEditorVal>;
@@ -8143,7 +8141,7 @@ class SketchpadStore {
         yTypeEditor = new Y.Map<YTypeEditorVal>();
         this.yTypeEditors.set(key, yTypeEditor);
       }
-      const typeEditor = new TypeEditorStore(this, yTypeEditor, this.yDoc.transact.bind(this.yDoc), typeId);
+      const typeEditor = new TypeEditorStore(this, yTypeEditor, this.yDoc.transact.bind(this.yDoc), Guid);
       this.typeEditors.set(key, typeEditor);
     });
     this.typeEditorCreatedSubscribers.forEach((subscriber) => subscriber());
@@ -8177,7 +8175,7 @@ class SketchpadStore {
   }
 
   typeEditorIds(): TypeEditorId[] {
-    return Array.from(this.typeEditors.values()).map((t) => ({ type: t.typeId }));
+    return Array.from(this.typeEditors.values()).map((t) => ({ type: t.Guid }));
   }
 
   hasDesignEditor(designEditor: DesignEditorId): boolean {

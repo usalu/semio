@@ -132,7 +132,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
             {actions.map((action, index) => (
               <button
                 key={index}
-                className={`p-1 rounded-sm transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
+                className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -167,7 +167,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
               {actions.map((action, index) => (
                 <button
                   key={index}
-                  className={`p-1 rounded-sm transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
+                  className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -223,7 +223,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
           {isDragHandle && (
-            <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10 rounded" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
+            <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
               <GripVertical size={12} className="text-muted-foreground" />
             </button>
           )}

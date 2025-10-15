@@ -38,9 +38,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { Environment, OrbitControls, Stage, useGLTF } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import { FC, Suspense, useEffect } from "react";
+import Model from "./sketchpad/Model";
 
 interface GltfProps {
   src: string;
@@ -95,16 +95,11 @@ interface FileProps {
 const File: FC<FileProps> = ({ src, environment, roughness, metalness }) => {
   return (
     <div className="w-full h-full">
-      <Canvas>
-        <Stage environment={null} shadows={false}>
-          <OrbitControls enablePan={false} />
-          <ambientLight intensity={1} />
-          <Suspense fallback={null}>
-            <Gltf src={src} roughness={roughness} metalness={metalness} />
-          </Suspense>
-        </Stage>
-        <Environment files={environment || ""} />
-      </Canvas>
+      <Model>
+        <Suspense fallback={null}>
+          <Gltf src={src} roughness={roughness} metalness={metalness} />
+        </Suspense>
+      </Model>
     </div>
   );
 };

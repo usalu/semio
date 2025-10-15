@@ -149,7 +149,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
   return (
     <div className="flex items-center gap-2 min-w-0">
       {label && (
-        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
           {label}
         </span>
       )}
@@ -166,7 +166,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
         >
           <Minus className="h-4 w-4" />
         </button>
-        <Input type="number" value={internalValue.toString()} onChange={handleInputChange} onFocus={onPointerDown} onBlur={onPointerUp} className="rounded-none border-l-0 border-r-0 text-center" step={step} min={min} max={max} />
+        <Input type="number" value={internalValue.toString()} onChange={handleInputChange} onFocus={onPointerDown} onBlur={onPointerUp} className="border-l-0 border-r-0 text-center" step={step} min={min} max={max} />
         <button
           type="button"
           onMouseDown={handleMouseDown(step)}

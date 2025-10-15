@@ -21,7 +21,7 @@
 // #endregion
 
 import { GizmoHelper, GizmoViewport, Grid, OrbitControls } from "@react-three/drei";
-import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import React, { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Camera } from "../../../semio";
@@ -205,11 +205,11 @@ interface ModelProps {
 
 const Model: FC<ModelProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed }) => (
   <div className="h-full w-full" onDoubleClick={onDoubleClickCapture}>
-    <ThreeCanvas onPointerMissed={onPointerMissed}>
+    <Canvas onPointerMissed={onPointerMissed}>
       <ModelInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
         {children}
       </ModelInner>
-    </ThreeCanvas>
+    </Canvas>
   </div>
 );
 

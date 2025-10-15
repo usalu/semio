@@ -37,7 +37,7 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
 
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
-      {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>}
+      {label && <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">

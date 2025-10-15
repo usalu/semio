@@ -42,7 +42,7 @@ export const Default: Story = {
     direction: "horizontal",
   },
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[800px] h-[500px] border rounded-lg">
+    <ResizablePanelGroup direction="horizontal" className="w-[800px] h-[500px] border">
       <ResizablePanel defaultSize={35} minSize={25}>
         <div className="flex flex-col h-full p-4 bg-muted/20">
           <h3 className="text-sm font-semibold mb-4">Type Library</h3>
@@ -88,7 +88,7 @@ export const Variants: Story = {
     <div className="flex flex-col gap-8">
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Horizontal</p>
-        <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">
+        <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border">
           <ResizablePanel defaultSize={50}>
             <div className="flex h-full items-center justify-center p-6">
               <span className="font-semibold">Model</span>
@@ -104,7 +104,7 @@ export const Variants: Story = {
       </div>
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground mb-4">Vertical</p>
-        <ResizablePanelGroup direction="vertical" className="w-[600px] h-[400px] border rounded-lg">
+        <ResizablePanelGroup direction="vertical" className="w-[600px] h-[400px] border">
           <ResizablePanel defaultSize={50}>
             <div className="flex h-full items-center justify-center p-6">
               <span className="font-semibold">Editor</span>
@@ -127,7 +127,7 @@ export const Horizontal: Story = {
     direction: "horizontal",
   },
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">
+    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border">
       <ResizablePanel defaultSize={50}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Left Panel</span>
@@ -148,7 +148,7 @@ export const WithHandle: Story = {
     direction: "horizontal",
   },
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">
+    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border">
       <ResizablePanel defaultSize={50}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Left Panel</span>
@@ -169,7 +169,7 @@ export const ThreePanels: Story = {
     direction: "horizontal",
   },
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">
+    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border">
       <ResizablePanel defaultSize={25}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Sidebar</span>
@@ -196,7 +196,7 @@ export const Vertical: Story = {
     direction: "vertical",
   },
   render: () => (
-    <ResizablePanelGroup direction="vertical" className="w-[400px] h-[400px] border rounded-lg">
+    <ResizablePanelGroup direction="vertical" className="w-[400px] h-[400px] border">
       <ResizablePanel defaultSize={50}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Top Panel</span>
@@ -217,7 +217,7 @@ export const Nested: Story = {
     direction: "horizontal",
   },
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[700px] h-[400px] border rounded-lg">
+    <ResizablePanelGroup direction="horizontal" className="w-[700px] h-[400px] border">
       <ResizablePanel defaultSize={30}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Sidebar</span>
@@ -248,7 +248,7 @@ export const WithMinMax: Story = {
     direction: "horizontal",
   },
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border rounded-lg">
+    <ResizablePanelGroup direction="horizontal" className="w-[600px] h-[200px] border">
       <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold text-center">Constrained Panel (20-40%)</span>

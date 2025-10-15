@@ -73,7 +73,7 @@ function Slider({
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
       {label && (
-        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
           {label}
         </span>
       )}
@@ -103,14 +103,14 @@ function Slider({
             <SliderPrimitive.Thumb
               data-slot="slider-thumb"
               key={index}
-              className="border-foreground bg-foreground ring-ring/50 block size-4 shrink-0 rounded-full border transition-colors hover:bg-accent focus-visible:bg-primary focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-primary"
+              className="border-foreground bg-foreground ring-ring/50 block size-4 shrink-0 rounded-full border transition-colors focus-visible:bg-primary focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-primary"
             />
           ))}
         </SliderPrimitive.Root>
         {isEditing ? (
           <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus />
         ) : (
-          <span className="text-sm w-20 text-right cursor-pointer hover:bg-muted px-1 rounded select-none" onDoubleClick={handleValueClick} title="Double-click to edit">
+          <span className="text-sm w-20 text-right cursor-pointer px-1 select-none" onDoubleClick={handleValueClick} title="Double-click to edit">
             {displayValue}
           </span>
         )}

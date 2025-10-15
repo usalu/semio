@@ -56,13 +56,16 @@ function BreadcrumbItem({ className, tooltip, children, ...props }: React.Compon
 function BreadcrumbLink({
   asChild,
   className,
+  level = "base",
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean;
+  level?: "base" | "panel" | "temporary";
 }) {
   const Comp = asChild ? Slot : "a";
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
-  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground hover:bg-accent hover:text-accent-foreground transition-colors px-1 flex items-center gap-1 h-9 cursor-pointer", className)} {...props} />;
+  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground transition-colors px-1 flex items-center gap-1 h-9 cursor-pointer", hoverClass, className)} {...props} />;
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
@@ -73,10 +76,12 @@ interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
   items?: { label: React.ReactNode; href: string; tooltip?: string }[];
   onNavigate?: (href: string) => void;
   tooltip?: string;
+  level?: "base" | "panel" | "temporary";
 }
 
-function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, ...props }: BreadcrumbSeparatorProps) {
+function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, level = "base", ...props }: BreadcrumbSeparatorProps) {
   const [open, setOpen] = React.useState(false);
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
   const handleSelect = (href: string) => {
     setOpen(false);
@@ -108,7 +113,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuPrimitive.Trigger asChild>
-              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer hover:bg-accent px-1 flex items-center transition-colors", className)} {...props}>
+              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer px-1 flex items-center transition-colors", hoverClass, className)} {...props}>
                 {open ? <ChevronDown /> : <ChevronRight />}
               </li>
             </DropdownMenuPrimitive.Trigger>
@@ -117,7 +122,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
         </Tooltip>
       ) : (
         <DropdownMenuPrimitive.Trigger asChild>
-          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer hover:bg-hover-base px-1 flex items-center transition-colors", className)} {...props}>
+          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer px-1 flex items-center transition-colors", hoverClass, className)} {...props}>
             {open ? <ChevronDown /> : <ChevronRight />}
           </li>
         </DropdownMenuPrimitive.Trigger>
@@ -128,7 +133,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
             const menuItem = (
               <DropdownMenuPrimitive.Item
                 key={index}
-                className="text-foreground focus:bg-hover-temporary relative flex cursor-pointer items-center px-1 py-1 text-sm outline-none whitespace-nowrap"
+                className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex cursor-pointer items-center px-1 py-1 text-sm outline-none whitespace-nowrap"
                 onClick={() => handleSelect(item.href)}
               >
                 {item.label}
@@ -140,7 +145,9 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
                 <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
                 <TooltipContent>{item.tooltip}</TooltipContent>
               </Tooltip>
-            ) : menuItem;
+            ) : (
+              menuItem
+            );
 
             // Add separator after each item except the last one
             if (index < items.length - 1) {

@@ -92,13 +92,13 @@ export const Variants: Story = {
             <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
           <TabsContent value="model">
-            <div className="border p-4 rounded-md">3D model view</div>
+            <div className="border p-4">3D model view</div>
           </TabsContent>
           <TabsContent value="diagram">
-            <div className="border p-4 rounded-md">Connection diagram</div>
+            <div className="border p-4">Connection diagram</div>
           </TabsContent>
           <TabsContent value="details">
-            <div className="border p-4 rounded-md">Design properties</div>
+            <div className="border p-4">Design properties</div>
           </TabsContent>
         </Tabs>
       </div>
@@ -110,10 +110,10 @@ export const Variants: Story = {
             <TabsTrigger value="designs">Designs</TabsTrigger>
           </TabsList>
           <TabsContent value="types" className="flex-1 ml-4">
-            <div className="border p-4 rounded-md">Type library</div>
+            <div className="border p-4">Type library</div>
           </TabsContent>
           <TabsContent value="designs" className="flex-1 ml-4">
-            <div className="border p-4 rounded-md">Design library</div>
+            <div className="border p-4">Design library</div>
           </TabsContent>
         </Tabs>
       </div>
@@ -130,13 +130,13 @@ export const Basic: Story = {
         <TabsTrigger value="tab3">Tab 3</TabsTrigger>
       </TabsList>
       <TabsContent value="tab1">
-        <div className="border p-4 rounded-md">Content for Tab 1</div>
+        <div className="border p-4">Content for Tab 1</div>
       </TabsContent>
       <TabsContent value="tab2">
-        <div className="border p-4 rounded-md">Content for Tab 2</div>
+        <div className="border p-4">Content for Tab 2</div>
       </TabsContent>
       <TabsContent value="tab3">
-        <div className="border p-4 rounded-md">Content for Tab 3</div>
+        <div className="border p-4">Content for Tab 3</div>
       </TabsContent>
     </Tabs>
   ),
@@ -160,13 +160,13 @@ export const WithIcons: Story = {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="home">
-        <div className="border p-4 rounded-md">Home content goes here</div>
+        <div className="border p-4">Home content goes here</div>
       </TabsContent>
       <TabsContent value="profile">
-        <div className="border p-4 rounded-md">Profile content goes here</div>
+        <div className="border p-4">Profile content goes here</div>
       </TabsContent>
       <TabsContent value="settings">
-        <div className="border p-4 rounded-md">Settings content goes here</div>
+        <div className="border p-4">Settings content goes here</div>
       </TabsContent>
     </Tabs>
   ),
@@ -217,19 +217,19 @@ export const ManyTabs: Story = {
         <TabsTrigger value="tab5">Settings</TabsTrigger>
       </TabsList>
       <TabsContent value="tab1">
-        <div className="border p-4 rounded-md">Overview content</div>
+        <div className="border p-4">Overview content</div>
       </TabsContent>
       <TabsContent value="tab2">
-        <div className="border p-4 rounded-md">Analytics content</div>
+        <div className="border p-4">Analytics content</div>
       </TabsContent>
       <TabsContent value="tab3">
-        <div className="border p-4 rounded-md">Reports content</div>
+        <div className="border p-4">Reports content</div>
       </TabsContent>
       <TabsContent value="tab4">
-        <div className="border p-4 rounded-md">Notifications content</div>
+        <div className="border p-4">Notifications content</div>
       </TabsContent>
       <TabsContent value="tab5">
-        <div className="border p-4 rounded-md">Settings content</div>
+        <div className="border p-4">Settings content</div>
       </TabsContent>
     </Tabs>
   ),
@@ -246,13 +246,13 @@ export const Disabled: Story = {
         <TabsTrigger value="tab3">Another Active</TabsTrigger>
       </TabsList>
       <TabsContent value="tab1">
-        <div className="border p-4 rounded-md">Content for active tab</div>
+        <div className="border p-4">Content for active tab</div>
       </TabsContent>
       <TabsContent value="tab2">
-        <div className="border p-4 rounded-md">Content for disabled tab</div>
+        <div className="border p-4">Content for disabled tab</div>
       </TabsContent>
       <TabsContent value="tab3">
-        <div className="border p-4 rounded-md">Content for another active tab</div>
+        <div className="border p-4">Content for another active tab</div>
       </TabsContent>
     </Tabs>
   ),

@@ -24,6 +24,7 @@ import { createPortal } from "react-dom";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../Tooltip";
 
+import { Design, Guid, Type } from "../../../semio";
 import {
   DesignScopeProvider,
   KitScopeProvider,
@@ -43,7 +44,6 @@ import {
   WindowEvents,
   YProviderFactory,
 } from "../../../store";
-import { Design, Type } from "../../../semio";
 import Chat from "./Chat";
 import DesignEditor from "./DesignEditor";
 import Details from "./Details";
@@ -56,23 +56,19 @@ import TypeEditor from "./TypeEditor";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 interface DragDropContextValue {
-  activeDraggedType: Type | null;
-  activeDraggedDesign: Design | null;
-  setActiveDraggedType: (type: Type | null) => void;
-  setActiveDraggedDesign: (design: Design | null) => void;
+  activeDraggedTypeId: Guid | null;
+  activeDraggedDesignId: Guid | null;
+  setActiveDraggedTypeId: (typeId: Guid | null) => void;
+  setActiveDraggedDesignId: (designId: Guid | null) => void;
 }
 
 const DragDropContext = createContext<DragDropContextValue | null>(null);
 
 export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
-  const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
+  const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<Guid | null>(null);
+  const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<Guid | null>(null);
 
-  return (
-    <DragDropContext.Provider value={{ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }}>
-      {children}
-    </DragDropContext.Provider>
-  );
+  return <DragDropContext.Provider value={{ activeDraggedTypeId, activeDraggedDesignId, setActiveDraggedTypeId, setActiveDraggedDesignId }}>{children}</DragDropContext.Provider>;
 };
 
 export const useDragDrop = () => {
@@ -254,10 +250,10 @@ const SketchpadBase: FC = () => {
                 <>
                   {mobileVisiblePanel ? (
                     <div className="absolute inset-1 z-30">
-                      {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
-                      {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
-                      {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
-                      {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => { }} />}
+                      {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                      {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                      {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                      {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                     </div>
                   ) : (
                     <div className="flex-1 flex flex-col overflow-hidden">
