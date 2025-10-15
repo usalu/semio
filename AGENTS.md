@@ -41,6 +41,7 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
+- The ui ALWAYS consists of three layers: 1. base, 2. panel and 3. temporary. Every layer has a darker background color and is on top of the previous layer. Every ui element ALWAYS has an enum for the layer and hence ALWAYS has three different color sets.
 
 ## Glossary
 

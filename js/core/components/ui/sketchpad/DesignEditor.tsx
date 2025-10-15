@@ -19,9 +19,8 @@
 
 // #endregion
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { DragEndEvent } from "@dnd-kit/core";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 
@@ -48,6 +47,7 @@ import {
   useSketchpad,
 } from "../../../store";
 import Combobox from "../Combobox";
+import { useDragDrop } from "./DragDropContext";
 import { Input } from "../Input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
 import Stepper from "../Stepper";
@@ -93,98 +93,96 @@ const DesignSectionForm: FC = () => {
 
   return (
     <>
-      <TreeSection label={t("design.title")} defaultOpen={true}>
-        <TreeItem>
-          <TreeContent>
-            <Input lazy label={t("design.name")} value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Textarea
-              lazy
-              label={t("design.description")}
-              value={design.description || ""}
-              placeholder={t("design.descriptionPlaceholder")}
-              onLazyChange={(value) => updateDesignField({ description: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
-            />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Input
-              lazy
-              label={t("design.icon")}
-              value={design.icon || ""}
-              placeholder={t("design.iconPlaceholder")}
-              onLazyChange={(value) => updateDesignField({ icon: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
-            />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Input
-              lazy
-              label={t("design.image")}
-              value={design.image || ""}
-              placeholder={t("design.imagePlaceholder")}
-              onLazyChange={(value) => updateDesignField({ image: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
-            />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Input
-              lazy
-              label={t("design.variant")}
-              value={design.variant || ""}
-              placeholder={t("design.variantPlaceholder")}
-              onLazyChange={(value) => updateDesignField({ variant: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
-            />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Input
-              lazy
-              label={t("design.view")}
-              value={design.view || ""}
-              placeholder={t("design.viewPlaceholder")}
-              onLazyChange={(value) => updateDesignField({ view: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
-            />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
-            <Input
-              lazy
-              label={t("design.unit")}
-              value={design.unit || ""}
-              onLazyChange={(value) => updateDesignField({ unit: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
-            />
-          </TreeContent>
-        </TreeItem>
-      </TreeSection>
+      <TreeItem>
+        <TreeContent>
+          <Input lazy label={t("design.name")} value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea
+            lazy
+            label={t("design.description")}
+            value={design.description || ""}
+            placeholder={t("design.descriptionPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ description: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            label={t("design.icon")}
+            value={design.icon || ""}
+            placeholder={t("design.iconPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ icon: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            label={t("design.image")}
+            value={design.image || ""}
+            placeholder={t("design.imagePlaceholder")}
+            onLazyChange={(value) => updateDesignField({ image: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            label={t("design.variant")}
+            value={design.variant || ""}
+            placeholder={t("design.variantPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ variant: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            label={t("design.view")}
+            value={design.view || ""}
+            placeholder={t("design.viewPlaceholder")}
+            onLazyChange={(value) => updateDesignField({ view: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            label={t("design.unit")}
+            value={design.unit || ""}
+            onLazyChange={(value) => updateDesignField({ unit: value })}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
       {design.location ? (
-        <TreeSection
+        <TreeItem
           label={t("design.location")}
           actions={[
             {
@@ -230,9 +228,9 @@ const DesignSectionForm: FC = () => {
               />
             </TreeContent>
           </TreeItem>
-        </TreeSection>
+        </TreeItem>
       ) : (
-        <TreeSection
+        <TreeItem
           label={t("design.location")}
           actions={[
             {
@@ -241,10 +239,10 @@ const DesignSectionForm: FC = () => {
               title: t("common.add"),
             },
           ]}
-        ></TreeSection>
+        ></TreeItem>
       )}
       {design.authors && design.authors.length > 0 ? (
-        <TreeSection
+        <TreeItem
           label={t("design.authors")}
           actions={[
             {
@@ -335,9 +333,9 @@ const DesignSectionForm: FC = () => {
               </TreeItem>
             )}
           </SortableTreeItems>
-        </TreeSection>
+        </TreeItem>
       ) : (
-        <TreeSection
+        <TreeItem
           label="Authors"
           actions={[
             {
@@ -353,10 +351,10 @@ const DesignSectionForm: FC = () => {
               title: "Add author",
             },
           ]}
-        ></TreeSection>
+        ></TreeItem>
       )}
       {design.attributes && design.attributes.length > 0 ? (
-        <TreeSection
+        <TreeItem
           label={t("design.attributes")}
           actions={[
             {
@@ -486,9 +484,9 @@ const DesignSectionForm: FC = () => {
               </TreeItem>
             )}
           </SortableTreeItems>
-        </TreeSection>
+        </TreeItem>
       ) : (
-        <TreeSection
+        <TreeItem
           label={t("design.attributes")}
           actions={[
             {
@@ -504,9 +502,9 @@ const DesignSectionForm: FC = () => {
               title: t("design.addAttribute"),
             },
           ]}
-        ></TreeSection>
+        ></TreeItem>
       )}
-      <TreeSection label={t("design.metadata")}>
+      <TreeItem label={t("design.metadata")}>
         {design.created && (
           <TreeItem>
             <TreeContent>
@@ -535,7 +533,7 @@ const DesignSectionForm: FC = () => {
             </TreeContent>
           </TreeItem>
         )}
-      </TreeSection>
+      </TreeItem>
     </>
   );
 };
@@ -979,15 +977,15 @@ const PiecesSectionForm: FC = () => {
   return (
     <>
       {hasMixedTypes ? (
-        <TreeSection label={t("piece.mixedSelection", { count: pieces.length })} defaultOpen={true}>
+        <TreeItem label={t("piece.mixedSelection", { count: pieces.length })} defaultOpen={true}>
           <TreeItem>
             <TreeContent>
               <p className="text-sm text-muted-foreground">{t("piece.mixedSelectionMessage")}</p>
             </TreeContent>
           </TreeItem>
-        </TreeSection>
+        </TreeItem>
       ) : (
-        <TreeSection
+        <TreeItem
           label={isDesignPiece ? (isSingle ? t("piece.designPiece") : t("piece.multipleDesignPieces", { count: pieces.length })) : isSingle ? t("piece.piece") : t("piece.multiplePieces", { count: pieces.length })}
           defaultOpen={true}
           actions={
@@ -1098,10 +1096,10 @@ const PiecesSectionForm: FC = () => {
               )}
             </>
           )}
-        </TreeSection>
+        </TreeItem>
       )}
       {hasCenter && (
-        <TreeSection label={t("piece.center")}>
+        <TreeItem label={t("piece.center")}>
           <TreeItem>
             <TreeContent>
               <Stepper
@@ -1128,52 +1126,50 @@ const PiecesSectionForm: FC = () => {
               />
             </TreeContent>
           </TreeItem>
-        </TreeSection>
+        </TreeItem>
       )}
       {hasPlane && (
-        <TreeSection label={t("piece.plane")}>
-          <TreeSection label={t("piece.origin")} defaultOpen={true}>
-            <TreeItem>
-              <TreeContent>
-                <Stepper
-                  label={t("common.x")}
-                  value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
-                  onChange={handlePlaneOriginXChange}
-                  onPointerDown={startTransaction}
-                  onPointerUp={finalizeTransaction}
-                  onPointerCancel={abortTransaction}
-                  step={0.1}
-                />
-              </TreeContent>
-            </TreeItem>
-            <TreeItem>
-              <TreeContent>
-                <Stepper
-                  label={t("common.y")}
-                  value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
-                  onChange={handlePlaneOriginYChange}
-                  onPointerDown={startTransaction}
-                  onPointerUp={finalizeTransaction}
-                  onPointerCancel={abortTransaction}
-                  step={0.1}
-                />
-              </TreeContent>
-            </TreeItem>
-            <TreeItem>
-              <TreeContent>
-                <Stepper
-                  label={t("common.z")}
-                  value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
-                  onChange={handlePlaneOriginZChange}
-                  onPointerDown={startTransaction}
-                  onPointerUp={finalizeTransaction}
-                  onPointerCancel={abortTransaction}
-                  step={0.1}
-                />
-              </TreeContent>
-            </TreeItem>
-          </TreeSection>
-        </TreeSection>
+        <TreeItem label={t("piece.plane")}>
+          <TreeItem>
+            <TreeContent>
+              <Stepper
+                label={t("common.x")}
+                value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
+                onChange={handlePlaneOriginXChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
+          </TreeItem>
+          <TreeItem>
+            <TreeContent>
+              <Stepper
+                label={t("common.y")}
+                value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
+                onChange={handlePlaneOriginYChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
+          </TreeItem>
+          <TreeItem>
+            <TreeContent>
+              <Stepper
+                label={t("common.z")}
+                value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
+                onChange={handlePlaneOriginZChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
+            </TreeContent>
+          </TreeItem>
+        </TreeItem>
       )}
       {(parentConnection || parentConnections.length > 0) && (
         <div style={{ marginTop: "0.5rem" }}>
@@ -1294,7 +1290,7 @@ const ConnectionsSectionForm: FC<{
   const commonTilt = getCommonValue((c) => c.tilt);
 
   return (
-    <TreeSection label={sectionLabel || (isSingle ? "Connection" : `Multiple Connections (${connections.length})`)} defaultOpen={true}>
+    <TreeItem label={sectionLabel || (isSingle ? "Connection" : `Multiple Connections (${connections.length})`)} defaultOpen={true}>
       {isSingle && (
         <>
           <TreeItem>
@@ -1440,7 +1436,7 @@ const ConnectionsSectionForm: FC<{
           <Stepper label="Y Offset" value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)} onChange={handleYOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
         </TreeContent>
       </TreeItem>
-    </TreeSection>
+    </TreeItem>
   );
 };
 
@@ -1467,18 +1463,18 @@ const PortSectionForm: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, po
 
   if (!piece || !type || !port) {
     return (
-      <TreeSection label="Port" defaultOpen={true}>
+      <TreeItem label="Port" defaultOpen={true}>
         <TreeItem>
           <TreeContent>
             <p className="text-sm text-muted-foreground">Port not found</p>
           </TreeContent>
         </TreeItem>
-      </TreeSection>
+      </TreeItem>
     );
   }
 
   return (
-    <TreeSection label="Port" defaultOpen={true}>
+    <TreeItem label="Port" defaultOpen={true}>
       <Input label={t("piece.id")} value={port.id_ || "~default~"} disabled />
       {port.description && <Textarea label="Description" value={port.description} disabled />}
       {port.family && <Input label="Family" value={port.family} disabled />}
@@ -1501,7 +1497,7 @@ const PortSectionForm: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, po
             </TreeContent>
           </TreeItem>
         ))}
-    </TreeSection>
+    </TreeItem>
   );
 };
 
@@ -1515,9 +1511,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const design = useDesign();
   const kit = useKit() as Kit;
   const editorSettings = useSketchpad((s) => s.editorSettings);
-
-  const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
-  const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
+  const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
@@ -1554,7 +1548,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     if (!hasSelection) {
       addSection("details", {
         id: "design",
-        label: "Properties",
+        label: "Design",
         order: 0,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -1714,26 +1708,6 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     };
   }, [editorSettings, addSection, removeSection]);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const id = active.id as string;
-
-    if (id.startsWith("type-")) {
-      const parts = id.replace("type-", "").split("-");
-      const name = parts[0];
-      const variant = parts.slice(1).join("-") || undefined;
-      const type = kit.types?.find((t) => t.name === name && (t.variant || undefined) === variant);
-      if (type) setActiveDraggedType(type);
-    } else if (id.startsWith("design-")) {
-      const parts = id.replace("design-", "").split("-");
-      const name = parts[0];
-      const variant = parts[1] || undefined;
-      const view = parts[2] || undefined;
-      const design = kit.designs?.find((d) => d.name === name && (d.variant || undefined) === variant && (d.view || undefined) === view);
-      if (design) setActiveDraggedDesign(design);
-    }
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;
 
@@ -1751,7 +1725,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         startTransaction();
         const piece = {
           guid: guid(),
-          type: `${activeDraggedType.name}${activeDraggedType.variant ? `-${activeDraggedType.variant}` : ""}`,
+          type: activeDraggedType.guid,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
         addPiece(piece);
@@ -1760,7 +1734,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         startTransaction();
         const piece = {
           guid: guid(),
-          design: `${activeDraggedDesign.name}${activeDraggedDesign.variant ? `-${activeDraggedDesign.variant}` : ""}${activeDraggedDesign.view ? `-${activeDraggedDesign.view}` : ""}`,
+          design: activeDraggedDesign.guid,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
         addPiece(piece);
@@ -1772,28 +1746,27 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     setActiveDraggedDesign(null);
   };
 
-  return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <ReactFlowProvider>
-        <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
-            <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
-          </ResizablePanel>
-          <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
-          <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`}>
-            <DesignModel />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </ReactFlowProvider>
+  useEffect(() => {
+    const listener = (e: Event) => {
+      const customEvent = e as CustomEvent<DragEndEvent>;
+      handleDragEnd(customEvent.detail);
+    };
+    window.addEventListener("design-drag-end", listener);
+    return () => window.removeEventListener("design-drag-end", listener);
+  }, [handleDragEnd]);
 
-      {createPortal(
-        <DragOverlay>
-          {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
-          {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
-        </DragOverlay>,
-        document.body,
-      )}
-    </DndContext>
+  return (
+    <ReactFlowProvider>
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
+          <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
+        </ResizablePanel>
+        <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
+        <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`}>
+          <DesignModel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </ReactFlowProvider>
   );
 };
 

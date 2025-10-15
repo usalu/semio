@@ -5,60 +5,85 @@ import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeSection } from "@semio/js/components/ui/Tree";
-import { Design, Kit, Type } from "../../../semio";
-import { useIsMobile, useKit } from "../../../store";
+import { Design, Type } from "../../../semio";
+import { DesignId, TypeId, useIsMobile } from "../../../store";
 import { usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
 
 interface TypeAvatarProps {
-  type: Type;
+  typeId?: TypeId;
+  type?: Type;
   showHoverCard?: boolean;
 }
 
-export const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
+export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHoverCard = false }) => {
+  const type = typeProp;
+  
+  if (!type) {
+    console.warn("[ORIGIN] TypeAvatar requires a type prop, received:", { typeId, typeProp });
+    return null;
+  }
+  
+  const dragId = `type-${type.name}-${type.variant || ""}`;
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `type-${type.name}-${type.variant || ""}`,
+    id: dragId,
+    data: { type },
   });
 
   const displayVariant = type.variant || type.name;
   const avatar = (
-    <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing select-none">
+    <Avatar className="cursor-grab active:cursor-grabbing select-none">
       <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   );
 
   if (!showHoverCard) {
-    return avatar;
+    return (
+      <div ref={setNodeRef} {...listeners} {...attributes}>
+        {avatar}
+      </div>
+    );
   }
 
   return (
-    <HoverCard openDelay={500}>
-      <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
-      <HoverCardContent className="w-80">
-        <div className="space-y-1">
-          {type.variant ? (
-            <>
-              <h4 className="text-sm font-semibold">{type.variant}</h4>
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <HoverCard openDelay={500}>
+        <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="space-y-1">
+            {type.variant ? (
+              <>
+                <h4 className="text-sm font-semibold">{type.variant}</h4>
+                <p className="text-sm">{type.description || "No description available."}</p>
+              </>
+            ) : (
               <p className="text-sm">{type.description || "No description available."}</p>
-            </>
-          ) : (
-            <p className="text-sm">{type.description || "No description available."}</p>
-          )}
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+            )}
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    </div>
   );
 };
 
 interface DesignAvatarProps {
-  design: Design;
+  designId?: DesignId;
+  design?: Design;
   showHoverCard?: boolean;
   isActive?: boolean;
 }
 
-export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false, isActive = false }) => {
+export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
+  const design = designProp;
+  
+  if (!design) {
+    console.warn("[ORIGIN] DesignAvatar requires a design prop");
+    return null;
+  }
+  
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
+    data: { design },
     disabled: isActive,
   });
 
@@ -66,30 +91,36 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = fa
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <Avatar ref={setNodeRef} {...listeners} {...attributes} className={`select-none ${isActive ? "cursor-default opacity-50" : "cursor-grab active:cursor-grabbing"}`}>
+    <Avatar className={`select-none ${isActive ? "cursor-default opacity-50" : "cursor-grab active:cursor-grabbing"}`}>
       <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   );
 
   if (!showHoverCard) {
-    return avatar;
+    return (
+      <div ref={setNodeRef} {...listeners} {...attributes}>
+        {avatar}
+      </div>
+    );
   }
 
   return (
-    <HoverCard openDelay={500}>
-      <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
-      <HoverCardContent className="w-80">
-        <div className="space-y-1">
-          {!isDefault && (
-            <h4 className="text-sm font-semibold">
-              {design.variant || design.name}
-              {design.view && design.view !== "Default" && ` (${design.view})`}
-            </h4>
-          )}
-          <p className="text-sm">{design.description || "No description available."}</p>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <HoverCard openDelay={500}>
+        <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="space-y-1">
+            {!isDefault && (
+              <h4 className="text-sm font-semibold">
+                {design.variant || design.name}
+                {design.view && design.view !== "Default" && ` (${design.view})`}
+              </h4>
+            )}
+            <p className="text-sm">{design.description || "No description available."}</p>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    </div>
   );
 };
 

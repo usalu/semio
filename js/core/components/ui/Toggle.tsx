@@ -191,7 +191,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         <TooltipTrigger asChild>
           <button
             type="button"
-            className={cn("shrink-0 p-0.5 z-10", actionHoverClass)}
+            className={cn("shrink-0 p-0.5 z-10 border", actionHoverClass)}
             onClick={(e) => {
               e.stopPropagation();
               onActionClick();
@@ -205,7 +205,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     ) : (
       <button
         type="button"
-        className={cn("shrink-0 p-0.5 z-10", actionHoverClass)}
+        className={cn("shrink-0 p-0.5 z-10 border", actionHoverClass)}
         onClick={(e) => {
           e.stopPropagation();
           onActionClick();
@@ -216,7 +216,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground [&:hover:not(:has(button:hover))_button]:border-transparent [&_button]:bg-transparent", className)} {...restProps}>
         {mainContent}
         {actionButton}
       </TogglePrimitive.Root>
