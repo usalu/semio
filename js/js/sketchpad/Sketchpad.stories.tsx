@@ -23,7 +23,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import Sketchpad from "./Sketchpad";
 
 const meta = {
-  title: "Sketchpad/Sketchpad",
+  title: "Sketchpad",
   component: Sketchpad,
   parameters: {
     layout: "fullscreen",

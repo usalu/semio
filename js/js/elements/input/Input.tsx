@@ -21,6 +21,7 @@
 import * as React from "react";
 
 import { cn } from "../../semio";
+import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
   label?: string;
@@ -31,15 +32,21 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
+  interactionId?: string;
 }
 
-function Input({ className, type, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, ...props }: InputProps) {
+function Input({ className, type, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
+  const { setActiveInteraction } = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
   }, [externalValue, isEditing]);
+
+  const isInteracting = interactionId && activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (lazy) {
@@ -50,6 +57,7 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (interactionId) setActiveInteraction(interactionId);
     if (lazy) {
       setIsEditing(true);
       startTransaction?.();
@@ -58,6 +66,7 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (interactionId) setActiveInteraction(undefined);
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
@@ -69,11 +78,13 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (lazy) {
       if (e.key === "Enter") {
+        if (interactionId) setActiveInteraction(undefined);
         setIsEditing(false);
         onLazyChange?.(localValue);
         finalizeTransaction?.();
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
+        if (interactionId) setActiveInteraction(undefined);
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
         abortTransaction?.();
@@ -87,7 +98,7 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
 
   if (label) {
     return (
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
         <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
         <input
           type={type}
@@ -114,6 +125,7 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
     <input
       type={type}
       data-slot="input"
+      style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
       className={cn(
         "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-primary",

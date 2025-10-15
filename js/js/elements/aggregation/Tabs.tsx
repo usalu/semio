@@ -35,6 +35,7 @@ function TabsList({ className, level = "base", ...props }: React.ComponentProps<
 function TabsTrigger({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: "base" | "panel" | "temporary" }) {
   const activeBgClass = level === "panel" ? "data-[state=active]:bg-panel" : level === "temporary" ? "data-[state=active]:bg-temporary" : "data-[state=active]:bg-background";
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
+  const activeHoverClass = level === "panel" ? "data-[state=active]:hover:bg-hover-panel" : level === "temporary" ? "data-[state=active]:hover:bg-hover-temporary" : "data-[state=active]:hover:bg-hover-base";
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
@@ -42,6 +43,7 @@ function TabsTrigger({ className, level = "base", ...props }: React.ComponentPro
         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         activeBgClass,
         hoverClass,
+        activeHoverClass,
         className,
       )}
       {...props}

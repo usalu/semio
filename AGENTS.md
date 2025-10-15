@@ -129,7 +129,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── js
 │ ├── ai
 │ ├── desktop
+│ │ └── package.json
 │ ├── docs
+│ │ └── package.json
 │ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
 │ │ ├── .storybook
 │ │ ├── elements

@@ -29,7 +29,7 @@ import { Popover, PopoverAnchor, PopoverContent } from "../Popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
 
 const toggleVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary data-[state=on]:hover:text-primary-foreground h-9 px-2 py-2 min-w-9 border",
+  "text-foreground inline-flex items-center justify-center gap-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground h-9 px-2 py-2 min-w-9 border",
   {
     variants: {
       variant: {
@@ -216,7 +216,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)} {...restProps}>
         {mainContent}
         {actionButton}
       </TogglePrimitive.Root>
@@ -276,7 +276,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         <TooltipTrigger asChild>
           <button
             type="button"
-            className={cn("shrink-0 p-0.5 z-10", dropdownHoverClass)}
+            className={cn("shrink-0 p-0.5 z-10 border", dropdownHoverClass)}
             onClick={(e) => {
               e.stopPropagation();
               setOpen(!open);
@@ -292,7 +292,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     ) : (
       <button
         type="button"
-        className={cn("shrink-0 p-0.5 z-10", dropdownHoverClass)}
+        className={cn("shrink-0 p-0.5 z-10 border", dropdownHoverClass)}
         onClick={(e) => {
           e.stopPropagation();
           setOpen(!open);
@@ -307,7 +307,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const toggleElement = (
       <TogglePrimitive.Root
         data-slot="toggle"
-        className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent [&:has(button:hover)]:text-foreground", className)}
+        className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)}
         pressed={pressed}
         onPressedChange={onPressedChange}
         {...restProps}

@@ -7632,6 +7632,7 @@ export interface SketchpadChangableState {
   isFullscreen: boolean;
   isNavbarExpanded: boolean;
   isMobile: boolean;
+  activeInteraction?: string;
 }
 export interface SketchpadState extends SketchpadChangableState {
   id?: string;
@@ -7650,6 +7651,7 @@ export interface SketchpadDiff {
   isFullscreen?: boolean;
   isNavbarExpanded?: boolean;
   isMobile?: boolean;
+  activeInteraction?: string;
 }
 
 export interface SketchpadCommandContext {
@@ -7756,6 +7758,9 @@ class SketchpadStore {
       if (!this.ySketchpad.has("isMobile")) {
         this.ySketchpad.set("isMobile", false);
       }
+      if (!this.ySketchpad.has("activeInteraction")) {
+        this.ySketchpad.set("activeInteraction", "");
+      }
       if (!this.ySketchpad.has("editorSettings")) {
         this.ySketchpad.set(
           "editorSettings",
@@ -7823,6 +7828,7 @@ class SketchpadStore {
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
       isNavbarExpanded: (this.ySketchpad.get("isNavbarExpanded") as boolean) || false,
       isMobile: (this.ySketchpad.get("isMobile") as boolean) || false,
+      activeInteraction: (this.ySketchpad.get("activeInteraction") as string) || undefined,
     };
     const currentHash = this.hash(currentValues);
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -7912,6 +7918,7 @@ class SketchpadStore {
       if (diff.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", diff.isFullscreen);
       if (diff.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", diff.isNavbarExpanded);
       if (diff.isMobile !== undefined) this.ySketchpad.set("isMobile", diff.isMobile);
+      if ("activeInteraction" in diff) this.ySketchpad.set("activeInteraction", diff.activeInteraction || "");
       if (diff.editorSettings) {
         const current = JSON.parse((this.ySketchpad.get("editorSettings") as string) || "{}");
         this.ySketchpad.set("editorSettings", JSON.stringify({ ...current, ...diff.editorSettings }));
@@ -8248,6 +8255,11 @@ const sketchpadCommands = {
       diff: { isMobile },
     };
   },
+  "semio.sketchpad.setActiveInteraction": (context: SketchpadCommandContext, interactionId?: string): SketchpadCommandResult => {
+    return {
+      diff: { activeInteraction: interactionId },
+    };
+  },
   "semio.sketchpad.syncNavigation": (context: SketchpadCommandContext, path: string): SketchpadCommandResult => {
     const migratedPath = migratePath(path);
     if (context.sketchpad.navigation !== migratedPath) {
@@ -8396,6 +8408,10 @@ export function useIsFullscreen(): boolean {
 
 export function useIsNavbarExpanded(): boolean {
   return useSketchpad((s) => s.isNavbarExpanded) as boolean;
+}
+
+export function useActiveInteraction(): string | undefined {
+  return useSketchpad((s) => s.activeInteraction) as string | undefined;
 }
 
 export function useIsMobile(): boolean {
@@ -8554,6 +8570,7 @@ export function useSketchpadCommands() {
     toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
     toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
     setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),
+    setActiveInteraction: (interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", interactionId),
     syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
     createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
     createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),

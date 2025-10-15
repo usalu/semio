@@ -24,6 +24,7 @@
 // #endregion TODOs
 import { Minus, Plus } from "lucide-react";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 import { Input } from "./Input";
 
 interface StepperProps {
@@ -37,12 +38,15 @@ interface StepperProps {
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
   label?: string;
+  interactionId?: string;
 }
 
-const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, label }) => {
+const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, label, interactionId }) => {
   const [internalValue, setInternalValue] = useState(value ?? defaultValue);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { setActiveInteraction } = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
 
   useEffect(() => {
     if (value !== undefined) {
@@ -123,6 +127,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
 
   const handleMouseDown = (increment: number) => {
     return () => {
+      if (interactionId) setActiveInteraction(interactionId);
       onPointerDown?.();
       if (increment > 0) {
         handleStepUp();
@@ -135,25 +140,30 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
 
   const handleMouseUp = () => {
     stopContinuousChange();
+    if (interactionId) setActiveInteraction(undefined);
     onPointerUp?.();
   };
 
   const handleMouseLeave = () => {
     stopContinuousChange();
+    if (interactionId) setActiveInteraction(undefined);
     onPointerCancel?.();
   };
 
   const canStepDown = min === undefined || internalValue > min;
   const canStepUp = max === undefined || internalValue < max;
 
+  const isInteracting = interactionId && activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
+
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {label && (
         <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
           {label}
         </span>
       )}
-      <div className="flex items-center flex-1 min-w-0">
+      <div className="flex items-center flex-1 min-w-0 h-9">
         <button
           type="button"
           onMouseDown={handleMouseDown(-step)}

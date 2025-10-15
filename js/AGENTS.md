@@ -39,10 +39,12 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 
 - NEVER use hardcoded (hex, rgb, …) or standard colors. All theme colors are explicitly defined.
 - ALWAYS use colors for light mode. Dark mode is automatically derived. There are scales for the following number of colors: 2 (dark, light), 3 (dark, gray, light), 4 (dark, dark-gray-gray, light-gray-gray, light), 5 (dark, dark-gray, gray, light-gray, light), 6 (dark, dark-gray-gray, gray, light-gray-gray, light), 7 (dark, dark-6-7, dark-5-7, gray, light-5-7, light-6-7, light), 8 (dark, d-d-d-g, dark-gray, d-g-g-g, light-gray, l-g-g-g, l-l-l-g, light), 9 (dark, dark-8-9, dark-7-9, dark-gray, gray, light-gray, light-7-9, light-8-9, light), 10 (gray-100, gray-200, gray-300, gray-400, gray, gray-600, gray-700, gray-800, gray-900, light), 11 (dark, gray-100, dark-gray-gray, dark-gray, gray, light-gray, light-gray-gray, light-light-gray, l-l-l-g, gray-900, light). ALWAYS pick the one with the highest contrast.
+- All closed ui elements ALWAYS have a border.
 - NEVER use hardcoded pixels. ALWAYS use the existing ui frameworks with relative units.
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
+- The ui ALWAYS consists of three layers: 1. base, 2. panel and 3. temporary. Every layer has a darker background color and is on top of the previous layer. Every ui element ALWAYS has an enum for the layer and hence ALWAYS has three different color sets.
 
 ## Glossary
 
@@ -128,79 +130,92 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── graphql
 ├── js
 │ ├── ai
-│ ├── core # @semio/js: all shared js code (ui, domain logic, configs, …)
-│ │ ├── components
-│ │ │ ├── ui
-│ │ │ │ ├── sketchpad
-│ │ │ │ │ │ ├── Chat.tsx
-│ │ │ │ │ │ ├── DesignEditor.tsx
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ │ ├── Home.tsx
-│ │ │ │ │ │ ├── KitEditor.tsx
-│ │ │ │ │ │ ├── Model.tsx
-│ │ │ │ │ │ ├── Navbar.tsx
-│ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ ├── Sketchpad.stories.tsx
-│ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/js
-│ │ │ │ │ │ ├── TypeEditor.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── Accordion.stories.tsx
-│ │ │ │ │ ├── Accordion.tsx
-│ │ │ │ │ ├── Avatar.stories.tsx
-│ │ │ │ │ ├── Avatar.tsx
-│ │ │ │ │ ├── Breadcrumb.stories.tsx
-│ │ │ │ │ ├── Breadcrumb.tsx
-│ │ │ │ │ ├── Button.stories.tsx
-│ │ │ │ │ ├── Button.tsx
-│ │ │ │ │ ├── ButtonGroup.stories.tsx
-│ │ │ │ │ ├── ButtonGroup.tsx
-│ │ │ │ │ ├── Collapsible.stories.tsx
-│ │ │ │ │ ├── Collapsible.tsx
-│ │ │ │ │ ├── Combobox.stories.tsx
-│ │ │ │ │ ├── Combobox.tsx
-│ │ │ │ │ ├── Dialog.stories.tsx
-│ │ │ │ │ ├── Dialog.tsx
-│ │ │ │ │ ├── File.stories.tsx
-│ │ │ │ │ ├── File.tsx
-│ │ │ │ │ ├── HoverCard.stories.tsx
-│ │ │ │ │ ├── HoverCard.tsx
-│ │ │ │ │ ├── Icons.stories.tsx
-│ │ │ │ │ ├── Icons.tsx
-│ │ │ │ │ ├── Input.stories.tsx
-│ │ │ │ │ ├── Input.tsx
-│ │ │ │ │ ├── Popover.stories.tsx
-│ │ │ │ │ ├── Popover.tsx
-│ │ │ │ │ ├── Resizable.stories.tsx
-│ │ │ │ │ ├── Resizable.tsx
-│ │ │ │ │ ├── ScrollArea.stories.tsx
-│ │ │ │ │ ├── ScrollArea.tsx
-│ │ │ │ │ ├── Select.stories.tsx
-│ │ │ │ │ ├── Select.tsx
-│ │ │ │ │ ├── Slider.stories.tsx
-│ │ │ │ │ ├── Slider.tsx
-│ │ │ │ │ ├── Stepper.stories.tsx
-│ │ │ │ │ ├── Stepper.tsx
-│ │ │ │ │ ├── Tabs.stories.tsx
-│ │ │ │ │ ├── Tabs.tsx
-│ │ │ │ │ ├── Textarea.stories.tsx
-│ │ │ │ │ ├── Textarea.tsx
-│ │ │ │ │ ├── Toggle.stories.tsx
-│ │ │ │ │ ├── Toggle.tsx
-│ │ │ │ │ ├── ToggleCycle.stories.tsx
-│ │ │ │ │ ├── ToggleCycle.tsx
-│ │ │ │ │ ├── ToggleGroup.stories.tsx
-│ │ │ │ │ ├── ToggleGroup.tsx
-│ │ │ │ │ ├── Tooltip.stories.tsx
-│ │ │ │ │ ├── Tooltip.tsx
-│ │ │ │ │ ├── Tree.stories.tsx
-│ │ │ │ │ └── Tree.tsx
-│ │ ├── lib
-│ │ │ └── utils.ts
+│ ├── desktop
+│ │ └── package.json
+│ ├── docs
+│ │ └── package.json
+│ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
+│ │ ├── .storybook
+│ │ ├── elements
+│ │ │ ├── aggregation
+│ │ │ │ ├── Accordion.stories.tsx
+│ │ │ │ ├── Accordion.tsx
+│ │ │ │ ├── Collapsible.stories.tsx
+│ │ │ │ ├── Collapsible.tsx
+│ │ │ │ ├── Dialog.stories.tsx
+│ │ │ │ ├── Dialog.tsx
+│ │ │ │ ├── Resizable.stories.tsx
+│ │ │ │ ├── Resizable.tsx
+│ │ │ │ ├── ScrollArea.stories.tsx
+│ │ │ │ ├── ScrollArea.tsx
+│ │ │ │ ├── Tabs.stories.tsx
+│ │ │ │ ├── Tabs.tsx
+│ │ │ │ ├── Tree.stories.tsx
+│ │ │ │ └── Tree.tsx
+│ │ │ ├── display
+│ │ │ │ ├── Avatar.stories.tsx
+│ │ │ │ ├── Avatar.tsx
+│ │ │ │ ├── HoverCard.stories.tsx
+│ │ │ │ ├── HoverCard.tsx
+│ │ │ │ ├── Icons.stories.tsx
+│ │ │ │ ├── Icons.tsx
+│ │ │ │ ├── Tooltip.stories.tsx
+│ │ │ │ └── Tooltip.tsx
+│ │ │ ├── input
+│ │ │ │ ├── Button.stories.tsx
+│ │ │ │ ├── Button.tsx
+│ │ │ │ ├── ButtonGroup.stories.tsx
+│ │ │ │ ├── ButtonGroup.tsx
+│ │ │ │ ├── Combobox.stories.tsx
+│ │ │ │ ├── Combobox.tsx
+│ │ │ │ ├── Input.stories.tsx
+│ │ │ │ ├── Input.tsx
+│ │ │ │ ├── Select.stories.tsx
+│ │ │ │ ├── Select.tsx
+│ │ │ │ ├── Slider.stories.tsx
+│ │ │ │ ├── Slider.tsx
+│ │ │ │ ├── Stepper.stories.tsx
+│ │ │ │ ├── Stepper.tsx
+│ │ │ │ ├── Textarea.stories.tsx
+│ │ │ │ ├── Textarea.tsx
+│ │ │ │ ├── Toggle.stories.tsx
+│ │ │ │ ├── Toggle.tsx
+│ │ │ │ ├── ToggleCycle.stories.tsx
+│ │ │ │ ├── ToggleCycle.tsx
+│ │ │ │ ├── ToggleGroup.stories.tsx
+│ │ │ │ └── ToggleGroup.tsx
+│ │ │ ├── navigation
+│ │ │ │ ├── Breadcrumb.stories.tsx
+│ │ │ │ └── Breadcrumb.tsx
+│ │ │ ├── Popover.stories.tsx
+│ │ │ ├── Popover.tsx
+│ │ │ ├── Scene.stories.tsx
+│ │ │ └── Scene.tsx
 │ │ ├── locales
 │ │ │ ├── de.json
 │ │ │ └── en.json
+│ │ ├── sketchpad
+│ │ │ ├── editors
+│ │ │ │ ├── design
+│ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── Scene.tsx
+│ │ │ │ ├── kit
+│ │ │ │ │ └── Editor.tsx
+│ │ │ │ │── type
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── Scene.tsx
+│ │ │ ├── DesignEditor.tsx
+│ │ │ ├── panels
+│ │ │ │ ├── Chat.tsx
+│ │ │ │ ├── Details.tsx
+│ │ │ │ ├── Settings.tsx
+│ │ │ │ └── Workbench.tsx
+│ │ │ ├── Footer.tsx
+│ │ │ ├── Home.tsx
+│ │ │ ├── Navbar.tsx
+│ │ │ ├── Sketchpad.stories.tsx
+│ │ │ └── Sketchpad.tsx # main component of @semio/js
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts
@@ -216,10 +231,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── tsconfig.json
 │ │ ├── vite.config.ts
 │ │ └── vitest.workspace.ts
-│ ├── docs
-│ ├── play
-│ ├── playground
-│ └── sketchpad
+│ └── play
 ├── jsonschema
 ├── liveblocks
 ├── meta
@@ -258,18 +270,18 @@ In general, if the user talks about an old file, then probably there is the same
 
 ## js
 
-Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and sketchpad (@semio/desktop) that runs in electron.
+Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and desktop (@semio/desktop) that runs in electron.
 
 ### Rules
 
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
-- ALWAYS be light and darkmode compatible.
 - ALWAYS use colors defined in `@theme inline {…}` from `@semio/js/globals.css`.
 - ALWAYS add tooltips (normal and extensive) to all ui elements.
 
 ### Styling
 
 - The ui consists of a navbar and edgeless content. Everything else is displayed as HUD with floating panels that show different colors.
+-
 
 # Packages
 

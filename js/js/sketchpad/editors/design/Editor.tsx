@@ -27,14 +27,14 @@ import { useTranslation } from "react-i18next";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Slider } from "@radix-ui/react-slider";
 import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
-import { Minus, Pin, Plus, Trash2 } from "lucide-react";
+import { Minus, Pin, Plus } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../elements/aggregation/Resizable";
-import { SortableTreeItems, TreeContent, TreeItem, TreeSection } from "../../../elements/aggregation/Tree";
+import { SortableTreeItems, TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import Combobox from "../../../elements/input/Combobox";
 import { Input } from "../../../elements/input/Input";
 import Stepper from "../../../elements/input/Stepper";
 import { Textarea } from "../../../elements/input/Textarea";
-import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, Guid, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece } from "../../../semio";
+import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, Guid, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece, Type } from "../../../semio";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { DesignAvatar, TypeAvatar } from "../../panels/Workbench";
 import { useDragDrop } from "../../Sketchpad";
@@ -86,7 +86,10 @@ const DesignSectionForm: FC = () => {
 
   const removeLocation = () => {
     startTransaction();
-    updateDesignField({ location: undefined });
+    handleChange({
+      ...design,
+      location: undefined,
+    });
     finalizeTransaction();
   };
 
@@ -173,7 +176,7 @@ const DesignSectionForm: FC = () => {
         </TreeContent>
       </TreeItem>
       {design.location ? (
-        <TreeSection
+        <TreeItem
           label={t("design.location")}
           actions={[
             {
@@ -219,9 +222,9 @@ const DesignSectionForm: FC = () => {
               />
             </TreeContent>
           </TreeItem>
-        </TreeSection>
+        </TreeItem>
       ) : (
-        <TreeSection
+        <TreeItem
           label={t("design.location")}
           actions={[
             {
@@ -230,301 +233,267 @@ const DesignSectionForm: FC = () => {
               title: t("common.add"),
             },
           ]}
-        ></TreeSection>
+        />
       )}
-      {design.authors && design.authors.length > 0 ? (
-        <TreeSection
-          label={t("design.authors")}
-          actions={[
-            {
-              icon: <Plus size={12} />,
-              onClick: () => {
-                startTransaction();
-                handleChange({
-                  ...design,
-                  authors: [...(design.authors || []), { name: "", email: "" }],
-                });
-                finalizeTransaction();
-              },
-              title: t("design.addAuthor"),
-            },
-          ]}
-        >
-          <SortableTreeItems
-            items={design.authors.map((author: any, index: number) => ({
-              ...author,
-              id: `author-${index}`,
-              index,
-            }))}
-            onReorder={(oldIndex, newIndex) => {
+      <TreeItem
+        label={t("design.authors")}
+        actions={[
+          {
+            icon: <Plus size={12} />,
+            onClick: () => {
               startTransaction();
               handleChange({
                 ...design,
-                authors: arrayMove(design.authors!, oldIndex, newIndex),
+                authors: [...(design.authors || []), { name: "", email: "" }],
               });
               finalizeTransaction();
-            }}
-          >
-            {(author, index) => (
-              <TreeItem key={`author-${index}`} label={author.name || `${t("design.author")} ${index + 1}`} sortable={true} sortableId={`author-${index}`} isDragHandle={true}>
-                <TreeItem>
-                  <TreeContent>
-                    <Input
-                      label={t("design.authorName")}
-                      value={author.name}
-                      onChange={(e) => {
-                        const updatedAuthors = [...(design.authors || [])];
-                        updatedAuthors[index] = {
-                          ...author,
-                          name: e.target.value,
-                        };
-                        handleChange({ ...design, authors: updatedAuthors });
-                      }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Input
-                      label={t("design.authorEmail")}
-                      value={author.email}
-                      onChange={(e) => {
-                        const updatedAuthors = [...(design.authors || [])];
-                        updatedAuthors[index] = {
-                          ...author,
-                          email: e.target.value,
-                        };
-                        handleChange({ ...design, authors: updatedAuthors });
-                      }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <button
-                      onClick={() => {
-                        startTransaction();
-                        handleChange({
-                          ...design,
-                          authors: design.authors?.filter((_: any, i: number) => i !== index),
-                        });
-                        finalizeTransaction();
-                      }}
-                      className="text-destructive hover:text-destructive/80 p-1"
-                      title={t("common.remove")}
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </TreeContent>
-                </TreeItem>
-              </TreeItem>
-            )}
-          </SortableTreeItems>
-        </TreeSection>
-      ) : (
-        <TreeSection
-          label="Authors"
-          actions={[
-            {
-              icon: <Plus size={12} />,
-              onClick: () => {
-                startTransaction();
-                handleChange({
-                  ...design,
-                  authors: [...(design.authors || []), { name: "", email: "" }],
-                });
-                finalizeTransaction();
-              },
-              title: "Add author",
             },
-          ]}
-        ></TreeSection>
-      )}
-      {design.attributes && design.attributes.length > 0 ? (
-        <TreeSection
-          label={t("design.attributes")}
-          actions={[
-            {
-              icon: <Plus size={12} />,
-              onClick: () => {
-                startTransaction();
-                handleChange({
-                  ...design,
-                  attributes: [...(design.attributes || []), { key: "" }],
-                });
-                finalizeTransaction();
-              },
-              title: t("design.addAttribute"),
-            },
-          ]}
+            title: t("common.add"),
+          },
+        ]}
+      >
+        <SortableTreeItems
+          items={(design.authors || []).map((author: any, index: number) => ({
+            ...author,
+            id: `author-${index}`,
+            index,
+          }))}
+          onReorder={(oldIndex, newIndex) => {
+            startTransaction();
+            handleChange({
+              ...design,
+              authors: arrayMove(design.authors!, oldIndex, newIndex),
+            });
+            finalizeTransaction();
+          }}
         >
-          <SortableTreeItems
-            items={design.attributes.map((attribute: any, index: number) => ({
-              ...attribute,
-              id: `attribute-${index}`,
-              index,
-            }))}
-            onReorder={(oldIndex, newIndex) => {
-              startTransaction();
-              handleChange({
-                ...design,
-                attributes: arrayMove(design.attributes!, oldIndex, newIndex),
-              });
-              finalizeTransaction();
-            }}
-          >
-            {(attribute, index) => (
-              <TreeItem key={`attribute-${index}`} label={attribute.key || `Attribute ${index + 1}`} sortable={true} sortableId={`attribute-${index}`} isDragHandle={true}>
-                <TreeItem>
-                  <TreeContent>
-                    <Input
-                      label={t("design.attributeName")}
-                      value={attribute.key}
-                      onChange={(e) => {
-                        const updatedAttributes = [...(design.attributes || [])];
-                        updatedAttributes[index] = {
-                          ...attribute,
-                          key: e.target.value,
-                        };
-                        handleChange({ ...design, attributes: updatedAttributes });
-                      }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Input
-                      label={t("design.attributeValue")}
-                      value={attribute.value || ""}
-                      placeholder={t("design.attributeValuePlaceholder")}
-                      onChange={(e) => {
-                        const updatedAttributes = [...(design.attributes || [])];
-                        updatedAttributes[index] = {
-                          ...attribute,
-                          value: e.target.value,
-                        };
-                        handleChange({ ...design, attributes: updatedAttributes });
-                      }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Input
-                      label={t("design.attributeUnit")}
-                      value={attribute.unit || ""}
-                      placeholder={t("design.attributeUnitPlaceholder")}
-                      onChange={(e) => {
-                        const updatedAttributes = [...(design.attributes || [])];
-                        updatedAttributes[index] = {
-                          ...attribute,
-                          unit: e.target.value,
-                        };
-                        handleChange({ ...design, attributes: updatedAttributes });
-                      }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Input
-                      label={t("design.attributeDefinition")}
-                      value={attribute.definition || ""}
-                      placeholder={t("design.attributeDefinitionPlaceholder")}
-                      onChange={(e) => {
-                        const updatedAttributes = [...(design.attributes || [])];
-                        updatedAttributes[index] = {
-                          ...attribute,
-                          definition: e.target.value,
-                        };
-                        handleChange({ ...design, attributes: updatedAttributes });
-                      }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <button
-                      onClick={() => {
-                        startTransaction();
-                        handleChange({
-                          ...design,
-                          attributes: design.attributes?.filter((_: any, i: number) => i !== index),
-                        });
-                        finalizeTransaction();
-                      }}
-                      className="text-destructive hover:text-destructive/80 p-1"
-                      title={t("design.removeAttribute")}
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </TreeContent>
-                </TreeItem>
+          {(author, index) => (
+            <TreeItem
+              key={`author-${index}`}
+              label={author.name || `${t("design.author")} ${index + 1}`}
+              sortable={true}
+              sortableId={`author-${index}`}
+              isDragHandle={true}
+              actions={[
+                {
+                  icon: <Minus size={12} />,
+                  onClick: () => {
+                    startTransaction();
+                    handleChange({
+                      ...design,
+                      authors: design.authors?.filter((_: any, i: number) => i !== index),
+                    });
+                    finalizeTransaction();
+                  },
+                  title: t("common.remove"),
+                },
+              ]}
+            >
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("design.authorName")}
+                    value={author.name}
+                    onChange={(e) => {
+                      const updatedAuthors = [...(design.authors || [])];
+                      updatedAuthors[index] = {
+                        ...author,
+                        name: e.target.value,
+                      };
+                      handleChange({ ...design, authors: updatedAuthors });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
               </TreeItem>
-            )}
-          </SortableTreeItems>
-        </TreeSection>
-      ) : (
-        <TreeSection
-          label={t("design.attributes")}
-          actions={[
-            {
-              icon: <Plus size={12} />,
-              onClick: () => {
-                startTransaction();
-                handleChange({
-                  ...design,
-                  attributes: [...(design.attributes || []), { key: "" }],
-                });
-                finalizeTransaction();
-              },
-              title: t("design.addAttribute"),
-            },
-          ]}
-        ></TreeSection>
-      )}
-      <TreeItem label={t("design.metadata")}>
-        {design.createdAt && (
-          <TreeItem>
-            <TreeContent>
-              <Input label="Created" value={design.createdAt.toISOString().split("T")[0]} disabled />
-            </TreeContent>
-          </TreeItem>
-        )}
-        {design.updatedAt && (
-          <TreeItem>
-            <TreeContent>
-              <Input label="Updated" value={design.updatedAt.toISOString().split("T")[0]} disabled />
-            </TreeContent>
-          </TreeItem>
-        )}
-        {design.pieces && design.pieces.length > 0 && (
-          <TreeItem>
-            <TreeContent>
-              <Input label="Pieces" value={`${design.pieces.length} pieces`} disabled />
-            </TreeContent>
-          </TreeItem>
-        )}
-        {design.connections && design.connections.length > 0 && (
-          <TreeItem>
-            <TreeContent>
-              <Input label="Connections" value={`${design.connections.length} connections`} disabled />
-            </TreeContent>
-          </TreeItem>
-        )}
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("design.authorEmail")}
+                    value={author.email}
+                    onChange={(e) => {
+                      const updatedAuthors = [...(design.authors || [])];
+                      updatedAuthors[index] = {
+                        ...author,
+                        email: e.target.value,
+                      };
+                      handleChange({ ...design, authors: updatedAuthors });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
+              </TreeItem>
+            </TreeItem>
+          )}
+        </SortableTreeItems>
       </TreeItem>
+      <TreeItem
+        label={t("design.attributes")}
+        actions={[
+          {
+            icon: <Plus size={12} />,
+            onClick: () => {
+              startTransaction();
+              handleChange({
+                ...design,
+                attributes: [...(design.attributes || []), { key: "" }],
+              });
+              finalizeTransaction();
+            },
+            title: t("common.add"),
+          },
+        ]}
+      >
+        <SortableTreeItems
+          items={(design.attributes || []).map((attribute: any, index: number) => ({
+            ...attribute,
+            id: `attribute-${index}`,
+            index,
+          }))}
+          onReorder={(oldIndex, newIndex) => {
+            startTransaction();
+            handleChange({
+              ...design,
+              attributes: arrayMove(design.attributes!, oldIndex, newIndex),
+            });
+            finalizeTransaction();
+          }}
+        >
+          {(attribute, index) => (
+            <TreeItem
+              key={`attribute-${index}`}
+              label={attribute.key || `${t("design.attribute")} ${index + 1}`}
+              sortable={true}
+              sortableId={`attribute-${index}`}
+              isDragHandle={true}
+              actions={[
+                {
+                  icon: <Minus size={12} />,
+                  onClick: () => {
+                    startTransaction();
+                    handleChange({
+                      ...design,
+                      attributes: design.attributes?.filter((_: any, i: number) => i !== index),
+                    });
+                    finalizeTransaction();
+                  },
+                  title: t("common.remove"),
+                },
+              ]}
+            >
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("design.attributeName")}
+                    value={attribute.key}
+                    onChange={(e) => {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
+                        ...attribute,
+                        key: e.target.value,
+                      };
+                      handleChange({ ...design, attributes: updatedAttributes });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
+              </TreeItem>
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("design.attributeValue")}
+                    value={attribute.value || ""}
+                    placeholder={t("design.attributeValuePlaceholder")}
+                    onChange={(e) => {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
+                        ...attribute,
+                        value: e.target.value,
+                      };
+                      handleChange({ ...design, attributes: updatedAttributes });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
+              </TreeItem>
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("design.attributeUnit")}
+                    value={attribute.unit || ""}
+                    placeholder={t("design.attributeUnitPlaceholder")}
+                    onChange={(e) => {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
+                        ...attribute,
+                        unit: e.target.value,
+                      };
+                      handleChange({ ...design, attributes: updatedAttributes });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
+              </TreeItem>
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("design.attributeDefinition")}
+                    value={attribute.definition || ""}
+                    placeholder={t("design.attributeDefinitionPlaceholder")}
+                    onChange={(e) => {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
+                        ...attribute,
+                        definition: e.target.value,
+                      };
+                      handleChange({ ...design, attributes: updatedAttributes });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
+              </TreeItem>
+            </TreeItem>
+          )}
+        </SortableTreeItems>
+      </TreeItem>
+      {design.createdAt && (
+        <TreeItem>
+          <TreeContent>
+            <Input
+              label={t("design.createdAt")}
+              value={(() => {
+                const date = design.createdAt;
+                if (date instanceof Date) return date.toISOString().split("T")[0];
+                if (typeof date === "string") return (date as string).split("T")[0];
+                return "";
+              })()}
+              disabled
+            />
+          </TreeContent>
+        </TreeItem>
+      )}
+      {design.updatedAt && (
+        <TreeItem>
+          <TreeContent>
+            <Input
+              label={t("design.updatedAt")}
+              value={(() => {
+                const date = design.updatedAt;
+                if (date instanceof Date) return date.toISOString().split("T")[0];
+                if (typeof date === "string") return (date as string).split("T")[0];
+                return "";
+              })()}
+              disabled
+            />
+          </TreeContent>
+        </TreeItem>
+      )}
     </>
   );
 };
@@ -1358,46 +1327,71 @@ const Editor: FC<EditorProps> = () => {
     };
   }, [selection, addSection, removeSection, editorType]);
 
+  // Workbench content components that access fresh data on each render
+  // These need to work outside KitScopeProvider, so we pass the kit directly via closure
+  const TypesWorkbenchContent: FC = () => {
+    // Use kit from the closure instead of useKit() to avoid context issues
+    const typesByName = (kit.types || []).reduce((acc: Record<string, Type[]>, type: Type) => {
+      if (!acc[type.name]) acc[type.name] = [];
+      acc[type.name].push(type);
+      return acc;
+    }, {});
+
+    return (
+      <>
+        {Object.entries(typesByName).map(([name, variants]) => (
+          <TreeItem key={name} label={name} defaultOpen={false}>
+            <TreeContent>
+              <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
+                {variants.map((type: Type) => (
+                  <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
+                ))}
+              </div>
+            </TreeContent>
+          </TreeItem>
+        ))}
+      </>
+    );
+  };
+
+  const DesignsWorkbenchContent: FC = () => {
+    // Use kit from the closure instead of useKit() to avoid context issues
+    const designsByName = (kit.designs || []).reduce((acc: Record<string, Design[]>, design: Design) => {
+      if (!acc[design.name]) acc[design.name] = [];
+      acc[design.name].push(design);
+      return acc;
+    }, {});
+
+    return (
+      <>
+        {Object.entries(designsByName).map(([name, designs]) => (
+          <TreeItem key={name} label={name} defaultOpen={false}>
+            <TreeContent>
+              <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
+                {designs.map((design: Design) => (
+                  <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} />
+                ))}
+              </div>
+            </TreeContent>
+          </TreeItem>
+        ))}
+      </>
+    );
+  };
+
   // Add workbench sections
   useEffect(() => {
-    const typesByName = (kit.types || []).reduce(
-      (acc, type) => {
-        if (!acc[type.name]) acc[type.name] = [];
-        acc[type.name].push(type);
-        return acc;
-      },
-      {} as Record<string, any[]>,
-    );
+    // Only register sections if we're in the design editor
+    if (editorType !== EditorType.DESIGN) return;
 
-    const designsByName = (kit.designs || []).reduce(
-      (acc, design) => {
-        if (!acc[design.name]) acc[design.name] = [];
-        acc[design.name].push(design);
-        return acc;
-      },
-      {} as Record<string, any[]>,
-    );
+    console.log("[ORIGIN] Design Editor adding workbench sections", { kit, editorType });
 
     addSection("workbench", {
       id: "types",
       label: "Types",
       order: 0,
       defaultOpen: true,
-      content: (
-        <>
-          {Object.entries(typesByName).map(([name, variants]) => (
-            <TreeItem key={name} label={name} defaultOpen={false}>
-              <TreeContent>
-                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                  {variants.map((type: any) => (
-                    <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
-                  ))}
-                </div>
-              </TreeContent>
-            </TreeItem>
-          ))}
-        </>
-      ),
+      content: () => <TypesWorkbenchContent />,
     });
 
     addSection("workbench", {
@@ -1405,28 +1399,18 @@ const Editor: FC<EditorProps> = () => {
       label: "Designs",
       order: 1,
       defaultOpen: true,
-      content: (
-        <>
-          {Object.entries(designsByName).map(([name, designs]) => (
-            <TreeItem key={name} label={name} defaultOpen={false}>
-              <TreeContent>
-                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                  {designs.map((design: any) => (
-                    <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} />
-                  ))}
-                </div>
-              </TreeContent>
-            </TreeItem>
-          ))}
-        </>
-      ),
+      content: () => <DesignsWorkbenchContent />,
     });
 
+    console.log("[ORIGIN] Design Editor workbench sections added");
+
     return () => {
+      console.log("[ORIGIN] Design Editor removing workbench sections");
       removeSection("workbench", "types");
       removeSection("workbench", "designs");
     };
-  }, [kit, addSection, removeSection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorType, kit]);
 
   // Add settings section
   useEffect(() => {
@@ -1435,7 +1419,7 @@ const Editor: FC<EditorProps> = () => {
       label: "Design Editor",
       order: 100,
       defaultOpen: true,
-      content: (
+      content: () => (
         <>
           <TreeItem>
             <TreeContent>
@@ -1455,7 +1439,8 @@ const Editor: FC<EditorProps> = () => {
     return () => {
       removeSection("settings", "design-editor-settings");
     };
-  }, [editorSettings, addSection, removeSection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;
@@ -1484,11 +1469,10 @@ const Editor: FC<EditorProps> = () => {
       } else if (activeDraggedDesign) {
         startTransaction();
         const pieceGuid = guid();
-        const designVariant = `${activeDraggedDesign.name}${activeDraggedDesign.variant ? `-${activeDraggedDesign.variant}` : ""}${activeDraggedDesign.view ? `-${activeDraggedDesign.view}` : ""}`;
         const piece = {
           guid: pieceGuid,
           id_: pieceGuid,
-          type: { name: "design", variant: designVariant },
+          design: activeDraggedDesign.guid,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
         addPiece(piece);

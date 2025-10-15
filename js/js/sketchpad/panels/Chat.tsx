@@ -5,7 +5,7 @@ import { Tree, TreeSection } from "../../elements/aggregation/Tree";
 import { Textarea } from "../../elements/input/Textarea";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { useIsMobile } from "../store";
+import { useActiveInteraction, useIsMobile } from "../store";
 
 interface ChatProps extends ResizablePanelProps {}
 
@@ -14,6 +14,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const isMobile = useIsMobile();
+  const activeInteraction = useActiveInteraction();
 
   const sections = usePanelSections("chat");
 
@@ -49,7 +50,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     <div
       className={`h-full z-20 bg-panel text-foreground border
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
-      style={{ width: `${width}px` }}
+      style={{ width: `${width}px`, opacity: activeInteraction && !activeInteraction.startsWith("chat-") ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">
         <div className={isMobile ? "p-2" : "p-1"}>

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { Layout, Mode, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../store";
+import { Layout, Mode, Theme, useActiveInteraction, useLayout, useMode, useSketchpadCommands, useTheme } from "../store";
 
 const LanguageSwitcher: FC = () => {
   const { i18n } = useTranslation();
@@ -35,6 +35,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const { setTheme, setLayout, setMode } = useSketchpadCommands();
   const sections = usePanelSections("settings");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const activeInteraction = useActiveInteraction();
 
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -77,7 +78,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
     <div
       className={`h-full z-20 bg-panel text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
-      style={{ width: `${width}px` }}
+      style={{ width: `${width}px`, opacity: activeInteraction && !activeInteraction.startsWith("settings-") ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">
         <div className={`${isMobile ? "p-2" : "p-1"} overflow-hidden min-w-0`}>

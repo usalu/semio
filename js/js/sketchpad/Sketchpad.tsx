@@ -25,6 +25,16 @@ import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../elements/display/Tooltip";
 
 import { Design, Type } from "../semio";
+import DesignEditor from "./editors/design/Editor";
+import KitEditor from "./editors/kit/Editor";
+import TypeEditor from "./editors/type/Editor";
+import Footer, { FooterItemProvider } from "./Footer";
+import Home from "./Home";
+import Navbar, { PanelSectionProvider } from "./Navbar";
+import Chat from "./panels/Chat";
+import Details from "./panels/Details";
+import Settings from "./panels/Settings";
+import Workbench, { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import {
   DesignScopeProvider,
   KitScopeProvider,
@@ -44,16 +54,6 @@ import {
   WindowEvents,
   YProviderFactory,
 } from "./store";
-import DesignEditor from "./editors/design/Editor";
-import KitEditor from "./editors/kit/Editor";
-import TypeEditor from "./editors/type/Editor";
-import Footer, { FooterItemProvider } from "./Footer";
-import Home from "./Home";
-import Navbar, { PanelSectionProvider } from "./Navbar";
-import Chat from "./panels/Chat";
-import Details from "./panels/Details";
-import Settings from "./panels/Settings";
-import Workbench, { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 
 interface DragDropContextValue {
   activeDraggedType: Type | null;
@@ -129,7 +129,7 @@ const SketchpadBase: FC = () => {
   const isFullscreen = useSketchpad((s) => s.isFullscreen);
   const isNavbarExpanded = useIsNavbarExpanded();
   const isMobile = useIsMobile();
-  const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile } = useSketchpadCommands();
+  const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile, setActiveInteraction } = useSketchpadCommands();
   const currentPath = useNavigation();
   const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
 
@@ -231,6 +231,7 @@ const SketchpadBase: FC = () => {
     window.dispatchEvent(new CustomEvent("design-drag-end", { detail: event }));
     setActiveDraggedType(null);
     setActiveDraggedDesign(null);
+    setActiveInteraction(undefined);
   };
 
   // Get the single visible panel on mobile

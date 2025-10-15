@@ -86,6 +86,7 @@ interface SortableTreeItemProps {
   isDragHandle?: boolean;
   defaultOpen?: boolean;
   isLastItem?: boolean;
+  actions?: TreeSectionAction[];
 }
 
 interface TreeItemProps {
@@ -101,6 +102,7 @@ interface TreeItemProps {
   isDragHandle?: boolean;
   defaultOpen?: boolean;
   isLastItem?: boolean;
+  actions?: TreeSectionAction[];
 }
 
 interface SortableTreeItemsProps {
@@ -189,9 +191,10 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   );
 };
 
-const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false }) => {
+const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [] }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const [open, setOpen] = useState(defaultOpen);
+  const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -202,7 +205,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
     paddingLeft: `${level * 0.75}rem`,
   };
 
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel cursor-pointer select-none overflow-hidden min-w-0";
+  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel cursor-pointer select-none overflow-hidden min-w-0 group";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -219,6 +222,8 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
             setOpen(!open);
             onClick?.();
           }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
@@ -229,6 +234,24 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           )}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
+          {actions.length > 0 && (
+            <div className="flex items-center gap-1">
+              {actions.map((action, index) => (
+                <button
+                  key={index}
+                  className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  title={action.title}
+                >
+                  {action.icon}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>}
       </>
@@ -240,7 +263,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={itemClasses} onClick={onClick}>
+    <div ref={setNodeRef} style={style} className={itemClasses} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {isDragHandle && (
         <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10 rounded" {...attributes} {...listeners}>
@@ -249,6 +272,24 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
       )}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate">{label}</span>
+      {actions.length > 0 && (
+        <div className="flex items-center gap-1">
+          {actions.map((action, index) => (
+            <button
+              key={index}
+              className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action.onClick();
+              }}
+              title={action.title}
+            >
+              {action.icon}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -274,7 +315,7 @@ export const SortableTreeItems: FC<SortableTreeItemsProps> = ({ items, onReorder
   );
 };
 
-export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true, isLastItem = false }) => {
+export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [] }) => {
   if (sortable && sortableId) {
     return (
       <SortableTreeItem
@@ -289,14 +330,16 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
         isDragHandle={isDragHandle}
         defaultOpen={defaultOpen}
         isLastItem={isLastItem}
+        actions={actions}
       />
     );
   }
 
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const [open, setOpen] = useState(defaultOpen);
+  const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel cursor-pointer select-none overflow-hidden min-w-0";
+  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel cursor-pointer select-none overflow-hidden min-w-0 group";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -312,11 +355,31 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
             setOpen(!open);
             onClick?.();
           }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
+          {actions.length > 0 && (
+            <div className="flex items-center gap-1">
+              {actions.map((action, index) => (
+                <button
+                  key={index}
+                  className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  title={action.title}
+                >
+                  {action.icon}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>}
       </>
@@ -328,10 +391,28 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
   }
 
   return (
-    <div className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick}>
+    <div className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate">{label}</span>
+      {actions.length > 0 && (
+        <div className="flex items-center gap-1">
+          {actions.map((action, index) => (
+            <button
+              key={index}
+              className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action.onClick();
+              }}
+              title={action.title}
+            >
+              {action.icon}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

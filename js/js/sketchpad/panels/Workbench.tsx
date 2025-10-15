@@ -8,7 +8,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../elements/di
 import { Design, Guid, Type } from "../../semio";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { useDesign, useIsMobile, useType } from "../store";
+import { useActiveInteraction, useDesign, useIsMobile, useSketchpadCommands, useType } from "../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;
@@ -18,34 +18,49 @@ interface TypeAvatarProps {
 
 export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHoverCard = false }) => {
   const type = typeProp || (typeId ? (useType(undefined, typeId) as Type) : null);
+  const { setActiveInteraction } = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
 
   if (!type) {
     console.warn("[ORIGIN] TypeAvatar requires either a type or typeId prop");
     return null;
   }
 
+  const interactionId = `type-${type.name}-${type.variant || ""}`;
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `type-${type.name}-${type.variant || ""}`,
+    id: interactionId,
     data: { type },
   });
 
+  const isInteracting = activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
+
+  const enhancedListeners = {
+    ...listeners,
+    onPointerDown: (e: React.PointerEvent) => {
+      console.log("[ORIGIN] TypeAvatar onPointerDown, setting interaction:", interactionId);
+      setActiveInteraction(interactionId);
+      listeners?.onPointerDown?.(e);
+    },
+  };
+
   const displayVariant = type.variant || type.name;
   const avatar = (
-    <Avatar className="cursor-grab active:cursor-grabbing select-none">
+    <Avatar className="cursor-grab active:cursor-grabbing select-none" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   );
 
   if (!showHoverCard) {
     return (
-      <div ref={setNodeRef} {...listeners} {...attributes}>
+      <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
         {avatar}
       </div>
     );
   }
 
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
+    <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
       <HoverCard openDelay={500}>
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -74,37 +89,53 @@ interface DesignAvatarProps {
 
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
   const design = designProp || (designId ? (useDesign(undefined, designId) as Design) : null);
+  const { setActiveInteraction } = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
 
   if (!design) {
     console.warn("[ORIGIN] DesignAvatar requires either a design or designId prop");
     return null;
   }
 
+  const interactionId = `design-${design.name}-${design.variant || ""}-${design.view || ""}`;
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
+    id: interactionId,
     data: { design },
     disabled: isActive,
   });
+
+  const isInteracting = activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
+
+  const enhancedListeners = {
+    ...listeners,
+    onPointerDown: (e: React.PointerEvent) => {
+      if (!isActive) {
+        setActiveInteraction(interactionId);
+        listeners?.onPointerDown?.(e);
+      }
+    },
+  };
 
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <Avatar className={`select-none ${isActive ? "cursor-default opacity-50" : "cursor-grab active:cursor-grabbing"}`}>
+    <Avatar className={`select-none ${isActive ? "cursor-default opacity-50" : "cursor-grab active:cursor-grabbing"}`} style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}>
       <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   );
 
   if (!showHoverCard) {
     return (
-      <div ref={setNodeRef} {...listeners} {...attributes}>
+      <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
         {avatar}
       </div>
     );
   }
 
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
+    <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
       <HoverCard openDelay={500}>
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -129,8 +160,13 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const isMobile = useIsMobile();
+  const activeInteraction = useActiveInteraction();
+
+  console.log("[ORIGIN] Workbench render, activeInteraction:", activeInteraction);
 
   const sections = usePanelSections("workbench");
+
+  console.log("[ORIGIN] Workbench sections:", sections, "isMobile:", isMobile, "visible:", visible);
 
   if (!visible) return null;
 
@@ -160,21 +196,35 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
+  console.log(
+    "[ORIGIN] Workbench rendering, sortedSections:",
+    sortedSections.map((s) => ({ id: s.id, label: s.label })),
+  );
+
   return (
     <div
       className={`h-full z-20 bg-panel text-foreground border
                 ${isResizing || isResizeHovered ? "border-r-primary" : "border-r"}`}
-      style={{ width: `${width}px` }}
+      style={{ width: `${width}px`, opacity: activeInteraction ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">
         <div className={isMobile ? "p-2" : "p-1"}>
-          <Tree>
-            {sortedSections.map((section) => (
-              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {typeof section.content === "function" ? section.content() : section.content}
-              </TreeSection>
-            ))}
-          </Tree>
+          {sortedSections.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground">No workbench sections available</div>
+          ) : (
+            <Tree>
+              {sortedSections.map((section) => {
+                console.log("[ORIGIN] Rendering TreeSection:", section.id, section.label);
+                const content = typeof section.content === "function" ? section.content() : section.content;
+                console.log("[ORIGIN] TreeSection content:", section.id, content);
+                return (
+                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                    {content}
+                  </TreeSection>
+                );
+              })}
+            </Tree>
+          )}
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

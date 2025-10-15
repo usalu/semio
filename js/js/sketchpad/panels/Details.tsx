@@ -6,7 +6,7 @@ import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeContent, TreeItem, TreeSection } from "../../elements/aggregation/Tree";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useIsMobile } from "../store";
+import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile } from "../store";
 
 interface DetailsProps extends ResizablePanelProps {}
 
@@ -39,6 +39,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const isMobile = useIsMobile();
+  const activeInteraction = useActiveInteraction();
 
   const sections = usePanelSections("details");
 
@@ -74,7 +75,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     <div
       className={`h-full z-20 bg-panel text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
-      style={{ width: `${width}px` }}
+      style={{ width: `${width}px`, opacity: activeInteraction && !activeInteraction.startsWith("details-") ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">
         <div className={`${isMobile ? "p-2" : "p-1"} overflow-hidden min-w-0`}>

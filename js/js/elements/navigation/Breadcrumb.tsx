@@ -31,7 +31,7 @@ function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
 }
 
 function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
-  return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words border overflow-hidden", className)} {...props} />;
+  return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words border overflow-hidden h-auto min-h-9", className)} {...props} />;
 }
 
 function BreadcrumbItem({ className, tooltip, children, ...props }: React.ComponentProps<"li"> & { tooltip?: string }) {
@@ -65,7 +65,7 @@ function BreadcrumbLink({
   const Comp = asChild ? Slot : "a";
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
-  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground transition-colors px-1 flex items-center gap-1 h-9 cursor-pointer", hoverClass, className)} {...props} />;
+  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground transition-colors px-1 flex items-center gap-1 h-full cursor-pointer", hoverClass, className)} {...props} />;
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
@@ -90,7 +90,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
 
   if (!items?.length) {
     const separatorElement = (
-      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-3 px-1 flex items-center", className)} {...props}>
+      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-3 px-1 flex items-center self-stretch", className)} {...props}>
         {children ?? <ChevronRight />}
       </li>
     );
@@ -113,7 +113,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuPrimitive.Trigger asChild>
-              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer px-1 flex items-center transition-colors", hoverClass, className)} {...props}>
+              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer px-1 flex items-center transition-colors self-stretch", hoverClass, className)} {...props}>
                 {open ? <ChevronDown /> : <ChevronRight />}
               </li>
             </DropdownMenuPrimitive.Trigger>
@@ -122,7 +122,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
         </Tooltip>
       ) : (
         <DropdownMenuPrimitive.Trigger asChild>
-          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer px-1 flex items-center transition-colors", hoverClass, className)} {...props}>
+          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-3 cursor-pointer px-1 flex items-center transition-colors self-stretch", hoverClass, className)} {...props}>
             {open ? <ChevronDown /> : <ChevronRight />}
           </li>
         </DropdownMenuPrimitive.Trigger>
@@ -177,7 +177,7 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span"
 }
 
 function BreadcrumbBreak({ className, ...props }: React.ComponentProps<"li">) {
-  return <li data-slot="breadcrumb-break" role="presentation" aria-hidden="true" className={cn("basis-full h-0 md:hidden", className)} {...props} />;
+  return <li data-slot="breadcrumb-break" role="presentation" aria-hidden="true" className={cn("basis-full h-0 hidden", className)} {...props} />;
 }
 
 export { Breadcrumb, BreadcrumbBreak, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator };

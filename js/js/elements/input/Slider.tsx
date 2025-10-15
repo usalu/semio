@@ -20,6 +20,7 @@
 // #endregion
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as React from "react";
+import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 import { Input } from "./Input";
 
 import { cn } from "../../semio";
@@ -35,19 +36,26 @@ function Slider({
   onPointerDown,
   onPointerUp,
   onPointerCancel,
+  interactionId,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
   label?: string;
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
+  interactionId?: string;
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
+  const { setActiveInteraction } = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
 
   const _values = React.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
   const displayValue = _values[0] ?? min;
+
+  const isInteracting = interactionId && activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
 
   const handleValueClick = () => {
     setEditValue(displayValue.toString());
@@ -70,14 +78,29 @@ function Slider({
     setIsEditing(false);
   };
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (interactionId) setActiveInteraction(interactionId);
+    onPointerDown?.();
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (interactionId) setActiveInteraction(undefined);
+    onPointerUp?.();
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    if (interactionId) setActiveInteraction(undefined);
+    onPointerCancel?.();
+  };
+
   return (
-    <div className={cn("flex items-center gap-2 min-w-0", className)}>
+    <div className={cn("flex items-center gap-2 min-w-0 h-9", className)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {label && (
         <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
           {label}
         </span>
       )}
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2 flex-1 min-w-0 h-9">
         <SliderPrimitive.Root
           data-slot="slider"
           defaultValue={defaultValue}
@@ -85,9 +108,9 @@ function Slider({
           min={min}
           max={max}
           onValueChange={onValueChange}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
           className={cn(
             "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
           )}

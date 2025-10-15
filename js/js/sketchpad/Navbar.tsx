@@ -117,10 +117,15 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
   });
 
   const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
-    setSections((prev) => ({
-      ...prev,
-      [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => (a.order || 0) - (b.order || 0)),
-    }));
+    console.log("[ORIGIN] PanelSectionProvider addSection called", { panelKey, sectionId: section.id, label: section.label });
+    setSections((prev) => {
+      const updated = {
+        ...prev,
+        [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => (a.order || 0) - (b.order || 0)),
+      };
+      console.log("[ORIGIN] PanelSectionProvider sections updated", { panelKey, count: updated[panelKey].length, sections: updated[panelKey].map(s => ({ id: s.id, label: s.label })) });
+      return updated;
+    });
   }, []);
 
   const removeSection = useCallback((panelKey: PanelKey, sectionId: string) => {
