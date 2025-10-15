@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "dev everything",
+      "name": "dev",
       "preLaunchTask": "dev",
       // "postDebugTask": "kill dev",
       "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
@@ -37,7 +37,7 @@
       ]
     },
     {
-      "name": "dev everything js",
+      "name": "dev js",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -53,7 +53,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "dev js",
+      "name": "dev js js",
       "preLaunchTask": "dev js",
       // "postDebugTask": "kill dev",
       "type": "chrome",

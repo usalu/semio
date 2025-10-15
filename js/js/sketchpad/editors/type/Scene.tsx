@@ -1,6 +1,6 @@
 // #region Header
 
-// index.ts
+// TypeModel.tsx
 
 // 2025 Ueli Saluz
 
@@ -19,16 +19,22 @@
 
 // #endregion
 
-import "./i18n";
-import i18n from "./i18n";
+import { FC, useCallback } from "react";
+import SceneComponent from "../../../elements/Scene";
+import { Camera } from "../../../semio";
+import { useTypeEditorCamera, useTypeEditorCommands } from "../../store";
 
-export { default as Sketchpad } from "./sketchpad/Sketchpad";
-export type { YProviderFactory } from "./sketchpad/store";
-export { i18n };
+const Scene: FC = () => {
+  const { setCamera } = useTypeEditorCommands();
+  const camera = useTypeEditorCamera();
+  const onCameraChange = useCallback(
+    (newCamera: Camera) => {
+      setCamera(newCamera);
+    },
+    [setCamera],
+  );
 
-export { default as eslintConfig } from "./eslint.config";
-export { default as postcssConfig } from "./postcss.config";
-export { default as tailwindConfig } from "./tailwind.config";
-// Exporting vite configs blows up storybook and nextjs
-// export { default as viteConfig } from './vite.config';
-// export { default as vitestConfig } from './vitest.workspace';
+  return <SceneComponent camera={camera} onCameraChange={onCameraChange} />;
+};
+
+export default Scene;

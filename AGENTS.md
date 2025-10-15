@@ -131,90 +131,87 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── desktop
 │ ├── docs
 │ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
-│ │ ├── components
-│ │ │ ├── ui
-│ │ │ │ ├── elements
-│ │ │ │ │ ├── aggregation
-│ │ │ │ │ │ ├── Accordion.stories.tsx
-│ │ │ │ │ │ ├── Accordion.tsx
-│ │ │ │ │ │ ├── Collapsible.stories.tsx
-│ │ │ │ │ │ ├── Collapsible.tsx
-│ │ │ │ │ │ ├── Dialog.stories.tsx
-│ │ │ │ │ │ ├── Dialog.tsx
-│ │ │ │ │ │ ├── Resizable.stories.tsx
-│ │ │ │ │ │ ├── Resizable.tsx
-│ │ │ │ │ │ ├── ScrollArea.stories.tsx
-│ │ │ │ │ │ ├── ScrollArea.tsx
-│ │ │ │ │ │ ├── Tabs.stories.tsx
-│ │ │ │ │ │ ├── Tabs.tsx
-│ │ │ │ │ │ ├── Tree.stories.tsx
-│ │ │ │ │ │ └── Tree.tsx
-│ │ │ │ │ ├── display
-│ │ │ │ │ │ ├── Avatar.stories.tsx
-│ │ │ │ │ │ ├── Avatar.tsx
-│ │ │ │ │ │ ├── HoverCard.stories.tsx
-│ │ │ │ │ │ ├── HoverCard.tsx
-│ │ │ │ │ │ ├── Icons.stories.tsx
-│ │ │ │ │ │ ├── Icons.tsx
-│ │ │ │ │ │ ├── Tooltip.stories.tsx
-│ │ │ │ │ │ └── Tooltip.tsx
-│ │ │ │ │ ├── input
-│ │ │ │ │ │ ├── Button.stories.tsx
-│ │ │ │ │ │ ├── Button.tsx
-│ │ │ │ │ │ ├── ButtonGroup.stories.tsx
-│ │ │ │ │ │ ├── ButtonGroup.tsx
-│ │ │ │ │ │ ├── Combobox.stories.tsx
-│ │ │ │ │ │ ├── Combobox.tsx
-│ │ │ │ │ │ ├── Input.stories.tsx
-│ │ │ │ │ │ ├── Input.tsx
-│ │ │ │ │ │ ├── Select.stories.tsx
-│ │ │ │ │ │ ├── Select.tsx
-│ │ │ │ │ │ ├── Slider.stories.tsx
-│ │ │ │ │ │ ├── Slider.tsx
-│ │ │ │ │ │ ├── Stepper.stories.tsx
-│ │ │ │ │ │ ├── Stepper.tsx
-│ │ │ │ │ │ ├── Textarea.stories.tsx
-│ │ │ │ │ │ ├── Textarea.tsx
-│ │ │ │ │ │ ├── Toggle.stories.tsx
-│ │ │ │ │ │ ├── Toggle.tsx
-│ │ │ │ │ │ ├── ToggleCycle.stories.tsx
-│ │ │ │ │ │ ├── ToggleCycle.tsx
-│ │ │ │ │ │ ├── ToggleGroup.stories.tsx
-│ │ │ │ │ │ └── ToggleGroup.tsx
-│ │ │ │ │ ├── navigation
-│ │ │ │ │ │ ├── Breadcrumb.stories.tsx
-│ │ │ │ │ │ └── Breadcrumb.tsx
-│ │ │ │ │ ├── Popover.stories.tsx
-│ │ │ │ │ ├── Popover.tsx
-│ │ │ │ │ ├── Scene.stories.tsx
-│ │ │ │ │ └── Scene.tsx
-│ │ │ │ ├── sketchpad
-│ │ │ │ │ ├── editors
-│ │ │ │ │ │ ├── design
-│ │ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ │ │ └── Scene.tsx
-│ │ │ │ │ │ ├── kit
-│ │ │ │ │ │ │ └── Editor.tsx
-│ │ │ │ │ │ │── type
-│ │ │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ │ │ └── Scene.tsx
-│ │ │ │ │ ├── DesignEditor.tsx
-│ │ │ │ │ ├── panels
-│ │ │ │ │ │ ├── Chat.tsx
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ ├── Home.tsx
-│ │ │ │ │ ├── Navbar.tsx
-│ │ │ │ │ ├── Sketchpad.stories.tsx
-│ │ │ │ │ └── Sketchpad.tsx # main component of @semio/js
-│ │ ├── lib
-│ │ │ └── utils.ts
+│ │ ├── .storybook
+│ │ ├── elements
+│ │ │ ├── aggregation
+│ │ │ │ ├── Accordion.stories.tsx
+│ │ │ │ ├── Accordion.tsx
+│ │ │ │ ├── Collapsible.stories.tsx
+│ │ │ │ ├── Collapsible.tsx
+│ │ │ │ ├── Dialog.stories.tsx
+│ │ │ │ ├── Dialog.tsx
+│ │ │ │ ├── Resizable.stories.tsx
+│ │ │ │ ├── Resizable.tsx
+│ │ │ │ ├── ScrollArea.stories.tsx
+│ │ │ │ ├── ScrollArea.tsx
+│ │ │ │ ├── Tabs.stories.tsx
+│ │ │ │ ├── Tabs.tsx
+│ │ │ │ ├── Tree.stories.tsx
+│ │ │ │ └── Tree.tsx
+│ │ │ ├── display
+│ │ │ │ ├── Avatar.stories.tsx
+│ │ │ │ ├── Avatar.tsx
+│ │ │ │ ├── HoverCard.stories.tsx
+│ │ │ │ ├── HoverCard.tsx
+│ │ │ │ ├── Icons.stories.tsx
+│ │ │ │ ├── Icons.tsx
+│ │ │ │ ├── Tooltip.stories.tsx
+│ │ │ │ └── Tooltip.tsx
+│ │ │ ├── input
+│ │ │ │ ├── Button.stories.tsx
+│ │ │ │ ├── Button.tsx
+│ │ │ │ ├── ButtonGroup.stories.tsx
+│ │ │ │ ├── ButtonGroup.tsx
+│ │ │ │ ├── Combobox.stories.tsx
+│ │ │ │ ├── Combobox.tsx
+│ │ │ │ ├── Input.stories.tsx
+│ │ │ │ ├── Input.tsx
+│ │ │ │ ├── Select.stories.tsx
+│ │ │ │ ├── Select.tsx
+│ │ │ │ ├── Slider.stories.tsx
+│ │ │ │ ├── Slider.tsx
+│ │ │ │ ├── Stepper.stories.tsx
+│ │ │ │ ├── Stepper.tsx
+│ │ │ │ ├── Textarea.stories.tsx
+│ │ │ │ ├── Textarea.tsx
+│ │ │ │ ├── Toggle.stories.tsx
+│ │ │ │ ├── Toggle.tsx
+│ │ │ │ ├── ToggleCycle.stories.tsx
+│ │ │ │ ├── ToggleCycle.tsx
+│ │ │ │ ├── ToggleGroup.stories.tsx
+│ │ │ │ └── ToggleGroup.tsx
+│ │ │ ├── navigation
+│ │ │ │ ├── Breadcrumb.stories.tsx
+│ │ │ │ └── Breadcrumb.tsx
+│ │ │ ├── Popover.stories.tsx
+│ │ │ ├── Popover.tsx
+│ │ │ ├── Scene.stories.tsx
+│ │ │ └── Scene.tsx
 │ │ ├── locales
 │ │ │ ├── de.json
 │ │ │ └── en.json
+│ │ ├── sketchpad
+│ │ │ ├── editors
+│ │ │ │ ├── design
+│ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── Scene.tsx
+│ │ │ │ ├── kit
+│ │ │ │ │ └── Editor.tsx
+│ │ │ │ │── type
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── Scene.tsx
+│ │ │ ├── DesignEditor.tsx
+│ │ │ ├── panels
+│ │ │ │ ├── Chat.tsx
+│ │ │ │ ├── Details.tsx
+│ │ │ │ ├── Settings.tsx
+│ │ │ │ └── Workbench.tsx
+│ │ │ ├── Footer.tsx
+│ │ │ ├── Home.tsx
+│ │ │ ├── Navbar.tsx
+│ │ │ ├── Sketchpad.stories.tsx
+│ │ │ └── Sketchpad.tsx # main component of @semio/js
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts

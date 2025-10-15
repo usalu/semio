@@ -1,6 +1,6 @@
 // #region Header
 
-// index.ts
+// Sketchpad.stories.tsx
 
 // 2025 Ueli Saluz
 
@@ -18,17 +18,28 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
+import type { Meta, StoryObj } from "@storybook/react";
 
-import "./i18n";
-import i18n from "./i18n";
+import Sketchpad from "./Sketchpad";
 
-export { default as Sketchpad } from "./sketchpad/Sketchpad";
-export type { YProviderFactory } from "./sketchpad/store";
-export { i18n };
+const meta = {
+  title: "Sketchpad/Sketchpad",
+  component: Sketchpad,
+  parameters: {
+    layout: "fullscreen",
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-full h-[750px]">
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof Sketchpad>;
 
-export { default as eslintConfig } from "./eslint.config";
-export { default as postcssConfig } from "./postcss.config";
-export { default as tailwindConfig } from "./tailwind.config";
-// Exporting vite configs blows up storybook and nextjs
-// export { default as viteConfig } from './vite.config';
-// export { default as vitestConfig } from './vitest.workspace';
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {},
+};
