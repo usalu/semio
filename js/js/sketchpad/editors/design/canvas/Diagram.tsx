@@ -24,23 +24,8 @@ import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
-import {
-  DesignEditorFullscreenPanel,
-  DesignEditorPresenceOther,
-  PieceScopeProvider,
-  useClusterableGroups,
-  useDesign,
-  useDesignEditorCommands,
-  useDesignEditorDiagramCenter,
-  useDesignEditorDiagramScale,
-  useDesignEditorFullscreen,
-  useDesignEditorOthers,
-  useDesignEditorSelection,
-  useExplodeableDesignNodes,
-  useKit,
-  useKitCommands,
-  useSketchpadCommands,
-} from "../../../store";
+import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useKit, useKitCommands, useSketchpadCommands } from "../../../store";
+import { useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];

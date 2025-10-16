@@ -4,7 +4,8 @@ import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggrega
 import { Input } from "../../../../elements/input/Input";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Kit } from "../../../../semio";
-import { useIsInKitScope, useKit, useKitEditorCommands, useKitStore } from "../../../store";
+import { useIsInKitScope, useKit, useKitStore } from "../../../store";
+import { useKitEditorCommands } from "../store";
 
 export const KitDetails: FC = () => {
   const isInKitScope = useIsInKitScope();

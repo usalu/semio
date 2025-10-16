@@ -34,8 +34,11 @@ import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
 import Details from "./panels/Details";
+import Hud from "./panels/Hud";
 import Settings from "./panels/Settings";
+import Stats from "./panels/Stats";
 import Toolbar from "./panels/Toolbar";
+import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
 import {
   DesignScopeProvider,
@@ -249,11 +252,13 @@ const SketchpadBase: FC = () => {
             </div>
             <div className="flex-1 flex overflow-hidden relative" style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}>
               {isMobile ? (
-                // Mobile layout: full-screen panel or editor
                 <>
                   {mobileVisiblePanel && mobileVisiblePanel !== "toolbar" ? (
                     <div className="absolute inset-1 z-30">
                       {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                      {mobileVisiblePanel === "tools" && <Tools visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                      {mobileVisiblePanel === "hud" && <Hud visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                      {mobileVisiblePanel === "stats" && <Stats visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                       {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                       {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                       {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
@@ -270,22 +275,36 @@ const SketchpadBase: FC = () => {
                   )}
                 </>
               ) : (
-                // Desktop layout: side-by-side panels with toolbar at bottom
                 <>
-                  {visiblePanels.workbench && (
-                    <div className="absolute left-1 top-0 bottom-1 z-20">
-                      <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />
+                  {(visiblePanels.workbench || visiblePanels.tools) && (
+                    <div className="absolute left-1 top-0 bottom-1 z-20 flex">
+                      {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
+                      {visiblePanels.tools && <Tools visible={true} width={panelSizes.toolsWidth} onWidthChange={(w) => setPanelSize("toolsWidth", w)} />}
                     </div>
                   )}
                   <div className="flex-1 flex flex-col overflow-hidden">
                     <Outlet />
+                    {(visiblePanels.hud || visiblePanels.stats) && (
+                      <div
+                        className="absolute z-30 flex"
+                        style={{
+                          left: (visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + 4,
+                          right: (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + 4,
+                          top: 0,
+                          bottom: visiblePanels.toolbar ? panelSizes.toolbarHeight + 4 : 0,
+                        }}
+                      >
+                        {visiblePanels.hud && <Hud visible={true} width={panelSizes.hudWidth} onWidthChange={(w) => setPanelSize("hudWidth", w)} />}
+                        {visiblePanels.stats && <Stats visible={true} width={panelSizes.statsWidth} onWidthChange={(w) => setPanelSize("statsWidth", w)} />}
+                      </div>
+                    )}
                     {visiblePanels.toolbar && (
                       <div className="absolute left-0 right-0 bottom-0 z-20">
                         <Toolbar
                           visible={true}
                           height={panelSizes.toolbarHeight}
                           onHeightChange={(h) => setPanelSize("toolbarHeight", h)}
-                          leftOffset={visiblePanels.workbench ? panelSizes.workbenchWidth + 4 : 0}
+                          leftOffset={(visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + (visiblePanels.workbench || visiblePanels.tools ? 4 : 0)}
                           rightOffset={
                             (visiblePanels.details ? panelSizes.detailsWidth : 0) +
                             (visiblePanels.chat ? panelSizes.chatWidth : 0) +

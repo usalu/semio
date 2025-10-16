@@ -197,23 +197,48 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── sketchpad
 │ │ │ ├── editors
 │ │ │ │ ├── design
-│ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ │ ├── Settings.tsx
+│ │ │ │ │ │ ├── Toolbar.tsx
+│ │ │ │ │ │ └── Workbench.tsx
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ └── store.tsx
+│ │ │ │ ├── home
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ └── Table.tsx
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
-│ │ │ │ │ └── Editor.tsx
-│ │ │ │ │── type
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ └── Table.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ └── Details.tsx
 │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── store.tsx
+│ │ │ │ └── type
+│ │ │ │ ├── canvas
 │ │ │ │ │ └── Scene.tsx
-│ │ │ ├── DesignEditor.tsx
+│ │ │ │ ├── panels
+│ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ ├── Settings.tsx
+│ │ │ │ │ └── Toolbar.tsx
+│ │ │ │ ├── Editor.tsx
+│ │ │ │ └── store.tsx
 │ │ │ ├── panels
 │ │ │ │ ├── Chat.tsx
 │ │ │ │ ├── Details.tsx
 │ │ │ │ ├── Settings.tsx
+│ │ │ │ ├── Toolbar.tsx
 │ │ │ │ └── Workbench.tsx
+│ │ │ ├── Canvas.tsx
+│ │ │ ├── Editor.tsx
 │ │ │ ├── Footer.tsx
-│ │ │ ├── Home.tsx
 │ │ │ ├── Navbar.tsx
+│ │ │ ├── Panel.tsx
 │ │ │ ├── Sketchpad.stories.tsx
 │ │ │ ├── Sketchpad.tsx # main component of @semio/js
 │ │ │ └── store.tsx
@@ -226,7 +251,6 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── package.json
 │ │ ├── postcss.config.ts
 │ │ ├── semio.ts # all domain logic
-│ │ ├── store.ts # react hooks for state (uses yjs)
 │ │ ├── tailwind.config.ts
 │ │ ├── theme.css
 │ │ ├── tsconfig.json
@@ -258,7 +282,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── .gitmodules
 ├── .prettierignore
 ├── .prettierrc.json
-├── CLAUDE.md
+├── AGENTS.md # All general ai information
+├── CITATION.cff
+├── CLAUDE.md # Claude specific
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
@@ -300,7 +326,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 #### General
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
-- State managment ALWAYS is in store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
+- State managment ALWAYS is in the corresponding store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
 - There is a transaction mechanism for kits. Every editor transaction is an extended kit transaction. The undo redo manager is on editor level and stores the diff of the transaction along with the editor state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 
 #### Styling

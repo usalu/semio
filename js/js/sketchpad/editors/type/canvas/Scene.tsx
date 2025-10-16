@@ -20,9 +20,9 @@
 // #endregion
 
 import { FC, useCallback } from "react";
-import SceneComponent from "../../../elements/Scene";
-import { Camera } from "../../../semio";
-import { useTypeEditorCamera, useTypeEditorCommands } from "../../store";
+import SceneComponent from "../../../../elements/Scene";
+import { Camera } from "../../../../semio";
+import { useTypeEditorCamera, useTypeEditorCommands } from "../store";
 
 const Scene: FC = () => {
   const { setCamera } = useTypeEditorCommands();

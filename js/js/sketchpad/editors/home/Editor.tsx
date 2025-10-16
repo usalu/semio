@@ -9,7 +9,8 @@ import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
-import { useHome, useHomeCommands, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { useHome, useHomeCommands } from "./store";
 
 type KitStoreKind = "temporary" | "local" | "remote";
 
@@ -328,101 +329,88 @@ const Home: FC = ({}) => {
   if (isMobile) {
     return (
       <div className="flex flex-col h-full">
-        {/* Two-line filter layout for mobile */}
-        <div className="flex flex-col border-b">
-          {/* Line 1: Active selections with horizontal scroll */}
-          <div className="border-b overflow-x-auto">
-            <div className="flex gap-1 p-1 w-max">
-              {selectedKind && (
-                <Toggle
-                  type="withAction"
-                  pressed={true}
-                  onPressedChange={() => toggleKind(selectedKind)}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateKit(selectedKind)}
-                  tooltip={tooltip("home.hideKind")}
-                  actionTooltip={tooltip("home.createKit")}
-                >
-                  {selectedKind === "temporary" && <Clock className="size-4" />}
-                  {selectedKind === "local" && <HardDrive className="size-4" />}
-                  {selectedKind === "remote" && <Cloud className="size-4" />}
-                </Toggle>
-              )}
-              {selectedName && (
-                <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-                  {selectedName}
-                </Toggle>
-              )}
-              {selectedVersion !== null && (
-                <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-                  {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
-                </Toggle>
-              )}
-            </div>
-          </div>
-
-          {/* Line 2: Suggested options with horizontal scroll */}
-          <div className="border-b overflow-x-auto">
-            <div className="flex gap-1 p-1 w-max">
-              {!selectedKind && (
-                <>
-                  <Toggle
-                    type="withAction"
-                    pressed={false}
-                    onPressedChange={() => toggleKind("temporary")}
-                    actionIcon={<Plus className="size-3.5 opacity-50" />}
-                    onActionClick={() => handleCreateKit("temporary")}
-                    tooltip={tooltip("home.showTemporary")}
-                    actionTooltip={tooltip("home.createTemporary")}
-                  >
-                    <Clock className="size-4" />
-                  </Toggle>
-                  <Toggle
-                    type="withAction"
-                    pressed={false}
-                    onPressedChange={() => toggleKind("local")}
-                    actionIcon={<Plus className="size-3.5 opacity-50" />}
-                    onActionClick={() => handleCreateKit("local")}
-                    tooltip={tooltip("home.showLocal")}
-                    actionTooltip={tooltip("home.createLocal")}
-                  >
-                    <HardDrive className="size-4" />
-                  </Toggle>
-                  <Toggle
-                    type="withAction"
-                    pressed={false}
-                    onPressedChange={() => toggleKind("remote")}
-                    actionIcon={<Plus className="size-3.5 opacity-50" />}
-                    onActionClick={() => handleCreateKit("remote")}
-                    tooltip={tooltip("home.showRemote")}
-                    actionTooltip={tooltip("home.createRemote")}
-                  >
-                    <Cloud className="size-4" />
-                  </Toggle>
-                </>
-              )}
-              {selectedKind &&
-                !selectedName &&
-                uniqueNames.length > 0 &&
-                uniqueNames.map((name) => (
-                  <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
-                    {name}
-                  </Toggle>
-                ))}
-              {selectedKind &&
-                selectedName &&
-                selectedVersion === null &&
-                uniqueVersions.length > 0 &&
-                uniqueVersions.map((version) => (
-                  <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                    {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
-                  </Toggle>
-                ))}
-            </div>
-          </div>
-
-          {/* Line 3: Search and sorting */}
-          <div className="flex items-center gap-1 p-1 border-b">
+        {/* Flexible filter layout with automatic wrapping for mobile */}
+        <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+          {selectedKind && (
+            <Toggle
+              type="withAction"
+              pressed={true}
+              onPressedChange={() => toggleKind(selectedKind)}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateKit(selectedKind)}
+              tooltip={tooltip("home.hideKind")}
+              actionTooltip={tooltip("home.createKit")}
+            >
+              {selectedKind === "temporary" && <Clock className="size-4" />}
+              {selectedKind === "local" && <HardDrive className="size-4" />}
+              {selectedKind === "remote" && <Cloud className="size-4" />}
+            </Toggle>
+          )}
+          {selectedName && (
+            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+              {selectedName}
+            </Toggle>
+          )}
+          {selectedVersion !== null && (
+            <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
+              {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+            </Toggle>
+          )}
+          {!selectedKind && (
+            <>
+              <Toggle
+                type="withAction"
+                pressed={false}
+                onPressedChange={() => toggleKind("temporary")}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit("temporary")}
+                tooltip={tooltip("home.showTemporary")}
+                actionTooltip={tooltip("home.createTemporary")}
+              >
+                <Clock className="size-4" />
+              </Toggle>
+              <Toggle
+                type="withAction"
+                pressed={false}
+                onPressedChange={() => toggleKind("local")}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit("local")}
+                tooltip={tooltip("home.showLocal")}
+                actionTooltip={tooltip("home.createLocal")}
+              >
+                <HardDrive className="size-4" />
+              </Toggle>
+              <Toggle
+                type="withAction"
+                pressed={false}
+                onPressedChange={() => toggleKind("remote")}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit("remote")}
+                tooltip={tooltip("home.showRemote")}
+                actionTooltip={tooltip("home.createRemote")}
+              >
+                <Cloud className="size-4" />
+              </Toggle>
+            </>
+          )}
+          {selectedKind &&
+            !selectedName &&
+            uniqueNames.length > 0 &&
+            uniqueNames.map((name) => (
+              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+                {name}
+              </Toggle>
+            ))}
+          {selectedKind &&
+            selectedName &&
+            selectedVersion === null &&
+            uniqueVersions.length > 0 &&
+            uniqueVersions.map((version) => (
+              <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
+                {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+              </Toggle>
+            ))}
+          <div className="flex items-center gap-1 flex-1 min-w-[160px]">
             <Input className="flex-1 min-w-0" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
             <Toggle
               type="dropdown"
@@ -484,98 +472,88 @@ const Home: FC = ({}) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Two-line filter layout */}
-      <div className="flex flex-col border-b">
-        {/* Line 1: Active selections */}
-        <div className="flex items-center gap-1 p-1 border-b">
-          <div className="flex flex-wrap gap-1 flex-shrink-0">
-            {selectedKind && (
-              <Toggle
-                type="withAction"
-                pressed={true}
-                onPressedChange={() => toggleKind(selectedKind)}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
-                onActionClick={() => handleCreateKit(selectedKind)}
-                tooltip={tooltip("home.hideKind")}
-                actionTooltip={tooltip("home.createKit")}
-              >
-                {selectedKind === "temporary" && <Clock className="size-4" />}
-                {selectedKind === "local" && <HardDrive className="size-4" />}
-                {selectedKind === "remote" && <Cloud className="size-4" />}
-              </Toggle>
-            )}
-            {selectedName && (
-              <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-                {selectedName}
-              </Toggle>
-            )}
-            {selectedVersion !== null && (
-              <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-                {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
-              </Toggle>
-            )}
-          </div>
-          <Input className="flex-1 min-w-0" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
-        </div>
-        {/* Line 2: Suggested options */}
-        <div className="flex items-center gap-1 p-1">
-          <div className="flex flex-wrap gap-1 flex-shrink-0">
-            {!selectedKind && (
-              <>
-                <Toggle
-                  type="withAction"
-                  pressed={false}
-                  onPressedChange={() => toggleKind("temporary")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateKit("temporary")}
-                  tooltip={tooltip("home.showTemporary")}
-                  actionTooltip={tooltip("home.createTemporary")}
-                >
-                  <Clock className="size-4" />
-                </Toggle>
-                <Toggle
-                  type="withAction"
-                  pressed={false}
-                  onPressedChange={() => toggleKind("local")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateKit("local")}
-                  tooltip={tooltip("home.showLocal")}
-                  actionTooltip={tooltip("home.createLocal")}
-                >
-                  <HardDrive className="size-4" />
-                </Toggle>
-                <Toggle
-                  type="withAction"
-                  pressed={false}
-                  onPressedChange={() => toggleKind("remote")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateKit("remote")}
-                  tooltip={tooltip("home.showRemote")}
-                  actionTooltip={tooltip("home.createRemote")}
-                >
-                  <Cloud className="size-4" />
-                </Toggle>
-              </>
-            )}
-            {selectedKind &&
-              !selectedName &&
-              uniqueNames.length > 0 &&
-              uniqueNames.map((name) => (
-                <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
-                  {name}
-                </Toggle>
-              ))}
-            {selectedKind &&
-              selectedName &&
-              selectedVersion === null &&
-              uniqueVersions.length > 0 &&
-              uniqueVersions.map((version) => (
-                <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                  {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
-                </Toggle>
-              ))}
-          </div>
-        </div>
+      {/* Flexible filter layout with automatic wrapping */}
+      <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+        {selectedKind && (
+          <Toggle
+            type="withAction"
+            pressed={true}
+            onPressedChange={() => toggleKind(selectedKind)}
+            actionIcon={<Plus className="size-3.5 opacity-50" />}
+            onActionClick={() => handleCreateKit(selectedKind)}
+            tooltip={tooltip("home.hideKind")}
+            actionTooltip={tooltip("home.createKit")}
+          >
+            {selectedKind === "temporary" && <Clock className="size-4" />}
+            {selectedKind === "local" && <HardDrive className="size-4" />}
+            {selectedKind === "remote" && <Cloud className="size-4" />}
+          </Toggle>
+        )}
+        {selectedName && (
+          <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+            {selectedName}
+          </Toggle>
+        )}
+        {selectedVersion !== null && (
+          <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
+            {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+          </Toggle>
+        )}
+        {!selectedKind && (
+          <>
+            <Toggle
+              type="withAction"
+              pressed={false}
+              onPressedChange={() => toggleKind("temporary")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateKit("temporary")}
+              tooltip={tooltip("home.showTemporary")}
+              actionTooltip={tooltip("home.createTemporary")}
+            >
+              <Clock className="size-4" />
+            </Toggle>
+            <Toggle
+              type="withAction"
+              pressed={false}
+              onPressedChange={() => toggleKind("local")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateKit("local")}
+              tooltip={tooltip("home.showLocal")}
+              actionTooltip={tooltip("home.createLocal")}
+            >
+              <HardDrive className="size-4" />
+            </Toggle>
+            <Toggle
+              type="withAction"
+              pressed={false}
+              onPressedChange={() => toggleKind("remote")}
+              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              onActionClick={() => handleCreateKit("remote")}
+              tooltip={tooltip("home.showRemote")}
+              actionTooltip={tooltip("home.createRemote")}
+            >
+              <Cloud className="size-4" />
+            </Toggle>
+          </>
+        )}
+        {selectedKind &&
+          !selectedName &&
+          uniqueNames.length > 0 &&
+          uniqueNames.map((name) => (
+            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+              {name}
+            </Toggle>
+          ))}
+        {selectedKind &&
+          selectedName &&
+          selectedVersion === null &&
+          uniqueVersions.length > 0 &&
+          uniqueVersions.map((version) => (
+            <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
+              {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+            </Toggle>
+          ))}
+        <Input className="flex-1 min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">

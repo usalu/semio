@@ -7,10 +7,10 @@
 import { useDraggable } from "@dnd-kit/core";
 import { FC } from "react";
 
-import { Avatar, AvatarFallback } from "../../../elements/display/Avatar";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../elements/display/HoverCard";
-import { Design, Guid, Type } from "../../../semio";
-import { useActiveInteraction, useDesign, useSketchpadCommands, useType } from "../../store";
+import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
+import { Design, Guid, Type } from "../../../../semio";
+import { useActiveInteraction, useDesign, useSketchpadCommands, useType } from "../../../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;

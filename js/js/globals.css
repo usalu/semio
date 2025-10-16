@@ -65,6 +65,7 @@
     --text-9xl--line-height: 1;
     --base: var(--color-light);
     --panel: var(--color-light-7-9);
+    --overlay: var(--color-light-6-7);
     --temporary: var(--color-light-5-7);
     --foreground: var(--color-dark);
     --muted: var(--color-light-8-9);
@@ -73,6 +74,7 @@
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
     --hover-panel: var(--color-gray-600);
+    --hover-overlay: var(--color-gray-500);
     --hover-temporary: var(--color-light-gray-gray);
     --border-color: var(--color-foreground);
 
@@ -213,6 +215,78 @@
       cursor:
         url("../../assets/cursors/cursor_crosshair.svg") 0 0,
         crosshair !important;
+    }
+
+    .cursor-ns-resize {
+      cursor:
+        url("../../assets/cursors/cursor_ns-resize_dark.svg") 2 16,
+        ns-resize !important;
+    }
+    [style*="cursor: ns-resize"],
+    [style*="cursor:ns-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_ns-resize_dark.svg") 2 16,
+        ns-resize !important;
+    }
+    .cursor-ns-resize,
+    [class*="cursor-ns-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_ns-resize_dark.svg") 2 16,
+        ns-resize !important;
+    }
+    [class*="before:cursor-ns-resize"]::before,
+    [class*="after:cursor-ns-resize"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_ns-resize_dark.svg") 2 16,
+        ns-resize !important;
+    }
+
+    .cursor-nesw-resize {
+      cursor:
+        url("../../assets/cursors/cursor_nesw-resize_dark.svg") 16 16,
+        nesw-resize !important;
+    }
+    [style*="cursor: nesw-resize"],
+    [style*="cursor:nesw-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_nesw-resize_dark.svg") 16 16,
+        nesw-resize !important;
+    }
+    .cursor-nesw-resize,
+    [class*="cursor-nesw-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_nesw-resize_dark.svg") 16 16,
+        nesw-resize !important;
+    }
+    [class*="before:cursor-nesw-resize"]::before,
+    [class*="after:cursor-nesw-resize"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_nesw-resize_dark.svg") 16 16,
+        nesw-resize !important;
+    }
+
+    .cursor-move {
+      cursor:
+        url("../../assets/cursors/cursor_move_dark.svg") 16 16,
+        move !important;
+    }
+    [style*="cursor: move"],
+    [style*="cursor:move"] {
+      cursor:
+        url("../../assets/cursors/cursor_move_dark.svg") 16 16,
+        move !important;
+    }
+    .cursor-move,
+    [class*="cursor-move"] {
+      cursor:
+        url("../../assets/cursors/cursor_move_dark.svg") 16 16,
+        move !important;
+    }
+    [class*="before:cursor-move"]::before,
+    [class*="after:cursor-move"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_move_dark.svg") 16 16,
+        move !important;
     }
 
     .react-flow__node {

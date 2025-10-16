@@ -49,12 +49,13 @@ import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import { Design, findConnectionsInDesign, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
-import { DesignEditorFullscreenPanel, EditorType, useDesign, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection, useEditorPanelVisibility, useEditorType, useKit, useSketchpad } from "../../store";
+import { EditorType, useDesign, useEditorPanelVisibility, useEditorType, useKit, useSketchpad } from "../../store";
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
 import { ToolsToggleGroup } from "./panels/Toolbar";
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
+import { DesignEditorFullscreenPanel, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
 
 export interface EditorProps {}
 
@@ -85,18 +86,12 @@ const Editor: FC<EditorProps> = () => {
 
   // Add/remove details panel sections based on selection
   useEffect(() => {
-    // Only register sections if we're in the design editor
     if (editorType !== EditorType.DESIGN) return;
 
     const hasPieces = (selection.pieces || []).length > 0;
     const hasConnections = (selection.connections || []).length > 0;
     const hasPortSelected = selection.port !== undefined;
     const hasSelection = hasPieces || hasConnections || hasPortSelected;
-
-    // Show details panel when there's a selection and it's not currently visible
-    if (hasSelection && !panelVisibility.details) {
-      togglePanel("details");
-    }
 
     removeSection("details", "design-details");
     removeSection("details", "design-port");

@@ -1788,7 +1788,7 @@ export const TypeScopeProvider = (props: { guid: string; children: React.ReactNo
   const value = { guid: props.guid };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
-const useTypeScope = () => useContext(TypeScopeContext);
+export const useTypeScope = () => useContext(TypeScopeContext);
 export const useIsInTypeScope = () => useTypeScope() !== null;
 
 function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore {
@@ -3517,7 +3517,7 @@ export const DesignScopeProvider = (props: { guid: string; children: React.React
   const value = { guid: props.guid };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
-const useDesignScope = () => useContext(DesignScopeContext);
+export const useDesignScope = () => useContext(DesignScopeContext);
 export const useIsInDesignScope = () => useDesignScope() !== null;
 
 function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string): T | DesignStore {
@@ -3726,7 +3726,7 @@ export interface KitCommandResult {
   files?: File[];
 }
 
-class KitStore {
+export class KitStore {
   public readonly parent: SketchpadStore;
   private readonly yProviderFactory: YProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
@@ -4656,7 +4656,7 @@ export const KitScopeProvider = (props: { guid: string; children: React.ReactNod
   const value = { guid: props.guid };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
-const useKitScope = () => useContext(KitScopeContext);
+export const useKitScope = () => useContext(KitScopeContext);
 export const useIsInKitScope = () => useKitScope() !== null;
 
 export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore {
@@ -4783,7 +4783,7 @@ interface EditorCommandResult<TDiff = any> {
   kitDiff?: KitDiff;
 }
 
-abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> {
+export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> {
   public readonly guid: string;
   public readonly parent: SketchpadStore;
   public readonly yMap: Y.Map<any>;
@@ -5770,6 +5770,9 @@ export interface KitEditorId {
 export interface KitEditorSelection {
   types?: Guid[];
   designs?: Guid[];
+  qualities?: string[];
+  files?: string[];
+  authors?: string[];
 }
 export interface KitEditorSelectionTypesDiff {
   added?: Guid[];
@@ -5779,9 +5782,24 @@ export interface KitEditorSelectionDesignsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+export interface KitEditorSelectionQualitiesDiff {
+  added?: string[];
+  removed?: string[];
+}
+export interface KitEditorSelectionFilesDiff {
+  added?: string[];
+  removed?: string[];
+}
+export interface KitEditorSelectionAuthorsDiff {
+  added?: string[];
+  removed?: string[];
+}
 export interface KitEditorSelectionDiff {
   types?: KitEditorSelectionTypesDiff;
   designs?: KitEditorSelectionDesignsDiff;
+  qualities?: KitEditorSelectionQualitiesDiff;
+  files?: KitEditorSelectionFilesDiff;
+  authors?: KitEditorSelectionAuthorsDiff;
 }
 export enum KitEditorFullscreenPanel {
   None = "none",
@@ -5864,6 +5882,39 @@ export const inverseKitEditorSelectionDiff = (selection: KitEditorSelection, dif
     }
     if (diff.designs.removed) {
       inverseDiff.designs.added = diff.designs.removed;
+    }
+  }
+
+  // Inverse qualities diff
+  if (diff.qualities) {
+    inverseDiff.qualities = {};
+    if (diff.qualities.added) {
+      inverseDiff.qualities.removed = diff.qualities.added;
+    }
+    if (diff.qualities.removed) {
+      inverseDiff.qualities.added = diff.qualities.removed;
+    }
+  }
+
+  // Inverse files diff
+  if (diff.files) {
+    inverseDiff.files = {};
+    if (diff.files.added) {
+      inverseDiff.files.removed = diff.files.added;
+    }
+    if (diff.files.removed) {
+      inverseDiff.files.added = diff.files.removed;
+    }
+  }
+
+  // Inverse authors diff
+  if (diff.authors) {
+    inverseDiff.authors = {};
+    if (diff.authors.added) {
+      inverseDiff.authors.removed = diff.authors.added;
+    }
+    if (diff.authors.removed) {
+      inverseDiff.authors.added = diff.authors.removed;
     }
   }
 
@@ -5955,6 +6006,24 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     const designs = selection.get("designs") as Y.Array<string>;
     if (designs && designs.length > 0) {
       result.designs = designs.toArray().map((id_) => ({ id_ }));
+    }
+
+    // Get qualities
+    const qualities = selection.get("qualities") as Y.Array<string>;
+    if (qualities && qualities.length > 0) {
+      result.qualities = qualities.toArray();
+    }
+
+    // Get files
+    const files = selection.get("files") as Y.Array<string>;
+    if (files && files.length > 0) {
+      result.files = files.toArray();
+    }
+
+    // Get authors
+    const authors = selection.get("authors") as Y.Array<string>;
+    if (authors && authors.length > 0) {
+      result.authors = authors.toArray();
     }
 
     return result;
@@ -6118,6 +6187,78 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
           const index = designs.toArray().indexOf(design.id_);
           if (index !== -1) {
             designs.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply qualities diff
+    if (selectionDiff.qualities) {
+      let qualities = (selection.get("qualities") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("qualities")) {
+        selection.set("qualities", qualities);
+      }
+
+      if (selectionDiff.qualities.added) {
+        for (const quality of selectionDiff.qualities.added) {
+          if (!qualities.toArray().includes(quality)) {
+            qualities.push([quality]);
+          }
+        }
+      }
+      if (selectionDiff.qualities.removed) {
+        for (const quality of selectionDiff.qualities.removed) {
+          const index = qualities.toArray().indexOf(quality);
+          if (index !== -1) {
+            qualities.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply files diff
+    if (selectionDiff.files) {
+      let files = (selection.get("files") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("files")) {
+        selection.set("files", files);
+      }
+
+      if (selectionDiff.files.added) {
+        for (const file of selectionDiff.files.added) {
+          if (!files.toArray().includes(file)) {
+            files.push([file]);
+          }
+        }
+      }
+      if (selectionDiff.files.removed) {
+        for (const file of selectionDiff.files.removed) {
+          const index = files.toArray().indexOf(file);
+          if (index !== -1) {
+            files.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply authors diff
+    if (selectionDiff.authors) {
+      let authors = (selection.get("authors") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("authors")) {
+        selection.set("authors", authors);
+      }
+
+      if (selectionDiff.authors.added) {
+        for (const author of selectionDiff.authors.added) {
+          if (!authors.toArray().includes(author)) {
+            authors.push([author]);
+          }
+        }
+      }
+      if (selectionDiff.authors.removed) {
+        for (const author of selectionDiff.authors.removed) {
+          const index = authors.toArray().indexOf(author);
+          if (index !== -1) {
+            authors.delete(index, 1);
           }
         }
       }
@@ -6320,6 +6461,162 @@ const kitEditorCommands = {
       diff: {
         selection: {
           designs: { removed: [Guid] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectQuality": (context: KitEditorCommandContext, key: string): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: {
+            removed: currentSelection?.qualities ?? [],
+            added: [key],
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectQualities": (context: KitEditorCommandContext, keys: string[]): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: {
+            removed: currentSelection?.qualities ?? [],
+            added: keys,
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.addQualityToSelection": (context: KitEditorCommandContext, key: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          qualities: { added: [key] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.removeQualityFromSelection": (context: KitEditorCommandContext, key: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          qualities: { removed: [key] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectFile": (context: KitEditorCommandContext, path: string): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: {
+            removed: currentSelection?.files ?? [],
+            added: [path],
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectFiles": (context: KitEditorCommandContext, paths: string[]): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: {
+            removed: currentSelection?.files ?? [],
+            added: paths,
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.addFileToSelection": (context: KitEditorCommandContext, path: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          files: { added: [path] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.removeFileFromSelection": (context: KitEditorCommandContext, path: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          files: { removed: [path] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectAuthor": (context: KitEditorCommandContext, name: string): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: {
+            removed: currentSelection?.authors ?? [],
+            added: [name],
+          },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.selectAuthors": (context: KitEditorCommandContext, names: string[]): KitEditorCommandResult => {
+    const currentSelection = context.kitEditor.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: {
+            removed: currentSelection?.authors ?? [],
+            added: names,
+          },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.addAuthorToSelection": (context: KitEditorCommandContext, name: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          authors: { added: [name] },
+        },
+      },
+    };
+  },
+  "semio.kitEditor.removeAuthorFromSelection": (context: KitEditorCommandContext, name: string): KitEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          authors: { removed: [name] },
         },
       },
     };
@@ -6537,6 +6834,18 @@ export function useKitEditorCommands(id?: KitEditorId) {
       selectDesigns: noOp,
       addDesignToSelection: noOp,
       removeDesignFromSelection: noOp,
+      selectQuality: noOp,
+      selectQualities: noOp,
+      addQualityToSelection: noOp,
+      removeQualityFromSelection: noOp,
+      selectFile: noOp,
+      selectFiles: noOp,
+      addFileToSelection: noOp,
+      removeFileFromSelection: noOp,
+      selectAuthor: noOp,
+      selectAuthors: noOp,
+      addAuthorToSelection: noOp,
+      removeAuthorFromSelection: noOp,
       deleteSelected: noOp,
       toggleTypesFullscreen: noOp,
       toggleDesignsFullscreen: noOp,
@@ -6578,6 +6887,18 @@ export function useKitEditorCommands(id?: KitEditorId) {
     selectDesigns: (designIds: Guid[]) => store.execute("semio.kitEditor.selectDesigns", designIds),
     addDesignToSelection: (Guid: Guid) => store.execute("semio.kitEditor.addDesignToSelection", Guid),
     removeDesignFromSelection: (Guid: Guid) => store.execute("semio.kitEditor.removeDesignFromSelection", Guid),
+    selectQuality: (key: string) => store.execute("semio.kitEditor.selectQuality", key),
+    selectQualities: (keys: string[]) => store.execute("semio.kitEditor.selectQualities", keys),
+    addQualityToSelection: (key: string) => store.execute("semio.kitEditor.addQualityToSelection", key),
+    removeQualityFromSelection: (key: string) => store.execute("semio.kitEditor.removeQualityFromSelection", key),
+    selectFile: (path: string) => store.execute("semio.kitEditor.selectFile", path),
+    selectFiles: (paths: string[]) => store.execute("semio.kitEditor.selectFiles", paths),
+    addFileToSelection: (path: string) => store.execute("semio.kitEditor.addFileToSelection", path),
+    removeFileFromSelection: (path: string) => store.execute("semio.kitEditor.removeFileFromSelection", path),
+    selectAuthor: (name: string) => store.execute("semio.kitEditor.selectAuthor", name),
+    selectAuthors: (names: string[]) => store.execute("semio.kitEditor.selectAuthors", names),
+    addAuthorToSelection: (name: string) => store.execute("semio.kitEditor.addAuthorToSelection", name),
+    removeAuthorFromSelection: (name: string) => store.execute("semio.kitEditor.removeAuthorFromSelection", name),
     deleteSelected: () => store.execute("semio.kitEditor.deleteSelected"),
     toggleTypesFullscreen: () => store.execute("semio.kitEditor.toggleTypesFullscreen"),
     toggleDesignsFullscreen: () => store.execute("semio.kitEditor.toggleDesignsFullscreen"),
@@ -7681,6 +8002,9 @@ type YSketchpad = Y.Map<YSketchpadVal>;
 export interface PanelVisibility {
   toolbar?: boolean;
   workbench?: boolean;
+  tools?: boolean;
+  hud?: boolean;
+  stats?: boolean;
   details?: boolean;
   chat?: boolean;
   settings?: boolean;
@@ -7698,6 +8022,9 @@ export interface EditorSettings {
 export interface PanelSizes {
   toolbarHeight: number;
   workbenchWidth: number;
+  toolsWidth: number;
+  hudWidth: number;
+  statsWidth: number;
   detailsWidth: number;
   chatWidth: number;
   settingsWidth: number;
@@ -7746,7 +8073,7 @@ export interface SketchpadCommandResult {
   diff?: SketchpadDiff;
 }
 
-class SketchpadStore {
+export class SketchpadStore {
   private readonly id: string | undefined;
   private readonly yProviderFactory: YProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
@@ -7862,6 +8189,9 @@ class SketchpadStore {
           JSON.stringify({
             toolbarHeight: 52,
             workbenchWidth: 230,
+            toolsWidth: 230,
+            hudWidth: 230,
+            statsWidth: 230,
             detailsWidth: 230,
             chatWidth: 230,
             settingsWidth: 230,
@@ -7895,6 +8225,9 @@ class SketchpadStore {
       : {
           toolbarHeight: 52,
           workbenchWidth: 230,
+          toolsWidth: 230,
+          hudWidth: 230,
+          statsWidth: 230,
           detailsWidth: 230,
           chatWidth: 230,
           settingsWidth: 230,

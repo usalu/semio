@@ -12,7 +12,8 @@ import { FC } from "react";
 import { Button } from "../../../../elements/input/Button";
 import { ToggleGroup, ToggleGroupItem } from "../../../../elements/input/ToggleGroup";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../elements/Popover";
-import { ToolType, useDesignEditor, useDesignEditorCommands, useIsInDesignScope } from "../../../store";
+import { ToolType, useIsInDesignScope } from "../../../store";
+import { useDesignEditor, useDesignEditorCommands } from "../store";
 
 export const SelectionTools: FC = () => {
   const activeTool = useDesignEditor((s) => s.activeTool);

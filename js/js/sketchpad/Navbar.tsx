@@ -24,6 +24,7 @@ import {
   ArrowRight,
   ArrowUp,
   Award,
+  BarChart3,
   Box,
   ChevronDown,
   ChevronUp,
@@ -35,9 +36,9 @@ import {
   HardDrive,
   Home,
   Info,
+  Layers,
   Layout,
   MessageCircle,
-  Minimize,
   Minus,
   Search as SearchIcon,
   Settings,
@@ -90,11 +91,14 @@ export interface PanelSection {
   }>;
 }
 
-export type PanelKey = "details" | "workbench" | "console" | "chat" | "settings" | "toolbar";
+export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar";
 
 export interface PanelSections {
   details: PanelSection[];
   workbench: PanelSection[];
+  tools: PanelSection[];
+  hud: PanelSection[];
+  stats: PanelSection[];
   console: PanelSection[];
   chat: PanelSection[];
   settings: PanelSection[];
@@ -113,6 +117,9 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
   const [sections, setSections] = useState<PanelSections>({
     details: [],
     workbench: [],
+    tools: [],
+    hud: [],
+    stats: [],
     console: [],
     chat: [],
     settings: [],
@@ -177,15 +184,21 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.DESIGN]: [
+    { key: "workbench", icon: Box, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "tools", icon: Wrench, tooltip: t("panels.tools"), hotkey: "⌘U" },
     { key: "toolbar", icon: Hammer, tooltip: t("panels.toolbar"), hotkey: "⌘K" },
-    { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "hud", icon: Layers, tooltip: t("panels.hud"), hotkey: "⌘H" },
+    { key: "stats", icon: BarChart3, tooltip: t("panels.stats"), hotkey: "⌘I" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.TYPE]: [
+    { key: "workbench", icon: Box, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "tools", icon: Wrench, tooltip: t("panels.tools"), hotkey: "⌘U" },
     { key: "toolbar", icon: Hammer, tooltip: t("panels.toolbar"), hotkey: "⌘K" },
-    { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "hud", icon: Layers, tooltip: t("panels.hud"), hotkey: "⌘H" },
+    { key: "stats", icon: BarChart3, tooltip: t("panels.stats"), hotkey: "⌘I" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
@@ -263,9 +276,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   // Kit kind items for breadcrumb
   const kitKindItems = [
-    { label: <Clock size={16} />, tooltip: tooltip("breadcrumb.temporary"), href: "/kits?kind=temporary" },
-    { label: <HardDrive size={16} />, tooltip: tooltip("breadcrumb.local"), href: "/kits?kind=local" },
-    { label: <Cloud size={16} />, tooltip: tooltip("breadcrumb.remote"), href: "/kits?kind=remote" },
+    { label: <Clock size={16} />, tooltip: tooltip("breadcrumb.temporary"), href: "/?kind=temporary" },
+    { label: <HardDrive size={16} />, tooltip: tooltip("breadcrumb.local"), href: "/?kind=local" },
+    { label: <Cloud size={16} />, tooltip: tooltip("breadcrumb.remote"), href: "/?kind=remote" },
   ];
 
   // Filter kits by kind for the kit selector
@@ -568,7 +581,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       })
       .map((k) => ({
         label: k.name,
-        href: `/kits?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
+        href: `/?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
       }));
   }, [homeKind, kits, store]);
 
@@ -584,7 +597,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       })
       .map((k) => ({
         label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
-        href: k.version || "",
+        href: `/kits/${k.guid}`,
       }));
   }, [homeName, homeKind, kits, store, t]);
 
@@ -668,7 +681,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {(kitGuid && kitKind) || homeKind ? (
           <>
             <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind || homeKind}`)}>
-              <BreadcrumbLink onClick={() => navigate(`/kits?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
+              <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
                 {(kitKind === "temporary" || homeKind === "temporary") && <Clock size={16} />}
                 {(kitKind === "local" || homeKind === "local") && <HardDrive size={16} />}
                 {(kitKind === "remote" || homeKind === "remote") && <Cloud size={16} />}
@@ -681,11 +694,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             {homeName && (
               <>
                 <BreadcrumbItem tooltip={tooltip("navbar.kitName")}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
+                  <BreadcrumbLink onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
                     {homeName}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator items={homeVersionsForName} tooltip={tooltip("navbar.versions")} onNavigate={(version) => navigate(`/kits?kind=${homeKind}&name=${encodeURIComponent(homeName)}&version=${encodeURIComponent(version)}`)} />
+                <BreadcrumbSeparator items={homeVersionsForName} tooltip={tooltip("navbar.versions")} onNavigate={(href) => navigate(href)} />
                 {homeVersion !== null && (
                   <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
                     <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
@@ -703,8 +716,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     else navigate(href);
                   }}
                 />
-                <BreadcrumbItem tooltip={tooltip("navbar.kit")}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}`)} style={{ cursor: "pointer" }}>
+                <BreadcrumbItem>
+                  <BreadcrumbLink onClick={() => {
+                    // Navigate to home page with kind and name filters
+                    console.log("[Navbar] KITNAME clicked, navigating to home with kind and name");
+                    navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || '')}`);
+                  }} style={{ cursor: "pointer" }} title={tooltip("navbar.kit")}>
                     {kit?.name || kitGuid}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -715,8 +732,15 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     navigate(href);
                   }}
                 />
-                <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}`)} style={{ cursor: "pointer" }}>{kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
+                <BreadcrumbItem>
+                  <BreadcrumbLink onClick={() => {
+                    // Navigate to home page with kind, name, and version filters
+                    console.log("[Navbar] KITVERSION clicked, navigating to home with filters");
+                    const versionParam = kit?.version ? `&version=${encodeURIComponent(kit.version)}` : '';
+                    navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || '')}${versionParam}`);
+                  }} style={{ cursor: "pointer" }} title={tooltip("navbar.kitVersion")}>
+                    {kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
               </>
             )}
@@ -740,8 +764,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 <BreadcrumbSeparator items={filteredNameItems} tooltip={tooltip("navbar.selectName")} onNavigate={(href) => navigate(href)} />
                 {filteredName !== null && (
                   <>
-                    <BreadcrumbItem tooltip={tooltip("navbar.name")}>
-                      <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}`)} style={{ cursor: "pointer" }}>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink onClick={() => {
+                        console.log("[Navbar] DESIGNNAME clicked, removing name filter");
+                        navigate(`/kits/${kitGuid}?kind=${filteredKind}`);
+                      }} style={{ cursor: "pointer" }} title={tooltip("navbar.name")}>
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -750,8 +777,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 )}
                 {filteredName !== null && filteredVariant !== null && (
                   <>
-                    <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
-                      <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}`)} style={{ cursor: "pointer" }}>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink onClick={() => {
+                        console.log("[Navbar] DESIGNVARIANT clicked, removing variant filter");
+                        navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}`);
+                      }} style={{ cursor: "pointer" }} title={tooltip("navbar.variant")}>
                         {filteredVariant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -760,10 +790,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 )}
                 {filteredName !== null && filteredVariant !== null && filteredView !== null && (
                   <>
-                    <BreadcrumbItem tooltip={tooltip("navbar.view")}>
+                    <BreadcrumbItem>
                       <BreadcrumbLink
-                        onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(filteredView)}`)}
+                        onClick={() => {
+                          console.log("[Navbar] DESIGNVIEW clicked, removing view filter");
+                          navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}`);
+                        }}
                         style={{ cursor: "pointer" }}
+                        title={tooltip("navbar.view")}
                       >
                         {filteredView || <span className="italic opacity-70">{t("design.defaultView")}</span>}
                       </BreadcrumbLink>
@@ -898,14 +932,22 @@ const PanelToggles: FC = ({}) => {
 
   if (panelConfig.length === 0) return null;
 
-  // Exclusive panels: only one can be open at a time (details, chat, settings)
-  const exclusivePanels = ["details", "chat", "settings"];
-  const exclusiveConfigs = panelConfig.filter((p) => exclusivePanels.includes(p.key));
-  const regularConfigs = panelConfig.filter((p) => !exclusivePanels.includes(p.key));
+  const workbenchPanels = ["workbench", "tools"];
+  const workbenchConfigs = panelConfig.filter((p) => workbenchPanels.includes(p.key));
+  const activeWorkbenchPanel = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || workbenchConfigs[0]?.key || "";
+  const isAnyWorkbenchPanelOpen = workbenchConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
-  // Find currently active exclusive panel
-  const activeExclusivePanel = exclusiveConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || exclusiveConfigs[0]?.key || "";
-  const isAnyExclusivePanelOpen = exclusiveConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+  const hudPanels = ["hud", "stats"];
+  const hudConfigs = panelConfig.filter((p) => hudPanels.includes(p.key));
+  const activeHudPanel = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || hudConfigs[0]?.key || "";
+  const isAnyHudPanelOpen = hudConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+
+  const rightPanels = ["details", "chat", "settings"];
+  const rightConfigs = panelConfig.filter((p) => rightPanels.includes(p.key));
+  const activeRightPanel = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || rightConfigs[0]?.key || "";
+  const isAnyRightPanelOpen = rightConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+
+  const otherConfigs = panelConfig.filter((p) => !workbenchPanels.includes(p.key) && !hudPanels.includes(p.key) && !rightPanels.includes(p.key) && p.key !== "toolbar");
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
@@ -920,8 +962,22 @@ const PanelToggles: FC = ({}) => {
         });
       }
     } else {
-      if (!current && exclusivePanels.includes(panelKey)) {
-        (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
+      if (!current && rightPanels.includes(panelKey)) {
+        (rightPanels as Array<keyof PanelVisibility>).forEach((p) => {
+          if (p !== panelKey && visiblePanels[p]) {
+            togglePanel(p);
+          }
+        });
+      }
+      if (!current && workbenchPanels.includes(panelKey)) {
+        (workbenchPanels as Array<keyof PanelVisibility>).forEach((p) => {
+          if (p !== panelKey && visiblePanels[p]) {
+            togglePanel(p);
+          }
+        });
+      }
+      if (!current && hudPanels.includes(panelKey)) {
+        (hudPanels as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
             togglePanel(p);
           }
@@ -931,25 +987,85 @@ const PanelToggles: FC = ({}) => {
     togglePanel(panelKey);
   };
 
-  const handleExclusivePressedChange = (pressed: boolean) => {
+  const handleWorkbenchPressedChange = (pressed: boolean) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
-      if (activeExclusivePanel && !visiblePanels[activeExclusivePanel as keyof PanelVisibility]) {
-        handleToggle(activeExclusivePanel as keyof PanelVisibility);
+      if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
+        handleToggle(activeWorkbenchPanel as keyof PanelVisibility);
       }
     } else {
-      const openPanel = exclusiveConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
+      const openPanel = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
         togglePanel(openPanel.key as keyof PanelVisibility);
       }
     }
   };
 
-  const handleExclusiveValueChange = (value: string | undefined) => {
+  const handleWorkbenchValueChange = (value: string | undefined) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
-    (exclusivePanels as Array<keyof PanelVisibility>).forEach((p) => {
+    (workbenchPanels as Array<keyof PanelVisibility>).forEach((p) => {
+      const isOpen = visiblePanels[p];
+      const shouldOpen = p === value;
+
+      if (isOpen && !shouldOpen) {
+        togglePanel(p);
+      } else if (!isOpen && shouldOpen) {
+        togglePanel(p);
+      }
+    });
+  };
+
+  const handleHudPressedChange = (pressed: boolean) => {
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    if (pressed) {
+      if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
+        handleToggle(activeHudPanel as keyof PanelVisibility);
+      }
+    } else {
+      const openPanel = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
+      if (openPanel) {
+        togglePanel(openPanel.key as keyof PanelVisibility);
+      }
+    }
+  };
+
+  const handleHudValueChange = (value: string | undefined) => {
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    if (!value) return;
+
+    (hudPanels as Array<keyof PanelVisibility>).forEach((p) => {
+      const isOpen = visiblePanels[p];
+      const shouldOpen = p === value;
+
+      if (isOpen && !shouldOpen) {
+        togglePanel(p);
+      } else if (!isOpen && shouldOpen) {
+        togglePanel(p);
+      }
+    });
+  };
+
+  const handleRightPressedChange = (pressed: boolean) => {
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    if (pressed) {
+      if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
+        handleToggle(activeRightPanel as keyof PanelVisibility);
+      }
+    } else {
+      const openPanel = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
+      if (openPanel) {
+        togglePanel(openPanel.key as keyof PanelVisibility);
+      }
+    }
+  };
+
+  const handleRightValueChange = (value: string | undefined) => {
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    if (!value) return;
+
+    (rightPanels as Array<keyof PanelVisibility>).forEach((p) => {
       const isOpen = visiblePanels[p];
       const shouldOpen = p === value;
 
@@ -962,9 +1078,52 @@ const PanelToggles: FC = ({}) => {
   };
 
   return (
-    <ToggleGroup type="multiple" value={[...regularConfigs.filter((p) => visiblePanels[p.key as keyof PanelVisibility]).map((p) => p.key), ...(isAnyExclusivePanelOpen ? [activeExclusivePanel] : [])]}>
-      {/* Regular toggles (workbench) */}
-      {regularConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
+    <ToggleGroup
+      type="multiple"
+      value={[
+        ...(isAnyWorkbenchPanelOpen ? [activeWorkbenchPanel] : []),
+        ...(isAnyHudPanelOpen ? [activeHudPanel] : []),
+        ...otherConfigs.filter((p) => visiblePanels[p.key as keyof PanelVisibility]).map((p) => p.key),
+        ...(isAnyRightPanelOpen ? [activeRightPanel] : []),
+      ]}
+    >
+      {workbenchConfigs.length > 0 && (
+        <Toggle
+          type="dropdown"
+          pressed={isAnyWorkbenchPanelOpen}
+          onPressedChange={handleWorkbenchPressedChange}
+          value={activeWorkbenchPanel}
+          onValueChange={handleWorkbenchValueChange}
+          tooltip={workbenchConfigs.find((p) => p.key === activeWorkbenchPanel)?.tooltip}
+          dropdownTooltip={t("navbar.changePanelType")}
+          items={workbenchConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+            value: key,
+            label: <Icon />,
+            tooltip,
+            hotkey,
+          }))}
+        />
+      )}
+
+      {hudConfigs.length > 0 && (
+        <Toggle
+          type="dropdown"
+          pressed={isAnyHudPanelOpen}
+          onPressedChange={handleHudPressedChange}
+          value={activeHudPanel}
+          onValueChange={handleHudValueChange}
+          tooltip={hudConfigs.find((p) => p.key === activeHudPanel)?.tooltip}
+          dropdownTooltip={t("navbar.changePanelType")}
+          items={hudConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+            value: key,
+            label: <Icon />,
+            tooltip,
+            hotkey,
+          }))}
+        />
+      )}
+
+      {otherConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
         <ToggleGroupItem
           key={key}
           value={key}
@@ -978,18 +1137,16 @@ const PanelToggles: FC = ({}) => {
         </ToggleGroupItem>
       ))}
 
-      {/* Dropdown toggle for exclusive panels (details, chat, settings) */}
-      {exclusiveConfigs.length > 0 && (
+      {rightConfigs.length > 0 && (
         <Toggle
           type="dropdown"
-          pressed={isAnyExclusivePanelOpen}
-          onPressedChange={handleExclusivePressedChange}
-          value={activeExclusivePanel}
-          onValueChange={handleExclusiveValueChange}
-          tooltip={exclusiveConfigs.find((p) => p.key === activeExclusivePanel)?.tooltip}
+          pressed={isAnyRightPanelOpen}
+          onPressedChange={handleRightPressedChange}
+          value={activeRightPanel}
+          onValueChange={handleRightValueChange}
+          tooltip={rightConfigs.find((p) => p.key === activeRightPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
-          className={regularConfigs.length > 0 ? "border-0 border-l" : "border-0"}
-          items={exclusiveConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+          items={rightConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
             tooltip,
@@ -1021,6 +1178,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   const editorType = useEditorType();
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
+  const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
   const { kit, design, type } = useParams();
   const homeCommands = useHomeCommands();
   const isValidKit = kit && !["temporary", "local", "remote"].includes(kit);
@@ -1118,7 +1276,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
           </ButtonGroup>
 
           {/* Single dropdown toggle for all panels on mobile */}
-          {panelConfig.length > 0 && (
+          {panelConfig.filter((p) => p.key !== "toolbar").length > 0 && (
             <Toggle
               type="dropdown"
               pressed={isAnyPanelOpen}
@@ -1127,21 +1285,35 @@ const Navbar: FC<NavbarProps> = ({}) => {
               onValueChange={handleMobilePanelChange}
               tooltip={panelConfig.find((p) => p.key === activePanel)?.tooltip || t("navbar.panels")}
               dropdownTooltip={t("navbar.changePanelType")}
-              items={panelConfig.map(({ key, icon: Icon, tooltip, hotkey }) => ({
-                value: key,
-                label: <Icon />,
-                tooltip,
-                hotkey,
-              }))}
+              items={panelConfig
+                .filter((p) => p.key !== "toolbar")
+                .map(({ key, icon: Icon, tooltip, hotkey }) => ({
+                  value: key,
+                  label: <Icon />,
+                  tooltip,
+                  hotkey,
+                }))}
             />
           )}
 
           <div className="flex gap-1">
+            {toolbarConfig && (
+              <Toggle
+                tooltip={toolbarConfig.tooltip}
+                hotkey={toolbarConfig.hotkey}
+                pressed={visiblePanels.toolbar}
+                onPressedChange={() => {
+                  commands[editorType]?.togglePanel("toolbar");
+                }}
+              >
+                <toolbarConfig.icon size={16} />
+              </Toggle>
+            )}
             <Toggle tooltip={tooltip("navbar.search")} pressed={searchOpen} onPressedChange={setSearchOpen}>
               <SearchIcon size={16} />
             </Toggle>
-            <Toggle tooltip={tooltip(isFullscreen ? "navbar.exitFullscreen" : "navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
-              {isFullscreen ? <Minimize size={16} /> : <Fullscreen size={16} />}
+            <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+              <Fullscreen size={16} />
             </Toggle>
             <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
               {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
@@ -1205,8 +1377,20 @@ const Navbar: FC<NavbarProps> = ({}) => {
       <div className="flex items-center gap-1 ml-auto">
         <Search />
         <PanelToggles />
+        {toolbarConfig && (
+          <Toggle
+            tooltip={toolbarConfig.tooltip}
+            hotkey={toolbarConfig.hotkey}
+            pressed={visiblePanels.toolbar}
+            onPressedChange={() => {
+              commands[editorType]?.togglePanel("toolbar");
+            }}
+          >
+            <toolbarConfig.icon />
+          </Toggle>
+        )}
         <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
-          {isFullscreen ? <Minimize /> : <Fullscreen />}
+          <Fullscreen />
         </Toggle>
         {onWindowEvents && (
           <ToggleGroup type="single">

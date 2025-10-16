@@ -10,7 +10,8 @@ import { Input } from "../../../../elements/input/Input";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Design, Guid, Kit, Piece, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
-import { useDesign, useDesignEditorCommands, useIsInDesignScope, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
+import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
+import { useDesignEditorCommands } from "../store";
 
 export const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();

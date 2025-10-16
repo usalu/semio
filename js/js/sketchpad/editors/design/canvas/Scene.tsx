@@ -25,22 +25,8 @@ import React, { FC, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
 import { Camera, Piece, Plane, planeToMatrix } from "../../../../semio";
-import {
-  DesignEditorFullscreenPanel,
-  DesignEditorPresenceOther,
-  PieceScopeProvider,
-  useDesign,
-  useDesignEditorCamera,
-  useDesignEditorCommands,
-  useDesignEditorFullscreen,
-  useDesignEditorOthers,
-  useDesignEditorSelection,
-  useIsPieceHovered,
-  useIsPieceSelected,
-  usePiece,
-  usePiecePlane,
-  usePieceStatus,
-} from "../../../store";
+import { DesignEditorFullscreenPanel, PieceScopeProvider, useDesign, useIsPieceHovered, useIsPieceSelected, usePiece, usePiecePlane, usePieceStatus } from "../../../store";
+import { DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
