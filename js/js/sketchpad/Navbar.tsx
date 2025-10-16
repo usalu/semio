@@ -31,6 +31,7 @@ import {
   Cloud,
   FileText,
   Fullscreen,
+  Hammer,
   HardDrive,
   Home,
   Info,
@@ -89,7 +90,7 @@ export interface PanelSection {
   }>;
 }
 
-export type PanelKey = "details" | "workbench" | "console" | "chat" | "settings";
+export type PanelKey = "details" | "workbench" | "console" | "chat" | "settings" | "toolbar";
 
 export interface PanelSections {
   details: PanelSection[];
@@ -97,6 +98,7 @@ export interface PanelSections {
   console: PanelSection[];
   chat: PanelSection[];
   settings: PanelSection[];
+  toolbar: PanelSection[];
 }
 
 interface PanelSectionContextValue {
@@ -114,6 +116,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
     console: [],
     chat: [],
     settings: [],
+    toolbar: [],
   });
 
   const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
@@ -123,7 +126,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
         ...prev,
         [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => (a.order || 0) - (b.order || 0)),
       };
-      console.log("[ORIGIN] PanelSectionProvider sections updated", { panelKey, count: updated[panelKey].length, sections: updated[panelKey].map(s => ({ id: s.id, label: s.label })) });
+      console.log("[ORIGIN] PanelSectionProvider sections updated", { panelKey, count: updated[panelKey].length, sections: updated[panelKey].map((s) => ({ id: s.id, label: s.label })) });
       return updated;
     });
   }, []);
@@ -174,12 +177,14 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.DESIGN]: [
+    { key: "toolbar", icon: Hammer, tooltip: t("panels.toolbar"), hotkey: "⌘K" },
     { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
   [EditorType.TYPE]: [
+    { key: "toolbar", icon: Hammer, tooltip: t("panels.toolbar"), hotkey: "⌘K" },
     { key: "workbench", icon: Wrench, tooltip: t("panels.workbench"), hotkey: "⌘J" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
@@ -571,12 +576,17 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const homeVersionsForName = useMemo(() => {
     if (!homeName || !homeKind) return [];
     return kits
-      .filter((k) => k.name === homeName)
+      .filter((k) => {
+        if (k.name !== homeName) return false;
+        const ks = store.kit(k.guid);
+        const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
+        return kKind === homeKind;
+      })
       .map((k) => ({
         label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
         href: k.version || "",
       }));
-  }, [homeName, homeKind, kits, t]);
+  }, [homeName, homeKind, kits, store, t]);
 
   // Build breadcrumb items for filtered names in kit editor
   const filteredNameItems = useMemo(() => {
@@ -676,13 +686,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator items={homeVersionsForName} tooltip={tooltip("navbar.versions")} onNavigate={(version) => navigate(`/kits?kind=${homeKind}&name=${encodeURIComponent(homeName)}&version=${encodeURIComponent(version)}`)} />
-              </>
-            )}
-            {homeVersion && (
-              <>
-                <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
-                  <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
-                </BreadcrumbItem>
+                {homeVersion !== null && (
+                  <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
+                    <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                )}
               </>
             )}
             {kitGuid && (
@@ -704,14 +712,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   items={kitVersionItems}
                   tooltip={tooltip("navbar.versions")}
                   onNavigate={(href) => {
-                    if (href.startsWith("/kits/")) navigate(href);
-                    else navigate(`/kits?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}&version=${encodeURIComponent(href)}`);
+                    navigate(href);
                   }}
                 />
                 <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}&version=${encodeURIComponent(kit?.version || "")}`)} style={{ cursor: "pointer" }}>
-                    {kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}
-                  </BreadcrumbLink>
+                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}`)} style={{ cursor: "pointer" }}>{kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
                 </BreadcrumbItem>
               </>
             )}
@@ -793,32 +798,56 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               items={designVariantItems}
               tooltip={tooltip("navbar.selectVariant")}
               onNavigate={(href) => {
-                console.log("[Navbar] Variant breadcrumb navigate", { href, design });
                 if (href === "#create-variant") handleCreateVariant(design, false);
                 else navigate(href);
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
-              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}`)} style={{ cursor: "pointer" }}>
-                {design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
-              </BreadcrumbLink>
+              <BreadcrumbLink style={{ cursor: "default" }}>{design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
               tooltip={tooltip("navbar.selectView")}
               onNavigate={(href) => {
-                console.log("[Navbar] View breadcrumb navigate", { href, design });
                 if (href === "#create-view") handleCreateView(design);
                 else navigate(href);
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.view")}>
-              <BreadcrumbLink
-                onClick={() => navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}`)}
-                style={{ cursor: "pointer" }}
-              >
-                {design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}
+              <BreadcrumbLink style={{ cursor: "default" }}>{design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}</BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        )}
+        {isTypeEditor && type && (
+          <>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.types")}>
+              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }}>
+                <Box size={16} />
               </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbBreak />
+            <BreadcrumbSeparator
+              items={typeNameItems}
+              tooltip={tooltip("navbar.selectType")}
+              onNavigate={(href) => {
+                if (href === "#create-type") handleCreateType();
+                else navigate(href);
+              }}
+            />
+            <BreadcrumbItem tooltip={tooltip("navbar.type")}>
+              <BreadcrumbLink style={{ cursor: "default" }}>{type.name}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={typeVariantItems}
+              tooltip={tooltip("navbar.selectVariant")}
+              onNavigate={(href) => {
+                if (href === "#create-variant") handleCreateVariant(type, true);
+                else navigate(href);
+              }}
+            />
+            <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
+              <BreadcrumbLink style={{ cursor: "default" }}>{type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}</BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}

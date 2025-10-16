@@ -25,6 +25,7 @@ import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../elements/display/Tooltip";
 
 import { Design, Type } from "../semio";
+import { DesignAvatar, TypeAvatar } from "./editors/design/Avatars";
 import DesignEditor from "./editors/design/Editor";
 import KitEditor from "./editors/kit/Editor";
 import TypeEditor from "./editors/type/Editor";
@@ -34,7 +35,8 @@ import Navbar, { PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
 import Details from "./panels/Details";
 import Settings from "./panels/Settings";
-import Workbench, { DesignAvatar, TypeAvatar } from "./panels/Workbench";
+import Toolbar from "./panels/Toolbar";
+import Workbench from "./panels/Workbench";
 import {
   DesignScopeProvider,
   KitScopeProvider,
@@ -249,7 +251,7 @@ const SketchpadBase: FC = () => {
               {isMobile ? (
                 // Mobile layout: full-screen panel or editor
                 <>
-                  {mobileVisiblePanel ? (
+                  {mobileVisiblePanel && mobileVisiblePanel !== "toolbar" ? (
                     <div className="absolute inset-1 z-30">
                       {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
                       {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
@@ -259,11 +261,16 @@ const SketchpadBase: FC = () => {
                   ) : (
                     <div className="flex-1 flex flex-col overflow-hidden">
                       <Outlet />
+                      {visiblePanels.toolbar && (
+                        <div className="absolute left-0 right-0 bottom-0 z-20">
+                          <Toolbar visible={true} height={panelSizes.toolbarHeight} onHeightChange={(h) => setPanelSize("toolbarHeight", h)} leftOffset={0} rightOffset={0} />
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
               ) : (
-                // Desktop layout: side-by-side panels
+                // Desktop layout: side-by-side panels with toolbar at bottom
                 <>
                   {visiblePanels.workbench && (
                     <div className="absolute left-1 top-0 bottom-1 z-20">
@@ -272,6 +279,19 @@ const SketchpadBase: FC = () => {
                   )}
                   <div className="flex-1 flex flex-col overflow-hidden">
                     <Outlet />
+                    {visiblePanels.toolbar && (
+                      <div className="absolute left-0 right-0 bottom-0 z-20">
+                        <Toolbar
+                          visible={true}
+                          height={panelSizes.toolbarHeight}
+                          onHeightChange={(h) => setPanelSize("toolbarHeight", h)}
+                          leftOffset={visiblePanels.workbench ? panelSizes.workbenchWidth + 4 : 0}
+                          rightOffset={
+                            (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + (visiblePanels.details || visiblePanels.chat || visiblePanels.settings ? 4 : 0)
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                   {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
                     <div className="absolute right-1 top-0 bottom-1 z-20 flex">

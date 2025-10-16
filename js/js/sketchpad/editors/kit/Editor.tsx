@@ -293,7 +293,7 @@ const Editor: FC = () => {
     }
 
     addSection("details", {
-      id: "kit",
+      id: "kit-details",
       label: "Kit",
       order: 0,
       defaultOpen: true,
@@ -301,7 +301,7 @@ const Editor: FC = () => {
     });
 
     return () => {
-      removeSection("details", "kit");
+      removeSection("details", "kit-details");
     };
   }, [addSection, removeSection, editorType]);
 
@@ -796,137 +796,154 @@ const Editor: FC = () => {
   if (isMobile) {
     return (
       <div className="flex flex-col h-full">
-        {/* Three-line filter layout for mobile */}
+        {/* Two-line filter layout for mobile */}
         <div className="flex flex-col border-b">
-          {/* Line 1: Kind toggles with horizontal scroll */}
+          {/* Line 1: Active selections with horizontal scroll */}
           <div className="border-b overflow-x-auto">
             <div className="flex gap-1 p-1 w-max">
-              {(!selectedKind || selectedKind === "designs") && (
+              {selectedKind && (
                 <Toggle
                   type="withAction"
-                  pressed={selectedKind === "designs"}
-                  onPressedChange={() => toggleKind("designs")}
+                  pressed={true}
+                  onPressedChange={() => toggleKind(selectedKind)}
                   actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateArtifact("designs")}
-                  tooltip={selectedKind === "designs" ? tooltip("kitEditor.hideDesigns") : tooltip("kitEditor.showDesigns")}
-                  actionTooltip={tooltip("kitEditor.createDesign")}
+                  onActionClick={() => handleCreateArtifact(selectedKind)}
+                  tooltip={tooltip("kitEditor.hideKind")}
+                  actionTooltip={tooltip("kitEditor.createArtifact")}
                 >
-                  <Layout className="size-4" />
+                  {selectedKind === "designs" && <Layout className="size-4" />}
+                  {selectedKind === "types" && <Box className="size-4" />}
+                  {selectedKind === "qualities" && <Award className="size-4" />}
+                  {selectedKind === "files" && <FileText className="size-4" />}
+                  {selectedKind === "authors" && <User className="size-4" />}
                 </Toggle>
               )}
-              {(!selectedKind || selectedKind === "types") && (
-                <Toggle
-                  type="withAction"
-                  pressed={selectedKind === "types"}
-                  onPressedChange={() => toggleKind("types")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateArtifact("types")}
-                  tooltip={selectedKind === "types" ? tooltip("kitEditor.hideTypes") : tooltip("kitEditor.showTypes")}
-                  actionTooltip={tooltip("kitEditor.createType")}
-                >
-                  <Box className="size-4" />
-                </Toggle>
-              )}
-              {(!selectedKind || selectedKind === "qualities") && (
-                <Toggle
-                  type="withAction"
-                  pressed={selectedKind === "qualities"}
-                  onPressedChange={() => toggleKind("qualities")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateArtifact("qualities")}
-                  tooltip={selectedKind === "qualities" ? tooltip("kitEditor.hideQualities") : tooltip("kitEditor.showQualities")}
-                  actionTooltip={tooltip("kitEditor.createQuality")}
-                >
-                  <Award className="size-4" />
-                </Toggle>
-              )}
-              {(!selectedKind || selectedKind === "files") && (
-                <Toggle
-                  type="withAction"
-                  pressed={selectedKind === "files"}
-                  onPressedChange={() => toggleKind("files")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateArtifact("files")}
-                  tooltip={selectedKind === "files" ? tooltip("kitEditor.hideFiles") : tooltip("kitEditor.showFiles")}
-                  actionTooltip={tooltip("kitEditor.createFile")}
-                >
-                  <FileText className="size-4" />
-                </Toggle>
-              )}
-              {(!selectedKind || selectedKind === "authors") && (
-                <Toggle
-                  type="withAction"
-                  pressed={selectedKind === "authors"}
-                  onPressedChange={() => toggleKind("authors")}
-                  actionIcon={<Plus className="size-3.5 opacity-50" />}
-                  onActionClick={() => handleCreateArtifact("authors")}
-                  tooltip={selectedKind === "authors" ? tooltip("kitEditor.hideAuthors") : tooltip("kitEditor.showAuthors")}
-                  actionTooltip={tooltip("kitEditor.createAuthor")}
-                >
-                  <User className="size-4" />
-                </Toggle>
-              )}
-            </div>
-          </div>
-
-          {/* Line 2: Other toggles (concepts, names, variants, views) with horizontal scroll */}
-          <div className="border-b overflow-x-auto">
-            <div className="flex gap-1 p-1 w-max">
-              {allConcepts.length > 0 &&
-                allConcepts.map((concept) => (
-                  <Toggle
-                    key={concept}
-                    pressed={selectedConcepts.includes(concept)}
-                    onPressedChange={() => toggleConcept(concept)}
-                    tooltip={selectedConcepts.includes(concept) ? t("kitEditor.hideConcept", { concept }) : t("kitEditor.showConcept", { concept })}
-                  >
-                    {concept}
-                  </Toggle>
-                ))}
-              {!selectedName &&
-                uniqueNames.length > 0 &&
-                uniqueNames.map((name) => (
-                  <Toggle key={name} pressed={selectedName === name} onPressedChange={() => toggleName(name)}>
-                    {name}
-                  </Toggle>
-                ))}
               {selectedName && (
                 <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
                   {selectedName}
                 </Toggle>
               )}
-              {!selectedVariant &&
-                selectedName &&
-                uniqueVariants.length > 0 &&
-                uniqueVariants.map((variant) => (
-                  <Toggle key={variant} pressed={selectedVariant === variant} onPressedChange={() => toggleVariant(variant)}>
-                    {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
-                  </Toggle>
-                ))}
-              {selectedVariant && (
+              {selectedVariant !== null && (
                 <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
                   {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
                 </Toggle>
               )}
-              {!selectedView &&
-                selectedName &&
-                selectedVariant !== null &&
-                uniqueViews.length > 0 &&
-                uniqueViews.map((view) => (
-                  <Toggle key={view} pressed={selectedView === view} onPressedChange={() => toggleView(view)}>
-                    {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
-                  </Toggle>
-                ))}
-              {selectedView && (
+              {selectedView !== null && (
                 <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
                   {selectedView || <span className="italic opacity-50">{t("design.defaultView")}</span>}
                 </Toggle>
               )}
+              {selectedConcepts.length > 0 &&
+                selectedConcepts.map((concept) => (
+                  <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitEditor.hideConcept", { concept })}>
+                    {concept}
+                  </Toggle>
+                ))}
+            </div>
+          </div>
+
+          {/* Line 2: Suggested options with horizontal scroll */}
+          <div className="border-b overflow-x-auto">
+            <div className="flex gap-1 p-1 w-max">
+              {!selectedKind && (
+                <>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("designs")}
+                    actionIcon={<Plus className="size-3.5 opacity-50" />}
+                    onActionClick={() => handleCreateArtifact("designs")}
+                    tooltip={tooltip("kitEditor.showDesigns")}
+                    actionTooltip={tooltip("kitEditor.createDesign")}
+                  >
+                    <Layout className="size-4" />
+                  </Toggle>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("types")}
+                    actionIcon={<Plus className="size-3.5 opacity-50" />}
+                    onActionClick={() => handleCreateArtifact("types")}
+                    tooltip={tooltip("kitEditor.showTypes")}
+                    actionTooltip={tooltip("kitEditor.createType")}
+                  >
+                    <Box className="size-4" />
+                  </Toggle>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("qualities")}
+                    actionIcon={<Plus className="size-3.5 opacity-50" />}
+                    onActionClick={() => handleCreateArtifact("qualities")}
+                    tooltip={tooltip("kitEditor.showQualities")}
+                    actionTooltip={tooltip("kitEditor.createQuality")}
+                  >
+                    <Award className="size-4" />
+                  </Toggle>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("files")}
+                    actionIcon={<Plus className="size-3.5 opacity-50" />}
+                    onActionClick={() => handleCreateArtifact("files")}
+                    tooltip={tooltip("kitEditor.showFiles")}
+                    actionTooltip={tooltip("kitEditor.createFile")}
+                  >
+                    <FileText className="size-4" />
+                  </Toggle>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("authors")}
+                    actionIcon={<Plus className="size-3.5 opacity-50" />}
+                    onActionClick={() => handleCreateArtifact("authors")}
+                    tooltip={tooltip("kitEditor.showAuthors")}
+                    actionTooltip={tooltip("kitEditor.createAuthor")}
+                  >
+                    <User className="size-4" />
+                  </Toggle>
+                </>
+              )}
+              {allConcepts.length > 0 &&
+                allConcepts
+                  .filter((c) => !selectedConcepts.includes(c))
+                  .map((concept) => (
+                    <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitEditor.showConcept", { concept })}>
+                      {concept}
+                    </Toggle>
+                  ))}
+              {selectedKind &&
+                !selectedName &&
+                uniqueNames.length > 0 &&
+                uniqueNames.map((name) => (
+                  <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+                    {name}
+                  </Toggle>
+                ))}
+              {selectedKind &&
+                selectedName &&
+                selectedVariant === null &&
+                uniqueVariants.length > 0 &&
+                uniqueVariants.map((variant) => (
+                  <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)}>
+                    {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
+                  </Toggle>
+                ))}
+              {selectedKind === "designs" &&
+                selectedName &&
+                selectedVariant !== null &&
+                selectedView === null &&
+                uniqueViews.length > 0 &&
+                uniqueViews.map((view) => (
+                  <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
+                    {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
+                  </Toggle>
+                ))}
             </div>
           </div>
 
           {/* Line 3: Search and sorting */}
-          <div className="flex items-center gap-1 p-1">
+          <div className="flex items-center gap-1 p-1 border-b">
             <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
             <Toggle
               type="dropdown"
@@ -994,125 +1011,151 @@ const Editor: FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-1 p-1 border-b">
-        <div className="flex flex-wrap gap-1 flex-shrink-0">
-          {(!selectedKind || selectedKind === "designs") && (
-            <Toggle
-              type="withAction"
-              pressed={selectedKind === "designs"}
-              onPressedChange={() => toggleKind("designs")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateArtifact("designs")}
-              tooltip={selectedKind === "designs" ? tooltip("kitEditor.hideDesigns") : tooltip("kitEditor.showDesigns")}
-              actionTooltip={tooltip("kitEditor.createDesign")}
-            >
-              <Layout className="size-4" />
-            </Toggle>
-          )}
-          {(!selectedKind || selectedKind === "types") && (
-            <Toggle
-              type="withAction"
-              pressed={selectedKind === "types"}
-              onPressedChange={() => toggleKind("types")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateArtifact("types")}
-              tooltip={selectedKind === "types" ? tooltip("kitEditor.hideTypes") : tooltip("kitEditor.showTypes")}
-              actionTooltip={tooltip("kitEditor.createType")}
-            >
-              <Box className="size-4" />
-            </Toggle>
-          )}
-          {(!selectedKind || selectedKind === "qualities") && (
-            <Toggle
-              type="withAction"
-              pressed={selectedKind === "qualities"}
-              onPressedChange={() => toggleKind("qualities")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateArtifact("qualities")}
-              tooltip={selectedKind === "qualities" ? tooltip("kitEditor.hideQualities") : tooltip("kitEditor.showQualities")}
-              actionTooltip={tooltip("kitEditor.createQuality")}
-            >
-              <Award className="size-4" />
-            </Toggle>
-          )}
-          {(!selectedKind || selectedKind === "files") && (
-            <Toggle
-              type="withAction"
-              pressed={selectedKind === "files"}
-              onPressedChange={() => toggleKind("files")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateArtifact("files")}
-              tooltip={selectedKind === "files" ? tooltip("kitEditor.hideFiles") : tooltip("kitEditor.showFiles")}
-              actionTooltip={tooltip("kitEditor.createFile")}
-            >
-              <FileText className="size-4" />
-            </Toggle>
-          )}
-          {(!selectedKind || selectedKind === "authors") && (
-            <Toggle
-              type="withAction"
-              pressed={selectedKind === "authors"}
-              onPressedChange={() => toggleKind("authors")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateArtifact("authors")}
-              tooltip={selectedKind === "authors" ? tooltip("kitEditor.hideAuthors") : tooltip("kitEditor.showAuthors")}
-              actionTooltip={tooltip("kitEditor.createAuthor")}
-            >
-              <User className="size-4" />
-            </Toggle>
-          )}
-          {allConcepts.length > 0 &&
-            allConcepts.map((concept) => (
+      {/* Two-line filter layout */}
+      <div className="flex flex-col border-b">
+        {/* Line 1: Active selections */}
+        <div className="flex items-center gap-1 p-1 border-b">
+          <div className="flex flex-wrap gap-1 flex-shrink-0">
+            {selectedKind && (
               <Toggle
-                key={concept}
-                pressed={selectedConcepts.includes(concept)}
-                onPressedChange={() => toggleConcept(concept)}
-                tooltip={selectedConcepts.includes(concept) ? t("kitEditor.hideConcept", { concept }) : t("kitEditor.showConcept", { concept })}
+                type="withAction"
+                pressed={true}
+                onPressedChange={() => toggleKind(selectedKind)}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateArtifact(selectedKind)}
+                tooltip={tooltip("kitEditor.hideKind")}
+                actionTooltip={tooltip("kitEditor.createArtifact")}
               >
-                {concept}
+                {selectedKind === "designs" && <Layout className="size-4" />}
+                {selectedKind === "types" && <Box className="size-4" />}
+                {selectedKind === "qualities" && <Award className="size-4" />}
+                {selectedKind === "files" && <FileText className="size-4" />}
+                {selectedKind === "authors" && <User className="size-4" />}
               </Toggle>
-            ))}
-          {!selectedName &&
-            uniqueNames.length > 0 &&
-            uniqueNames.map((name) => (
-              <Toggle key={name} pressed={selectedName === name} onPressedChange={() => toggleName(name)}>
-                {name}
+            )}
+            {selectedName && (
+              <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+                {selectedName}
               </Toggle>
-            ))}
-          {selectedName && (
-            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-              {selectedName}
-            </Toggle>
-          )}
-          {!selectedVariant &&
-            selectedName &&
-            uniqueVariants.length > 0 &&
-            uniqueVariants.map((variant) => (
-              <Toggle key={variant} pressed={selectedVariant === variant} onPressedChange={() => toggleVariant(variant)}>
-                {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
+            )}
+            {selectedVariant !== null && (
+              <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
+                {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
               </Toggle>
-            ))}
-          {selectedVariant && (
-            <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
-              {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
-            </Toggle>
-          )}
-          {!selectedView &&
-            selectedName &&
-            selectedVariant !== null &&
-            uniqueViews.length > 0 &&
-            uniqueViews.map((view) => (
-              <Toggle key={view} pressed={selectedView === view} onPressedChange={() => toggleView(view)}>
-                {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
+            )}
+            {selectedView !== null && (
+              <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
+                {selectedView || <span className="italic opacity-50">{t("design.defaultView")}</span>}
               </Toggle>
-            ))}
-          {selectedView && (
-            <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
-              {selectedView || <span className="italic opacity-50">{t("design.defaultView")}</span>}
-            </Toggle>
-          )}
+            )}
+            {selectedConcepts.length > 0 &&
+              selectedConcepts.map((concept) => (
+                <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitEditor.hideConcept", { concept })}>
+                  {concept}
+                </Toggle>
+              ))}
+          </div>
+          <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
         </div>
-        <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
+        {/* Line 2: Suggested options */}
+        <div className="flex items-center gap-1 p-1">
+          <div className="flex flex-wrap gap-1 flex-shrink-0">
+            {!selectedKind && (
+              <>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("designs")}
+                  actionIcon={<Plus className="size-3.5 opacity-50" />}
+                  onActionClick={() => handleCreateArtifact("designs")}
+                  tooltip={tooltip("kitEditor.showDesigns")}
+                  actionTooltip={tooltip("kitEditor.createDesign")}
+                >
+                  <Layout className="size-4" />
+                </Toggle>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("types")}
+                  actionIcon={<Plus className="size-3.5 opacity-50" />}
+                  onActionClick={() => handleCreateArtifact("types")}
+                  tooltip={tooltip("kitEditor.showTypes")}
+                  actionTooltip={tooltip("kitEditor.createType")}
+                >
+                  <Box className="size-4" />
+                </Toggle>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("qualities")}
+                  actionIcon={<Plus className="size-3.5 opacity-50" />}
+                  onActionClick={() => handleCreateArtifact("qualities")}
+                  tooltip={tooltip("kitEditor.showQualities")}
+                  actionTooltip={tooltip("kitEditor.createQuality")}
+                >
+                  <Award className="size-4" />
+                </Toggle>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("files")}
+                  actionIcon={<Plus className="size-3.5 opacity-50" />}
+                  onActionClick={() => handleCreateArtifact("files")}
+                  tooltip={tooltip("kitEditor.showFiles")}
+                  actionTooltip={tooltip("kitEditor.createFile")}
+                >
+                  <FileText className="size-4" />
+                </Toggle>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("authors")}
+                  actionIcon={<Plus className="size-3.5 opacity-50" />}
+                  onActionClick={() => handleCreateArtifact("authors")}
+                  tooltip={tooltip("kitEditor.showAuthors")}
+                  actionTooltip={tooltip("kitEditor.createAuthor")}
+                >
+                  <User className="size-4" />
+                </Toggle>
+              </>
+            )}
+            {allConcepts.length > 0 &&
+              allConcepts
+                .filter((c) => !selectedConcepts.includes(c))
+                .map((concept) => (
+                  <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitEditor.showConcept", { concept })}>
+                    {concept}
+                  </Toggle>
+                ))}
+            {selectedKind &&
+              !selectedName &&
+              uniqueNames.length > 0 &&
+              uniqueNames.map((name) => (
+                <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+                  {name}
+                </Toggle>
+              ))}
+            {selectedKind &&
+              selectedName &&
+              selectedVariant === null &&
+              uniqueVariants.length > 0 &&
+              uniqueVariants.map((variant) => (
+                <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)}>
+                  {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
+                </Toggle>
+              ))}
+            {selectedKind === "designs" &&
+              selectedName &&
+              selectedVariant !== null &&
+              selectedView === null &&
+              uniqueViews.length > 0 &&
+              uniqueViews.map((view) => (
+                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
+                  {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
+                </Toggle>
+              ))}
+          </div>
+        </div>
       </div>
       <ScrollArea className="flex-1">
         <table className="w-full border-collapse">

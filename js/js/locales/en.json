@@ -69,6 +69,8 @@
         "suggestions": "Suggestions"
     },
     "panels": {
+        "toolbar": "Toolbar panel",
+        "toolbar.extensive": "Toggle toolbar panel",
         "details": "Details panel",
         "details.extensive": "Toggle details panel",
         "workbench": "Workbench panel",
@@ -248,7 +250,8 @@
         "name": "Name",
         "kind": "Kind",
         "lastUpdated": "Last updated",
-        "created": "Created"
+        "created": "Created",
+        "sortByName": "Sort by name"
     },
     "kitEditor": {
         "designs": "Designs",
@@ -276,7 +279,8 @@
         "name": "Name",
         "kind": "Kind",
         "lastUpdated": "Last updated",
-        "created": "Created"
+        "created": "Created",
+        "sortByName": "Sort by name"
     },
     "breadcrumb": {
         "starter": "Starter",
@@ -344,7 +348,34 @@
         "variantPlaceholder": "Type variant",
         "defaultVariant": "Default Variant",
         "newVariant": "New Variant",
-        "unit": "Unit"
+        "unit": "Unit",
+        "representations": "Representations",
+        "representation": "Representation",
+        "representationUrl": "URL",
+        "representationDescription": "Description",
+        "representationDescriptionPlaceholder": "Enter description...",
+        "representationTags": "Tags",
+        "representationTagsPlaceholder": "Enter tags...",
+        "ports": "Ports",
+        "port": "Port",
+        "portFamily": "Family",
+        "portFamilyPlaceholder": "Enter port family...",
+        "portDescription": "Description",
+        "portDescriptionPlaceholder": "Enter port description...",
+        "portPoint": "Point",
+        "portDirection": "Direction",
+        "portCompatibleFamilies": "Compatible Families",
+        "portCompatibleFamiliesPlaceholder": "Enter compatible families...",
+        "authors": "Authors",
+        "author": "Author",
+        "authorName": "Name",
+        "attributes": "Attributes",
+        "attribute": "Attribute",
+        "attributeName": "Name",
+        "attributeValue": "Value",
+        "attributeValuePlaceholder": "Optional value",
+        "attributeDefinition": "Definition",
+        "attributeDefinitionPlaceholder": "Optional definition (text or URL)"
     },
     "sort": {
         "ascending": "Sort ascending",

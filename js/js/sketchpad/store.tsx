@@ -128,6 +128,16 @@ export enum EditorType {
   TYPE = "type",
 }
 
+export enum ToolType {
+  // Selection tools
+  SELECTION_NORMAL = "selection-normal",
+  SELECTION_ADDITIVE = "selection-additive",
+  SELECTION_SUBTRACTIVE = "selection-subtractive",
+  // Lasso tools
+  LASSO_RECTANGULAR = "lasso-rectangular",
+  LASSO_FREEFORM = "lasso-freeform",
+}
+
 // #endregion Constants
 
 // #region General
@@ -1802,9 +1812,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id === type.guid);
-          return update ? { ...type, ports: update.diff.ports } : type;
-        })
+        const update = colorDiff.updated?.find((u) => u.id === type.guid);
+        return update ? { ...type, ports: update.diff.ports } : type;
+      })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -2229,7 +2239,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
   const selection = useDesignEditorSelection();
-  return selection.pieces?.some((p) => p.id_ === piece?.id) ?? false;
+  return selection.pieces?.includes(piece?.guid ?? "") ?? false;
 }
 
 export function useIsPieceHovered(): boolean {
@@ -2753,9 +2763,10 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 }
 
 export function useIsConnectionSelected(): boolean {
-  const connection = useConnectionScope();
+  const connectionScope = useConnectionScope();
   const selection = useDesignEditorSelection();
-  return selection.connections?.some((c) => c.connected.piece.id_ === connection?.id.connected.piece.id_ && c.connecting.piece.id_ === connection?.id.connecting.piece.id_) ?? false;
+  if (!connectionScope) return false;
+  return selection.connections?.some((guid) => guid === connectionScope.guid) ?? false;
 }
 
 export function useIsConnectionHovered(): boolean {
@@ -3406,7 +3417,7 @@ class DesignStore {
       }
     }
 
-    if (diff.location !== undefined) {
+    if ("location" in diff) {
       if (diff.location) {
         if (!this.location) {
           const yLocation = new Y.Map();
@@ -3445,13 +3456,44 @@ class DesignStore {
       }
     }
 
-    if (diff.attributes !== undefined) {
-      this.attributes = [];
-      this.yAttributes.delete(0, this.yAttributes.length);
+    if ("attributes" in diff) {
+      if (diff.attributes && typeof diff.attributes === "object" && ("added" in diff.attributes || "removed" in diff.attributes || "updated" in diff.attributes)) {
+        // Handle incremental updates
+        if (diff.attributes.removed) {
+          diff.attributes.removed.forEach((guid) => {
+            const attr = this.attributes.get(guid);
+            if (attr) {
+              const yAttrIndex = Array.from(this.yAttributes).findIndex((yAttr: any) => {
+                const yMap = yAttr[0] as Y.Map<any>;
+                return yMap.get("guid") === guid;
+              });
+              if (yAttrIndex !== -1) {
+                this.yAttributes.delete(yAttrIndex, 1);
+              }
+              this.attributes.delete(guid);
+            }
+          });
+        }
+        if (diff.attributes.updated) {
+          diff.attributes.updated.forEach(({ id, diff: attrDiff }) => {
+            const attr = this.attributes.get(id);
+            if (attr) {
+              attr.change(attrDiff);
+            }
+          });
+        }
+        if (diff.attributes.added) {
+          diff.attributes.added.forEach((attribute) => this.createAttribute(attribute));
+        }
+      } else {
+        // Handle complete replacement (array format)
+        this.attributes.clear();
+        this.yAttributes.delete(0, this.yAttributes.length);
 
-      if (diff.attributes) {
-        for (const attribute of diff.attributes) {
-          this.createAttribute(attribute);
+        if (diff.attributes && Array.isArray(diff.attributes)) {
+          for (const attribute of diff.attributes) {
+            this.createAttribute(attribute);
+          }
         }
       }
     }
@@ -3558,7 +3600,7 @@ export function useClusterableGroups() {
     if (!design) return [];
     return getClusterableGroups(
       design,
-      selection.pieces.map((p: any) => p.id_),
+      selection.pieces,
     );
   }, [design, selection.pieces]);
 }
@@ -3631,26 +3673,26 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
 
 export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
   const kit = useKit();
-  const design = useDesign();
-  const Guid = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  const design = useDesign() as Design;
+  const designGuid = design.guid;
 
   return useMemo(() => {
     if (pieceIds.length === 1) {
-      return findReplacableTypesForPieceInDesign(kit, Guid, pieceIds[0], selectedVariants);
+      return findReplacableTypesForPieceInDesign(kit, designGuid, pieceIds[0], selectedVariants);
     } else {
-      return findReplacableTypesForPiecesInDesign(kit, Guid, pieceIds, selectedVariants);
+      return findReplacableTypesForPiecesInDesign(kit, designGuid, pieceIds, selectedVariants);
     }
-  }, [kit, Guid, pieceIds, selectedVariants]);
+  }, [kit, designGuid, pieceIds, selectedVariants]);
 }
 
 export function useReplacableDesigns(piece: Piece) {
   const kit = useKit();
-  const design = useDesign();
-  const Guid = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  const design = useDesign() as Design;
+  const designGuid = design.guid;
 
   return useMemo(() => {
-    return findReplacableDesignsForDesignPiece(kit, Guid, piece);
-  }, [kit, Guid, piece]);
+    return findReplacableDesignsForDesignPiece(kit, designGuid, piece);
+  }, [kit, designGuid, piece]);
 }
 
 export function useExplodeableDesignNodes(nodes: any[], selection: any) {
@@ -3659,7 +3701,7 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
     return nodes.filter((node) => {
       if (node.type !== "design") return false;
       const Guid = node.data.piece.id_;
-      if (!selection.pieces?.some((p: any) => p.id_ === Guid)) return false;
+      if (!selection.pieces?.includes(Guid)) return false;
       const designName = (node.data.piece as any).type?.variant;
       if (!designName) return false;
       if (!kit?.designs?.find((d) => d.name === designName)) return false;
@@ -4266,7 +4308,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -4442,7 +4484,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) {}
+                  } catch (error) { }
                 }
               }
             }
@@ -5135,17 +5177,17 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
+        toolbar: false,
         workbench: false,
         details: false,
-        console: false,
         chat: false,
         settings: false,
       };
     }
     return {
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
       workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
-      console: yPanelVisibility.get("console") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
@@ -5374,7 +5416,7 @@ export function useTypeEditorCamera(): Camera | undefined {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -5477,17 +5519,17 @@ class HomeStore {
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
+        toolbar: false,
         workbench: false,
         details: false,
-        console: false,
         chat: false,
         settings: false,
       };
     }
     return {
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
       workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
-      console: yPanelVisibility.get("console") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
@@ -5884,17 +5926,17 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
+        toolbar: false,
         workbench: false,
         details: false,
-        console: false,
         chat: false,
         settings: false,
       };
     }
     return {
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
       workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
-      console: yPanelVisibility.get("console") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
@@ -6480,7 +6522,7 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -6632,6 +6674,7 @@ export interface DesignEditorDiff {
   hover?: DesignEditorHover;
   fullscreenPanel?: DesignEditorFullscreenPanel;
   panelVisibility?: Partial<PanelVisibility>;
+  activeTool?: ToolType;
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
@@ -6647,6 +6690,7 @@ export interface DesignEditorEdit {
 export interface DesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
   panelVisibility: PanelVisibility;
+  activeTool?: ToolType;
   selection?: DesignEditorSelection;
   hover?: DesignEditorHover;
   presence?: DesignEditorPresence;
@@ -6775,21 +6819,27 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
     this.yMap.set("fullscreenPanel", panel);
   }
+  get activeTool(): ToolType {
+    return (this.yMap.get("activeTool") as ToolType) ?? ToolType.SELECTION_NORMAL;
+  }
+  set activeTool(tool: ToolType) {
+    this.yMap.set("activeTool", tool);
+  }
   get panelVisibility(): PanelVisibility {
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
+        toolbar: false,
         workbench: false,
         details: false,
-        console: false,
         chat: false,
         settings: false,
       };
     }
     return {
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
       workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
-      console: yPanelVisibility.get("console") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
@@ -6803,16 +6853,13 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     // Get pieces
     const pieces = selection.get("pieces") as Y.Array<string>;
     if (pieces && pieces.length > 0) {
-      result.pieces = pieces.toArray().map((id_) => ({ id_ }));
+      result.pieces = pieces.toArray();
     }
 
     // Get connections
-    const connections = selection.get("connections") as Y.Array<Y.Map<any>>;
+    const connections = selection.get("connections") as Y.Array<string>;
     if (connections && connections.length > 0) {
-      result.connections = connections.toArray().map((conn) => ({
-        connected: { piece: { id_: conn.get("connected") } },
-        connecting: { piece: { id_: conn.get("connecting") } },
-      }));
+      result.connections = connections.toArray();
     }
 
     // Get port
@@ -6820,13 +6867,13 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     if (port) {
       const piece = port.get("piece");
       const designPiece = port.get("designPiece");
-      const Guid = port.get("port");
+      const portId = port.get("port");
 
-      if (piece && Guid) {
+      if (piece && portId) {
         result.port = {
-          piece: { id_: piece },
-          designPiece: designPiece ? { id_: designPiece } : undefined,
-          port: { id_: Guid },
+          piece: piece,
+          designPiece: designPiece,
+          port: portId,
         };
       }
     }
@@ -6882,6 +6929,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     return {
       fullscreenPanel: this.fullscreenPanel,
       panelVisibility: this.panelVisibility,
+      activeTool: this.activeTool,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
       canUndo: this.canUndo(),
@@ -6934,23 +6982,21 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
     // Apply connections diff
     if (selectionDiff.connections) {
-      let connections = (selection.get("connections") as Y.Array<Y.Map<any>>) || new Y.Array<Y.Map<any>>();
+      let connections = (selection.get("connections") as Y.Array<Guid>) || new Y.Array<Guid>();
       if (!selection.has("connections")) {
         selection.set("connections", connections);
       }
 
       if (selectionDiff.connections.added) {
-        for (const connection of selectionDiff.connections.added) {
-          const connectionMap = new Y.Map();
-          connectionMap.set("connected", connection.connected.piece);
-          connectionMap.set("connecting", connection.connecting.piece);
-          connections.push([connectionMap]);
+        for (const connectionGuid of selectionDiff.connections.added) {
+          if (!connections.toArray().includes(connectionGuid)) {
+            connections.push([connectionGuid]);
+          }
         }
       }
       if (selectionDiff.connections.removed) {
-        for (const connection of selectionDiff.connections.removed) {
-          const connectionsArray = connections.toArray();
-          const index = connectionsArray.findIndex((conn) => conn.get("connected") === connection.connected.piece && conn.get("connecting") === connection.connecting.piece);
+        for (const connectionGuid of selectionDiff.connections.removed) {
+          const index = connections.toArray().indexOf(connectionGuid);
           if (index !== -1) {
             connections.delete(index, 1);
           }
@@ -6977,6 +7023,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   change = (diff: DesignEditorDiff) => {
     this.transact(() => {
       if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
+      if (diff.activeTool) this.activeTool = diff.activeTool;
       if (diff.panelVisibility !== undefined) {
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
         if (!yPanelVisibility) {
@@ -7093,6 +7140,13 @@ const designEditorCommands = {
       },
     };
   },
+  "semio.designEditor.setActiveTool": (context: DesignEditorCommandContext, tool: ToolType): DesignEditorCommandResult => {
+    return {
+      diff: {
+        activeTool: tool,
+      },
+    };
+  },
   "semio.designEditor.selectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     const design = findDesignInKit(context.kit, context.Guid)!;
     const currentSelection = context.designEditor.selection;
@@ -7100,12 +7154,12 @@ const designEditorCommands = {
       diff: {
         selection: {
           pieces: {
-            removed: currentSelection.pieces ?? [],
-            added: design.pieces ?? [],
+            removed: currentSelection?.pieces ?? [],
+            added: design.pieces?.map((p) => p.guid) ?? [],
           },
           connections: {
-            removed: currentSelection.connections ?? [],
-            added: design.connections ?? [],
+            removed: currentSelection?.connections ?? [],
+            added: design.connections?.map((c) => c.guid) ?? [],
           },
         },
       },
@@ -7116,8 +7170,9 @@ const designEditorCommands = {
     return {
       diff: {
         selection: {
-          pieces: { removed: currentSelection.pieces ?? [] },
-          connections: { removed: currentSelection.connections ?? [] },
+          pieces: { removed: currentSelection?.pieces ?? [] },
+          connections: { removed: currentSelection?.connections ?? [] },
+          port: undefined,
         },
       },
     };
@@ -7128,10 +7183,10 @@ const designEditorCommands = {
       diff: {
         selection: {
           pieces: {
-            removed: currentSelection.pieces ?? [],
+            removed: currentSelection?.pieces ?? [],
             added: [Guid],
           },
-          connections: { removed: currentSelection.connections ?? [] },
+          connections: { removed: currentSelection?.connections ?? [] },
         },
       },
     };
@@ -7142,10 +7197,10 @@ const designEditorCommands = {
       diff: {
         selection: {
           pieces: {
-            removed: currentSelection.pieces ?? [],
+            removed: currentSelection?.pieces ?? [],
             added: pieceIds,
           },
-          connections: { removed: currentSelection.connections ?? [] },
+          connections: { removed: currentSelection?.connections ?? [] },
         },
       },
     };
@@ -7184,11 +7239,17 @@ const designEditorCommands = {
   },
   "semio.designEditor.deleteSelected": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     const selection = context.designEditor.selection;
+    const design = findDesignInKit(context.kit, context.Guid);
+    const selectedConnections =
+      selection?.connections
+        ?.map((connGuid) => design?.connections?.find((c) => c.guid === connGuid))
+        .filter((c): c is Connection => c !== undefined)
+        .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } })) ?? [];
     return {
       diff: {
         selection: {
-          pieces: { removed: selection.pieces ?? [] },
-          connections: { removed: selection.connections ?? [] },
+          pieces: { removed: selection?.pieces ?? [] },
+          connections: { removed: selection?.connections ?? [] },
         },
       },
       kitDiff: {
@@ -7196,7 +7257,7 @@ const designEditorCommands = {
           updated: [
             {
               id: context.Guid,
-              diff: { pieces: { removed: selection.pieces }, connections: { removed: selection.connections } },
+              diff: { pieces: { removed: selection?.pieces ?? [] }, connections: { removed: selectedConnections } },
             },
           ],
         },
@@ -7294,6 +7355,9 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, Guid: Guid): DesignEditorCommandResult => {
+    const design = findDesignInKit(context.kit, context.Guid);
+    const connection = design?.connections?.find((c) => c.guid === Guid);
+    if (!connection) return {};
     return {
       diff: {},
       kitDiff: {
@@ -7301,7 +7365,7 @@ const designEditorCommands = {
           updated: [
             {
               id: context.Guid,
-              diff: { connections: { removed: [Guid] } },
+              diff: { connections: { removed: [{ connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }] } },
             },
           ],
         },
@@ -7309,6 +7373,12 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: Guid[]): DesignEditorCommandResult => {
+    const design = findDesignInKit(context.kit, context.Guid);
+    const connectionsToRemove =
+      connectionIds
+        .map((connGuid) => design?.connections?.find((c) => c.guid === connGuid))
+        .filter((c): c is Connection => c !== undefined)
+        .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } })) ?? [];
     return {
       diff: {},
       kitDiff: {
@@ -7316,7 +7386,7 @@ const designEditorCommands = {
           updated: [
             {
               id: context.Guid,
-              diff: { connections: { removed: connectionIds } },
+              diff: { connections: { removed: connectionsToRemove } },
             },
           ],
         },
@@ -7354,6 +7424,9 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.updateConnection": (context: DesignEditorCommandContext, Guid: Guid, connectionDiff: ConnectionDiff): DesignEditorCommandResult => {
+    const design = findDesignInKit(context.kit, context.Guid);
+    const connection = design?.connections?.find((c) => c.guid === Guid);
+    if (!connection) return {};
     return {
       diff: {},
       kitDiff: {
@@ -7361,7 +7434,7 @@ const designEditorCommands = {
           updated: [
             {
               id: context.Guid,
-              diff: { connections: { updated: [{ id: Guid, diff: connectionDiff }] } },
+              diff: { connections: { updated: [{ id: { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }, diff: connectionDiff }] } },
             },
           ],
         },
@@ -7369,6 +7442,17 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.updateConnections": (context: DesignEditorCommandContext, updates: { id: Guid; diff: ConnectionDiff }[]): DesignEditorCommandResult => {
+    const design = findDesignInKit(context.kit, context.Guid);
+    const updatesWithConnectionIds = updates
+      .map((update) => {
+        const connection = design?.connections?.find((c) => c.guid === update.id);
+        if (!connection) return null;
+        return {
+          id: { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } },
+          diff: update.diff,
+        };
+      })
+      .filter((u): u is { id: { connected: { piece: string }; connecting: { piece: string } }; diff: ConnectionDiff } => u !== null);
     return {
       diff: {},
       kitDiff: {
@@ -7376,41 +7460,41 @@ const designEditorCommands = {
           updated: [
             {
               id: context.Guid,
-              diff: { connections: { updated: updates } },
+              diff: { connections: { updated: updatesWithConnectionIds } },
             },
           ],
         },
       },
     };
   },
-  "semio.designEditor.selectConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+  "semio.designEditor.selectConnection": (context: DesignEditorCommandContext, connectionGuid: Guid): DesignEditorCommandResult => {
     const currentSelection = context.designEditor.selection;
     return {
       diff: {
         selection: {
-          pieces: { removed: currentSelection.pieces ?? [] },
+          pieces: { removed: currentSelection?.pieces ?? [] },
           connections: {
-            removed: currentSelection.connections ?? [],
-            added: [connection],
+            removed: currentSelection?.connections ?? [],
+            added: [connectionGuid],
           },
         },
       },
     };
   },
-  "semio.designEditor.addConnectionToSelection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+  "semio.designEditor.addConnectionToSelection": (context: DesignEditorCommandContext, connectionGuid: Guid): DesignEditorCommandResult => {
     return {
       diff: {
         selection: {
-          connections: { added: [connection] },
+          connections: { added: [connectionGuid] },
         },
       },
     };
   },
-  "semio.designEditor.removeConnectionFromSelection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+  "semio.designEditor.removeConnectionFromSelection": (context: DesignEditorCommandContext, connectionGuid: Guid): DesignEditorCommandResult => {
     return {
       diff: {
         selection: {
-          connections: { removed: [connection] },
+          connections: { removed: [connectionGuid] },
         },
       },
     };
@@ -7496,7 +7580,7 @@ export function useDesignEditorDiagramScale(): number | undefined {
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  const noOp = () => {};
+  const noOp = () => { };
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7518,6 +7602,7 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
       deleteSelected: noOp,
       toggleDiagramFullscreen: noOp,
       toggleAccesslFullscreen: noOp,
+      setActiveTool: noOp,
       addPiece: noOp,
       addPieces: noOp,
       removePiece: noOp,
@@ -7549,14 +7634,15 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     selectPieces: (guids: Guid[]) => store.execute("semio.designEditor.selectPieces", guids),
     addPieceToSelection: (guid: Guid) => store.execute("semio.designEditor.addPieceToSelection", guid),
     removePieceFromSelection: (guid: Guid) => store.execute("semio.designEditor.removePieceFromSelection", guid),
-    selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
-    addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
-    removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
+    selectConnection: (connectionGuid: Guid) => store.execute("semio.designEditor.selectConnection", connectionGuid),
+    addConnectionToSelection: (connectionGuid: Guid) => store.execute("semio.designEditor.addConnectionToSelection", connectionGuid),
+    removeConnectionFromSelection: (connectionGuid: Guid) => store.execute("semio.designEditor.removeConnectionFromSelection", connectionGuid),
     selectPiecePort: (piece: Guid, port: Guid) => store.execute("semio.designEditor.selectPiecePort", piece, port),
     deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
     deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleAccesslFullscreen: () => store.execute("semio.designEditor.toggleAccesslFullscreen"),
+    setActiveTool: (tool: ToolType) => store.execute("semio.designEditor.setActiveTool", tool),
     addPiece: (piece: Piece) => store.execute("semio.designEditor.addPiece", piece),
     addPieces: (pieces: Piece[]) => store.execute("semio.designEditor.addPieces", pieces),
     removePiece: (piece: Guid) => store.execute("semio.designEditor.removePiece", piece),
@@ -7596,6 +7682,7 @@ type YSketchpadVal = string | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
 export interface PanelVisibility {
+  toolbar?: boolean;
   workbench?: boolean;
   details?: boolean;
   chat?: boolean;
@@ -7612,6 +7699,7 @@ export interface EditorSettings {
 }
 
 export interface PanelSizes {
+  toolbarHeight: number;
   workbenchWidth: number;
   detailsWidth: number;
   chatWidth: number;
@@ -7775,6 +7863,7 @@ class SketchpadStore {
         this.ySketchpad.set(
           "panelSizes",
           JSON.stringify({
+            toolbarHeight: 52,
             workbenchWidth: 230,
             detailsWidth: 230,
             chatWidth: 230,
@@ -7799,20 +7888,21 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-          design: { snappiness: 10, gridSize: 24 },
-          type: {},
-          kit: {},
-        };
+        design: { snappiness: 10, gridSize: 24 },
+        type: {},
+        kit: {},
+      };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-          workbenchWidth: 230,
-          detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
-          consoleHeight: 200,
-        };
+        toolbarHeight: 52,
+        workbenchWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const currentValues = {

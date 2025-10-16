@@ -1,3 +1,18 @@
+// #region Header
+
+// Settings.tsx
+
+// Generalized settings panel that displays global settings and editor-specific settings sections.
+// Editors can register their own settings sections dynamically using the panel section system.
+//
+// Architecture:
+// - Contains built-in general settings (theme, layout, mode, language)
+// - Editors can add custom settings sections via `useAddPanelSection("settings", {...})`
+// - Sections are sorted by order and rendered as TreeSections
+// - Follows the same pattern as Workbench and Details panels
+
+// #endregion
+
 import { t } from "i18next";
 import { BrainCircuit, FingerprintIcon, GraduationCap, Laptop, MonitorIcon, MoonIcon, Sparkles, SunIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";

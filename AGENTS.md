@@ -213,7 +213,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── Home.tsx
 │ │ │ ├── Navbar.tsx
 │ │ │ ├── Sketchpad.stories.tsx
-│ │ │ └── Sketchpad.tsx # main component of @semio/js
+│ │ │ ├── Sketchpad.tsx # main component of @semio/js
+│ │ │ └── store.tsx
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts

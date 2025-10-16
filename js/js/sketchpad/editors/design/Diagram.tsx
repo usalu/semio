@@ -21,7 +21,7 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 
-import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Piece, Port, TOLERANCE, Type } from "../../../semio";
+import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import {
@@ -39,6 +39,7 @@ import {
   useExplodeableDesignNodes,
   useKit,
   useKitCommands,
+  useSketchpadCommands,
 } from "../../store";
 
 type ClusterMenuProps = {
@@ -284,23 +285,26 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 
   const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
+  const isSelected = selection?.pieces?.includes(guid) ?? false;
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection.port;
 
-    if (currentSelectedPort && (currentSelectedPort.piece.guid !== piece.guid || currentSelectedPort.port.guid !== port.guid)) {
+    if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
       const connection: Connection = {
+        guid: crypto.randomUUID(),
         connecting: {
-          piece: { guid: currentSelectedPort.piece.guid },
-          port: { guid: currentSelectedPort.port.guid },
+          guid: crypto.randomUUID(),
+          piece: currentSelectedPort.piece,
+          port: currentSelectedPort.port,
         },
-        connected: { piece: { guid: piece.guid }, port: { guid: port.guid } },
+        connected: { guid: crypto.randomUUID(), piece: piece.guid, port: port.guid },
       };
       addConnection(connection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.piece.guid === piece.guid && currentSelectedPort.port.guid === port.guid) {
+    } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
       deselectPiecePort();
-    } else if (port.guid) selectPiecePort({ guid: piece.guid }, { guid: port.guid });
+    } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
   let fillClass = "";
@@ -310,30 +314,33 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
-    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
   } else if (diff === DiffStatus.Removed) {
-    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
     strokeClass = "stroke-danger stroke-2";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
-    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
-  } else if (selected) {
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
+  } else if (isSelected) {
     fillClass = "fill-primary";
   } else {
     fillClass = "fill-transparent";
   }
 
+  const isDesignPiece = !!piece.design;
+
   return (
-    <PieceScopeProvider id={{ guid }}>
+    <PieceScopeProvider guid={guid}>
       <div style={{ opacity }}>
         <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
           <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+          {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
           <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-foreground">
             {guid}
           </text>
         </svg>
         {ports?.map((port: Port, portIndex: number) => (
-          <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={guid} selected={selection.port?.piece.guid === guid && selection.port?.port.guid === port.guid} onPortClick={onPortClick} />
+          <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={guid} selected={selection.port?.piece === guid && selection.port?.port === port.guid} onPortClick={onPortClick} />
         ))}
       </div>
     </PieceScopeProvider>
@@ -349,6 +356,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
   const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
+  const isSelected = selection?.pieces?.includes(guid) ?? false;
 
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
     const connectedIsDesignPiece = connection.connected.piece.guid === piece.guid || connection.connected.designPiece?.guid === piece.guid;
@@ -403,19 +411,21 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection.port;
 
-    if (currentSelectedPort && (currentSelectedPort.piece.guid !== piece.guid || currentSelectedPort.port.guid !== port.guid)) {
+    if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
       const connection: Connection = {
+        guid: crypto.randomUUID(),
         connecting: {
-          piece: { guid: currentSelectedPort.piece.guid },
-          port: { guid: currentSelectedPort.port.guid },
+          guid: crypto.randomUUID(),
+          piece: currentSelectedPort.piece,
+          port: currentSelectedPort.port,
         },
-        connected: { piece: { guid: piece.guid }, port: { guid: port.guid } },
+        connected: { guid: crypto.randomUUID(), piece: piece.guid, port: port.guid },
       };
       addConnection(connection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.piece.guid === piece.guid && currentSelectedPort.port.guid === port.guid) {
+    } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
       deselectPiecePort();
-    } else if (port.guid) selectPiecePort({ guid: piece.guid }, { guid: port.guid });
+    } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
   let fillClass = "";
@@ -425,14 +435,14 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
-    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
   } else if (diff === DiffStatus.Removed) {
-    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
     strokeClass = "stroke-danger stroke-2";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
-    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
-  } else if (selected) {
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
+  } else if (isSelected) {
     fillClass = "fill-primary";
   } else {
     fillClass = "fill-background";
@@ -447,7 +457,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         </text>
       </svg>
       {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={guid} selected={selection.port?.piece.guid === guid && selection.port?.port.guid === port.guid} onPortClick={onPortClick} />
+        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={guid} selected={selection.port?.piece === guid && selection.port?.port === port.guid} onPortClick={onPortClick} />
       ))}
     </div>
   );
@@ -635,7 +645,7 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
 
   return {
     type: "connection",
-    id: `${sourceNodeId}:${sourcePortId} -- ${targetNodeId}:${targetPortId}:${connectionIndex}`,
+    id: connection.guid,
     source: sourceNodeId,
     sourceHandle: sourcePortId,
     target: targetNodeId,
@@ -658,22 +668,49 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const pieceNodes =
     design.pieces
       ?.map((piece, i) => {
-        const isSelected = selection?.pieces?.some((p: any) => p.guid === piece.guid) ?? false;
+        const isSelected = selection?.pieces?.includes(piece.guid) ?? false;
         const center = centerMap.get(piece.guid) || piece.center || { x: 0, y: 0 };
 
+        if (piece.design) {
+          const design = kit.designs?.find((d: Design) => d.guid === piece.design);
+          if (!design) {
+            console.warn(`Design not found for piece ${piece.guid}: ${piece.design}`);
+            const fallbackType: Type = {
+              guid: `fallback-${piece.design}`,
+              name: `Unknown-${piece.design}`,
+              variant: undefined,
+              unit: "m",
+              description: `Missing design: ${piece.design}`,
+              ports: [],
+              representations: [],
+            };
+            return pieceToNode(piece, fallbackType, center, isSelected, i);
+          }
+          const designAsType: Type = {
+            guid: design.guid,
+            name: design.name,
+            variant: design.variant,
+            unit: design.unit || "m",
+            description: design.description,
+            ports: [],
+            representations: [],
+          };
+          return pieceToNode(piece, designAsType, center, isSelected, i);
+        }
+
         if (!piece.type) {
-          console.warn(`No type defined for piece ${piece.guid}`);
           return null;
         }
 
         const type = findTypeInKit(kit, piece.type);
         if (!type) {
-          console.warn(`Type not found for piece ${piece.guid}: ${piece.type.name}/${piece.type.variant || "no-variant"}`);
+          console.warn(`Type not found for piece ${piece.guid}: ${piece.type}`);
           const fallbackType: Type = {
-            name: piece.type.name,
-            variant: piece.type.variant,
+            guid: `fallback-${piece.type}`,
+            name: `Unknown-${piece.type}`,
+            variant: undefined,
             unit: "m",
-            description: `Missing type: ${piece.type.name}`,
+            description: `Missing type: ${piece.type}`,
             ports: [],
             representations: [],
           };
@@ -686,7 +723,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const includedDesigns = getIncludedDesigns(design);
 
   const designNodes = includedDesigns.map((includedDesign, i) => {
-    const isSelected = selection?.pieces.some((p: any) => p.guid === includedDesign.id) ?? false;
+    const isSelected = selection?.pieces?.includes(includedDesign.designGuid) ?? false;
 
     if (includedDesign.type === "connected") {
       let calculatedCenter = { x: 0, y: 0 };
@@ -764,24 +801,26 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
     nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${includedDesign.id}`, nodeIndex);
   });
 
-  const parentConnectionId =
+  const parentConnectionGuid =
     selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-          const selectedPieceId = selection.pieces[0].guid;
-          const pieceMetadata = metadata.get(selectedPieceId);
-          if (pieceMetadata?.parentPieceId) {
-            return `${pieceMetadata.parentPieceId} -- ${selectedPieceId}`;
-          }
-          return null;
-        })()
+        const selectedPieceGuid = selection.pieces[0];
+        const pieceMetadata = metadata.get(selectedPieceGuid);
+        if (pieceMetadata?.parentPieceId) {
+          const parentConnection = design.connections?.find(
+            (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
+          );
+          return parentConnection?.guid ?? null;
+        }
+        return null;
+      })()
       : null;
 
   const connectionEdges =
     design.connections?.map((connection, connectionIndex) => {
-      const isSelected = selection?.connections.some((c: any) => c.connecting.piece.guid === connection.connecting.piece.guid && c.connected.piece.guid === connection.connected.piece.guid) ?? false;
+      const isSelected = selection?.connections?.includes(connection.guid) ?? false;
 
-      const connectionId = `${connection.connecting.piece.guid} -- ${connection.connected.piece.guid}`;
-      const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.guid} -- ${connection.connecting.piece.guid}`;
+      const isParentConnection = parentConnectionGuid === connection.guid;
 
       return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
     }) ?? [];
@@ -816,6 +855,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   } = useDesignEditorCommands();
 
   const { updateDesign } = useKitCommands();
+  const sketchpadCommands = useSketchpadCommands();
+  const kit = useKit();
 
   const selection = useDesignEditorSelection();
   const fullscreenPanel = useDesignEditorFullscreen();
@@ -826,17 +867,27 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   // const design = useDiffedDesign();
   const design = useDesign();
   // const types = usePortColoredTypes();
-  const kit = useKit();
   // const flattenedDesign = useFlatDesign();
   const flattenedDesign = design;
   // const metadata = usePiecesMetadata();
   const metadata = new Map();
 
   if (!design) return null;
-  const { nodes, edges } = designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
+
+  console.log("[ORIGIN] Diagram render - selection:", selection);
+
+  const nodesAndEdges = designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
     nodes: [],
     edges: [],
   };
+  const nodes = nodesAndEdges.nodes;
+  const edges = nodesAndEdges.edges;
+
+  console.log(
+    "[ORIGIN] Diagram render - nodes with selection:",
+    nodes.filter((n) => n.selected).map((n) => ({ id: n.id, selected: n.selected })),
+  );
+
   const reactFlowInstance = useReactFlow();
   const [dragState, setDragState] = useState<{
     lastPostition: XYPosition;
@@ -886,20 +937,35 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
-    if (e.ctrlKey || e.metaKey) removePieceFromSelection({ guid: pieceId });
-    else if (e.shiftKey) addPieceToSelection({ guid: pieceId });
-    else selectPiece({ guid: pieceId });
+    console.log("[ORIGIN] Diagram onNodeClick", { pieceId, ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey });
+    if (e.ctrlKey || e.metaKey) removePieceFromSelection(pieceId);
+    else if (e.shiftKey) addPieceToSelection(pieceId);
+    else selectPiece(pieceId);
+  };
+
+  const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
+    e.stopPropagation();
+    const kitData = kit as Kit;
+    if (!kitData?.guid) return;
+    const piece = node.data.piece;
+    if (piece.type) sketchpadCommands.navigateToType(kitData.guid, piece.type);
+    else if (piece.design) sketchpadCommands.navigateToDesign(kitData.guid, piece.design);
   };
 
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
     e.stopPropagation();
-    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(edge.data!.connection);
-    else if (e.shiftKey) addConnectionToSelection(edge.data!.connection);
-    else selectConnection(edge.data!.connection);
+    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(edge.data!.connection.guid);
+    else if (e.shiftKey) addConnectionToSelection(edge.data!.connection.guid);
+    else selectConnection(edge.data!.connection.guid);
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
-    if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
+    console.log("[ORIGIN] Diagram onPaneClick called");
+    e.stopPropagation();
+    if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      console.log("[ORIGIN] Calling deselectAll()");
+      deselectAll();
+    }
   };
 
   const onDoubleClick = (e: React.MouseEvent) => {
@@ -909,14 +975,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => { });
     },
     [execute],
   );
 
   const onExpand = useCallback(
     (target: DesignId) => {
-      execute?.("explode", { designId: target }).catch(() => {});
+      execute?.("explode", { designId: target }).catch(() => { });
     },
     [execute],
   );
@@ -1382,7 +1448,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         }
 
         if (!altPressed) {
-          for (const otherNode of nodes.filter((n) => !(selection.pieces ?? []).some((p: any) => p.guid === getPieceIdFromNode(n)))) {
+          for (const otherNode of nodes.filter((n) => !(selection.pieces ?? []).includes(getPieceIdFromNode(n)))) {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design.connections?.find((c) =>
               areSameConnection(c, {
@@ -1521,7 +1587,20 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   return (
-    <div id="diagram" className="h-full w-full relative">
+    <div
+      id="diagram"
+      className="h-full w-full relative"
+      onClick={(e) => {
+        console.log("[ORIGIN] Diagram div onClick", e.target, e.currentTarget);
+        if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("react-flow__pane")) {
+          console.log("[ORIGIN] Clicked on diagram background via div");
+          if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            console.log("[ORIGIN] Calling deselectAll() from div");
+            deselectAll();
+          }
+        }
+      }}
+    >
       <ReactFlow
         ref={useDroppable({ id: "diagram-drop-zone" }).setNodeRef}
         nodes={nodes}
@@ -1537,6 +1616,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         panOnDrag={[0]}
         proOptions={{ hideAttribution: true }}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}

@@ -17,6 +17,26 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Architecture:
+// This editor demonstrates the generalized panel section system:
+// - Registers "Types" and "Designs" sections in the workbench panel
+// - Registers context-sensitive sections in the details panel based on selection
+// - Registers editor-specific settings in the settings panel
+//
+// The panel system allows ANY component (including nested editors) to be mounted as a section.
+// Example of nesting a design editor as a section:
+//   addSection("workbench", {
+//     id: "nested-design-editor",
+//     label: "Nested Design",
+//     order: 10,
+//     defaultOpen: false,
+//     content: () => (
+//       <DesignScopeProvider guid={someDesignGuid}>
+//         <Editor />
+//       </DesignScopeProvider>
+//     )
+//   });
+
 // #endregion
 
 import { DragEndEvent } from "@dnd-kit/core";
@@ -26,7 +46,7 @@ import { useTranslation } from "react-i18next";
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { Slider } from "@radix-ui/react-slider";
-import { Connection, ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
+import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { Minus, Pin, Plus } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../elements/aggregation/Resizable";
 import { SortableTreeItems, TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
@@ -34,9 +54,8 @@ import Combobox from "../../../elements/input/Combobox";
 import { Input } from "../../../elements/input/Input";
 import Stepper from "../../../elements/input/Stepper";
 import { Textarea } from "../../../elements/input/Textarea";
-import { Design, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, Guid, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece, Type } from "../../../semio";
+import { Connection, Design, findConnectionInDesign, findConnectionsInDesign, findPieceInDesign, findTypeInKit, guid, Guid, ICON_WIDTH, Kit, parseDesignIdFromVariant, Piece, Type } from "../../../semio";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
-import { DesignAvatar, TypeAvatar } from "../../panels/Workbench";
 import { useDragDrop } from "../../Sketchpad";
 import {
   DesignEditorFullscreenPanel,
@@ -45,6 +64,7 @@ import {
   useDesignEditorCommands,
   useDesignEditorFullscreen,
   useDesignEditorSelection,
+  useEditorPanelVisibility,
   useEditorType,
   useIsInDesignScope,
   useKit,
@@ -54,8 +74,10 @@ import {
   useReplacableTypes,
   useSketchpad,
 } from "../../store";
+import { DesignAvatar, TypeAvatar } from "./Avatars";
 import Diagram from "./Diagram";
 import DesignScene from "./Scene";
+import { ToolsToggleGroup } from "./Tools";
 
 const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
@@ -86,10 +108,7 @@ const DesignSectionForm: FC = () => {
 
   const removeLocation = () => {
     startTransaction();
-    handleChange({
-      ...design,
-      location: undefined,
-    });
+    updateDesignField({ location: undefined });
     finalizeTransaction();
   };
 
@@ -336,8 +355,7 @@ const DesignSectionForm: FC = () => {
             icon: <Plus size={12} />,
             onClick: () => {
               startTransaction();
-              handleChange({
-                ...design,
+              updateDesignField({
                 attributes: [...(design.attributes || []), { key: "" }],
               });
               finalizeTransaction();
@@ -354,8 +372,7 @@ const DesignSectionForm: FC = () => {
           }))}
           onReorder={(oldIndex, newIndex) => {
             startTransaction();
-            handleChange({
-              ...design,
+            updateDesignField({
               attributes: arrayMove(design.attributes!, oldIndex, newIndex),
             });
             finalizeTransaction();
@@ -373,8 +390,7 @@ const DesignSectionForm: FC = () => {
                   icon: <Minus size={12} />,
                   onClick: () => {
                     startTransaction();
-                    handleChange({
-                      ...design,
+                    updateDesignField({
                       attributes: design.attributes?.filter((_: any, i: number) => i !== index),
                     });
                     finalizeTransaction();
@@ -394,7 +410,7 @@ const DesignSectionForm: FC = () => {
                         ...attribute,
                         key: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedAttributes });
+                      updateDesignField({ attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -413,7 +429,7 @@ const DesignSectionForm: FC = () => {
                         ...attribute,
                         value: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedAttributes });
+                      updateDesignField({ attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -432,7 +448,7 @@ const DesignSectionForm: FC = () => {
                         ...attribute,
                         unit: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedAttributes });
+                      updateDesignField({ attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -451,7 +467,7 @@ const DesignSectionForm: FC = () => {
                         ...attribute,
                         definition: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedAttributes });
+                      updateDesignField({ attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -506,8 +522,9 @@ const PiecesSection: FC = () => {
 
 const PiecesSectionForm: FC = () => {
   const { t } = useTranslation();
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { startTransaction, finalizeTransaction, abortTransaction, updatePiece, updatePieces } = useDesignEditorCommands();
   const design = useDesign() as Design;
+  const kit = useKit() as Kit;
   // const metadata = usePiecesMetadata();
   const metadata = new Map();
   const pieces = usePieces();
@@ -565,32 +582,58 @@ const PiecesSectionForm: FC = () => {
   };
 
   const handleCenterXChange = (value: number) => {
-    console.warn("[ORIGIN] handleCenterXChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (isSingle && piece) {
+      updatePiece(piece.guid, { center: { x: value, y: piece.center?.y ?? 0 } });
+    } else {
+      const updates = pieces.map((p) => ({ id: p.guid, diff: { center: { x: value, y: p.center?.y ?? 0 } } }));
+      updatePieces(updates);
+    }
   };
 
   const handleCenterYChange = (value: number) => {
-    console.warn("[ORIGIN] handleCenterYChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (isSingle && piece) {
+      updatePiece(piece.guid, { center: { x: piece.center?.x ?? 0, y: value } });
+    } else {
+      const updates = pieces.map((p) => ({ id: p.guid, diff: { center: { x: p.center?.x ?? 0, y: value } } }));
+      updatePieces(updates);
+    }
   };
 
   const handlePlaneOriginXChange = (value: number) => {
-    console.warn("[ORIGIN] handlePlaneOriginXChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, origin: { ...piece.plane.origin, x: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, origin: { ...p.plane!.origin, x: value } } } }));
+      updatePieces(updates);
+    }
   };
 
   const handlePlaneOriginYChange = (value: number) => {
-    console.warn("[ORIGIN] handlePlaneOriginYChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, origin: { ...piece.plane.origin, y: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, origin: { ...p.plane!.origin, y: value } } } }));
+      updatePieces(updates);
+    }
   };
 
   const handlePlaneOriginZChange = (value: number) => {
-    console.warn("[ORIGIN] handlePlaneOriginZChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, origin: { ...piece.plane.origin, z: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, origin: { ...p.plane!.origin, z: value } } } }));
+      updatePieces(updates);
+    }
   };
 
-  const commonTypeName = getCommonValue((p) => p.type.name);
-  const commonTypeVariant = getCommonValue((p) => p.type.variant);
+  const commonTypeName = getCommonValue((p) => {
+    const type = p.type ? findTypeInKit(kit, p.type) : null;
+    return type?.name;
+  });
+  const commonTypeVariant = getCommonValue((p) => {
+    const type = p.type ? findTypeInKit(kit, p.type) : null;
+    return type?.variant;
+  });
   const commonCenterX = getCommonValue((p) => p.center?.x);
   const commonCenterY = getCommonValue((p) => p.center?.y);
   const commonPlaneOriginX = getCommonValue((p) => p.plane?.origin.x);
@@ -599,13 +642,30 @@ const PiecesSectionForm: FC = () => {
 
   const hasCenter = pieces.some((p) => p.center);
   const hasPlane = pieces.some((p) => p.plane);
-  const hasVariant = pieces.some((p) => p.type.variant);
+  const hasVariant = pieces.some((p) => {
+    const type = p.type ? findTypeInKit(kit, p.type) : null;
+    return type?.variant;
+  });
   const hasUnfixedPieces = pieces.some((p) => !p.plane || !p.center);
 
-  const selectedVariants = useMemo(() => [...new Set(pieces.map((p) => p.type.variant).filter((v): v is string => Boolean(v)))], [pieces]);
-  const availableTypes = useReplacableTypes(pieces, isDesignPiece ? [] : selectedVariants);
+  const pieceIds = useMemo(() => pieces.map((p) => p.guid), [pieces]);
+
+  const selectedVariants = useMemo(
+    () => [
+      ...new Set(
+        pieces
+          .map((p) => {
+            const type = p.type ? findTypeInKit(kit, p.type) : null;
+            return type?.variant;
+          })
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ],
+    [pieces, kit],
+  );
+  const availableTypes = useReplacableTypes(pieceIds, isDesignPiece ? [] : selectedVariants);
   const availableTypeNames = useMemo(() => [...new Set(availableTypes.map((t) => t.name))], [availableTypes]);
-  const allReplacableTypes = useReplacableTypes(pieces, []);
+  const allReplacableTypes = useReplacableTypes(pieceIds, []);
   const availableVariants = useMemo(
     () =>
       commonTypeName && !isDesignPiece
@@ -663,14 +723,6 @@ const PiecesSectionForm: FC = () => {
         });
       } catch {}
     }
-
-    // For design pieces, also check for external connections
-    if (isDesignPiece && piece.type.name === "design") {
-      const parentConn = findParentConnectionForDesignPiece(getPieceId(piece));
-      if (parentConn) {
-        parentConnection = parentConn;
-      }
-    }
   } else if (!isSingle) {
     // For multiple pieces, find all their parent connections
     parentConnections = pieces
@@ -687,17 +739,9 @@ const PiecesSectionForm: FC = () => {
           }
         }
 
-        // For design pieces, also check for external connections
-        if (piece.type.name === "design") {
-          const parentConn = findParentConnectionForDesignPiece(getPieceId(piece));
-          if (parentConn) {
-            return parentConn;
-          }
-        }
-
         return null;
       })
-      .filter((conn): conn is Connection => conn !== null);
+      .filter((conn) => conn !== null) as Connection[];
   }
 
   return (
@@ -797,7 +841,7 @@ const PiecesSectionForm: FC = () => {
                       value: name,
                       label: name,
                     }))}
-                    value={isSingle && piece ? piece.type.name : commonTypeName || ""}
+                    value={isSingle && piece && piece.type ? findTypeInKit(kit, piece.type)?.name || "" : commonTypeName || ""}
                     placeholder={!isSingle && commonTypeName === undefined ? t("common.mixedValues") : t("common.selectType")}
                     onValueChange={handleTypeNameChange}
                   />
@@ -812,7 +856,7 @@ const PiecesSectionForm: FC = () => {
                         value: variant,
                         label: variant,
                       }))}
-                      value={isSingle && piece ? piece.type.variant || "" : commonTypeVariant || ""}
+                      value={isSingle && piece && piece.type ? findTypeInKit(kit, piece.type)?.variant || "" : commonTypeVariant || ""}
                       placeholder={!isSingle && commonTypeVariant === undefined ? t("common.mixedValues") : t("common.selectVariant")}
                       onValueChange={handleTypeVariantChange}
                       allowClear={true}
@@ -907,7 +951,7 @@ const PiecesSectionForm: FC = () => {
 };
 
 const ConnectionsSection: FC<{
-  connections: Guid[];
+  connections: Connection[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
   const isInDesignScope = useIsInDesignScope();
@@ -916,31 +960,12 @@ const ConnectionsSection: FC<{
 };
 
 const ConnectionsSectionForm: FC<{
-  connections: Guid[];
+  connections: Connection[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
   const { t } = useTranslation();
   const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
-  const design = useDesign();
-  const connectionObjects = connections.map((conn) => {
-    // The conn is already a Guid, but we need to create a full Guid to query
-    const Guid = {
-      connecting: {
-        piece: conn.connecting.piece,
-        // Include port and designPiece only if they exist in the connection
-        ...((conn.connecting as any).port && { port: (conn.connecting as any).port }),
-        ...((conn.connecting as any).designPiece && { designPiece: (conn.connecting as any).designPiece }),
-      },
-      connected: {
-        piece: conn.connected.piece,
-        ...((conn.connected as any).port && { port: (conn.connected as any).port }),
-        ...((conn.connected as any).designPiece && { designPiece: (conn.connected as any).designPiece }),
-      },
-    };
-
-    // Try to find the connection in the design
-    return findConnectionInDesign(design, Guid);
-  });
+  const connectionObjects = connections;
 
   const isSingle = connections.length === 1;
   const connection = isSingle ? connectionObjects[0] : null;
@@ -1223,12 +1248,13 @@ export interface EditorProps {}
 
 const Editor: FC<EditorProps> = () => {
   const fullscreenPanel = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel } = useDesignEditorCommands();
 
   const selection = useDesignEditorSelection();
-  const design = useDesign();
+  const design = useDesign() as Design | undefined;
   const kit = useKit() as Kit;
-  const editorSettings = useSketchpad((s) => s.editorSettings);
+  const editorSettings = useSketchpad((s) => s.editorSettings) as any;
+  const panelVisibility = useEditorPanelVisibility();
   const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
@@ -1255,17 +1281,20 @@ const Editor: FC<EditorProps> = () => {
     const hasPortSelected = selection.port !== undefined;
     const hasSelection = hasPieces || hasConnections || hasPortSelected;
 
-    // Remove all details sections first
-    removeSection("details", "design");
-    removeSection("details", "port");
-    removeSection("details", "pieces");
-    removeSection("details", "connections");
-    removeSection("details", "mixed");
+    // Show details panel when there's a selection and it's not currently visible
+    if (hasSelection && !panelVisibility.details) {
+      togglePanel("details");
+    }
 
-    // Add appropriate sections based on selection
+    removeSection("details", "design-details");
+    removeSection("details", "design-port");
+    removeSection("details", "design-pieces");
+    removeSection("details", "design-connections");
+    removeSection("details", "design-mixed");
+
     if (!hasSelection) {
       addSection("details", {
-        id: "design",
+        id: "design-details",
         label: "Design",
         order: 0,
         defaultOpen: true,
@@ -1275,7 +1304,7 @@ const Editor: FC<EditorProps> = () => {
       const portPieceId = selection.port!.piece;
       const portId = selection.port!.port;
       addSection("details", {
-        id: "port",
+        id: "design-port",
         label: "Port",
         order: 1,
         defaultOpen: true,
@@ -1284,7 +1313,7 @@ const Editor: FC<EditorProps> = () => {
     } else {
       if (hasPieces) {
         addSection("details", {
-          id: "pieces",
+          id: "design-pieces",
           label: selection.pieces!.length === 1 ? "Piece" : `Pieces (${selection.pieces!.length})`,
           order: 2,
           defaultOpen: true,
@@ -1292,9 +1321,10 @@ const Editor: FC<EditorProps> = () => {
         });
       }
       if (hasConnections) {
-        const conns = selection.connections!;
+        const connGuids = selection.connections!;
+        const conns = findConnectionsInDesign(design!, connGuids);
         addSection("details", {
-          id: "connections",
+          id: "design-connections",
           label: conns.length === 1 ? "Connection" : `Connections (${conns.length})`,
           order: 3,
           defaultOpen: true,
@@ -1303,7 +1333,7 @@ const Editor: FC<EditorProps> = () => {
       }
       if (hasPieces && hasConnections) {
         addSection("details", {
-          id: "mixed",
+          id: "design-mixed",
           label: "Mixed Selection",
           order: 4,
           defaultOpen: true,
@@ -1319,18 +1349,15 @@ const Editor: FC<EditorProps> = () => {
     }
 
     return () => {
-      removeSection("details", "design");
-      removeSection("details", "port");
-      removeSection("details", "pieces");
-      removeSection("details", "connections");
-      removeSection("details", "mixed");
+      removeSection("details", "design-details");
+      removeSection("details", "design-port");
+      removeSection("details", "design-pieces");
+      removeSection("details", "design-connections");
+      removeSection("details", "design-mixed");
     };
   }, [selection, addSection, removeSection, editorType]);
 
-  // Workbench content components that access fresh data on each render
-  // These need to work outside KitScopeProvider, so we pass the kit directly via closure
   const TypesWorkbenchContent: FC = () => {
-    // Use kit from the closure instead of useKit() to avoid context issues
     const typesByName = (kit.types || []).reduce((acc: Record<string, Type[]>, type: Type) => {
       if (!acc[type.name]) acc[type.name] = [];
       acc[type.name].push(type);
@@ -1355,7 +1382,6 @@ const Editor: FC<EditorProps> = () => {
   };
 
   const DesignsWorkbenchContent: FC = () => {
-    // Use kit from the closure instead of useKit() to avoid context issues
     const designsByName = (kit.designs || []).reduce((acc: Record<string, Design[]>, design: Design) => {
       if (!acc[design.name]) acc[design.name] = [];
       acc[design.name].push(design);
@@ -1368,8 +1394,8 @@ const Editor: FC<EditorProps> = () => {
           <TreeItem key={name} label={name} defaultOpen={false}>
             <TreeContent>
               <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                {designs.map((design: Design) => (
-                  <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} />
+                {designs.map((d: Design) => (
+                  <DesignAvatar key={`${d.name}-${d.variant}-${d.view}`} design={d} showHoverCard={true} isActive={design?.guid === d.guid} />
                 ))}
               </div>
             </TreeContent>
@@ -1379,15 +1405,29 @@ const Editor: FC<EditorProps> = () => {
     );
   };
 
-  // Add workbench sections
+  // Add toolbar tools
   useEffect(() => {
-    // Only register sections if we're in the design editor
+    if (editorType !== EditorType.DESIGN) return;
+
+    addSection("toolbar", {
+      id: "design-tools",
+      label: "Tools",
+      order: 0,
+      content: () => <ToolsToggleGroup />,
+    });
+
+    return () => {
+      removeSection("toolbar", "design-tools");
+    };
+  }, [editorType, addSection, removeSection]);
+
+  useEffect(() => {
     if (editorType !== EditorType.DESIGN) return;
 
     console.log("[ORIGIN] Design Editor adding workbench sections", { kit, editorType });
 
     addSection("workbench", {
-      id: "types",
+      id: "design-types",
       label: "Types",
       order: 0,
       defaultOpen: true,
@@ -1395,7 +1435,7 @@ const Editor: FC<EditorProps> = () => {
     });
 
     addSection("workbench", {
-      id: "designs",
+      id: "design-designs",
       label: "Designs",
       order: 1,
       defaultOpen: true,
@@ -1406,11 +1446,10 @@ const Editor: FC<EditorProps> = () => {
 
     return () => {
       console.log("[ORIGIN] Design Editor removing workbench sections");
-      removeSection("workbench", "types");
-      removeSection("workbench", "designs");
+      removeSection("workbench", "design-types");
+      removeSection("workbench", "design-designs");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorType, kit]);
+  }, [editorType, kit, addSection, removeSection]);
 
   // Add settings section
   useEffect(() => {

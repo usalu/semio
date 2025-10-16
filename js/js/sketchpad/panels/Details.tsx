@@ -1,3 +1,20 @@
+// #region Header
+
+// Details.tsx
+
+// Generalized details panel that displays context-specific information based on the active editor and selection.
+// Editors can register details sections dynamically that update based on user selections.
+//
+// Architecture:
+// - Wraps content in scope providers (Kit, Design, Type) based on route parameters
+// - Editors register sections via `useAddPanelSection("details", {...})`
+// - Common pattern: editors register different sections based on selection state
+//   (e.g., design editor shows "Design" when nothing selected, "Pieces" when pieces selected)
+// - Sections are sorted by order and rendered as TreeSections
+// - Shows a placeholder message when no sections are registered
+
+// #endregion
+
 import { FC, ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";

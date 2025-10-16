@@ -28,9 +28,9 @@
 import { closestCenter, DndContext, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { createContext, FC, ReactNode, useContext, useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 
 const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
 
@@ -52,7 +52,7 @@ const IndentationLines: FC<{ level: number; isLastAtLevel: boolean[]; showLines:
 export const TreeContent: FC<{ children: ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   return (
-    <div className="relative" style={{ paddingLeft: `${level * 0.75}rem` }}>
+    <div className="relative py-0.5" style={{ paddingLeft: `${level * 0.75}rem` }}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {children}
     </div>

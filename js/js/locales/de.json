@@ -69,6 +69,8 @@
         "suggestions": "Vorschläge"
     },
     "panels": {
+        "toolbar": "Werkzeugleiste-Panel",
+        "toolbar.extensive": "Werkzeugleiste-Panel umschalten",
         "details": "Details-Panel",
         "details.extensive": "Details-Panel umschalten",
         "workbench": "Werkbank-Panel",
@@ -248,7 +250,8 @@
         "name": "Name",
         "kind": "Art",
         "lastUpdated": "Zuletzt aktualisiert",
-        "created": "Erstellt"
+        "created": "Erstellt",
+        "sortByName": "Nach Name sortieren"
     },
     "kitEditor": {
         "designs": "Designs",
@@ -276,7 +279,8 @@
         "name": "Name",
         "kind": "Art",
         "lastUpdated": "Zuletzt aktualisiert",
-        "created": "Erstellt"
+        "created": "Erstellt",
+        "sortByName": "Nach Name sortieren"
     },
     "breadcrumb": {
         "starter": "Starter",
@@ -344,7 +348,34 @@
         "variantPlaceholder": "Typ-Variante",
         "defaultVariant": "Standardvariante",
         "newVariant": "Neue Variante",
-        "unit": "Einheit"
+        "unit": "Einheit",
+        "representations": "Darstellungen",
+        "representation": "Darstellung",
+        "representationUrl": "URL",
+        "representationDescription": "Beschreibung",
+        "representationDescriptionPlaceholder": "Beschreibung eingeben...",
+        "representationTags": "Tags",
+        "representationTagsPlaceholder": "Tags eingeben...",
+        "ports": "Ports",
+        "port": "Port",
+        "portFamily": "Familie",
+        "portFamilyPlaceholder": "Port-Familie eingeben...",
+        "portDescription": "Beschreibung",
+        "portDescriptionPlaceholder": "Port-Beschreibung eingeben...",
+        "portPoint": "Punkt",
+        "portDirection": "Richtung",
+        "portCompatibleFamilies": "Kompatible Familien",
+        "portCompatibleFamiliesPlaceholder": "Kompatible Familien eingeben...",
+        "authors": "Autoren",
+        "author": "Autor",
+        "authorName": "Name",
+        "attributes": "Attribute",
+        "attribute": "Attribut",
+        "attributeName": "Name",
+        "attributeValue": "Wert",
+        "attributeValuePlaceholder": "Optionaler Wert",
+        "attributeDefinition": "Definition",
+        "attributeDefinitionPlaceholder": "Optionale Definition (Text oder URL)"
     },
     "sort": {
         "ascending": "Aufsteigend sortieren",

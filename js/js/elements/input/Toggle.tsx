@@ -305,13 +305,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root
-        data-slot="toggle"
-        className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)}
-        pressed={pressed}
-        onPressedChange={onPressedChange}
-        {...restProps}
-      >
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)} pressed={pressed} onPressedChange={onPressedChange} {...restProps}>
         {mainContent}
         {dropdownButton}
       </TogglePrimitive.Root>
