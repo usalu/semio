@@ -121,7 +121,7 @@ const RepresentationsSectionForm: FC = () => {
         label={t("type.representations")}
         actions={[
           {
-            icon: <Plus size={12} />,
+            icon: <Plus />,
             onClick: () => {
               startTransaction();
               handleChange({
@@ -158,7 +158,7 @@ const RepresentationsSectionForm: FC = () => {
               isDragHandle={true}
               actions={[
                 {
-                  icon: <Minus size={12} />,
+                  icon: <Minus />,
                   onClick: () => {
                     startTransaction();
                     handleChange({
@@ -260,7 +260,7 @@ const PortsSectionForm: FC = () => {
         label={t("type.ports")}
         actions={[
           {
-            icon: <Plus size={12} />,
+            icon: <Plus />,
             onClick: () => {
               startTransaction();
               handleChange({
@@ -305,7 +305,7 @@ const PortsSectionForm: FC = () => {
               isDragHandle={true}
               actions={[
                 {
-                  icon: <Minus size={12} />,
+                  icon: <Minus />,
                   onClick: () => {
                     startTransaction();
                     handleChange({
@@ -532,7 +532,7 @@ const AuthorsSectionForm: FC = () => {
         label={t("type.authors")}
         actions={[
           {
-            icon: <Plus size={12} />,
+            icon: <Plus />,
             onClick: () => {
               startTransaction();
               handleChange({
@@ -569,7 +569,7 @@ const AuthorsSectionForm: FC = () => {
               isDragHandle={true}
               actions={[
                 {
-                  icon: <Minus size={12} />,
+                  icon: <Minus />,
                   onClick: () => {
                     startTransaction();
                     handleChange({
@@ -627,7 +627,7 @@ const AttributesSectionForm: FC = () => {
         label={t("type.attributes")}
         actions={[
           {
-            icon: <Plus size={12} />,
+            icon: <Plus />,
             onClick: () => {
               startTransaction();
               handleChange({
@@ -664,7 +664,7 @@ const AttributesSectionForm: FC = () => {
               isDragHandle={true}
               actions={[
                 {
-                  icon: <Minus size={12} />,
+                  icon: <Minus />,
                   onClick: () => {
                     startTransaction();
                     handleChange({

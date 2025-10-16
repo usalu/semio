@@ -76,6 +76,8 @@
     --hover-panel: var(--color-gray-600);
     --hover-overlay: var(--color-gray-500);
     --hover-temporary: var(--color-light-gray-gray);
+    --active-base: var(--color-gray-600);
+    --active-foreground: var(--color-dark);
     --border-color: var(--color-foreground);
 
     * {
@@ -330,6 +332,19 @@
       cursor:
         url("../../assets/cursors/cursor_crosshair.svg") 16 16,
         crosshair !important;
+    }
+
+    [data-slot="popover-trigger"] {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+
+    [role="button"],
+    [role="link"] {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
     }
 
     /* * {
@@ -750,6 +765,8 @@
   --color-hover-base: var(--hover-base);
   --color-hover-panel: var(--hover-panel);
   --color-hover-temporary: var(--hover-temporary);
+  --color-active-base: var(--active-base);
+  --color-active-foreground: var(--active-foreground);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
   --color-border: var(--accent);

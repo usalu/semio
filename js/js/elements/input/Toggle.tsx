@@ -22,14 +22,16 @@
 
 import * as TogglePrimitive from "@radix-ui/react-toggle";
 import { cva } from "class-variance-authority";
+import { ChevronDown } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "../../semio";
 import { Popover, PopoverAnchor, PopoverContent } from "../Popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
+import { Action } from "./Action";
 
 const toggleVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground h-9 px-2 py-2 min-w-9 border",
+  "text-foreground inline-flex items-center justify-center gap-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground h-9 px-2 py-2 min-w-9",
   {
     variants: {
       variant: {
@@ -123,7 +125,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const toggleElement = (
       <TogglePrimitive.Root
         data-slot="toggle"
-        className={cn(toggleVariants({ level }), className)}
+        className={cn(toggleVariants({ level }), "border", className)}
         pressed={pressed}
         onPressedChange={(newPressed) => {
           onPressedChange?.(newPressed);
@@ -184,41 +186,19 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       <span className="flex items-center gap-2 flex-1 min-w-0">{restProps.children}</span>
     );
 
-    const actionHoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-
-    const actionButton = actionTooltip ? (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            className={cn("shrink-0 p-0.5 z-10 border", actionHoverClass)}
-            onClick={(e) => {
-              e.stopPropagation();
-              onActionClick();
-            }}
-          >
-            {actionIcon}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>{actionTooltip}</TooltipContent>
-      </Tooltip>
-    ) : (
-      <button
-        type="button"
-        className={cn("shrink-0 p-0.5 z-10 border", actionHoverClass)}
-        onClick={(e) => {
-          e.stopPropagation();
-          onActionClick();
-        }}
-      >
-        {actionIcon}
-      </button>
-    );
-
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "border gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)} {...restProps}>
         {mainContent}
-        {actionButton}
+        <Action
+          level={level}
+          onClick={(e) => {
+            e.stopPropagation();
+            onActionClick();
+          }}
+          tooltip={actionTooltip}
+        >
+          {actionIcon}
+        </Action>
       </TogglePrimitive.Root>
     );
 
@@ -269,45 +249,29 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       <span className="truncate flex-1 min-w-0">{currentItem?.label || placeholder}</span>
     );
 
-    const dropdownHoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-
-    const dropdownButton = dropdownTooltip ? (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            className={cn("shrink-0 p-0.5 z-10 border", dropdownHoverClass)}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(!open);
-            }}
-          >
-            <svg className="size-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>{dropdownTooltip}</TooltipContent>
-      </Tooltip>
-    ) : (
-      <button
-        type="button"
-        className={cn("shrink-0 p-0.5 z-10 border", dropdownHoverClass)}
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen(!open);
-        }}
-      >
-        <svg className="size-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-        </svg>
-      </button>
-    );
-
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)} pressed={pressed} onPressedChange={onPressedChange} {...restProps}>
+      <TogglePrimitive.Root
+        data-slot="toggle"
+        className={cn(toggleVariants({ level }), "border gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)}
+        pressed={pressed}
+        onPressedChange={(newPressed) => {
+          if (!open) {
+            onPressedChange?.(newPressed);
+          }
+        }}
+        {...restProps}
+      >
         {mainContent}
-        {dropdownButton}
+        <Action
+          level={level}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(!open);
+          }}
+          tooltip={dropdownTooltip}
+        >
+          <ChevronDown className="size-3 opacity-50" />
+        </Action>
       </TogglePrimitive.Root>
     );
 
@@ -370,7 +334,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   const activeTooltip = pressed && tooltipPressed ? tooltipPressed : tooltip;
 
-  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), className)} pressed={pressed} {...restProps} />;
+  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "border", className)} pressed={pressed} {...restProps} />;
 
   const wrappedToggle = activeTooltip ? (
     <Tooltip>

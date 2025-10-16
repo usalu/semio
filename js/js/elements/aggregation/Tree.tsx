@@ -30,6 +30,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { createContext, FC, ReactNode, useContext, useState } from "react";
+import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 
 const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
@@ -130,20 +131,21 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
         {actions.length > 0 && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             {actions.map((action, index) => (
-              <button
-                key={index}
-                className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  action.onClick();
-                }}
-                title={action.title}
-              >
-                {action.icon}
-              </button>
+              <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+                <Action
+                  level="panel"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  tooltip={action.title}
+                >
+                  {action.icon}
+                </Action>
+              </div>
             ))}
           </div>
         )}
@@ -165,20 +167,21 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
-                <button
-                  key={index}
-                  className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    action.onClick();
-                  }}
-                  title={action.title}
-                >
-                  {action.icon}
-                </button>
+                <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+                  <Action
+                    level="panel"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      action.onClick();
+                    }}
+                    tooltip={action.title}
+                  >
+                    {action.icon}
+                  </Action>
+                </div>
               ))}
             </div>
           )}
@@ -235,20 +238,21 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
-                <button
-                  key={index}
-                  className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    action.onClick();
-                  }}
-                  title={action.title}
-                >
-                  {action.icon}
-                </button>
+                <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+                  <Action
+                    level="panel"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      action.onClick();
+                    }}
+                    tooltip={action.title}
+                  >
+                    {action.icon}
+                  </Action>
+                </div>
               ))}
             </div>
           )}
@@ -273,20 +277,21 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate">{label}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {actions.map((action, index) => (
-            <button
-              key={index}
-              className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                action.onClick();
-              }}
-              title={action.title}
-            >
-              {action.icon}
-            </button>
+            <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+              <Action
+                level="panel"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                }}
+                tooltip={action.title}
+              >
+                {action.icon}
+              </Action>
+            </div>
           ))}
         </div>
       )}

@@ -233,16 +233,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
 
-  console.log("[Navbar] Path parsing:", {
-    navigation,
-    pathParts,
-    isKitsPath,
-    homeKind,
-    homeName,
-    homeVersion,
-    searchParamsString: searchParams.toString(),
-  });
-
   // Kit editor (/kits/:kitGuid or /kits/:kitGuid/designs/:design or /kits/:kitGuid/types/:type)
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
 
@@ -364,17 +354,28 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     navigate(`/kits/${guid}`);
   }, [navigate, sketchpadCommands, kits, t]);
 
+  const handleCreateVersion = useCallback(() => {
+    if (!kit) return;
+    const newGuid = crypto.randomUUID();
+    const now = new Date();
+    const existingVersions = kits.filter((k) => k.name === kit.name).map((k) => k.version || "");
+    const uniqueVersion = generateUniqueName(kit.version || "", existingVersions);
+    sketchpadCommands.createKit({
+      guid: newGuid,
+      name: kit.name,
+      version: uniqueVersion,
+      createdAt: now,
+      updatedAt: now,
+    });
+    navigate(`/kits/${newGuid}`);
+  }, [kit, kits, navigate, sketchpadCommands]);
+
   const handleCreateDesign = useCallback(
     (name?: string) => {
-      console.log("[Navbar] handleCreateDesign called", { name, kitCommands: !!kitCommands });
-      if (!kitCommands) {
-        console.warn("[Navbar] kitCommands is null, cannot create design");
-        return;
-      }
+      if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allDesigns.map((d) => d.name);
       const uniqueName = name || generateUniqueName(t("design.defaultName"), existingNames);
-      console.log("[Navbar] Creating design with name:", uniqueName);
       kitCommands.createDesign({ guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
       navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
@@ -395,18 +396,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const handleCreateVariant = useCallback(
     (designOrType: Design | Type, isType: boolean) => {
-      console.log("[Navbar] handleCreateVariant called", { designOrType, isType, kitCommands: !!kitCommands });
-      if (!kitCommands) {
-        console.warn("[Navbar] kitCommands is null, cannot create variant");
-        return;
-      }
+      if (!kitCommands) return;
       const guid = crypto.randomUUID();
       if (!isType) {
         const d = designOrType as Design;
         const existingVariants = allDesigns.filter((design) => design.name === d.name).map((design) => design.variant || "");
-        console.log("[Navbar] Creating design variant", { name: d.name, existingVariants });
         const uniqueVariant = generateUniqueName(t("design.newVariant"), existingVariants);
-        console.log("[Navbar] Unique variant name:", uniqueVariant);
         kitCommands.createDesign({
           guid,
           name: d.name,
@@ -434,16 +429,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const handleCreateView = useCallback(
     (design: Design) => {
-      console.log("[Navbar] handleCreateView called", { design, kitCommands: !!kitCommands });
-      if (!kitCommands) {
-        console.warn("[Navbar] kitCommands is null, cannot create view");
-        return;
-      }
+      if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingViews = allDesigns.filter((d) => d.name === design.name && (d.variant || "") === (design.variant || "")).map((d) => d.view || "");
-      console.log("[Navbar] Creating design view", { name: design.name, variant: design.variant, existingViews });
       const uniqueView = generateUniqueName(t("design.newView"), existingViews);
-      console.log("[Navbar] Unique view name:", uniqueView);
       kitCommands.createDesign({
         guid,
         name: design.name,
@@ -562,12 +551,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   // Build breadcrumb items for kit versions
   const kitVersionItems = useMemo(() => {
     if (!kit?.name) return [];
-    // Get all kits with the same name
     const sameNameKits = kits.filter((k) => k.name === kit.name);
-    return sameNameKits.map((k) => ({
+    const items = sameNameKits.map((k) => ({
       label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
       href: `/kits/${k.guid}`,
     }));
+    items.push({ label: "+ " + t("navbar.createVersion"), href: "#create-version" });
+    return items;
   }, [kit, kits, t]);
 
   // Build breadcrumb items for home page kits filtered by kind
@@ -717,11 +707,15 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   }}
                 />
                 <BreadcrumbItem>
-                  <BreadcrumbLink onClick={() => {
-                    // Navigate to home page with kind and name filters
-                    console.log("[Navbar] KITNAME clicked, navigating to home with kind and name");
-                    navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || '')}`);
-                  }} style={{ cursor: "pointer" }} title={tooltip("navbar.kit")}>
+                  <BreadcrumbLink
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}`);
+                    }}
+                    style={{ cursor: "pointer" }}
+                    title={tooltip("navbar.kit")}
+                  >
                     {kit?.name || kitGuid}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -729,16 +723,21 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   items={kitVersionItems}
                   tooltip={tooltip("navbar.versions")}
                   onNavigate={(href) => {
-                    navigate(href);
+                    if (href === "#create-version") handleCreateVersion();
+                    else navigate(href);
                   }}
                 />
                 <BreadcrumbItem>
-                  <BreadcrumbLink onClick={() => {
-                    // Navigate to home page with kind, name, and version filters
-                    console.log("[Navbar] KITVERSION clicked, navigating to home with filters");
-                    const versionParam = kit?.version ? `&version=${encodeURIComponent(kit.version)}` : '';
-                    navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || '')}${versionParam}`);
-                  }} style={{ cursor: "pointer" }} title={tooltip("navbar.kitVersion")}>
+                  <BreadcrumbLink
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const versionParam = kit?.version !== undefined ? `&version=${encodeURIComponent(kit.version)}` : "";
+                      navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}${versionParam}`);
+                    }}
+                    style={{ cursor: "pointer" }}
+                    title={tooltip("navbar.kitVersion")}
+                  >
                     {kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -748,6 +747,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         ) : null}
         {isKitEditor && (
           <>
+            <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             {filteredKind && (
               <>
@@ -765,10 +765,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 {filteredName !== null && (
                   <>
                     <BreadcrumbItem>
-                      <BreadcrumbLink onClick={() => {
-                        console.log("[Navbar] DESIGNNAME clicked, removing name filter");
-                        navigate(`/kits/${kitGuid}?kind=${filteredKind}`);
-                      }} style={{ cursor: "pointer" }} title={tooltip("navbar.name")}>
+                      <BreadcrumbLink
+                        onClick={() => {
+                          const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName);
+                          if (firstMatchingDesign) {
+                            navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&select=${firstMatchingDesign.guid}`);
+                          }
+                        }}
+                        style={{ cursor: "pointer" }}
+                        title={tooltip("navbar.name")}
+                      >
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -778,10 +784,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 {filteredName !== null && filteredVariant !== null && (
                   <>
                     <BreadcrumbItem>
-                      <BreadcrumbLink onClick={() => {
-                        console.log("[Navbar] DESIGNVARIANT clicked, removing variant filter");
-                        navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}`);
-                      }} style={{ cursor: "pointer" }} title={tooltip("navbar.variant")}>
+                      <BreadcrumbLink
+                        onClick={() => {
+                          const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName && (d.variant || "") === filteredVariant);
+                          if (firstMatchingDesign) {
+                            navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant || "")}&select=${firstMatchingDesign.guid}`);
+                          }
+                        }}
+                        style={{ cursor: "pointer" }}
+                        title={tooltip("navbar.variant")}
+                      >
                         {filteredVariant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -793,8 +805,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     <BreadcrumbItem>
                       <BreadcrumbLink
                         onClick={() => {
-                          console.log("[Navbar] DESIGNVIEW clicked, removing view filter");
-                          navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}`);
+                          const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName && (d.variant || "") === filteredVariant && (d.view || "") === filteredView);
+                          if (firstMatchingDesign) {
+                            navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant || "")}&view=${encodeURIComponent(filteredView || "")}&select=${firstMatchingDesign.guid}`);
+                          }
                         }}
                         style={{ cursor: "pointer" }}
                         title={tooltip("navbar.view")}
@@ -810,6 +824,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         )}
         {isDesignEditor && design && (
           <>
+            <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={tooltip("breadcrumb.designs")}>
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }}>
@@ -826,7 +841,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.design")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{design.name}</BreadcrumbLink>
+              <BreadcrumbLink
+                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&select=${design.guid}`);
+                }}
+              >
+                <button type="button">{design.name}</button>
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
@@ -837,7 +861,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}</BreadcrumbLink>
+              <BreadcrumbLink
+                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&select=${design.guid}`);
+                }}
+              >
+                <button type="button">{design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}</button>
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
@@ -848,12 +881,22 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.view")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}</BreadcrumbLink>
+              <BreadcrumbLink
+                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}&select=${design.guid}`);
+                }}
+              >
+                <button type="button">{design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}</button>
+              </BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
         {isTypeEditor && type && (
           <>
+            <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
             <BreadcrumbItem tooltip={tooltip("breadcrumb.types")}>
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }}>
@@ -870,7 +913,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.type")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{type.name}</BreadcrumbLink>
+              <BreadcrumbLink
+                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(type.name)}&select=${type.guid}`);
+                }}
+              >
+                <button type="button">{type.name}</button>
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
@@ -881,7 +933,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               }}
             />
             <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}</BreadcrumbLink>
+              <BreadcrumbLink
+                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}&select=${type.guid}`);
+                }}
+              >
+                <button type="button">{type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}</button>
+              </BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
@@ -890,7 +951,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   );
 };
 
-const Search: FC = ({}) => {
+const Search: FC = ({ }) => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
   const [open, setOpen] = useState(false);
@@ -911,7 +972,7 @@ const Search: FC = ({}) => {
   );
 };
 
-const PanelToggles: FC = ({}) => {
+const PanelToggles: FC = ({ }) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -950,7 +1011,7 @@ const PanelToggles: FC = ({}) => {
   const otherConfigs = panelConfig.filter((p) => !workbenchPanels.includes(p.key) && !hudPanels.includes(p.key) && !rightPanels.includes(p.key) && p.key !== "toolbar");
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -988,7 +1049,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleWorkbenchPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
         handleToggle(activeWorkbenchPanel as keyof PanelVisibility);
@@ -1002,7 +1063,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleWorkbenchValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (!value) return;
 
     (workbenchPanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -1018,7 +1079,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleHudPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
         handleToggle(activeHudPanel as keyof PanelVisibility);
@@ -1032,7 +1093,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleHudValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (!value) return;
 
     (hudPanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -1048,7 +1109,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleRightPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
         handleToggle(activeRightPanel as keyof PanelVisibility);
@@ -1062,7 +1123,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleRightValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (!value) return;
 
     (rightPanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -1078,15 +1139,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   return (
-    <ToggleGroup
-      type="multiple"
-      value={[
-        ...(isAnyWorkbenchPanelOpen ? [activeWorkbenchPanel] : []),
-        ...(isAnyHudPanelOpen ? [activeHudPanel] : []),
-        ...otherConfigs.filter((p) => visiblePanels[p.key as keyof PanelVisibility]).map((p) => p.key),
-        ...(isAnyRightPanelOpen ? [activeRightPanel] : []),
-      ]}
-    >
+    <div className="flex items-stretch border overflow-hidden h-9">
       {workbenchConfigs.length > 0 && (
         <Toggle
           type="dropdown"
@@ -1096,6 +1149,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleWorkbenchValueChange}
           tooltip={workbenchConfigs.find((p) => p.key === activeWorkbenchPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
+          className="border-0 border-l first:border-l-0"
           items={workbenchConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -1114,6 +1168,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleHudValueChange}
           tooltip={hudConfigs.find((p) => p.key === activeHudPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
+          className="border-0 border-l first:border-l-0"
           items={hudConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -1123,19 +1178,30 @@ const PanelToggles: FC = ({}) => {
         />
       )}
 
-      {otherConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
-        <ToggleGroupItem
-          key={key}
-          value={key}
-          tooltip={tooltip}
-          hotkey={hotkey}
-          onClick={() => {
-            handleToggle(key as keyof PanelVisibility);
-          }}
-        >
-          <Icon />
-        </ToggleGroupItem>
-      ))}
+      <ToggleGroup
+        type="multiple"
+        value={[
+          ...(isAnyWorkbenchPanelOpen ? [activeWorkbenchPanel] : []),
+          ...(isAnyHudPanelOpen ? [activeHudPanel] : []),
+          ...otherConfigs.filter((p) => visiblePanels[p.key as keyof PanelVisibility]).map((p) => p.key),
+          ...(isAnyRightPanelOpen ? [activeRightPanel] : []),
+        ]}
+        className="border-0 border-l first:border-l-0"
+      >
+        {otherConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
+          <ToggleGroupItem
+            key={key}
+            value={key}
+            tooltip={tooltip}
+            hotkey={hotkey}
+            onClick={() => {
+              handleToggle(key as keyof PanelVisibility);
+            }}
+          >
+            <Icon />
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
 
       {rightConfigs.length > 0 && (
         <Toggle
@@ -1146,6 +1212,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleRightValueChange}
           tooltip={rightConfigs.find((p) => p.key === activeRightPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
+          className="border-0 border-l first:border-l-0"
           items={rightConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -1154,13 +1221,13 @@ const PanelToggles: FC = ({}) => {
           }))}
         />
       )}
-    </ToggleGroup>
+    </div>
   );
 };
 
-interface NavbarProps {}
+interface NavbarProps { }
 
-const Navbar: FC<NavbarProps> = ({}) => {
+const Navbar: FC<NavbarProps> = ({ }) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
@@ -1200,7 +1267,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   const isAnyPanelOpen = panelConfig.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleMobilePanelToggle = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (pressed) {
       // Open the active panel if none is open
       if (activePanel && !visiblePanels[activePanel as keyof PanelVisibility]) {
@@ -1219,7 +1286,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   };
 
   const handleMobilePanelChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[editorType]?.togglePanel || (() => { });
     if (!value) return;
 
     // Close all other panels and open the selected one

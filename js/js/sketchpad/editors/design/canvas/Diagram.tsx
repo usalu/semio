@@ -24,6 +24,7 @@ import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
+import { Button } from "../../../../elements/input/Button";
 import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useKit, useKitCommands, useSketchpadCommands } from "../../../store";
 import { useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
@@ -92,11 +93,11 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
               height: boundingBox.height,
             }}
           >
-            <div className="absolute inset-0 border-2 border-dashed border-primary/50 rounded-md" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <button onClick={() => onCluster(groupPieceIds)} className="bg-primary text-primary-foreground px-3 py-1 text-sm font-medium hover:bg-primary/90 transition-colors">
+              <Button level="temporary" className="px-3 py-1 text-sm h-auto" onClick={() => onCluster(groupPieceIds)}>
                 Cluster
-              </button>
+              </Button>
             </div>
           </div>
         );
@@ -151,11 +152,11 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
               height: boundingBox.height,
             }}
           >
-            <div className="absolute inset-0 border-2 border-dashed border-secondary/50 rounded-md" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <button onClick={() => onExpand({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 text-sm font-medium hover:bg-secondary/90 transition-colors">
+              <Button level="temporary" className="px-3 py-1 text-sm h-auto" onClick={() => onExpand({ name: designName })}>
                 Expand
-              </button>
+              </Button>
             </div>
           </div>
         );
@@ -176,8 +177,8 @@ const PresenceDiagram: FC<DesignEditorPresenceOther> = ({ name, cursor, camera }
           zIndex: 1000,
         }}
       >
-        <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs">
-          <div className="w-2 h-2 bg-primary-foreground rounded-full"></div>
+        <div className="flex items-center gap-1 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs">
+          <div className="w-2 h-2 bg-accent-foreground rounded-full"></div>
           {name}
         </div>
       </div>
@@ -299,15 +300,15 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.accent)_50%)]" : "fill-success";
   } else if (diff === DiffStatus.Removed) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.accent)_50%)]" : "fill-danger";
     strokeClass = "stroke-danger stroke-2";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.accent)_50%)]" : "fill-warning";
   } else if (isSelected) {
-    fillClass = "fill-primary";
+    fillClass = "fill-accent";
   } else {
     fillClass = "fill-transparent";
   }
@@ -420,15 +421,15 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.accent)_50%)]" : "fill-success";
   } else if (diff === DiffStatus.Removed) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.accent)_50%)]" : "fill-danger";
     strokeClass = "stroke-danger stroke-2";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.accent)_50%)]" : "fill-warning";
   } else if (isSelected) {
-    fillClass = "fill-primary";
+    fillClass = "fill-accent";
   } else {
     fillClass = "fill-background";
   }
@@ -517,10 +518,10 @@ const HelperLines: React.FC<{
       {lines.map((line, index) => {
         if (line.type === "horizontal" && line.position !== undefined) {
           const screenY = line.position * viewport.zoom + viewport.y;
-          return <div key={`h-${line.relatedPieceId}-${index}`} className="absolute left-0 w-full h-px border-t border-dashed border-primary opacity-60" style={{ top: screenY }} />;
+          return <div key={`h-${line.relatedPieceId}-${index}`} className="absolute left-0 w-full h-px border-t border-dashed border-accent opacity-60" style={{ top: screenY }} />;
         } else if (line.type === "vertical" && line.position !== undefined) {
           const screenX = line.position * viewport.zoom + viewport.x;
-          return <div key={`v-${line.relatedPieceId}-${index}`} className="absolute top-0 w-px h-full border-l border-dashed border-primary opacity-60" style={{ left: screenX }} />;
+          return <div key={`v-${line.relatedPieceId}-${index}`} className="absolute top-0 w-px h-full border-l border-dashed border-accent opacity-60" style={{ left: screenX }} />;
         } else if (line.type === "equalDistance" && line.x1 !== undefined && line.y1 !== undefined && line.x2 !== undefined && line.y2 !== undefined) {
           const screenX1 = line.x1 * viewport.zoom + viewport.x;
           const screenY1 = line.y1 * viewport.zoom + viewport.y;
@@ -789,16 +790,16 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const parentConnectionGuid =
     selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-          const selectedPieceGuid = selection.pieces[0];
-          const pieceMetadata = metadata.get(selectedPieceGuid);
-          if (pieceMetadata?.parentPieceId) {
-            const parentConnection = design.connections?.find(
-              (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
-            );
-            return parentConnection?.guid ?? null;
-          }
-          return null;
-        })()
+        const selectedPieceGuid = selection.pieces[0];
+        const pieceMetadata = metadata.get(selectedPieceGuid);
+        if (pieceMetadata?.parentPieceId) {
+          const parentConnection = design.connections?.find(
+            (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
+          );
+          return parentConnection?.guid ?? null;
+        }
+        return null;
+      })()
       : null;
 
   const connectionEdges =
@@ -960,14 +961,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => { });
     },
     [execute],
   );
 
   const onExpand = useCallback(
     (target: DesignId) => {
-      execute?.("explode", { designId: target }).catch(() => {});
+      execute?.("explode", { designId: target }).catch(() => { });
     },
     [execute],
   );

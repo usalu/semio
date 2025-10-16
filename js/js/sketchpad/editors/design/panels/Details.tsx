@@ -133,7 +133,7 @@ const DesignSectionForm: FC = () => {
           label={t("design.location")}
           actions={[
             {
-              icon: <Minus size={12} />,
+              icon: <Minus />,
               onClick: removeLocation,
               title: t("common.remove"),
             },
@@ -181,7 +181,7 @@ const DesignSectionForm: FC = () => {
           label={t("design.location")}
           actions={[
             {
-              icon: <Plus size={12} />,
+              icon: <Plus />,
               onClick: addLocation,
               title: t("common.add"),
             },
@@ -192,7 +192,7 @@ const DesignSectionForm: FC = () => {
         label={t("design.authors")}
         actions={[
           {
-            icon: <Plus size={12} />,
+            icon: <Plus />,
             onClick: () => {
               startTransaction();
               handleChange({
@@ -229,7 +229,7 @@ const DesignSectionForm: FC = () => {
               isDragHandle={true}
               actions={[
                 {
-                  icon: <Minus size={12} />,
+                  icon: <Minus />,
                   onClick: () => {
                     startTransaction();
                     handleChange({
@@ -286,7 +286,7 @@ const DesignSectionForm: FC = () => {
         label={t("design.attributes")}
         actions={[
           {
-            icon: <Plus size={12} />,
+            icon: <Plus />,
             onClick: () => {
               startTransaction();
               updateDesignField({
@@ -321,7 +321,7 @@ const DesignSectionForm: FC = () => {
               isDragHandle={true}
               actions={[
                 {
-                  icon: <Minus size={12} />,
+                  icon: <Minus />,
                   onClick: () => {
                     startTransaction();
                     updateDesignField({

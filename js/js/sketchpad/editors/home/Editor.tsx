@@ -5,6 +5,7 @@ import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
+import { Action } from "../../../elements/input/Action";
 import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
@@ -234,6 +235,22 @@ const Home: FC = ({}) => {
     navigateToKit(newKit.guid);
   };
 
+  const handleCreateVersion = (kitName: string, type: KitStoreKind) => {
+    const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
+    const uniqueVersion = generateUniqueName("", existingVersions);
+    const newKit: Kit = {
+      guid: guid(),
+      name: kitName,
+      version: uniqueVersion,
+      types: [],
+      designs: [],
+    };
+    const local = type === "local" || type === "remote";
+    const remote = type === "remote";
+    createKit(newKit, local, remote);
+    navigateToKit(newKit.guid);
+  };
+
   const toggleKind = (type: KitStoreKind) => {
     const newParams = new URLSearchParams(searchParams);
     if (selectedKind === type) {
@@ -431,39 +448,52 @@ const Home: FC = ({}) => {
         {/* Simplified table - only name column, no headers */}
         <ScrollArea className="flex-1">
           <div className="flex flex-col">
-            {rows.map((row) => (
-              <div key={row.id} className={`border-b p-2 hover:bg-muted/50 cursor-pointer ${selection.includes(row.kit.guid) ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row.kit.guid, e)}>
-                <div className="flex items-center gap-2" style={{ paddingLeft: `${row.level * 16}px` }}>
-                  {row.hasChildren ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRow(row.id);
-                      }}
-                      className="w-5 h-5 flex items-center justify-center hover:bg-muted shrink-0"
-                    >
-                      {row.isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    </button>
-                  ) : (
-                    <span className="w-5 h-5 shrink-0" />
-                  )}
-                  <div className="shrink-0">
-                    {row.type === "temporary" && <Clock className="size-4" />}
-                    {row.type === "local" && <HardDrive className="size-4" />}
-                    {row.type === "remote" && <Cloud className="size-4" />}
+            {rows.map((row) => {
+              const isSelected = selection.includes(row.kit.guid);
+              return (
+                <div key={row.id} className={`border-b p-2 cursor-pointer ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row.kit.guid, e)}>
+                  <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {row.hasChildren ? (
+                        <button onClick={() => toggleRow(row.id)} className="w-5 h-5 flex items-center justify-center hover:bg-muted shrink-0">
+                          {row.isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
+                      ) : (
+                        <span className="w-5 h-5 shrink-0" />
+                      )}
+                      <div className="shrink-0">
+                        {row.type === "temporary" && <Clock className="size-4" />}
+                        {row.type === "local" && <HardDrive className="size-4" />}
+                        {row.type === "remote" && <Cloud className="size-4" />}
+                      </div>
+                      <span
+                        className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToKit(row.kit.guid);
+                        }}
+                      >
+                        {row.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {row.level === 0 && (
+                        <Action
+                          level="base"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateVersion(row.name, row.type);
+                          }}
+                          tooltip={t("home.createVersion")}
+                        >
+                          <Plus />
+                        </Action>
+                      )}
+                    </div>
                   </div>
-                  <a
-                    className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigateToKit(row.kit.guid);
-                    }}
-                  >
-                    {row.name}
-                  </a>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
       </div>
@@ -564,6 +594,7 @@ const Home: FC = ({}) => {
                   <span>{t("home.name")}</span>
                   <Toggle
                     type="dropdown"
+                    pressed={sortColumn === "name"}
                     value={sortColumn === "name" ? sortDirection : "asc"}
                     onValueChange={(value) => {
                       homeCommands.setSortColumn("name");
@@ -573,7 +604,7 @@ const Home: FC = ({}) => {
                       { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                       { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                     ]}
-                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                    className="px-1 min-w-0"
                   />
                 </div>
                 <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
@@ -584,6 +615,7 @@ const Home: FC = ({}) => {
                     <span>{t("home.kind")}</span>
                     <Toggle
                       type="dropdown"
+                      pressed={sortColumn === "type"}
                       value={sortColumn === "type" ? sortDirection : "asc"}
                       onValueChange={(value) => {
                         homeCommands.setSortColumn("type");
@@ -593,10 +625,10 @@ const Home: FC = ({}) => {
                         { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                         { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                       ]}
-                      className="border-0 h-auto px-1 py-0.5 min-w-0"
+                      className="px-1 min-w-0"
                     />
                   </div>
-                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
                 </th>
               )}
               <th className="text-left p-1 font-medium relative group">
@@ -604,6 +636,7 @@ const Home: FC = ({}) => {
                   <span>{t("home.lastUpdated")}</span>
                   <Toggle
                     type="dropdown"
+                    pressed={sortColumn === "updatedAt"}
                     value={sortColumn === "updatedAt" ? sortDirection : "asc"}
                     onValueChange={(value) => {
                       homeCommands.setSortColumn("updatedAt");
@@ -613,16 +646,17 @@ const Home: FC = ({}) => {
                       { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                       { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                     ]}
-                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                    className="px-1 min-w-0"
                   />
                 </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
               </th>
               <th className="text-left p-1 font-medium relative group">
                 <div className="flex items-center justify-between w-full">
                   <span>{t("home.created")}</span>
                   <Toggle
                     type="dropdown"
+                    pressed={sortColumn === "createdAt"}
                     value={sortColumn === "createdAt" ? sortDirection : "asc"}
                     onValueChange={(value) => {
                       homeCommands.setSortColumn("createdAt");
@@ -632,52 +666,67 @@ const Home: FC = ({}) => {
                       { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                       { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                     ]}
-                    className="border-0 h-auto px-1 py-0.5 min-w-0"
+                    className="px-1 min-w-0"
                   />
                 </div>
               </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className={`border-b hover:bg-muted/50 cursor-pointer ${selection.includes(row.kit.guid) ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row.kit.guid, e)}>
-                <td className="p-1">
-                  <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
-                    {row.hasChildren ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleRow(row.id);
-                        }}
-                        className="w-4 h-4 flex items-center justify-center hover:bg-muted"
-                      >
-                        {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                      </button>
-                    ) : (
-                      <span className="w-4 h-4" />
-                    )}
-                    <a
-                      className="cursor-pointer hover:underline text-left"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigateToKit(row.kit.guid);
-                      }}
-                    >
-                      {row.name}
-                    </a>
-                  </div>
-                </td>
-                {!selectedKind && (
-                  <td className="p-1">
-                    {row.type === "temporary" && <Clock className="size-4" />}
-                    {row.type === "local" && <HardDrive className="size-4" />}
-                    {row.type === "remote" && <Cloud className="size-4" />}
+            {rows.map((row) => {
+              const isSelected = selection.includes(row.kit.guid);
+              return (
+                <tr key={row.id} className={`border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row.kit.guid, e)} role="button" tabIndex={0}>
+                  <td className="p-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        {row.hasChildren ? (
+                          <button onClick={() => toggleRow(row.id)} className="w-4 h-4 flex items-center justify-center hover:bg-muted shrink-0">
+                            {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          </button>
+                        ) : (
+                          <span className="w-4 h-4 shrink-0" />
+                        )}
+                        <span
+                          className="hover:underline text-left flex-1 min-w-0 truncate"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToKit(row.kit.guid);
+                          }}
+                          role="link"
+                          tabIndex={0}
+                        >
+                          {row.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {row.level === 0 && (
+                          <Action
+                            level="base"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateVersion(row.name, row.type);
+                            }}
+                            tooltip={t("home.createVersion")}
+                          >
+                            <Plus />
+                          </Action>
+                        )}
+                      </div>
+                    </div>
                   </td>
-                )}
-                <td className="p-1">{row.updatedAt}</td>
-                <td className="p-1">{row.createdAt}</td>
-              </tr>
-            ))}
+                  {!selectedKind && (
+                    <td className="p-1">
+                      {row.type === "temporary" && <Clock className="size-4" />}
+                      {row.type === "local" && <HardDrive className="size-4" />}
+                      {row.type === "remote" && <Cloud className="size-4" />}
+                    </td>
+                  )}
+                  <td className="p-1">{row.updatedAt}</td>
+                  <td className="p-1">{row.createdAt}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </ScrollArea>

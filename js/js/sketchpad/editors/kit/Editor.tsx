@@ -5,6 +5,7 @@ import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
+import { Action } from "../../../elements/input/Action";
 import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
@@ -84,6 +85,9 @@ const Editor: FC = () => {
   // Get concepts and search from search params
   const selectedConcepts = searchParams.getAll("c");
   const searchQuery = searchParams.get("q") || "";
+
+  // Get selection parameter for auto-selecting designs/types
+  const selectParam = searchParams.get("select");
   const expandedRowsArray = kitEditor?.expandedRows || [];
   const expandedRows = new Set(expandedRowsArray);
 
@@ -142,7 +146,7 @@ const Editor: FC = () => {
 
   // Collect unique views for the selected name and variant (only for designs)
   const uniqueViews = useMemo(() => {
-    if (!selectedName || !selectedVariant || selectedKind !== "designs") return [];
+    if (!selectedName || selectedVariant === null || selectedKind !== "designs") return [];
     const viewSet = new Set<string>();
     kit.designs?.forEach((d: Design) => {
       if (d.name === selectedName && (d.variant || "") === selectedVariant) {
@@ -169,6 +173,33 @@ const Editor: FC = () => {
       removeSection("details", "kit-details");
     };
   }, [addSection, removeSection, editorType]);
+
+  // Auto-select design/type when select parameter is present
+  useEffect(() => {
+    if (!selectParam) return;
+
+    if (selectedKind === "designs") {
+      const design = kit.designs?.find((d: Design) => d.guid === selectParam);
+      if (design) {
+        console.log("[Kit Editor] Auto-selecting design from URL parameter", { designGuid: selectParam });
+        kitEditorCommands.selectDesign(selectParam);
+        // Remove the select parameter after selecting
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("select");
+        setSearchParams(newParams, { replace: true });
+      }
+    } else if (selectedKind === "types") {
+      const type = kit.types?.find((t: Type) => t.guid === selectParam);
+      if (type) {
+        console.log("[Kit Editor] Auto-selecting type from URL parameter", { typeGuid: selectParam });
+        kitEditorCommands.selectType(selectParam);
+        // Remove the select parameter after selecting
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("select");
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [selectParam, selectedKind, kit, kitEditorCommands, searchParams, setSearchParams]);
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -528,6 +559,53 @@ const Editor: FC = () => {
     }
   };
 
+  const handleCreateVariantForRow = (row: TableRow) => {
+    if (row.kind === "designs") {
+      const design = row.data as Design;
+      const existingVariants = (kit.designs || []).filter((d: Design) => d.name === design.name).map((d: Design) => d.variant || "");
+      const uniqueVariant = generateUniqueName(t("design.newVariant"), existingVariants);
+      const newDesign: Design = {
+        guid: guid(),
+        name: design.name,
+        variant: uniqueVariant,
+        view: "",
+        pieces: [],
+        connections: [],
+      };
+      kitCommands.createDesign(newDesign);
+      sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
+    } else if (row.kind === "types") {
+      const type = row.data as Type;
+      const existingVariants = (kit.types || []).filter((t: Type) => t.name === type.name).map((t: Type) => t.variant || "");
+      const uniqueVariant = generateUniqueName(t("type.newVariant"), existingVariants);
+      const newType: Type = {
+        guid: guid(),
+        name: type.name,
+        variant: uniqueVariant,
+        ports: [],
+      };
+      kitCommands.createType(newType);
+      sketchpadCommands.navigateToType(kit.guid, newType.guid);
+    }
+  };
+
+  const handleCreateViewForRow = (row: TableRow) => {
+    if (row.kind !== "designs") return;
+    const design = row.data as Design;
+    const existingViews = (kit.designs || []).filter((d: Design) => d.name === design.name && d.variant === design.variant).map((d: Design) => d.view || "");
+    const uniqueView = generateUniqueName(t("design.newView"), existingViews);
+    const newDesign: Design = {
+      guid: guid(),
+      name: design.name,
+      variant: design.variant,
+      view: uniqueView,
+      pieces: [],
+      connections: [],
+    };
+    kitCommands.createDesign(newDesign);
+    sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
+  };
+
   const toggleKind = (kind: ArtifactKind) => {
     const newParams = new URLSearchParams(searchParams);
     if (selectedKind === kind) {
@@ -872,13 +950,14 @@ const Editor: FC = () => {
           {selectedKind === "designs" &&
             selectedName &&
             selectedVariant !== null &&
-            selectedView === null &&
             uniqueViews.length > 0 &&
-            uniqueViews.map((view) => (
-              <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
-                {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
-              </Toggle>
-            ))}
+            uniqueViews
+              .filter((view) => view !== selectedView)
+              .map((view) => (
+                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
+                  {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
+                </Toggle>
+              ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
             <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
             <Toggle
@@ -909,38 +988,84 @@ const Editor: FC = () => {
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
               return (
-                <div key={row.id} className={`border-b p-2 hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row, e)}>
-                  <div className="flex items-center gap-2" style={{ paddingLeft: `${row.level * 16}px` }}>
-                    {row.hasChildren ? (
-                      <button
+                <div key={row.id} className={`border-b p-2 cursor-pointer ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)}>
+                  <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {row.hasChildren ? (
+                        <button onClick={() => toggleRow(row.id)} className="w-5 h-5 flex items-center justify-center hover:bg-muted shrink-0">
+                          {row.isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
+                      ) : (
+                        <span className="w-5 h-5 shrink-0" />
+                      )}
+                      <div className="shrink-0">
+                        {row.kind === "designs" && <Layout className="size-4" />}
+                        {row.kind === "types" && <Box className="size-4" />}
+                        {row.kind === "qualities" && <Award className="size-4" />}
+                        {row.kind === "files" && <FileText className="size-4" />}
+                        {row.kind === "authors" && <User className="size-4" />}
+                      </div>
+                      <span
+                        className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleRow(row.id);
+                          if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+                          else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
                         }}
-                        className="w-5 h-5 flex items-center justify-center hover:bg-muted shrink-0"
                       >
-                        {row.isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                      </button>
-                    ) : (
-                      <span className="w-5 h-5 shrink-0" />
-                    )}
-                    <div className="shrink-0">
-                      {row.kind === "designs" && <Layout className="size-4" />}
-                      {row.kind === "types" && <Box className="size-4" />}
-                      {row.kind === "qualities" && <Award className="size-4" />}
-                      {row.kind === "files" && <FileText className="size-4" />}
-                      {row.kind === "authors" && <User className="size-4" />}
+                        {row.artifact}
+                      </span>
                     </div>
-                    <a
-                      className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-                        else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-                      }}
-                    >
-                      {row.artifact}
-                    </a>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {row.kind === "designs" && row.level === 0 && (
+                        <>
+                          <Action
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateVariantForRow(row);
+                            }}
+                            tooltip={t("kitEditor.createVariant")}
+                            level="base"
+                          >
+                            <Plus />
+                          </Action>
+                          <Action
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateViewForRow(row);
+                            }}
+                            tooltip={t("kitEditor.createView")}
+                            level="base"
+                          >
+                            <Plus />
+                          </Action>
+                        </>
+                      )}
+                      {row.kind === "types" && row.level === 0 && (
+                        <Action
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateVariantForRow(row);
+                          }}
+                          tooltip={t("kitEditor.createVariant")}
+                          level="base"
+                        >
+                          <Plus />
+                        </Action>
+                      )}
+                      {row.kind === "designs" && row.level === 1 && (
+                        <Action
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateViewForRow(row);
+                          }}
+                          tooltip={t("kitEditor.createView")}
+                          level="base"
+                        >
+                          <Plus />
+                        </Action>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -1080,13 +1205,14 @@ const Editor: FC = () => {
         {selectedKind === "designs" &&
           selectedName &&
           selectedVariant !== null &&
-          selectedView === null &&
           uniqueViews.length > 0 &&
-          uniqueViews.map((view) => (
-            <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
-              {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
-            </Toggle>
-          ))}
+          uniqueViews
+            .filter((view) => view !== selectedView)
+            .map((view) => (
+              <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
+                {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
+              </Toggle>
+            ))}
         <Input className="flex-1 min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>
       <ScrollArea className="flex-1">
@@ -1108,7 +1234,7 @@ const Editor: FC = () => {
                       { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                       { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                     ]}
-                    className="h-auto px-1 py-0.5 min-w-0"
+                    className="px-1 min-w-0"
                   />
                 </div>
                 <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
@@ -1129,7 +1255,7 @@ const Editor: FC = () => {
                         { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                         { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                       ]}
-                      className="h-auto px-1 py-0.5 min-w-0"
+                      className="px-1 min-w-0"
                     />
                   </div>
                   <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
@@ -1150,7 +1276,7 @@ const Editor: FC = () => {
                       { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                       { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                     ]}
-                    className="h-auto px-1 py-0.5 min-w-0"
+                    className="px-1 min-w-0"
                   />
                 </div>
                 <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
@@ -1170,7 +1296,7 @@ const Editor: FC = () => {
                       { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
                       { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
                     ]}
-                    className="h-auto px-1 py-0.5 min-w-0"
+                    className="px-1 min-w-0"
                   />
                 </div>
               </th>
@@ -1185,32 +1311,78 @@ const Editor: FC = () => {
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
               return (
-                <tr key={row.id} className={`border-b hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-muted/30" : ""}`} onClick={(e) => handleRowClick(row, e)}>
-                  <td className="p-1">
-                    <div className="flex items-center gap-1" style={{ paddingLeft: `${row.level * 24}px` }}>
-                      {row.hasChildren ? (
-                        <button
+                <tr key={row.id} className={`border-b cursor-pointer ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)}>
+                  <td className="p-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        {row.hasChildren ? (
+                          <button onClick={() => toggleRow(row.id)} className="w-4 h-4 flex items-center justify-center hover:bg-muted shrink-0">
+                            {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          </button>
+                        ) : (
+                          <span className="w-4 h-4 shrink-0" />
+                        )}
+                        <span
+                          className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleRow(row.id);
+                            if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+                            else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
                           }}
-                          className="w-4 h-4 flex items-center justify-center hover:bg-muted"
                         >
-                          {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                        </button>
-                      ) : (
-                        <span className="w-4 h-4" />
-                      )}
-                      <a
-                        className="cursor-pointer hover:underline text-left"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-                          else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-                        }}
-                      >
-                        {row.artifact}
-                      </a>
+                          {row.artifact}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {row.kind === "designs" && row.level === 0 && (
+                          <>
+                            <Action
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCreateVariantForRow(row);
+                              }}
+                              tooltip={t("kitEditor.createVariant")}
+                              level="base"
+                            >
+                              <Plus />
+                            </Action>
+                            <Action
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCreateViewForRow(row);
+                              }}
+                              tooltip={t("kitEditor.createView")}
+                              level="base"
+                            >
+                              <Plus />
+                            </Action>
+                          </>
+                        )}
+                        {row.kind === "types" && row.level === 0 && (
+                          <Action
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateVariantForRow(row);
+                            }}
+                            tooltip={t("kitEditor.createVariant")}
+                            level="base"
+                          >
+                            <Plus />
+                          </Action>
+                        )}
+                        {row.kind === "designs" && row.level === 1 && (
+                          <Action
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateViewForRow(row);
+                            }}
+                            tooltip={t("kitEditor.createView")}
+                            level="base"
+                          >
+                            <Plus />
+                          </Action>
+                        )}
+                      </div>
                     </div>
                   </td>
                   {!selectedKind && (
