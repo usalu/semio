@@ -451,7 +451,7 @@ const Home: FC = ({}) => {
             {rows.map((row) => {
               const isSelected = selection.includes(row.kit.guid);
               return (
-                <div key={row.id} className={`border-b p-2 cursor-pointer ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row.kit.guid, e)}>
+                <div key={row.id} className={`border-b p-2 ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} role="button" tabIndex={0} onClick={(e) => handleRowClick(row.kit.guid, e)}>
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {row.hasChildren ? (
@@ -467,7 +467,9 @@ const Home: FC = ({}) => {
                         {row.type === "remote" && <Cloud className="size-4" />}
                       </div>
                       <span
-                        className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
+                        className="hover:underline text-left flex-1 min-w-0 truncate"
+                        role="button"
+                        tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation();
                           navigateToKit(row.kit.guid);
@@ -607,7 +609,7 @@ const Home: FC = ({}) => {
                     className="px-1 min-w-0"
                   />
                 </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
               </th>
               {!selectedKind && (
                 <th className="text-left p-1 font-medium relative group">

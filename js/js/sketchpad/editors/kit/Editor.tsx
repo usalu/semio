@@ -988,7 +988,7 @@ const Editor: FC = () => {
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
               return (
-                <div key={row.id} className={`border-b p-2 cursor-pointer ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)}>
+                <div key={row.id} className={`border-b p-2 ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)} role="button" tabIndex={0}>
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {row.hasChildren ? (
@@ -1006,12 +1006,14 @@ const Editor: FC = () => {
                         {row.kind === "authors" && <User className="size-4" />}
                       </div>
                       <span
-                        className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
+                        className="hover:underline text-left flex-1 min-w-0 truncate"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
                           else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
                         }}
+                        role="link"
+                        tabIndex={0}
                       >
                         {row.artifact}
                       </span>
@@ -1237,7 +1239,7 @@ const Editor: FC = () => {
                     className="px-1 min-w-0"
                   />
                 </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
               </th>
               {!selectedKind && (
                 <th className="text-left p-1 font-medium relative group">
@@ -1258,7 +1260,7 @@ const Editor: FC = () => {
                       className="px-1 min-w-0"
                     />
                   </div>
-                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
                 </th>
               )}
               <th className="text-left p-1 font-medium relative group">
@@ -1279,7 +1281,7 @@ const Editor: FC = () => {
                     className="px-1 min-w-0"
                   />
                 </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary" />
+                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
               </th>
               <th className="text-left p-1 font-medium relative group">
                 <div className="flex items-center justify-between w-full">
@@ -1311,7 +1313,7 @@ const Editor: FC = () => {
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
               return (
-                <tr key={row.id} className={`border-b cursor-pointer ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)}>
+                <tr key={row.id} className={`border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)} role="button" tabIndex={0}>
                   <td className="p-1" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
                       <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -1323,12 +1325,14 @@ const Editor: FC = () => {
                           <span className="w-4 h-4 shrink-0" />
                         )}
                         <span
-                          className="cursor-pointer hover:underline text-left flex-1 min-w-0 truncate"
+                          className="hover:underline text-left flex-1 min-w-0 truncate"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
                             else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
                           }}
+                          role="link"
+                          tabIndex={0}
                         >
                           {row.artifact}
                         </span>

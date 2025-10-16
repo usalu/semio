@@ -70,13 +70,13 @@
     --foreground: var(--color-dark);
     --muted: var(--color-light-8-9);
     --muted-foreground: var(--color-gray);
-    --accent: var(--color-gray-800);
+    --accent: var(--color-primary);
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
     --hover-panel: var(--color-gray-600);
     --hover-overlay: var(--color-gray-500);
     --hover-temporary: var(--color-light-gray-gray);
-    --active-base: var(--color-gray-600);
+    --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-color: var(--color-foreground);
 
@@ -87,11 +87,11 @@
     }
 
     ::selection {
-      background-color: var(--color-primary);
+      background-color: var(--accent);
     }
 
     ::-moz-selection {
-      background-color: var(--color-primary);
+      background-color: var(--accent);
     }
 
     .cursor-pointer {
@@ -341,7 +341,16 @@
     }
 
     [role="button"],
-    [role="link"] {
+    [role="link"],
+    a,
+    button {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+
+    [data-slot="breadcrumb-link"],
+    [data-slot="breadcrumb-separator"][class*="cursor-pointer"] {
       cursor:
         url("../../assets/cursors/cursor_pointer.svg") 0 0,
         pointer !important;
@@ -533,7 +542,7 @@
   --foreground: var(--color-light);
   --muted: var(--color-dark-8-9);
   --muted-foreground: var(--color-gray);
-  --accent: var(--color-gray-200);
+  --accent: var(--color-primary);
   --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
   --hover-panel: var(--color-gray-400);

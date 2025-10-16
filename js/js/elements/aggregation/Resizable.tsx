@@ -64,17 +64,16 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
       data-slot="resizable-handle"
       className={cn(
         "relative flex w-px items-center justify-center",
-        "border-r", // Base border
-        // Conditional hover/drag styling from the wrapper
-        isDragging || isHovered ? "bg-primary border-primary" : "hover:border-primary",
-        "before:absolute before:inset-y-0 before:-left-2 before:w-4 before:cursor-ew-resize", // Wider hit area
-        "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none", // Changed outline-hidden to outline-none
+        "border-r",
+        isDragging || isHovered ? "bg-accent border-accent" : "hover:border-accent",
+        "before:absolute before:inset-y-0 before:-left-2 before:w-4 before:cursor-ew-resize",
+        "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
         "after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2",
         "data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full",
-        "data-[panel-group-direction=vertical]:border-r-0 data-[panel-group-direction=vertical]:border-t", // Adjust border for vertical
+        "data-[panel-group-direction=vertical]:border-r-0 data-[panel-group-direction=vertical]:border-t",
         isDragging || isHovered
-          ? "data-[panel-group-direction=vertical]:bg-primary data-[panel-group-direction=vertical]:border-primary" // Vertical hover/drag
-          : "data-[panel-group-direction=vertical]:hover:border-primary", // Vertical hover
+          ? "data-[panel-group-direction=vertical]:bg-accent data-[panel-group-direction=vertical]:border-accent"
+          : "data-[panel-group-direction=vertical]:hover:border-accent",
         "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
         "data-[panel-group-direction=vertical]:before:inset-x-0 data-[panel-group-direction=vertical]:before:-top-2 data-[panel-group-direction=vertical]:before:h-4 data-[panel-group-direction=vertical]:before:w-full data-[panel-group-direction=vertical]:before:cursor-ns-resize",
         className,

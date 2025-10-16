@@ -21,12 +21,30 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 
-import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
+import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../semio";
+import { Button } from "../../../elements/input/Button";
 
 import "@xyflow/react/dist/style.css";
-import { Button } from "../../../../elements/input/Button";
-import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useKit, useKitCommands, useSketchpadCommands } from "../../../store";
-import { useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorSelection } from "../store";
+import {
+  DesignEditorFullscreenPanel,
+  DesignEditorPresenceOther,
+  PieceScopeProvider,
+  useClusterableGroups,
+  useDesign,
+  useDesignEditorCommands,
+  useDesignEditorDiagramCenter,
+  useDesignEditorDiagramScale,
+  useDesignEditorFullscreen,
+  useDesignEditorHover,
+  useDesignEditorOthers,
+  useDesignEditorSelection,
+  useExplodeableDesignNodes,
+  useKit,
+  useKitCommands,
+  useIsConnectionHovered,
+  useIsPieceHovered,
+  useSketchpadCommands,
+} from "../../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -238,6 +256,9 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
 const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port);
   const portColor = findAttributeValue(port, "semio.color", "var(--color-foreground)")!;
+  const hover = useDesignEditorHover();
+  const { hoverPort, hoverPiece } = useDesignEditorCommands();
+  const isHovered = hover?.port?.piece === pieceId && hover.port?.port === port.guid;
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -252,13 +273,19 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
       style={{
         left: x + ICON_WIDTH / 2,
         top: y,
-        backgroundColor: selected ? "var(--accent)" : portColor,
-        border: selected ? "6px solid var(--accent)" : "0",
-        zIndex: selected ? 20 : 10,
+        backgroundColor: selected || isHovered ? "var(--color-accent)" : portColor,
+        border: selected || isHovered ? "6px solid var(--color-accent)" : "0",
+        zIndex: selected || isHovered ? 20 : 10,
       }}
       position={Position.Top}
       role="button"
       onClick={onClick}
+      onPointerEnter={() => {
+        if (port.guid) hoverPort(pieceId, port.guid);
+      }}
+      onPointerLeave={() => {
+        hoverPiece(pieceId);
+      }}
     />
   );
 };
@@ -272,9 +299,8 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 
   const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
-  const hover = useDesignEditorHover();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
-  const isHovered = hover?.piece === guid;
+  const isHovered = useIsPieceHovered();
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection.port;
@@ -303,7 +329,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.accent)_50%)]" : "fill-success";
+    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
   } else if (diff === DiffStatus.Removed) {
     fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.accent)_50%)]" : "fill-danger";
     strokeClass = "stroke-danger stroke-2";
@@ -312,17 +338,25 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.accent)_50%)]" : "fill-warning";
   } else if (isSelected) {
     fillClass = "fill-accent";
-  } else if (isHovered) {
-    fillClass = "fill-gray-200";
   } else {
     fillClass = "fill-transparent";
+  }
+  if (isHovered) {
+    strokeClass = "stroke-accent stroke-2";
+    if (!isSelected && diff === DiffStatus.Unchanged) {
+      fillClass = "fill-[color-mix(in_srgb,theme(colors.accent)_35%,theme(colors.background)_65%)]";
+    }
   }
 
   const isDesignPiece = !!piece.design;
 
   return (
     <PieceScopeProvider guid={guid}>
-      <div style={{ opacity }} onMouseEnter={() => hoverPiece(guid)} onMouseLeave={() => clearHover()}>
+      <div
+        style={{ opacity }}
+        onPointerEnter={() => hoverPiece(guid)}
+        onPointerLeave={() => clearHover()}
+      >
         <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
           <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
           {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
@@ -347,9 +381,9 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
   const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
-  const hover = useDesignEditorHover();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
-  const isHovered = hover?.piece === guid;
+  const hoverState = useDesignEditorHover();
+  const isHovered = hoverState?.piece === guid;
 
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
     const connectedIsDesignPiece = connection.connected.piece.guid === piece.guid || connection.connected.designPiece?.guid === piece.guid;
@@ -437,14 +471,22 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.accent)_50%)]" : "fill-warning";
   } else if (isSelected) {
     fillClass = "fill-accent";
-  } else if (isHovered) {
-    fillClass = "fill-gray-200";
   } else {
     fillClass = "fill-background";
   }
+  if (isHovered) {
+    strokeClass = "stroke-accent stroke-2";
+    if (!isSelected && diff === DiffStatus.Unchanged) {
+      fillClass = "fill-[color-mix(in_srgb,theme(colors.accent)_35%,theme(colors.background)_65%)]";
+    }
+  }
 
   return (
-    <div style={{ opacity }} onMouseEnter={() => hoverPiece(guid)} onMouseLeave={() => clearHover()}>
+    <div
+      style={{ opacity }}
+      onPointerEnter={() => hoverPiece(guid)}
+      onPointerLeave={() => clearHover()}
+    >
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
         <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
@@ -460,16 +502,15 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 const nodeComponents = { piece: PieceNodeComponent, design: DesignNodeComponent };
 
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, source, target, sourceX, sourceY, targetX, targetY, sourceHandleId, targetHandleId, data, selected }) => {
-  const { hoverConnection, clearHover } = useDesignEditorCommands();
-  const hover = useDesignEditorHover();
-  const connectionGuid = data?.connection?.guid;
-  const isHovered = hover?.connection === connectionGuid;
-  
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
   const diff = (data?.connection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
+  const hoverState = useDesignEditorHover();
+  const { hoverConnection, clearHover } = useDesignEditorCommands();
+  const connectionGuid = data?.connection?.guid;
+  const isHovered = connectionGuid ? hoverState?.connection === connectionGuid : false;
 
   let stroke = "var(--color-dark)";
   let strokeWidth = 2;
@@ -486,27 +527,40 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, sour
     stroke = selected ? "color-mix(in srgb, var(--color-warning) 50%, var(--color-primary) 50%)" : "var(--color-warning)";
   } else if (selected) {
     stroke = "var(--color-primary)";
-  } else if (isHovered) {
-    stroke = "var(--color-gray-300)";
-    strokeWidth = 3;
   } else if (isParentConnection) {
     stroke = "var(--color-secondary)";
     strokeWidth = 3;
   }
+  if (isHovered) {
+    stroke = "var(--color-accent)";
+    strokeWidth = Math.max(strokeWidth, 3);
+    dasharray = undefined;
+    opacity = 1;
+  }
 
   return (
-    <BaseEdge
-      path={path}
-      onMouseEnter={() => connectionGuid && hoverConnection(connectionGuid)}
-      onMouseLeave={() => clearHover()}
-      style={{
-        stroke,
-        strokeWidth,
-        strokeDasharray: dasharray,
-        opacity,
-      }}
-      className="transition-colors duration-200"
-    />
+    <g>
+      <BaseEdge
+        path={path}
+        style={{
+          stroke,
+          strokeWidth,
+          strokeDasharray: dasharray,
+          opacity,
+        }}
+        className="transition-colors duration-200 pointer-events-none"
+      />
+      <path
+        d={path}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={Math.max(strokeWidth, 6)}
+        onPointerEnter={() => {
+          if (connectionGuid) hoverConnection(connectionGuid);
+        }}
+        onPointerLeave={() => clearHover()}
+      />
+    </g>
   );
 };
 const edgeComponents = { connection: ConnectionEdgeComponent };

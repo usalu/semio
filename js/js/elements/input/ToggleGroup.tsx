@@ -78,7 +78,7 @@ function ToggleGroupItem({
           variant: context.variant,
           level: context.level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-primary data-[state=on]:hover:bg-primary/90 border-0 border-l first:border-l-0 !h-full",
+        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90 border-0 border-l first:border-l-0 !h-full",
         className,
       )}
       {...props}

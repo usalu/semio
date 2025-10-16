@@ -73,7 +73,7 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const piecePlane = usePiecePlane();
   const status = usePieceStatus();
 
-  const { selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignEditorCommands();
 
   // const piece = flatDesign.pieces?.[pieceIndex];
   // const plane = piecePlanes[pieceIndex];
@@ -151,10 +151,19 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     },
     [selectPiece, removePieceFromSelection, addPieceToSelection],
   );
+  const materialColor = useMemo(() => {
+    if (isSelected) return getComputedColor("--color-primary");
+    if (isHovered) return getComputedColor("--color-accent");
+    return getComputedColor("--color-light");
+  }, [isSelected, isHovered]);
   return (
-    <mesh onClick={onSelect}>
+    <mesh 
+      onClick={onSelect}
+      onPointerEnter={() => hoverPiece(piece.guid)}
+      onPointerLeave={() => clearHover()}
+    >
       <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color={isSelected ? "purple" : isHovered ? "orange" : "red"} />
+      <meshBasicMaterial color={materialColor} />
     </mesh>
   );
 

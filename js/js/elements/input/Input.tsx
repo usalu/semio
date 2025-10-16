@@ -105,7 +105,7 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
           data-slot="input"
           className={cn(
             "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-primary",
+            "focus-visible:border-accent",
             "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
             type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
             className,
@@ -127,8 +127,8 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
       data-slot="input"
       style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-primary",
+        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "focus-visible:border-accent",
         "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
         type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
         className,

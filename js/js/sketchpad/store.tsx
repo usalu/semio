@@ -2243,9 +2243,10 @@ export function useIsPieceSelected(): boolean {
 }
 
 export function useIsPieceHovered(): boolean {
-  // const hover = useDesignEditorHover();
-  // return hover.piece?.id_ === piece.id_ ?? false;
-  return false;
+  const hover = useDesignEditorHover();
+  const pieceScope = usePieceScope();
+  if (!pieceScope || !hover) return false;
+  return hover.piece === pieceScope.guid;
 }
 
 export function usePiecePlane(): Plane {
@@ -2770,9 +2771,10 @@ export function useIsConnectionSelected(): boolean {
 }
 
 export function useIsConnectionHovered(): boolean {
-  // const hover = useDesignEditorHover();
-  // return hover.connection?.id_ === connection.id_ ?? false;
-  return false;
+  const hover = useDesignEditorHover();
+  const connectionScope = useConnectionScope();
+  if (!connectionScope || !hover) return false;
+  return hover.connection === connectionScope.guid;
 }
 
 export function useConnectionStatus(): DiffStatus {
@@ -6981,7 +6983,7 @@ export interface DesignEditorPresence {
 export interface DesignEditorHover {
   piece?: Guid;
   connection?: Guid;
-  port?: Guid;
+  port?: { piece: Guid; designPiece?: Guid; port: Guid };
 }
 export interface DesignEditorPresenceOther extends DesignEditorPresence {
   name: string;
@@ -7212,6 +7214,35 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   get diff(): KitDiff {
     return {};
   }
+  get hover(): DesignEditorHover | undefined {
+    const hover = this.yMap.get("hover") as Y.Map<any> | undefined;
+    if (!hover) return undefined;
+    const result: DesignEditorHover = {};
+    const piece = hover.get("piece") as Guid | undefined;
+    const connection = hover.get("connection") as Guid | undefined;
+    const portRaw = hover.get("port") as Y.Map<string> | string | undefined;
+    if (piece) result.piece = piece;
+    if (connection) result.connection = connection;
+    if (portRaw) {
+      if (portRaw instanceof Y.Map) {
+        const portPiece = portRaw.get("piece") as Guid | undefined;
+        const portGuid = portRaw.get("port") as Guid | undefined;
+        if (portPiece && portGuid) {
+          result.port = { piece: portPiece, port: portGuid };
+          const designPiece = portRaw.get("designPiece") as Guid | undefined;
+          if (designPiece) {
+            result.port.designPiece = designPiece;
+          }
+        }
+      } else if (typeof portRaw === "string") {
+        const [portPiece, portGuid] = portRaw.split(":");
+        if (portPiece && portGuid) {
+          result.port = { piece: portPiece as Guid, port: portGuid as Guid };
+        }
+      }
+    }
+    return Object.keys(result).length > 0 ? result : undefined;
+  }
 
   get camera(): Camera | undefined {
     const cameraStr = this.yMap.get("camera") as string | undefined;
@@ -7249,14 +7280,9 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       panelVisibility: this.panelVisibility,
       activeTool: this.activeTool,
       selection: this.selection,
-      isTransactionActive: this.isTransactionActive,
-      canUndo: this.canUndo(),
-      canRedo: this.canRedo(),
+      hover: this.hover,
       presence: this.presence,
       others: this.others,
-      diff: this.diff,
-      currentTransactionStack: this.currentTransactionStack,
-      pastTransactionsStack: this.pastTransactionsStack,
       camera: this.camera,
       diagramCenter: this.diagramCenter,
       diagramScale: this.diagramScale,
@@ -7361,7 +7387,62 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
         // Handle presence changes if needed
       }
       if (diff.hover) {
-        // Handle hover changes if needed
+        let yHover = this.yMap.get("hover") as Y.Map<any>;
+        if (!yHover) {
+          yHover = new Y.Map<any>();
+          this.yMap.set("hover", yHover);
+        }
+        if (Object.prototype.hasOwnProperty.call(diff.hover, "piece")) {
+          const pieceValue = diff.hover.piece;
+          if (pieceValue) {
+            yHover.set("piece", pieceValue);
+          } else {
+            yHover.delete("piece");
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(diff.hover, "connection")) {
+          const connectionValue = diff.hover.connection;
+          if (connectionValue) {
+            yHover.set("connection", connectionValue);
+          } else {
+            yHover.delete("connection");
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(diff.hover, "port")) {
+          const portValue = diff.hover.port;
+          if (portValue) {
+            let yPort = yHover.get("port") as Y.Map<string>;
+            if (!yPort) {
+              yPort = new Y.Map<string>();
+              yHover.set("port", yPort);
+            }
+            if (Object.prototype.hasOwnProperty.call(portValue, "piece")) {
+              if (portValue.piece) {
+                yPort.set("piece", portValue.piece);
+              } else {
+                yPort.delete("piece");
+              }
+            }
+            if (Object.prototype.hasOwnProperty.call(portValue, "designPiece")) {
+              if (portValue.designPiece) {
+                yPort.set("designPiece", portValue.designPiece);
+              } else {
+                yPort.delete("designPiece");
+              }
+            } else {
+              yPort.delete("designPiece");
+            }
+            if (Object.prototype.hasOwnProperty.call(portValue, "port")) {
+              if (portValue.port) {
+                yPort.set("port", portValue.port);
+              } else {
+                yPort.delete("port");
+              }
+            }
+          } else {
+            yHover.delete("port");
+          }
+        }
       }
       if (diff.camera) {
         this.yMap.set("camera", JSON.stringify(diff.camera));
@@ -7838,6 +7919,34 @@ const designEditorCommands = {
       },
     };
   },
+  "semio.designEditor.hoverPiece": (context: DesignEditorCommandContext, pieceGuid: Guid): DesignEditorCommandResult => {
+    return {
+      diff: {
+        hover: { piece: pieceGuid, connection: undefined, port: undefined },
+      },
+    };
+  },
+  "semio.designEditor.hoverConnection": (context: DesignEditorCommandContext, connectionGuid: Guid): DesignEditorCommandResult => {
+    return {
+      diff: {
+        hover: { piece: undefined, connection: connectionGuid, port: undefined },
+      },
+    };
+  },
+  "semio.designEditor.hoverPort": (context: DesignEditorCommandContext, pieceGuid: Guid, portGuid: Guid): DesignEditorCommandResult => {
+    return {
+      diff: {
+        hover: { piece: pieceGuid, connection: undefined, port: { piece: pieceGuid, port: portGuid } },
+      },
+    };
+  },
+  "semio.designEditor.clearHover": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      diff: {
+        hover: { piece: undefined, connection: undefined, port: undefined },
+      },
+    };
+  },
 };
 
 type DesignEditorScope = { id: string };
@@ -7896,6 +8005,10 @@ export function useDesignEditorDiagramScale(): number | undefined {
   return useDesignEditor((s) => s.diagramScale) as number | undefined;
 }
 
+export function useDesignEditorHover(): DesignEditorHover | undefined {
+  return useDesignEditor((s) => s.hover) as DesignEditorHover | undefined;
+}
+
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
   const noOp = () => {};
@@ -7937,6 +8050,10 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
       setCamera: noOp,
       setDiagramCenter: noOp,
       setDiagramScale: noOp,
+      hoverPiece: noOp,
+      hoverConnection: noOp,
+      hoverPort: noOp,
+      clearHover: noOp,
       execute: noOp,
     };
   }
@@ -7976,6 +8093,10 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     setCamera: (camera: Camera) => store.execute("semio.designEditor.setCamera", camera),
     setDiagramCenter: (center: Coord) => store.execute("semio.designEditor.setDiagramCenter", center),
     setDiagramScale: (scale: number) => store.execute("semio.designEditor.setDiagramScale", scale),
+    hoverPiece: (guid: Guid) => store.execute("semio.designEditor.hoverPiece", guid),
+    hoverConnection: (guid: Guid) => store.execute("semio.designEditor.hoverConnection", guid),
+    hoverPort: (pieceGuid: Guid, portGuid: Guid) => store.execute("semio.designEditor.hoverPort", pieceGuid, portGuid),
+    clearHover: () => store.execute("semio.designEditor.clearHover"),
     togglePanel: (panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       try {

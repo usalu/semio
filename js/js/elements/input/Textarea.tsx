@@ -90,7 +90,7 @@ function Textarea({ className, label, lazy, value: externalValue, onChange, onLa
           data-slot="textarea"
           className={cn(
             "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-16 w-full border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-primary",
+            "focus-visible:border-accent",
             "aria-invalid:border-destructive flex-1",
             className,
           )}
@@ -110,7 +110,7 @@ function Textarea({ className, label, lazy, value: externalValue, onChange, onLa
       data-slot="textarea"
       className={cn(
         "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-16 w-full border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-primary",
+        "focus-visible:border-accent",
         "aria-invalid:border-destructive",
         className,
       )}

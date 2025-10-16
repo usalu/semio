@@ -7,6 +7,7 @@ export {
   useDesignEditorDiagramScale,
   useDesignEditorDiff,
   useDesignEditorFullscreen,
+  useDesignEditorHover,
   useDesignEditorOthers,
   useDesignEditorSelection,
 } from "../../store";

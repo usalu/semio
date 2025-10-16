@@ -28,7 +28,7 @@ function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.
 }
 
 function HoverCardTrigger({ className, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
-  return <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" className={cn("cursor-pointer", className)} {...props} />;
+  return <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" className={cn(className)} {...props} />;
 }
 
 function HoverCardContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
