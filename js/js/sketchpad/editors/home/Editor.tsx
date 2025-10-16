@@ -125,9 +125,11 @@ const Home: FC = ({}) => {
 
     kitGroups.forEach((groupKits, name) => {
       const parentId = `kit-${name}`;
-      const hasChildren = groupKits.length > 1 || groupKits.some((k) => k.version);
+      const defaultKit = groupKits.find((k) => !k.version);
+      const parentKit = defaultKit || groupKits[0];
+      const hasChildren = groupKits.some((k) => k.guid !== parentKit.guid);
 
-      const kitStore = store.kit(groupKits[0].guid);
+      const kitStore = store.kit(parentKit.guid);
       let type: KitStoreKind = "temporary";
       if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
       else if (kitStore.isLocallyPersisted) type = "local";
@@ -139,13 +141,14 @@ const Home: FC = ({}) => {
         hasChildren,
         isExpanded: expandedRows.has(parentId),
         type,
-        updatedAt: "",
-        createdAt: "",
-        kit: groupKits[0],
+        updatedAt: formatDate(parentKit.updatedAt),
+        createdAt: formatDate(parentKit.createdAt),
+        kit: parentKit,
       });
 
       if (expandedRows.has(parentId) && hasChildren) {
         groupKits.forEach((kit) => {
+          if (kit.guid === parentKit.guid) return;
           const kitStore = store.kit(kit.guid);
           let kitKind: KitStoreKind = "temporary";
           if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) kitKind = "remote";
@@ -237,7 +240,7 @@ const Home: FC = ({}) => {
 
   const handleCreateVersion = (kitName: string, type: KitStoreKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName("", existingVersions);
+    const uniqueVersion = generateUniqueName(t("kit.newVersion"), existingVersions);
     const newKit: Kit = {
       guid: guid(),
       name: kitName,

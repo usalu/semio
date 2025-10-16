@@ -10,6 +10,7 @@ export {
   useDesignEditorHover,
   useDesignEditorOthers,
   useDesignEditorSelection,
+  useIsDesignPieceChangedInTransaction,
 } from "../../store";
 export type {
   DesignEditorCommandContext,

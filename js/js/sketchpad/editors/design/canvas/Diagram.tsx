@@ -39,7 +39,7 @@ import {
   useKitCommands,
   useSketchpadCommands,
 } from "../../../store";
-import { DesignEditorSelection, useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorSelection } from "../store";
+import { DesignEditorSelection, useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorSelection, useIsDesignPieceChangedInTransaction } from "../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -269,7 +269,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
         left: x + ICON_WIDTH / 2,
         top: y,
         backgroundColor: selected ? "var(--active-base)" : isHovered ? "var(--hover-base)" : portColor,
-        border: selected ? "2px solid var(--active-foreground)" : "0",
+        border: selected || isHovered ? "2px solid var(--border-color)" : "0",
         zIndex: selected || isHovered ? 20 : 10,
       }}
       position={Position.Top}
@@ -334,6 +334,7 @@ type PieceNodeInnerProps = {
 
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, hoverPiece, clearHover, selectPiecePort, deselectPiecePort, addConnection }) => {
   const isHovered = useIsPieceHovered();
+  const isChangedInTransaction = useIsDesignPieceChangedInTransaction(undefined, piece.guid);
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
@@ -370,14 +371,21 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
     fillClass = "fill-[var(--color-warning)]";
     strokeClass = "stroke-[var(--color-warning)] stroke-2";
   }
+  
+  // Show changed color if piece was modified in current transaction
+  if (isChangedInTransaction && diff === DiffStatus.Unchanged) {
+    fillClass = "fill-[var(--color-changed-base)]";
+    strokeClass = "stroke-[var(--color-changed-base)] stroke-2";
+  }
+  
   if (isHovered && !isSelected) {
     fillClass = "fill-[var(--hover-base)]";
-    strokeClass = "stroke-[var(--hover-base)] stroke-2";
+    strokeClass = "stroke-[var(--foreground)] stroke-2";
     opacity = 1;
   }
   if (isSelected) {
     fillClass = "fill-[var(--active-base)]";
-    strokeClass = "stroke-[var(--active-base)] stroke-2";
+    strokeClass = "stroke-[var(--foreground)] stroke-2";
     opacity = 1;
   }
 
@@ -531,12 +539,12 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
   }
   if (isHovered && !isSelected) {
     fillClass = "fill-[var(--hover-base)]";
-    strokeClass = "stroke-[var(--hover-base)] stroke-2";
+    strokeClass = "stroke-[var(--foreground)] stroke-2";
     opacity = 1;
   }
   if (isSelected) {
     fillClass = "fill-[var(--active-base)]";
-    strokeClass = "stroke-[var(--active-base)] stroke-2";
+    strokeClass = "stroke-[var(--foreground)] stroke-2";
     opacity = 1;
   }
 

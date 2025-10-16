@@ -778,6 +778,7 @@
   --color-hover-temporary: var(--hover-temporary);
   --color-active-base: var(--active-base);
   --color-active-foreground: var(--active-foreground);
+  --color-changed-base: var(--color-warning);
   --color-material-plaster-light: var(--material-plaster-light);
   --color-material-plaster-dark: var(--material-plaster-dark);
   --color-popover: var(--temporary);

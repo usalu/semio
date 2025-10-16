@@ -89,6 +89,7 @@
         "name": "Name",
         "version": "Version",
         "defaultVersion": "Default Version",
+        "newVersion": "New Version",
         "defaultName": "New Kit",
         "description": "Description",
         "descriptionPlaceholder": "Enter kit description...",

@@ -76,6 +76,8 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignEditorCommands();
   const plasterLight = useMemo(() => getComputedColor("--material-plaster-light"), []);
   const plasterDark = useMemo(() => getComputedColor("--material-plaster-dark"), []);
+  const hoverBase = useMemo(() => getComputedColor("--hover-base"), []);
+  const activeBase = useMemo(() => getComputedColor("--active-base"), []);
 
   // const piece = flatDesign.pieces?.[pieceIndex];
   // const plane = piecePlanes[pieceIndex];
@@ -154,15 +156,15 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     [selectPiece, removePieceFromSelection, addPieceToSelection],
   );
   const materialColor = useMemo(() => {
-    if (isSelected) return plasterDark;
-    if (isHovered) return plasterDark;
+    if (isSelected) return activeBase;
+    if (isHovered) return hoverBase;
     return plasterLight;
-  }, [isSelected, isHovered, plasterDark, plasterLight]);
+  }, [isSelected, isHovered, activeBase, hoverBase, plasterLight]);
   return (
     <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={materialColor} roughness={0.8} metalness={0.05} />
-      <Edges scale={1.001} color={plasterDark} />
+      <meshStandardMaterial color={materialColor} emissive={isSelected ? activeBase : isHovered ? hoverBase : "#000000"} emissiveIntensity={isSelected || isHovered ? 0.4 : 0} roughness={0.8} metalness={0.05} />
+      <Edges scale={1.001} color={isSelected ? activeBase : isHovered ? hoverBase : plasterDark} />
     </mesh>
   );
 

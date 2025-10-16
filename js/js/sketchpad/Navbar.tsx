@@ -360,7 +360,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     const newGuid = crypto.randomUUID();
     const now = new Date();
     const existingVersions = kits.filter((k) => k.name === kit.name).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(kit.version || "", existingVersions);
+    const uniqueVersion = generateUniqueName(t("kit.newVersion"), existingVersions);
     sketchpadCommands.createKit({
       guid: newGuid,
       name: kit.name,
@@ -1278,7 +1278,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleWorkbenchValueChange}
           tooltip={workbenchConfigs.find((p) => p.key === activeWorkbenchPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
-          className="border-0 border-l first:border-l-0"
+          className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
           items={workbenchConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -1297,7 +1297,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleHudValueChange}
           tooltip={hudConfigs.find((p) => p.key === activeHudPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
-          className="border-0 border-l first:border-l-0"
+          className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
           items={hudConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -1315,7 +1315,7 @@ const PanelToggles: FC = ({}) => {
           ...otherConfigs.filter((p) => visiblePanels[p.key as keyof PanelVisibility]).map((p) => p.key),
           ...(isAnyRightPanelOpen ? [activeRightPanel] : []),
         ]}
-        className="border-0 border-l first:border-l-0"
+        className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
       >
         {otherConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
           <ToggleGroupItem
@@ -1341,7 +1341,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={handleRightValueChange}
           tooltip={rightConfigs.find((p) => p.key === activeRightPanel)?.tooltip}
           dropdownTooltip={t("navbar.changePanelType")}
-          className="border-0 border-l first:border-l-0"
+          className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
           items={rightConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
             value: key,
             label: <Icon />,
@@ -1408,6 +1408,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   const filteredName = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("name") : null;
   const filteredVariant = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("variant") : null;
   const filteredView = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("view") : null;
+  const selectedGuid = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("select") : null;
   const currentDesign = useMemo(() => {
     if (!isDesignEditorPath || !itemGuid) return undefined;
     return allDesigns.find((d) => d.guid === itemGuid);
@@ -1435,24 +1436,23 @@ const Navbar: FC<NavbarProps> = ({}) => {
       if (homeVersion !== null) add(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}&version=${encodeURIComponent(homeVersion)}`);
     }
     if (isKitEditorPath && kitGuid && filteredKind) {
-      add(`/kits/${kitGuid}?kind=${filteredKind}`);
+      const base = `/kits/${kitGuid}`;
+      const kindParams = new URLSearchParams();
+      kindParams.set("kind", filteredKind);
+      add(`${base}?${kindParams.toString()}`);
       if (filteredName !== null) {
-        const nameSelectedGuid = filteredKind === "designs" ? allDesigns.find((d) => d.name === filteredName)?.guid : filteredKind === "types" ? allTypes.find((t) => t.name === filteredName)?.guid : undefined;
-        const nameSelectSuffix = nameSelectedGuid ? `&select=${nameSelectedGuid}` : "";
-        add(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}${nameSelectSuffix}`);
+        const nameParams = new URLSearchParams(kindParams);
+        nameParams.set("name", filteredName);
+        if (selectedGuid) nameParams.set("select", selectedGuid);
+        add(`${base}?${nameParams.toString()}`);
         if (filteredVariant !== null) {
-          const variantSelectedGuid =
-            filteredKind === "designs"
-              ? allDesigns.find((d) => d.name === filteredName && (d.variant || "") === filteredVariant)?.guid
-              : filteredKind === "types"
-                ? allTypes.find((t) => t.name === filteredName && (t.variant || "") === filteredVariant)?.guid
-                : undefined;
-          const variantSelectSuffix = variantSelectedGuid ? `&select=${variantSelectedGuid}` : "";
-          add(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}${variantSelectSuffix}`);
+          const variantParams = new URLSearchParams(nameParams);
+          variantParams.set("variant", filteredVariant);
+          add(`${base}?${variantParams.toString()}`);
           if (filteredView !== null && filteredKind === "designs") {
-            const viewSelectedGuid = allDesigns.find((d) => d.name === filteredName && (d.variant || "") === filteredVariant && (d.view || "") === filteredView)?.guid;
-            const viewSelectSuffix = viewSelectedGuid ? `&select=${viewSelectedGuid}` : "";
-            add(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(filteredView)}${viewSelectSuffix}`);
+            const viewParams = new URLSearchParams(variantParams);
+            viewParams.set("view", filteredView);
+            add(`${base}?${viewParams.toString()}`);
           }
         }
       }
@@ -1469,7 +1469,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
     }
     add(currentPath);
     return items;
-  }, [kitKind, homeKind, kitGuid, currentKit, homeName, homeVersion, isKitEditorPath, filteredKind, filteredName, filteredVariant, filteredView, isDesignEditorPath, currentDesign, isTypeEditorPath, currentType, currentPath, allDesigns, allTypes]);
+  }, [kitKind, homeKind, kitGuid, currentKit, homeName, homeVersion, isKitEditorPath, filteredKind, filteredName, filteredVariant, filteredView, selectedGuid, isDesignEditorPath, currentDesign, isTypeEditorPath, currentType, currentPath, allDesigns, allTypes]);
   const upTarget = useMemo(() => {
     if (breadcrumbTrail.length < 2) return undefined;
     const current = breadcrumbTrail[breadcrumbTrail.length - 1];
