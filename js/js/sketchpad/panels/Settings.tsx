@@ -92,7 +92,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   return (
     <div
       className={`h-full z-20 bg-panel text-foreground border min-w-0 overflow-hidden
-                ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
+                ${isResizing || isResizeHovered ? "border-l-accent" : "border-l"}`}
       style={{ width: `${width}px`, opacity: activeInteraction && !activeInteraction.startsWith("settings-") ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">

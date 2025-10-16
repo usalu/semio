@@ -95,7 +95,7 @@ interface GizmoProps {
 }
 
 const Gizmo: FC<GizmoProps> = ({ show = true }) => {
-  const colors = useMemo(() => [getComputedColor("--color-primary"), getComputedColor("--color-tertiary"), getComputedColor("--color-secondary")] as [string, string, string], []);
+  const colors = useMemo(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")] as [string, string, string], []);
   const labels = useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
   const margin = useMemo(() => [80, 80] as [number, number], []);
   if (!show) return null;

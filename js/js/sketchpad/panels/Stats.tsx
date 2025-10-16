@@ -45,7 +45,7 @@ const Stats: FC<StatsProps> = ({ visible, onWidthChange, width }) => {
   return (
     <div
       className={`h-full z-30 text-foreground border
-                ${isResizing || isResizeHovered ? "border-r-primary" : "border-r"}`}
+                ${isResizing || isResizeHovered ? "border-r-accent" : "border-r"}`}
       style={{ width: `${width}px`, opacity: activeInteraction ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">

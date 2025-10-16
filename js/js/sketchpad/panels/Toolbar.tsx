@@ -77,7 +77,7 @@ const Toolbar: FC<ToolbarProps> = ({ visible, onHeightChange, height, leftOffset
   return (
     <div
       className={`z-20 bg-panel text-foreground border border-t
-                ${isResizing || isResizeHovered ? "border-t-primary" : ""}`}
+                ${isResizing || isResizeHovered ? "border-t-accent" : ""}`}
       style={{
         height: `${height}px`,
         marginLeft: `${leftOffset}px`,

@@ -41,6 +41,7 @@
     "cmdk": "^1.1.1",
     "cytoscape": "^3.33.1",
     "date-fns": "^4.1.0",
+    "fuse.js": "^7.1.0",
     "i18next": "^23.16.8",
     "i18next-browser-languagedetector": "^8.2.0",
     "jszip": "^3.10.1",

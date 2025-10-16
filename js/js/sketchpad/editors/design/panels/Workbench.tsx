@@ -63,8 +63,8 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 
   const displayVariant = type.variant || type.name;
   const avatar = (
-    <Avatar className={`cursor-grab active:cursor-grabbing select-none ${isHovered ? "outline outline-2 outline-[var(--color-accent)] outline-offset-2" : ""}`} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-      <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+    <Avatar className={`cursor-grab active:cursor-grabbing select-none ${isHovered ? "border-[var(--active-base)]" : ""}`} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+      <AvatarFallback className={`select-none ${isHovered ? "bg-[var(--active-base)] text-[var(--active-foreground)]" : "bg-muted"}`}>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   );
 
@@ -150,8 +150,8 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <Avatar className={`select-none ${isActive ? "cursor-default opacity-50" : "cursor-grab active:cursor-grabbing"} ${isHovered ? "outline outline-2 outline-[var(--color-accent)] outline-offset-2" : ""}`} style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}>
-      <AvatarFallback className="select-none">{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+    <Avatar className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} ${isHovered ? "border-[var(--active-base)]" : ""}`} style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}>
+      <AvatarFallback className={`select-none ${isHovered ? "bg-[var(--active-base)] text-[var(--active-foreground)]" : "bg-muted"}`}>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   );
 

@@ -20,7 +20,7 @@
 
 // #endregion
 
-import { Line, Select } from "@react-three/drei";
+import { Edges, Line, Select } from "@react-three/drei";
 import React, { FC, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
@@ -74,6 +74,8 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const status = usePieceStatus();
 
   const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignEditorCommands();
+  const plasterLight = useMemo(() => getComputedColor("--material-plaster-light"), []);
+  const plasterDark = useMemo(() => getComputedColor("--material-plaster-dark"), []);
 
   // const piece = flatDesign.pieces?.[pieceIndex];
   // const plane = piecePlanes[pieceIndex];
@@ -142,28 +144,25 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const onSelect = useCallback(
     (e?: MouseEvent) => {
       if (e?.ctrlKey || e?.metaKey) {
-        removePieceFromSelection({ id_: piece.id_ });
+        removePieceFromSelection(piece.guid);
       } else if (e?.shiftKey) {
-        addPieceToSelection({ id_: piece.id_ });
+        addPieceToSelection(piece.guid);
       } else {
-        selectPiece({ id_: piece.id_ });
+        selectPiece(piece.guid);
       }
     },
     [selectPiece, removePieceFromSelection, addPieceToSelection],
   );
   const materialColor = useMemo(() => {
-    if (isSelected) return getComputedColor("--color-primary");
-    if (isHovered) return getComputedColor("--color-accent");
-    return getComputedColor("--color-light");
-  }, [isSelected, isHovered]);
+    if (isSelected) return plasterDark;
+    if (isHovered) return plasterDark;
+    return plasterLight;
+  }, [isSelected, isHovered, plasterDark, plasterLight]);
   return (
-    <mesh 
-      onClick={onSelect}
-      onPointerEnter={() => hoverPiece(piece.guid)}
-      onPointerLeave={() => clearHover()}
-    >
+    <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color={materialColor} />
+      <meshStandardMaterial color={materialColor} roughness={0.8} metalness={0.05} />
+      <Edges scale={1.001} color={plasterDark} />
     </mesh>
   );
 
@@ -251,8 +250,8 @@ const ModelDesign: FC = () => {
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
       const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
-      if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index]?.id_)) {
-        selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
+      if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index])) {
+        selectPieces(newSelectedPieceIds);
       }
     },
     [selectPieces],
@@ -262,8 +261,8 @@ const ModelDesign: FC = () => {
     <Select box multiple onChange={onChange}>
       <group>
         {/* <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}> */}
-        {flatDesign.pieces?.map((piece: Piece, index: number) => (
-          <PieceScopeProvider key={`piece-${piece.id_}`} guid={piece.guid}>
+        {flatDesign.pieces?.map((piece: Piece) => (
+          <PieceScopeProvider key={piece.guid} guid={piece.guid}>
             <ModelPiece />
           </PieceScopeProvider>
         ))}

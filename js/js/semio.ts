@@ -2954,9 +2954,7 @@ export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connect
 };
 
 const getColorForText = (text?: string): string => {
-  if (!text || text === "") {
-    return "var(--color-dark)";
-  }
+  if (!text || text === "") return "var(--foreground)";
 
   // Create a simple hash from the family string
   let hash = 0;
@@ -2966,31 +2964,61 @@ const getColorForText = (text?: string): string => {
     hash = hash & hash; // Convert to 32-bit integer
   }
 
-  // Generate color variations based on primary, secondary, tertiary
+  // Generate color variations based on accent and status semantics
   const baseColors = [
     {
-      base: "var(--color-primary)",
-      variations: ["#ff344f", "#ff5569", "#ff7684", "#ff97a0"],
+      base: "var(--accent)",
+      variations: [
+        "color-mix(in srgb, var(--accent) 85%, var(--base) 15%)",
+        "color-mix(in srgb, var(--accent) 70%, var(--base) 30%)",
+        "color-mix(in srgb, var(--accent) 60%, var(--foreground) 40%)",
+        "color-mix(in srgb, var(--accent) 45%, var(--foreground) 55%)",
+      ],
     },
     {
-      base: "var(--color-secondary)",
-      variations: ["#34d1bf", "#4dd7c9", "#66ddd3", "#80e3dd"],
+      base: "var(--accent-secondary)",
+      variations: [
+        "color-mix(in srgb, var(--accent-secondary) 85%, var(--base) 15%)",
+        "color-mix(in srgb, var(--accent-secondary) 70%, var(--base) 30%)",
+        "color-mix(in srgb, var(--accent-secondary) 60%, var(--foreground) 40%)",
+        "color-mix(in srgb, var(--accent-secondary) 45%, var(--foreground) 55%)",
+      ],
     },
     {
-      base: "var(--color-tertiary)",
-      variations: ["#fa9500", "#fba320", "#fcb140", "#fdc060"],
+      base: "var(--accent-tertiary)",
+      variations: [
+        "color-mix(in srgb, var(--accent-tertiary) 85%, var(--base) 15%)",
+        "color-mix(in srgb, var(--accent-tertiary) 70%, var(--base) 30%)",
+        "color-mix(in srgb, var(--accent-tertiary) 60%, var(--foreground) 40%)",
+        "color-mix(in srgb, var(--accent-tertiary) 45%, var(--foreground) 55%)",
+      ],
     },
     {
-      base: "var(--color-success)",
-      variations: ["#7eb77f", "#8ec28f", "#9ecd9f", "#aed8af"],
+      base: "var(--status-success)",
+      variations: [
+        "color-mix(in srgb, var(--status-success) 85%, var(--base) 15%)",
+        "color-mix(in srgb, var(--status-success) 70%, var(--base) 30%)",
+        "color-mix(in srgb, var(--status-success) 60%, var(--foreground) 40%)",
+        "color-mix(in srgb, var(--status-success) 45%, var(--foreground) 55%)",
+      ],
     },
     {
-      base: "var(--color-warning)",
-      variations: ["#fccf05", "#fcd525", "#fddb45", "#fde165"],
+      base: "var(--status-warning)",
+      variations: [
+        "color-mix(in srgb, var(--status-warning) 85%, var(--base) 15%)",
+        "color-mix(in srgb, var(--status-warning) 70%, var(--base) 30%)",
+        "color-mix(in srgb, var(--status-warning) 60%, var(--foreground) 40%)",
+        "color-mix(in srgb, var(--status-warning) 45%, var(--foreground) 55%)",
+      ],
     },
     {
-      base: "var(--color-info)",
-      variations: ["#dbbea1", "#e1c7ae", "#e7d0bb", "#edd9c8"],
+      base: "var(--status-info)",
+      variations: [
+        "color-mix(in srgb, var(--status-info) 85%, var(--base) 15%)",
+        "color-mix(in srgb, var(--status-info) 70%, var(--base) 30%)",
+        "color-mix(in srgb, var(--status-info) 60%, var(--foreground) 40%)",
+        "color-mix(in srgb, var(--status-info) 45%, var(--foreground) 55%)",
+      ],
     },
   ];
 

@@ -79,6 +79,8 @@
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-color: var(--color-foreground);
+    --material-plaster-light: color-mix(in srgb, var(--color-light) 70%, var(--color-light-7-9) 30%);
+    --material-plaster-dark: color-mix(in srgb, var(--color-gray-300) 40%, var(--color-dark-7-9) 60%);
 
     * {
       cursor:
@@ -710,10 +712,10 @@
       crosshair !important;
   }
 
-  .temp .react-flow__edge-path {
-    stroke: #e98787;
-    stroke-dasharray: 5 5;
-  }
+    .temp .react-flow__edge-path {
+      stroke: #e98787;
+      stroke-dasharray: 5 5;
+    }
 
   .react-flow__handle.connectionindicator,
   .react-flow__handle.connectionindicator:hover {
@@ -776,6 +778,8 @@
   --color-hover-temporary: var(--hover-temporary);
   --color-active-base: var(--active-base);
   --color-active-foreground: var(--active-foreground);
+  --color-material-plaster-light: var(--material-plaster-light);
+  --color-material-plaster-dark: var(--material-plaster-dark);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
   --color-border: var(--accent);

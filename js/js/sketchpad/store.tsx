@@ -4902,11 +4902,24 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
 
   abortTransaction = () => {
     if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack) {
-        currentStack.delete(0, currentStack.length);
-      }
-      this.isTransactionActive = false;
+      this.transact(() => {
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          for (let i = currentStack.length - 1; i >= 0; i--) {
+            const edit = currentStack.get(i);
+            if (edit && edit.undo) {
+              if (edit.undo.kitDiff) {
+                this.kit().change(edit.undo.kitDiff);
+              }
+              if (edit.undo.selectionDiff) {
+                this.applySelectionDiff(edit.undo.selectionDiff);
+              }
+            }
+          }
+          currentStack.delete(0, currentStack.length);
+        }
+        this.isTransactionActive = false;
+      });
     }
   };
 
@@ -4920,13 +4933,30 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
 
   finalizeTransaction = () => {
     if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (currentStack && pastStack && currentStack.length > 0) {
-        pastStack.push(currentStack.toArray());
-        currentStack.delete(0, currentStack.length);
-      }
-      this.isTransactionActive = false;
+      this.transact(() => {
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        let pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+        if (!pastStack) {
+          pastStack = new Y.Array<any>();
+          this.yMap.set("pastTransactionsStack", pastStack);
+        }
+        if (currentStack && currentStack.length > 0) {
+          const edits = currentStack.toArray();
+          if (edits.length === 1) {
+            pastStack.push([edits[0]]);
+          } else if (edits.length > 1) {
+            const firstEdit = edits[0];
+            const lastEdit = edits[edits.length - 1];
+            const mergedEdit = {
+              do: lastEdit.do,
+              undo: firstEdit.undo,
+            };
+            pastStack.push([mergedEdit]);
+          }
+          currentStack.delete(0, currentStack.length);
+        }
+        this.isTransactionActive = false;
+      });
     }
   };
 
@@ -4939,29 +4969,37 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   };
 
   undo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(currentStack.length - 1);
-        currentStack.delete(currentStack.length - 1, 1);
-        if (edit && edit.undo) {
-          edit.undo.diff && this.change(edit.undo.diff);
-          edit.undo.kitDiff && this.kit().change(edit.undo.kitDiff);
-          edit.undo.selectionDiff && this.applySelectionDiff(edit.undo.selectionDiff);
+    this.transact(() => {
+      if (this.isTransactionActive) {
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          const edit = currentStack.get(currentStack.length - 1);
+          currentStack.delete(currentStack.length - 1, 1);
+          if (edit && edit.undo) {
+            if (edit.undo.kitDiff) {
+              this.kit().change(edit.undo.kitDiff);
+            }
+            if (edit.undo.selectionDiff) {
+              this.applySelectionDiff(edit.undo.selectionDiff);
+            }
+          }
+        }
+      } else {
+        const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+        if (pastStack && pastStack.length > 0) {
+          const edit = pastStack.get(pastStack.length - 1);
+          pastStack.delete(pastStack.length - 1, 1);
+          if (edit && edit.undo) {
+            if (edit.undo.kitDiff) {
+              this.kit().change(edit.undo.kitDiff);
+            }
+            if (edit.undo.selectionDiff) {
+              this.applySelectionDiff(edit.undo.selectionDiff);
+            }
+          }
         }
       }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(pastStack.length - 1);
-        pastStack.delete(pastStack.length - 1, 1);
-        if (edit && edit.undo) {
-          edit.undo.diff && this.change(edit.undo.diff);
-          edit.undo.kitDiff && this.kit().change(edit.undo.kitDiff);
-          edit.undo.selectionDiff && this.applySelectionDiff(edit.undo.selectionDiff);
-        }
-      }
-    }
+    });
   };
 
   onUndone = (subscribe: Subscribe) => {
@@ -4973,29 +5011,37 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   };
 
   redo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(0);
-        currentStack.delete(0, 1);
-        if (edit && edit.do) {
-          edit.do.diff && this.change(edit.do.diff);
-          edit.do.kitDiff && this.kit().change(edit.do.kitDiff);
-          edit.do.selectionDiff && this.applySelectionDiff(edit.do.selectionDiff);
+    this.transact(() => {
+      if (this.isTransactionActive) {
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          const edit = currentStack.get(0);
+          currentStack.delete(0, 1);
+          if (edit && edit.do) {
+            if (edit.do.kitDiff) {
+              this.kit().change(edit.do.kitDiff);
+            }
+            if (edit.do.selectionDiff) {
+              this.applySelectionDiff(edit.do.selectionDiff);
+            }
+          }
+        }
+      } else {
+        const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+        if (pastStack && pastStack.length > 0) {
+          const edit = pastStack.get(0);
+          pastStack.delete(0, 1);
+          if (edit && edit.do) {
+            if (edit.do.kitDiff) {
+              this.kit().change(edit.do.kitDiff);
+            }
+            if (edit.do.selectionDiff) {
+              this.applySelectionDiff(edit.do.selectionDiff);
+            }
+          }
         }
       }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(0);
-        pastStack.delete(0, 1);
-        if (edit && edit.do) {
-          edit.do.diff && this.change(edit.do.diff);
-          edit.do.kitDiff && this.kit().change(edit.do.kitDiff);
-          edit.do.selectionDiff && this.applySelectionDiff(edit.do.selectionDiff);
-        }
-      }
-    }
+    });
   };
 
   onRedone = (subscribe: Subscribe) => {
@@ -5008,23 +5054,29 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
 
   protected recordEdit(state: any, result: TCommandResult) {
     if (this.isTransactionActive && (result.diff || result.kitDiff)) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (!currentStack) {
+        currentStack = new Y.Array<any>();
+        this.yMap.set("currentTransactionStack", currentStack);
+      }
       const selection = this.getSelection();
       const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
       const kitStore = this.kit();
       const kitState = kitStore.snapshot();
       const inversedKitDiff = result.kitDiff ? inverseKitDiff(kitState, result.kitDiff) : undefined;
 
-      const edit: TEdit = {
-        do: {
-          kitDiff: result.kitDiff,
-          selectionDiff: result.diff?.selection,
-        },
-        undo: {
-          kitDiff: inversedKitDiff,
-          selectionDiff: inversedSelectionDiff,
-        },
-      } as TEdit;
+      const doStep = {
+        kitDiff: result.kitDiff,
+        selectionDiff: result.diff?.selection,
+      };
+      const undoStep = {
+        kitDiff: inversedKitDiff,
+        selectionDiff: inversedSelectionDiff,
+      };
+      const edit = {
+        do: doStep,
+        undo: undoStep,
+      };
       currentStack.push([edit]);
     }
   }

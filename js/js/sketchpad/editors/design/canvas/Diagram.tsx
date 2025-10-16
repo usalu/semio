@@ -21,12 +21,25 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 
-import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
+import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, Guid, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
-import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useKit, useKitCommands, useSketchpadCommands } from "../../../store";
-import { useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorSelection } from "../store";
+import {
+  ConnectionScopeProvider,
+  DesignEditorFullscreenPanel,
+  DesignEditorPresenceOther,
+  PieceScopeProvider,
+  useClusterableGroups,
+  useDesign,
+  useExplodeableDesignNodes,
+  useIsConnectionHovered,
+  useIsPieceHovered,
+  useKit,
+  useKitCommands,
+  useSketchpadCommands,
+} from "../../../store";
+import { DesignEditorSelection, useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -237,7 +250,10 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
 
 const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port);
-  const portColor = findAttributeValue(port, "semio.color", "var(--color-foreground)")!;
+  const portColor = findAttributeValue(port, "semio.color", "var(--foreground)")!;
+  const hover = useDesignEditorHover();
+  const { hoverPort, hoverPiece } = useDesignEditorCommands();
+  const isHovered = hover?.port?.piece === pieceId && hover.port?.port === port.guid;
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -252,32 +268,75 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
       style={{
         left: x + ICON_WIDTH / 2,
         top: y,
-        backgroundColor: selected ? "var(--accent)" : portColor,
-        border: selected ? "6px solid var(--accent)" : "0",
-        zIndex: selected ? 20 : 10,
+        backgroundColor: selected ? "var(--active-base)" : isHovered ? "var(--hover-base)" : portColor,
+        border: selected ? "2px solid var(--active-foreground)" : "0",
+        zIndex: selected || isHovered ? 20 : 10,
       }}
       position={Position.Top}
       role="button"
       onClick={onClick}
+      onPointerEnter={() => {
+        if (port.guid) hoverPort(pieceId, port.guid);
+      }}
+      onPointerLeave={() => {
+        hoverPiece(pieceId);
+      }}
     />
   );
 };
 
-const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data, selected }) => {
+const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data }) => {
   const {
     piece,
     piece: { guid, attributes },
     type: { ports },
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
-
   const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
-  const hover = useDesignEditorHover();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
-  const isHovered = hover?.piece === guid;
+  const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const isDesignPiece = !!piece.design;
+
+  return (
+    <PieceScopeProvider guid={guid}>
+      <PieceNodeInner
+        id={id}
+        piece={piece}
+        ports={ports}
+        isSelected={isSelected}
+        diff={diff}
+        isDesignPiece={isDesignPiece}
+        selection={selection}
+        hoverPiece={hoverPiece}
+        clearHover={clearHover}
+        selectPiecePort={selectPiecePort}
+        deselectPiecePort={deselectPiecePort}
+        addConnection={addConnection}
+      />
+    </PieceScopeProvider>
+  );
+});
+
+type PieceNodeInnerProps = {
+  id: string;
+  piece: Piece;
+  ports: Port[] | undefined;
+  isSelected: boolean;
+  diff: DiffStatus;
+  isDesignPiece: boolean;
+  selection: DesignEditorSelection | undefined;
+  hoverPiece: (guid: Guid) => void;
+  clearHover: () => void;
+  selectPiecePort: (piece: Guid, port: Guid) => void;
+  deselectPiecePort: () => void;
+  addConnection: (connection: Connection) => void;
+};
+
+const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, hoverPiece, clearHover, selectPiecePort, deselectPiecePort, addConnection }) => {
+  const isHovered = useIsPieceHovered();
 
   const onPortClick = (port: Port) => {
-    const currentSelectedPort = selection.port;
+    const currentSelectedPort = selection?.port;
 
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
       const connection: Connection = {
@@ -296,60 +355,58 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  let fillClass = "";
-  let strokeClass = "stroke-foreground stroke-2";
+  let fillClass = "fill-transparent";
+  let strokeClass = "stroke-[var(--foreground)] stroke-2";
   let opacity = 1;
 
-  const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
-
   if (diff === DiffStatus.Added) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.accent)_50%)]" : "fill-success";
+    fillClass = "fill-[var(--color-success)]";
+    strokeClass = "stroke-[var(--color-success)] stroke-2";
   } else if (diff === DiffStatus.Removed) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.accent)_50%)]" : "fill-danger";
-    strokeClass = "stroke-danger stroke-2";
+    fillClass = "fill-[var(--color-danger)]";
+    strokeClass = "stroke-[var(--color-danger)] stroke-2";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.accent)_50%)]" : "fill-warning";
-  } else if (isSelected) {
-    fillClass = "fill-accent";
-  } else if (isHovered) {
-    fillClass = "fill-gray-200";
-  } else {
-    fillClass = "fill-transparent";
+    fillClass = "fill-[var(--color-warning)]";
+    strokeClass = "stroke-[var(--color-warning)] stroke-2";
+  }
+  if (isHovered && !isSelected) {
+    fillClass = "fill-[var(--hover-base)]";
+    strokeClass = "stroke-[var(--hover-base)] stroke-2";
+    opacity = 1;
+  }
+  if (isSelected) {
+    fillClass = "fill-[var(--active-base)]";
+    strokeClass = "stroke-[var(--active-base)] stroke-2";
+    opacity = 1;
   }
 
-  const isDesignPiece = !!piece.design;
-
   return (
-    <PieceScopeProvider guid={guid}>
-      <div style={{ opacity }} onMouseEnter={() => hoverPiece(guid)} onMouseLeave={() => clearHover()}>
-        <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
-          <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-          {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
-          <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-foreground">
-            {guid}
-          </text>
-        </svg>
-        {ports?.map((port: Port, portIndex: number) => (
-          <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={guid} selected={selection.port?.piece === guid && selection.port?.port === port.guid} onPortClick={onPortClick} />
-        ))}
-      </div>
-    </PieceScopeProvider>
+    <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
+      <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
+        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
+          {piece.guid}
+        </text>
+      </svg>
+      {ports?.map((port: Port, portIndex: number) => (
+        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selection?.port?.piece === piece.guid && selection?.port?.port === port.guid} onPortClick={onPortClick} />
+      ))}
+    </div>
   );
-});
+};
 
-const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data, selected }) => {
+const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data }) => {
   const {
     piece,
     piece: { guid, attributes },
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
-
   const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
-  const hover = useDesignEditorHover();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
-  const isHovered = hover?.piece === guid;
+  const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
     const connectedIsDesignPiece = connection.connected.piece.guid === piece.guid || connection.connected.designPiece?.guid === piece.guid;
@@ -401,8 +458,44 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     };
   });
 
+  return (
+    <PieceScopeProvider guid={guid}>
+      <DesignNodeInner
+        id={id}
+        piece={piece}
+        ports={ports}
+        isSelected={isSelected}
+        diff={diff}
+        selection={selection}
+        hoverPiece={hoverPiece}
+        clearHover={clearHover}
+        selectPiecePort={selectPiecePort}
+        deselectPiecePort={deselectPiecePort}
+        addConnection={addConnection}
+      />
+    </PieceScopeProvider>
+  );
+});
+
+type DesignNodeInnerProps = {
+  id: string;
+  piece: Piece;
+  ports: Port[] | undefined;
+  isSelected: boolean;
+  diff: DiffStatus;
+  selection: DesignEditorSelection | undefined;
+  hoverPiece: (guid: Guid) => void;
+  clearHover: () => void;
+  selectPiecePort: (piece: Guid, port: Guid) => void;
+  deselectPiecePort: () => void;
+  addConnection: (connection: Connection) => void;
+};
+
+const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isSelected, diff, selection, hoverPiece, clearHover, selectPiecePort, deselectPiecePort, addConnection }) => {
+  const isHovered = useIsPieceHovered();
+
   const onPortClick = (port: Port) => {
-    const currentSelectedPort = selection.port;
+    const currentSelectedPort = selection?.port;
 
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
       const connection: Connection = {
@@ -421,84 +514,94 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  let fillClass = "";
-  let strokeClass = "stroke-dark stroke-2";
+  let fillClass = "fill-[var(--color-base)]";
+  let strokeClass = "stroke-[var(--foreground)] stroke-2";
   let opacity = 1;
 
-  const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
-
   if (diff === DiffStatus.Added) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.accent)_50%)]" : "fill-success";
+    fillClass = "fill-[var(--color-success)]";
+    strokeClass = "stroke-[var(--color-success)] stroke-2";
   } else if (diff === DiffStatus.Removed) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.accent)_50%)]" : "fill-danger";
-    strokeClass = "stroke-danger stroke-2";
+    fillClass = "fill-[var(--color-danger)]";
+    strokeClass = "stroke-[var(--color-danger)] stroke-2";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
-    fillClass = isSelected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.accent)_50%)]" : "fill-warning";
-  } else if (isSelected) {
-    fillClass = "fill-accent";
-  } else if (isHovered) {
-    fillClass = "fill-gray-200";
-  } else {
-    fillClass = "fill-background";
+    fillClass = "fill-[var(--color-warning)]";
+    strokeClass = "stroke-[var(--color-warning)] stroke-2";
+  }
+  if (isHovered && !isSelected) {
+    fillClass = "fill-[var(--hover-base)]";
+    strokeClass = "stroke-[var(--hover-base)] stroke-2";
+    opacity = 1;
+  }
+  if (isSelected) {
+    fillClass = "fill-[var(--active-base)]";
+    strokeClass = "stroke-[var(--active-base)] stroke-2";
+    opacity = 1;
   }
 
   return (
-    <div style={{ opacity }} onMouseEnter={() => hoverPiece(guid)} onMouseLeave={() => clearHover()}>
+    <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
         <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
-          {guid}
+        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
+          {piece.guid}
         </text>
       </svg>
       {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={guid} selected={selection.port?.piece === guid && selection.port?.port === port.guid} onPortClick={onPortClick} />
+        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selection?.port?.piece === piece.guid && selection?.port?.port === port.guid} onPortClick={onPortClick} />
       ))}
     </div>
   );
-});
+};
 const nodeComponents = { piece: PieceNodeComponent, design: DesignNodeComponent };
 
-const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, source, target, sourceX, sourceY, targetX, targetY, sourceHandleId, targetHandleId, data, selected }) => {
-  const { hoverConnection, clearHover } = useDesignEditorCommands();
-  const hover = useDesignEditorHover();
-  const connectionGuid = data?.connection?.guid;
-  const isHovered = hover?.connection === connectionGuid;
-  
+const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = (props) => {
+  const connectionGuid = props.data?.connection?.guid;
+  if (!connectionGuid) {
+    return <ConnectionEdgeFallback {...props} />;
+  }
+  return (
+    <ConnectionScopeProvider guid={connectionGuid}>
+      <ConnectionEdgeInner {...props} connectionGuid={connectionGuid} />
+    </ConnectionScopeProvider>
+  );
+};
+
+const ConnectionEdgeFallback: React.FC<EdgeProps<ConnectionEdge>> = ({ sourceX, sourceY, targetX, targetY, data, selected }) => {
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
-
   const diff = (data?.connection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
-  let stroke = "var(--color-dark)";
+  let stroke = "var(--foreground)";
   let strokeWidth = 2;
   let dasharray: string | undefined;
   let opacity = 1;
 
   if (diff === DiffStatus.Added) {
-    stroke = selected ? "color-mix(in srgb, var(--color-success) 50%, var(--color-primary) 50%)" : "var(--color-success)";
+    stroke = "var(--color-success)";
     dasharray = "5 5";
   } else if (diff === DiffStatus.Removed) {
-    stroke = selected ? "color-mix(in srgb, var(--color-danger) 50%, var(--color-primary) 50%)" : "var(--color-danger)";
+    stroke = "var(--color-danger)";
     opacity = 0.25;
   } else if (diff === DiffStatus.Modified) {
-    stroke = selected ? "color-mix(in srgb, var(--color-warning) 50%, var(--color-primary) 50%)" : "var(--color-warning)";
-  } else if (selected) {
-    stroke = "var(--color-primary)";
-  } else if (isHovered) {
-    stroke = "var(--color-gray-300)";
+    stroke = "var(--color-warning)";
+  }
+  if (isParentConnection) {
+    stroke = "var(--accent-secondary)";
     strokeWidth = 3;
-  } else if (isParentConnection) {
-    stroke = "var(--color-secondary)";
-    strokeWidth = 3;
+  }
+  if (selected) {
+    stroke = "var(--active-base)";
+    strokeWidth = Math.max(strokeWidth, 3);
+    dasharray = undefined;
+    opacity = 1;
   }
 
   return (
     <BaseEdge
       path={path}
-      onMouseEnter={() => connectionGuid && hoverConnection(connectionGuid)}
-      onMouseLeave={() => clearHover()}
       style={{
         stroke,
         strokeWidth,
@@ -507,6 +610,74 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, sour
       }}
       className="transition-colors duration-200"
     />
+  );
+};
+
+type ConnectionEdgeInnerProps = EdgeProps<ConnectionEdge> & { connectionGuid: Guid };
+
+const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sourceY, targetX, targetY, data, selected, connectionGuid }) => {
+  const { hoverConnection, clearHover } = useDesignEditorCommands();
+  const isHovered = useIsConnectionHovered();
+  const HANDLE_HEIGHT = 5;
+  const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
+
+  const diff = (data?.connection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const isParentConnection = data?.isParentConnection ?? false;
+
+  let stroke = "var(--foreground)";
+  let strokeWidth = 2;
+  let dasharray: string | undefined;
+  let opacity = 1;
+
+  if (diff === DiffStatus.Added) {
+    stroke = "var(--color-success)";
+    dasharray = "5 5";
+  } else if (diff === DiffStatus.Removed) {
+    stroke = "var(--color-danger)";
+    opacity = 0.25;
+  } else if (diff === DiffStatus.Modified) {
+    stroke = "var(--color-warning)";
+  }
+  if (isParentConnection) {
+    stroke = "var(--accent-secondary)";
+    strokeWidth = 3;
+  }
+  if (isHovered && !selected) {
+    stroke = "var(--hover-base)";
+    strokeWidth = Math.max(strokeWidth, 3);
+    dasharray = undefined;
+    opacity = 1;
+  }
+  if (selected) {
+    stroke = "var(--active-base)";
+    strokeWidth = Math.max(strokeWidth, 3);
+    dasharray = undefined;
+    opacity = 1;
+  }
+
+  return (
+    <g>
+      <BaseEdge
+        path={path}
+        style={{
+          stroke,
+          strokeWidth,
+          strokeDasharray: dasharray,
+          opacity,
+        }}
+        className="transition-colors duration-200 pointer-events-none"
+      />
+      <path
+        d={path}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={Math.max(strokeWidth, 6)}
+        onPointerEnter={() => {
+          if (connectionGuid) hoverConnection(connectionGuid);
+        }}
+        onPointerLeave={() => clearHover()}
+      />
+    </g>
   );
 };
 const edgeComponents = { connection: ConnectionEdgeComponent };
@@ -548,7 +719,7 @@ const HelperLines: React.FC<{
           const screenY2 = line.y2 * viewport.zoom + viewport.y;
 
           const isMidLine = line.relatedPieceId.startsWith("mid-");
-          const strokeColor = "var(--color-primary)";
+          const strokeColor = "var(--accent)";
           const strokeWidth = isMidLine ? "3" : "2";
           const opacity = isMidLine ? 1 : 0.7;
           const dashArray = isMidLine ? "4 4" : "8 4";
@@ -573,6 +744,7 @@ const pieceToNode = (piece: Piece, type: Type, center: Coord, selected: boolean,
     y: -center.y * ICON_WIDTH || 0,
   },
   selected,
+  draggable: true,
   data: { piece, type },
   className: selected ? "selected" : "",
 });
@@ -585,6 +757,7 @@ const designToNode = (piece: Piece, externalConnections: Connection[], center: C
     y: -center.y * ICON_WIDTH || 0,
   },
   selected,
+  draggable: true,
   data: { piece, externalConnections },
   className: selected ? "selected" : "",
 });
@@ -809,16 +982,16 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const parentConnectionGuid =
     selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-        const selectedPieceGuid = selection.pieces[0];
-        const pieceMetadata = metadata.get(selectedPieceGuid);
-        if (pieceMetadata?.parentPieceId) {
-          const parentConnection = design.connections?.find(
-            (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
-          );
-          return parentConnection?.guid ?? null;
-        }
-        return null;
-      })()
+          const selectedPieceGuid = selection.pieces[0];
+          const pieceMetadata = metadata.get(selectedPieceGuid);
+          if (pieceMetadata?.parentPieceId) {
+            const parentConnection = design.connections?.find(
+              (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
+            );
+            return parentConnection?.guid ?? null;
+          }
+          return null;
+        })()
       : null;
 
   const connectionEdges =
@@ -980,14 +1153,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => { });
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
     },
     [execute],
   );
 
   const onExpand = useCallback(
     (target: DesignId) => {
-      execute?.("explode", { designId: target }).catch(() => { });
+      execute?.("explode", { designId: target }).catch(() => {});
     },
     [execute],
   );
@@ -996,19 +1169,19 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     (event: any, node: Node) => {
       const currentSelectedIds = selection?.pieces ?? [];
       const pieceId = getPieceIdFromNode(node as DiagramNode);
-      const isNodeSelected = currentSelectedIds.some((p: any) => p.guid === pieceId);
+      const isNodeSelected = currentSelectedIds.includes(pieceId);
       const ctrlKey = event.ctrlKey || event.metaKey;
       const shiftKey = event.shiftKey;
 
-      if (ctrlKey) isNodeSelected ? removePieceFromSelection({ guid: pieceId }) : addPieceToSelection({ guid: pieceId });
-      else if (shiftKey) !isNodeSelected ? addPieceToSelection({ guid: pieceId }) : selectPiece({ guid: pieceId });
-      else if (!isNodeSelected) selectPiece({ guid: pieceId });
+      if (ctrlKey) isNodeSelected ? removePieceFromSelection(pieceId) : addPieceToSelection(pieceId);
+      else if (shiftKey) !isNodeSelected ? addPieceToSelection(pieceId) : selectPiece(pieceId);
+      else if (!isNodeSelected) selectPiece(pieceId);
 
       startTransaction();
       setDragState({ lastPostition: { x: node.position.x, y: node.position.y } });
       setHelperLines([]);
     },
-    [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction],
+    [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction, selection],
   );
 
   const onNodeDrag = useCallback(
@@ -1023,26 +1196,24 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       const altPressed = event.altKey;
 
       const currentHelperLines: HelperLine[] = [];
-      const nonSelectedNodes = nodes.filter((n) => !(selection?.pieces ?? []).some((p: any) => p.guid === getPieceIdFromNode(n)));
+      const nonSelectedNodes = nodes.filter((n) => !(selection?.pieces ?? []).includes(getPieceIdFromNode(n)));
       const draggedCenterX = node.position.x + ICON_WIDTH / 2;
       const draggedCenterY = node.position.y + ICON_WIDTH / 2;
 
       const addedConnections: Connection[] = [];
-      // Note: Piece updates during drag are temporarily disabled for new store architecture
-      // let updatedPieces: PieceDiff[] = [];
-      // let updatedConnections: ConnectionDiff[] = [];
+      const updatedPieces: Array<{ id: string; diff: any }> = [];
+      
+      let draggedX = node.position.x;
+      let draggedY = node.position.y;
 
-      for (const selectedNode of nodes.filter((n) => selection?.pieces?.some((p: any) => p.guid === getPieceIdFromNode(n)))) {
+      for (const selectedNode of nodes.filter((n) => selection?.pieces?.includes(getPieceIdFromNode(n)))) {
         if (selectedNode.type !== "piece") continue;
         const piece = (selectedNode as PieceNode).data.piece;
         const type = (selectedNode as PieceNode).data.type;
-        const fixedPieceId = metadata.get(piece.guid)!.fixedPieceId;
+        const fixedPieceId = metadata.get(piece.guid)?.fixedPieceId;
         let closestConnection: Connection | null = null;
         let closestDistance = Number.MAX_VALUE;
         const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!;
-
-        let draggedX = node.position.x;
-        let draggedY = node.position.y;
 
         if (!altPressed) {
           const EQUAL_DISTANCE_THRESHOLD = 15;
@@ -1455,7 +1626,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         if (!altPressed) {
           for (const otherNode of nodes.filter((n) => !(selection.pieces ?? []).includes(getPieceIdFromNode(n)))) {
             if (otherNode.type !== "piece") continue;
-            const existingConnection = design.connections?.find((c) =>
+            const existingConnection = design?.connections?.find((c) =>
               areSameConnection(c, {
                 connected: { piece: { guid: selectedNode.data.piece.guid } },
                 connecting: { piece: { guid: otherNode.data.piece.guid } },
@@ -1469,20 +1640,23 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
                 const otherPort = findPortInType((otherNode as PieceNode).data.type, {
                   guid: otherHandle.id!,
                 });
-                const haveSameFixedPiece = fixedPieceId === metadata.get(otherNode.data.piece.guid)!.fixedPieceId;
+                const haveSameFixedPiece = fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId;
                 if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || isPortInUse(design, piece, port) || isPortInUse(design, otherNode.data.piece, otherPort)) continue;
                 const dx = selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x);
                 const dy = selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y);
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance < closestDistance && distance < MIN_DISTANCE) {
                   closestConnection = {
+                    guid: crypto.randomUUID(),
                     connected: {
-                      piece: { guid: otherNode.data.piece.guid },
-                      port: { guid: otherHandle.id! },
+                      guid: crypto.randomUUID(),
+                      piece: otherNode.data.piece.guid,
+                      port: otherHandle.id!,
                     },
                     connecting: {
-                      piece: { guid: selectedNode.data.piece.guid },
-                      port: { guid: handle.id! },
+                      guid: crypto.randomUUID(),
+                      piece: selectedNode.data.piece.guid,
+                      port: handle.id!,
                     },
                     x: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
                     y: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
@@ -1496,59 +1670,42 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
         if (closestConnection) {
           addedConnections.push(closestConnection);
-          // Note: Piece updates during drag are temporarily disabled for new store architecture
-          // const updatedPiece = {
-          //   ...selectedNode.data.piece,
-          //   center: undefined,
-          //   plane: undefined,
-          // };
-          // if (updatedPiece.type) {
-          //   updatedPieces.push(updatedPiece as Piece);
-          // }
+          updatedPieces.push({
+            id: selectedNode.data.piece.guid,
+            diff: {
+              center: undefined,
+              plane: undefined,
+            },
+          });
         } else {
-          // Note: Piece position updates during drag are temporarily disabled for new store architecture
-          // if (!piece.center) {
-          //   const parentPieceId = metadata.get(selectedNode.data.piece.guid)!.parentPieceId!;
-          //   const parentNode = nodes.find((n) => n.data.piece.guid === parentPieceId);
-          //   if (!parentNode) throw new Error(`Parent node not found for piece ${parentPieceId}`);
-          //   const parentInternalNode = reactFlowInstance.getInternalNode(parentNode.id);
-          //   if (!parentInternalNode) throw new Error(`Internal node not found for ${parentNode.id}`);
-          //   const parentConnection = findConnectionInDesign(design, {
-          //     connected: { piece: { guid: selectedNode.data.piece.guid } },
-          //     connecting: { piece: { guid: parentPieceId } },
-          //   });
-          //   updatedConnections.push({
-          //     ...parentConnection,
-          //     x: (parentConnection.x ?? 0) + (draggedX - lastPostition.x) / ICON_WIDTH,
-          //     y: (parentConnection.y ?? 0) - (draggedY - lastPostition.y) / ICON_WIDTH,
-          //   });
-          // } else {
-          //   const scaledOffset = {
-          //     x: (draggedX - lastPostition.x) / ICON_WIDTH,
-          //     y: -(draggedY - lastPostition.y) / ICON_WIDTH,
-          //   };
-          //   const updatedPiece = {
-          //     ...piece,
-          //     center: {
-          //       x: piece.center!.x + scaledOffset.x,
-          //       y: piece.center!.y + scaledOffset.y,
-          //     },
-          //   };
-          //   if (updatedPiece.type) {
-          //     updatedPieces.push(updatedPiece as Piece);
-          //   }
-          // }
+          const scaledOffset = {
+            x: (draggedX - lastPostition.x) / ICON_WIDTH,
+            y: -(draggedY - lastPostition.y) / ICON_WIDTH,
+          };
+          updatedPieces.push({
+            id: piece.guid,
+            diff: {
+              center: {
+                x: (piece.center?.x ?? 0) + scaledOffset.x,
+                y: (piece.center?.y ?? 0) + scaledOffset.y,
+              },
+            },
+          });
         }
-        if (addedConnections.length > 0) {
-          addedConnections.forEach((conn) => addConnection(conn));
-        }
-        setDragState({
-          ...dragState!,
-          lastPostition: { x: draggedX, y: draggedY },
-        });
       }
+      
+      if (addedConnections.length > 0) {
+        addedConnections.forEach((conn) => addConnection(conn));
+      }
+      if (updatedPieces.length > 0) {
+        updatePieces(updatedPieces);
+      }
+      setDragState({
+        ...dragState!,
+        lastPostition: { x: draggedX, y: draggedY },
+      });
     },
-    [addConnection, design, reactFlowInstance, selection, nodes, metadata],
+    [addConnection, updatePieces, design, reactFlowInstance, selection, nodes, metadata, dragState],
   );
 
   const onNodeDragStop = useCallback(() => {
@@ -1573,19 +1730,23 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       const targetPieceId = extractPieceIdFromNodeId(params.target!);
 
       const newConnection = {
+        guid: crypto.randomUUID(),
         connected: {
-          piece: { guid: sourcePieceId },
-          port: { guid: params.sourceHandle! },
+          guid: crypto.randomUUID(),
+          piece: sourcePieceId,
+          port: params.sourceHandle!,
         },
         connecting: {
-          piece: { guid: targetPieceId },
-          port: { guid: params.targetHandle! },
+          guid: crypto.randomUUID(),
+          piece: targetPieceId,
+          port: params.targetHandle!,
         },
         x: (sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
         y: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
       };
 
-      if ((design.connections ?? []).find((c) => areSameConnection(c, newConnection))) return;
+      if (!design) return;
+      if (((design as Design).connections ?? []).find((c: Connection) => areSameConnection(c, newConnection))) return;
       addConnection(newConnection);
     },
     [addConnection, reactFlowInstance, design],
@@ -1614,6 +1775,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         edgeTypes={edgeComponents}
         connectionMode={ConnectionMode.Loose}
         elementsSelectable={false}
+        nodesDraggable={true}
         minZoom={0.1}
         maxZoom={12}
         fitView={!savedDiagramCenter && !savedDiagramScale}

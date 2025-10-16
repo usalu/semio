@@ -126,6 +126,7 @@ const TypeRoute: FC = () => {
 };
 
 const SketchpadBase: FC = () => {
+  const { kit, design, type: typeParam } = useParams();
   const layout = useLayout();
   const theme = useTheme();
   const editorType = useEditorType();
@@ -332,10 +333,37 @@ const SketchpadBase: FC = () => {
         </FooterItemProvider>
       </PanelSectionProvider>
       {createPortal(
-        <DragOverlay>
-          {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
-          {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
-        </DragOverlay>,
+        design && kit ? (
+          <KitScopeProvider guid={kit}>
+            <DesignScopeProvider guid={design}>
+              <DragOverlay>
+                {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
+                {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+              </DragOverlay>
+            </DesignScopeProvider>
+          </KitScopeProvider>
+        ) : typeParam && kit ? (
+          <KitScopeProvider guid={kit}>
+            <TypeScopeProvider guid={typeParam}>
+              <DragOverlay>
+                {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
+                {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+              </DragOverlay>
+            </TypeScopeProvider>
+          </KitScopeProvider>
+        ) : kit ? (
+          <KitScopeProvider guid={kit}>
+            <DragOverlay>
+              {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
+              {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+            </DragOverlay>
+          </KitScopeProvider>
+        ) : (
+          <DragOverlay>
+            {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
+            {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+          </DragOverlay>
+        ),
         document.body,
       )}
     </DndContext>

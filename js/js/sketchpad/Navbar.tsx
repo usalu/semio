@@ -19,6 +19,7 @@
 
 // #endregion
 
+import Fuse, { FuseResult } from "fuse.js";
 import {
   ArrowLeft,
   ArrowRight,
@@ -49,13 +50,13 @@ import {
 } from "lucide-react";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, useSearchParams } from "react-router";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandList } from "../elements/Command";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../elements/Command";
 import { ButtonGroup, ButtonGroupItem } from "../elements/input/ButtonGroup";
 import { Toggle } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../elements/navigation/Breadcrumb";
-import { Author, AuthorDiff, Connection, Design, DesignDiff, FileDiff, generateUniqueName, Guid, Piece, File as SemioFile, Type, TypeDiff } from "../semio";
+import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
 import {
   EditorType,
   PanelVisibility,
@@ -807,7 +808,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         onClick={() => {
                           const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName && (d.variant || "") === filteredVariant && (d.view || "") === filteredView);
                           if (firstMatchingDesign) {
-                            navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant || "")}&view=${encodeURIComponent(filteredView || "")}&select=${firstMatchingDesign.guid}`);
+                            navigate(
+                              `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant || "")}&view=${encodeURIComponent(filteredView || "")}&select=${firstMatchingDesign.guid}`,
+                            );
                           }
                         }}
                         style={{ cursor: "pointer" }}
@@ -951,10 +954,85 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   );
 };
 
-const Search: FC = ({ }) => {
+type SearchResult = {
+  type: "kit" | "design" | "type" | "quality";
+  item: KitShallow | DesignShallow | TypeShallow | Quality;
+  kitGuid: string;
+};
+
+const Search: FC = ({}) => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const kits = useKits();
+
+  const searchData = useMemo(() => {
+    const results: SearchResult[] = [];
+    kits.forEach((kit) => {
+      results.push({ type: "kit", item: kit as KitShallow, kitGuid: kit.guid });
+      (kit.designs || []).forEach((design) => {
+        if (typeof design === "object") results.push({ type: "design", item: design as DesignShallow, kitGuid: kit.guid });
+      });
+      (kit.types || []).forEach((type) => {
+        if (typeof type === "object") results.push({ type: "type", item: type as TypeShallow, kitGuid: kit.guid });
+      });
+      (kit.qualities || []).forEach((quality) => {
+        if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitGuid: kit.guid });
+      });
+    });
+    return results;
+  }, [kits]);
+
+  const fuse = useMemo(
+    () =>
+      new Fuse(searchData, {
+        keys: [
+          { name: "item.name", weight: 2 },
+          { name: "item.variant", weight: 1.5 },
+          { name: "item.view", weight: 1 },
+          { name: "item.description", weight: 0.5 },
+          { name: "item.key", weight: 1.5 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+      }),
+    [searchData],
+  );
+
+  const searchResults = useMemo(() => (query.trim() ? fuse.search(query).slice(0, 20) : ([] as FuseResult<SearchResult>[])), [fuse, query]);
+
+  const handleSelect = useCallback(
+    (result: SearchResult) => {
+      const { type, item, kitGuid } = result;
+      setOpen(false);
+      setQuery("");
+
+      if (type === "kit") navigate(`/kits/${item.guid}`);
+      else if (type === "design") navigate(`/kits/${kitGuid}/designs/${item.guid}`);
+      else if (type === "type") navigate(`/kits/${kitGuid}/types/${item.guid}`);
+      else if (type === "quality") navigate(`/kits/${kitGuid}?kind=qualities&select=${item.guid}`);
+    },
+    [navigate],
+  );
+
+  const getIcon = (type: SearchResult["type"]) => {
+    if (type === "kit") return <HardDrive size={16} />;
+    if (type === "design") return <Layout size={16} />;
+    if (type === "type") return <Box size={16} />;
+    if (type === "quality") return <Award size={16} />;
+    return null;
+  };
+
+  const getDisplayName = (result: SearchResult) => {
+    const { type, item } = result;
+    if (type === "quality") return (item as Quality).name;
+    const name = (item as any).name || "";
+    const variant = (item as any).variant || "";
+    const view = (item as any).view || "";
+    return [name, variant, view].filter(Boolean).join(" - ");
+  };
 
   return (
     <>
@@ -962,17 +1040,68 @@ const Search: FC = ({ }) => {
         <SearchIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder={t("navbar.searchPlaceholder")} />
+        <CommandInput placeholder={t("navbar.searchPlaceholder")} value={query} onValueChange={setQuery} />
         <CommandList>
           <CommandEmpty>{t("navbar.noResults")}</CommandEmpty>
-          <CommandGroup heading={t("navbar.suggestions")}>{/* TODO: Add command items here */}</CommandGroup>
+          {searchResults.length > 0 && (
+            <>
+              <CommandGroup heading={t("navbar.kits")}>
+                {searchResults
+                  .filter((r: FuseResult<SearchResult>) => r.item.type === "kit")
+                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                    <CommandItem key={`kit-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                      <div className="flex items-center gap-2">
+                        {getIcon(r.item.type)}
+                        <span>{getDisplayName(r.item)}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+              <CommandGroup heading={t("breadcrumb.designs")}>
+                {searchResults
+                  .filter((r: FuseResult<SearchResult>) => r.item.type === "design")
+                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                    <CommandItem key={`design-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                      <div className="flex items-center gap-2">
+                        {getIcon(r.item.type)}
+                        <span>{getDisplayName(r.item)}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+              <CommandGroup heading={t("breadcrumb.types")}>
+                {searchResults
+                  .filter((r: FuseResult<SearchResult>) => r.item.type === "type")
+                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                    <CommandItem key={`type-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                      <div className="flex items-center gap-2">
+                        {getIcon(r.item.type)}
+                        <span>{getDisplayName(r.item)}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+              <CommandGroup heading={t("breadcrumb.qualities")}>
+                {searchResults
+                  .filter((r: FuseResult<SearchResult>) => r.item.type === "quality")
+                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                    <CommandItem key={`quality-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                      <div className="flex items-center gap-2">
+                        {getIcon(r.item.type)}
+                        <span>{getDisplayName(r.item)}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       </CommandDialog>
     </>
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
@@ -1011,7 +1140,7 @@ const PanelToggles: FC = ({ }) => {
   const otherConfigs = panelConfig.filter((p) => !workbenchPanels.includes(p.key) && !hudPanels.includes(p.key) && !rightPanels.includes(p.key) && p.key !== "toolbar");
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -1049,7 +1178,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleWorkbenchPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
         handleToggle(activeWorkbenchPanel as keyof PanelVisibility);
@@ -1063,7 +1192,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleWorkbenchValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     (workbenchPanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -1079,7 +1208,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleHudPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
         handleToggle(activeHudPanel as keyof PanelVisibility);
@@ -1093,7 +1222,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleHudValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     (hudPanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -1109,7 +1238,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleRightPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
         handleToggle(activeRightPanel as keyof PanelVisibility);
@@ -1123,7 +1252,7 @@ const PanelToggles: FC = ({ }) => {
   };
 
   const handleRightValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     (rightPanels as Array<keyof PanelVisibility>).forEach((p) => {
@@ -1225,9 +1354,9 @@ const PanelToggles: FC = ({ }) => {
   );
 };
 
-interface NavbarProps { }
+interface NavbarProps {}
 
-const Navbar: FC<NavbarProps> = ({ }) => {
+const Navbar: FC<NavbarProps> = ({}) => {
   const { t } = useTranslation();
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
   const isFullscreen = useIsFullscreen();
@@ -1238,8 +1367,118 @@ const Navbar: FC<NavbarProps> = ({ }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const currentPath = useNavigation();
+  const location = useLocation();
+  const currentPathname = useNavigation();
+  const currentPath = `${currentPathname}${location.search}`;
   const { canGoBack, canGoForward } = useNavigationHistory();
+  const [searchParams] = useSearchParams();
+  const kits = useKits();
+  const store = useSketchpadStore();
+  const pathParts = currentPathname.split("/").filter((p) => p);
+  const isKitsPath = pathParts[0] === "kits";
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isDesignEditorPath = isKitsPath && pathParts[2] === "designs" && uuidRegex.test(pathParts[3] || "");
+  const isTypeEditorPath = isKitsPath && pathParts[2] === "types" && uuidRegex.test(pathParts[3] || "");
+  const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
+  const itemGuid = isDesignEditorPath || isTypeEditorPath ? pathParts[3] : null;
+  const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
+  const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
+  const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
+  const kitKind = useMemo(() => {
+    if (!kitGuid || !store.hasKit(kitGuid)) return undefined;
+    const kitStore = store.kit(kitGuid);
+    if (!kitStore) return undefined;
+    if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) return "remote";
+    if (kitStore.isLocallyPersisted) return "local";
+    return "temporary";
+  }, [kitGuid, store]);
+  const currentKit = useMemo(() => {
+    if (!kitGuid) return undefined;
+    return kits.find((k) => k.guid === kitGuid);
+  }, [kits, kitGuid]);
+  const allDesigns = useMemo(() => {
+    if (!currentKit?.designs) return [];
+    return (currentKit.designs as any[]).filter((d): d is Design => typeof d === "object" && d.guid !== undefined);
+  }, [currentKit?.designs]);
+  const allTypes = useMemo(() => {
+    if (!currentKit?.types) return [];
+    return (currentKit.types as any[]).filter((t): t is Type => typeof t === "object" && t.guid !== undefined);
+  }, [currentKit?.types]);
+  const filteredKind = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("name") : null;
+  const filteredVariant = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("variant") : null;
+  const filteredView = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("view") : null;
+  const currentDesign = useMemo(() => {
+    if (!isDesignEditorPath || !itemGuid) return undefined;
+    return allDesigns.find((d) => d.guid === itemGuid);
+  }, [isDesignEditorPath, allDesigns, itemGuid]);
+  const currentType = useMemo(() => {
+    if (!isTypeEditorPath || !itemGuid) return undefined;
+    return allTypes.find((t) => t.guid === itemGuid);
+  }, [isTypeEditorPath, allTypes, itemGuid]);
+  const isKitEditorPath = Boolean(kitGuid && !isDesignEditorPath && !isTypeEditorPath);
+  const breadcrumbTrail = useMemo(() => {
+    const items: string[] = [];
+    const add = (value: string | null | undefined) => {
+      if (!value) return;
+      if (items[items.length - 1] !== value) items.push(value);
+    };
+    add("/");
+    const kindValue = kitKind || homeKind;
+    if (kindValue) add(`/?kind=${kindValue}`);
+    if (kitGuid && kitKind && currentKit) {
+      const kitNameValue = currentKit.name || "";
+      add(`/?kind=${kitKind}&name=${encodeURIComponent(kitNameValue)}`);
+      if (currentKit.version !== undefined) add(`/?kind=${kitKind}&name=${encodeURIComponent(kitNameValue)}&version=${encodeURIComponent(currentKit.version || "")}`);
+    } else if (homeKind && homeName) {
+      add(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`);
+      if (homeVersion !== null) add(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}&version=${encodeURIComponent(homeVersion)}`);
+    }
+    if (isKitEditorPath && kitGuid && filteredKind) {
+      add(`/kits/${kitGuid}?kind=${filteredKind}`);
+      if (filteredName !== null) {
+        const nameSelectedGuid = filteredKind === "designs" ? allDesigns.find((d) => d.name === filteredName)?.guid : filteredKind === "types" ? allTypes.find((t) => t.name === filteredName)?.guid : undefined;
+        const nameSelectSuffix = nameSelectedGuid ? `&select=${nameSelectedGuid}` : "";
+        add(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}${nameSelectSuffix}`);
+        if (filteredVariant !== null) {
+          const variantSelectedGuid =
+            filteredKind === "designs"
+              ? allDesigns.find((d) => d.name === filteredName && (d.variant || "") === filteredVariant)?.guid
+              : filteredKind === "types"
+                ? allTypes.find((t) => t.name === filteredName && (t.variant || "") === filteredVariant)?.guid
+                : undefined;
+          const variantSelectSuffix = variantSelectedGuid ? `&select=${variantSelectedGuid}` : "";
+          add(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}${variantSelectSuffix}`);
+          if (filteredView !== null && filteredKind === "designs") {
+            const viewSelectedGuid = allDesigns.find((d) => d.name === filteredName && (d.variant || "") === filteredVariant && (d.view || "") === filteredView)?.guid;
+            const viewSelectSuffix = viewSelectedGuid ? `&select=${viewSelectedGuid}` : "";
+            add(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(filteredView)}${viewSelectSuffix}`);
+          }
+        }
+      }
+    }
+    if (isDesignEditorPath && kitGuid && currentDesign) {
+      add(`/kits/${kitGuid}?kind=designs`);
+      add(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(currentDesign.name)}&select=${currentDesign.guid}`);
+      add(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(currentDesign.name)}&variant=${encodeURIComponent(currentDesign.variant || "")}&select=${currentDesign.guid}`);
+    }
+    if (isTypeEditorPath && kitGuid && currentType) {
+      add(`/kits/${kitGuid}?kind=types`);
+      add(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(currentType.name)}&select=${currentType.guid}`);
+      add(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(currentType.name)}&variant=${encodeURIComponent(currentType.variant || "")}&select=${currentType.guid}`);
+    }
+    add(currentPath);
+    return items;
+  }, [kitKind, homeKind, kitGuid, currentKit, homeName, homeVersion, isKitEditorPath, filteredKind, filteredName, filteredVariant, filteredView, isDesignEditorPath, currentDesign, isTypeEditorPath, currentType, currentPath, allDesigns, allTypes]);
+  const upTarget = useMemo(() => {
+    if (breadcrumbTrail.length < 2) return undefined;
+    const current = breadcrumbTrail[breadcrumbTrail.length - 1];
+    for (let i = breadcrumbTrail.length - 2; i >= 0; i--) {
+      if (breadcrumbTrail[i] !== current) return breadcrumbTrail[i];
+    }
+    return undefined;
+  }, [breadcrumbTrail]);
+  const isAtRoot = !upTarget;
 
   // Always call hooks unconditionally
   const editorType = useEditorType();
@@ -1259,15 +1498,13 @@ const Navbar: FC<NavbarProps> = ({ }) => {
     [EditorType.TYPE]: typeEditorCommands,
   };
 
-  const isAtRoot = currentPath === "/";
-
   // Find the currently active panel (used by mobile)
   // Default to first panel if none is open
   const activePanel = panelConfig.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || panelConfig[0]?.key || "";
   const isAnyPanelOpen = panelConfig.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const handleMobilePanelToggle = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (pressed) {
       // Open the active panel if none is open
       if (activePanel && !visiblePanels[activePanel as keyof PanelVisibility]) {
@@ -1286,7 +1523,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
   };
 
   const handleMobilePanelChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => { });
+    const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
 
     // Close all other panels and open the selected one
@@ -1337,7 +1574,14 @@ const Navbar: FC<NavbarProps> = ({ }) => {
             <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
               <ArrowRight size={16} />
             </ButtonGroupItem>
-            <ButtonGroupItem value="up" tooltip={tooltip("navbar.up")} onClick={() => navigate("/")} disabled={isAtRoot}>
+            <ButtonGroupItem
+              value="up"
+              tooltip={tooltip("navbar.up")}
+              onClick={() => {
+                if (upTarget) navigate(upTarget);
+              }}
+              disabled={isAtRoot}
+            >
               <ArrowUp size={16} />
             </ButtonGroupItem>
           </ButtonGroup>
@@ -1434,7 +1678,14 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         <ButtonGroupItem value="forward" tooltip={t("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="up" tooltip={t("navbar.up")} onClick={() => navigate("/")} disabled={isAtRoot}>
+        <ButtonGroupItem
+          value="up"
+          tooltip={t("navbar.up")}
+          onClick={() => {
+            if (upTarget) navigate(upTarget);
+          }}
+          disabled={isAtRoot}
+        >
           <ArrowUp size={16} />
         </ButtonGroupItem>
       </ButtonGroup>

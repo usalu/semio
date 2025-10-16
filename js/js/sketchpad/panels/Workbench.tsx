@@ -26,15 +26,38 @@
 
 // #endregion
 
-import { FC, useState } from "react";
+import { FC, ReactNode, useState } from "react";
+import { useParams } from "react-router";
 
 import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeSection } from "../../elements/aggregation/Tree";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { useActiveInteraction, useIsMobile } from "../store";
+import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile } from "../store";
 
 interface WorkbenchProps extends ResizablePanelProps {}
+
+const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
+  const { kit, design, type } = useParams();
+  if (design && kit) {
+    return (
+      <KitScopeProvider guid={kit}>
+        <DesignScopeProvider guid={design}>{children}</DesignScopeProvider>
+      </KitScopeProvider>
+    );
+  }
+  if (type && kit) {
+    return (
+      <KitScopeProvider guid={kit}>
+        <TypeScopeProvider guid={type}>{children}</TypeScopeProvider>
+      </KitScopeProvider>
+    );
+  }
+  if (kit) {
+    return <KitScopeProvider guid={kit}>{children}</KitScopeProvider>;
+  }
+  return <>{children}</>;
+};
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizeHovered, setIsResizeHovered] = useState(false);
@@ -84,27 +107,29 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   return (
     <div
       className={`h-full z-20 bg-panel text-foreground border
-                ${isResizing || isResizeHovered ? "border-r-primary" : "border-r"}`}
+                ${isResizing || isResizeHovered ? "border-r-accent" : "border-r"}`}
       style={{ width: `${width}px`, opacity: activeInteraction ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">
         <div className={isMobile ? "p-2" : "p-1"}>
-          {sortedSections.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">No workbench sections available</div>
-          ) : (
-            <Tree>
-              {sortedSections.map((section) => {
-                console.log("[ORIGIN] Rendering TreeSection:", section.id, section.label);
-                const content = typeof section.content === "function" ? section.content() : section.content;
-                console.log("[ORIGIN] TreeSection content:", section.id, content);
-                return (
-                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                    {content}
-                  </TreeSection>
-                );
-              })}
-            </Tree>
-          )}
+          <ScopedContent>
+            {sortedSections.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">No workbench sections available</div>
+            ) : (
+              <Tree>
+                {sortedSections.map((section) => {
+                  console.log("[ORIGIN] Rendering TreeSection:", section.id, section.label);
+                  const content = typeof section.content === "function" ? section.content() : section.content;
+                  console.log("[ORIGIN] TreeSection content:", section.id, content);
+                  return (
+                    <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                      {content}
+                    </TreeSection>
+                  );
+                })}
+              </Tree>
+            )}
+          </ScopedContent>
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

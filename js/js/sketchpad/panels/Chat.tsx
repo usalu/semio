@@ -49,7 +49,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   return (
     <div
       className={`h-full z-20 bg-panel text-foreground border
-                ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
+                ${isResizing || isResizeHovered ? "border-l-accent" : "border-l"}`}
       style={{ width: `${width}px`, opacity: activeInteraction && !activeInteraction.startsWith("chat-") ? 0.1 : 1, transition: "opacity 150ms" }}
     >
       <ScrollArea className="h-full">
