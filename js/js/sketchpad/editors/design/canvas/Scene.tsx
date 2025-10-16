@@ -23,8 +23,8 @@
 import { Line, Select } from "@react-three/drei";
 import React, { FC, useCallback, useMemo } from "react";
 import * as THREE from "three";
-import Model from "../../../elements/Scene";
-import { Camera, Piece, Plane, planeToMatrix } from "../../../semio";
+import Scene from "../../../../elements/Scene";
+import { Camera, Piece, Plane, planeToMatrix } from "../../../../semio";
 import {
   DesignEditorFullscreenPanel,
   DesignEditorPresenceOther,
@@ -40,7 +40,7 @@ import {
   usePiece,
   usePiecePlane,
   usePieceStatus,
-} from "../../store";
+} from "../../../store";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -280,7 +280,7 @@ const ModelDesign: FC = () => {
   );
 };
 
-const Scene: FC = () => {
+const DesignEditorScene: FC = () => {
   const { deselectAll, toggleAccesslFullscreen, setCamera } = useDesignEditorCommands();
   const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Accessl;
   const camera = useDesignEditorCamera();
@@ -304,10 +304,10 @@ const Scene: FC = () => {
   );
 
   return (
-    <Model showGizmo={fullscreen} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+    <Scene showGizmo={fullscreen} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
       <ModelDesign />
-    </Model>
+    </Scene>
   );
 };
 
-export default Scene;
+export default DesignEditorScene;

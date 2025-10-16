@@ -195,23 +195,47 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── sketchpad
 │ │ │ ├── editors
 │ │ │ │ ├── design
-│ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ │ ├── Settings.tsx
+│ │ │ │ │ │ ├── Toolbar.tsx
+│ │ │ │ │ │ └── Workbench.tsx
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ └── store.tsx
+│ │ │ │ ├── home
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ └── Table.tsx
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
-│ │ │ │ │ └── Editor.tsx
-│ │ │ │ │── type
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ └── Table.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ └── Details.tsx
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ └── Scene.tsx
-│ │ │ ├── DesignEditor.tsx
+│ │ │ │ │ └── store.tsx
+│ │ │ │ └── type
+│ │ │ │   ├── canvas
+│ │ │ │   │ └── Scene.tsx
+│ │ │ │   ├── panels
+│ │ │ │   │ ├── Details.tsx
+│ │ │ │   │ ├── Settings.tsx
+│ │ │ │   │ └── Toolbar.tsx
+│ │ │ │   ├── Editor.tsx
+│ │ │ │   └── store.tsx
 │ │ │ ├── panels
 │ │ │ │ ├── Chat.tsx
 │ │ │ │ ├── Details.tsx
 │ │ │ │ ├── Settings.tsx
+│ │ │ │ ├── Toolbar.tsx
 │ │ │ │ └── Workbench.tsx
+│ │ │ ├── Canvas.tsx
 │ │ │ ├── Footer.tsx
-│ │ │ ├── Home.tsx
 │ │ │ ├── Navbar.tsx
+│ │ │ ├── Panel.tsx
 │ │ │ ├── Sketchpad.stories.tsx
 │ │ │ ├── Sketchpad.tsx # main component of @semio/js
 │ │ │ └── store.tsx
@@ -256,7 +280,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── .gitmodules
 ├── .prettierignore
 ├── .prettierrc.json
-├── CLAUDE.md
+├── AGENTS.md # All general ai information
+├── CITATION.cff
+├── CLAUDE.md # Claude specific
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup

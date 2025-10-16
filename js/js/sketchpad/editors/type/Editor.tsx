@@ -30,7 +30,7 @@ import { Textarea } from "../../../elements/input/Textarea";
 import { guid, Type } from "../../../semio";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, useEditorType, useIsInTypeScope, useKitCommands, useType, useTypeEditorCommands } from "../../store";
-import TypeScene from "./Scene";
+import TypeScene from "./canvas/Scene";
 
 const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();

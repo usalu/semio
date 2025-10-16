@@ -25,12 +25,12 @@ import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../elements/display/Tooltip";
 
 import { Design, Type } from "../semio";
-import { DesignAvatar, TypeAvatar } from "./editors/design/Avatars";
 import DesignEditor from "./editors/design/Editor";
+import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
+import Home from "./editors/home/Editor";
 import KitEditor from "./editors/kit/Editor";
 import TypeEditor from "./editors/type/Editor";
 import Footer, { FooterItemProvider } from "./Footer";
-import Home from "./Home";
 import Navbar, { PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
 import Details from "./panels/Details";
@@ -287,7 +287,10 @@ const SketchpadBase: FC = () => {
                           onHeightChange={(h) => setPanelSize("toolbarHeight", h)}
                           leftOffset={visiblePanels.workbench ? panelSizes.workbenchWidth + 4 : 0}
                           rightOffset={
-                            (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + (visiblePanels.details || visiblePanels.chat || visiblePanels.settings ? 4 : 0)
+                            (visiblePanels.details ? panelSizes.detailsWidth : 0) +
+                            (visiblePanels.chat ? panelSizes.chatWidth : 0) +
+                            (visiblePanels.settings ? panelSizes.settingsWidth : 0) +
+                            (visiblePanels.details || visiblePanels.chat || visiblePanels.settings ? 4 : 0)
                           }
                         />
                       </div>

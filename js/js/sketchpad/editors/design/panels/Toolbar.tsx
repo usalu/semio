@@ -7,19 +7,18 @@
 
 // #endregion
 
-import { ChevronDown, MousePointer2, Square, Lasso } from "lucide-react";
+import { ChevronDown, Lasso, MousePointer2, Square } from "lucide-react";
 import { FC } from "react";
-import { Button } from "../../../elements/input/Button";
-import { ToggleGroup, ToggleGroupItem } from "../../../elements/input/ToggleGroup";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../elements/Popover";
-import { ToolType, useDesignEditor, useDesignEditorCommands } from "../../store";
+import { Button } from "../../../../elements/input/Button";
+import { ToggleGroup, ToggleGroupItem } from "../../../../elements/input/ToggleGroup";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../../elements/Popover";
+import { ToolType, useDesignEditor, useDesignEditorCommands, useIsInDesignScope } from "../../../store";
 
 export const SelectionTools: FC = () => {
   const activeTool = useDesignEditor((s) => s.activeTool);
   const { setActiveTool } = useDesignEditorCommands();
 
-  const isSelectionTool =
-    activeTool === ToolType.SELECTION_NORMAL || activeTool === ToolType.SELECTION_ADDITIVE || activeTool === ToolType.SELECTION_SUBTRACTIVE;
+  const isSelectionTool = activeTool === ToolType.SELECTION_NORMAL || activeTool === ToolType.SELECTION_ADDITIVE || activeTool === ToolType.SELECTION_SUBTRACTIVE;
 
   const getSelectionIcon = () => {
     switch (activeTool) {
@@ -128,11 +127,20 @@ export const LassoTools: FC = () => {
 };
 
 export const ToolsToggleGroup: FC = () => {
+  const isInDesignScope = useIsInDesignScope();
+
+  if (!isInDesignScope) {
+    return null;
+  }
+
+  return <ToolsToggleGroupInternal />;
+};
+
+const ToolsToggleGroupInternal: FC = () => {
   const activeTool = useDesignEditor((s) => s.activeTool);
   const { setActiveTool } = useDesignEditorCommands();
 
-  const isSelectionTool =
-    activeTool === ToolType.SELECTION_NORMAL || activeTool === ToolType.SELECTION_ADDITIVE || activeTool === ToolType.SELECTION_SUBTRACTIVE;
+  const isSelectionTool = activeTool === ToolType.SELECTION_NORMAL || activeTool === ToolType.SELECTION_ADDITIVE || activeTool === ToolType.SELECTION_SUBTRACTIVE;
   const isLassoTool = activeTool === ToolType.LASSO_RECTANGULAR || activeTool === ToolType.LASSO_FREEFORM;
 
   const handleValueChange = (value: string) => {

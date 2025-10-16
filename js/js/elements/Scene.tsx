@@ -24,15 +24,7 @@ import { GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react
 import { Canvas, useThree } from "@react-three/fiber";
 import React, { FC, ReactNode, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Camera } from "../../../semio";
-
-interface ModelProps {
-  children?: ReactNode;
-}
-
-const Model: FC<ModelProps> = ({ children }) => {
-  return <>{children}</>;
-};
+import { Camera } from "../semio";
 
 interface GltfProps {
   src: string;

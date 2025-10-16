@@ -1,9 +1,6 @@
 // #region Header
 
-// Avatars.tsx
-
-// Design editor specific avatar components for draggable types and designs.
-// These components are used in the design editor's workbench sections and drag overlay.
+// Workbench.tsx
 
 // #endregion
 

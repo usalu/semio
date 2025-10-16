@@ -4,12 +4,12 @@ import { ArrowDown, ArrowUp, Clock, Cloud, HardDrive, Plus } from "lucide-react"
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
-import { ScrollArea } from "../elements/aggregation/ScrollArea";
-import { Input } from "../elements/input/Input";
-import { Toggle } from "../elements/input/Toggle";
-import i18n from "../i18n";
-import { generateUniqueName, guid, Kit, KitShallow } from "../semio";
-import { useHome, useHomeCommands, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "./store";
+import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
+import { Input } from "../../../elements/input/Input";
+import { Toggle } from "../../../elements/input/Toggle";
+import i18n from "../../../i18n";
+import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
+import { useHome, useHomeCommands, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 
 type KitStoreKind = "temporary" | "local" | "remote";
 

@@ -21,7 +21,7 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 
-import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../semio";
+import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import {
@@ -40,7 +40,7 @@ import {
   useKit,
   useKitCommands,
   useSketchpadCommands,
-} from "../../store";
+} from "../../../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -804,16 +804,16 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const parentConnectionGuid =
     selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-        const selectedPieceGuid = selection.pieces[0];
-        const pieceMetadata = metadata.get(selectedPieceGuid);
-        if (pieceMetadata?.parentPieceId) {
-          const parentConnection = design.connections?.find(
-            (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
-          );
-          return parentConnection?.guid ?? null;
-        }
-        return null;
-      })()
+          const selectedPieceGuid = selection.pieces[0];
+          const pieceMetadata = metadata.get(selectedPieceGuid);
+          if (pieceMetadata?.parentPieceId) {
+            const parentConnection = design.connections?.find(
+              (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
+            );
+            return parentConnection?.guid ?? null;
+          }
+          return null;
+        })()
       : null;
 
   const connectionEdges =
@@ -975,14 +975,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => { });
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
     },
     [execute],
   );
 
   const onExpand = useCallback(
     (target: DesignId) => {
-      execute?.("explode", { designId: target }).catch(() => { });
+      execute?.("explode", { designId: target }).catch(() => {});
     },
     [execute],
   );

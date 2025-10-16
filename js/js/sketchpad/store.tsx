@@ -1812,9 +1812,9 @@ export function usePortColoredTypes(): Type[] {
     const colorDiff = colorPortsForTypes(diffedKit.types);
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
-        const update = colorDiff.updated?.find((u) => u.id === type.guid);
-        return update ? { ...type, ports: update.diff.ports } : type;
-      })
+          const update = colorDiff.updated?.find((u) => u.id === type.guid);
+          return update ? { ...type, ports: update.diff.ports } : type;
+        })
       : diffedKit.types;
   }, [diffedKit.types]);
   const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
@@ -3598,10 +3598,7 @@ export function useClusterableGroups() {
   const selection = useDesignEditorSelection();
   return useMemo(() => {
     if (!design) return [];
-    return getClusterableGroups(
-      design,
-      selection.pieces,
-    );
+    return getClusterableGroups(design, selection.pieces);
   }, [design, selection.pieces]);
 }
 
@@ -4308,7 +4305,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -4484,7 +4481,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) { }
+                  } catch (error) {}
                 }
               }
             }
@@ -5416,7 +5413,7 @@ export function useTypeEditorCamera(): Camera | undefined {
 
 export function useTypeEditorCommands(id?: TypeEditorId) {
   const store = useTypeEditorStore(undefined, id) as TypeEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -6522,7 +6519,7 @@ export function useKitEditorOthers(): KitEditorPresenceOther[] {
 
 export function useKitEditorCommands(id?: KitEditorId) {
   const store = useKitEditorStore(undefined, id) as KitEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7580,7 +7577,7 @@ export function useDesignEditorDiagramScale(): number | undefined {
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  const noOp = () => { };
+  const noOp = () => {};
   if (!store) {
     return {
       startTransaction: noOp,
@@ -7888,21 +7885,21 @@ class SketchpadStore {
     const editorSettings = editorSettingsStr
       ? JSON.parse(editorSettingsStr)
       : {
-        design: { snappiness: 10, gridSize: 24 },
-        type: {},
-        kit: {},
-      };
+          design: { snappiness: 10, gridSize: 24 },
+          type: {},
+          kit: {},
+        };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        toolbarHeight: 52,
-        workbenchWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+          toolbarHeight: 52,
+          workbenchWidth: 230,
+          detailsWidth: 230,
+          chatWidth: 230,
+          settingsWidth: 230,
+          consoleHeight: 200,
+        };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const currentValues = {
