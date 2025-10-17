@@ -2,6 +2,7 @@ import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeSection } from "../../elements/aggregation/Tree";
+import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { Textarea } from "../../elements/input/Textarea";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
@@ -54,13 +55,15 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     >
       <ScrollArea className="h-full">
         <div className={isMobile ? "p-2" : "p-1"}>
-          <Tree>
-            {sortedSections.map((section) => (
-              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {typeof section.content === "function" ? section.content() : section.content}
-              </TreeSection>
-            ))}
-          </Tree>
+          <TreeStateProvider>
+            <Tree>
+              {sortedSections.map((section) => (
+                <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                  {typeof section.content === "function" ? section.content() : section.content}
+                </TreeSection>
+              ))}
+            </Tree>
+          </TreeStateProvider>
         </div>
         <div className={`${isMobile ? "p-2" : "p-1"} border-t`}>
           <Textarea placeholder={t("chat.placeholder")} />

@@ -19,6 +19,7 @@ import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeContent, TreeItem, TreeSection } from "../../elements/aggregation/Tree";
+import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../elements/input/Select";
 import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
 import { usePanelSections } from "../Navbar";
@@ -97,8 +98,9 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
     >
       <ScrollArea className="h-full">
         <div className={`${isMobile ? "p-2" : "p-1"} overflow-hidden min-w-0`}>
-          <Tree className="min-w-0 overflow-hidden">
-            <TreeSection label={t("settings.general")} defaultOpen={true}>
+          <TreeStateProvider>
+            <Tree className="min-w-0 overflow-hidden">
+              <TreeSection label={t("settings.general")} defaultOpen={true}>
               <TreeItem>
                 <TreeContent>
                   <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
@@ -150,12 +152,13 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
               </TreeItem>
             </TreeSection>
 
-            {sortedSections.map((section) => (
-              <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                {typeof section.content === "function" ? section.content() : section.content}
-              </TreeSection>
-            ))}
-          </Tree>
+              {sortedSections.map((section) => (
+                <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                  {typeof section.content === "function" ? section.content() : section.content}
+                </TreeSection>
+              ))}
+            </Tree>
+          </TreeStateProvider>
         </div>
       </ScrollArea>
       <div className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />

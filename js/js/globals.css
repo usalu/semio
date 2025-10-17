@@ -79,9 +79,7 @@
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-color: var(--color-foreground);
-    --material-plaster-light: color-mix(in srgb, var(--color-light) 70%, var(--color-light-7-9) 30%);
-    --material-plaster-dark: color-mix(in srgb, var(--color-gray-300) 40%, var(--color-dark-7-9) 60%);
-
+    --plaster: var(--color-gray);
     * {
       cursor:
         url("../../assets/cursors/cursor.svg") 0 0,
@@ -779,8 +777,10 @@
   --color-active-base: var(--active-base);
   --color-active-foreground: var(--active-foreground);
   --color-changed-base: var(--color-warning);
-  --color-material-plaster-light: var(--material-plaster-light);
-  --color-material-plaster-dark: var(--material-plaster-dark);
+  --color-selected-changed: color-mix(in oklch, var(--active-base) 50%, var(--color-warning) 50%);
+  --color-selected-added: color-mix(in oklch, var(--active-base) 50%, var(--color-success) 50%);
+  --color-selected-removed: color-mix(in oklch, var(--active-base) 50%, var(--color-danger) 50%);
+  --color-plaster: var(--plaster);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
   --color-border: var(--accent);

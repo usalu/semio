@@ -74,10 +74,10 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const status = usePieceStatus();
 
   const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignEditorCommands();
-  const plasterLight = useMemo(() => getComputedColor("--material-plaster-light"), []);
-  const plasterDark = useMemo(() => getComputedColor("--material-plaster-dark"), []);
-  const hoverBase = useMemo(() => getComputedColor("--hover-base"), []);
-  const activeBase = useMemo(() => getComputedColor("--active-base"), []);
+  const plasterColor = useMemo(() => getComputedColor("--plaster"), []);
+  const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
+  const hoverColor = useMemo(() => getComputedColor("--hover-base"), []);
+  const activeColor = useMemo(() => getComputedColor("--active-base"), []);
 
   // const piece = flatDesign.pieces?.[pieceIndex];
   // const plane = piecePlanes[pieceIndex];
@@ -156,15 +156,17 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     [selectPiece, removePieceFromSelection, addPieceToSelection],
   );
   const materialColor = useMemo(() => {
-    if (isSelected) return activeBase;
-    if (isHovered) return hoverBase;
-    return plasterLight;
-  }, [isSelected, isHovered, activeBase, hoverBase, plasterLight]);
+    if (isSelected) return activeColor;
+    if (isHovered) return hoverColor;
+    return plasterColor;
+  }, [isSelected, isHovered, activeColor, plasterColor, plasterColor]);
+  const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : plasterColor;
+  const emissiveIntensity = isSelected ? 0.45 : isHovered ? 0.35 : 0;
   return (
     <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={materialColor} emissive={isSelected ? activeBase : isHovered ? hoverBase : "#000000"} emissiveIntensity={isSelected || isHovered ? 0.4 : 0} roughness={0.8} metalness={0.05} />
-      <Edges scale={1.001} color={isSelected ? activeBase : isHovered ? hoverBase : plasterDark} />
+      <meshStandardMaterial color={materialColor} emissive={emissiveColor} emissiveIntensity={emissiveIntensity} roughness={0.8} metalness={0.05} />
+      <Edges scale={1.001} color={foregroundColor} />
     </mesh>
   );
 

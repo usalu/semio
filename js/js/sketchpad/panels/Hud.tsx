@@ -1,6 +1,7 @@
 import { FC, useState } from "react";
 import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeSection } from "../../elements/aggregation/Tree";
+import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
 import { useActiveInteraction, useIsMobile } from "../store";
@@ -53,16 +54,18 @@ const Hud: FC<HudProps> = ({ visible, onWidthChange, width }) => {
           {sortedSections.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">No hud sections available</div>
           ) : (
-            <Tree>
-              {sortedSections.map((section) => {
-                const content = typeof section.content === "function" ? section.content() : section.content;
-                return (
-                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                    {content}
-                  </TreeSection>
-                );
-              })}
-            </Tree>
+            <TreeStateProvider>
+              <Tree>
+                {sortedSections.map((section) => {
+                  const content = typeof section.content === "function" ? section.content() : section.content;
+                  return (
+                    <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                      {content}
+                    </TreeSection>
+                  );
+                })}
+              </Tree>
+            </TreeStateProvider>
           )}
         </div>
       </ScrollArea>

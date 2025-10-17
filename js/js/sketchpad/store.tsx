@@ -4802,6 +4802,7 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   protected readonly transact: (fn: () => void) => void;
   protected cache?: TState;
   protected cacheHash?: string;
+  private lastDeletedTransactionEdit?: TEdit;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
     this.guid = guid();
@@ -4960,7 +4961,7 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
           console.log("[ORIGIN] Clearing redo stack on finalize");
           redoStack.delete(0, redoStack.length);
         }
-        
+
         const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
         let pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
         if (!pastStack) {
@@ -4996,43 +4997,44 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   };
 
   undo = () => {
-    this.transact(() => {
-      if (this.isTransactionActive) {
-        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-        if (currentStack && currentStack.length > 0) {
-          const edit = currentStack.get(currentStack.length - 1);
-          currentStack.delete(currentStack.length - 1, 1);
-          if (edit && edit.undo) {
-            if (edit.undo.kitDiff) {
-              this.kit().change(edit.undo.kitDiff);
-            }
-            if (edit.undo.selectionDiff) {
-              this.applySelectionDiff(edit.undo.selectionDiff);
-            }
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        this.lastDeletedTransactionEdit = edit;
+        currentStack.delete(currentStack.length - 1, 1);
+        console.log("[ORIGIN] Undo in transaction, stack length:", currentStack.length);
+        if (edit && edit.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
           }
-        }
-      } else {
-        const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-        let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
-        if (!redoStack) {
-          redoStack = new Y.Array<any>();
-          this.yMap.set("redoStack", redoStack);
-        }
-        if (pastStack && pastStack.length > 0) {
-          const edit = pastStack.get(pastStack.length - 1);
-          pastStack.delete(pastStack.length - 1, 1);
-          redoStack.push([edit]);
-          if (edit && edit.undo) {
-            if (edit.undo.kitDiff) {
-              this.kit().change(edit.undo.kitDiff);
-            }
-            if (edit.undo.selectionDiff) {
-              this.applySelectionDiff(edit.undo.selectionDiff);
-            }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
           }
         }
       }
-    });
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (!redoStack) {
+        redoStack = new Y.Array<any>();
+        this.yMap.set("redoStack", redoStack);
+      }
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        redoStack.push([edit]);
+        console.log("[ORIGIN] Undo outside transaction, past stack length:", pastStack.length, "redo stack length:", redoStack.length);
+        if (edit && edit.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
+          }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
+          }
+        }
+      }
+    }
   };
 
   onUndone = (subscribe: Subscribe) => {
@@ -5044,27 +5046,46 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   };
 
   redo = () => {
-    this.transact(() => {
-      if (!this.isTransactionActive) {
-        const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-        const redoStack = this.yMap.get("redoStack") as Y.Array<any>;
-        if (redoStack && redoStack.length > 0) {
-          const edit = redoStack.get(redoStack.length - 1);
-          redoStack.delete(redoStack.length - 1, 1);
-          if (pastStack) {
-            pastStack.push([edit]);
+    if (this.isTransactionActive) {
+      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (!currentStack) {
+        currentStack = new Y.Array<any>();
+        this.yMap.set("currentTransactionStack", currentStack);
+      }
+      const lastDeletedEdit = this.lastDeletedTransactionEdit;
+      if (lastDeletedEdit) {
+        currentStack.push([lastDeletedEdit]);
+        this.lastDeletedTransactionEdit = undefined;
+        console.log("[ORIGIN] Redo in transaction, stack length:", currentStack.length);
+        if (lastDeletedEdit.do) {
+          if (lastDeletedEdit.do.kitDiff) {
+            this.kit().change(lastDeletedEdit.do.kitDiff);
           }
-          if (edit && edit.do) {
-            if (edit.do.kitDiff) {
-              this.kit().change(edit.do.kitDiff);
-            }
-            if (edit.do.selectionDiff) {
-              this.applySelectionDiff(edit.do.selectionDiff);
-            }
+          if (lastDeletedEdit.do.selectionDiff) {
+            this.applySelectionDiff(lastDeletedEdit.do.selectionDiff);
           }
         }
       }
-    });
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      const redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (redoStack && redoStack.length > 0) {
+        const edit = redoStack.get(redoStack.length - 1);
+        redoStack.delete(redoStack.length - 1, 1);
+        if (pastStack) {
+          pastStack.push([edit]);
+        }
+        console.log("[ORIGIN] Redo outside transaction, past stack length:", pastStack.length, "redo stack length:", redoStack.length);
+        if (edit && edit.do) {
+          if (edit.do.kitDiff) {
+            this.kit().change(edit.do.kitDiff);
+          }
+          if (edit.do.selectionDiff) {
+            this.applySelectionDiff(edit.do.selectionDiff);
+          }
+        }
+      }
+    }
   };
 
   onRedone = (subscribe: Subscribe) => {
@@ -5084,7 +5105,10 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
         console.log("[ORIGIN] Clearing redo stack");
         redoStack.delete(0, redoStack.length);
       }
-      
+
+      // Clear last deleted edit for in-transaction redo
+      this.lastDeletedTransactionEdit = undefined;
+
       let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
       if (!currentStack) {
         currentStack = new Y.Array<any>();
@@ -8107,59 +8131,13 @@ export function useDesignEditorHover(): DesignEditorHover | undefined {
 }
 
 export function useDesignEditorCommands(id?: DesignEditorId) {
-  const store = useDesignEditorStore(undefined, id) as DesignEditorStore | null;
-  const noOp = () => {};
-  if (!store) {
-    return {
-      startTransaction: noOp,
-      finalizeTransaction: noOp,
-      abortTransaction: noOp,
-      undo: noOp,
-      redo: noOp,
-      selectAll: noOp,
-      deselectAll: noOp,
-      selectPiece: noOp,
-      selectPieces: noOp,
-      addPieceToSelection: noOp,
-      removePieceFromSelection: noOp,
-      selectConnection: noOp,
-      addConnectionToSelection: noOp,
-      removeConnectionFromSelection: noOp,
-      selectPiecePort: noOp,
-      deselectPiecePort: noOp,
-      deleteSelected: noOp,
-      toggleDiagramFullscreen: noOp,
-      toggleAccesslFullscreen: noOp,
-      setActiveTool: noOp,
-      addPiece: noOp,
-      addPieces: noOp,
-      removePiece: noOp,
-      removePieces: noOp,
-      addConnection: noOp,
-      addConnections: noOp,
-      removeConnection: noOp,
-      removeConnections: noOp,
-      updatePiece: noOp,
-      updatePieces: noOp,
-      updateConnection: noOp,
-      updateConnections: noOp,
-      togglePanel: noOp,
-      setCamera: noOp,
-      setDiagramCenter: noOp,
-      setDiagramScale: noOp,
-      hoverPiece: noOp,
-      hoverConnection: noOp,
-      hoverPort: noOp,
-      clearHover: noOp,
-      execute: noOp,
-    };
-  }
+  const store = useDesignEditorStore(undefined, id) as DesignEditorStore;
   return {
-    startTransaction: () => store.execute("semio.designEditor.startTransaction"),
-    finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
-    abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
-    undo: () => store.execute("semio.designEditor.undo"),
-    redo: () => store.execute("semio.designEditor.redo"),
+    startTransaction: () => store.startTransaction(),
+    finalizeTransaction: () => store.finalizeTransaction(),
+    abortTransaction: () => store.abortTransaction(),
+    undo: () => store.undo(),
+    redo: () => store.redo(),
     selectAll: () => store.execute("semio.designEditor.selectAll"),
     deselectAll: () => store.execute("semio.designEditor.deselectAll"),
     selectPiece: (guid: Guid) => store.execute("semio.designEditor.selectPiece", guid),
@@ -8219,14 +8197,31 @@ export function useIsDesignPieceChangedInTransaction(id: DesignEditorId | undefi
       if (!currentStack || currentStack.length === 0) {
         return false;
       }
-      
+
       // Check if piece is in any edit in current transaction
       for (const edit of currentStack) {
         if (edit.do?.kitDiff?.designs) {
           for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+            // Check updated pieces
             if (designUpdate.diff.pieces?.updated) {
               for (const pieceUpdate of designUpdate.diff.pieces.updated) {
                 if (pieceUpdate.id === pieceId) {
+                  return true;
+                }
+              }
+            }
+            // Check added pieces
+            if (designUpdate.diff.pieces?.added) {
+              for (const piece of designUpdate.diff.pieces.added) {
+                if (piece.guid === pieceId) {
+                  return true;
+                }
+              }
+            }
+            // Check removed pieces
+            if (designUpdate.diff.pieces?.removed) {
+              for (const removedPieceId of designUpdate.diff.pieces.removed) {
+                if (removedPieceId === pieceId) {
                   return true;
                 }
               }
@@ -8236,7 +8231,7 @@ export function useIsDesignPieceChangedInTransaction(id: DesignEditorId | undefi
       }
       return false;
     },
-    true
+    true,
   );
 }
 

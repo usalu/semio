@@ -21,6 +21,7 @@ import { useParams } from "react-router";
 
 import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeContent, TreeItem, TreeSection } from "../../elements/aggregation/Tree";
+import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
 import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile } from "../store";
@@ -97,23 +98,25 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
       <ScrollArea className="h-full">
         <div className={`${isMobile ? "p-2" : "p-1"} overflow-hidden min-w-0`}>
           <ScopedContent>
-            <Tree className="min-w-0 overflow-hidden">
-              {sortedSections.map((section) => (
-                <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                  {typeof section.content === "function" ? section.content() : section.content}
-                </TreeSection>
-              ))}
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden">
+                {sortedSections.map((section) => (
+                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                    {typeof section.content === "function" ? section.content() : section.content}
+                  </TreeSection>
+                ))}
 
-              {sortedSections.length === 0 && (
-                <TreeSection label={t("details.noSelection")} defaultOpen={true}>
-                  <TreeItem>
-                    <TreeContent>
-                      <p className="text-sm text-muted-foreground">{t("details.noSelectionMessage")}</p>
-                    </TreeContent>
-                  </TreeItem>
-                </TreeSection>
-              )}
-            </Tree>
+                {sortedSections.length === 0 && (
+                  <TreeSection label={t("details.noSelection")} defaultOpen={true}>
+                    <TreeItem>
+                      <TreeContent>
+                        <p className="text-sm text-muted-foreground">{t("details.noSelectionMessage")}</p>
+                      </TreeContent>
+                    </TreeItem>
+                  </TreeSection>
+                )}
+              </Tree>
+            </TreeStateProvider>
           </ScopedContent>
         </div>
       </ScrollArea>

@@ -32,6 +32,7 @@ import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { createContext, FC, ReactNode, useContext, useState } from "react";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
+import { useTreeState } from "./TreeStateProvider";
 
 const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
 
@@ -114,7 +115,10 @@ interface SortableTreeItemsProps {
 
 export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [] }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
-  const [open, setOpen] = useState(defaultOpen);
+  const treeState = useTreeState();
+  const sectionId = `section-${label}`;
+  const open = treeState.getOpenState(sectionId, defaultOpen);
+  const setOpen = (value: boolean) => treeState.setOpenState(sectionId, value);
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
 
@@ -197,7 +201,10 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
 
 const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [] }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
-  const [open, setOpen] = useState(defaultOpen);
+  const treeState = useTreeState();
+  const itemId = `item-${id}-${label}`;
+  const open = treeState.getOpenState(itemId, defaultOpen);
+  const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -342,7 +349,10 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
   }
 
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
-  const [open, setOpen] = useState(defaultOpen);
+  const treeState = useTreeState();
+  const itemId = `item-${sortableId || label}`;
+  const open = treeState.getOpenState(itemId, defaultOpen);
+  const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
   const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group";

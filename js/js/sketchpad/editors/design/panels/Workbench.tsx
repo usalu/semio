@@ -10,7 +10,7 @@ import { FC, useMemo } from "react";
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
 import { Design, Guid, Type } from "../../../../semio";
-import { useActiveInteraction, useDesign, useDesignEditorHover, useSketchpadCommands, useType } from "../../../store";
+import { useActiveInteraction, useDesign, useDesignEditorHover, useDesignEditorSelection, useSketchpadCommands, useType } from "../../../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;
@@ -24,6 +24,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   const activeInteraction = useActiveInteraction();
   const design = useDesign() as Design | null;
   const hover = useDesignEditorHover();
+  const selection = useDesignEditorSelection();
   const hoveredPiece = useMemo(() => {
     if (!hover?.piece || !design?.pieces) return undefined;
     return design.pieces.find((piece) => piece.guid === hover.piece);
@@ -60,11 +61,41 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       listeners?.onPointerDown?.(e);
     },
   };
+  const isSelected = useMemo(() => {
+    if (!type || !selection?.pieces?.length || !design?.pieces?.length) return false;
+    return selection.pieces.some((pieceId) => {
+      const piece = design.pieces?.find((p) => p.guid === pieceId);
+      if (!piece) return false;
+      const pieceType = piece.type as Type | string | undefined;
+      if (!pieceType) return false;
+      if (typeof pieceType === "string") {
+        return pieceType === type.guid || pieceType === type.name || pieceType === type.variant;
+      }
+      return pieceType.guid === type.guid;
+    });
+  }, [type, selection?.pieces, design?.pieces]);
+
+  const isActiveSelection = isSelected;
 
   const displayVariant = type.variant || type.name;
   const avatar = (
-    <Avatar className={`cursor-grab active:cursor-grabbing select-none ${isHovered ? "border-[var(--hover-base)]" : ""}`} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-      <AvatarFallback className={`select-none ${isHovered ? "bg-[var(--hover-base)] text-foreground" : "bg-muted"}`}>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+    <Avatar
+      className={`cursor-grab active:cursor-grabbing select-none border-[var(--border-color)] ${
+        isActiveSelection ? "outline outline-1 outline-[var(--active-base)]" : isHovered ? "outline outline-1 outline-[var(--hover-base)]" : ""
+      }`}
+      style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
+    >
+      <AvatarFallback
+        className={`select-none ${
+          isActiveSelection
+            ? "bg-[var(--active-base)] text-[var(--active-foreground)]"
+            : isHovered
+              ? "bg-[var(--hover-base)] text-foreground"
+              : "bg-muted"
+        }`}
+      >
+        {displayVariant.substring(0, 2).toUpperCase()}
+      </AvatarFallback>
     </Avatar>
   );
 
@@ -110,6 +141,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   const activeInteraction = useActiveInteraction();
   const currentDesign = useDesign() as Design | null;
   const hover = useDesignEditorHover();
+  const selection = useDesignEditorSelection();
   const hoveredPiece = useMemo(() => {
     if (!hover?.piece || !currentDesign?.pieces) return undefined;
     return currentDesign.pieces.find((piece) => piece.guid === hover.piece);
@@ -145,13 +177,33 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       }
     },
   };
+  const isSelectedDesign = useMemo(() => {
+    if (!design) return false;
+    if (selection?.pieces?.some((pieceId) => currentDesign?.pieces?.find((piece) => piece.guid === pieceId && piece.design === design.guid))) return true;
+    return selection?.design === design.guid;
+  }, [design, selection?.pieces, selection?.design, currentDesign?.pieces]);
 
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <Avatar className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} ${isHovered ? "border-[var(--hover-base)]" : ""}`} style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}>
-      <AvatarFallback className={`select-none ${isHovered ? "bg-[var(--hover-base)] text-foreground" : "bg-muted"}`}>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
+    <Avatar
+      className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[var(--border-color)] ${
+        isSelectedDesign ? "outline outline-1 outline-[var(--active-base)]" : isHovered ? "outline outline-1 outline-[var(--hover-base)]" : ""
+      }`}
+      style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}
+    >
+      <AvatarFallback
+        className={`select-none ${
+          isSelectedDesign
+            ? "bg-[var(--active-base)] text-[var(--active-foreground)]"
+            : isHovered
+              ? "bg-[var(--hover-base)] text-foreground"
+              : "bg-muted"
+        }`}
+      >
+        {displayVariant.substring(0, 2).toUpperCase()}
+      </AvatarFallback>
     </Avatar>
   );
 

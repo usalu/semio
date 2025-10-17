@@ -360,6 +360,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
   let strokeClass = "stroke-[var(--foreground)] stroke-2";
   let opacity = 1;
 
+  // Determine base state colors
   if (diff === DiffStatus.Added) {
     fillClass = "fill-[var(--color-success)]";
     strokeClass = "stroke-[var(--color-success)] stroke-2";
@@ -370,22 +371,36 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
   } else if (diff === DiffStatus.Modified) {
     fillClass = "fill-[var(--color-warning)]";
     strokeClass = "stroke-[var(--color-warning)] stroke-2";
-  }
-  
-  // Show changed color if piece was modified in current transaction
-  if (isChangedInTransaction && diff === DiffStatus.Unchanged) {
+  } else if (isChangedInTransaction) {
     fillClass = "fill-[var(--color-changed-base)]";
     strokeClass = "stroke-[var(--color-changed-base)] stroke-2";
   }
   
+  // Apply hover state (overrides base)
   if (isHovered && !isSelected) {
     fillClass = "fill-[var(--hover-base)]";
     strokeClass = "stroke-[var(--foreground)] stroke-2";
     opacity = 1;
   }
+  
+  // Apply selected state with mixed colors for transaction changes
   if (isSelected) {
-    fillClass = "fill-[var(--active-base)]";
-    strokeClass = "stroke-[var(--foreground)] stroke-2";
+    if (isChangedInTransaction) {
+      fillClass = "fill-[var(--color-selected-changed)]";
+      strokeClass = "stroke-[var(--foreground)] stroke-2";
+    } else if (diff === DiffStatus.Added) {
+      fillClass = "fill-[var(--color-selected-added)]";
+      strokeClass = "stroke-[var(--foreground)] stroke-2";
+    } else if (diff === DiffStatus.Removed) {
+      fillClass = "fill-[var(--color-selected-removed)]";
+      strokeClass = "stroke-[var(--foreground)] stroke-2";
+    } else if (diff === DiffStatus.Modified) {
+      fillClass = "fill-[var(--color-selected-changed)]";
+      strokeClass = "stroke-[var(--foreground)] stroke-2";
+    } else {
+      fillClass = "fill-[var(--active-base)]";
+      strokeClass = "stroke-[var(--foreground)] stroke-2";
+    }
     opacity = 1;
   }
 

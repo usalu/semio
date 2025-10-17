@@ -31,6 +31,7 @@ import { useParams } from "react-router";
 
 import { ScrollArea } from "../../elements/aggregation/ScrollArea";
 import { Tree, TreeSection } from "../../elements/aggregation/Tree";
+import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
 import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile } from "../store";
@@ -116,18 +117,20 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
             {sortedSections.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground">No workbench sections available</div>
             ) : (
-              <Tree>
-                {sortedSections.map((section) => {
-                  console.log("[ORIGIN] Rendering TreeSection:", section.id, section.label);
-                  const content = typeof section.content === "function" ? section.content() : section.content;
-                  console.log("[ORIGIN] TreeSection content:", section.id, content);
-                  return (
-                    <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
-                      {content}
-                    </TreeSection>
-                  );
-                })}
-              </Tree>
+              <TreeStateProvider>
+                <Tree>
+                  {sortedSections.map((section) => {
+                    console.log("[ORIGIN] Rendering TreeSection:", section.id, section.label);
+                    const content = typeof section.content === "function" ? section.content() : section.content;
+                    console.log("[ORIGIN] TreeSection content:", section.id, content);
+                    return (
+                      <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                        {content}
+                      </TreeSection>
+                    );
+                  })}
+                </Tree>
+              </TreeStateProvider>
             )}
           </ScopedContent>
         </div>

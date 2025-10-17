@@ -40,6 +40,7 @@
 // #endregion
 
 import { DragEndEvent } from "@dnd-kit/core";
+import { Plus } from "lucide-react";
 import { FC, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -49,7 +50,7 @@ import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import { Design, findConnectionsInDesign, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
-import { EditorType, useDesign, useEditorPanelVisibility, useEditorType, useKit, useSketchpad } from "../../store";
+import { EditorType, useDesign, useEditorPanelVisibility, useEditorType, useKit, useKitEditorCommands, useSketchpad, useSketchpadCommands } from "../../store";
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
@@ -74,6 +75,8 @@ const Editor: FC<EditorProps> = () => {
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const kitEditorCommands = useKitEditorCommands();
+  const { navigateToType, navigateToDesign } = useSketchpadCommands();
 
   useHotkeys("ctrl+a", () => selectAll());
   useHotkeys("ctrl+d", () => deselectAll());
@@ -171,10 +174,35 @@ const Editor: FC<EditorProps> = () => {
       return acc;
     }, {});
 
+    const handleCreateVariant = (name: string) => {
+      const existingTypes = typesByName[name] || [];
+      const variantNumber = existingTypes.length + 1;
+      const newType: Type = {
+        guid: guid(),
+        name,
+        variant: `Variant ${variantNumber}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitEditorCommands.addType(newType);
+      navigateToType(kit.guid, newType.guid);
+    };
+
     return (
       <>
         {Object.entries(typesByName).map(([name, variants]) => (
-          <TreeItem key={name} label={name} defaultOpen={false}>
+          <TreeItem
+            key={name}
+            label={name}
+            defaultOpen={false}
+            actions={[
+              {
+                icon: <Plus size={12} />,
+                onClick: () => handleCreateVariant(name),
+                title: "Add variant",
+              },
+            ]}
+          >
             <TreeContent>
               <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                 {variants.map((type: Type) => (
@@ -195,10 +223,35 @@ const Editor: FC<EditorProps> = () => {
       return acc;
     }, {});
 
+    const handleCreateVariant = (name: string) => {
+      const existingDesigns = designsByName[name] || [];
+      const variantNumber = existingDesigns.length + 1;
+      const newDesign: Design = {
+        guid: guid(),
+        name,
+        variant: `Variant ${variantNumber}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitEditorCommands.addDesign(newDesign);
+      navigateToDesign(kit.guid, newDesign.guid);
+    };
+
     return (
       <>
         {Object.entries(designsByName).map(([name, designs]) => (
-          <TreeItem key={name} label={name} defaultOpen={false}>
+          <TreeItem
+            key={name}
+            label={name}
+            defaultOpen={false}
+            actions={[
+              {
+                icon: <Plus size={12} />,
+                onClick: () => handleCreateVariant(name),
+                title: "Add variant",
+              },
+            ]}
+          >
             <TreeContent>
               <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                 {designs.map((d: Design) => (
@@ -233,12 +286,45 @@ const Editor: FC<EditorProps> = () => {
 
     console.log("[ORIGIN] Design Editor adding workbench sections", { kit, editorType });
 
+    const handleCreateType = () => {
+      const existingTypes = kit.types || [];
+      const typeNumber = existingTypes.length + 1;
+      const newType: Type = {
+        guid: guid(),
+        name: `Type ${typeNumber}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitEditorCommands.addType(newType);
+      navigateToType(kit.guid, newType.guid);
+    };
+
+    const handleCreateDesign = () => {
+      const existingDesigns = kit.designs || [];
+      const designNumber = existingDesigns.length + 1;
+      const newDesign: Design = {
+        guid: guid(),
+        name: `Design ${designNumber}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitEditorCommands.addDesign(newDesign);
+      navigateToDesign(kit.guid, newDesign.guid);
+    };
+
     addSection("workbench", {
       id: "design-types",
       label: "Types",
       order: 0,
       defaultOpen: true,
       content: () => <TypesWorkbenchContent />,
+      actions: [
+        {
+          icon: <Plus size={12} />,
+          onClick: handleCreateType,
+          title: "Add type",
+        },
+      ],
     });
 
     addSection("workbench", {
@@ -247,6 +333,13 @@ const Editor: FC<EditorProps> = () => {
       order: 1,
       defaultOpen: true,
       content: () => <DesignsWorkbenchContent />,
+      actions: [
+        {
+          icon: <Plus size={12} />,
+          onClick: handleCreateDesign,
+          title: "Add design",
+        },
+      ],
     });
 
     console.log("[ORIGIN] Design Editor workbench sections added");

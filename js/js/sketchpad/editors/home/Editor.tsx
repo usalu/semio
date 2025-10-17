@@ -458,9 +458,9 @@ const Home: FC = ({}) => {
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {row.hasChildren ? (
-                        <button onClick={() => toggleRow(row.id)} className="w-5 h-5 flex items-center justify-center hover:bg-muted shrink-0">
-                          {row.isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                        </button>
+                        <Action level="base" onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}>
+                          {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                        </Action>
                       ) : (
                         <span className="w-5 h-5 shrink-0" />
                       )}
@@ -686,9 +686,9 @@ const Home: FC = ({}) => {
                     <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
                       <div className="flex items-center gap-1 flex-1 min-w-0">
                         {row.hasChildren ? (
-                          <button onClick={() => toggleRow(row.id)} className="w-4 h-4 flex items-center justify-center hover:bg-muted shrink-0">
-                            {row.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                          </button>
+                          <Action level="base" onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}>
+                            {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                          </Action>
                         ) : (
                           <span className="w-4 h-4 shrink-0" />
                         )}
