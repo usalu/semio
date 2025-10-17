@@ -25,7 +25,7 @@ import React, { FC, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
 import { Camera, Piece, Plane, planeToMatrix } from "../../../../semio";
-import { DesignEditorFullscreenPanel, PieceScopeProvider, useDesign, useIsPieceHovered, useIsPieceSelected, usePiece, usePiecePlane, usePieceStatus } from "../../../store";
+import { DesignEditorFullscreenPanel, PieceScopeProvider, useDesign, useIsPieceHovered, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../store";
 import { DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -69,7 +69,7 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const piece = usePiece() as Piece;
   const isSelected = useIsPieceSelected();
   const selection = useDesignEditorSelection();
-  const isHovered = useIsPieceHovered();
+  const isHovered = useIsPieceTransitiveHovered();
   const piecePlane = usePiecePlane();
   const status = usePieceStatus();
 
@@ -161,11 +161,10 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     return plasterColor;
   }, [isSelected, isHovered, activeColor, plasterColor, plasterColor]);
   const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : plasterColor;
-  const emissiveIntensity = isSelected ? 0.45 : isHovered ? 0.35 : 0;
   return (
     <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={materialColor} emissive={emissiveColor} emissiveIntensity={emissiveIntensity} roughness={0.8} metalness={0.05} />
+      <meshStandardMaterial color={materialColor} emissive={emissiveColor} emissiveIntensity={0.45} />
       <Edges scale={1.001} color={foregroundColor} />
     </mesh>
   );

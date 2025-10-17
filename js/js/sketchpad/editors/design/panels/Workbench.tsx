@@ -10,7 +10,7 @@ import { FC, useMemo } from "react";
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
 import { Design, Guid, Type } from "../../../../semio";
-import { useActiveInteraction, useDesign, useDesignEditorHover, useDesignEditorSelection, useSketchpadCommands, useType } from "../../../store";
+import { useActiveInteraction, useDesign, useDesignEditorCommands, useDesignEditorHover, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection, useSketchpadCommands, useType } from "../../../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;
@@ -21,28 +21,17 @@ interface TypeAvatarProps {
 export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHoverCard = false }) => {
   const type = typeProp || (typeId ? (useType(undefined, typeId) as Type) : null);
   const { setActiveInteraction } = useSketchpadCommands();
+  const { hoverType, clearHover } = useDesignEditorCommands();
   const activeInteraction = useActiveInteraction();
   const design = useDesign() as Design | null;
-  const hover = useDesignEditorHover();
   const selection = useDesignEditorSelection();
-  const hoveredPiece = useMemo(() => {
-    if (!hover?.piece || !design?.pieces) return undefined;
-    return design.pieces.find((piece) => piece.guid === hover.piece);
-  }, [hover?.piece, design]);
-  const isHovered = useMemo(() => {
-    if (!hoveredPiece || hoveredPiece.design) return false;
-    const hoveredPieceType = hoveredPiece.type as Type | string | undefined;
-    if (!hoveredPieceType) return false;
-    if (typeof hoveredPieceType === "string") {
-      return hoveredPieceType === type.guid || hoveredPieceType === type.name || hoveredPieceType === type.variant;
-    }
-    return hoveredPieceType.guid === type.guid;
-  }, [hoveredPiece, type.guid, type.name, type.variant]);
 
   if (!type) {
     console.warn("[ORIGIN] TypeAvatar requires either a type or typeId prop");
     return null;
   }
+
+  const isHovered = useDesignEditorIsTypeTransitiveHovered(undefined, type.guid);
 
   const interactionId = `type-${type.name}-${type.variant || ""}`;
   const { attributes, listeners, setNodeRef } = useDraggable({
@@ -101,14 +90,14 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 
   if (!showHoverCard) {
     return (
-      <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
+      <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => hoverType(type.guid)} onPointerLeave={() => clearHover()}>
         {avatar}
       </div>
     );
   }
 
   return (
-    <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
+    <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => hoverType(type.guid)} onPointerLeave={() => clearHover()}>
       <HoverCard openDelay={500}>
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -138,25 +127,18 @@ interface DesignAvatarProps {
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
   const design = designProp || (designId ? (useDesign(undefined, designId) as Design) : null);
   const { setActiveInteraction } = useSketchpadCommands();
+  const { hoverDesign, clearHover } = useDesignEditorCommands();
   const activeInteraction = useActiveInteraction();
   const currentDesign = useDesign() as Design | null;
-  const hover = useDesignEditorHover();
   const selection = useDesignEditorSelection();
-  const hoveredPiece = useMemo(() => {
-    if (!hover?.piece || !currentDesign?.pieces) return undefined;
-    return currentDesign.pieces.find((piece) => piece.guid === hover.piece);
-  }, [hover?.piece, currentDesign]);
-  const isHovered = useMemo(() => {
-    if (!design) return false;
-    if (hoveredPiece?.design === design.guid) return true;
-    if (hover?.port?.designPiece === design.guid) return true;
-    return false;
-  }, [design, hoveredPiece?.design, hover?.port?.designPiece]);
+  const hover = useDesignEditorHover();
 
   if (!design) {
     console.warn("[ORIGIN] DesignAvatar requires either a design or designId prop");
     return null;
   }
+
+  const isHovered = hover?.designs?.includes(design.guid) ?? false;
 
   const interactionId = `design-${design.name}-${design.variant || ""}-${design.view || ""}`;
   const { attributes, listeners, setNodeRef } = useDraggable({
@@ -209,14 +191,14 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
 
   if (!showHoverCard) {
     return (
-      <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
+      <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => !isActive && hoverDesign(design.guid)} onPointerLeave={() => !isActive && clearHover()}>
         {avatar}
       </div>
     );
   }
 
   return (
-    <div ref={setNodeRef} {...enhancedListeners} {...attributes}>
+    <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => !isActive && hoverDesign(design.guid)} onPointerLeave={() => !isActive && clearHover()}>
       <HoverCard openDelay={500}>
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">

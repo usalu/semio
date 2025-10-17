@@ -188,8 +188,7 @@ function useSync<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl>
 }
 
 function useSyncDeep<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl>, selector?: (state: TAccessl) => TSelected): TAccessl | TSelected {
-  const state = useSyncExternalStore(store.onChangedDeep, store.snapshot) as TAccessl;
-  return selector ? selector(state) : state;
+  return useSync(store, selector, true);
 }
 
 // #endregion General
@@ -2246,7 +2245,17 @@ export function useIsPieceHovered(): boolean {
   const hover = useDesignEditorHover();
   const pieceScope = usePieceScope();
   if (!pieceScope || !hover) return false;
-  return hover.piece === pieceScope.guid;
+  return hover.pieces?.includes(pieceScope.guid) ?? false;
+}
+
+/**
+ * Check if the current piece (from PieceScope) is transitively hovered
+ * (piece itself, or its type/design is hovered in Kit Editor)
+ */
+export function useIsPieceTransitiveHovered(): boolean {
+  const pieceScope = usePieceScope();
+  if (!pieceScope) return false;
+  return useDesignEditorIsPieceTransitiveHovered(undefined, pieceScope.guid);
 }
 
 export function usePiecePlane(): Plane {
@@ -2774,7 +2783,7 @@ export function useIsConnectionHovered(): boolean {
   const hover = useDesignEditorHover();
   const connectionScope = useConnectionScope();
   if (!connectionScope || !hover) return false;
-  return hover.connection === connectionScope.guid;
+  return hover.connections?.includes(connectionScope.guid) ?? false;
 }
 
 export function useConnectionStatus(): DiffStatus {
@@ -5886,6 +5895,7 @@ export interface KitEditorSelection {
   files?: string[];
   authors?: string[];
 }
+const emptyKitEditorSelection: KitEditorSelection = {};
 export interface KitEditorSelectionTypesDiff {
   added?: Guid[];
   removed?: Guid[];
@@ -6046,12 +6056,12 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 
     const selection = new Y.Map<any>();
     const selectedTypes = new Y.Array<string>();
-    if (state?.selection?.types) {
-      selectedTypes.push(state?.selection.types.map((type) => typeIdToString(type)) || []);
+    if (state?.selection?.types?.length) {
+      selectedTypes.push(state.selection.types);
     }
     const selectedDesigns = new Y.Array<string>();
-    if (state?.selection?.designs) {
-      selectedDesigns.push(state?.selection.designs.map((design) => designIdToString(design)) || []);
+    if (state?.selection?.designs?.length) {
+      selectedDesigns.push(state.selection.designs);
     }
     selection.set("types", selectedTypes);
     selection.set("designs", selectedDesigns);
@@ -6111,13 +6121,13 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     // Get types
     const types = selection.get("types") as Y.Array<string>;
     if (types && types.length > 0) {
-      result.types = types.toArray().map((id_) => ({ id_ }));
+      result.types = types.toArray();
     }
 
     // Get designs
     const designs = selection.get("designs") as Y.Array<string>;
     if (designs && designs.length > 0) {
-      result.designs = designs.toArray().map((id_) => ({ id_ }));
+      result.designs = designs.toArray();
     }
 
     // Get qualities
@@ -6265,14 +6275,14 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 
       if (selectionDiff.types.added) {
         for (const type of selectionDiff.types.added) {
-          if (!types.toArray().includes(type.id_)) {
-            types.push([type.id_]);
+          if (!types.toArray().includes(type)) {
+            types.push([type]);
           }
         }
       }
       if (selectionDiff.types.removed) {
         for (const type of selectionDiff.types.removed) {
-          const index = types.toArray().indexOf(type.id_);
+          const index = types.toArray().indexOf(type);
           if (index !== -1) {
             types.delete(index, 1);
           }
@@ -6289,14 +6299,14 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 
       if (selectionDiff.designs.added) {
         for (const design of selectionDiff.designs.added) {
-          if (!designs.toArray().includes(design.id_)) {
-            designs.push([design.id_]);
+          if (!designs.toArray().includes(design)) {
+            designs.push([design]);
           }
         }
       }
       if (selectionDiff.designs.removed) {
         for (const design of selectionDiff.designs.removed) {
-          const index = designs.toArray().indexOf(design.id_);
+          const index = designs.toArray().indexOf(design);
           if (index !== -1) {
             designs.delete(index, 1);
           }
@@ -6914,8 +6924,10 @@ export function useKitEditor<T>(selector?: (state: KitEditorState) => T, id?: Ki
   return useSyncDeep<KitEditorState, T>(useKitEditorStore(identitySelector, id) as KitEditorStore, selector ? selector : identitySelector);
 }
 
-export function useKitEditorSelection(): KitEditorSelection {
-  return useKitEditor((s) => s.selection) as KitEditorSelection;
+export function useKitEditorSelection(id?: KitEditorId): KitEditorSelection {
+  const store = useKitEditorStore(identitySelector, id) as KitEditorStore | null;
+  if (!store) return emptyKitEditorSelection;
+  return useSync<KitEditorState, KitEditorSelection>(store, (state) => state.selection, true) as KitEditorSelection;
 }
 
 export function useKitEditorFullscreen(): KitEditorFullscreenPanel {
@@ -7091,9 +7103,11 @@ export interface DesignEditorPresence {
   diagramScale?: number;
 }
 export interface DesignEditorHover {
-  piece?: Guid;
-  connection?: Guid;
-  port?: { piece: Guid; designPiece?: Guid; port: Guid };
+  pieces?: Guid[];
+  connections?: Guid[];
+  ports?: { piece: Guid; designPiece?: Guid; port: Guid }[];
+  types?: Guid[];
+  designs?: Guid[];
 }
 export interface DesignEditorPresenceOther extends DesignEditorPresence {
   name: string;
@@ -7328,29 +7342,22 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     const hover = this.yMap.get("hover") as Y.Map<any> | undefined;
     if (!hover) return undefined;
     const result: DesignEditorHover = {};
-    const piece = hover.get("piece") as Guid | undefined;
-    const connection = hover.get("connection") as Guid | undefined;
-    const portRaw = hover.get("port") as Y.Map<string> | string | undefined;
-    if (piece) result.piece = piece;
-    if (connection) result.connection = connection;
-    if (portRaw) {
-      if (portRaw instanceof Y.Map) {
-        const portPiece = portRaw.get("piece") as Guid | undefined;
-        const portGuid = portRaw.get("port") as Guid | undefined;
-        if (portPiece && portGuid) {
-          result.port = { piece: portPiece, port: portGuid };
-          const designPiece = portRaw.get("designPiece") as Guid | undefined;
-          if (designPiece) {
-            result.port.designPiece = designPiece;
-          }
-        }
-      } else if (typeof portRaw === "string") {
-        const [portPiece, portGuid] = portRaw.split(":");
-        if (portPiece && portGuid) {
-          result.port = { piece: portPiece as Guid, port: portGuid as Guid };
-        }
-      }
+    const pieces = hover.get("pieces") as Y.Array<Guid> | undefined;
+    const connections = hover.get("connections") as Y.Array<Guid> | undefined;
+    const ports = hover.get("ports") as Y.Array<Y.Map<string>> | undefined;
+    const types = hover.get("types") as Y.Array<Guid> | undefined;
+    const designs = hover.get("designs") as Y.Array<Guid> | undefined;
+    if (pieces && pieces.length > 0) result.pieces = pieces.toArray();
+    if (connections && connections.length > 0) result.connections = connections.toArray();
+    if (ports && ports.length > 0) {
+      result.ports = ports.toArray().map((yPort) => ({
+        piece: yPort.get("piece") as Guid,
+        designPiece: yPort.get("designPiece") as Guid | undefined,
+        port: yPort.get("port") as Guid,
+      }));
     }
+    if (types && types.length > 0) result.types = types.toArray();
+    if (designs && designs.length > 0) result.designs = designs.toArray();
     return Object.keys(result).length > 0 ? result : undefined;
   }
 
@@ -7497,60 +7504,69 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
         // Handle presence changes if needed
       }
       if (diff.hover) {
-        let yHover = this.yMap.get("hover") as Y.Map<any>;
-        if (!yHover) {
-          yHover = new Y.Map<any>();
-          this.yMap.set("hover", yHover);
-        }
-        if (Object.prototype.hasOwnProperty.call(diff.hover, "piece")) {
-          const pieceValue = diff.hover.piece;
-          if (pieceValue) {
-            yHover.set("piece", pieceValue);
-          } else {
-            yHover.delete("piece");
+        if (Object.keys(diff.hover).length === 0) {
+          this.yMap.delete("hover");
+        } else {
+          let yHover = this.yMap.get("hover") as Y.Map<any>;
+          if (!yHover) {
+            yHover = new Y.Map<any>();
+            this.yMap.set("hover", yHover);
           }
-        }
-        if (Object.prototype.hasOwnProperty.call(diff.hover, "connection")) {
-          const connectionValue = diff.hover.connection;
-          if (connectionValue) {
-            yHover.set("connection", connectionValue);
-          } else {
-            yHover.delete("connection");
-          }
-        }
-        if (Object.prototype.hasOwnProperty.call(diff.hover, "port")) {
-          const portValue = diff.hover.port;
-          if (portValue) {
-            let yPort = yHover.get("port") as Y.Map<string>;
-            if (!yPort) {
-              yPort = new Y.Map<string>();
-              yHover.set("port", yPort);
-            }
-            if (Object.prototype.hasOwnProperty.call(portValue, "piece")) {
-              if (portValue.piece) {
-                yPort.set("piece", portValue.piece);
-              } else {
-                yPort.delete("piece");
-              }
-            }
-            if (Object.prototype.hasOwnProperty.call(portValue, "designPiece")) {
-              if (portValue.designPiece) {
-                yPort.set("designPiece", portValue.designPiece);
-              } else {
-                yPort.delete("designPiece");
-              }
+          if (Object.prototype.hasOwnProperty.call(diff.hover, "pieces")) {
+            const piecesValue = diff.hover.pieces;
+            if (piecesValue && piecesValue.length > 0) {
+              const yPieces = new Y.Array<Guid>();
+              yPieces.push(piecesValue);
+              yHover.set("pieces", yPieces);
             } else {
-              yPort.delete("designPiece");
+              yHover.delete("pieces");
             }
-            if (Object.prototype.hasOwnProperty.call(portValue, "port")) {
-              if (portValue.port) {
-                yPort.set("port", portValue.port);
-              } else {
-                yPort.delete("port");
-              }
+          }
+          if (Object.prototype.hasOwnProperty.call(diff.hover, "connections")) {
+            const connectionsValue = diff.hover.connections;
+            if (connectionsValue && connectionsValue.length > 0) {
+              const yConnections = new Y.Array<Guid>();
+              yConnections.push(connectionsValue);
+              yHover.set("connections", yConnections);
+            } else {
+              yHover.delete("connections");
             }
-          } else {
-            yHover.delete("port");
+          }
+          if (Object.prototype.hasOwnProperty.call(diff.hover, "ports")) {
+            const portsValue = diff.hover.ports;
+            if (portsValue && portsValue.length > 0) {
+              const yPorts = new Y.Array<any>();
+              portsValue.forEach((port) => {
+                const yPort = new Y.Map<string>();
+                yPort.set("piece", port.piece);
+                if (port.designPiece) yPort.set("designPiece", port.designPiece);
+                yPort.set("port", port.port);
+                yPorts.push([yPort]);
+              });
+              yHover.set("ports", yPorts);
+            } else {
+              yHover.delete("ports");
+            }
+          }
+          if (Object.prototype.hasOwnProperty.call(diff.hover, "types")) {
+            const typesValue = diff.hover.types;
+            if (typesValue && typesValue.length > 0) {
+              const yTypes = new Y.Array<Guid>();
+              yTypes.push(typesValue);
+              yHover.set("types", yTypes);
+            } else {
+              yHover.delete("types");
+            }
+          }
+          if (Object.prototype.hasOwnProperty.call(diff.hover, "designs")) {
+            const designsValue = diff.hover.designs;
+            if (designsValue && designsValue.length > 0) {
+              const yDesigns = new Y.Array<Guid>();
+              yDesigns.push(designsValue);
+              yHover.set("designs", yDesigns);
+            } else {
+              yHover.delete("designs");
+            }
           }
         }
       }
@@ -8041,30 +8057,81 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.hoverPiece": (context: DesignEditorCommandContext, pieceGuid: Guid): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
     return {
       diff: {
-        hover: { piece: pieceGuid, connection: undefined, port: undefined },
+        hover: { ...currentHover, pieces: [pieceGuid] },
+      },
+    };
+  },
+  "semio.designEditor.hoverPieces": (context: DesignEditorCommandContext, pieceGuids: Guid[]): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
+    return {
+      diff: {
+        hover: { ...currentHover, pieces: pieceGuids },
       },
     };
   },
   "semio.designEditor.hoverConnection": (context: DesignEditorCommandContext, connectionGuid: Guid): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
     return {
       diff: {
-        hover: { piece: undefined, connection: connectionGuid, port: undefined },
+        hover: { ...currentHover, connections: [connectionGuid] },
+      },
+    };
+  },
+  "semio.designEditor.hoverConnections": (context: DesignEditorCommandContext, connectionGuids: Guid[]): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
+    return {
+      diff: {
+        hover: { ...currentHover, connections: connectionGuids },
       },
     };
   },
   "semio.designEditor.hoverPort": (context: DesignEditorCommandContext, pieceGuid: Guid, portGuid: Guid): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
     return {
       diff: {
-        hover: { piece: pieceGuid, connection: undefined, port: { piece: pieceGuid, port: portGuid } },
+        hover: { ...currentHover, pieces: [pieceGuid], ports: [{ piece: pieceGuid, port: portGuid }] },
+      },
+    };
+  },
+  "semio.designEditor.hoverType": (context: DesignEditorCommandContext, typeGuid: Guid): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
+    return {
+      diff: {
+        hover: { ...currentHover, types: [typeGuid] },
+      },
+    };
+  },
+  "semio.designEditor.hoverTypes": (context: DesignEditorCommandContext, typeGuids: Guid[]): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
+    return {
+      diff: {
+        hover: { ...currentHover, types: typeGuids },
+      },
+    };
+  },
+  "semio.designEditor.hoverDesign": (context: DesignEditorCommandContext, designGuid: Guid): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
+    return {
+      diff: {
+        hover: { ...currentHover, designs: [designGuid] },
+      },
+    };
+  },
+  "semio.designEditor.hoverDesigns": (context: DesignEditorCommandContext, designGuids: Guid[]): DesignEditorCommandResult => {
+    const currentHover = context.designEditor.hover ?? {};
+    return {
+      diff: {
+        hover: { ...currentHover, designs: designGuids },
       },
     };
   },
   "semio.designEditor.clearHover": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     return {
       diff: {
-        hover: { piece: undefined, connection: undefined, port: undefined },
+        hover: {},
       },
     };
   },
@@ -8169,8 +8236,14 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     setDiagramCenter: (center: Coord) => store.execute("semio.designEditor.setDiagramCenter", center),
     setDiagramScale: (scale: number) => store.execute("semio.designEditor.setDiagramScale", scale),
     hoverPiece: (guid: Guid) => store.execute("semio.designEditor.hoverPiece", guid),
+    hoverPieces: (guids: Guid[]) => store.execute("semio.designEditor.hoverPieces", guids),
     hoverConnection: (guid: Guid) => store.execute("semio.designEditor.hoverConnection", guid),
+    hoverConnections: (guids: Guid[]) => store.execute("semio.designEditor.hoverConnections", guids),
     hoverPort: (pieceGuid: Guid, portGuid: Guid) => store.execute("semio.designEditor.hoverPort", pieceGuid, portGuid),
+    hoverType: (guid: Guid) => store.execute("semio.designEditor.hoverType", guid),
+    hoverTypes: (guids: Guid[]) => store.execute("semio.designEditor.hoverTypes", guids),
+    hoverDesign: (guid: Guid) => store.execute("semio.designEditor.hoverDesign", guid),
+    hoverDesigns: (guids: Guid[]) => store.execute("semio.designEditor.hoverDesigns", guids),
     clearHover: () => store.execute("semio.designEditor.clearHover"),
     togglePanel: (panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
@@ -8234,6 +8307,582 @@ export function useIsDesignPieceChangedInTransaction(id: DesignEditorId | undefi
     true,
   );
 }
+
+// #region Design Editor - Piece Hooks
+
+/**
+ * Check if a specific piece is directly hovered
+ */
+export function useDesignEditorIsPieceHovered(id: DesignEditorId | undefined, pieceId: string): boolean {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  return useSync<DesignEditorState, boolean>(
+    store,
+    (state) => {
+      const hover = state.hover;
+      return hover?.pieces?.includes(pieceId) ?? false;
+    },
+    true,
+  ) as boolean;
+}
+
+/**
+ * Check if a piece is transitively hovered (piece itself, its type, or its design is hovered in the same editor)
+ */
+export function useDesignEditorIsPieceTransitiveHovered(id: DesignEditorId | undefined, pieceId: string): boolean {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  
+  return useSync<DesignEditorState, boolean>(
+    store,
+    (state) => {
+      const hover = state.hover;
+      
+      // Direct piece hover
+      if (hover?.pieces?.includes(pieceId)) return true;
+      
+      // Get the piece from the design
+      const design = store.design().snapshot();
+      const piece = design?.pieces?.find((p) => p.guid === pieceId);
+      if (!piece) return false;
+      
+      // Check if the piece's type is hovered in this editor
+      if (piece.type && hover?.types?.includes(piece.type)) return true;
+      
+      // Check if the piece's design is hovered in this editor
+      if (piece.design && hover?.designs?.includes(piece.design)) return true;
+      
+      return false;
+    },
+    true,
+  ) as boolean;
+}
+
+/**
+ * Check if a type is transitively hovered (type itself or any piece of that type is hovered in the same editor)
+ */
+export function useDesignEditorIsTypeTransitiveHovered(id: DesignEditorId | undefined, typeId: string): boolean {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  
+  return useSync<DesignEditorState, boolean>(
+    store,
+    (state) => {
+      const hover = state.hover;
+      
+      // Direct type hover
+      if (hover?.types?.includes(typeId)) return true;
+      
+      // Check if any hovered piece has this type
+      if (hover?.pieces && hover.pieces.length > 0) {
+        const design = store.design().snapshot();
+        return hover.pieces.some((pieceId) => {
+          const piece = design?.pieces?.find((p) => p.guid === pieceId);
+          return piece?.type === typeId;
+        });
+      }
+      
+      return false;
+    },
+    true,
+  ) as boolean;
+}
+
+/**
+ * Get the diff status of a piece from the current kit diff
+ */
+export function useDesignEditorPieceStatus(id: DesignEditorId | undefined, pieceId: string): DiffStatus {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  return useSync<DesignEditorState, DiffStatus>(
+    store,
+    (state) => {
+      const currentStack = store?.currentTransactionStack;
+      
+      // Check current transaction stack for status
+      if (currentStack && currentStack.length > 0) {
+        for (const edit of currentStack) {
+          if (edit.do?.kitDiff?.designs) {
+            for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+              // Check added pieces
+              if (designUpdate.diff.pieces?.added) {
+                for (const piece of designUpdate.diff.pieces.added) {
+                  if (piece.guid === pieceId) {
+                    return DiffStatus.Added;
+                  }
+                }
+              }
+              // Check removed pieces
+              if (designUpdate.diff.pieces?.removed) {
+                for (const removedId of designUpdate.diff.pieces.removed) {
+                  if (removedId === pieceId) {
+                    return DiffStatus.Removed;
+                  }
+                }
+              }
+              // Check modified pieces
+              if (designUpdate.diff.pieces?.updated) {
+                for (const pieceUpdate of designUpdate.diff.pieces.updated) {
+                  if (pieceUpdate.id === pieceId) {
+                    return DiffStatus.Modified;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      return DiffStatus.Unchanged;
+    },
+    true,
+  ) as DiffStatus;
+}
+
+/**
+ * Check if a piece is selected
+ */
+export function useDesignEditorIsPieceSelected(id: DesignEditorId | undefined, pieceId: string): boolean {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  return useSync<DesignEditorState, boolean>(
+    store,
+    (state) => {
+      return state.selection?.pieces?.includes(pieceId) ?? false;
+    },
+    true,
+  ) as boolean;
+}
+
+/**
+ * Get the color for a piece based on its state (status, selection, hover)
+ */
+export function useDesignEditorPieceColor(id: DesignEditorId | undefined, pieceId: string): { fill: string; stroke: string; opacity: number } {
+  const isSelected = useDesignEditorIsPieceSelected(id, pieceId);
+  const isHovered = useDesignEditorIsPieceTransitiveHovered(id, pieceId);
+  const status = useDesignEditorPieceStatus(id, pieceId);
+  const isChangedInTransaction = useIsDesignPieceChangedInTransaction(id, pieceId) as boolean;
+  
+  let fill = "var(--foreground)";
+  let stroke = "var(--foreground)";
+  let opacity = 1;
+
+  // Base state colors
+  if (status === DiffStatus.Added) {
+    fill = "var(--color-success)";
+    stroke = "var(--color-success)";
+  } else if (status === DiffStatus.Removed) {
+    fill = "var(--color-danger)";
+    stroke = "var(--color-danger)";
+    opacity = 0.2;
+  } else if (status === DiffStatus.Modified) {
+    fill = "var(--color-warning)";
+    stroke = "var(--color-warning)";
+  } else if (isChangedInTransaction) {
+    fill = "var(--color-changed-base)";
+    stroke = "var(--color-changed-base)";
+  } else {
+    fill = "transparent";
+    stroke = "var(--foreground)";
+  }
+
+  // Hover state (overrides base when not selected)
+  if (isHovered && !isSelected) {
+    fill = "var(--hover-base)";
+    stroke = "var(--foreground)";
+    opacity = 1;
+  }
+
+  // Selected state with mixed colors for transaction changes
+  if (isSelected) {
+    if (isChangedInTransaction) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Added) {
+      fill = "var(--color-selected-added)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Removed) {
+      fill = "var(--color-selected-removed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Modified) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else {
+      fill = "var(--active-base)";
+      stroke = "var(--foreground)";
+    }
+    opacity = 1;
+  }
+
+  return { fill, stroke, opacity };
+}
+
+// #endregion Design Editor - Piece Hooks
+
+// #region Design Editor - Connection Hooks
+
+/**
+ * Check if a specific connection is directly hovered
+ */
+export function useDesignEditorIsConnectionHovered(id: DesignEditorId | undefined, connectionId: string): boolean {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  return useSync<DesignEditorState, boolean>(
+    store,
+    (state) => {
+      return state.hover?.connections?.includes(connectionId) ?? false;
+    },
+    true,
+  ) as boolean;
+}
+
+/**
+ * Check if a connection is selected
+ */
+export function useDesignEditorIsConnectionSelected(id: DesignEditorId | undefined, connectionId: string): boolean {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  return useSync<DesignEditorState, boolean>(
+    store,
+    (state) => {
+      return state.selection?.connections?.includes(connectionId) ?? false;
+    },
+    true,
+  ) as boolean;
+}
+
+/**
+ * Get the diff status of a connection from the current kit diff
+ */
+export function useDesignEditorConnectionStatus(id: DesignEditorId | undefined, connectionId: string): DiffStatus {
+  const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
+  return useSync<DesignEditorState, DiffStatus>(
+    store,
+    (state) => {
+      const currentStack = store?.currentTransactionStack;
+      
+      if (currentStack && currentStack.length > 0) {
+        for (const edit of currentStack) {
+          if (edit.do?.kitDiff?.designs) {
+            for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+              // Check added connections
+              if (designUpdate.diff.connections?.added) {
+                for (const conn of designUpdate.diff.connections.added) {
+                  if (conn.guid === connectionId) {
+                    return DiffStatus.Added;
+                  }
+                }
+              }
+              // Check removed connections (removed is an array of connection IDs)
+              if (designUpdate.diff.connections?.removed) {
+                for (const removedConn of designUpdate.diff.connections.removed) {
+                  if (typeof removedConn === 'string' && removedConn === connectionId) {
+                    return DiffStatus.Removed;
+                  } else if (typeof removedConn === 'object' && removedConn.connected && removedConn.connecting) {
+                    // Handle case where removed is a Side comparison
+                    continue;
+                  }
+                }
+              }
+              // Check modified connections
+              if (designUpdate.diff.connections?.updated) {
+                for (const connUpdate of designUpdate.diff.connections.updated) {
+                  if (typeof connUpdate.id === 'string' && connUpdate.id === connectionId) {
+                    return DiffStatus.Modified;
+                  } else if (typeof connUpdate.id === 'object' && connUpdate.id.connected && connUpdate.id.connecting) {
+                    // Handle case where id is a Side-based identifier
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      return DiffStatus.Unchanged;
+    },
+    true,
+  ) as DiffStatus;
+}
+
+/**
+ * Get the color for a connection based on its state
+ */
+export function useDesignEditorConnectionColor(id: DesignEditorId | undefined, connectionId: string): { fill: string; stroke: string; opacity: number } {
+  const isSelected = useDesignEditorIsConnectionSelected(id, connectionId);
+  const isHovered = useDesignEditorIsConnectionHovered(id, connectionId);
+  const status = useDesignEditorConnectionStatus(id, connectionId);
+  
+  let fill = "var(--foreground)";
+  let stroke = "var(--foreground)";
+  let opacity = 1;
+
+  // Base state colors
+  if (status === DiffStatus.Added) {
+    fill = "var(--color-success)";
+    stroke = "var(--color-success)";
+  } else if (status === DiffStatus.Removed) {
+    fill = "var(--color-danger)";
+    stroke = "var(--color-danger)";
+    opacity = 0.2;
+  } else if (status === DiffStatus.Modified) {
+    fill = "var(--color-warning)";
+    stroke = "var(--color-warning)";
+  }
+
+  // Hover state
+  if (isHovered && !isSelected) {
+    fill = "var(--hover-base)";
+    stroke = "var(--foreground)";
+    opacity = 1;
+  }
+
+  // Selected state
+  if (isSelected) {
+    if (status === DiffStatus.Added) {
+      fill = "var(--color-selected-added)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Removed) {
+      fill = "var(--color-selected-removed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Modified) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else {
+      fill = "var(--active-base)";
+      stroke = "var(--foreground)";
+    }
+    opacity = 1;
+  }
+
+  return { fill, stroke, opacity };
+}
+
+// #endregion Design Editor - Connection Hooks
+
+// #region Kit Editor - Type Hooks
+
+/**
+ * Check if a specific type is directly hovered in Kit Editor
+ */
+export function useKitEditorIsTypeHovered(typeId: string, id?: KitEditorId): boolean {
+  return (useKitEditor((state) => state.hover?.type === typeId, id) as boolean) ?? false;
+}
+
+/**
+ * Get the diff status of a type from the current kit diff
+ */
+export function useKitEditorTypeStatus(typeId: string, id?: KitEditorId): DiffStatus {
+  const store = useKitEditorStore(identitySelector, id) as KitEditorStore;
+  if (!store) return DiffStatus.Unchanged;
+  
+  return useSync<KitEditorState, DiffStatus>(
+    store,
+    (state) => {
+      const currentStack = store?.currentTransactionStack;
+      
+      if (currentStack && currentStack.length > 0) {
+        for (const edit of currentStack) {
+          if (edit.do?.kitDiff?.types) {
+            // Check added types
+            if (edit.do.kitDiff.types.added) {
+              for (const type of edit.do.kitDiff.types.added) {
+                if (type.guid === typeId) {
+                  return DiffStatus.Added;
+                }
+              }
+            }
+            // Check removed types
+            if (edit.do.kitDiff.types.removed) {
+              for (const removedId of edit.do.kitDiff.types.removed) {
+                if (removedId === typeId) {
+                  return DiffStatus.Removed;
+                }
+              }
+            }
+            // Check modified types
+            if (edit.do.kitDiff.types.updated) {
+              for (const typeUpdate of edit.do.kitDiff.types.updated) {
+                if (typeUpdate.id === typeId) {
+                  return DiffStatus.Modified;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      return DiffStatus.Unchanged;
+    },
+    true,
+  ) as DiffStatus;
+}
+
+/**
+ * Get the color for a type based on its state
+ */
+export function useKitEditorTypeColor(typeId: string, isSelected: boolean, id?: KitEditorId): { fill: string; stroke: string; opacity: number } {
+  const isHovered = useKitEditorIsTypeHovered(typeId, id);
+  const status = useKitEditorTypeStatus(typeId, id);
+  
+  let fill = "var(--foreground)";
+  let stroke = "var(--foreground)";
+  let opacity = 1;
+
+  // Base state colors
+  if (status === DiffStatus.Added) {
+    fill = "var(--color-success)";
+    stroke = "var(--color-success)";
+  } else if (status === DiffStatus.Removed) {
+    fill = "var(--color-danger)";
+    stroke = "var(--color-danger)";
+    opacity = 0.2;
+  } else if (status === DiffStatus.Modified) {
+    fill = "var(--color-warning)";
+    stroke = "var(--color-warning)";
+  } else {
+    fill = "transparent";
+    stroke = "var(--foreground)";
+  }
+
+  // Hover state
+  if (isHovered && !isSelected) {
+    fill = "var(--hover-base)";
+    stroke = "var(--foreground)";
+    opacity = 1;
+  }
+
+  // Selected state
+  if (isSelected) {
+    if (status === DiffStatus.Added) {
+      fill = "var(--color-selected-added)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Removed) {
+      fill = "var(--color-selected-removed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Modified) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else {
+      fill = "var(--active-base)";
+      stroke = "var(--foreground)";
+    }
+    opacity = 1;
+  }
+
+  return { fill, stroke, opacity };
+}
+
+// #endregion Kit Editor - Type Hooks
+
+// #region Kit Editor - Design Hooks
+
+/**
+ * Check if a specific design is directly hovered in Kit Editor
+ */
+export function useKitEditorIsDesignHovered(designId: string, id?: KitEditorId): boolean {
+  return (useKitEditor((state) => state.hover?.design === designId, id) as boolean) ?? false;
+}
+
+/**
+ * Get the diff status of a design from the current kit diff
+ */
+export function useKitEditorDesignStatus(designId: string, id?: KitEditorId): DiffStatus {
+  const store = useKitEditorStore(identitySelector, id) as KitEditorStore;
+  if (!store) return DiffStatus.Unchanged;
+  
+  return useSync<KitEditorState, DiffStatus>(
+    store,
+    (state) => {
+      const currentStack = store?.currentTransactionStack;
+      
+      if (currentStack && currentStack.length > 0) {
+        for (const edit of currentStack) {
+          if (edit.do?.kitDiff?.designs) {
+            // Check added designs
+            if (edit.do.kitDiff.designs.added) {
+              for (const design of edit.do.kitDiff.designs.added) {
+                if (design.guid === designId) {
+                  return DiffStatus.Added;
+                }
+              }
+            }
+            // Check removed designs
+            if (edit.do.kitDiff.designs.removed) {
+              for (const removedId of edit.do.kitDiff.designs.removed) {
+                if (removedId === designId) {
+                  return DiffStatus.Removed;
+                }
+              }
+            }
+            // Check modified designs
+            if (edit.do.kitDiff.designs.updated) {
+              for (const designUpdate of edit.do.kitDiff.designs.updated) {
+                if (designUpdate.id === designId) {
+                  return DiffStatus.Modified;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      return DiffStatus.Unchanged;
+    },
+    true,
+  ) as DiffStatus;
+}
+
+/**
+ * Get the color for a design based on its state
+ */
+export function useKitEditorDesignColor(designId: string, isSelected: boolean, id?: KitEditorId): { fill: string; stroke: string; opacity: number } {
+  const isHovered = useKitEditorIsDesignHovered(designId, id);
+  const status = useKitEditorDesignStatus(designId, id);
+  
+  let fill = "var(--foreground)";
+  let stroke = "var(--foreground)";
+  let opacity = 1;
+
+  // Base state colors
+  if (status === DiffStatus.Added) {
+    fill = "var(--color-success)";
+    stroke = "var(--color-success)";
+  } else if (status === DiffStatus.Removed) {
+    fill = "var(--color-danger)";
+    stroke = "var(--color-danger)";
+    opacity = 0.2;
+  } else if (status === DiffStatus.Modified) {
+    fill = "var(--color-warning)";
+    stroke = "var(--color-warning)";
+  } else {
+    fill = "transparent";
+    stroke = "var(--foreground)";
+  }
+
+  // Hover state
+  if (isHovered && !isSelected) {
+    fill = "var(--hover-base)";
+    stroke = "var(--foreground)";
+    opacity = 1;
+  }
+
+  // Selected state
+  if (isSelected) {
+    if (status === DiffStatus.Added) {
+      fill = "var(--color-selected-added)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Removed) {
+      fill = "var(--color-selected-removed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Modified) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else {
+      fill = "var(--active-base)";
+      stroke = "var(--foreground)";
+    }
+    opacity = 1;
+  }
+
+  return { fill, stroke, opacity };
+}
+
+// #endregion Kit Editor - Design Hooks
 
 // #endregion Design Editor
 
@@ -8800,6 +9449,18 @@ export class SketchpadStore {
 
   kitEditorIds(): KitEditorId[] {
     return Array.from(this.kitEditors.values()).map((k) => k.id());
+  }
+
+  getAllKitEditors(): KitEditorStore[] {
+    return Array.from(this.kitEditors.values());
+  }
+
+  getAllDesignEditors(): DesignEditorStore[] {
+    const allDesignEditors: DesignEditorStore[] = [];
+    for (const kitMap of this.designEditors.values()) {
+      allDesignEditors.push(...Array.from(kitMap.values()));
+    }
+    return allDesignEditors;
   }
 
   createTypeEditor = (kit: Guid, type: Guid) => {

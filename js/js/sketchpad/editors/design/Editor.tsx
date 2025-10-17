@@ -168,6 +168,7 @@ const Editor: FC<EditorProps> = () => {
   }, [selection, addSection, removeSection, editorType]);
 
   const TypesWorkbenchContent: FC = () => {
+    const { hoverTypes, clearHover } = useDesignEditorCommands();
     const typesByName = (kit.types || []).reduce((acc: Record<string, Type[]>, type: Type) => {
       if (!acc[type.name]) acc[type.name] = [];
       acc[type.name].push(type);
@@ -191,32 +192,34 @@ const Editor: FC<EditorProps> = () => {
     return (
       <>
         {Object.entries(typesByName).map(([name, variants]) => (
-          <TreeItem
-            key={name}
-            label={name}
-            defaultOpen={false}
-            actions={[
-              {
-                icon: <Plus size={12} />,
-                onClick: () => handleCreateVariant(name),
-                title: "Add variant",
-              },
-            ]}
-          >
-            <TreeContent>
-              <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                {variants.map((type: Type) => (
-                  <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
-                ))}
-              </div>
-            </TreeContent>
-          </TreeItem>
+          <div key={name} onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))} onPointerLeave={() => clearHover()}>
+            <TreeItem
+              label={name}
+              defaultOpen={false}
+              actions={[
+                {
+                  icon: <Plus size={12} />,
+                  onClick: () => handleCreateVariant(name),
+                  title: "Add variant",
+                },
+              ]}
+            >
+              <TreeContent>
+                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
+                  {variants.map((type: Type) => (
+                    <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
+                  ))}
+                </div>
+              </TreeContent>
+            </TreeItem>
+          </div>
         ))}
       </>
     );
   };
 
   const DesignsWorkbenchContent: FC = () => {
+    const { hoverDesigns, clearHover } = useDesignEditorCommands();
     const designsByName = (kit.designs || []).reduce((acc: Record<string, Design[]>, design: Design) => {
       if (!acc[design.name]) acc[design.name] = [];
       acc[design.name].push(design);
@@ -240,26 +243,27 @@ const Editor: FC<EditorProps> = () => {
     return (
       <>
         {Object.entries(designsByName).map(([name, designs]) => (
-          <TreeItem
-            key={name}
-            label={name}
-            defaultOpen={false}
-            actions={[
-              {
-                icon: <Plus size={12} />,
-                onClick: () => handleCreateVariant(name),
-                title: "Add variant",
-              },
-            ]}
-          >
-            <TreeContent>
-              <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                {designs.map((d: Design) => (
-                  <DesignAvatar key={`${d.name}-${d.variant}-${d.view}`} design={d} showHoverCard={true} isActive={design?.guid === d.guid} />
-                ))}
-              </div>
-            </TreeContent>
-          </TreeItem>
+          <div key={name} onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))} onPointerLeave={() => clearHover()}>
+            <TreeItem
+              label={name}
+              defaultOpen={false}
+              actions={[
+                {
+                  icon: <Plus size={12} />,
+                  onClick: () => handleCreateVariant(name),
+                  title: "Add variant",
+                },
+              ]}
+            >
+              <TreeContent>
+                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
+                  {designs.map((d: Design) => (
+                    <DesignAvatar key={`${d.name}-${d.variant}-${d.view}`} design={d} showHoverCard={true} isActive={design?.guid === d.guid} />
+                  ))}
+                </div>
+              </TreeContent>
+            </TreeItem>
+          </div>
         ))}
       </>
     );

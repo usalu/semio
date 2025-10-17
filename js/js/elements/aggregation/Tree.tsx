@@ -135,7 +135,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
         {actions.length > 0 && (
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 text-muted-foreground">
             {actions.map((action, index) => (
               <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                 <Action
@@ -172,7 +172,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 text-muted-foreground">
               {actions.map((action, index) => (
                 <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                   <Action
@@ -239,14 +239,14 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
           {isDragHandle && (
-            <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
+            <Action level="panel" className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
               <GripVertical size={12} className="text-muted-foreground" />
-            </button>
+            </Action>
           )}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs font-normal truncate">{label}</span>
+          <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 text-foreground">
               {actions.map((action, index) => (
                 <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                   <Action
@@ -278,14 +278,14 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
     <div ref={setNodeRef} style={style} className={itemClasses} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {isDragHandle && (
-        <button className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted-foreground/10 rounded" {...attributes} {...listeners}>
+        <Action level="panel" className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
           <GripVertical size={12} className="text-muted-foreground" />
-        </button>
+        </Action>
       )}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-xs font-normal truncate">{label}</span>
+      <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 text-foreground">
           {actions.map((action, index) => (
             <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
               <Action
@@ -377,22 +377,23 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs font-normal truncate">{label}</span>
+          <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 text-foreground">
               {actions.map((action, index) => (
-                <button
-                  key={index}
-                  className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    action.onClick();
-                  }}
-                  title={action.title}
-                >
-                  {action.icon}
-                </button>
+                <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+                  <Action
+                    level="panel"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      action.onClick();
+                    }}
+                    tooltip={action.title}
+                  >
+                    {action.icon}
+                  </Action>
+                </div>
               ))}
             </div>
           )}
@@ -410,22 +411,23 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
     <div className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-xs font-normal truncate">{label}</span>
+      <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 text-foreground">
           {actions.map((action, index) => (
-            <button
-              key={index}
-              className={`p-1 transition-opacity hover:bg-muted-foreground/10 ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                action.onClick();
-              }}
-              title={action.title}
-            >
-              {action.icon}
-            </button>
+            <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+              <Action
+                level="panel"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                }}
+                tooltip={action.title}
+              >
+                {action.icon}
+              </Action>
+            </div>
           ))}
         </div>
       )}

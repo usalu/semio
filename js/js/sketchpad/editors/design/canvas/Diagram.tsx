@@ -39,7 +39,7 @@ import {
   useKitCommands,
   useSketchpadCommands,
 } from "../../../store";
-import { DesignEditorSelection, useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorSelection, useIsDesignPieceChangedInTransaction } from "../store";
+import { DesignEditorSelection, useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorPieceColor, useDesignEditorSelection, useIsDesignPieceChangedInTransaction } from "../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -333,8 +333,7 @@ type PieceNodeInnerProps = {
 };
 
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, hoverPiece, clearHover, selectPiecePort, deselectPiecePort, addConnection }) => {
-  const isHovered = useIsPieceHovered();
-  const isChangedInTransaction = useIsDesignPieceChangedInTransaction(undefined, piece.guid);
+  const { fill, stroke, opacity } = useDesignEditorPieceColor(id, piece.guid);
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
@@ -356,53 +355,8 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  let fillClass = "fill-transparent";
-  let strokeClass = "stroke-[var(--foreground)] stroke-2";
-  let opacity = 1;
-
-  // Determine base state colors
-  if (diff === DiffStatus.Added) {
-    fillClass = "fill-[var(--color-success)]";
-    strokeClass = "stroke-[var(--color-success)] stroke-2";
-  } else if (diff === DiffStatus.Removed) {
-    fillClass = "fill-[var(--color-danger)]";
-    strokeClass = "stroke-[var(--color-danger)] stroke-2";
-    opacity = 0.2;
-  } else if (diff === DiffStatus.Modified) {
-    fillClass = "fill-[var(--color-warning)]";
-    strokeClass = "stroke-[var(--color-warning)] stroke-2";
-  } else if (isChangedInTransaction) {
-    fillClass = "fill-[var(--color-changed-base)]";
-    strokeClass = "stroke-[var(--color-changed-base)] stroke-2";
-  }
-  
-  // Apply hover state (overrides base)
-  if (isHovered && !isSelected) {
-    fillClass = "fill-[var(--hover-base)]";
-    strokeClass = "stroke-[var(--foreground)] stroke-2";
-    opacity = 1;
-  }
-  
-  // Apply selected state with mixed colors for transaction changes
-  if (isSelected) {
-    if (isChangedInTransaction) {
-      fillClass = "fill-[var(--color-selected-changed)]";
-      strokeClass = "stroke-[var(--foreground)] stroke-2";
-    } else if (diff === DiffStatus.Added) {
-      fillClass = "fill-[var(--color-selected-added)]";
-      strokeClass = "stroke-[var(--foreground)] stroke-2";
-    } else if (diff === DiffStatus.Removed) {
-      fillClass = "fill-[var(--color-selected-removed)]";
-      strokeClass = "stroke-[var(--foreground)] stroke-2";
-    } else if (diff === DiffStatus.Modified) {
-      fillClass = "fill-[var(--color-selected-changed)]";
-      strokeClass = "stroke-[var(--foreground)] stroke-2";
-    } else {
-      fillClass = "fill-[var(--active-base)]";
-      strokeClass = "stroke-[var(--foreground)] stroke-2";
-    }
-    opacity = 1;
-  }
+  const fillClass = `fill-[${fill}]`;
+  const strokeClass = `stroke-[${stroke}] stroke-2`;
 
   return (
     <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
