@@ -4794,7 +4794,7 @@ interface EditorDiff<TSelectionDiff = any> {
   selection?: TSelectionDiff;
   presence?: any;
   hover?: any;
-  fullscreenPanel?: any;
+  fullscreenWindow?: any;
   panelVisibility?: Partial<PanelVisibility>;
 }
 
@@ -4882,8 +4882,8 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
 
   change = (diff: TDiff) => {
     this.transact(() => {
-      if (diff.fullscreenPanel !== undefined) {
-        this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      if (diff.fullscreenWindow !== undefined) {
+        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
       }
       if (diff.panelVisibility !== undefined) {
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
@@ -5198,7 +5198,7 @@ export interface TypeEditorSelectionDiff {
   ports?: TypeEditorSelectionPortsDiff;
   representations?: TypeEditorSelectionRepresentationsDiff;
 }
-export enum TypeEditorFullscreenPanel {
+export enum TypeEditorFullscreenWindow {
   None = "none",
   Ports = "ports",
   Representations = "representations",
@@ -5218,7 +5218,7 @@ export interface TypeEditorDiff {
   selection?: TypeEditorSelectionDiff;
   presence?: TypeEditorPresence;
   hover?: TypeEditorHover;
-  fullscreenPanel?: TypeEditorFullscreenPanel;
+  fullscreenWindow?: TypeEditorFullscreenWindow;
   panelVisibility?: Partial<PanelVisibility>;
   camera?: Camera;
 }
@@ -5231,7 +5231,7 @@ export interface TypeEditorEdit {
   undo: TypeEditorStep;
 }
 export interface TypeEditorState {
-  fullscreenPanel: TypeEditorFullscreenPanel;
+  fullscreenWindow: TypeEditorFullscreenWindow;
   panelVisibility: PanelVisibility;
   selection?: TypeEditorSelection;
   hover?: TypeEditorHover;
@@ -5273,8 +5273,8 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     super(parent, yMap, transact);
     this.Guid = Guid;
 
-    if (!yMap.has("fullscreenPanel")) {
-      yMap.set("fullscreenPanel", TypeEditorFullscreenPanel.None);
+    if (!yMap.has("fullscreenWindow")) {
+      yMap.set("fullscreenWindow", TypeEditorFullscreenWindow.None);
     }
   }
 
@@ -5287,8 +5287,8 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   }
 
   // TypeEditor-specific getters
-  get fullscreenPanel(): TypeEditorFullscreenPanel {
-    return this.yMap.get("fullscreenPanel") as TypeEditorFullscreenPanel;
+  get fullscreenWindow(): TypeEditorFullscreenWindow {
+    return this.yMap.get("fullscreenWindow") as TypeEditorFullscreenWindow;
   }
 
   get panelVisibility(): PanelVisibility {
@@ -5362,7 +5362,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
 
   protected buildSnapshot(): TypeEditorState {
     return {
-      fullscreenPanel: this.fullscreenPanel,
+      fullscreenWindow: this.fullscreenWindow,
       panelVisibility: this.panelVisibility,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -5441,8 +5441,8 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
 
   change = (diff: TypeEditorDiff) => {
     this.transact(() => {
-      if (diff.fullscreenPanel) {
-        this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      if (diff.fullscreenWindow) {
+        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
       }
       if (diff.panelVisibility !== undefined) {
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
@@ -5923,7 +5923,7 @@ export interface KitEditorSelectionDiff {
   files?: KitEditorSelectionFilesDiff;
   authors?: KitEditorSelectionAuthorsDiff;
 }
-export enum KitEditorFullscreenPanel {
+export enum KitEditorFullscreenWindow {
   None = "none",
   Types = "types",
   Designs = "designs",
@@ -5946,7 +5946,7 @@ export interface KitEditorDiff {
   selection?: KitEditorSelectionDiff;
   presence?: KitEditorPresence;
   hover?: KitEditorHover;
-  fullscreenPanel?: KitEditorFullscreenPanel;
+  fullscreenWindow?: KitEditorFullscreenWindow;
   panelVisibility?: Partial<PanelVisibility>;
   filterSearch?: string;
   expandedRows?: string[];
@@ -5962,7 +5962,7 @@ export interface KitEditorEdit {
   undo: KitEditorStep;
 }
 export interface KitEditorState {
-  fullscreenPanel: KitEditorFullscreenPanel;
+  fullscreenWindow: KitEditorFullscreenWindow;
   panelVisibility: PanelVisibility;
   selection?: KitEditorSelection;
   hover?: KitEditorHover;
@@ -6052,7 +6052,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     const kit = this.parent.kit(id.kit);
     yMap.set("kit", kit.guid);
 
-    yMap.set("fullscreenPanel", state?.fullscreenPanel || KitEditorFullscreenPanel.None);
+    yMap.set("fullscreenWindow", state?.fullscreenWindow || KitEditorFullscreenWindow.None);
 
     const selection = new Y.Map<any>();
     const selectedTypes = new Y.Array<string>();
@@ -6088,8 +6088,8 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
   }
 
   // KitEditor-specific getters
-  get fullscreenPanel(): KitEditorFullscreenPanel {
-    return this.yMap.get("fullscreenPanel") as KitEditorFullscreenPanel;
+  get fullscreenWindow(): KitEditorFullscreenWindow {
+    return this.yMap.get("fullscreenWindow") as KitEditorFullscreenWindow;
   }
 
   get panelVisibility(): PanelVisibility {
@@ -6196,7 +6196,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 
   protected buildSnapshot(): KitEditorState {
     return {
-      fullscreenPanel: this.fullscreenPanel,
+      fullscreenWindow: this.fullscreenWindow,
       panelVisibility: this.panelVisibility,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -6216,8 +6216,8 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
 
   change = (diff: KitEditorDiff) => {
     this.transact(() => {
-      if (diff.fullscreenPanel !== undefined) {
-        this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      if (diff.fullscreenWindow !== undefined) {
+        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
       }
       if (diff.panelVisibility !== undefined) {
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
@@ -6449,20 +6449,20 @@ const kitEditorCommands = {
     return { diff: {} };
   },
   "semio.kitEditor.toggleTypesFullscreen": (context: KitEditorCommandContext): KitEditorCommandResult => {
-    const currentPanel = context.kitEditor.fullscreenPanel;
-    const newPanel = currentPanel === KitEditorFullscreenPanel.Types ? KitEditorFullscreenPanel.None : KitEditorFullscreenPanel.Types;
+    const currentPanel = context.kitEditor.fullscreenWindow;
+    const newPanel = currentPanel === KitEditorFullscreenWindow.Types ? KitEditorFullscreenWindow.None : KitEditorFullscreenWindow.Types;
     return {
       diff: {
-        fullscreenPanel: newPanel,
+        fullscreenWindow: newPanel,
       },
     };
   },
   "semio.kitEditor.toggleDesignsFullscreen": (context: KitEditorCommandContext): KitEditorCommandResult => {
-    const currentPanel = context.kitEditor.fullscreenPanel;
-    const newPanel = currentPanel === KitEditorFullscreenPanel.Designs ? KitEditorFullscreenPanel.None : KitEditorFullscreenPanel.Designs;
+    const currentPanel = context.kitEditor.fullscreenWindow;
+    const newPanel = currentPanel === KitEditorFullscreenWindow.Designs ? KitEditorFullscreenWindow.None : KitEditorFullscreenWindow.Designs;
     return {
       diff: {
-        fullscreenPanel: newPanel,
+        fullscreenWindow: newPanel,
       },
     };
   },
@@ -6930,8 +6930,8 @@ export function useKitEditorSelection(id?: KitEditorId): KitEditorSelection {
   return useSync<KitEditorState, KitEditorSelection>(store, (state) => state.selection, true) as KitEditorSelection;
 }
 
-export function useKitEditorFullscreen(): KitEditorFullscreenPanel {
-  return useKitEditor((s) => s.fullscreenPanel) as KitEditorFullscreenPanel;
+export function useKitEditorFullscreen(): KitEditorFullscreenWindow {
+  return useKitEditor((s) => s.fullscreenWindow) as KitEditorFullscreenWindow;
 }
 
 export function useKitEditorOthers(): KitEditorPresenceOther[] {
@@ -7091,7 +7091,7 @@ export interface DesignEditorSelectionDiff {
   connections?: DesignEditorSelectionConnectionsDiff;
   port?: DesignEditorSelectionPortDiff;
 }
-export enum DesignEditorFullscreenPanel {
+export enum DesignEditorFullscreenWindow {
   None = "none",
   Diagram = "diagram",
   Accessl = "accessl",
@@ -7116,7 +7116,7 @@ export interface DesignEditorDiff {
   selection?: DesignEditorSelectionDiff;
   presence?: DesignEditorPresence;
   hover?: DesignEditorHover;
-  fullscreenPanel?: DesignEditorFullscreenPanel;
+  fullscreenWindow?: DesignEditorFullscreenWindow;
   panelVisibility?: Partial<PanelVisibility>;
   activeTool?: ToolType;
   camera?: Camera;
@@ -7132,7 +7132,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 export interface DesignEditorState {
-  fullscreenPanel: DesignEditorFullscreenPanel;
+  fullscreenWindow: DesignEditorFullscreenWindow;
   panelVisibility: PanelVisibility;
   activeTool?: ToolType;
   selection?: DesignEditorSelection;
@@ -7202,8 +7202,8 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     yMap.set("design", design.guid);
 
     // Only initialize if not already set (preserve existing values when reopening)
-    if (!yMap.has("fullscreenPanel")) {
-      yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+    if (!yMap.has("fullscreenWindow")) {
+      yMap.set("fullscreenWindow", state?.fullscreenWindow || DesignEditorFullscreenWindow.None);
     }
 
     // Only initialize selection if not already set
@@ -7257,11 +7257,11 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     });
   }
 
-  get fullscreenPanel(): DesignEditorFullscreenPanel {
-    return this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel;
+  get fullscreenWindow(): DesignEditorFullscreenWindow {
+    return this.yMap.get("fullscreenWindow") as DesignEditorFullscreenWindow;
   }
-  set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
-    this.yMap.set("fullscreenPanel", panel);
+  set fullscreenWindow(panel: DesignEditorFullscreenWindow) {
+    this.yMap.set("fullscreenWindow", panel);
   }
   get activeTool(): ToolType {
     return (this.yMap.get("activeTool") as ToolType) ?? ToolType.SELECTION_NORMAL;
@@ -7393,7 +7393,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
   protected buildSnapshot(): DesignEditorState {
     return {
-      fullscreenPanel: this.fullscreenPanel,
+      fullscreenWindow: this.fullscreenWindow,
       panelVisibility: this.panelVisibility,
       activeTool: this.activeTool,
       selection: this.selection,
@@ -7483,7 +7483,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
 
   change = (diff: DesignEditorDiff) => {
     this.transact(() => {
-      if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
+      if (diff.fullscreenWindow) this.fullscreenWindow = diff.fullscreenWindow;
       if (diff.activeTool) this.activeTool = diff.activeTool;
       if (diff.panelVisibility !== undefined) {
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
@@ -7659,20 +7659,20 @@ const designEditorCommands = {
     return { diff: {} };
   },
   "semio.designEditor.toggleDiagramFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    const currentPanel = context.designEditor.fullscreenPanel;
-    const newPanel = currentPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram;
+    const currentPanel = context.designEditor.fullscreenWindow;
+    const newPanel = currentPanel === DesignEditorFullscreenWindow.Diagram ? DesignEditorFullscreenWindow.None : DesignEditorFullscreenWindow.Diagram;
     return {
       diff: {
-        fullscreenPanel: newPanel,
+        fullscreenWindow: newPanel,
       },
     };
   },
   "semio.designEditor.toggleAccesslFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    const currentPanel = context.designEditor.fullscreenPanel;
-    const newPanel = currentPanel === DesignEditorFullscreenPanel.Accessl ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Accessl;
+    const currentPanel = context.designEditor.fullscreenWindow;
+    const newPanel = currentPanel === DesignEditorFullscreenWindow.Accessl ? DesignEditorFullscreenWindow.None : DesignEditorFullscreenWindow.Accessl;
     return {
       diff: {
-        fullscreenPanel: newPanel,
+        fullscreenWindow: newPanel,
       },
     };
   },
@@ -8169,8 +8169,8 @@ export function useDesignEditorSelection(): DesignEditorSelection {
   return useDesignEditor((s) => s.selection) as DesignEditorSelection;
 }
 
-export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor((s) => s.fullscreenPanel) as DesignEditorFullscreenPanel;
+export function useDesignEditorFullscreen(): DesignEditorFullscreenWindow {
+  return useDesignEditor((s) => s.fullscreenWindow) as DesignEditorFullscreenWindow;
 }
 
 export function useDesignEditorDiff(): KitDiff {
@@ -8330,26 +8330,26 @@ export function useDesignEditorIsPieceHovered(id: DesignEditorId | undefined, pi
  */
 export function useDesignEditorIsPieceTransitiveHovered(id: DesignEditorId | undefined, pieceId: string): boolean {
   const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
-  
+
   return useSync<DesignEditorState, boolean>(
     store,
     (state) => {
       const hover = state.hover;
-      
+
       // Direct piece hover
       if (hover?.pieces?.includes(pieceId)) return true;
-      
+
       // Get the piece from the design
       const design = store.design().snapshot();
       const piece = design?.pieces?.find((p) => p.guid === pieceId);
       if (!piece) return false;
-      
+
       // Check if the piece's type is hovered in this editor
       if (piece.type && hover?.types?.includes(piece.type)) return true;
-      
+
       // Check if the piece's design is hovered in this editor
       if (piece.design && hover?.designs?.includes(piece.design)) return true;
-      
+
       return false;
     },
     true,
@@ -8361,15 +8361,15 @@ export function useDesignEditorIsPieceTransitiveHovered(id: DesignEditorId | und
  */
 export function useDesignEditorIsTypeTransitiveHovered(id: DesignEditorId | undefined, typeId: string): boolean {
   const store = useDesignEditorStore(identitySelector, id) as DesignEditorStore;
-  
+
   return useSync<DesignEditorState, boolean>(
     store,
     (state) => {
       const hover = state.hover;
-      
+
       // Direct type hover
       if (hover?.types?.includes(typeId)) return true;
-      
+
       // Check if any hovered piece has this type
       if (hover?.pieces && hover.pieces.length > 0) {
         const design = store.design().snapshot();
@@ -8378,7 +8378,7 @@ export function useDesignEditorIsTypeTransitiveHovered(id: DesignEditorId | unde
           return piece?.type === typeId;
         });
       }
-      
+
       return false;
     },
     true,
@@ -8394,7 +8394,7 @@ export function useDesignEditorPieceStatus(id: DesignEditorId | undefined, piece
     store,
     (state) => {
       const currentStack = store?.currentTransactionStack;
-      
+
       // Check current transaction stack for status
       if (currentStack && currentStack.length > 0) {
         for (const edit of currentStack) {
@@ -8428,7 +8428,7 @@ export function useDesignEditorPieceStatus(id: DesignEditorId | undefined, piece
           }
         }
       }
-      
+
       return DiffStatus.Unchanged;
     },
     true,
@@ -8457,7 +8457,7 @@ export function useDesignEditorPieceColor(id: DesignEditorId | undefined, pieceI
   const isHovered = useDesignEditorIsPieceTransitiveHovered(id, pieceId);
   const status = useDesignEditorPieceStatus(id, pieceId);
   const isChangedInTransaction = useIsDesignPieceChangedInTransaction(id, pieceId) as boolean;
-  
+
   let fill = "var(--foreground)";
   let stroke = "var(--foreground)";
   let opacity = 1;
@@ -8553,7 +8553,7 @@ export function useDesignEditorConnectionStatus(id: DesignEditorId | undefined, 
     store,
     (state) => {
       const currentStack = store?.currentTransactionStack;
-      
+
       if (currentStack && currentStack.length > 0) {
         for (const edit of currentStack) {
           if (edit.do?.kitDiff?.designs) {
@@ -8569,9 +8569,9 @@ export function useDesignEditorConnectionStatus(id: DesignEditorId | undefined, 
               // Check removed connections (removed is an array of connection IDs)
               if (designUpdate.diff.connections?.removed) {
                 for (const removedConn of designUpdate.diff.connections.removed) {
-                  if (typeof removedConn === 'string' && removedConn === connectionId) {
+                  if (typeof removedConn === "string" && removedConn === connectionId) {
                     return DiffStatus.Removed;
-                  } else if (typeof removedConn === 'object' && removedConn.connected && removedConn.connecting) {
+                  } else if (typeof removedConn === "object" && removedConn.connected && removedConn.connecting) {
                     // Handle case where removed is a Side comparison
                     continue;
                   }
@@ -8580,9 +8580,9 @@ export function useDesignEditorConnectionStatus(id: DesignEditorId | undefined, 
               // Check modified connections
               if (designUpdate.diff.connections?.updated) {
                 for (const connUpdate of designUpdate.diff.connections.updated) {
-                  if (typeof connUpdate.id === 'string' && connUpdate.id === connectionId) {
+                  if (typeof connUpdate.id === "string" && connUpdate.id === connectionId) {
                     return DiffStatus.Modified;
-                  } else if (typeof connUpdate.id === 'object' && connUpdate.id.connected && connUpdate.id.connecting) {
+                  } else if (typeof connUpdate.id === "object" && connUpdate.id.connected && connUpdate.id.connecting) {
                     // Handle case where id is a Side-based identifier
                     continue;
                   }
@@ -8592,7 +8592,7 @@ export function useDesignEditorConnectionStatus(id: DesignEditorId | undefined, 
           }
         }
       }
-      
+
       return DiffStatus.Unchanged;
     },
     true,
@@ -8606,7 +8606,7 @@ export function useDesignEditorConnectionColor(id: DesignEditorId | undefined, c
   const isSelected = useDesignEditorIsConnectionSelected(id, connectionId);
   const isHovered = useDesignEditorIsConnectionHovered(id, connectionId);
   const status = useDesignEditorConnectionStatus(id, connectionId);
-  
+
   let fill = "var(--foreground)";
   let stroke = "var(--foreground)";
   let opacity = 1;
@@ -8669,12 +8669,12 @@ export function useKitEditorIsTypeHovered(typeId: string, id?: KitEditorId): boo
 export function useKitEditorTypeStatus(typeId: string, id?: KitEditorId): DiffStatus {
   const store = useKitEditorStore(identitySelector, id) as KitEditorStore;
   if (!store) return DiffStatus.Unchanged;
-  
+
   return useSync<KitEditorState, DiffStatus>(
     store,
     (state) => {
       const currentStack = store?.currentTransactionStack;
-      
+
       if (currentStack && currentStack.length > 0) {
         for (const edit of currentStack) {
           if (edit.do?.kitDiff?.types) {
@@ -8705,7 +8705,7 @@ export function useKitEditorTypeStatus(typeId: string, id?: KitEditorId): DiffSt
           }
         }
       }
-      
+
       return DiffStatus.Unchanged;
     },
     true,
@@ -8718,7 +8718,7 @@ export function useKitEditorTypeStatus(typeId: string, id?: KitEditorId): DiffSt
 export function useKitEditorTypeColor(typeId: string, isSelected: boolean, id?: KitEditorId): { fill: string; stroke: string; opacity: number } {
   const isHovered = useKitEditorIsTypeHovered(typeId, id);
   const status = useKitEditorTypeStatus(typeId, id);
-  
+
   let fill = "var(--foreground)";
   let stroke = "var(--foreground)";
   let opacity = 1;
@@ -8784,12 +8784,12 @@ export function useKitEditorIsDesignHovered(designId: string, id?: KitEditorId):
 export function useKitEditorDesignStatus(designId: string, id?: KitEditorId): DiffStatus {
   const store = useKitEditorStore(identitySelector, id) as KitEditorStore;
   if (!store) return DiffStatus.Unchanged;
-  
+
   return useSync<KitEditorState, DiffStatus>(
     store,
     (state) => {
       const currentStack = store?.currentTransactionStack;
-      
+
       if (currentStack && currentStack.length > 0) {
         for (const edit of currentStack) {
           if (edit.do?.kitDiff?.designs) {
@@ -8820,7 +8820,7 @@ export function useKitEditorDesignStatus(designId: string, id?: KitEditorId): Di
           }
         }
       }
-      
+
       return DiffStatus.Unchanged;
     },
     true,
@@ -8833,7 +8833,7 @@ export function useKitEditorDesignStatus(designId: string, id?: KitEditorId): Di
 export function useKitEditorDesignColor(designId: string, isSelected: boolean, id?: KitEditorId): { fill: string; stroke: string; opacity: number } {
   const isHovered = useKitEditorIsDesignHovered(designId, id);
   const status = useKitEditorDesignStatus(designId, id);
-  
+
   let fill = "var(--foreground)";
   let stroke = "var(--foreground)";
   let opacity = 1;

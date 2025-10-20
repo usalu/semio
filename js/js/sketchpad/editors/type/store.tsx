@@ -26,6 +26,6 @@ export type {
   TypeEditorStep,
 } from "../../store";
 
-export { TypeEditorFullscreenPanel } from "../../store";
+export { TypeEditorFullscreenWindow } from "../../store";
 
 export { useTypeEditor, useTypeEditorCamera, useTypeEditorCommands, useTypeEditorOthers, useTypeEditorPanelVisibility, useTypeEditorSelection } from "../../store";

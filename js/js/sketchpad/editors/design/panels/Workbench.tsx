@@ -69,9 +69,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   const displayVariant = type.variant || type.name;
   const avatar = (
     <Avatar
-      className={`cursor-grab active:cursor-grabbing select-none border-[var(--border-color)] ${
-        isActiveSelection ? "outline outline-1 outline-[var(--active-base)]" : isHovered ? "outline outline-1 outline-[var(--hover-base)]" : ""
-      }`}
+      className={`cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)] ${isActiveSelection ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : ""}`}
       style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
     >
       <AvatarFallback
@@ -170,9 +168,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   const displayVariant = design.variant || design.name;
   const avatar = (
     <Avatar
-      className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[var(--border-color)] ${
-        isSelectedDesign ? "outline outline-1 outline-[var(--active-base)]" : isHovered ? "outline outline-1 outline-[var(--hover-base)]" : ""
-      }`}
+      className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[color:var(--border-color)] ${isSelectedDesign ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : ""}`}
       style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}
     >
       <AvatarFallback

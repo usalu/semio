@@ -28,6 +28,6 @@ export type {
   KitEditorStep,
 } from "../../store";
 
-export { KitEditorFullscreenPanel } from "../../store";
+export { KitEditorFullscreenWindow } from "../../store";
 
 export { useKitEditor, useKitEditorCommands, useKitEditorFullscreen, useKitEditorOthers, useKitEditorSelection } from "../../store";

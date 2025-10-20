@@ -54,14 +54,14 @@ import { EditorType, useDesign, useEditorPanelVisibility, useEditorType, useKit,
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
-import { ToolsToggleGroup } from "./panels/Toolbar";
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
-import { DesignEditorFullscreenPanel, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
+import { DesignEditorFullscreenWindow, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
+import { ToolsToggleGroup } from "./Toolbar";
 
 export interface EditorProps {}
 
 const Editor: FC<EditorProps> = () => {
-  const fullscreenPanel = useDesignEditorFullscreen();
+  const fullscreenWindow = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel } = useDesignEditorCommands();
 
   const selection = useDesignEditorSelection();
@@ -195,7 +195,7 @@ const Editor: FC<EditorProps> = () => {
           <div key={name} onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))} onPointerLeave={() => clearHover()}>
             <TreeItem
               label={name}
-              defaultOpen={false}
+              defaultOpen={true}
               actions={[
                 {
                   icon: <Plus size={12} />,
@@ -246,7 +246,7 @@ const Editor: FC<EditorProps> = () => {
           <div key={name} onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))} onPointerLeave={() => clearHover()}>
             <TreeItem
               label={name}
-              defaultOpen={false}
+              defaultOpen={true}
               actions={[
                 {
                   icon: <Plus size={12} />,
@@ -439,11 +439,11 @@ const Editor: FC<EditorProps> = () => {
   return (
     <ReactFlowProvider>
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
+        <ResizablePanel defaultSize={fullscreenWindow === DesignEditorFullscreenWindow.Diagram ? 100 : 50} className={`${fullscreenWindow === DesignEditorFullscreenWindow.Accessl ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
           <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
         </ResizablePanel>
-        <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
-        <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Accessl ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`}>
+        <ResizableHandle className={`border-r ${fullscreenWindow !== DesignEditorFullscreenWindow.None ? "hidden" : "block"}`} />
+        <ResizablePanel defaultSize={fullscreenWindow === DesignEditorFullscreenWindow.Accessl ? 100 : 50} className={`${fullscreenWindow === DesignEditorFullscreenWindow.Diagram ? "hidden" : "block"}`}>
           <DesignScene />
         </ResizablePanel>
       </ResizablePanelGroup>

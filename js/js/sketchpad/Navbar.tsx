@@ -1612,7 +1612,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
               <Toggle
                 tooltip={toolbarConfig.tooltip}
                 hotkey={toolbarConfig.hotkey}
-                pressed={visiblePanels.toolbar}
+                pressed={!!visiblePanels.toolbar}
                 onPressedChange={() => {
                   commands[editorType]?.togglePanel("toolbar");
                 }}
@@ -1699,7 +1699,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
           <Toggle
             tooltip={toolbarConfig.tooltip}
             hotkey={toolbarConfig.hotkey}
-            pressed={visiblePanels.toolbar}
+            pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
               commands[editorType]?.togglePanel("toolbar");
             }}

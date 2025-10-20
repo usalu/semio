@@ -278,7 +278,7 @@ const SketchpadBase: FC = () => {
               ) : (
                 <>
                   {(visiblePanels.workbench || visiblePanels.tools) && (
-                    <div className="absolute left-1 top-0 bottom-1 z-20 flex">
+                    <div className="absolute left-1 top-1 bottom-1 z-20 flex">
                       {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
                       {visiblePanels.tools && <Tools visible={true} width={panelSizes.toolsWidth} onWidthChange={(w) => setPanelSize("toolsWidth", w)} />}
                     </div>
@@ -317,7 +317,7 @@ const SketchpadBase: FC = () => {
                     )}
                   </div>
                   {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
-                    <div className="absolute right-1 top-0 bottom-1 z-20 flex">
+                    <div className="absolute right-1 top-1 bottom-1 z-20 flex">
                       {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
                       {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
                       {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}

@@ -27,11 +27,12 @@ import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
 import {
   ConnectionScopeProvider,
-  DesignEditorFullscreenPanel,
+  DesignEditorFullscreenWindow,
   DesignEditorPresenceOther,
   PieceScopeProvider,
   useClusterableGroups,
   useDesign,
+  useEditorPanelVisibility,
   useExplodeableDesignNodes,
   useIsConnectionHovered,
   useIsPieceHovered,
@@ -39,7 +40,17 @@ import {
   useKitCommands,
   useSketchpadCommands,
 } from "../../../store";
-import { DesignEditorSelection, useDesignEditorCommands, useDesignEditorDiagramCenter, useDesignEditorDiagramScale, useDesignEditorFullscreen, useDesignEditorHover, useDesignEditorOthers, useDesignEditorPieceColor, useDesignEditorSelection, useIsDesignPieceChangedInTransaction } from "../store";
+import {
+  DesignEditorSelection,
+  useDesignEditorCommands,
+  useDesignEditorDiagramCenter,
+  useDesignEditorDiagramScale,
+  useDesignEditorFullscreen,
+  useDesignEditorHover,
+  useDesignEditorOthers,
+  useDesignEditorPieceColor,
+  useDesignEditorSelection,
+} from "../store";
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -355,7 +366,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  const fillClass = `fill-[${fill}]`;
+  const fillClass = fill === "transparent" ? "fill-none" : `fill-[${fill}]`;
   const strokeClass = `stroke-[${stroke}] stroke-2`;
 
   return (
@@ -491,7 +502,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  let fillClass = "fill-[var(--color-base)]";
+  let fillClass = "fill-none";
   let strokeClass = "stroke-[var(--foreground)] stroke-2";
   let opacity = 1;
 
@@ -1014,10 +1025,11 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const kit = useKit();
 
   const selection = useDesignEditorSelection();
-  const fullscreenPanel = useDesignEditorFullscreen();
+  const fullscreenWindow = useDesignEditorFullscreen();
   const others = useDesignEditorOthers();
   const savedDiagramCenter = useDesignEditorDiagramCenter();
   const savedDiagramScale = useDesignEditorDiagramScale();
+  const panelVisibility = useEditorPanelVisibility();
 
   // const design = useDiffedDesign();
   const design = useDesign();
@@ -1048,7 +1060,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     lastPostition: XYPosition;
   } | null>(null);
   const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
-  const fullscreen = fullscreenPanel === DesignEditorFullscreenPanel.Diagram;
+  const fullscreen = fullscreenWindow === DesignEditorFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
 
@@ -1179,7 +1191,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
       const addedConnections: Connection[] = [];
       const updatedPieces: Array<{ id: string; diff: any }> = [];
-      
+
       let draggedX = node.position.x;
       let draggedY = node.position.y;
 
@@ -1670,7 +1682,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
           });
         }
       }
-      
+
       if (addedConnections.length > 0) {
         addedConnections.forEach((conn) => addConnection(conn));
       }
@@ -1772,8 +1784,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         connectionLineComponent={ConnectionConnectionLine}
         className="bg-background"
       >
-        {fullscreen && <Controls className="border border-border " showZoom={false} showInteractive={false} />}
-        {fullscreen && <MiniMap className="border border-border " maskColor="var(--accent)" bgColor="var(--background)" nodeComponent={MiniMapNode} />}
+        {fullscreen && panelVisibility.toolbar && <Controls className="border border-border " showZoom={false} showInteractive={false} />}
+        {fullscreen && panelVisibility.toolbar && <MiniMap className="border border-border " maskColor="var(--accent)" bgColor="var(--background)" nodeComponent={MiniMapNode} />}
         <ViewportPortal>⌞</ViewportPortal>
         {others.map((presence, idx) => (
           <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.x || 0}-${presence.cursor?.y || 0}`} {...presence} />

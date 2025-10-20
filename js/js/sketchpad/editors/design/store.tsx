@@ -1,5 +1,5 @@
 export {
-  DesignEditorFullscreenPanel,
+  DesignEditorFullscreenWindow,
   useDesignEditor,
   useDesignEditorCamera,
   useDesignEditorCommands,

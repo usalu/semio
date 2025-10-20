@@ -135,7 +135,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
         {actions.length > 0 && (
-          <div className="flex items-center gap-0.5 text-muted-foreground">
+          <div className="flex items-center gap-0.5">
             {actions.map((action, index) => (
               <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                 <Action
@@ -172,7 +172,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-0.5 text-muted-foreground">
+            <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
                 <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                   <Action
@@ -246,7 +246,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-0.5 text-foreground">
+            <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
                 <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                   <Action
@@ -285,7 +285,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-0.5 text-foreground">
+        <div className="flex items-center gap-0.5">
           {actions.map((action, index) => (
             <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
               <Action
@@ -379,7 +379,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-0.5 text-foreground">
+            <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
                 <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
                   <Action
@@ -413,7 +413,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-0.5 text-foreground">
+        <div className="flex items-center gap-0.5">
           {actions.map((action, index) => (
             <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
               <Action

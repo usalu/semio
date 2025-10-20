@@ -25,8 +25,8 @@ import React, { FC, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
 import { Camera, Piece, Plane, planeToMatrix } from "../../../../semio";
-import { DesignEditorFullscreenPanel, PieceScopeProvider, useDesign, useIsPieceHovered, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../store";
-import { DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
+import { PieceScopeProvider, useDesign, useEditorPanelVisibility, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../store";
+import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -279,8 +279,9 @@ const ModelDesign: FC = () => {
 
 const DesignEditorScene: FC = () => {
   const { deselectAll, toggleAccesslFullscreen, setCamera } = useDesignEditorCommands();
-  const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Accessl;
+  const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenWindow.Accessl;
   const camera = useDesignEditorCamera();
+  const panelVisibility = useEditorPanelVisibility();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       toggleAccesslFullscreen();
@@ -301,7 +302,7 @@ const DesignEditorScene: FC = () => {
   );
 
   return (
-    <Scene showGizmo={fullscreen} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+    <Scene showGizmo={fullscreen && !!panelVisibility.toolbar} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
       <ModelDesign />
     </Scene>
   );
