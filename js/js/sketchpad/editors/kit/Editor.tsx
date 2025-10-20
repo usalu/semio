@@ -72,12 +72,29 @@ const EditorContent: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tooltip = useTooltip();
 
+  const kitScope = useKitScope();
+  const sketchpadStore = useSketchpadStore();
+  const hasKit = kitScope?.guid ? sketchpadStore.hasKit(kitScope.guid) : false;
+
   const kit = useKit() as Kit;
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitEditorCommands = useKitEditorCommands();
   const kitEditor = useKitEditor() as KitEditorState;
   const isMobile = useIsMobile();
+
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+  const editorType = useEditorType();
+
+  // Early return if no kit is loaded
+  if (!hasKit) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
+      </div>
+    );
+  }
 
   // Get filters from search params (?kind=&name=&variant=&view=)
   const selectedKind = searchParams.get("kind") as ArtifactKind | null;
@@ -103,10 +120,6 @@ const EditorContent: FC = () => {
   };
   const sortColumn = kitEditor?.sortColumn;
   const sortDirection = kitEditor?.sortDirection || "asc";
-
-  const addSection = useAddPanelSection();
-  const removeSection = useRemovePanelSection();
-  const editorType = useEditorType();
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
@@ -183,7 +196,8 @@ const EditorContent: FC = () => {
 
     if (selectedKind === "designs") {
       const design = kit.designs?.find((d: Design) => d.guid === selectParam);
-      if (design) {kitEditorCommands.selectDesign(selectParam);
+      if (design) {
+        kitEditorCommands.selectDesign(selectParam);
         // Remove the select parameter after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
@@ -191,14 +205,16 @@ const EditorContent: FC = () => {
       }
     } else if (selectedKind === "types") {
       const type = kit.types?.find((t: Type) => t.guid === selectParam);
-      if (type) {kitEditorCommands.selectType(selectParam);
+      if (type) {
+        kitEditorCommands.selectType(selectParam);
         // Remove the select parameter after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
         setSearchParams(newParams, { replace: true });
       }
     }
-  }, [selectParam, selectedKind, kit, kitEditorCommands, searchParams, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectParam, selectedKind]);
 
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -985,7 +1001,13 @@ const EditorContent: FC = () => {
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {row.hasChildren ? (
-                        <Action level="base" onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}>
+                        <Action
+                          level="base"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRow(row.id);
+                          }}
+                        >
                           {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
                         </Action>
                       ) : (
@@ -1311,7 +1333,13 @@ const EditorContent: FC = () => {
                     <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
                       <div className="flex items-center gap-1 flex-1 min-w-0">
                         {row.hasChildren ? (
-                          <Action level="base" onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}>
+                          <Action
+                            level="base"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRow(row.id);
+                            }}
+                          >
                             {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
                           </Action>
                         ) : (
@@ -1403,10 +1431,7 @@ const EditorContent: FC = () => {
   );
 };
 
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -1433,24 +1458,11 @@ class ErrorBoundary extends React.Component<
 }
 
 const Editor: FC = () => {
-  const { t } = useTranslation();
-  const kitScope = useKitScope();
-  const sketchpadStore = useSketchpadStore();
-  const hasKit = kitScope?.guid ? sketchpadStore.hasKit(kitScope.guid) : false;
-
-  if (!hasKit) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
-      </div>
-    );
-  }
-
   return (
     <ErrorBoundary
       fallback={
         <div className="flex items-center justify-center h-full">
-          <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
+          <p className="text-sm text-muted-foreground">Failed to load kit editor</p>
         </div>
       }
     >

@@ -148,7 +148,8 @@ const KitDetailsForm: FC = () => {
         </TreeItem>
       </TreeSection>
     );
-  } catch (error) {return (
+  } catch (error) {
+    return (
       <TreeSection label={t("kit.title")} defaultOpen={true}>
         <TreeItem>
           <TreeContent>

@@ -20,6 +20,7 @@
 // #endregion
 
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { usePanelSections } from "../Navbar";
 import { useActiveInteraction, useIsMobile } from "../store";
 
@@ -30,6 +31,7 @@ interface ToolbarProps {
 }
 
 const Toolbar: FC<ToolbarProps> = ({ visible, leftOffset = 0, rightOffset = 0 }) => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const activeInteraction = useActiveInteraction();
   const sections = usePanelSections("toolbar");
@@ -45,9 +47,9 @@ const Toolbar: FC<ToolbarProps> = ({ visible, leftOffset = 0, rightOffset = 0 })
         transition: "opacity 150ms",
       }}
     >
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-end justify-center">
         {sortedSections.length === 0 ? (
-          <div className="text-muted-foreground text-xs">No tools</div>
+          <div className="text-muted-foreground text-xs">{t("panels.toolbar.noTools")}</div>
         ) : (
           <div className={`inline-flex items-center gap-1 ${isMobile ? "px-1" : "px-1"}`}>
             {sortedSections.map((section) => {

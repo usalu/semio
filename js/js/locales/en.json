@@ -73,16 +73,20 @@
     "panels": {
         "toolbar": "Toolbar panel",
         "toolbar.extensive": "Toggle toolbar panel",
+        "toolbar.noTools": "No tools",
         "details": "Details panel",
         "details.extensive": "Toggle details panel",
         "workbench": "Workbench panel",
         "workbench.extensive": "Toggle workbench panel",
+        "workbench.noSections": "No workbench sections available",
         "console": "Console panel",
         "console.extensive": "Toggle console panel",
         "chat": "Chat panel",
         "chat.extensive": "Toggle chat panel",
         "settings": "Settings panel",
-        "settings.extensive": "Toggle settings panel"
+        "settings.extensive": "Toggle settings panel",
+        "tools.noSections": "No tools sections available",
+        "hud.noSections": "No hud sections available"
     },
     "kit": {
         "title": "Kit",
@@ -149,7 +153,13 @@
         "created": "Created",
         "updated": "Updated",
         "pieces": "Pieces",
-        "connections": "Connections"
+        "connections": "Connections",
+        "selectOnlyPiecesOrConnections": "Select only pieces or only connections to edit details.",
+        "editorTitle": "Design Editor",
+        "snappiness": "Snappiness",
+        "gridSize": "Grid Size",
+        "variantPrefix": "Variant",
+        "viewPrefix": "View"
     },
     "piece": {
         "id": "ID",
@@ -225,7 +235,10 @@
         "selectDesign": "Select design",
         "selectType": "Select type",
         "selectVariant": "Select variant",
-        "selectView": "Select view"
+        "selectView": "Select view",
+        "addVariant": "Add variant",
+        "addType": "Add type",
+        "addDesign": "Add design"
     },
     "home": {
         "temporary": "Temporary",
@@ -389,8 +402,21 @@
     "tools": {
         "port": "Port Tool",
         "port.extensive": "Click on the mesh to place a port at the intersection point with the surface normal as direction. Hold and drag to orbit the camera.",
+        "port.label": "Port",
+        "port.addAndEdit": "Add and edit ports",
         "selection": "Selection Tool",
-        "selection.extensive": "Click to select items. Use modifier keys for additive or subtractive selection."
+        "selection.extensive": "Click to select items. Use modifier keys for additive or subtractive selection.",
+        "selection.normal": "Normal",
+        "selection.additive": "Additive",
+        "selection.subtractive": "Subtractive",
+        "selection.selectPieces": "Click to select pieces",
+        "selection.selectPorts": "Click to select ports",
+        "selection.addToSelection": "Add to selection",
+        "selection.removeFromSelection": "Remove from selection",
+        "lasso.rectangular": "Rectangular",
+        "lasso.freeform": "Freeform",
+        "lasso.rectangular.extensive": "Draw rectangle to select multiple pieces",
+        "lasso.freeform.extensive": "Draw freeform shape to select multiple pieces"
     },
     "sort": {
         "ascending": "Sort ascending",

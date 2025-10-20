@@ -21,35 +21,36 @@
 
 import { Crosshair, Minus, MousePointer2, Plus } from "lucide-react";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
-import { useTypeEditor, useTypeEditorCommands } from "./store";
+import { useTypeEditorSafe, useTypeEditorCommands } from "./store";
 
-const TYPE_TOOLS: ToolDefinition[] = [
+const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolType.SELECTION_NORMAL,
     modes: [
       {
         id: ToolType.SELECTION_NORMAL,
-        label: "Normal",
+        label: t("tools.selection.normal"),
         icon: <MousePointer2 className="h-4 w-4" />,
-        tooltip: "Click to select ports",
+        tooltip: t("tools.selection.selectPorts"),
         hotkey: "Click",
       },
       {
         id: ToolType.SELECTION_ADDITIVE,
-        label: "Additive",
+        label: t("tools.selection.additive"),
         icon: <Plus className="h-4 w-4" />,
-        tooltip: "Add to selection",
+        tooltip: t("tools.selection.addToSelection"),
         hotkey: "Shift",
       },
       {
         id: ToolType.SELECTION_SUBTRACTIVE,
-        label: "Subtractive",
+        label: t("tools.selection.subtractive"),
         icon: <Minus className="h-4 w-4" />,
-        tooltip: "Remove from selection",
+        tooltip: t("tools.selection.removeFromSelection"),
         hotkey: "Ctrl",
       },
     ],
@@ -60,19 +61,20 @@ const TYPE_TOOLS: ToolDefinition[] = [
     modes: [
       {
         id: ToolType.PORT,
-        label: "Port",
+        label: t("tools.port.label"),
         icon: <Crosshair className="h-4 w-4" />,
-        tooltip: "Add and edit ports",
+        tooltip: t("tools.port.addAndEdit"),
       },
     ],
   },
 ];
 
 export const ToolsToggleGroup: FC = () => {
+  const { t } = useTranslation();
   const { kit, type } = useParams();
-  const editor = useTypeEditor((s) => s, kit && type ? { kit, type } : undefined);
+  const editor = useTypeEditorSafe((s) => s, kit && type ? { kit, type } : undefined);
   const { setActiveTool } = useTypeEditorCommands(kit && type ? { kit, type } : undefined);
-  if (!editor) return null;
-  const activeTool = editor.activeTool ?? ToolType.PORT;
-  return <ToolGroup tools={TYPE_TOOLS} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
+  const activeTool = editor?.activeTool ?? ToolType.SELECTION_NORMAL;
+  if (!editor) return <></>;
+  return <ToolGroup tools={getTypeTools(t)} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
 };

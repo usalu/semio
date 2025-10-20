@@ -150,7 +150,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
         yMap.set("fullscreenWindow", TypeEditorFullscreenWindow.None);
       }
       if (!yMap.has("activeTool")) {
-        yMap.set("activeTool", ToolType.PORT);
+        yMap.set("activeTool", ToolType.SELECTION_NORMAL);
       }
       if (!yMap.has("panelVisibility")) {
         const yPanelVisibility = new Y.Map<boolean>();
@@ -185,9 +185,9 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     const value = this.yMap.get("activeTool") as ToolType;
     if (value === undefined) {
       this.transact(() => {
-        this.yMap.set("activeTool", ToolType.PORT);
+        this.yMap.set("activeTool", ToolType.SELECTION_NORMAL);
       });
-      return ToolType.PORT;
+      return ToolType.SELECTION_NORMAL;
     }
     return value;
   }
@@ -454,8 +454,15 @@ export function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, 
 
 export function useTypeEditor<T>(selector?: (state: TypeEditorState) => T, id?: TypeEditorId): T | TypeEditorState | null {
   const store = useTypeEditorStore(identitySelector, id);
-  if (!store) return null;
   return useSyncDeep<TypeEditorState, T>(store as TypeEditorStore, selector ? selector : identitySelector);
+}
+
+export function useTypeEditorSafe<T>(selector?: (state: TypeEditorState) => T, id?: TypeEditorId): T | TypeEditorState | null {
+  try {
+    return useTypeEditor(selector, id);
+  } catch {
+    return null;
+  }
 }
 
 export function useTypeEditorSelection(): TypeEditorSelection {

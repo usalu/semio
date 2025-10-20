@@ -1256,10 +1256,12 @@ class RepresentationStore {
   };
 
   snapshot(): Representation {
+    const tags = this.yTags.toArray();
     const currentHash = this.hash({
       guid: this.guid,
       url: this.url,
       description: this.description,
+      tags,
     });
 
     if (this.cache && this.cacheHash === currentHash) {
@@ -1270,6 +1272,7 @@ class RepresentationStore {
       guid: this.guid,
       url: this.url,
       description: this.description,
+      tags,
     };
 
     this.cache = representation;
@@ -1280,6 +1283,12 @@ class RepresentationStore {
   apply(diff: RepresentationDiff): void {
     if (diff.url !== undefined) this.url = diff.url;
     if (diff.description !== undefined) this.description = diff.description;
+    if (diff.tags !== undefined) {
+      this.yTags.delete(0, this.yTags.length);
+      if (diff.tags.length > 0) {
+        this.yTags.push(diff.tags);
+      }
+    }
   }
 
   change = (diff: RepresentationDiff) => {
@@ -1465,6 +1474,9 @@ export class TypeStore {
     //     this.createAttribute(attribute);
     //   }
     // }
+    if (type.attributes) {
+      type.attributes.forEach((attribute) => this.createAttribute(attribute));
+    }
 
     this.authors = new Map();
     this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
@@ -1482,6 +1494,9 @@ export class TypeStore {
     //     this.createRepresentation(representation);
     //   }
     // }
+    if (type.representations) {
+      type.representations.forEach((representation) => this.createRepresentation(representation));
+    }
 
     this.yPorts = this.yType.set("ports", new Y.Array<YPort>());
     if (type.ports) {
@@ -1560,16 +1575,39 @@ export class TypeStore {
     this.yType.set("updatedAt", new Date().toISOString());
   }
 
-  hasAttribute(guid: string): boolean {
-    return this.attributes.some((a) => a.guid === guid);
+  hasAttribute(identifier: string): boolean {
+    return this.findAttributeStore(identifier) !== undefined;
   }
 
   createAttribute(attribute: Attribute): void {
+    if (!attribute.guid) throw new Error("Attribute guid is required.");
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
-    this.attributes.push(yAttributeStore);
+    this.attributes.set(attribute.guid, yAttributeStore);
+  }
+
+  private findAttributeStore(identifier: string): AttributeStore | undefined {
+    const byGuid = this.attributes.get(identifier);
+    if (byGuid) return byGuid;
+    for (const attribute of this.attributes.values()) {
+      if (attribute.key === identifier) {
+        return attribute;
+      }
+    }
+    return undefined;
+  }
+
+  private findAttributeIndexByGuid(guid: string): number {
+    for (let index = 0; index < this.yAttributes.length; index += 1) {
+      const yAttribute = this.yAttributes.get(index) as YAttribute | undefined;
+      if (!yAttribute) continue;
+      if ((yAttribute.get("guid") as string | undefined) === guid) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   createRepresentation(representation: Representation): void {
@@ -1626,6 +1664,7 @@ export class TypeStore {
       image: this.image,
       description: this.description,
       authors: Array.from(this.authors.values()).map((a) => a.guid),
+      attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       representations: Array.from(this.representations.values()).map((rep) => rep.snapshot()),
       ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
       createdAt: this.createdAt,
@@ -1656,10 +1695,12 @@ export class TypeStore {
 
       if (diff.authors !== undefined) {
         this.yAuthors.delete(0, this.yAuthors.length);
-        this.authors = new Map(diff.authors.map((authorGuid) => {
-          const author = this.parent.author(authorGuid);
-          return [author.guid, author];
-        }));
+        this.authors = new Map(
+          diff.authors.map((authorGuid) => {
+            const author = this.parent.author(authorGuid);
+            return [author.guid, author];
+          }),
+        );
         this.authors.forEach((author) => this.yAuthors.push([author.guid]));
       }
 
@@ -1709,7 +1750,33 @@ export class TypeStore {
         }
       }
 
-      // TODO: Handle location, props, attributes diffs
+      if (diff.attributes) {
+        if (diff.attributes.removed) {
+          diff.attributes.removed.forEach((identifier) => {
+            const attribute = this.findAttributeStore(identifier);
+            if (!attribute) return;
+            const index = this.findAttributeIndexByGuid(attribute.guid);
+            if (index !== -1) {
+              this.yAttributes.delete(index, 1);
+            }
+            this.attributes.delete(attribute.guid);
+          });
+        }
+        if (diff.attributes.added) {
+          diff.attributes.added.forEach((attribute) => {
+            this.createAttribute(attribute);
+          });
+        }
+        if (diff.attributes.updated) {
+          diff.attributes.updated.forEach(({ id, diff: attributeDiff }) => {
+            const attribute = this.findAttributeStore(id);
+            if (!attribute) return;
+            attribute.change(attributeDiff);
+          });
+        }
+      }
+
+      // TODO: Handle location, props diffs
 
       this.cache = undefined;
       this.cacheHash = undefined;
@@ -3221,8 +3288,10 @@ export class DesignStore {
         if (diff.pieces.updated) {
           diff.pieces.updated.forEach(({ id, diff: pieceDiff }) => {
             const pieceStore = this.pieces.get(id);
-            if (pieceStore) {pieceStore.change(pieceDiff);
-            } else {}
+            if (pieceStore) {
+              pieceStore.change(pieceDiff);
+            } else {
+            }
           });
         }
         if (diff.pieces.removed) {
@@ -3612,7 +3681,8 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
             plane: includedDesign.plane,
             description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.Guid.name}`,
           };
-        }return {
+        }
+        return {
           id_: pieceIdString,
           type: {
             name: "unknown",

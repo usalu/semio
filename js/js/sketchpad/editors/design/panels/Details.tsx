@@ -506,22 +506,28 @@ const PiecesSectionForm: FC = () => {
     return piece.guid;
   };
 
-  const handleTypeNameChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
+  const handleTypeNameChange = (value: string) => {
+    // TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleTypeVariantChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
+  const handleTypeVariantChange = (value: string) => {
+    // TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleDesignNameChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
+  const handleDesignNameChange = (value: string) => {
+    // TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleDesignVariantChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
+  const handleDesignVariantChange = (value: string) => {
+    // TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleDesignViewChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
+  const handleDesignViewChange = (value: string) => {
+    // TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const fixPieces = async () => {// TODO: Implement using execute command
+  const fixPieces = async () => {
+    // TODO: Implement using execute command
   };
 
   const handleCenterXChange = (value: number) => {
@@ -624,7 +630,8 @@ const PiecesSectionForm: FC = () => {
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
 
-  const availableDesigns = isDesignPiece && isSingle && piece ? useReplacableDesigns(piece) : [];
+  const replacableDesignsRaw = useReplacableDesigns(isSingle && piece ? piece : ({} as Piece));
+  const availableDesigns = isDesignPiece && isSingle && piece ? replacableDesignsRaw : [];
   const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
 
   // Parse current design ID for design pieces

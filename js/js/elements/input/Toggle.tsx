@@ -225,7 +225,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     if (!items || items.length === 0) return null;
 
     const [open, setOpen] = React.useState(false);
-    const currentItem = items.find((item) => item.value === value);
+    const hasValue = value !== undefined && value !== null;
+    const matchingItem = hasValue ? items.find((item) => item.value === value) : undefined;
+    const fallbackItem = matchingItem ?? items[0];
+    const resolvedValue = fallbackItem?.value;
+    const currentItem = fallbackItem;
 
     const handleSelect = (selectedValue: T) => {
       onValueChange?.(selectedValue);
@@ -283,7 +287,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
           <div className="flex flex-col">
             {items.map((item) => {
-              const isSelected = item.value === value;
+              const isSelected = resolvedValue !== undefined ? item.value === resolvedValue : item.value === value;
               const itemHoverClass = level === "panel" ? "hover:bg-hover-panel focus:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary focus:bg-hover-temporary" : "hover:bg-hover-base focus:bg-hover-base";
               const itemButton = (
                 <button

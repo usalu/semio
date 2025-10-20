@@ -269,7 +269,7 @@ const SketchpadBase: FC = () => {
                     <div className="flex-1 flex flex-col overflow-hidden">
                       <Outlet />
                       {visiblePanels.toolbar && (
-                        <div className="absolute left-0 right-0 bottom-1 z-20">
+                        <div className="absolute left-0 right-0 z-20" style={{ bottom: "calc(1.25rem + var(--spacing))" }}>
                           <Toolbar visible={true} leftOffset={0} rightOffset={0} />
                         </div>
                       )}
@@ -279,7 +279,12 @@ const SketchpadBase: FC = () => {
               ) : (
                 <>
                   {(visiblePanels.workbench || visiblePanels.tools) && (
-                    <div className="absolute left-1 top-1 bottom-1 z-20 flex">
+                    <div
+                      className="absolute left-1 top-1 z-20 flex"
+                      style={{
+                        bottom: "calc(1.25rem + var(--spacing))",
+                      }}
+                    >
                       {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
                       {visiblePanels.tools && <Tools visible={true} width={panelSizes.toolsWidth} onWidthChange={(w) => setPanelSize("toolsWidth", w)} />}
                     </div>
@@ -293,7 +298,7 @@ const SketchpadBase: FC = () => {
                           left: (visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + 4,
                           right: (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + 4,
                           top: 0,
-                          bottom: visiblePanels.toolbar ? 36 + 4 : 0,
+                          bottom: "calc(1.25rem + var(--spacing))",
                         }}
                       >
                         {visiblePanels.hud && <Hud visible={true} width={panelSizes.hudWidth} onWidthChange={(w) => setPanelSize("hudWidth", w)} />}
@@ -301,7 +306,7 @@ const SketchpadBase: FC = () => {
                       </div>
                     )}
                     {visiblePanels.toolbar && (
-                      <div className="absolute left-0 right-0 bottom-1 z-20">
+                      <div className="absolute left-0 right-0 z-20" style={{ bottom: "calc(1.25rem + var(--spacing))" }}>
                         <Toolbar
                           visible={true}
                           leftOffset={(visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + (visiblePanels.workbench || visiblePanels.tools ? 4 : 0)}
@@ -316,7 +321,12 @@ const SketchpadBase: FC = () => {
                     )}
                   </div>
                   {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
-                    <div className="absolute right-1 top-1 bottom-1 z-20 flex">
+                    <div
+                      className="absolute right-1 top-1 z-20 flex"
+                      style={{
+                        bottom: "calc(1.25rem + var(--spacing))",
+                      }}
+                    >
                       {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
                       {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
                       {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}

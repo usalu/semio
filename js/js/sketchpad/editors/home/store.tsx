@@ -21,16 +21,7 @@
 
 import * as Y from "yjs";
 import { guid, Guid } from "../../../semio";
-import {
-  createObserver,
-  identitySelector,
-  PanelVisibility,
-  registerHomeStoreFactory,
-  SketchpadStore,
-  Subscribe,
-  useSketchpadStore,
-  useSyncDeep,
-} from "../../store";
+import { createObserver, identitySelector, PanelVisibility, registerHomeStoreFactory, SketchpadStore, Subscribe, useSketchpadStore, useSyncDeep } from "../../store";
 
 export interface HomeSelection {
   kits?: Guid[];

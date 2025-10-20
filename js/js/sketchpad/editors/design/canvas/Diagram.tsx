@@ -19,14 +19,14 @@ import {
   ViewportPortal,
   XYPosition,
 } from "@xyflow/react";
-import React, { FC, useCallback, useEffect, useRef, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, Guid, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
 import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands } from "../../../kits/store";
-import { useEditorPanelVisibility, useSketchpadCommands } from "../../../store";
+import { ToolType, useEditorPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
   DesignEditorFullscreenWindow,
   DesignEditorPresenceOther,
@@ -38,6 +38,7 @@ import {
   useDesignEditorHover,
   useDesignEditorOthers,
   useDesignEditorPieceColor,
+  useDesignEditor,
   useDesignEditorSelection,
 } from "../store";
 
@@ -355,7 +356,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  const fillClass = fill === "transparent" ? "fill-none" : `fill-[${fill}]`;
+  const fillClass = fill === "transparent" ? "fill-transparent" : `fill-[${fill}]`;
   const strokeClass = `stroke-[${stroke}] stroke-2`;
 
   return (
@@ -491,7 +492,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  let fillClass = "fill-none";
+  let fillClass = "fill-transparent";
   let strokeClass = "stroke-[var(--foreground)] stroke-2";
   let opacity = 1;
 
@@ -1010,6 +1011,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const { updateDesign } = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kit = useKit();
+  const activeTool = (useDesignEditor((s) => s.activeTool) as ToolType | undefined) ?? ToolType.SELECTION_NORMAL;
 
   const selection = useDesignEditorSelection();
   const fullscreenWindow = useDesignEditorFullscreen();
@@ -1024,15 +1026,17 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   // const flattenedDesign = useFlatDesign();
   const flattenedDesign = design;
   // const metadata = usePiecesMetadata();
-  const metadata = new Map();
+  const metadata = useMemo(() => new Map(), []);
+
+  const { nodes, edges } = useMemo(() => {
+    if (!design) return { nodes: [], edges: [] };
+    return designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
+      nodes: [],
+      edges: [],
+    };
+  }, [design, flattenedDesign, metadata, kit, selection]);
 
   if (!design) return null;
-  const nodesAndEdges = designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
-    nodes: [],
-    edges: [],
-  };
-  const nodes = nodesAndEdges.nodes;
-  const edges = nodesAndEdges.edges;
 
   const reactFlowInstance = useReactFlow();
   const [dragState, setDragState] = useState<{ lastPostition: XYPosition } | null>(null);
@@ -1082,6 +1086,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     const pieceId = getPieceIdFromNode(node);
     if (e.ctrlKey || e.metaKey) removePieceFromSelection(pieceId);
     else if (e.shiftKey) addPieceToSelection(pieceId);
+    else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection(pieceId);
+    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection(pieceId);
     else selectPiece(pieceId);
   };
 
@@ -1096,9 +1102,12 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
     e.stopPropagation();
-    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(edge.data!.connection.guid);
-    else if (e.shiftKey) addConnectionToSelection(edge.data!.connection.guid);
-    else selectConnection(edge.data!.connection.guid);
+    const connectionId = edge.data!.connection.guid;
+    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(connectionId);
+    else if (e.shiftKey) addConnectionToSelection(connectionId);
+    else if (activeTool === ToolType.SELECTION_ADDITIVE) addConnectionToSelection(connectionId);
+    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removeConnectionFromSelection(connectionId);
+    else selectConnection(connectionId);
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
@@ -1137,13 +1146,15 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
       if (ctrlKey) isNodeSelected ? removePieceFromSelection(pieceId) : addPieceToSelection(pieceId);
       else if (shiftKey) !isNodeSelected ? addPieceToSelection(pieceId) : selectPiece(pieceId);
+      else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection(pieceId);
+      else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection(pieceId);
       else if (!isNodeSelected) selectPiece(pieceId);
 
       startTransaction();
       setDragState({ lastPostition: { x: node.position.x, y: node.position.y } });
       setHelperLines([]);
     },
-    [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction, selection],
+    [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction, selection, activeTool],
   );
 
   const onNodeDrag = useCallback(

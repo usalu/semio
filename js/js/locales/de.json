@@ -73,16 +73,20 @@
     "panels": {
         "toolbar": "Werkzeugleiste-Panel",
         "toolbar.extensive": "Werkzeugleiste-Panel umschalten",
+        "toolbar.noTools": "Keine Werkzeuge",
         "details": "Details-Panel",
         "details.extensive": "Details-Panel umschalten",
         "workbench": "Werkbank-Panel",
         "workbench.extensive": "Werkbank-Panel umschalten",
+        "workbench.noSections": "Keine Werkbank-Abschnitte verfügbar",
         "console": "Konsole-Panel",
         "console.extensive": "Konsole-Panel umschalten",
         "chat": "Chat-Panel",
         "chat.extensive": "Chat-Panel umschalten",
         "settings": "Einstellungen-Panel",
-        "settings.extensive": "Einstellungen-Panel umschalten"
+        "settings.extensive": "Einstellungen-Panel umschalten",
+        "tools.noSections": "Keine Werkzeug-Abschnitte verfügbar",
+        "hud.noSections": "Keine HUD-Abschnitte verfügbar"
     },
     "kit": {
         "title": "Kit",
@@ -149,7 +153,13 @@
         "created": "Erstellt",
         "updated": "Aktualisiert",
         "pieces": "Teile",
-        "connections": "Verbindungen"
+        "connections": "Verbindungen",
+        "selectOnlyPiecesOrConnections": "Wählen Sie nur Teile oder nur Verbindungen aus, um Details zu bearbeiten.",
+        "editorTitle": "Design-Editor",
+        "snappiness": "Einrastfaktor",
+        "gridSize": "Rastergröße",
+        "variantPrefix": "Variante",
+        "viewPrefix": "Ansicht"
     },
     "piece": {
         "id": "ID",
@@ -225,7 +235,10 @@
         "selectDesign": "Design auswählen",
         "selectType": "Typ auswählen",
         "selectVariant": "Variante auswählen",
-        "selectView": "Ansicht auswählen"
+        "selectView": "Ansicht auswählen",
+        "addVariant": "Variante hinzufügen",
+        "addType": "Typ hinzufügen",
+        "addDesign": "Design hinzufügen"
     },
     "home": {
         "temporary": "Temporär",
@@ -389,8 +402,21 @@
     "tools": {
         "port": "Port-Werkzeug",
         "port.extensive": "Klicken Sie auf das Mesh, um einen Port am Schnittpunkt mit der Oberflächennormale als Richtung zu platzieren. Halten und ziehen Sie, um die Kamera zu drehen.",
+        "port.label": "Port",
+        "port.addAndEdit": "Ports hinzufügen und bearbeiten",
         "selection": "Auswahl-Werkzeug",
-        "selection.extensive": "Klicken Sie, um Elemente auszuwählen. Verwenden Sie Modifikatortasten für additive oder subtraktive Auswahl."
+        "selection.extensive": "Klicken Sie, um Elemente auszuwählen. Verwenden Sie Modifikatortasten für additive oder subtraktive Auswahl.",
+        "selection.normal": "Normal",
+        "selection.additive": "Additiv",
+        "selection.subtractive": "Subtraktiv",
+        "selection.selectPieces": "Klicken um Teile auszuwählen",
+        "selection.selectPorts": "Klicken um Ports auszuwählen",
+        "selection.addToSelection": "Zur Auswahl hinzufügen",
+        "selection.removeFromSelection": "Aus Auswahl entfernen",
+        "lasso.rectangular": "Rechteckig",
+        "lasso.freeform": "Freihand",
+        "lasso.rectangular.extensive": "Rechteck zeichnen um mehrere Teile auszuwählen",
+        "lasso.freeform.extensive": "Freihandform zeichnen um mehrere Teile auszuwählen"
     },
     "sort": {
         "ascending": "Aufsteigend sortieren",

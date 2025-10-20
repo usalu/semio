@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { Sphere, Line, useGLTF } from "@react-three/drei";
+import { Line, Sphere, useGLTF } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import { FC, useCallback, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -45,10 +45,7 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
 
   // Calculate arrow points for line
   const arrowLength = 0.5;
-  const endPoint = useMemo(
-    () => [position[0] + direction[0] * arrowLength, position[1] + direction[1] * arrowLength, position[2] + direction[2] * arrowLength] as [number, number, number],
-    [position, direction],
-  );
+  const endPoint = useMemo(() => [position[0] + direction[0] * arrowLength, position[1] + direction[1] * arrowLength, position[2] + direction[2] * arrowLength] as [number, number, number], [position, direction]);
   const points = useMemo(() => [position, endPoint], [position, endPoint]);
 
   const handlePointerEvent = useCallback(
@@ -87,10 +84,7 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
     const dir = normal.clone().normalize();
     return [dir.x, dir.y, dir.z] as [number, number, number];
   }, [normal]);
-  const endPoint = useMemo(
-    () => [posArray[0] + direction[0] * arrowLength, posArray[1] + direction[1] * arrowLength, posArray[2] + direction[2] * arrowLength] as [number, number, number],
-    [posArray, direction],
-  );
+  const endPoint = useMemo(() => [posArray[0] + direction[0] * arrowLength, posArray[1] + direction[1] * arrowLength, posArray[2] + direction[2] * arrowLength] as [number, number, number], [posArray, direction]);
   const points = useMemo(() => [posArray, endPoint], [posArray, endPoint]);
 
   return (
@@ -111,7 +105,13 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
   );
 };
 
-const LoadedTypeMesh: FC<{ url: string; onPointerDown: (e: ThreeEvent<PointerEvent>) => void; onPointerUp: (e: ThreeEvent<PointerEvent>) => void; onPointerMove: (e: ThreeEvent<PointerEvent>) => void; onPointerOut: (e: ThreeEvent<PointerEvent>) => void }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
+const LoadedTypeMesh: FC<{
+  url: string;
+  onPointerDown: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerUp: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+}> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const { scene } = useGLTF(url);
 
   const clonedScene = useMemo(() => {
@@ -146,7 +146,8 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
   }, [type]);
 
   const handlePointerDown = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {if (activeTool === ToolType.PORT) {
+    (event: ThreeEvent<PointerEvent>) => {
+      if (activeTool === ToolType.PORT) {
         setIsPointerDown(true);
         pointerDownTimeRef.current = Date.now();
         pointerDownPositionRef.current = { x: event.clientX, y: event.clientY };
@@ -176,7 +177,8 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
   );
 
   const handlePointerMove = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {if (activeTool === ToolType.PORT && event.face && !isPointerDown) {
+    (event: ThreeEvent<PointerEvent>) => {
+      if (activeTool === ToolType.PORT && event.face && !isPointerDown) {
         event.stopPropagation();
         const position = new THREE.Vector3().copy(event.point);
         const normal = event.face.normal.clone();
@@ -217,7 +219,8 @@ const SceneContent: FC = () => {
   const kitCommands = useKitCommands();
   const selection = useTypeEditorSelection();
   const hover = useTypeEditorHover();
-  const { selectPort, deselectPort, hoverPort, clearHover } = useTypeEditorCommands();const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
+  const { selectPort, deselectPort, hoverPort, clearHover } = useTypeEditorCommands();
+  const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
 
   const handlePortPreview = useCallback((position: THREE.Vector3, normal: THREE.Vector3) => {
     setPortPreview({ position, normal });
@@ -259,7 +262,8 @@ const SceneContent: FC = () => {
   }, [clearHover]);
 
   const handlePortClick = useCallback(
-    (portId: string) => {const isSelected = selection?.ports?.includes(portId) || false;
+    (portId: string) => {
+      const isSelected = selection?.ports?.includes(portId) || false;
       if (activeTool === ToolType.SELECTION_ADDITIVE) {
         if (!isSelected) selectPort(portId);
       } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) {
@@ -278,12 +282,14 @@ const SceneContent: FC = () => {
   );
 
   const handlePortHover = useCallback(
-    (portId: string) => {hoverPort(portId);
+    (portId: string) => {
+      hoverPort(portId);
     },
     [hoverPort],
   );
 
-  const handlePortLeave = useCallback(() => {clearHover();
+  const handlePortLeave = useCallback(() => {
+    clearHover();
   }, [clearHover]);
 
   return (
@@ -291,7 +297,8 @@ const SceneContent: FC = () => {
       <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
       {type?.ports?.map((port) => {
         const isSelected = selection?.ports?.includes(port.guid) || false;
-        const isHovered = hover?.port === port.guid;return <PortVisual key={port.guid} port={port} isSelected={isSelected} isHovered={isHovered} onHover={() => handlePortHover(port.guid)} onLeave={handlePortLeave} onClick={() => handlePortClick(port.guid)} />;
+        const isHovered = hover?.port === port.guid;
+        return <PortVisual key={port.guid} port={port} isSelected={isSelected} isHovered={isHovered} onHover={() => handlePortHover(port.guid)} onLeave={handlePortLeave} onClick={() => handlePortClick(port.guid)} />;
       })}
       {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
     </>

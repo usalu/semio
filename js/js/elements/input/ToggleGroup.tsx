@@ -40,7 +40,7 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 function ToggleGroup({ className, label, level = "base", children, ...restProps }: ToggleGroupProps) {
   const variant = "default";
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} className={cn("group/toggle-group flex w-fit items-stretch border overflow-hidden h-9", className)} {...restProps}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} className={cn("group/toggle-group flex w-fit items-stretch border border-border divide-x divide-border overflow-hidden h-9", className)} {...restProps}>
       <ToggleGroupContext.Provider value={{ variant, level }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
@@ -78,7 +78,7 @@ function ToggleGroupItem({
           variant: context.variant,
           level: context.level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90 border-0 border-l first:border-l-0 !h-full",
+        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90 border-0 !h-full",
         className,
       )}
       {...props}

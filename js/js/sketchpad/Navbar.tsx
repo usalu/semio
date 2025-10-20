@@ -77,6 +77,7 @@ import {
   useSketchpadScope,
   useSketchpadStore,
   useTooltip,
+  WindowEvents,
 } from "./store";
 
 export interface PanelSection {
@@ -1101,8 +1102,6 @@ const PanelToggles: FC = ({}) => {
   };
   const isMobile = useIsMobile();
 
-  if (panelConfig.length === 0) return null;
-
   const workbenchPanels = ["workbench", "tools"];
   const workbenchConfigs = panelConfig.filter((p) => workbenchPanels.includes(p.key));
   const activeWorkbenchPanel = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || workbenchConfigs[0]?.key || "";
@@ -1248,6 +1247,8 @@ const PanelToggles: FC = ({}) => {
     });
   };
 
+  if (panelConfig.length === 0) return null;
+
   return (
     <div className="flex items-stretch border overflow-hidden h-9">
       {workbenchConfigs.length > 0 && (
@@ -1335,15 +1336,15 @@ const PanelToggles: FC = ({}) => {
   );
 };
 
-interface NavbarProps {}
+interface NavbarBaseProps {
+  isFullscreen: boolean;
+  isNavbarExpanded: boolean;
+  tooltip: (key: string) => string | undefined;
+  onWindowEvents?: WindowEvents;
+}
 
-const Navbar: FC<NavbarProps> = ({}) => {
+function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents }: NavbarBaseProps) {
   const { t } = useTranslation();
-  const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
-  const isFullscreen = useIsFullscreen();
-  const isNavbarExpanded = useIsNavbarExpanded();
-  const isMobile = useIsMobile();
-  const tooltip = useTooltip();
   const { toggleFullscreen, toggleNavbarExpanded, navigateBack, navigateForward } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -1554,9 +1555,8 @@ const Navbar: FC<NavbarProps> = ({}) => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [isFullscreen]);
 
-  if (isMobile) {
-    return (
-      <div id="navbar" className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`} style={{ WebkitAppRegion: "drag" }}>
+  return (
+      <div id="navbar" className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`} style={{ WebkitAppRegion: "drag" } as any}>
         {/* Unexpanded navbar */}
         <div className="h-12 flex items-center justify-between px-1 gap-1">
           <ButtonGroup>
@@ -1655,24 +1655,84 @@ const Navbar: FC<NavbarProps> = ({}) => {
         </CommandDialog>
       </div>
     );
-  }
+};
+
+function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents }: NavbarBaseProps) {
+  const { t } = useTranslation();
+  const { toggleFullscreen, navigateBack, navigateForward } = useSketchpadCommands();
+  const [isVisible, setIsVisible] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPathname = useNavigation();
+  const currentPath = `${currentPathname}${location.search}`;
+  const { canGoBack, canGoForward } = useNavigationHistory();
+  const [searchParams] = useSearchParams();
+  const kits = useKits();
+  
+  const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  
+  const pathParts = currentPathname.split("/").filter(Boolean);
+  const isKitsPath = pathParts[0] === "kits";
+  const kitGuid = isKitsPath && pathParts[1] && isUuidPattern(pathParts[1]) ? pathParts[1] : null;
+  const homeKind = !kitGuid ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
+  const homeName = !kitGuid ? searchParams.get("name") : null;
+  
+  const upTarget = currentPath === "/" ? undefined : currentPath === "/kits" ? "/" : currentPath.split("/").slice(0, -1).join("/") || "/";
+  const isAtRoot = currentPath === "/" || currentPath === "/kits";
+  
+  const secondPart = pathParts[2];
+  const thirdPart = pathParts[3];
+  const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
+  const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
+  
+  const editorType = useEditorType();
+  const visiblePanels = useEditorPanelVisibility();
+  const panelConfig = getPanelConfigs(t)[editorType];
+  const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
+  const homeCommands = useHomeCommands();
+  const isValidKit = kitGuid && !["temporary", "local", "remote"].includes(kitGuid);
+  const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit: kitGuid } : undefined);
+  const design = thirdPart && isDesignEditor ? thirdPart : null;
+  const type = thirdPart && isTypeEditor ? thirdPart : null;
+  const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
+  const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
+  const commands = {
+    [EditorType.HOME]: homeCommands,
+    [EditorType.KIT]: kitEditorCommands,
+    [EditorType.DESIGN]: designEditorCommands,
+    [EditorType.TYPE]: typeEditorCommands,
+  };
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      setIsVisible(true);
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setIsVisible(e.clientY < 50);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [isFullscreen]);
 
   return (
     <div
       id="navbar"
       className={`w-full h-12 border-b flex items-center gap-1 px-1 [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`}
-      style={{ WebkitAppRegion: "drag" }}
+      style={{ WebkitAppRegion: "drag" } as any}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" tooltip={t("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
+        <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" tooltip={t("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
+        <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
         <ButtonGroupItem
           value="up"
-          tooltip={t("navbar.up")}
+          tooltip={tooltip("navbar.up")}
           onClick={() => {
             if (upTarget) navigate(upTarget);
           }}
@@ -1718,5 +1778,20 @@ const Navbar: FC<NavbarProps> = ({}) => {
       </div>
     </div>
   );
-};
+}
+
+function Navbar() {
+  const isMobile = useIsMobile();
+  const isFullscreen = useIsFullscreen();
+  const isNavbarExpanded = useIsNavbarExpanded();
+  const tooltip = useTooltip();
+  const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
+
+  if (isMobile) {
+    return <NavbarMobile isFullscreen={isFullscreen} isNavbarExpanded={isNavbarExpanded} tooltip={tooltip} onWindowEvents={onWindowEvents} />;
+  }
+
+  return <NavbarDesktop isFullscreen={isFullscreen} isNavbarExpanded={isNavbarExpanded} tooltip={tooltip} onWindowEvents={onWindowEvents} />;
+}
+
 export default Navbar;

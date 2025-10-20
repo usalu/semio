@@ -23,20 +23,7 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, Coord, Design, DesignDiff, DiffStatus, Guid, KitDiff, Type, TypeDiff } from "../../../semio";
 import { KitCommandContext, KitStore, useKitScope } from "../../kits/store";
-import {
-  Editor,
-  identitySelector,
-  PanelVisibility,
-  registerKitEditorStoreFactory,
-  SketchpadStore,
-  useSketchpadStore,
-  useSync,
-  useSyncDeep,
-  YAttributes,
-  YLeafMapNumber,
-  YLeafMapString,
-  YStringArray,
-} from "../../store";
+import { Editor, identitySelector, PanelVisibility, registerKitEditorStoreFactory, SketchpadStore, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
 import { commands as kitEditorCommands } from "./commands";
 
 type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;

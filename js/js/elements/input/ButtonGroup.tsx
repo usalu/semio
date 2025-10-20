@@ -58,7 +58,7 @@ const ButtonGroupContext = React.createContext<VariantProps<typeof buttonGroupIt
 
 function ButtonGroup({ className, variant, size, level = "base", label, children, ...props }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupItemVariants> & { label?: string }) {
   const buttonGroupElement = (
-    <div data-slot="button-group" data-variant={variant} data-size={size} data-level={level} className={cn("group/button-group flex w-fit items-stretch border overflow-hidden h-9", className)} {...props}>
+    <div data-slot="button-group" data-variant={variant} data-size={size} data-level={level} className={cn("group/button-group flex w-fit items-stretch border border-border divide-x divide-border overflow-hidden h-9", className)} {...props}>
       <ButtonGroupContext.Provider value={{ variant, size, level }}>{children}</ButtonGroupContext.Provider>
     </div>
   );
@@ -103,7 +103,7 @@ function ButtonGroupItem({
           size: context.size || size,
           level: context.level || level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 border-0 border-l first:border-l-0 !h-full",
+        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 border-0 !h-full",
         className,
       )}
       {...props}

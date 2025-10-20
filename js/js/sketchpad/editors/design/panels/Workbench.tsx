@@ -24,11 +24,11 @@ import { FC, useMemo } from "react";
 
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
-import { Design, Guid, Type } from "../../../../semio";
-import { useDesign, useIsInDesignScope, useType } from "../../../kits/store";
+import { Design, Guid, Piece, Type } from "../../../../semio";
+import { useDesign, useDesignScope, useIsInDesignScope, useType } from "../../../kits/store";
 import { useActiveInteraction, useSketchpadCommands } from "../../../store";
 import type { DesignEditorSelection } from "../store";
-import { useDesignEditorCommands, useDesignEditorHover, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection } from "../store";
+import { useDesignEditorCommandsSafe, useDesignEditorCommands, useDesignEditorHover, useDesignEditorHoverSafe, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection, useDesignEditorSelectionSafe } from "../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;
@@ -37,7 +37,9 @@ interface TypeAvatarProps {
 }
 
 export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHoverCard = false }) => {
-  const type = typeProp || (typeId ? (useType(undefined, typeId) as Type) : null);
+  // Always call useType unconditionally, even if typeId is undefined
+  const typeFromStore = useType(undefined, typeId || "") as Type | null;
+  const type = typeProp || typeFromStore;
   const { setActiveInteraction } = useSketchpadCommands();
   const { hoverType, clearHover } = useDesignEditorCommands();
   const activeInteraction = useActiveInteraction();
@@ -74,7 +76,8 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 
   const enhancedListeners = {
     ...listeners,
-    onPointerDown: (e: React.PointerEvent) => {setActiveInteraction(interactionId);
+    onPointerDown: (e: React.PointerEvent) => {
+      setActiveInteraction(interactionId);
       listeners?.onPointerDown?.(e);
     },
   };
@@ -94,7 +97,8 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   }, [type, selection?.pieces, design?.pieces]);
 
   // Early return AFTER all hooks have been called
-  if (!type) {return null;
+  if (!type) {
+    return null;
   }
 
   const isActiveSelection = isSelected;
@@ -168,31 +172,21 @@ interface DesignAvatarProps {
 }
 
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
-  const design = designProp || (designId ? (useDesign(undefined, designId) as Design) : null);
-  const { setActiveInteraction } = useSketchpadCommands();
-  const { hoverDesign, clearHover } = useDesignEditorCommands();
-  const activeInteraction = useActiveInteraction();
   const isInDesignScope = useIsInDesignScope();
-  let currentDesign: Design | null = null;
-  try {
-    currentDesign = useDesign() as Design | null;
-  } catch (error) {
-    if (isInDesignScope || !(error instanceof Error) || error.message.indexOf("DesignScopeProvider") === -1) throw error;
-  }
-  let selection: DesignEditorSelection | undefined;
-  try {
-    selection = useDesignEditorSelection();
-  } catch (error) {
-    if (isInDesignScope || !(error instanceof Error)) throw error;
-  }
-  let hover: ReturnType<typeof useDesignEditorHover> | undefined;
-  try {
-    hover = useDesignEditorHover();
-  } catch (error) {
-    if (isInDesignScope || !(error instanceof Error)) throw error;
-  }
+  const { setActiveInteraction } = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
 
-  const isHovered = hover?.designs?.includes(design?.guid || "") ?? false;
+  const designFromStore = designId && !designProp ? (useDesign(undefined, designId) as Design | null) : null;
+  const design = designProp || designFromStore;
+
+  const designScope = useDesignScope();
+  const currentDesignFromScope = designScope ? (useDesign() as Design | null) : null;
+
+  const selectionFromScope = useDesignEditorSelectionSafe();
+  const hoverFromScope = useDesignEditorHoverSafe();
+  const commandsFromScope = useDesignEditorCommandsSafe();
+
+  const isHovered = hoverFromScope?.designs?.includes(design?.guid || "") ?? false;
 
   const interactionId = design ? `design-${design.name}-${design.variant || ""}-${design.view || ""}` : "design-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({
@@ -216,12 +210,13 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
 
   const isSelectedDesign = useMemo(() => {
     if (!design) return false;
-    if (selection?.pieces?.some((pieceId) => currentDesign?.pieces?.find((piece) => piece.guid === pieceId && piece.design === design.guid))) return true;
-    return selection?.design === design.guid;
-  }, [design, selection?.pieces, selection?.design, currentDesign?.pieces]);
+    if (selectionFromScope?.pieces?.some((pieceId: string) => currentDesignFromScope?.pieces?.find((piece: Piece) => piece.guid === pieceId && piece.design === design.guid))) return true;
+    return selectionFromScope?.pieces?.some((pieceId: string) => currentDesignFromScope?.pieces?.find((piece: Piece) => piece.guid === pieceId && piece.design === design.guid)) ?? false;
+  }, [design, selectionFromScope?.pieces, currentDesignFromScope?.pieces]);
 
   // Early return AFTER all hooks have been called
-  if (!design) {return null;
+  if (!design) {
+    return null;
   }
 
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
@@ -245,10 +240,10 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
         {...enhancedListeners}
         {...attributes}
         onPointerEnter={() => {
-          if (!isActive && isInDesignScope) hoverDesign(design.guid);
+          if (!isActive && isInDesignScope) commandsFromScope.hoverDesign(design.guid);
         }}
         onPointerLeave={() => {
-          if (!isActive && isInDesignScope) clearHover();
+          if (!isActive && isInDesignScope) commandsFromScope.clearHover();
         }}
       >
         {avatar}
@@ -262,10 +257,10 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       {...enhancedListeners}
       {...attributes}
       onPointerEnter={() => {
-        if (!isActive && isInDesignScope) hoverDesign(design.guid);
+        if (!isActive && isInDesignScope) commandsFromScope.hoverDesign(design.guid);
       }}
       onPointerLeave={() => {
-        if (!isActive && isInDesignScope) clearHover();
+        if (!isActive && isInDesignScope) commandsFromScope.clearHover();
       }}
     >
       <HoverCard openDelay={500}>

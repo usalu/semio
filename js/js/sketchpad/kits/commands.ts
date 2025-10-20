@@ -201,7 +201,8 @@ export const commands = {
                         files,
                     };
                 }
-            } catch (error) {throw error;
+            } catch (error) {
+                throw error;
             }
         })();
         return { diff: {} };
@@ -336,7 +337,8 @@ export const commands = {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-            } catch (error) {throw error;
+            } catch (error) {
+                throw error;
             } finally {
                 if (db) {
                     db.close();

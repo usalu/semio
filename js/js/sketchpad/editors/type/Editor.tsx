@@ -33,7 +33,7 @@ const Editor: FC = () => {
   const editorType = useEditorType();
   const { setActiveTool } = useTypeEditorCommands();
   const editor = useTypeEditor((s) => s);
-  const activeTool = editor?.activeTool ?? ToolType.PORT;
+  const activeTool = editor?.activeTool ?? ToolType.SELECTION_NORMAL;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

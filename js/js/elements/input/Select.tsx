@@ -24,9 +24,41 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 
-function Select({ label, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & { label?: string }) {
+function Select({ label, children, value, defaultValue, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & { label?: string }) {
+  const fallbackValue = React.useMemo(() => {
+    const findValue = (nodes: React.ReactNode[]): string | undefined => {
+      for (const node of nodes) {
+        if (!React.isValidElement(node)) {
+          continue;
+        }
+        if ((node.type === SelectPrimitive.Item || node.type === SelectItem || node.props["data-slot"] === "select-item") && node.props.value !== undefined) {
+          return node.props.value as string;
+        }
+        const nested = React.Children.toArray(node.props.children);
+        if (nested.length) {
+          const nestedValue = findValue(nested);
+          if (nestedValue !== undefined) {
+            return nestedValue;
+          }
+        }
+      }
+      return undefined;
+    };
+    return findValue(React.Children.toArray(children));
+  }, [children]);
+
   const selectElement = (
-    <SelectPrimitive.Root data-slot="select" {...props}>
+    <SelectPrimitive.Root
+      data-slot="select"
+      {...(value !== null && value !== undefined
+        ? { value }
+        : defaultValue !== null && defaultValue !== undefined
+          ? { defaultValue }
+          : fallbackValue !== undefined
+            ? { defaultValue: fallbackValue }
+            : {})}
+      {...props}
+    >
       {children}
     </SelectPrimitive.Root>
   );

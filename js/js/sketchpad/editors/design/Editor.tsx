@@ -36,6 +36,7 @@ import { DragEndEvent } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
 import { FC, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
 
 import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../elements/aggregation/Resizable";
@@ -44,7 +45,7 @@ import { Design, findConnectionsInDesign, guid, ICON_WIDTH, Kit, Type } from "..
 import { useDesign, useKit } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
-import { EditorType, useEditorPanelVisibility, useEditorType, useSketchpad, useSketchpadCommands } from "../../store";
+import { EditorType, ToolType, useEditorPanelVisibility, useEditorType, useSketchpad, useSketchpadCommands } from "../../store";
 import { useKitEditorCommands } from "../kit/store";
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
@@ -52,13 +53,14 @@ import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from ".
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignEditorFullscreenWindow, useDesignEditor, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
-import { ToolType } from "../../store";
 
 export interface EditorProps {}
 
 const Editor: FC<EditorProps> = () => {
+  const { t } = useTranslation();
   const fullscreenWindow = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
+    useDesignEditorCommands();
   const editor = useDesignEditor((s) => s);
   const activeTool = editor?.activeTool ?? ToolType.SELECTION_NORMAL;
 
@@ -128,7 +130,7 @@ const Editor: FC<EditorProps> = () => {
     if (!hasSelection) {
       addSection("details", {
         id: "design-details",
-        label: "Design",
+        label: t("design.title"),
         order: 0,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -138,7 +140,7 @@ const Editor: FC<EditorProps> = () => {
       const portId = selection.port!.port;
       addSection("details", {
         id: "design-port",
-        label: "Port",
+        label: t("port.title"),
         order: 1,
         defaultOpen: true,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
@@ -147,7 +149,7 @@ const Editor: FC<EditorProps> = () => {
       if (hasPieces) {
         addSection("details", {
           id: "design-pieces",
-          label: selection.pieces!.length === 1 ? "Piece" : `Pieces (${selection.pieces!.length})`,
+          label: selection.pieces!.length === 1 ? t("piece.piece") : t("design.pieces") + ` (${selection.pieces!.length})`,
           order: 2,
           defaultOpen: true,
           content: () => <PiecesSection />,
@@ -158,7 +160,7 @@ const Editor: FC<EditorProps> = () => {
         const conns = findConnectionsInDesign(design!, connGuids);
         addSection("details", {
           id: "design-connections",
-          label: conns.length === 1 ? "Connection" : `Connections (${conns.length})`,
+          label: conns.length === 1 ? t("connection.title") : t("design.connections") + ` (${conns.length})`,
           order: 3,
           defaultOpen: true,
           content: () => <ConnectionsSection connections={conns} />,
@@ -167,13 +169,13 @@ const Editor: FC<EditorProps> = () => {
       if (hasPieces && hasConnections) {
         addSection("details", {
           id: "design-mixed",
-          label: "Mixed Selection",
+          label: t("piece.mixedSelection", { count: (selection.pieces?.length || 0) + (selection.connections?.length || 0) }),
           order: 4,
           defaultOpen: true,
           content: () => (
             <TreeItem>
               <TreeContent>
-                <p className="text-sm text-muted-foreground">Select only pieces or only connections to edit details.</p>
+                <p className="text-sm text-muted-foreground">{t("design.selectOnlyPiecesOrConnections")}</p>
               </TreeContent>
             </TreeItem>
           ),
@@ -222,7 +224,7 @@ const Editor: FC<EditorProps> = () => {
                 {
                   icon: <Plus size={12} />,
                   onClick: () => handleCreateVariant(name),
-                  title: "Add variant",
+                  title: t("common.addVariant"),
                 },
               ]}
             >
@@ -272,7 +274,7 @@ const Editor: FC<EditorProps> = () => {
                 {
                   icon: <Plus size={12} />,
                   onClick: () => handleCreateVariant(name),
-                  title: "Add variant",
+                  title: t("common.addVariant"),
                 },
               ]}
             >
@@ -307,7 +309,8 @@ const Editor: FC<EditorProps> = () => {
   }, [editorType, addSection, removeSection]);
 
   useEffect(() => {
-    if (editorType !== EditorType.DESIGN) return;const handleCreateType = () => {
+    if (editorType !== EditorType.DESIGN) return;
+    const handleCreateType = () => {
       const existingTypes = kit.types || [];
       const typeNumber = existingTypes.length + 1;
       const newType: Type = {
@@ -335,7 +338,7 @@ const Editor: FC<EditorProps> = () => {
 
     addSection("workbench", {
       id: "design-types",
-      label: "Types",
+      label: t("kitEditor.types"),
       order: 0,
       defaultOpen: true,
       content: () => <TypesWorkbenchContent />,
@@ -343,7 +346,7 @@ const Editor: FC<EditorProps> = () => {
         {
           icon: <Plus size={12} />,
           onClick: handleCreateType,
-          title: "Add type",
+          title: t("common.addType"),
         },
       ],
       onPointerEnter: () => {
@@ -355,7 +358,7 @@ const Editor: FC<EditorProps> = () => {
 
     addSection("workbench", {
       id: "design-designs",
-      label: "Designs",
+      label: t("kitEditor.designs"),
       order: 1,
       defaultOpen: true,
       content: () => <DesignsWorkbenchContent />,
@@ -363,7 +366,7 @@ const Editor: FC<EditorProps> = () => {
         {
           icon: <Plus size={12} />,
           onClick: handleCreateDesign,
-          title: "Add design",
+          title: t("common.addDesign"),
         },
       ],
       onPointerEnter: () => {
@@ -371,16 +374,19 @@ const Editor: FC<EditorProps> = () => {
         hoverDesigns(kit.designs.map((design) => design.guid));
       },
       onPointerLeave: () => clearHover(),
-    });return () => {removeSection("workbench", "design-types");
+    });
+    return () => {
+      removeSection("workbench", "design-types");
       removeSection("workbench", "design-designs");
     };
-  }, [editorType, kit, addSection, removeSection, hoverTypes, hoverDesigns, clearHover]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorType]);
 
   // Add settings section
   useEffect(() => {
     addSection("settings", {
       id: "design-editor-settings",
-      label: "Design Editor",
+      label: t("design.editorTitle"),
       order: 100,
       defaultOpen: true,
       content: () => (
@@ -388,13 +394,17 @@ const Editor: FC<EditorProps> = () => {
           <TreeItem>
             <TreeContent>
               <div className="flex flex-col gap-1">
-                <label>Snappiness: {editorSettings.design?.snappiness}</label>
+                <label>
+                  {t("design.snappiness")}: {editorSettings.design?.snappiness}
+                </label>
                 <input type="range" min="0" max="20" value={editorSettings.design?.snappiness || 10} className="w-full" readOnly />
               </div>
             </TreeContent>
           </TreeItem>
           <TreeItem>
-            <TreeContent>Grid Size: {editorSettings.design?.gridSize || 24}px</TreeContent>
+            <TreeContent>
+              {t("design.gridSize")}: {editorSettings.design?.gridSize || 24}px
+            </TreeContent>
           </TreeItem>
         </>
       ),

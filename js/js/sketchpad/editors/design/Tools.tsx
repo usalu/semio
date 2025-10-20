@@ -21,35 +21,36 @@
 
 import { Lasso, Minus, MousePointer2, Plus, Square } from "lucide-react";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
-import { useDesignEditor, useDesignEditorCommands } from "./store";
+import { useDesignEditorSafe, useDesignEditorCommands } from "./store";
 
-const DESIGN_TOOLS: ToolDefinition[] = [
+const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolType.SELECTION_NORMAL,
     modes: [
       {
         id: ToolType.SELECTION_NORMAL,
-        label: "Normal",
+        label: t("tools.selection.normal"),
         icon: <MousePointer2 className="h-4 w-4" />,
-        tooltip: "Click to select pieces",
+        tooltip: t("tools.selection.selectPieces"),
         hotkey: "Click",
       },
       {
         id: ToolType.SELECTION_ADDITIVE,
-        label: "Additive",
+        label: t("tools.selection.additive"),
         icon: <Plus className="h-4 w-4" />,
-        tooltip: "Add to selection",
+        tooltip: t("tools.selection.addToSelection"),
         hotkey: "Shift",
       },
       {
         id: ToolType.SELECTION_SUBTRACTIVE,
-        label: "Subtractive",
+        label: t("tools.selection.subtractive"),
         icon: <Minus className="h-4 w-4" />,
-        tooltip: "Remove from selection",
+        tooltip: t("tools.selection.removeFromSelection"),
         hotkey: "Ctrl",
       },
     ],
@@ -60,25 +61,26 @@ const DESIGN_TOOLS: ToolDefinition[] = [
     modes: [
       {
         id: ToolType.LASSO_RECTANGULAR,
-        label: "Rectangular",
+        label: t("tools.lasso.rectangular"),
         icon: <Square className="h-4 w-4" />,
-        tooltip: "Draw rectangle to select multiple pieces",
+        tooltip: t("tools.lasso.rectangular.extensive"),
       },
       {
         id: ToolType.LASSO_FREEFORM,
-        label: "Freeform",
+        label: t("tools.lasso.freeform"),
         icon: <Lasso className="h-4 w-4" />,
-        tooltip: "Draw freeform shape to select multiple pieces",
+        tooltip: t("tools.lasso.freeform.extensive"),
       },
     ],
   },
 ];
 
 export const ToolsToggleGroup: FC = () => {
+  const { t } = useTranslation();
   const { kit, design } = useParams();
-  const editor = useDesignEditor((s) => s, kit && design ? { kit, design } : undefined);
+  const editor = useDesignEditorSafe((s) => s, kit && design ? { kit, design } : undefined);
   const { setActiveTool } = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
-  if (!editor) return null;
-  const activeTool = editor.activeTool || ToolType.SELECTION_NORMAL;
-  return <ToolGroup tools={DESIGN_TOOLS} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
+  const activeTool = editor?.activeTool || ToolType.SELECTION_NORMAL;
+  if (!editor) return <></>;
+  return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
 };

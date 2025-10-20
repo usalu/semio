@@ -785,7 +785,7 @@
   --color-plaster: var(--plaster);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
-  --color-border: var(--accent);
+  --color-border: var(--foreground);
 }
 
 /* #navbar {

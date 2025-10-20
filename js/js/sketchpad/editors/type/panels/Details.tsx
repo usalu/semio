@@ -135,8 +135,16 @@ const RepresentationsSectionForm: FC = () => {
   const selection = useTypeEditorSelection();
   const hover = useTypeEditorHover();
 
-  const handleChange = (updatedType: any) => {
-    kitCommands.updateType(type.guid, updatedType);
+  const applyDiff = (diff: any) => {
+    kitCommands.updateType(type.guid, diff);
+  };
+
+  const updateRepresentation = (id: string, representationDiff: any) => {
+    applyDiff({
+      representations: {
+        updated: [{ id, diff: representationDiff }],
+      },
+    });
   };
 
   return (
@@ -148,7 +156,7 @@ const RepresentationsSectionForm: FC = () => {
             icon: <Plus />,
             onClick: () => {
               startTransaction();
-              kitCommands.updateType(type.guid, {
+              applyDiff({
                 representations: {
                   added: [{ guid: guid(), url: "", tags: [] }],
                 },
@@ -166,10 +174,13 @@ const RepresentationsSectionForm: FC = () => {
             index,
           }))}
           onReorder={(oldIndex, newIndex) => {
+            if (!type.representations) return;
             startTransaction();
-            handleChange({
-              ...type,
-              representations: arrayMove(type.representations!, oldIndex, newIndex),
+            applyDiff({
+              representations: {
+                removed: type.representations.map((representation: any) => representation.guid),
+                added: arrayMove(type.representations, oldIndex, newIndex),
+              },
             });
             finalizeTransaction();
           }}
@@ -191,9 +202,10 @@ const RepresentationsSectionForm: FC = () => {
                       icon: <Minus />,
                       onClick: () => {
                         startTransaction();
-                        handleChange({
-                          ...type,
-                          representations: type.representations?.filter((_: any, i: number) => i !== index),
+                        applyDiff({
+                          representations: {
+                            removed: [representation.guid],
+                          },
                         });
                         finalizeTransaction();
                       },
@@ -207,12 +219,7 @@ const RepresentationsSectionForm: FC = () => {
                         label={t("type.representationUrl")}
                         value={representation.url}
                         onChange={(e) => {
-                          const updatedRepresentations = [...(type.representations || [])];
-                          updatedRepresentations[index] = {
-                            ...representation,
-                            url: e.target.value,
-                          };
-                          handleChange({ ...type, representations: updatedRepresentations });
+                          updateRepresentation(representation.guid, { url: e.target.value });
                         }}
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
@@ -226,12 +233,7 @@ const RepresentationsSectionForm: FC = () => {
                         value={representation.description || ""}
                         placeholder={t("type.representationDescriptionPlaceholder")}
                         onChange={(e) => {
-                          const updatedRepresentations = [...(type.representations || [])];
-                          updatedRepresentations[index] = {
-                            ...representation,
-                            description: e.target.value,
-                          };
-                          handleChange({ ...type, representations: updatedRepresentations });
+                          updateRepresentation(representation.guid, { description: e.target.value });
                         }}
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
@@ -245,15 +247,12 @@ const RepresentationsSectionForm: FC = () => {
                         value={(representation.tags || []).join(", ")}
                         placeholder={t("type.representationTagsPlaceholder")}
                         onChange={(e) => {
-                          const updatedRepresentations = [...(type.representations || [])];
-                          updatedRepresentations[index] = {
-                            ...representation,
+                          updateRepresentation(representation.guid, {
                             tags: e.target.value
                               .split(",")
                               .map((tag) => tag.trim())
                               .filter((tag) => tag),
-                          };
-                          handleChange({ ...type, representations: updatedRepresentations });
+                          });
                         }}
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
@@ -282,8 +281,18 @@ const PortsSectionForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
   const selection = useTypeEditorSelection();
-  const hover = useTypeEditorHover();const handleChange = (updatedType: any) => {
-    kitCommands.updateType(type.guid, updatedType);
+  const hover = useTypeEditorHover();
+
+  const applyDiff = (diff: any) => {
+    kitCommands.updateType(type.guid, diff);
+  };
+
+  const updatePort = (id: string, portDiff: any) => {
+    applyDiff({
+      ports: {
+        updated: [{ id, diff: portDiff }],
+      },
+    });
   };
 
   return (
@@ -295,7 +304,7 @@ const PortsSectionForm: FC = () => {
             icon: <Plus />,
             onClick: () => {
               startTransaction();
-              kitCommands.updateType(type.guid, {
+              applyDiff({
                 ports: {
                   added: [
                     {
@@ -320,45 +329,52 @@ const PortsSectionForm: FC = () => {
             index,
           }))}
           onReorder={(oldIndex, newIndex) => {
+            if (!type.ports) return;
             startTransaction();
-            handleChange({
-              ...type,
-              ports: arrayMove(type.ports!, oldIndex, newIndex),
+            applyDiff({
+              ports: {
+                removed: type.ports.map((existingPort: any) => existingPort.guid),
+                added: arrayMove(type.ports, oldIndex, newIndex),
+              },
             });
             finalizeTransaction();
           }}
         >
           {(port, index) => {
             const isSelected = selection?.ports?.includes(port.guid) || false;
-            const isHovered = hover?.port === port.guid;const handleClick = (e: React.MouseEvent) => {
-              e.stopPropagation();if (isSelected) {
+            const isHovered = hover?.port === port.guid;
+            const handleClick = (event: React.MouseEvent) => {
+              event.stopPropagation();
+              if (isSelected) {
                 deselectPort(port.guid);
               } else {
                 selectPort(port.guid);
               }
             };
 
-            const handleHover = () => {hoverPort(port.guid);
+            const handleHover = () => {
+              hoverPort(port.guid);
             };
 
-            const handleLeave = () => {clearHover();
+            const handleLeave = () => {
+              clearHover();
             };
 
             return (
-              <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick} style={{ cursor: "pointer" }}>
+              <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
                 <TreeItem
                   key={`port-${index}`}
                   label={port.family || `${t("type.port")} ${index + 1}`}
                   sortable={true}
                   sortableId={`port-${index}`}
                   isDragHandle={true}
-                  className={`${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
+                  className={`cursor-pointer ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
                   actions={[
                     {
                       icon: <Minus />,
                       onClick: () => {
                         startTransaction();
-                        handleChange({
+                        applyDiff({
                           ports: {
                             removed: [port.guid],
                           },
@@ -376,12 +392,7 @@ const PortsSectionForm: FC = () => {
                         value={port.family || ""}
                         placeholder={t("type.portFamilyPlaceholder")}
                         onChange={(e) => {
-                          const updatedPorts = [...(type.ports || [])];
-                          updatedPorts[index] = {
-                            ...port,
-                            family: e.target.value,
-                          };
-                          handleChange({ ...type, ports: updatedPorts });
+                          updatePort(port.guid, { family: e.target.value });
                         }}
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
@@ -395,12 +406,7 @@ const PortsSectionForm: FC = () => {
                         value={port.description || ""}
                         placeholder={t("type.portDescriptionPlaceholder")}
                         onChange={(e) => {
-                          const updatedPorts = [...(type.ports || [])];
-                          updatedPorts[index] = {
-                            ...port,
-                            description: e.target.value,
-                          };
-                          handleChange({ ...type, ports: updatedPorts });
+                          updatePort(port.guid, { description: e.target.value });
                         }}
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
@@ -414,12 +420,7 @@ const PortsSectionForm: FC = () => {
                           label={t("common.x")}
                           value={port.point.x}
                           onChange={(value) => {
-                            const updatedPorts = [...(type.ports || [])];
-                            updatedPorts[index] = {
-                              ...port,
-                              point: { ...port.point, x: value },
-                            };
-                            handleChange({ ...type, ports: updatedPorts });
+                            updatePort(port.guid, { point: { x: value } });
                           }}
                           onPointerDown={startTransaction}
                           onPointerUp={finalizeTransaction}
@@ -434,12 +435,7 @@ const PortsSectionForm: FC = () => {
                           label={t("common.y")}
                           value={port.point.y}
                           onChange={(value) => {
-                            const updatedPorts = [...(type.ports || [])];
-                            updatedPorts[index] = {
-                              ...port,
-                              point: { ...port.point, y: value },
-                            };
-                            handleChange({ ...type, ports: updatedPorts });
+                            updatePort(port.guid, { point: { y: value } });
                           }}
                           onPointerDown={startTransaction}
                           onPointerUp={finalizeTransaction}
@@ -454,12 +450,7 @@ const PortsSectionForm: FC = () => {
                           label={t("common.z")}
                           value={port.point.z}
                           onChange={(value) => {
-                            const updatedPorts = [...(type.ports || [])];
-                            updatedPorts[index] = {
-                              ...port,
-                              point: { ...port.point, z: value },
-                            };
-                            handleChange({ ...type, ports: updatedPorts });
+                            updatePort(port.guid, { point: { z: value } });
                           }}
                           onPointerDown={startTransaction}
                           onPointerUp={finalizeTransaction}
@@ -476,12 +467,7 @@ const PortsSectionForm: FC = () => {
                           label={t("common.x")}
                           value={port.direction.x}
                           onChange={(value) => {
-                            const updatedPorts = [...(type.ports || [])];
-                            updatedPorts[index] = {
-                              ...port,
-                              direction: { ...port.direction, x: value },
-                            };
-                            handleChange({ ...type, ports: updatedPorts });
+                            updatePort(port.guid, { direction: { x: value } });
                           }}
                           onPointerDown={startTransaction}
                           onPointerUp={finalizeTransaction}
@@ -496,12 +482,7 @@ const PortsSectionForm: FC = () => {
                           label={t("common.y")}
                           value={port.direction.y}
                           onChange={(value) => {
-                            const updatedPorts = [...(type.ports || [])];
-                            updatedPorts[index] = {
-                              ...port,
-                              direction: { ...port.direction, y: value },
-                            };
-                            handleChange({ ...type, ports: updatedPorts });
+                            updatePort(port.guid, { direction: { y: value } });
                           }}
                           onPointerDown={startTransaction}
                           onPointerUp={finalizeTransaction}
@@ -516,12 +497,7 @@ const PortsSectionForm: FC = () => {
                           label={t("common.z")}
                           value={port.direction.z}
                           onChange={(value) => {
-                            const updatedPorts = [...(type.ports || [])];
-                            updatedPorts[index] = {
-                              ...port,
-                              direction: { ...port.direction, z: value },
-                            };
-                            handleChange({ ...type, ports: updatedPorts });
+                            updatePort(port.guid, { direction: { z: value } });
                           }}
                           onPointerDown={startTransaction}
                           onPointerUp={finalizeTransaction}
@@ -538,15 +514,12 @@ const PortsSectionForm: FC = () => {
                         value={(port.compatibleFamilies || []).join(", ")}
                         placeholder={t("type.portCompatibleFamiliesPlaceholder")}
                         onChange={(e) => {
-                          const updatedPorts = [...(type.ports || [])];
-                          updatedPorts[index] = {
-                            ...port,
+                          updatePort(port.guid, {
                             compatibleFamilies: e.target.value
                               .split(",")
                               .map((family) => family.trim())
                               .filter((family) => family),
-                          };
-                          handleChange({ ...type, ports: updatedPorts });
+                          });
                         }}
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
@@ -576,8 +549,8 @@ const AuthorsSectionForm: FC = () => {
   const type = useType(undefined, undefined, true) as Type;
   const kit = useKit() as Kit;
 
-  const handleChange = (updatedType: any) => {
-    kitCommands.updateType(type.guid, updatedType);
+  const updateAuthors = (authors: string[]) => {
+    kitCommands.updateType(type.guid, { authors });
   };
 
   return (
@@ -595,10 +568,7 @@ const AuthorsSectionForm: FC = () => {
                 name: "",
                 email: "",
               });
-              handleChange({
-                ...type,
-                authors: [...(type.authors || []), newAuthorGuid],
-              });
+              updateAuthors([...(type.authors || []), newAuthorGuid]);
               finalizeTransaction();
             },
             title: t("common.add"),
@@ -618,10 +588,7 @@ const AuthorsSectionForm: FC = () => {
           })}
           onReorder={(oldIndex, newIndex) => {
             startTransaction();
-            handleChange({
-              ...type,
-              authors: arrayMove(type.authors!, oldIndex, newIndex),
-            });
+            updateAuthors(arrayMove(type.authors!, oldIndex, newIndex));
             finalizeTransaction();
           }}
         >
@@ -637,10 +604,7 @@ const AuthorsSectionForm: FC = () => {
                   icon: <Minus />,
                   onClick: () => {
                     startTransaction();
-                    handleChange({
-                      ...type,
-                      authors: type.authors?.filter((_: any, i: number) => i !== index),
-                    });
+                    updateAuthors((type.authors || []).filter((_, i: number) => i !== index));
                     finalizeTransaction();
                   },
                   title: t("common.remove"),
@@ -693,8 +657,16 @@ const AttributesSectionForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const handleChange = (updatedType: any) => {
-    kitCommands.updateType(type.guid, updatedType);
+  const applyDiff = (diff: any) => {
+    kitCommands.updateType(type.guid, diff);
+  };
+
+  const updateAttribute = (id: string, attributeDiff: any) => {
+    applyDiff({
+      attributes: {
+        updated: [{ id, diff: attributeDiff }],
+      },
+    });
   };
 
   return (
@@ -706,9 +678,10 @@ const AttributesSectionForm: FC = () => {
             icon: <Plus />,
             onClick: () => {
               startTransaction();
-              handleChange({
-                ...type,
-                attributes: [...(type.attributes || []), { guid: guid(), key: "" }],
+              applyDiff({
+                attributes: {
+                  added: [{ guid: guid(), key: "" }],
+                },
               });
               finalizeTransaction();
             },
@@ -723,10 +696,13 @@ const AttributesSectionForm: FC = () => {
             index,
           }))}
           onReorder={(oldIndex, newIndex) => {
+            if (!type.attributes) return;
             startTransaction();
-            handleChange({
-              ...type,
-              attributes: arrayMove(type.attributes!, oldIndex, newIndex),
+            applyDiff({
+              attributes: {
+                removed: type.attributes.map((attribute: any) => attribute.guid),
+                added: arrayMove(type.attributes, oldIndex, newIndex),
+              },
             });
             finalizeTransaction();
           }}
@@ -743,9 +719,10 @@ const AttributesSectionForm: FC = () => {
                   icon: <Minus />,
                   onClick: () => {
                     startTransaction();
-                    handleChange({
-                      ...type,
-                      attributes: type.attributes?.filter((_: any, i: number) => i !== index),
+                    applyDiff({
+                      attributes: {
+                        removed: [attribute.guid],
+                      },
                     });
                     finalizeTransaction();
                   },
@@ -759,12 +736,7 @@ const AttributesSectionForm: FC = () => {
                     label={t("type.attributeName")}
                     value={attribute.key}
                     onChange={(e) => {
-                      const updatedAttributes = [...(type.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        key: e.target.value,
-                      };
-                      handleChange({ ...type, attributes: updatedAttributes });
+                      updateAttribute(attribute.guid, { key: e.target.value });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -778,12 +750,7 @@ const AttributesSectionForm: FC = () => {
                     value={attribute.value || ""}
                     placeholder={t("type.attributeValuePlaceholder")}
                     onChange={(e) => {
-                      const updatedAttributes = [...(type.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        value: e.target.value,
-                      };
-                      handleChange({ ...type, attributes: updatedAttributes });
+                      updateAttribute(attribute.guid, { value: e.target.value });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -797,12 +764,7 @@ const AttributesSectionForm: FC = () => {
                     value={attribute.definition || ""}
                     placeholder={t("type.attributeDefinitionPlaceholder")}
                     onChange={(e) => {
-                      const updatedAttributes = [...(type.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        definition: e.target.value,
-                      };
-                      handleChange({ ...type, attributes: updatedAttributes });
+                      updateAttribute(attribute.guid, { definition: e.target.value });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}

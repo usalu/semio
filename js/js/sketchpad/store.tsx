@@ -173,12 +173,20 @@ export interface Synchronizable<TAccessl> {
 
 export const identitySelector = (state: any) => state;
 
-export function useSync<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl>, selector?: (state: TAccessl) => TSelected, deep: boolean = false): TAccessl | TSelected {
-  const state = deep ? useSyncExternalStore(store.onChangedDeep, store.snapshot) : useSyncExternalStore(store.onChanged, store.snapshot);
+const nullStore: Synchronizable<null> = {
+  onChanged: () => () => {},
+  onChangedDeep: () => () => {},
+  snapshot: () => null,
+};
+
+export function useSync<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl> | null, selector?: (state: TAccessl) => TSelected, deep: boolean = false): TAccessl | TSelected | null {
+  const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl>);
+  const state = deep ? useSyncExternalStore(actualStore.onChangedDeep, actualStore.snapshot) : useSyncExternalStore(actualStore.onChanged, actualStore.snapshot);
+  if (!store) return null;
   return selector ? selector(state) : state;
 }
 
-export function useSyncDeep<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl>, selector?: (state: TAccessl) => TSelected): TAccessl | TSelected {
+export function useSyncDeep<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl> | null, selector?: (state: TAccessl) => TSelected): TAccessl | TSelected | null {
   return useSync(store, selector, true);
 }
 
@@ -1385,8 +1393,7 @@ export class SketchpadStore {
           const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory);
           this.kits.set(kit.guid, kitStore);
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
-        } catch (error) {
-        }
+        } catch (error) {}
       } else {
         this.yDoc.transact(() => {
           const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
@@ -1439,7 +1446,7 @@ export function useSketchpadStore(id?: string): SketchpadStore {
   return store;
 }
 
-export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
+export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState | null {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : identitySelector);
 }
 
@@ -1602,8 +1609,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
 
         return unsubscribe;
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }, [store, editorType, kitGuid, itemGuid, navigation]);
 
   return panelVisibility;
@@ -1636,8 +1642,7 @@ export function useEditorCommands() {
           if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
           break;
       }
-    } catch (e) {
-    }
+    } catch (e) {}
 
     return {
       togglePanel: (panelKey: keyof PanelVisibility) => {
@@ -1651,8 +1656,7 @@ export function useEditorCommands() {
               [panelKey]: !current[panelKey],
             },
           });
-        } catch (e) {
-        }
+        } catch (e) {}
       },
       execute: (command: string, ...args: any[]) => {
         if (!editor) return;

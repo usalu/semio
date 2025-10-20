@@ -60,50 +60,62 @@ export interface ToolGroupProps {
 }
 
 export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange, level = "panel" }) => {
-  const allModes = tools.flatMap((tool) => tool.modes);
-  const activeMode = allModes.find((mode) => mode.id === activeTool);
-  const singleModeTools = tools.filter((tool) => tool.modes.length === 1);
-  const multiModeTools = tools.filter((tool) => tool.modes.length > 1);
-  const hasSingleModeTools = singleModeTools.length > 0;
-  const hasMultiModeTools = multiModeTools.length > 0;
-  if (!hasSingleModeTools && multiModeTools.length === 1) {
-    const tool = multiModeTools[0];
+  const renderMultiMode = (tool: ToolDefinition) => {
     const currentMode = tool.modes.find((mode) => mode.id === activeTool);
     const isPressed = !!currentMode;
     const defaultMode = tool.defaultMode || tool.modes[0].id;
     const dropdownItems: ToggleItem<ToolType>[] = tool.modes.map((mode) => ({ value: mode.id, label: mode.icon, tooltip: mode.tooltip, hotkey: mode.hotkey }));
-    return <Toggle type="dropdown" level={level} pressed={isPressed} onPressedChange={(pressed) => !pressed && onToolChange(defaultMode)} value={activeTool} onValueChange={onToolChange} items={dropdownItems} tooltip={currentMode?.tooltip} />;
-  }
-  return (
-    <div className="flex items-center gap-0">
-      {hasSingleModeTools && (
+    return {
+      key: tool.id,
+      element: (
+        <Toggle
+          type="dropdown"
+          level={level}
+          pressed={isPressed}
+          onPressedChange={(pressed) => onToolChange(pressed ? (currentMode?.id ?? defaultMode) : defaultMode)}
+          value={activeTool}
+          onValueChange={onToolChange}
+          items={dropdownItems}
+          tooltip={currentMode?.tooltip}
+        />
+      ),
+    };
+  };
+  const segments: { key: string; element: React.ReactNode }[] = [];
+  let pendingSingles: ToolDefinition[] = [];
+  const flushSingles = () => {
+    if (pendingSingles.length === 0) return;
+    const key = pendingSingles.map((tool) => tool.id).join("-");
+    segments.push({
+      key,
+      element: (
         <ToggleGroup type="single" level={level} value={activeTool} onValueChange={(value: string) => value && onToolChange(value as ToolType)}>
-          {singleModeTools.map((tool) => {
+          {pendingSingles.map((tool) => {
             const mode = tool.modes[0];
             return <ToolModeComponent key={mode.id} mode={mode} isActive={activeTool === mode.id} onActivate={onToolChange} level={level} />;
           })}
         </ToggleGroup>
-      )}
-      {hasMultiModeTools &&
-        multiModeTools.map((tool) => {
-          const currentMode = tool.modes.find((mode) => mode.id === activeTool);
-          const isPressed = !!currentMode;
-          const defaultMode = tool.defaultMode || tool.modes[0].id;
-          const dropdownItems: ToggleItem<ToolType>[] = tool.modes.map((mode) => ({ value: mode.id, label: mode.icon, tooltip: mode.tooltip, hotkey: mode.hotkey }));
-          return (
-            <Toggle
-              key={tool.id}
-              type="dropdown"
-              level={level}
-              pressed={isPressed}
-              onPressedChange={(pressed) => !pressed && onToolChange(defaultMode)}
-              value={activeTool}
-              onValueChange={onToolChange}
-              items={dropdownItems}
-              tooltip={currentMode?.tooltip}
-            />
-          );
-        })}
+      ),
+    });
+    pendingSingles = [];
+  };
+  tools.forEach((tool) => {
+    if (tool.modes.length === 1) {
+      pendingSingles.push(tool);
+    } else {
+      flushSingles();
+      segments.push(renderMultiMode(tool));
+    }
+  });
+  flushSingles();
+  if (segments.length === 1) return segments[0].element;
+  return (
+    <div className="flex items-center gap-0">
+      {segments.map((segment, index) => (
+        <div key={segment.key ?? index} className={index === 0 ? "" : "-ml-px"}>
+          {segment.element}
+        </div>
+      ))}
     </div>
   );
 };
