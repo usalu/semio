@@ -1,6 +1,6 @@
 // #region Header
 
-// DesignEditor.tsx
+// Editor.tsx
 
 // 2025 Ueli Saluz
 
@@ -16,13 +16,6 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// Architecture:
-// This editor demonstrates the generalized panel section system:
-// - Registers "Types" and "Designs" sections in the workbench panel
-// - Registers context-sensitive sections in the details panel based on selection
-// - Registers editor-specific settings in the settings panel
-//
 // The panel system allows ANY component (including nested editors) to be mounted as a section.
 // Example of nesting a design editor as a section:
 //   addSection("workbench", {
@@ -57,14 +50,17 @@ import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
-import { DesignEditorFullscreenWindow, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
+import { DesignEditorFullscreenWindow, useDesignEditor, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
+import { ToolType } from "../../store";
 
 export interface EditorProps {}
 
 const Editor: FC<EditorProps> = () => {
   const fullscreenWindow = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } = useDesignEditorCommands();
+  const editor = useDesignEditor((s) => s);
+  const activeTool = editor?.activeTool ?? ToolType.SELECTION_NORMAL;
 
   const selection = useDesignEditorSelection();
   const design = useDesign() as Design | undefined;
@@ -88,6 +84,31 @@ const Editor: FC<EditorProps> = () => {
   useHotkeys("ctrl+shift+z", () => redo());
 
   const editorType = useEditorType();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeTool === ToolType.SELECTION_NORMAL) {
+        if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          setActiveTool(ToolType.SELECTION_ADDITIVE);
+        } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          setActiveTool(ToolType.SELECTION_SUBTRACTIVE);
+        }
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (activeTool === ToolType.SELECTION_ADDITIVE && !e.shiftKey) {
+        setActiveTool(ToolType.SELECTION_NORMAL);
+      } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
+        setActiveTool(ToolType.SELECTION_NORMAL);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [activeTool, setActiveTool]);
 
   // Add/remove details panel sections based on selection
   useEffect(() => {
@@ -170,7 +191,6 @@ const Editor: FC<EditorProps> = () => {
   }, [selection, addSection, removeSection, editorType]);
 
   const TypesWorkbenchContent: FC = () => {
-    const { hoverTypes, clearHover } = useDesignEditorCommands();
     const typesByName = (kit.types || []).reduce((acc: Record<string, Type[]>, type: Type) => {
       if (!acc[type.name]) acc[type.name] = [];
       acc[type.name].push(type);
@@ -221,7 +241,6 @@ const Editor: FC<EditorProps> = () => {
   };
 
   const DesignsWorkbenchContent: FC = () => {
-    const { hoverDesigns, clearHover } = useDesignEditorCommands();
     const designsByName = (kit.designs || []).reduce((acc: Record<string, Design[]>, design: Design) => {
       if (!acc[design.name]) acc[design.name] = [];
       acc[design.name].push(design);
@@ -288,11 +307,7 @@ const Editor: FC<EditorProps> = () => {
   }, [editorType, addSection, removeSection]);
 
   useEffect(() => {
-    if (editorType !== EditorType.DESIGN) return;
-
-    console.log("[ORIGIN] Design Editor adding workbench sections", { kit, editorType });
-
-    const handleCreateType = () => {
+    if (editorType !== EditorType.DESIGN) return;const handleCreateType = () => {
       const existingTypes = kit.types || [];
       const typeNumber = existingTypes.length + 1;
       const newType: Type = {
@@ -331,6 +346,11 @@ const Editor: FC<EditorProps> = () => {
           title: "Add type",
         },
       ],
+      onPointerEnter: () => {
+        if (!kit.types || kit.types.length === 0) return;
+        hoverTypes(kit.types.map((type) => type.guid));
+      },
+      onPointerLeave: () => clearHover(),
     });
 
     addSection("workbench", {
@@ -346,16 +366,15 @@ const Editor: FC<EditorProps> = () => {
           title: "Add design",
         },
       ],
-    });
-
-    console.log("[ORIGIN] Design Editor workbench sections added");
-
-    return () => {
-      console.log("[ORIGIN] Design Editor removing workbench sections");
-      removeSection("workbench", "design-types");
+      onPointerEnter: () => {
+        if (!kit.designs || kit.designs.length === 0) return;
+        hoverDesigns(kit.designs.map((design) => design.guid));
+      },
+      onPointerLeave: () => clearHover(),
+    });return () => {removeSection("workbench", "design-types");
       removeSection("workbench", "design-designs");
     };
-  }, [editorType, kit, addSection, removeSection]);
+  }, [editorType, kit, addSection, removeSection, hoverTypes, hoverDesigns, clearHover]);
 
   // Add settings section
   useEffect(() => {

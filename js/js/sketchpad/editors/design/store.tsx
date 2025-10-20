@@ -1,4 +1,23 @@
-// #region Design Editor
+// #region Header
+
+// store.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
 
 import { Connection } from "@xyflow/react";
 import React, { createContext, useContext } from "react";
@@ -541,36 +560,24 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    console.group(`Executing command: "${command}"`);
     if (command === "semio.designEditor.startTransaction") {
-      console.log("[ORIGIN] Starting transaction, isActive:", this.isTransactionActive);
       this.startTransaction();
-      console.log("[ORIGIN] Transaction started, isActive:", this.isTransactionActive);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.finalizeTransaction") {
-      console.log("[ORIGIN] Finalizing transaction, isActive:", this.isTransactionActive);
       this.finalizeTransaction();
-      console.log("[ORIGIN] Transaction finalized, isActive:", this.isTransactionActive);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.abortTransaction") {
-      console.log("[ORIGIN] Aborting transaction, isActive:", this.isTransactionActive);
       this.abortTransaction();
-      console.log("[ORIGIN] Transaction aborted, isActive:", this.isTransactionActive);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.undo") {
       this.undo();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.redo") {
       this.redo();
-      console.groupEnd();
       return {} as T;
     }
 
@@ -587,9 +594,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       Guid: this.design().guid,
       fileUrls: kitStore.fileUrls,
     };
-    console.log("Context:", context);
     const result = callback(context, ...rest);
-    console.log("Result:", result);
     if (result.diff) {
       this.change(result.diff);
     }
@@ -597,7 +602,6 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       kitStore.change(result.kitDiff);
     }
     this.recordEdit(state, result);
-    console.groupEnd();
     return result as T;
   }
 
@@ -720,15 +724,11 @@ export function useDesignEditorCommands(id?: DesignEditorId) {
     clearHover: () => store.execute("semio.designEditor.clearHover"),
     togglePanel: (panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
-      try {
-        store.change({
-          panelVisibility: {
-            [panelKey]: !current[panelKey],
-          },
-        });
-      } catch (error) {
-        console.error("[useDesignEditorCommands.togglePanel] ERROR in store.change:", error);
-      }
+      store.change({
+        panelVisibility: {
+          [panelKey]: !current[panelKey],
+        },
+      });
     },
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };

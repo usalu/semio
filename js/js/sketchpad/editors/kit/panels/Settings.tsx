@@ -2,9 +2,20 @@
 
 // Settings.tsx
 
-// Kit editor-specific settings that are registered to the settings panel.
-// Currently empty but can be populated with kit-specific configuration options
-// such as default units, quality benchmarks, validation rules, etc.
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
 

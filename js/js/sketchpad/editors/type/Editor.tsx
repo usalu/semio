@@ -21,15 +21,44 @@
 
 import { FC, useEffect } from "react";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
-import { EditorType, useEditorType } from "../../store";
+import { EditorType, ToolType, useEditorType } from "../../store";
 import TypeScene from "./canvas/Scene";
 import { AttributesSection, AuthorsSection, PortsSection, RepresentationsSection, TypeDetails } from "./panels/Details";
+import { useTypeEditor, useTypeEditorCommands } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
 const Editor: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const editorType = useEditorType();
+  const { setActiveTool } = useTypeEditorCommands();
+  const editor = useTypeEditor((s) => s);
+  const activeTool = editor?.activeTool ?? ToolType.PORT;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeTool === ToolType.SELECTION_NORMAL) {
+        if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          setActiveTool(ToolType.SELECTION_ADDITIVE);
+        } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          setActiveTool(ToolType.SELECTION_SUBTRACTIVE);
+        }
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (activeTool === ToolType.SELECTION_ADDITIVE && !e.shiftKey) {
+        setActiveTool(ToolType.SELECTION_NORMAL);
+      } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
+        setActiveTool(ToolType.SELECTION_NORMAL);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [activeTool, setActiveTool]);
 
   useEffect(() => {
     if (editorType !== EditorType.TYPE) return;

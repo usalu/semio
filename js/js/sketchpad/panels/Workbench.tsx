@@ -2,27 +2,20 @@
 
 // Workbench.tsx
 
-// Generalized panel component that displays dynamic sections registered by editors.
-// This panel serves as a mountable container where different editors can inject their own content.
-//
-// Architecture:
-// - Editors use `useAddPanelSection` to register sections dynamically
-// - Each section has an id, label, order, defaultOpen state, and content (ReactNode or render function)
-// - Sections are automatically sorted by order and rendered as TreeSections
-// - The panel system is used by: Workbench, Details, Settings, and Chat panels
-//
-// Example usage in an editor:
-//   const addSection = useAddPanelSection();
-//   useEffect(() => {
-//     addSection("workbench", {
-//       id: "my-section",
-//       label: "My Section",
-//       order: 0,
-//       defaultOpen: true,
-//       content: () => <MyComponent />
-//     });
-//     return () => removeSection("workbench", "my-section");
-//   }, []);
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
 
@@ -70,13 +63,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizing, setIsResizing] = useState(false);
   const isMobile = useIsMobile();
   const activeInteraction = useActiveInteraction();
-
-  console.log("[ORIGIN] Workbench render, activeInteraction:", activeInteraction);
-
   const sections = usePanelSections("workbench");
-
-  console.log("[ORIGIN] Workbench sections:", sections, "isMobile:", isMobile, "visible:", visible);
-
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -103,11 +90,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  console.log(
-    "[ORIGIN] Workbench rendering, sortedSections:",
-    sortedSections.map((s) => ({ id: s.id, label: s.label })),
-  );
-
   if (!visible) return null;
 
   return (
@@ -125,11 +107,9 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
               <TreeStateProvider>
                 <Tree>
                   {sortedSections.map((section) => {
-                    console.log("[ORIGIN] Rendering TreeSection:", section.id, section.label);
                     const content = typeof section.content === "function" ? section.content() : section.content;
-                    console.log("[ORIGIN] TreeSection content:", section.id, content);
                     return (
-                      <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                      <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave}>
                         {content}
                       </TreeSection>
                     );

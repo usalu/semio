@@ -45,6 +45,7 @@ import {
   KitScopeProvider,
   Layout,
   SketchpadScopeProvider,
+  SketchpadState,
   Theme,
   TypeScopeProvider,
   useEditorPanelVisibility,
@@ -131,8 +132,9 @@ const SketchpadBase: FC = () => {
   const theme = useTheme();
   const editorType = useEditorType();
   const visiblePanels = useEditorPanelVisibility();
-  const panelSizes = useSketchpad((s) => s.panelSizes);
-  const isFullscreen = useSketchpad((s) => s.isFullscreen);
+  const sketchpad = useSketchpad() as SketchpadState;
+  const panelSizes = sketchpad.panelSizes;
+  const isFullscreen = sketchpad.isFullscreen;
   const isNavbarExpanded = useIsNavbarExpanded();
   const isMobile = useIsMobile();
   const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile, setActiveInteraction } = useSketchpadCommands();
@@ -233,9 +235,7 @@ const SketchpadBase: FC = () => {
     if (design) setActiveDraggedDesign(design);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    console.log("[ORIGIN] handleDragEnd called in Sketchpad", event);
-    window.dispatchEvent(new CustomEvent("design-drag-end", { detail: event }));
+  const handleDragEnd = (event: DragEndEvent) => {window.dispatchEvent(new CustomEvent("design-drag-end", { detail: event }));
     setActiveDraggedType(null);
     setActiveDraggedDesign(null);
     setActiveInteraction(undefined);
@@ -269,8 +269,8 @@ const SketchpadBase: FC = () => {
                     <div className="flex-1 flex flex-col overflow-hidden">
                       <Outlet />
                       {visiblePanels.toolbar && (
-                        <div className="absolute left-0 right-0 bottom-0 z-20">
-                          <Toolbar visible={true} height={panelSizes.toolbarHeight} onHeightChange={(h) => setPanelSize("toolbarHeight", h)} leftOffset={0} rightOffset={0} />
+                        <div className="absolute left-0 right-0 bottom-1 z-20">
+                          <Toolbar visible={true} leftOffset={0} rightOffset={0} />
                         </div>
                       )}
                     </div>
@@ -293,7 +293,7 @@ const SketchpadBase: FC = () => {
                           left: (visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + 4,
                           right: (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + 4,
                           top: 0,
-                          bottom: visiblePanels.toolbar ? panelSizes.toolbarHeight + 4 : 0,
+                          bottom: visiblePanels.toolbar ? 36 + 4 : 0,
                         }}
                       >
                         {visiblePanels.hud && <Hud visible={true} width={panelSizes.hudWidth} onWidthChange={(w) => setPanelSize("hudWidth", w)} />}
@@ -301,11 +301,9 @@ const SketchpadBase: FC = () => {
                       </div>
                     )}
                     {visiblePanels.toolbar && (
-                      <div className="absolute left-0 right-0 bottom-0 z-20">
+                      <div className="absolute left-0 right-0 bottom-1 z-20">
                         <Toolbar
                           visible={true}
-                          height={panelSizes.toolbarHeight}
-                          onHeightChange={(h) => setPanelSize("toolbarHeight", h)}
                           leftOffset={(visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + (visiblePanels.workbench || visiblePanels.tools ? 4 : 0)}
                           rightOffset={
                             (visiblePanels.details ? panelSizes.detailsWidth : 0) +

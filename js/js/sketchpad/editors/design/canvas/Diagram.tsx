@@ -361,8 +361,8 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
   return (
     <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} pointerEvents="all" />
+        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} pointerEvents="none" />}
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
           {piece.guid}
         </text>
@@ -386,8 +386,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
-    const connectedIsDesignPiece = connection.connected.piece.guid === piece.guid || connection.connected.designPiece?.guid === piece.guid;
-    const connectingIsDesignPiece = connection.connecting.piece.guid === piece.guid || connection.connecting.designPiece?.guid === piece.guid;
+    const connectedIsDesignPiece = connection.connected.piece === piece.guid || connection.connected.designPiece === piece.guid;
+    const connectingIsDesignPiece = connection.connecting.piece === piece.guid || connection.connecting.designPiece === piece.guid;
 
     const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
     const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
@@ -408,7 +408,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
     return {
       guid: `port-${portIndex}`,
-      description: `Port for connection to ${originalSide.piece.guid}:${originalSide.port.guid}`,
+      description: `Port for connection to ${originalSide.piece}:${originalSide.port}`,
       family: "default",
       mandatory: false,
       t: t,
@@ -417,19 +417,19 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
       attributes: [
         {
           key: "semio.originalPieceId",
-          value: designSide.piece.guid || "",
+          value: designSide.piece || "",
         },
         {
           key: "semio.originalPortId",
-          value: designSide.port.guid || "",
+          value: designSide.port || "",
         },
         {
           key: "semio.externalPieceId",
-          value: originalSide.piece.guid || "",
+          value: originalSide.piece || "",
         },
         {
           key: "semio.externalPortId",
-          value: originalSide.port.guid || "",
+          value: originalSide.port || "",
         },
       ],
     };
@@ -520,7 +520,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
   return (
     <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} pointerEvents="all" />
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
           {piece.guid}
         </text>
@@ -829,7 +829,6 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
         if (piece.design) {
           const design = kit.designs?.find((d: Design) => d.guid === piece.design);
           if (!design) {
-            console.warn(`Design not found for piece ${piece.guid}: ${piece.design}`);
             const fallbackType: Type = {
               guid: `fallback-${piece.design}`,
               name: `Unknown-${piece.design}`,
@@ -859,7 +858,6 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
 
         const type = findTypeInKit(kit, piece.type);
         if (!type) {
-          console.warn(`Type not found for piece ${piece.guid}: ${piece.type}`);
           const fallbackType: Type = {
             guid: `fallback-${piece.type}`,
             name: `Unknown-${piece.type}`,
@@ -1029,9 +1027,6 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const metadata = new Map();
 
   if (!design) return null;
-
-  console.log("[ORIGIN] Diagram render - selection:", selection);
-
   const nodesAndEdges = designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
     nodes: [],
     edges: [],
@@ -1039,21 +1034,13 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const nodes = nodesAndEdges.nodes;
   const edges = nodesAndEdges.edges;
 
-  console.log(
-    "[ORIGIN] Diagram render - nodes with selection:",
-    nodes.filter((n) => n.selected).map((n) => ({ id: n.id, selected: n.selected })),
-  );
-
   const reactFlowInstance = useReactFlow();
-  const [dragState, setDragState] = useState<{
-    lastPostition: XYPosition;
-  } | null>(null);
+  const [dragState, setDragState] = useState<{ lastPostition: XYPosition } | null>(null);
   const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
   const fullscreen = fullscreenWindow === DesignEditorFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
-
-  // Set the React Flow instance ref for use in DesignEditor
+  const { setNodeRef: setDroppableRef } = useDroppable({ id: "diagram-drop-zone" });
   useEffect(() => {
     reactFlowInstanceRef.current = reactFlowInstance;
   }, [reactFlowInstance, reactFlowInstanceRef]);
@@ -1093,7 +1080,6 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
-    console.log("[ORIGIN] Diagram onNodeClick", { pieceId, ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey });
     if (e.ctrlKey || e.metaKey) removePieceFromSelection(pieceId);
     else if (e.shiftKey) addPieceToSelection(pieceId);
     else selectPiece(pieceId);
@@ -1116,10 +1102,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
-    console.log("[ORIGIN] Diagram onPaneClick called");
     e.stopPropagation();
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
-      console.log("[ORIGIN] Calling deselectAll()");
       deselectAll();
     }
   };
@@ -1735,18 +1719,15 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       id="diagram"
       className="h-full w-full relative"
       onClick={(e) => {
-        console.log("[ORIGIN] Diagram div onClick", e.target, e.currentTarget);
         if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("react-flow__pane")) {
-          console.log("[ORIGIN] Clicked on diagram background via div");
           if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-            console.log("[ORIGIN] Calling deselectAll() from div");
             deselectAll();
           }
         }
       }}
     >
       <ReactFlow
-        ref={useDroppable({ id: "diagram-drop-zone" }).setNodeRef}
+        ref={setDroppableRef}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeComponents}
@@ -1788,3 +1769,4 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 };
 
 export default Diagram;
+

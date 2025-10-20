@@ -1,3 +1,24 @@
+// #region Header
+
+// Editor.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Award, Box, FileText, Layout, Plus, User } from "lucide-react";
@@ -162,9 +183,7 @@ const EditorContent: FC = () => {
 
     if (selectedKind === "designs") {
       const design = kit.designs?.find((d: Design) => d.guid === selectParam);
-      if (design) {
-        console.log("[Kit Editor] Auto-selecting design from URL parameter", { designGuid: selectParam });
-        kitEditorCommands.selectDesign(selectParam);
+      if (design) {kitEditorCommands.selectDesign(selectParam);
         // Remove the select parameter after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
@@ -172,9 +191,7 @@ const EditorContent: FC = () => {
       }
     } else if (selectedKind === "types") {
       const type = kit.types?.find((t: Type) => t.guid === selectParam);
-      if (type) {
-        console.log("[Kit Editor] Auto-selecting type from URL parameter", { typeGuid: selectParam });
-        kitEditorCommands.selectType(selectParam);
+      if (type) {kitEditorCommands.selectType(selectParam);
         // Remove the select parameter after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
@@ -524,19 +541,13 @@ const EditorContent: FC = () => {
         break;
       }
       case "qualities": {
-        // TODO: Implement quality creation
-        console.log("Create new quality");
-        break;
+        // TODO: Implement quality creationbreak;
       }
       case "files": {
-        // TODO: Implement file creation
-        console.log("Create new file");
-        break;
+        // TODO: Implement file creationbreak;
       }
       case "authors": {
-        // TODO: Implement author creation
-        console.log("Create new author");
-        break;
+        // TODO: Implement author creationbreak;
       }
     }
   };
@@ -1405,9 +1416,7 @@ class ErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.log("[Kit Editor] Error caught:", error, errorInfo);
-  }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {

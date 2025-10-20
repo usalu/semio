@@ -1,3 +1,24 @@
+// #region Header
+
+// store.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
 import React, { createContext, useContext } from "react";
 import * as Y from "yjs";
 import { Camera, Coord, Guid, TypeDiff } from "../../../semio";
@@ -147,7 +168,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     });
   }
 
-  type(): TypeStore {
+  type(): TypeStore | undefined {
     return this.parent.kit(this.Guid.kit).type(this.Guid.type);
   }
 
@@ -322,7 +343,6 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   }
 
   change = (diff: TypeEditorDiff) => {
-    console.log("[ORIGIN] TypeEditorStore.change called", { diff, guid: this.guid });
     this.transact(() => {
       if (diff.fullscreenWindow) {
         this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
@@ -346,19 +366,15 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
         this.applySelectionDiff(diff.selection);
       }
       if (diff.hover) {
-        console.log("[ORIGIN] Applying hover diff", { hover: diff.hover });
         let yHover = this.yMap.get("hover") as Y.Map<string>;
         if (!yHover) {
-          console.log("[ORIGIN] Creating new hover map");
           yHover = new Y.Map<string>();
           this.yMap.set("hover", yHover);
         }
         if (diff.hover.port !== undefined) {
           if (diff.hover.port) {
-            console.log("[ORIGIN] Setting port hover", { port: diff.hover.port });
             yHover.set("port", diff.hover.port);
           } else {
-            console.log("[ORIGIN] Deleting port hover");
             yHover.delete("port");
           }
         }
@@ -369,7 +385,13 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
             yHover.delete("representation");
           }
         }
-        console.log("[ORIGIN] After applying hover, yHover content:", { port: yHover.get("port"), representation: yHover.get("representation") });
+        if (diff.hover.representation !== undefined) {
+          if (diff.hover.representation) {
+            yHover.set("representation", diff.hover.representation);
+          } else {
+            yHover.delete("representation");
+          }
+        }
       }
       if (diff.presence) {
         // Handle presence changes if needed
@@ -378,7 +400,6 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
         this.yMap.set("camera", JSON.stringify(diff.camera));
       }
     });
-    console.log("[ORIGIN] After transact, current hover state:", this.hover);
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
@@ -387,12 +408,16 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
       throw new Error(`Command "${command}" not found`);
     }
     const typeEditor = this.snapshot();
-    const kit = this.kit().snapshot();
+    const kitStore = this.kit();
+    const kit = kitStore.snapshot();
+    const typeStore = this.type();
+    const typeGuid = typeStore?.guid ?? this.Guid.type;
+
     const context: TypeEditorCommandContext = {
       kit,
       typeEditor,
-      Guid: this.type().guid,
-      fileUrls: this.kit().fileUrls,
+      Guid: typeGuid,
+      fileUrls: kitStore.fileUrls,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -400,7 +425,9 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     }
     if (result.typeDiff) {
       // Apply type diff to the type store
-      // This would require implementing change method in TypeStore
+      if (typeStore) {
+        typeStore.change(result.typeDiff);
+      }
     }
     this.recordEdit(typeEditor, result);
     return result as T;

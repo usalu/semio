@@ -74,6 +74,8 @@ interface TreeSectionProps {
   defaultOpen?: boolean;
   className?: string;
   actions?: TreeSectionAction[];
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 interface SortableTreeItemProps {
@@ -113,7 +115,7 @@ interface SortableTreeItemsProps {
   children: (item: any, index: number) => ReactNode;
 }
 
-export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [] }) => {
+export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
   const sectionId = `section-${label}`;
@@ -127,8 +129,14 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
       <div
         className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 ${className}`}
         style={{ paddingLeft: `${level * 0.75}rem` }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onPointerEnter={() => {
+          setIsHovered(true);
+          onSectionPointerEnter?.();
+        }}
+        onPointerLeave={() => {
+          setIsHovered(false);
+          onSectionPointerLeave?.();
+        }}
       >
         <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
         <div className="w-[14px] flex-shrink-0" />
@@ -164,8 +172,14 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 ${className}`}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           role="button"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onPointerEnter={() => {
+            setIsHovered(true);
+            onSectionPointerEnter?.();
+          }}
+          onPointerLeave={() => {
+            setIsHovered(false);
+            onSectionPointerLeave?.();
+          }}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />}

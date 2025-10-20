@@ -2,6 +2,21 @@
 
 // Workbench.tsx
 
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // #endregion
 
 import { useDraggable } from "@dnd-kit/core";
@@ -59,9 +74,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 
   const enhancedListeners = {
     ...listeners,
-    onPointerDown: (e: React.PointerEvent) => {
-      console.log("[ORIGIN] TypeAvatar onPointerDown, setting interaction:", interactionId);
-      setActiveInteraction(interactionId);
+    onPointerDown: (e: React.PointerEvent) => {setActiveInteraction(interactionId);
       listeners?.onPointerDown?.(e);
     },
   };
@@ -81,9 +94,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   }, [type, selection?.pieces, design?.pieces]);
 
   // Early return AFTER all hooks have been called
-  if (!type) {
-    console.warn("[ORIGIN] TypeAvatar requires either a type or typeId prop");
-    return null;
+  if (!type) {return null;
   }
 
   const isActiveSelection = isSelected;
@@ -91,7 +102,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   const displayVariant = type.variant || type.name;
   const avatar = (
     <Avatar
-      className={`cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)] ${isActiveSelection ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : ""}`}
+      className={`cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)] ${isActiveSelection ? "ring-1 ring-inset ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-inset ring-[color:var(--hover-base)]" : ""}`}
       style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
     >
       <AvatarFallback className={`select-none ${isActiveSelection ? "bg-[var(--active-base)] text-[var(--active-foreground)]" : isHovered ? "bg-[var(--hover-base)] text-foreground" : "bg-muted"}`}>
@@ -210,9 +221,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   }, [design, selection?.pieces, selection?.design, currentDesign?.pieces]);
 
   // Early return AFTER all hooks have been called
-  if (!design) {
-    console.warn("[ORIGIN] DesignAvatar requires either a design or designId prop");
-    return null;
+  if (!design) {return null;
   }
 
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
@@ -220,7 +229,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   const displayVariant = design.variant || design.name;
   const avatar = (
     <Avatar
-      className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[color:var(--border-color)] ${isSelectedDesign ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : ""}`}
+      className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[color:var(--border-color)] ${isSelectedDesign ? "ring-1 ring-inset ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-inset ring-[color:var(--hover-base)]" : ""}`}
       style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}
     >
       <AvatarFallback className={`select-none ${isSelectedDesign ? "bg-[var(--active-base)] text-[var(--active-foreground)]" : isHovered ? "bg-[var(--hover-base)] text-foreground" : "bg-muted"}`}>

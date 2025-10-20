@@ -452,10 +452,8 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   finalizeTransaction = () => {
     if (this.isTransactionActive) {
       this.transact(() => {
-        // Clear redo stack when transaction is finalized
         let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
         if (redoStack && redoStack.length > 0) {
-          console.log("[ORIGIN] Clearing redo stack on finalize");
           redoStack.delete(0, redoStack.length);
         }
 
@@ -500,7 +498,6 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
         const edit = currentStack.get(currentStack.length - 1);
         this.lastDeletedTransactionEdit = edit;
         currentStack.delete(currentStack.length - 1, 1);
-        console.log("[ORIGIN] Undo in transaction, stack length:", currentStack.length);
         if (edit && edit.undo) {
           if (edit.undo.kitDiff) {
             this.kit().change(edit.undo.kitDiff);
@@ -521,7 +518,6 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
         const edit = pastStack.get(pastStack.length - 1);
         pastStack.delete(pastStack.length - 1, 1);
         redoStack.push([edit]);
-        console.log("[ORIGIN] Undo outside transaction, past stack length:", pastStack.length, "redo stack length:", redoStack.length);
         if (edit && edit.undo) {
           if (edit.undo.kitDiff) {
             this.kit().change(edit.undo.kitDiff);
@@ -553,7 +549,6 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
       if (lastDeletedEdit) {
         currentStack.push([lastDeletedEdit]);
         this.lastDeletedTransactionEdit = undefined;
-        console.log("[ORIGIN] Redo in transaction, stack length:", currentStack.length);
         if (lastDeletedEdit.do) {
           if (lastDeletedEdit.do.kitDiff) {
             this.kit().change(lastDeletedEdit.do.kitDiff);
@@ -572,7 +567,6 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
         if (pastStack) {
           pastStack.push([edit]);
         }
-        console.log("[ORIGIN] Redo outside transaction, past stack length:", pastStack.length, "redo stack length:", redoStack.length);
         if (edit && edit.do) {
           if (edit.do.kitDiff) {
             this.kit().change(edit.do.kitDiff);
@@ -594,16 +588,11 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
   };
 
   protected recordEdit(state: any, result: TCommandResult) {
-    console.log("[ORIGIN] recordEdit called, isTransactionActive:", this.isTransactionActive, "has diff:", !!result.diff, "has kitDiff:", !!result.kitDiff);
     if (this.isTransactionActive && (result.diff || result.kitDiff)) {
-      // Clear redo stack when new edit is recorded
       let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
       if (redoStack && redoStack.length > 0) {
-        console.log("[ORIGIN] Clearing redo stack");
         redoStack.delete(0, redoStack.length);
       }
-
-      // Clear last deleted edit for in-transaction redo
       this.lastDeletedTransactionEdit = undefined;
 
       let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
@@ -630,9 +619,6 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
         undo: undoStep,
       };
       currentStack.push([edit]);
-      console.log("[ORIGIN] Edit recorded, stack length:", currentStack.length);
-    } else {
-      console.log("[ORIGIN] Edit NOT recorded");
     }
   }
 
@@ -1400,11 +1386,8 @@ export class SketchpadStore {
           this.kits.set(kit.guid, kitStore);
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
         } catch (error) {
-          console.error(`Error loading kit ${kitGuid} from IndexedDB:`, error);
         }
       } else {
-        // Temporary kit - can't be recovered, remove from metadata
-        console.warn(`Temporary kit ${kitGuid} was not persisted and cannot be recovered`);
         this.yDoc.transact(() => {
           const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
           if (index !== -1) {
@@ -1620,7 +1603,6 @@ export function useEditorPanelVisibility(): PanelVisibility {
         return unsubscribe;
       }
     } catch (e) {
-      console.error("Error in useEditorPanelVisibility:", e);
     }
   }, [store, editorType, kitGuid, itemGuid, navigation]);
 
@@ -1655,13 +1637,11 @@ export function useEditorCommands() {
           break;
       }
     } catch (e) {
-      console.error("Error getting editor in useEditorCommands:", e);
     }
 
     return {
       togglePanel: (panelKey: keyof PanelVisibility) => {
         if (!editor) {
-          console.error("[useEditorCommands] togglePanel: no editor found!");
           return;
         }
         const current = editor.snapshot().panelVisibility;
@@ -1672,7 +1652,6 @@ export function useEditorCommands() {
             },
           });
         } catch (e) {
-          console.error("[useEditorCommands] ERROR calling editor.change:", e);
         }
       },
       execute: (command: string, ...args: any[]) => {

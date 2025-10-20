@@ -1,3 +1,24 @@
+// #region Header
+
+// Details.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
 import { arrayMove } from "@dnd-kit/sortable";
 import { Minus, Plus } from "lucide-react";
 import { FC } from "react";
@@ -20,7 +41,7 @@ const TypeDetailsForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
-  const type = useType() as Type;
+  const type = useType(undefined, undefined, true) as Type;
 
   const updateTypeField = (diff: any) => {
     kitCommands.updateType(type.guid, diff);
@@ -110,7 +131,7 @@ const RepresentationsSectionForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, selectRepresentation, deselectRepresentation, hoverRepresentation, clearHover } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
-  const type = useType() as Type;
+  const type = useType(undefined, undefined, true) as Type;
   const selection = useTypeEditorSelection();
   const hover = useTypeEditorHover();
 
@@ -259,13 +280,9 @@ const PortsSectionForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction, selectPort, deselectPort, hoverPort, clearHover } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
-  const type = useType() as Type;
+  const type = useType(undefined, undefined, true) as Type;
   const selection = useTypeEditorSelection();
-  const hover = useTypeEditorHover();
-
-  console.log("[ORIGIN] PortsSectionForm render", { selection, hover });
-
-  const handleChange = (updatedType: any) => {
+  const hover = useTypeEditorHover();const handleChange = (updatedType: any) => {
     kitCommands.updateType(type.guid, updatedType);
   };
 
@@ -313,28 +330,18 @@ const PortsSectionForm: FC = () => {
         >
           {(port, index) => {
             const isSelected = selection?.ports?.includes(port.guid) || false;
-            const isHovered = hover?.port === port.guid;
-
-            console.log("[ORIGIN] Rendering port tree item", { portId: port.guid, isSelected, isHovered, hoverState: hover });
-
-            const handleClick = (e: React.MouseEvent) => {
-              e.stopPropagation();
-              console.log("[ORIGIN] Port tree item clicked", { portId: port.guid, isSelected });
-              if (isSelected) {
+            const isHovered = hover?.port === port.guid;const handleClick = (e: React.MouseEvent) => {
+              e.stopPropagation();if (isSelected) {
                 deselectPort(port.guid);
               } else {
                 selectPort(port.guid);
               }
             };
 
-            const handleHover = () => {
-              console.log("[ORIGIN] Port tree item hover", { portId: port.guid });
-              hoverPort(port.guid);
+            const handleHover = () => {hoverPort(port.guid);
             };
 
-            const handleLeave = () => {
-              console.log("[ORIGIN] Port tree item leave");
-              clearHover();
+            const handleLeave = () => {clearHover();
             };
 
             return (
@@ -352,8 +359,9 @@ const PortsSectionForm: FC = () => {
                       onClick: () => {
                         startTransaction();
                         handleChange({
-                          ...type,
-                          ports: type.ports?.filter((_: any, i: number) => i !== index),
+                          ports: {
+                            removed: [port.guid],
+                          },
                         });
                         finalizeTransaction();
                       },
@@ -565,7 +573,7 @@ const AuthorsSectionForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
-  const type = useType() as Type;
+  const type = useType(undefined, undefined, true) as Type;
   const kit = useKit() as Kit;
 
   const handleChange = (updatedType: any) => {
@@ -683,7 +691,7 @@ const AttributesSectionForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
-  const type = useType() as Type;
+  const type = useType(undefined, undefined, true) as Type;
 
   const handleChange = (updatedType: any) => {
     kitCommands.updateType(type.guid, updatedType);

@@ -2,16 +2,20 @@
 
 // Details.tsx
 
-// Generalized details panel that displays context-specific information based on the active editor and selection.
-// Editors can register details sections dynamically that update based on user selections.
-//
-// Architecture:
-// - Wraps content in scope providers (Kit, Design, Type) based on route parameters
-// - Editors register sections via `useAddPanelSection("details", {...})`
-// - Common pattern: editors register different sections based on selection state
-//   (e.g., design editor shows "Design" when nothing selected, "Pieces" when pieces selected)
-// - Sections are sorted by order and rendered as TreeSections
-// - Shows a placeholder message when no sections are registered
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
 
@@ -104,7 +108,14 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
             <TreeStateProvider>
               <Tree className="min-w-0 overflow-hidden">
                 {sortedSections.map((section) => (
-                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions}>
+                  <TreeSection
+                    key={section.id}
+                    label={section.label}
+                    defaultOpen={section.defaultOpen}
+                    actions={section.actions}
+                    onPointerEnter={section.onPointerEnter}
+                    onPointerLeave={section.onPointerLeave}
+                  >
                     {typeof section.content === "function" ? section.content() : section.content}
                   </TreeSection>
                 ))}

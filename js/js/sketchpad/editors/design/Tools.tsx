@@ -2,138 +2,83 @@
 
 // Tools.tsx
 
-// Tool components for the design editor toolbar.
-// Provides selection and lasso tools with dropdown variants.
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
 
-import { Lasso, MousePointer2, Square } from "lucide-react";
+import { Lasso, Minus, MousePointer2, Plus, Square } from "lucide-react";
 import { FC } from "react";
-import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../elements/display/Tooltip";
-import { Button } from "../../../elements/input/Button";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../elements/Popover";
+import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
 import { useDesignEditor, useDesignEditorCommands } from "./store";
 
+const DESIGN_TOOLS: ToolDefinition[] = [
+  {
+    id: "selection",
+    defaultMode: ToolType.SELECTION_NORMAL,
+    modes: [
+      {
+        id: ToolType.SELECTION_NORMAL,
+        label: "Normal",
+        icon: <MousePointer2 className="h-4 w-4" />,
+        tooltip: "Click to select pieces",
+        hotkey: "Click",
+      },
+      {
+        id: ToolType.SELECTION_ADDITIVE,
+        label: "Additive",
+        icon: <Plus className="h-4 w-4" />,
+        tooltip: "Add to selection",
+        hotkey: "Shift",
+      },
+      {
+        id: ToolType.SELECTION_SUBTRACTIVE,
+        label: "Subtractive",
+        icon: <Minus className="h-4 w-4" />,
+        tooltip: "Remove from selection",
+        hotkey: "Ctrl",
+      },
+    ],
+  },
+  {
+    id: "lasso",
+    defaultMode: ToolType.LASSO_RECTANGULAR,
+    modes: [
+      {
+        id: ToolType.LASSO_RECTANGULAR,
+        label: "Rectangular",
+        icon: <Square className="h-4 w-4" />,
+        tooltip: "Draw rectangle to select multiple pieces",
+      },
+      {
+        id: ToolType.LASSO_FREEFORM,
+        label: "Freeform",
+        icon: <Lasso className="h-4 w-4" />,
+        tooltip: "Draw freeform shape to select multiple pieces",
+      },
+    ],
+  },
+];
+
 export const ToolsToggleGroup: FC = () => {
-  const { t } = useTranslation();
   const { kit, design } = useParams();
   const editor = useDesignEditor((s) => s, kit && design ? { kit, design } : undefined);
   const { setActiveTool } = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
-
   if (!editor) return null;
-
   const activeTool = editor.activeTool || ToolType.SELECTION_NORMAL;
-
-  const isSelectionTool = activeTool === ToolType.SELECTION_NORMAL || activeTool === ToolType.SELECTION_ADDITIVE || activeTool === ToolType.SELECTION_SUBTRACTIVE;
-  const isLassoTool = activeTool === ToolType.LASSO_RECTANGULAR || activeTool === ToolType.LASSO_FREEFORM;
-
-  const getSelectionIcon = () => <MousePointer2 className="h-4 w-4" />;
-
-  const getSelectionLabel = () => {
-    switch (activeTool) {
-      case ToolType.SELECTION_NORMAL:
-        return "Normal";
-      case ToolType.SELECTION_ADDITIVE:
-        return "Additive";
-      case ToolType.SELECTION_SUBTRACTIVE:
-        return "Subtractive";
-      default:
-        return "Select";
-    }
-  };
-
-  const getLassoIcon = () => {
-    switch (activeTool) {
-      case ToolType.LASSO_RECTANGULAR:
-        return <Square className="h-4 w-4" />;
-      case ToolType.LASSO_FREEFORM:
-        return <Lasso className="h-4 w-4" />;
-      default:
-        return <Square className="h-4 w-4" />;
-    }
-  };
-
-  const getLassoLabel = () => {
-    switch (activeTool) {
-      case ToolType.LASSO_RECTANGULAR:
-        return "Rectangular";
-      case ToolType.LASSO_FREEFORM:
-        return "Freeform";
-      default:
-        return "Lasso";
-    }
-  };
-
-  return (
-    <TooltipProvider>
-      <div className="flex items-center gap-2">
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button level="panel" variant={isSelectionTool ? "default" : "ghost"} className="h-8 w-8 p-0">
-                  {getSelectionIcon()}
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-xs">
-                <div className="font-semibold">Selection Tool</div>
-                <div className="text-muted-foreground">Click to select pieces</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-48 p-2">
-            <div className="space-y-1">
-              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_NORMAL)}>
-                <MousePointer2 className="h-4 w-4" />
-                <span className="text-xs">Normal (Click)</span>
-              </Button>
-              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_ADDITIVE)}>
-                <MousePointer2 className="h-4 w-4" />
-                <span className="text-xs">Additive (Shift)</span>
-              </Button>
-              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_SUBTRACTIVE)}>
-                <MousePointer2 className="h-4 w-4" />
-                <span className="text-xs">Subtractive (Ctrl)</span>
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button level="panel" variant={isLassoTool ? "default" : "ghost"} className="h-8 w-8 p-0">
-                  {getLassoIcon()}
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-xs">
-                <div className="font-semibold">Lasso Tool</div>
-                <div className="text-muted-foreground">Draw to select multiple pieces</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-48 p-2">
-            <div className="space-y-1">
-              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.LASSO_RECTANGULAR)}>
-                <Square className="h-4 w-4" />
-                <span className="text-xs">Rectangular</span>
-              </Button>
-              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.LASSO_FREEFORM)}>
-                <Lasso className="h-4 w-4" />
-                <span className="text-xs">Freeform</span>
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </TooltipProvider>
-  );
+  return <ToolGroup tools={DESIGN_TOOLS} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
 };

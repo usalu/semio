@@ -1,3 +1,24 @@
+// #region Header
+
+// Details.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
 import { arrayMove } from "@dnd-kit/sortable";
 import { Slider } from "@radix-ui/react-slider";
 import { Connection } from "@xyflow/react";
@@ -485,34 +506,22 @@ const PiecesSectionForm: FC = () => {
     return piece.guid;
   };
 
-  const handleTypeNameChange = (value: string) => {
-    console.warn("[ORIGIN] handleTypeNameChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+  const handleTypeNameChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleTypeVariantChange = (value: string) => {
-    console.warn("[ORIGIN] handleTypeVariantChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+  const handleTypeVariantChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleDesignNameChange = (value: string) => {
-    console.warn("[ORIGIN] handleDesignNameChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+  const handleDesignNameChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleDesignVariantChange = (value: string) => {
-    console.warn("[ORIGIN] handleDesignVariantChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+  const handleDesignVariantChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const handleDesignViewChange = (value: string) => {
-    console.warn("[ORIGIN] handleDesignViewChange not yet implemented");
-    // TODO: Implement using updatePiece/updatePieces commands
+  const handleDesignViewChange = (value: string) => {// TODO: Implement using updatePiece/updatePieces commands
   };
 
-  const fixPieces = async () => {
-    console.warn("[ORIGIN] fixPieces not yet implemented");
-    // TODO: Implement using execute command
+  const fixPieces = async () => {// TODO: Implement using execute command
   };
 
   const handleCenterXChange = (value: number) => {

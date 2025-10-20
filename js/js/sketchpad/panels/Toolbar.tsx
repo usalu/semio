@@ -2,108 +2,61 @@
 
 // Toolbar.tsx
 
-// Horizontal toolbar panel component positioned at the bottom of the editor.
-// Displays dynamic tool sections registered by editors in a horizontal layout.
-//
-// Architecture:
-// - Positioned at bottom, between left and right panels
-// - On mobile: full width (no side panels)
-// - On desktop: adjusts width based on visible side panels
-// - Editors use `useAddPanelSection` to register tool sections dynamically
-// - Sections are displayed horizontally with separators
-//
-// Example usage in an editor:
-//   const addSection = useAddPanelSection();
-//   useEffect(() => {
-//     addSection("toolbar", {
-//       id: "my-tools",
-//       label: "My Tools",
-//       order: 0,
-//       content: () => <MyToolButtons />
-//     });
-//     return () => removeSection("toolbar", "my-tools");
-//   }, []);
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
 
-import { FC, useState } from "react";
+import { FC } from "react";
 import { usePanelSections } from "../Navbar";
 import { useActiveInteraction, useIsMobile } from "../store";
 
 interface ToolbarProps {
   visible: boolean;
-  onHeightChange?: (height: number) => void;
-  height: number;
   leftOffset?: number;
   rightOffset?: number;
 }
 
-const Toolbar: FC<ToolbarProps> = ({ visible, onHeightChange, height, leftOffset = 0, rightOffset = 0 }) => {
-  const [isResizeHovered, setIsResizeHovered] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
+const Toolbar: FC<ToolbarProps> = ({ visible, leftOffset = 0, rightOffset = 0 }) => {
   const isMobile = useIsMobile();
   const activeInteraction = useActiveInteraction();
-
   const sections = usePanelSections("toolbar");
-
   if (!visible) return null;
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-
-    const startY = e.clientY;
-    const startHeight = height;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = startHeight - (e.clientY - startY);
-      if (newHeight >= 40 && newHeight <= 200) {
-        onHeightChange?.(newHeight);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
-
   return (
     <div
-      className={`z-20 bg-panel text-foreground border border-t
-                ${isResizing || isResizeHovered ? "border-t-accent" : ""}`}
+      className="z-20 bg-transparent text-foreground h-9"
       style={{
-        height: `${height}px`,
         marginLeft: `${leftOffset}px`,
         marginRight: `${rightOffset}px`,
         opacity: activeInteraction ? 0.1 : 1,
         transition: "opacity 150ms",
       }}
     >
-      <div className="h-full flex items-center justify-center overflow-x-auto overflow-y-hidden">
+      <div className="h-full flex items-center justify-center">
         {sortedSections.length === 0 ? (
-          <div className="text-muted-foreground text-xs py-2">No tools</div>
+          <div className="text-muted-foreground text-xs">No tools</div>
         ) : (
-          <div className={`inline-flex items-center gap-2 h-full ${isMobile ? "px-3" : "px-2"}`}>
-            {sortedSections.map((section, index) => {
+          <div className={`inline-flex items-center gap-1 ${isMobile ? "px-1" : "px-1"}`}>
+            {sortedSections.map((section) => {
               const content = typeof section.content === "function" ? section.content() : section.content;
-              return (
-                <div key={section.id} className="flex items-center h-full">
-                  {index > 0 && <div className="w-px h-6 bg-border mx-1" />}
-                  <div className="flex items-center gap-1">{content}</div>
-                </div>
-              );
+              return <div key={section.id}>{content}</div>;
             })}
           </div>
         )}
       </div>
-      <div className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />
     </div>
   );
 };

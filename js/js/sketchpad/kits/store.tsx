@@ -1,4 +1,23 @@
-// #region Attribute
+// #region Header
+
+// store.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
 
 import { Connection } from "@xyflow/react";
 import React, { createContext, useContext, useMemo } from "react";
@@ -3202,12 +3221,8 @@ export class DesignStore {
         if (diff.pieces.updated) {
           diff.pieces.updated.forEach(({ id, diff: pieceDiff }) => {
             const pieceStore = this.pieces.get(id);
-            if (pieceStore) {
-              console.log("[ORIGIN] Updating piece:", id, "with diff:", pieceDiff);
-              pieceStore.change(pieceDiff);
-            } else {
-              console.warn("[ORIGIN] Piece not found for update:", id);
-            }
+            if (pieceStore) {pieceStore.change(pieceDiff);
+            } else {}
           });
         }
         if (diff.pieces.removed) {
@@ -3597,10 +3612,7 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
             plane: includedDesign.plane,
             description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.Guid.name}`,
           };
-        }
-
-        console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
-        return {
+        }return {
           id_: pieceIdString,
           type: {
             name: "unknown",
@@ -3870,8 +3882,8 @@ export class KitStore {
     this.types.set(type.guid, yTypeStore);
   }
 
-  type(guid: string): TypeStore {
-    return this.types.get(guid)!;
+  type(guid: string): TypeStore | undefined {
+    return this.types.get(guid);
   }
 
   hasDesign(guid: string): boolean {

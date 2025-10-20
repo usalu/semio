@@ -320,8 +320,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 
 ### Styling
 
-- The ui consists of a navbar and edgeless content. Everything else is displayed as HUD with floating panels that show different colors.
--
+- The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
 
 # Packages
 

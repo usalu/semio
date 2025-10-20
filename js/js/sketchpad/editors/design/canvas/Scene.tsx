@@ -1,6 +1,6 @@
 // #region Header
 
-// DesignModel.tsx
+// Scene.tsx
 
 // 2025 Ueli Saluz
 // 2025 AdrianoCelentano

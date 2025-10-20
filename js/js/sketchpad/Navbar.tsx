@@ -90,6 +90,8 @@ export interface PanelSection {
     onClick: () => void;
     title: string;
   }>;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar";
@@ -128,22 +130,17 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
   });
 
   const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
-    console.log("[ORIGIN] PanelSectionProvider addSection called", { panelKey, sectionId: section.id, label: section.label });
     setSections((prev) => {
       const updated = {
         ...prev,
         [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => (a.order || 0) - (b.order || 0)),
       };
-      console.log("[ORIGIN] PanelSectionProvider sections updated", { panelKey, count: updated[panelKey].length, sections: updated[panelKey].map((s) => ({ id: s.id, label: s.label })) });
       return updated;
     });
   }, []);
 
   const removeSection = useCallback((panelKey: PanelKey, sectionId: string) => {
-    setSections((prev) => ({
-      ...prev,
-      [panelKey]: prev[panelKey].filter((s) => s.id !== sectionId),
-    }));
+    setSections((prev) => ({ ...prev, [panelKey]: prev[panelKey].filter((s) => s.id !== sectionId) }));
   }, []);
 
   return <PanelSectionContext.Provider value={{ sections, addSection, removeSection }}>{children}</PanelSectionContext.Provider>;
@@ -220,31 +217,22 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const isMobile = useIsMobile();
   const isNavbarExpanded = useIsNavbarExpanded();
 
-  // Parse URL path parts
   const pathParts = navigation.split("/").filter((p) => p);
-
-  // Determine what kind of page we're on
   const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
-  // Check if we're in the /kits path
   const isKitsPath = pathParts[0] === "kits";
 
-  // Home page filters (?kind=&name=&version=)
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
 
-  // Kit editor (/kits/:kitGuid or /kits/:kitGuid/designs/:design or /kits/:kitGuid/types/:type)
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
 
-  // Check if we're in design or type editor
   const secondPart = pathParts[2];
   const thirdPart = pathParts[3];
   const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
   const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
   const itemGuid = isDesignEditor || isTypeEditor ? thirdPart : null;
 
-  // Get artifact kind filters for kit editor (?kind=&name=&variant=&view=)
   const filteredKind = kitGuid && !isDesignEditor && !isTypeEditor ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
   const filteredName = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("name") : null;
   const filteredVariant = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("variant") : null;
@@ -255,7 +243,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const kit = kits.find((k) => k.guid === kitGuid);
   const store = useSketchpadStore();
 
-  // Determine kit storage kind
   const kitKind = useMemo(() => {
     if (!kitGuid || !store.hasKit(kitGuid)) return undefined;
     const kitStore = store.kit(kitGuid);
@@ -265,14 +252,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return "temporary";
   }, [kitGuid, store]);
 
-  // Kit kind items for breadcrumb
   const kitKindItems = [
     { label: <Clock size={16} />, tooltip: tooltip("breadcrumb.temporary"), href: "/?kind=temporary" },
     { label: <HardDrive size={16} />, tooltip: tooltip("breadcrumb.local"), href: "/?kind=local" },
     { label: <Cloud size={16} />, tooltip: tooltip("breadcrumb.remote"), href: "/?kind=remote" },
   ];
 
-  // Filter kits by kind for the kit selector
   const kitItemsWithCreate = useMemo(() => {
     const items = kits
       .filter((k) => {
@@ -283,7 +268,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       })
       .map((k) => ({ label: k.name, href: `/kits/${k.guid}` }));
 
-    // Add create option
     items.push({ label: "+ " + t("navbar.createKit"), href: "#create-kit" });
     return items;
   }, [kits, kitKind, store, t]);
@@ -328,7 +312,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     { label: <User size={16} />, tooltip: tooltip("breadcrumb.authors"), kind: "authors", href: kitGuid ? `/kits/${kitGuid}?kind=authors` : "/kits?kind=authors" },
   ];
 
-  // Get all designs and types as full objects (needed for create handlers)
   const allDesigns: Design[] = useMemo(() => {
     if (!kit?.designs) return [];
     return (kit.designs as any[]).filter((d): d is Design => typeof d === "object" && d.guid !== undefined);
@@ -339,7 +322,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return (kit.types as any[]).filter((t): t is Type => typeof t === "object" && t.guid !== undefined);
   }, [kit?.types]);
 
-  // Create handlers for various entity types
   const handleCreateKit = useCallback(() => {
     const guid = crypto.randomUUID();
     const now = new Date();
@@ -447,7 +429,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     [kitCommands, kitGuid, navigate, allDesigns],
   );
 
-  // Create handler for filtered artifact kinds
   const handleCreate = useCallback(() => {
     if (!kit || !filteredKind || !kitCommands) return;
 
