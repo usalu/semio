@@ -151,7 +151,8 @@ const SketchpadBase: FC = () => {
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-  }, [updateIsMobile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle layout switching based on mobile state
   useEffect(() => {

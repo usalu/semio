@@ -34,12 +34,17 @@ import { Tree, TreeSection } from "../../elements/aggregation/Tree";
 import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile } from "../store";
+import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile, useNavigation } from "../store";
 
 interface WorkbenchProps extends ResizablePanelProps {}
 
 const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
-  const { kit, design, type } = useParams();
+  const params = useParams();
+  const navigation = useNavigation();
+  const match = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
+  const kit = params.kit ?? match?.[1];
+  const design = params.design ?? (match?.[2] === "designs" ? match?.[3] : undefined);
+  const type = params.type ?? (match?.[2] === "types" ? match?.[3] : undefined);
   if (design && kit) {
     return (
       <KitScopeProvider guid={kit}>
@@ -72,8 +77,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
 
   console.log("[ORIGIN] Workbench sections:", sections, "isMobile:", isMobile, "visible:", visible);
 
-  if (!visible) return null;
-
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -104,6 +107,8 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     "[ORIGIN] Workbench rendering, sortedSections:",
     sortedSections.map((s) => ({ id: s.id, label: s.label })),
   );
+
+  if (!visible) return null;
 
   return (
     <div

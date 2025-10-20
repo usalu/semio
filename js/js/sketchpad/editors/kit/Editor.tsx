@@ -1,7 +1,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Award, Box, FileText, Layout, Plus, User } from "lucide-react";
-import { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
@@ -11,7 +11,7 @@ import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { Author, Design, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
-import { EditorType, useEditorType, useIsMobile, useKit, useKitCommands, useNavigation, useSketchpadCommands, useTooltip } from "../../store";
+import { EditorType, useEditorType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 import { KitDetails } from "./panels/Details";
 import { KitEditorState, useKitEditor, useKitEditorCommands } from "./store";
 
@@ -43,7 +43,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Editor: FC = () => {
+const EditorContent: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -51,25 +51,7 @@ const Editor: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tooltip = useTooltip();
 
-  let kit: Kit | null = null;
-  try {
-    kit = useKit() as Kit;
-  } catch (error) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
-      </div>
-    );
-  }
-
-  if (!kit) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
-      </div>
-    );
-  }
-
+  const kit = useKit() as Kit;
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitEditorCommands = useKitEditorCommands();
@@ -107,54 +89,54 @@ const Editor: FC = () => {
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
-    kit.designs?.forEach((d: Design) => d.concepts?.forEach((c: string) => conceptSet.add(c)));
+    kit?.designs?.forEach((d: Design) => d.concepts?.forEach((c: string) => conceptSet.add(c)));
     return Array.from(conceptSet).sort();
-  }, [kit.designs]);
+  }, [kit?.designs]);
 
   // Collect unique names for the selected kind (or unified when no kind selected)
   const uniqueNames = useMemo(() => {
     const nameSet = new Set<string>();
     if (!selectedKind || selectedKind === "designs") {
-      kit.designs?.forEach((d: Design) => nameSet.add(d.name));
+      kit?.designs?.forEach((d: Design) => nameSet.add(d.name));
     }
     if (!selectedKind || selectedKind === "types") {
-      kit.types?.forEach((t: Type) => nameSet.add(t.name));
+      kit?.types?.forEach((t: Type) => nameSet.add(t.name));
     }
     return Array.from(nameSet).sort();
-  }, [kit.designs, kit.types, selectedKind]);
+  }, [kit?.designs, kit?.types, selectedKind]);
 
   // Collect unique variants for the selected name
   const uniqueVariants = useMemo(() => {
     if (!selectedName) return [];
     const variantSet = new Set<string>();
     if (!selectedKind || selectedKind === "designs") {
-      kit.designs?.forEach((d: Design) => {
+      kit?.designs?.forEach((d: Design) => {
         if (d.name === selectedName) {
           variantSet.add(d.variant || "");
         }
       });
     }
     if (!selectedKind || selectedKind === "types") {
-      kit.types?.forEach((t: Type) => {
+      kit?.types?.forEach((t: Type) => {
         if (t.name === selectedName) {
           variantSet.add(t.variant || "");
         }
       });
     }
     return Array.from(variantSet).sort();
-  }, [kit.designs, kit.types, selectedKind, selectedName]);
+  }, [kit?.designs, kit?.types, selectedKind, selectedName]);
 
   // Collect unique views for the selected name and variant (only for designs)
   const uniqueViews = useMemo(() => {
     if (!selectedName || selectedVariant === null || selectedKind !== "designs") return [];
     const viewSet = new Set<string>();
-    kit.designs?.forEach((d: Design) => {
+    kit?.designs?.forEach((d: Design) => {
       if (d.name === selectedName && (d.variant || "") === selectedVariant) {
         viewSet.add(d.view || "");
       }
     });
     return Array.from(viewSet).sort();
-  }, [kit.designs, selectedKind, selectedName, selectedVariant]);
+  }, [kit?.designs, selectedKind, selectedName, selectedVariant]);
 
   useEffect(() => {
     if (editorType !== EditorType.KIT) {
@@ -1407,6 +1389,64 @@ const Editor: FC = () => {
         </table>
       </ScrollArea>
     </div>
+  );
+};
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.log("[Kit Editor] Error caught:", error, errorInfo);
+  }
+
+  componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
+    if (prevProps.children !== this.props.children && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+const Editor: FC = () => {
+  const { t } = useTranslation();
+  const kitScope = useKitScope();
+  const sketchpadStore = useSketchpadStore();
+  const hasKit = kitScope?.guid ? sketchpadStore.hasKit(kitScope.guid) : false;
+
+  if (!hasKit) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <p className="text-sm text-muted-foreground">{t("kit.noKitLoaded")}</p>
+        </div>
+      }
+    >
+      <EditorContent />
+    </ErrorBoundary>
   );
 };
 

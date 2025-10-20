@@ -1,6 +1,7 @@
 import React, { createContext, useContext } from "react";
 import * as Y from "yjs";
 import { Camera, Coord, Guid, TypeDiff } from "../../../semio";
+import { TypeStore } from "../../kits/store";
 import {
   Editor,
   identitySelector,
@@ -20,11 +21,11 @@ import {
   YLeafMapString,
   YStringArray,
 } from "../../store";
-import TypeEditor from "./Editor";
+import { commands as typeEditorCommands } from "./commands";
 
 type YTypeEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YTypeEditor = Y.Map<YTypeEditorVal>;
-type YTypeEditors = Y.Map<string, YTypeEditor>;
+type YTypeEditors = Y.Map<YTypeEditor>;
 
 export interface TypeEditorId {
   kit: Guid;
@@ -117,19 +118,37 @@ function inverseTypeEditorSelectionDiff(selection: TypeEditorSelection, diff: Ty
 }
 
 class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult> {
-  private readonly Guid: Guid;
+  private readonly Guid: TypeEditorId;
 
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, Guid: Guid) {
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, id: TypeEditorId) {
     super(parent, yMap, transact);
-    this.Guid = Guid;
+    this.Guid = id;
 
-    if (!yMap.has("fullscreenWindow")) {
-      yMap.set("fullscreenWindow", TypeEditorFullscreenWindow.None);
-    }
+    transact(() => {
+      if (!yMap.has("fullscreenWindow")) {
+        yMap.set("fullscreenWindow", TypeEditorFullscreenWindow.None);
+      }
+      if (!yMap.has("activeTool")) {
+        yMap.set("activeTool", ToolType.PORT);
+      }
+      if (!yMap.has("panelVisibility")) {
+        const yPanelVisibility = new Y.Map<boolean>();
+        yPanelVisibility.set("toolbar", true);
+        yPanelVisibility.set("workbench", false);
+        yPanelVisibility.set("details", true);
+        yPanelVisibility.set("chat", false);
+        yPanelVisibility.set("settings", false);
+        yMap.set("panelVisibility", yPanelVisibility);
+      }
+    });
+
+    Object.entries(typeEditorCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
   }
 
   type(): TypeStore {
-    return this.parent.kit(this.Guid.kit).type(this.Guid);
+    return this.parent.kit(this.Guid.kit).type(this.Guid.type);
   }
 
   kit(): KitStore {
@@ -142,24 +161,31 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   }
 
   get activeTool(): ToolType {
-    return (this.yMap.get("activeTool") as ToolType) ?? ToolType.SELECTION_NORMAL;
+    const value = this.yMap.get("activeTool") as ToolType;
+    if (value === undefined) {
+      this.transact(() => {
+        this.yMap.set("activeTool", ToolType.PORT);
+      });
+      return ToolType.PORT;
+    }
+    return value;
   }
 
   get panelVisibility(): PanelVisibility {
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
-        toolbar: false,
+        toolbar: true,
         workbench: false,
-        details: false,
+        details: true,
         chat: false,
         settings: false,
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
+      toolbar: yPanelVisibility.get("toolbar") ?? true,
       workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
+      details: yPanelVisibility.get("details") ?? true,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
@@ -218,7 +244,9 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     return {
       fullscreenWindow: this.fullscreenWindow,
       panelVisibility: this.panelVisibility,
+      activeTool: this.activeTool,
       selection: this.selection,
+      hover: this.hover,
       isTransactionActive: this.isTransactionActive,
       canUndo: this.canUndo(),
       canRedo: this.canRedo(),
@@ -294,6 +322,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   }
 
   change = (diff: TypeEditorDiff) => {
+    console.log("[ORIGIN] TypeEditorStore.change called", { diff, guid: this.guid });
     this.transact(() => {
       if (diff.fullscreenWindow) {
         this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
@@ -317,15 +346,19 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
         this.applySelectionDiff(diff.selection);
       }
       if (diff.hover) {
+        console.log("[ORIGIN] Applying hover diff", { hover: diff.hover });
         let yHover = this.yMap.get("hover") as Y.Map<string>;
         if (!yHover) {
+          console.log("[ORIGIN] Creating new hover map");
           yHover = new Y.Map<string>();
           this.yMap.set("hover", yHover);
         }
         if (diff.hover.port !== undefined) {
           if (diff.hover.port) {
+            console.log("[ORIGIN] Setting port hover", { port: diff.hover.port });
             yHover.set("port", diff.hover.port);
           } else {
+            console.log("[ORIGIN] Deleting port hover");
             yHover.delete("port");
           }
         }
@@ -336,6 +369,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
             yHover.delete("representation");
           }
         }
+        console.log("[ORIGIN] After applying hover, yHover content:", { port: yHover.get("port"), representation: yHover.get("representation") });
       }
       if (diff.presence) {
         // Handle presence changes if needed
@@ -344,6 +378,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
         this.yMap.set("camera", JSON.stringify(diff.camera));
       }
     });
+    console.log("[ORIGIN] After transact, current hover state:", this.hover);
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
@@ -356,7 +391,8 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
     const context: TypeEditorCommandContext = {
       kit,
       typeEditor,
-      Guid: this.Guid,
+      Guid: this.type().guid,
+      fileUrls: this.kit().fileUrls,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -377,7 +413,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
 
 registerTypeEditorStoreFactory((parent, yMap, transact, id) => new TypeEditorStore(parent, yMap, transact, id));
 
-function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore | null {
+export function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedKitId = kitScope?.guid ?? id?.kit;
@@ -389,8 +425,10 @@ function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: Ty
   return selector ? selector(typeEditorStore) : typeEditorStore;
 }
 
-export function useTypeEditor<T>(selector?: (state: TypeEditorState) => T, id?: TypeEditorId): T | TypeEditorState {
-  return useSyncDeep<TypeEditorState, T>(useTypeEditorStore(identitySelector, id) as TypeEditorStore, selector ? selector : identitySelector);
+export function useTypeEditor<T>(selector?: (state: TypeEditorState) => T, id?: TypeEditorId): T | TypeEditorState | null {
+  const store = useTypeEditorStore(identitySelector, id);
+  if (!store) return null;
+  return useSyncDeep<TypeEditorState, T>(store as TypeEditorStore, selector ? selector : identitySelector);
 }
 
 export function useTypeEditorSelection(): TypeEditorSelection {
@@ -560,6 +598,14 @@ export function useTypeEditorHover(): TypeEditorHover | undefined {
 
 export function useTypeEditorActiveTool(): ToolType {
   return useTypeEditor((s) => s.activeTool) as ToolType;
+}
+
+export function useTypeEditorIsPortSelected(id: TypeEditorId | undefined, portId: string): boolean {
+  return useTypeEditor((s) => s.selection?.ports?.includes(portId) || false, id) as boolean;
+}
+
+export function useTypeEditorIsPortHovered(id: TypeEditorId | undefined, portId: string): boolean {
+  return useTypeEditor((s) => s.hover?.port === portId, id) as boolean;
 }
 
 const TypeEditorScopeContext = createContext<{ id: string } | undefined>(undefined);

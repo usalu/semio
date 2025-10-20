@@ -2,7 +2,16 @@
 
 import * as Y from "yjs";
 import { guid, Guid } from "../../../semio";
-import { createObserver, identitySelector, PanelVisibility, SketchpadStore, Subscribe, useSketchpadStore, useSyncDeep } from "../../store";
+import {
+  createObserver,
+  identitySelector,
+  PanelVisibility,
+  registerHomeStoreFactory,
+  SketchpadStore,
+  Subscribe,
+  useSketchpadStore,
+  useSyncDeep,
+} from "../../store";
 
 export interface HomeSelection {
   kits?: Guid[];
@@ -205,6 +214,8 @@ export class HomeStore {
     return this.executeCommand<T>(command, ...rest);
   }
 }
+
+registerHomeStoreFactory((parent, yMap, transact) => new HomeStore(parent, yMap, transact));
 
 function useHomeStore<T>(selector?: (store: HomeStore) => T): T | HomeStore {
   const store = useSketchpadStore();

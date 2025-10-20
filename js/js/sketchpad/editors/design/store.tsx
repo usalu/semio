@@ -6,24 +6,10 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, ConnectionDiff, Coord, DiffStatus, Guid, KitDiff, Piece, PieceDiff } from "../../../semio";
 import { DesignStore, KitCommandContext, KitStore, useDesignScope, useKitScope } from "../../kits/store";
-import {
-  Editor,
-  identitySelector,
-  PanelVisibility,
-  registerDesignEditorStoreFactory,
-  SketchpadStore,
-  ToolType,
-  useSketchpadStore,
-  useSync,
-  useSyncDeep,
-  YAttributes,
-  YLeafMapNumber,
-  YLeafMapString,
-  YStringArray,
-} from "../../store";
+import { Editor, identitySelector, PanelVisibility, registerDesignEditorStoreFactory, SketchpadStore, ToolType, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
 import { commands as designEditorCommands } from "./commands";
 
-type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y.Map<boolean> | YAttributes | YStringArray;
 type YDesignEditor = Y.Map<YDesignEditorVal>;
 type YDesignEditors = Y.Map<string, Y.Map<string, YDesignEditor>>;
 
@@ -211,6 +197,15 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     if (!yMap.has("pastTransactionsStack")) {
       yMap.set("pastTransactionsStack", new Y.Array<any>());
     }
+    if (!yMap.has("panelVisibility")) {
+      const yPanelVisibility = new Y.Map<boolean>();
+      yPanelVisibility.set("toolbar", true);
+      yPanelVisibility.set("workbench", true);
+      yPanelVisibility.set("details", true);
+      yPanelVisibility.set("chat", false);
+      yPanelVisibility.set("settings", false);
+      yMap.set("panelVisibility", yPanelVisibility as any);
+    }
 
     // Camera, diagramCenter, and diagramScale are already handled by their getters/setters
     // and will be preserved automatically if they exist in the yMap
@@ -236,17 +231,17 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
-        toolbar: false,
-        workbench: false,
-        details: false,
+        toolbar: true,
+        workbench: true,
+        details: true,
         chat: false,
         settings: false,
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
-      workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
+      toolbar: yPanelVisibility.get("toolbar") ?? true,
+      workbench: yPanelVisibility.get("workbench") ?? true,
+      details: yPanelVisibility.get("details") ?? true,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
@@ -621,7 +616,7 @@ export const DesignEditorScopeProvider = (props: { id: string; children: React.R
 };
 const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
-function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore | null {
+export function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedKitId = kitScope?.guid ?? id?.kit;
@@ -637,8 +632,10 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
-export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
-  return useSyncDeep<DesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
+export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState | null {
+  const store = useDesignEditorStore(identitySelector, id);
+  if (!store) return null;
+  return useSyncDeep<DesignEditorState, T>(store as DesignEditorStore, selector ? selector : identitySelector);
 }
 
 export function useDesignEditorSelection(): DesignEditorSelection {

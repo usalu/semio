@@ -24,13 +24,17 @@ import { Tree, TreeContent, TreeItem, TreeSection } from "../../elements/aggrega
 import { TreeStateProvider } from "../../elements/aggregation/TreeStateProvider";
 import { usePanelSections } from "../Navbar";
 import { ResizablePanelProps } from "../Sketchpad";
-import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile } from "../store";
+import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useActiveInteraction, useIsMobile, useNavigation } from "../store";
 
 interface DetailsProps extends ResizablePanelProps {}
 
 const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
-  const { kit, design, type } = useParams();
-
+  const params = useParams();
+  const navigation = useNavigation();
+  const match = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
+  const kit = params.kit ?? match?.[1];
+  const design = params.design ?? (match?.[2] === "designs" ? match?.[3] : undefined);
+  const type = params.type ?? (match?.[2] === "types" ? match?.[3] : undefined);
   if (design && kit) {
     return (
       <KitScopeProvider guid={kit}>
@@ -48,7 +52,6 @@ const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
   if (kit) {
     return <KitScopeProvider guid={kit}>{children}</KitScopeProvider>;
   }
-
   return <>{children}</>;
 };
 

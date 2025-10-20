@@ -1,4 +1,4 @@
-import { Access, Layout, Mode, SketchpadCommandContext, SketchpadCommandResult, Theme } from "./store";
+import { Access, Layout, migratePath, Mode, SketchpadCommandContext, SketchpadCommandResult, Theme } from "./store";
 
 export const commands = {
     "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
@@ -32,9 +32,12 @@ export const commands = {
         };
     },
     "semio.sketchpad.setIsMobile": (context: SketchpadCommandContext, isMobile: boolean): SketchpadCommandResult => {
-        return {
-            diff: { isMobile },
-        };
+        if (context.sketchpad.isMobile !== isMobile) {
+            return {
+                diff: { isMobile },
+            };
+        }
+        return {};
     },
     "semio.sketchpad.setActiveInteraction": (context: SketchpadCommandContext, interactionId?: string): SketchpadCommandResult => {
         return {

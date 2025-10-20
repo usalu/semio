@@ -25,36 +25,11 @@ import { useLocation, useNavigate } from "react-router";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
-import type {
-  DesignEditorCommandContext,
-  DesignEditorCommandResult,
-  DesignEditorDiff,
-  DesignEditorEdit,
-  DesignEditorId,
-  DesignEditorSelectionDiff,
-  DesignEditorState,
-} from "./editors/design/store";
-import type {
-  KitEditorCommandContext,
-  KitEditorCommandResult,
-  KitEditorDiff,
-  KitEditorEdit,
-  KitEditorId,
-  KitEditorSelectionDiff,
-  KitEditorState,
-} from "./editors/kit/store";
-import type {
-  TypeEditorCommandContext,
-  TypeEditorCommandResult,
-  TypeEditorDiff,
-  TypeEditorEdit,
-  TypeEditorId,
-  TypeEditorSelectionDiff,
-  TypeEditorState,
-} from "./editors/type/store";
-import { HomeStore } from "./editors/home/store";
-import { KitStore } from "./kits/store";
 import { commands as sketchpadCommands } from "./commands";
+import type { DesignEditorId, DesignEditorState } from "./editors/design/store";
+import type { KitEditorId, KitEditorState } from "./editors/kit/store";
+import type { TypeEditorId, TypeEditorState } from "./editors/type/store";
+import { KitStore } from "./kits/store";
 export {
   AuthorScopeProvider,
   ConnectionScopeProvider,
@@ -235,23 +210,23 @@ type YTypeEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumbe
 type YTypeEditor = Y.Map<YTypeEditorVal>;
 type YTypeEditors = Y.Map<YTypeEditor>;
 
-type KitEditorStoreInstance = Editor<KitEditorState, KitEditorDiff, KitEditorSelectionDiff, KitEditorEdit, KitEditorCommandContext, KitEditorCommandResult>;
-type DesignEditorStoreInstance = Editor<DesignEditorState, DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorEdit, DesignEditorCommandContext, DesignEditorCommandResult>;
-type TypeEditorStoreInstance = Editor<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult>;
+type YKitMetadata = Y.Map<string | boolean>;
+type YKits = Y.Array<YKitMetadata>;
+
+type KitEditorStoreInstance = any;
+type DesignEditorStoreInstance = any;
+type TypeEditorStoreInstance = any;
+type HomeStoreInstance = any;
 
 type KitEditorStoreFactory = (parent: SketchpadStore, yMap: YKitEditor, transact: (fn: () => void) => void, id: KitEditorId, state?: KitEditorState) => KitEditorStoreInstance;
-type DesignEditorStoreFactory = (
-  parent: SketchpadStore,
-  yMap: YDesignEditor,
-  transact: (fn: () => void) => void,
-  id: DesignEditorId,
-  state?: DesignEditorState,
-) => DesignEditorStoreInstance;
+type DesignEditorStoreFactory = (parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) => DesignEditorStoreInstance;
 type TypeEditorStoreFactory = (parent: SketchpadStore, yMap: YTypeEditor, transact: (fn: () => void) => void, id: TypeEditorId, state?: TypeEditorState) => TypeEditorStoreInstance;
+type HomeStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => HomeStoreInstance;
 
 let kitEditorStoreFactory: KitEditorStoreFactory | undefined;
 let designEditorStoreFactory: DesignEditorStoreFactory | undefined;
 let typeEditorStoreFactory: TypeEditorStoreFactory | undefined;
+let homeStoreFactory: HomeStoreFactory | undefined;
 
 export function registerKitEditorStoreFactory(factory: KitEditorStoreFactory) {
   kitEditorStoreFactory = factory;
@@ -263,6 +238,10 @@ export function registerDesignEditorStoreFactory(factory: DesignEditorStoreFacto
 
 export function registerTypeEditorStoreFactory(factory: TypeEditorStoreFactory) {
   typeEditorStoreFactory = factory;
+}
+
+export function registerHomeStoreFactory(factory: HomeStoreFactory) {
+  homeStoreFactory = factory;
 }
 
 function resolveKitEditorStoreFactory(): KitEditorStoreFactory {
@@ -278,6 +257,11 @@ function resolveDesignEditorStoreFactory(): DesignEditorStoreFactory {
 function resolveTypeEditorStoreFactory(): TypeEditorStoreFactory {
   if (!typeEditorStoreFactory) throw new Error("Type editor store factory not registered");
   return typeEditorStoreFactory;
+}
+
+function resolveHomeStoreFactory(): HomeStoreFactory {
+  if (!homeStoreFactory) throw new Error("Home store factory not registered");
+  return homeStoreFactory;
 }
 
 // #endregion General
@@ -678,7 +662,7 @@ export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, T
 
 // #region Sketchpad
 
-type YSketchpadVal = string | boolean | YDesignEditors;
+type YSketchpadVal = string | number | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
 export interface PanelVisibility {
@@ -763,7 +747,7 @@ export class SketchpadStore {
   private readonly kits: Map<string, KitStore>;
   private readonly yKits: YKits;
   private readonly yHome: Y.Map<any>;
-  private homeStore?: HomeStore;
+  private homeStore?: HomeStoreInstance;
   private readonly yKitEditors: YKitEditors;
   private readonly kitEditors: Map<string, KitEditorStoreInstance>;
   private readonly yTypeEditors: YTypeEditors;
@@ -819,6 +803,9 @@ export class SketchpadStore {
     this.yKitEditors = this.yDoc.getMap("kitEditors");
     this.yTypeEditors = this.yDoc.getMap("typeEditors");
     this.yDesignEditors = this.yDoc.getMap("designEditors");
+
+    // Load persisted kits from IndexedDB
+    this.loadPersistedKits();
 
     // Only initialize sketchpad settings if they don't exist (preserve on reload)
     this.yDoc.transact(() => {
@@ -943,6 +930,16 @@ export class SketchpadStore {
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
     const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory);
     this.kits.set(kit.guid, kitStore);
+
+    // Store kit metadata in Y.Doc for persistence
+    this.yDoc.transact(() => {
+      const kitMetadata = new Y.Map<string | boolean>();
+      kitMetadata.set("guid", kit.guid);
+      kitMetadata.set("local", local || false);
+      kitMetadata.set("remote", remote || false);
+      this.yKits.push([kitMetadata]);
+    });
+
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -1038,7 +1035,11 @@ export class SketchpadStore {
     const kitStore = this.kits.get(guid);
     if (kitStore) {
       this.yDoc.transact(() => {
-        this.yKits.delete(guid);
+        // Find and remove the kit metadata from yKits
+        const index = this.yKits.toArray().findIndex((kitMeta) => kitMeta.get("guid") === guid);
+        if (index !== -1) {
+          this.yKits.delete(index, 1);
+        }
       });
       this.kits.delete(guid);
       this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
@@ -1154,7 +1155,7 @@ export class SketchpadStore {
       console.group(`Executing (special) command: "${command}"`);
       const Guid = rest[0] as Guid;
       const url = rest[1] as string;
-      const kitStore = this.kits.get(kitIdToString(Guid));
+      const kitStore = this.kits.get(Guid);
       if (kitStore) {
         await kitStore.execute("semio.kit.import", url);
       }
@@ -1220,9 +1221,10 @@ export class SketchpadStore {
     );
   }
 
-  home(): HomeStore {
+  home(): HomeStoreInstance {
     if (!this.homeStore) {
-      this.homeStore = new HomeStore(this, this.yHome, this.yDoc.transact.bind(this.yDoc));
+      const homeFactory = resolveHomeStoreFactory();
+      this.homeStore = homeFactory(this, this.yHome, this.yDoc.transact.bind(this.yDoc));
     }
     return this.homeStore;
   }
@@ -1334,20 +1336,96 @@ export class SketchpadStore {
     }
     return allDesignEditors.map((d) => d.id());
   }
-}
 
-const stores: Map<Guid, SketchpadStore> = new Map();
+  private async loadPersistedKits() {
+    // Wait for the sketchpad's Y.Doc to sync with IndexedDB
+    if (this.persistence) {
+      await new Promise<void>((resolve) => {
+        this.persistence!.once("synced", () => resolve());
+      });
+    }
 
-const loadPersistedKits = () => {
-  // TODO: proper edge case handeling
-  const semioRaw = localStorage.getItem("semio");
-  if (semio) {
-    const semio = JSON.parse(semio);
-    const { kits } = semio;
-    for (const kit in kits) {
+    // Load kits from yKits metadata stored in the sketchpad's Y.Doc
+    const kitMetadataArray = this.yKits.toArray();
+
+    for (const kitMetadata of kitMetadataArray) {
+      const kitGuid = kitMetadata.get("guid") as string;
+      const local = kitMetadata.get("local") as boolean;
+      const remote = kitMetadata.get("remote") as boolean;
+
+      // Skip if kit is already loaded
+      if (this.kits.has(kitGuid)) continue;
+
+      if (local && typeof indexedDB !== "undefined") {
+        // Load from IndexedDB for local/remote kits
+        try {
+          const yDoc = new Y.Doc();
+          const persistence = new IndexeddbPersistence(`semio-kit-${kitGuid}`, yDoc);
+
+          // Wait for persistence to load
+          await new Promise<void>((resolve) => {
+            persistence.on("synced", () => resolve());
+          });
+
+          // Extract kit data from the Y.Doc
+          const yKit = yDoc.getMap();
+          const kit: Kit = {
+            guid: yKit.get("guid") as string,
+            name: yKit.get("name") as string,
+            version: yKit.get("version") as string,
+            remote: yKit.get("remote") as string,
+            homepage: yKit.get("homepage") as string,
+            license: yKit.get("license") as string,
+            preview: yKit.get("preview") as string,
+            concepts: yKit.get("concepts") as string[],
+            icon: yKit.get("icon") as string,
+            image: yKit.get("image") as string,
+            description: yKit.get("description") as string,
+            createdAt: yKit.get("createdAt") ? new Date(yKit.get("createdAt") as string) : undefined,
+            updatedAt: yKit.get("updatedAt") ? new Date(yKit.get("updatedAt") as string) : undefined,
+            types: [],
+            designs: [],
+            files: [],
+            qualities: [],
+            authors: [],
+            attributes: [],
+          };
+
+          // Destroy the temporary persistence and doc
+          persistence.destroy();
+
+          // Create the kit store (this will set up its own persistence)
+          // Don't add to yKits again since it's already there
+          const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory);
+          this.kits.set(kit.guid, kitStore);
+          this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
+        } catch (error) {
+          console.error(`Error loading kit ${kitGuid} from IndexedDB:`, error);
+        }
+      } else {
+        // Temporary kit - can't be recovered, remove from metadata
+        console.warn(`Temporary kit ${kitGuid} was not persisted and cannot be recovered`);
+        this.yDoc.transact(() => {
+          const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
+          if (index !== -1) {
+            this.yKits.delete(index, 1);
+          }
+        });
+      }
     }
   }
-};
+}
+
+// Persist stores across HMR reloads
+let stores: Map<Guid, SketchpadStore>;
+if (import.meta.hot?.data.stores) {
+  stores = import.meta.hot.data.stores;
+} else {
+  stores = new Map();
+  if (import.meta.hot) {
+    import.meta.hot.data.stores = stores;
+  }
+}
 
 // TODO: Find clean way to hide Scope and extra hook and still pass window events to navbar
 export type WindowEvents = {
@@ -1387,7 +1465,7 @@ export function useNavigation(): string {
   return location.pathname;
 }
 
-function migratePath(path: string): string {
+export function migratePath(path: string): string {
   if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
     return path.replace(/^\/kit\/([^/]+)\/design\/([^/]+)/, "/kits/$1/designs/$2");
   }
@@ -1489,6 +1567,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
   const itemGuid = pathMatch?.[3];
 
   const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
+    toolbar: true,
     workbench: true,
     details: true,
     chat: true,
@@ -1520,6 +1599,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
       if (editor) {
         const unsubscribe = editor.onChangedDeep(() => {
           const newPanelVisibility = editor.snapshot().panelVisibility || {
+            toolbar: true,
             workbench: true,
             details: true,
             chat: true,
@@ -1529,6 +1609,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
         });
 
         const initialPanelVisibility = editor.snapshot().panelVisibility || {
+          toolbar: true,
           workbench: true,
           details: true,
           chat: true,
@@ -1605,55 +1686,58 @@ export function useEditorCommands() {
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
   const navigate = useNavigate();
-  return {
-    setAccess: (access: Access) => store.execute("semio.sketchpad.setAccess", access),
-    setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
-    setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
-    setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
-    toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
-    toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
-    setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),
-    setActiveInteraction: (interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", interactionId),
-    syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
-    createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
-    createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
-    createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-    navigateToKit: (kit: Guid) => navigate(`/kits/${kit}`),
-    navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
-    navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
-    navigateBack: () => {
-      store.execute("semio.sketchpad.navigateBack");
-      const state = store.snapshot();
-      const targetPath = state.navigationHistory[state.navigationHistoryIndex];
-      if (targetPath) {
-        navigate(targetPath);
-      }
-    },
-    navigateForward: () => {
-      store.execute("semio.sketchpad.navigateForward");
-      const state = store.snapshot();
-      const targetPath = state.navigationHistory[state.navigationHistoryIndex];
-      if (targetPath) {
-        navigate(targetPath);
-      }
-    },
-    updateEditorSettings: (editorType: "design" | "type" | "kit", settings: Record<string, any>) => {
-      const current = store.snapshot().editorSettings;
-      store.change({
-        editorSettings: {
-          ...current,
-          [editorType]: { ...current[editorType], ...settings },
-        },
-      });
-    },
-    setPanelSize: (panelKey: keyof PanelSizes, size: number) => {
-      store.change({
-        panelSizes: {
-          [panelKey]: size,
-        },
-      });
-    },
-  };
+  return useMemo(
+    () => ({
+      setAccess: (access: Access) => store.execute("semio.sketchpad.setAccess", access),
+      setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
+      setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
+      setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
+      toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
+      toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
+      setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),
+      setActiveInteraction: (interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", interactionId),
+      syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
+      createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
+      createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
+      createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
+      navigateToKit: (kit: Guid) => navigate(`/kits/${kit}`),
+      navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
+      navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
+      navigateBack: () => {
+        store.execute("semio.sketchpad.navigateBack");
+        const state = store.snapshot();
+        const targetPath = state.navigationHistory[state.navigationHistoryIndex];
+        if (targetPath) {
+          navigate(targetPath);
+        }
+      },
+      navigateForward: () => {
+        store.execute("semio.sketchpad.navigateForward");
+        const state = store.snapshot();
+        const targetPath = state.navigationHistory[state.navigationHistoryIndex];
+        if (targetPath) {
+          navigate(targetPath);
+        }
+      },
+      updateEditorSettings: (editorType: "design" | "type" | "kit", settings: Record<string, any>) => {
+        const current = store.snapshot().editorSettings;
+        store.change({
+          editorSettings: {
+            ...current,
+            [editorType]: { ...current[editorType], ...settings },
+          },
+        });
+      },
+      setPanelSize: (panelKey: keyof PanelSizes, size: number) => {
+        store.change({
+          panelSizes: {
+            [panelKey]: size,
+          },
+        });
+      },
+    }),
+    [store, navigate],
+  );
 }
 
 export function useKits(): KitShallow[] {

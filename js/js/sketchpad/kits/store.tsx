@@ -66,7 +66,7 @@ import {
 } from "../../semio";
 import { useDesignEditorDiff, useDesignEditorHover, useDesignEditorIsPieceTransitiveHovered, useDesignEditorSelection } from "../editors/design/store";
 import type { SketchpadStore, Url } from "../store";
-import { Subscribe, YProviderFactory, createObserver, useSketchpadStore } from "../store";
+import { Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
 
 type YAttributeVal = string;
@@ -1360,7 +1360,7 @@ class PortStore {
   snapshot = (): Port => {
     const currentData = {
       guid: this.guid,
-      id_: this.id_,
+      id_: this.localId,
       description: this.description,
       family: this.family,
       mandatory: this.mandatory,
@@ -1379,7 +1379,7 @@ class PortStore {
   };
 
   apply(diff: PortDiff): void {
-    if (diff.id_ !== undefined) this.id_ = diff.id_;
+    if (diff.id_ !== undefined) this.localId = diff.id_;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.family !== undefined) this.family = diff.family;
     if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
@@ -1409,7 +1409,7 @@ type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YRepres
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
-class TypeStore {
+export class TypeStore {
   public readonly parent: KitStore;
   private yType: YType;
   private yAttributes: YAttributes;
@@ -1623,27 +1623,78 @@ class TypeStore {
   };
 
   change = (diff: TypeDiff) => {
-    if (diff.name !== undefined) this.yType.set("name", diff.name);
-    if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
-    if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
-    if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
-    if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
-    if (diff.icon !== undefined) this.yType.set("icon", diff.icon);
-    if (diff.image !== undefined) this.yType.set("image", diff.image);
-    if (diff.description !== undefined) this.yType.set("description", diff.description);
-    if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt);
-    if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt);
+    this.parent.yDoc.transact(() => {
+      if (diff.name !== undefined) this.yType.set("name", diff.name);
+      if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
+      if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
+      if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
+      if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
+      if (diff.icon !== undefined) this.yType.set("icon", diff.icon);
+      if (diff.image !== undefined) this.yType.set("image", diff.image);
+      if (diff.description !== undefined) this.yType.set("description", diff.description);
+      if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt);
+      if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt);
 
-    if (diff.authors !== undefined) {
-      this.yAuthors.delete(0, this.yAuthors.length);
-      this.authors = diff.authors.map((author) => this.parent.author(author));
-      this.authors.forEach((author) => this.yAuthors.push([author.guid]));
-    }
+      if (diff.authors !== undefined) {
+        this.yAuthors.delete(0, this.yAuthors.length);
+        this.authors = new Map(diff.authors.map((authorGuid) => {
+          const author = this.parent.author(authorGuid);
+          return [author.guid, author];
+        }));
+        this.authors.forEach((author) => this.yAuthors.push([author.guid]));
+      }
 
-    // TODO: Handle location, representations, ports, props, attributes diffs
+      if (diff.representations) {
+        if (diff.representations.removed) {
+          diff.representations.removed.forEach((guid) => {
+            const index = Array.from(this.representations.keys()).indexOf(guid);
+            if (index !== -1) {
+              this.yRepresentations.delete(index, 1);
+              this.representations.delete(guid);
+            }
+          });
+        }
+        if (diff.representations.added) {
+          diff.representations.added.forEach((representation) => {
+            this.createRepresentation(representation);
+          });
+        }
+        if (diff.representations.updated) {
+          diff.representations.updated.forEach(({ id, diff: repDiff }) => {
+            const rep = this.representations.get(id);
+            if (rep) rep.apply(repDiff);
+          });
+        }
+      }
 
-    this.cache = undefined;
-    this.cacheHash = undefined;
+      if (diff.ports) {
+        if (diff.ports.removed) {
+          diff.ports.removed.forEach((guid) => {
+            const index = Array.from(this.ports.keys()).indexOf(guid);
+            if (index !== -1) {
+              this.yPorts.delete(index, 1);
+              this.ports.delete(guid);
+            }
+          });
+        }
+        if (diff.ports.added) {
+          diff.ports.added.forEach((port) => {
+            this.createPort(port);
+          });
+        }
+        if (diff.ports.updated) {
+          diff.ports.updated.forEach(({ id, diff: portDiff }) => {
+            const port = this.ports.get(id);
+            if (port) port.apply(portDiff);
+          });
+        }
+      }
+
+      // TODO: Handle location, props, attributes diffs
+
+      this.cache = undefined;
+      this.cacheHash = undefined;
+    });
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -3623,7 +3674,7 @@ export interface KitCommandResult {
 export class KitStore {
   public readonly parent: SketchpadStore;
   private readonly yProviderFactory: YProviderFactory | undefined;
-  private readonly yDoc: Y.Doc;
+  public readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
   private readonly yTypes: YTypes;
   private readonly types: Map<string, TypeStore>;

@@ -386,6 +386,12 @@
         "attributeDefinition": "Definition",
         "attributeDefinitionPlaceholder": "Optionale Definition (Text oder URL)"
     },
+    "tools": {
+        "port": "Port-Werkzeug",
+        "port.extensive": "Klicken Sie auf das Mesh, um einen Port am Schnittpunkt mit der Oberflächennormale als Richtung zu platzieren. Halten und ziehen Sie, um die Kamera zu drehen.",
+        "selection": "Auswahl-Werkzeug",
+        "selection.extensive": "Klicken Sie, um Elemente auszuwählen. Verwenden Sie Modifikatortasten für additive oder subtraktive Auswahl."
+    },
     "sort": {
         "ascending": "Aufsteigend sortieren",
         "descending": "Absteigend sortieren"

@@ -10,8 +10,9 @@ import { FC, useMemo } from "react";
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
 import { Design, Guid, Type } from "../../../../semio";
-import { useDesign, useType } from "../../../kits/store";
+import { useDesign, useIsInDesignScope, useType } from "../../../kits/store";
 import { useActiveInteraction, useSketchpadCommands } from "../../../store";
+import type { DesignEditorSelection } from "../store";
 import { useDesignEditorCommands, useDesignEditorHover, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection } from "../store";
 
 interface TypeAvatarProps {
@@ -25,17 +26,29 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   const { setActiveInteraction } = useSketchpadCommands();
   const { hoverType, clearHover } = useDesignEditorCommands();
   const activeInteraction = useActiveInteraction();
-  const design = useDesign() as Design | null;
-  const selection = useDesignEditorSelection();
-
-  if (!type) {
-    console.warn("[ORIGIN] TypeAvatar requires either a type or typeId prop");
-    return null;
+  const isInDesignScope = useIsInDesignScope();
+  let design: Design | null = null;
+  try {
+    design = useDesign() as Design | null;
+  } catch (error) {
+    if (isInDesignScope || !(error instanceof Error) || error.message.indexOf("DesignScopeProvider") === -1) throw error;
+  }
+  let selection: DesignEditorSelection | undefined;
+  try {
+    selection = useDesignEditorSelection();
+  } catch (error) {
+    if (isInDesignScope || !(error instanceof Error)) throw error;
   }
 
-  const isHovered = useDesignEditorIsTypeTransitiveHovered(undefined, type.guid);
+  // Call hooks unconditionally, even if type is null (will use empty string as fallback)
+  let isHovered = false;
+  try {
+    isHovered = useDesignEditorIsTypeTransitiveHovered(undefined, type?.guid || "");
+  } catch (error) {
+    if (isInDesignScope || !(error instanceof Error)) throw error;
+  }
 
-  const interactionId = `type-${type.name}-${type.variant || ""}`;
+  const interactionId = type ? `type-${type.name}-${type.variant || ""}` : "type-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: interactionId,
     data: { type },
@@ -52,6 +65,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       listeners?.onPointerDown?.(e);
     },
   };
+
   const isSelected = useMemo(() => {
     if (!type || !selection?.pieces?.length || !design?.pieces?.length) return false;
     return selection.pieces.some((pieceId) => {
@@ -65,6 +79,12 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       return pieceType.guid === type.guid;
     });
   }, [type, selection?.pieces, design?.pieces]);
+
+  // Early return AFTER all hooks have been called
+  if (!type) {
+    console.warn("[ORIGIN] TypeAvatar requires either a type or typeId prop");
+    return null;
+  }
 
   const isActiveSelection = isSelected;
 
@@ -82,14 +102,34 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 
   if (!showHoverCard) {
     return (
-      <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => hoverType(type.guid)} onPointerLeave={() => clearHover()}>
+      <div
+        ref={setNodeRef}
+        {...enhancedListeners}
+        {...attributes}
+        onPointerEnter={() => {
+          if (isInDesignScope) hoverType(type.guid);
+        }}
+        onPointerLeave={() => {
+          if (isInDesignScope) clearHover();
+        }}
+      >
         {avatar}
       </div>
     );
   }
 
   return (
-    <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => hoverType(type.guid)} onPointerLeave={() => clearHover()}>
+    <div
+      ref={setNodeRef}
+      {...enhancedListeners}
+      {...attributes}
+      onPointerEnter={() => {
+        if (isInDesignScope) hoverType(type.guid);
+      }}
+      onPointerLeave={() => {
+        if (isInDesignScope) clearHover();
+      }}
+    >
       <HoverCard openDelay={500}>
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -121,18 +161,29 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   const { setActiveInteraction } = useSketchpadCommands();
   const { hoverDesign, clearHover } = useDesignEditorCommands();
   const activeInteraction = useActiveInteraction();
-  const currentDesign = useDesign() as Design | null;
-  const selection = useDesignEditorSelection();
-  const hover = useDesignEditorHover();
-
-  if (!design) {
-    console.warn("[ORIGIN] DesignAvatar requires either a design or designId prop");
-    return null;
+  const isInDesignScope = useIsInDesignScope();
+  let currentDesign: Design | null = null;
+  try {
+    currentDesign = useDesign() as Design | null;
+  } catch (error) {
+    if (isInDesignScope || !(error instanceof Error) || error.message.indexOf("DesignScopeProvider") === -1) throw error;
+  }
+  let selection: DesignEditorSelection | undefined;
+  try {
+    selection = useDesignEditorSelection();
+  } catch (error) {
+    if (isInDesignScope || !(error instanceof Error)) throw error;
+  }
+  let hover: ReturnType<typeof useDesignEditorHover> | undefined;
+  try {
+    hover = useDesignEditorHover();
+  } catch (error) {
+    if (isInDesignScope || !(error instanceof Error)) throw error;
   }
 
-  const isHovered = hover?.designs?.includes(design.guid) ?? false;
+  const isHovered = hover?.designs?.includes(design?.guid || "") ?? false;
 
-  const interactionId = `design-${design.name}-${design.variant || ""}-${design.view || ""}`;
+  const interactionId = design ? `design-${design.name}-${design.variant || ""}-${design.view || ""}` : "design-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: interactionId,
     data: { design },
@@ -151,11 +202,18 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       }
     },
   };
+
   const isSelectedDesign = useMemo(() => {
     if (!design) return false;
     if (selection?.pieces?.some((pieceId) => currentDesign?.pieces?.find((piece) => piece.guid === pieceId && piece.design === design.guid))) return true;
     return selection?.design === design.guid;
   }, [design, selection?.pieces, selection?.design, currentDesign?.pieces]);
+
+  // Early return AFTER all hooks have been called
+  if (!design) {
+    console.warn("[ORIGIN] DesignAvatar requires either a design or designId prop");
+    return null;
+  }
 
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
 
@@ -173,14 +231,34 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
 
   if (!showHoverCard) {
     return (
-      <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => !isActive && hoverDesign(design.guid)} onPointerLeave={() => !isActive && clearHover()}>
+      <div
+        ref={setNodeRef}
+        {...enhancedListeners}
+        {...attributes}
+        onPointerEnter={() => {
+          if (!isActive && isInDesignScope) hoverDesign(design.guid);
+        }}
+        onPointerLeave={() => {
+          if (!isActive && isInDesignScope) clearHover();
+        }}
+      >
         {avatar}
       </div>
     );
   }
 
   return (
-    <div ref={setNodeRef} {...enhancedListeners} {...attributes} onPointerEnter={() => !isActive && hoverDesign(design.guid)} onPointerLeave={() => !isActive && clearHover()}>
+    <div
+      ref={setNodeRef}
+      {...enhancedListeners}
+      {...attributes}
+      onPointerEnter={() => {
+        if (!isActive && isInDesignScope) hoverDesign(design.guid);
+      }}
+      onPointerLeave={() => {
+        if (!isActive && isInDesignScope) clearHover();
+      }}
+    >
       <HoverCard openDelay={500}>
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">

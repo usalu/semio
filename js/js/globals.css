@@ -540,6 +540,8 @@
   --panel: var(--color-dark-7-9);
   --temporary: var(--color-dark-5-7);
   --foreground: var(--color-light);
+  --active-base: var(--color-primary);
+  --active-foreground: var(--color-light);
   --muted: var(--color-dark-8-9);
   --muted-foreground: var(--color-gray);
   --accent: var(--color-primary);

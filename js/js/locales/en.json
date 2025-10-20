@@ -386,6 +386,12 @@
         "attributeDefinition": "Definition",
         "attributeDefinitionPlaceholder": "Optional definition (text or URL)"
     },
+    "tools": {
+        "port": "Port Tool",
+        "port.extensive": "Click on the mesh to place a port at the intersection point with the surface normal as direction. Hold and drag to orbit the camera.",
+        "selection": "Selection Tool",
+        "selection.extensive": "Click to select items. Use modifier keys for additive or subtractive selection."
+    },
     "sort": {
         "ascending": "Sort ascending",
         "descending": "Sort descending"

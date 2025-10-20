@@ -7,28 +7,25 @@
 
 // #endregion
 
-import { ChevronDown, Lasso, MousePointer2, Square } from "lucide-react";
+import { Lasso, MousePointer2, Square } from "lucide-react";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../elements/display/Tooltip";
 import { Button } from "../../../elements/input/Button";
-import { ToggleGroup, ToggleGroupItem } from "../../../elements/input/ToggleGroup";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../elements/Popover";
-import { useIsInDesignScope } from "../../kits/store";
 import { ToolType } from "../../store";
 import { useDesignEditor, useDesignEditorCommands } from "./store";
 
 export const ToolsToggleGroup: FC = () => {
-  const isInDesignScope = useIsInDesignScope();
+  const { t } = useTranslation();
+  const { kit, design } = useParams();
+  const editor = useDesignEditor((s) => s, kit && design ? { kit, design } : undefined);
+  const { setActiveTool } = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
 
-  if (!isInDesignScope) {
-    return null;
-  }
+  if (!editor) return null;
 
-  return <ToolsToggleGroupInternal />;
-};
-
-const ToolsToggleGroupInternal: FC = () => {
-  const activeTool = useDesignEditor((s) => s.activeTool);
-  const { setActiveTool } = useDesignEditorCommands();
+  const activeTool = editor.activeTool || ToolType.SELECTION_NORMAL;
 
   const isSelectionTool = activeTool === ToolType.SELECTION_NORMAL || activeTool === ToolType.SELECTION_ADDITIVE || activeTool === ToolType.SELECTION_SUBTRACTIVE;
   const isLassoTool = activeTool === ToolType.LASSO_RECTANGULAR || activeTool === ToolType.LASSO_FREEFORM;
@@ -71,54 +68,72 @@ const ToolsToggleGroupInternal: FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button level="panel" variant={isSelectionTool ? "default" : "ghost"} className="gap-1 h-8 px-2">
-            {getSelectionIcon()}
-            <span className="text-xs">{getSelectionLabel()}</span>
-            <ChevronDown className="h-3 w-3 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-48 p-2">
-          <div className="space-y-1">
-            <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_NORMAL)}>
-              <MousePointer2 className="h-4 w-4" />
-              <span className="text-xs">Normal (Click)</span>
-            </Button>
-            <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_ADDITIVE)}>
-              <MousePointer2 className="h-4 w-4" />
-              <span className="text-xs">Additive (Shift)</span>
-            </Button>
-            <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_SUBTRACTIVE)}>
-              <MousePointer2 className="h-4 w-4" />
-              <span className="text-xs">Subtractive (Ctrl)</span>
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+    <TooltipProvider>
+      <div className="flex items-center gap-2">
+        <Popover>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button level="panel" variant={isSelectionTool ? "default" : "ghost"} className="h-8 w-8 p-0">
+                  {getSelectionIcon()}
+                </Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-xs">
+                <div className="font-semibold">Selection Tool</div>
+                <div className="text-muted-foreground">Click to select pieces</div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+          <PopoverContent className="w-48 p-2">
+            <div className="space-y-1">
+              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_NORMAL)}>
+                <MousePointer2 className="h-4 w-4" />
+                <span className="text-xs">Normal (Click)</span>
+              </Button>
+              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_ADDITIVE)}>
+                <MousePointer2 className="h-4 w-4" />
+                <span className="text-xs">Additive (Shift)</span>
+              </Button>
+              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.SELECTION_SUBTRACTIVE)}>
+                <MousePointer2 className="h-4 w-4" />
+                <span className="text-xs">Subtractive (Ctrl)</span>
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button level="panel" variant={isLassoTool ? "default" : "ghost"} className="gap-1 h-8 px-2">
-            {getLassoIcon()}
-            <span className="text-xs">{getLassoLabel()}</span>
-            <ChevronDown className="h-3 w-3 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-48 p-2">
-          <div className="space-y-1">
-            <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.LASSO_RECTANGULAR)}>
-              <Square className="h-4 w-4" />
-              <span className="text-xs">Rectangular</span>
-            </Button>
-            <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.LASSO_FREEFORM)}>
-              <Lasso className="h-4 w-4" />
-              <span className="text-xs">Freeform</span>
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
+        <Popover>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button level="panel" variant={isLassoTool ? "default" : "ghost"} className="h-8 w-8 p-0">
+                  {getLassoIcon()}
+                </Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-xs">
+                <div className="font-semibold">Lasso Tool</div>
+                <div className="text-muted-foreground">Draw to select multiple pieces</div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+          <PopoverContent className="w-48 p-2">
+            <div className="space-y-1">
+              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.LASSO_RECTANGULAR)}>
+                <Square className="h-4 w-4" />
+                <span className="text-xs">Rectangular</span>
+              </Button>
+              <Button level="temporary" variant="ghost" className="w-full justify-start gap-2 h-8" onClick={() => setActiveTool(ToolType.LASSO_FREEFORM)}>
+                <Lasso className="h-4 w-4" />
+                <span className="text-xs">Freeform</span>
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </TooltipProvider>
   );
 };

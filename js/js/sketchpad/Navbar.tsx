@@ -1363,7 +1363,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
   const isNavbarExpanded = useIsNavbarExpanded();
   const isMobile = useIsMobile();
   const tooltip = useTooltip();
-  const { toggleFullscreen, toggleNavbarExpanded, navigateBack, navigateForward, setIsMobile } = useSketchpadCommands();
+  const { toggleFullscreen, toggleNavbarExpanded, navigateBack, navigateForward } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
@@ -1558,15 +1558,6 @@ const Navbar: FC<NavbarProps> = ({}) => {
       }
     });
   };
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [setIsMobile]);
 
   useEffect(() => {
     if (!isFullscreen) {

@@ -6,9 +6,9 @@ import { SortableTreeItems, TreeContent, TreeItem } from "../../../../elements/a
 import { Input } from "../../../../elements/input/Input";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { guid, Type } from "../../../../semio";
-import { useIsInTypeScope, useKitCommands, useType } from "../../../kits/store";
-import { useTypeEditorCommands } from "../store";
+import { Author, guid, Kit, Type } from "../../../../semio";
+import { useIsInTypeScope, useKit, useKitCommands, useType } from "../../../kits/store";
+import { useTypeEditorCommands, useTypeEditorHover, useTypeEditorSelection } from "../store";
 
 export const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -108,9 +108,11 @@ export const RepresentationsSection: FC = () => {
 
 const RepresentationsSectionForm: FC = () => {
   const { t } = useTranslation();
-  const { startTransaction, finalizeTransaction } = useTypeEditorCommands();
+  const { startTransaction, finalizeTransaction, selectRepresentation, deselectRepresentation, hoverRepresentation, clearHover } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
   const type = useType() as Type;
+  const selection = useTypeEditorSelection();
+  const hover = useTypeEditorHover();
 
   const handleChange = (updatedType: any) => {
     kitCommands.updateType(type.guid, updatedType);
@@ -125,9 +127,10 @@ const RepresentationsSectionForm: FC = () => {
             icon: <Plus />,
             onClick: () => {
               startTransaction();
-              handleChange({
-                ...type,
-                representations: [...(type.representations || []), { guid: guid(), url: "", tags: [] }],
+              kitCommands.updateType(type.guid, {
+                representations: {
+                  added: [{ guid: guid(), url: "", tags: [] }],
+                },
               });
               finalizeTransaction();
             },
@@ -150,89 +153,96 @@ const RepresentationsSectionForm: FC = () => {
             finalizeTransaction();
           }}
         >
-          {(representation, index) => (
-            <TreeItem
-              key={`representation-${index}`}
-              label={representation.url || `${t("type.representation")} ${index + 1}`}
-              sortable={true}
-              sortableId={`representation-${index}`}
-              isDragHandle={true}
-              actions={[
-                {
-                  icon: <Minus />,
-                  onClick: () => {
-                    startTransaction();
-                    handleChange({
-                      ...type,
-                      representations: type.representations?.filter((_: any, i: number) => i !== index),
-                    });
-                    finalizeTransaction();
-                  },
-                  title: t("common.remove"),
-                },
-              ]}
-            >
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("type.representationUrl")}
-                    value={representation.url}
-                    onChange={(e) => {
-                      const updatedRepresentations = [...(type.representations || [])];
-                      updatedRepresentations[index] = {
-                        ...representation,
-                        url: e.target.value,
-                      };
-                      handleChange({ ...type, representations: updatedRepresentations });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Textarea
-                    label={t("type.representationDescription")}
-                    value={representation.description || ""}
-                    placeholder={t("type.representationDescriptionPlaceholder")}
-                    onChange={(e) => {
-                      const updatedRepresentations = [...(type.representations || [])];
-                      updatedRepresentations[index] = {
-                        ...representation,
-                        description: e.target.value,
-                      };
-                      handleChange({ ...type, representations: updatedRepresentations });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("type.representationTags")}
-                    value={(representation.tags || []).join(", ")}
-                    placeholder={t("type.representationTagsPlaceholder")}
-                    onChange={(e) => {
-                      const updatedRepresentations = [...(type.representations || [])];
-                      updatedRepresentations[index] = {
-                        ...representation,
-                        tags: e.target.value
-                          .split(",")
-                          .map((tag) => tag.trim())
-                          .filter((tag) => tag),
-                      };
-                      handleChange({ ...type, representations: updatedRepresentations });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-            </TreeItem>
-          )}
+          {(representation, index) => {
+            const isSelected = selection?.representations?.includes(representation.guid) || false;
+            const isHovered = hover?.representation === representation.guid;
+            return (
+              <div onPointerEnter={() => hoverRepresentation(representation.guid)} onPointerLeave={() => clearHover()} onClick={() => (isSelected ? deselectRepresentation(representation.guid) : selectRepresentation(representation.guid))}>
+                <TreeItem
+                  key={`representation-${index}`}
+                  label={representation.url || `${t("type.representation")} ${index + 1}`}
+                  sortable={true}
+                  sortableId={`representation-${index}`}
+                  isDragHandle={true}
+                  className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
+                  actions={[
+                    {
+                      icon: <Minus />,
+                      onClick: () => {
+                        startTransaction();
+                        handleChange({
+                          ...type,
+                          representations: type.representations?.filter((_: any, i: number) => i !== index),
+                        });
+                        finalizeTransaction();
+                      },
+                      title: t("common.remove"),
+                    },
+                  ]}
+                >
+                  <TreeItem>
+                    <TreeContent>
+                      <Input
+                        label={t("type.representationUrl")}
+                        value={representation.url}
+                        onChange={(e) => {
+                          const updatedRepresentations = [...(type.representations || [])];
+                          updatedRepresentations[index] = {
+                            ...representation,
+                            url: e.target.value,
+                          };
+                          handleChange({ ...type, representations: updatedRepresentations });
+                        }}
+                        onFocus={startTransaction}
+                        onBlur={finalizeTransaction}
+                      />
+                    </TreeContent>
+                  </TreeItem>
+                  <TreeItem>
+                    <TreeContent>
+                      <Textarea
+                        label={t("type.representationDescription")}
+                        value={representation.description || ""}
+                        placeholder={t("type.representationDescriptionPlaceholder")}
+                        onChange={(e) => {
+                          const updatedRepresentations = [...(type.representations || [])];
+                          updatedRepresentations[index] = {
+                            ...representation,
+                            description: e.target.value,
+                          };
+                          handleChange({ ...type, representations: updatedRepresentations });
+                        }}
+                        onFocus={startTransaction}
+                        onBlur={finalizeTransaction}
+                      />
+                    </TreeContent>
+                  </TreeItem>
+                  <TreeItem>
+                    <TreeContent>
+                      <Input
+                        label={t("type.representationTags")}
+                        value={(representation.tags || []).join(", ")}
+                        placeholder={t("type.representationTagsPlaceholder")}
+                        onChange={(e) => {
+                          const updatedRepresentations = [...(type.representations || [])];
+                          updatedRepresentations[index] = {
+                            ...representation,
+                            tags: e.target.value
+                              .split(",")
+                              .map((tag) => tag.trim())
+                              .filter((tag) => tag),
+                          };
+                          handleChange({ ...type, representations: updatedRepresentations });
+                        }}
+                        onFocus={startTransaction}
+                        onBlur={finalizeTransaction}
+                      />
+                    </TreeContent>
+                  </TreeItem>
+                </TreeItem>
+              </div>
+            );
+          }}
         </SortableTreeItems>
       </TreeItem>
     </>
@@ -247,9 +257,13 @@ export const PortsSection: FC = () => {
 
 const PortsSectionForm: FC = () => {
   const { t } = useTranslation();
-  const { startTransaction, finalizeTransaction, abortTransaction } = useTypeEditorCommands();
+  const { startTransaction, finalizeTransaction, abortTransaction, selectPort, deselectPort, hoverPort, clearHover } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
   const type = useType() as Type;
+  const selection = useTypeEditorSelection();
+  const hover = useTypeEditorHover();
+
+  console.log("[ORIGIN] PortsSectionForm render", { selection, hover });
 
   const handleChange = (updatedType: any) => {
     kitCommands.updateType(type.guid, updatedType);
@@ -264,17 +278,17 @@ const PortsSectionForm: FC = () => {
             icon: <Plus />,
             onClick: () => {
               startTransaction();
-              handleChange({
-                ...type,
-                ports: [
-                  ...(type.ports || []),
-                  {
-                    guid: guid(),
-                    t: 0,
-                    point: { x: 0, y: 0, z: 0 },
-                    direction: { x: 0, y: 0, z: 1 },
-                  },
-                ],
+              kitCommands.updateType(type.guid, {
+                ports: {
+                  added: [
+                    {
+                      guid: guid(),
+                      t: 0,
+                      point: { x: 0, y: 0, z: 0 },
+                      direction: { x: 0, y: 0, z: 1 },
+                    },
+                  ],
+                },
               });
               finalizeTransaction();
             },
@@ -297,214 +311,244 @@ const PortsSectionForm: FC = () => {
             finalizeTransaction();
           }}
         >
-          {(port, index) => (
-            <TreeItem
-              key={`port-${index}`}
-              label={port.family || `${t("type.port")} ${index + 1}`}
-              sortable={true}
-              sortableId={`port-${index}`}
-              isDragHandle={true}
-              actions={[
-                {
-                  icon: <Minus />,
-                  onClick: () => {
-                    startTransaction();
-                    handleChange({
-                      ...type,
-                      ports: type.ports?.filter((_: any, i: number) => i !== index),
-                    });
-                    finalizeTransaction();
-                  },
-                  title: t("common.remove"),
-                },
-              ]}
-            >
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("type.portFamily")}
-                    value={port.family || ""}
-                    placeholder={t("type.portFamilyPlaceholder")}
-                    onChange={(e) => {
-                      const updatedPorts = [...(type.ports || [])];
-                      updatedPorts[index] = {
-                        ...port,
-                        family: e.target.value,
-                      };
-                      handleChange({ ...type, ports: updatedPorts });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Textarea
-                    label={t("type.portDescription")}
-                    value={port.description || ""}
-                    placeholder={t("type.portDescriptionPlaceholder")}
-                    onChange={(e) => {
-                      const updatedPorts = [...(type.ports || [])];
-                      updatedPorts[index] = {
-                        ...port,
-                        description: e.target.value,
-                      };
-                      handleChange({ ...type, ports: updatedPorts });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem label={t("type.portPoint")}>
-                <TreeItem>
-                  <TreeContent>
-                    <Stepper
-                      label={t("common.x")}
-                      value={port.point.x}
-                      onChange={(value) => {
-                        const updatedPorts = [...(type.ports || [])];
-                        updatedPorts[index] = {
-                          ...port,
-                          point: { ...port.point, x: value },
-                        };
-                        handleChange({ ...type, ports: updatedPorts });
-                      }}
-                      onPointerDown={startTransaction}
-                      onPointerUp={finalizeTransaction}
-                      onPointerCancel={abortTransaction}
-                      step={0.1}
-                    />
-                  </TreeContent>
+          {(port, index) => {
+            const isSelected = selection?.ports?.includes(port.guid) || false;
+            const isHovered = hover?.port === port.guid;
+
+            console.log("[ORIGIN] Rendering port tree item", { portId: port.guid, isSelected, isHovered, hoverState: hover });
+
+            const handleClick = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              console.log("[ORIGIN] Port tree item clicked", { portId: port.guid, isSelected });
+              if (isSelected) {
+                deselectPort(port.guid);
+              } else {
+                selectPort(port.guid);
+              }
+            };
+
+            const handleHover = () => {
+              console.log("[ORIGIN] Port tree item hover", { portId: port.guid });
+              hoverPort(port.guid);
+            };
+
+            const handleLeave = () => {
+              console.log("[ORIGIN] Port tree item leave");
+              clearHover();
+            };
+
+            return (
+              <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick} style={{ cursor: "pointer" }}>
+                <TreeItem
+                  key={`port-${index}`}
+                  label={port.family || `${t("type.port")} ${index + 1}`}
+                  sortable={true}
+                  sortableId={`port-${index}`}
+                  isDragHandle={true}
+                  className={`${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
+                  actions={[
+                    {
+                      icon: <Minus />,
+                      onClick: () => {
+                        startTransaction();
+                        handleChange({
+                          ...type,
+                          ports: type.ports?.filter((_: any, i: number) => i !== index),
+                        });
+                        finalizeTransaction();
+                      },
+                      title: t("common.remove"),
+                    },
+                  ]}
+                >
+                  <TreeItem>
+                    <TreeContent>
+                      <Input
+                        label={t("type.portFamily")}
+                        value={port.family || ""}
+                        placeholder={t("type.portFamilyPlaceholder")}
+                        onChange={(e) => {
+                          const updatedPorts = [...(type.ports || [])];
+                          updatedPorts[index] = {
+                            ...port,
+                            family: e.target.value,
+                          };
+                          handleChange({ ...type, ports: updatedPorts });
+                        }}
+                        onFocus={startTransaction}
+                        onBlur={finalizeTransaction}
+                      />
+                    </TreeContent>
+                  </TreeItem>
+                  <TreeItem>
+                    <TreeContent>
+                      <Textarea
+                        label={t("type.portDescription")}
+                        value={port.description || ""}
+                        placeholder={t("type.portDescriptionPlaceholder")}
+                        onChange={(e) => {
+                          const updatedPorts = [...(type.ports || [])];
+                          updatedPorts[index] = {
+                            ...port,
+                            description: e.target.value,
+                          };
+                          handleChange({ ...type, ports: updatedPorts });
+                        }}
+                        onFocus={startTransaction}
+                        onBlur={finalizeTransaction}
+                      />
+                    </TreeContent>
+                  </TreeItem>
+                  <TreeItem label={t("type.portPoint")}>
+                    <TreeItem>
+                      <TreeContent>
+                        <Stepper
+                          label={t("common.x")}
+                          value={port.point.x}
+                          onChange={(value) => {
+                            const updatedPorts = [...(type.ports || [])];
+                            updatedPorts[index] = {
+                              ...port,
+                              point: { ...port.point, x: value },
+                            };
+                            handleChange({ ...type, ports: updatedPorts });
+                          }}
+                          onPointerDown={startTransaction}
+                          onPointerUp={finalizeTransaction}
+                          onPointerCancel={abortTransaction}
+                          step={0.1}
+                        />
+                      </TreeContent>
+                    </TreeItem>
+                    <TreeItem>
+                      <TreeContent>
+                        <Stepper
+                          label={t("common.y")}
+                          value={port.point.y}
+                          onChange={(value) => {
+                            const updatedPorts = [...(type.ports || [])];
+                            updatedPorts[index] = {
+                              ...port,
+                              point: { ...port.point, y: value },
+                            };
+                            handleChange({ ...type, ports: updatedPorts });
+                          }}
+                          onPointerDown={startTransaction}
+                          onPointerUp={finalizeTransaction}
+                          onPointerCancel={abortTransaction}
+                          step={0.1}
+                        />
+                      </TreeContent>
+                    </TreeItem>
+                    <TreeItem>
+                      <TreeContent>
+                        <Stepper
+                          label={t("common.z")}
+                          value={port.point.z}
+                          onChange={(value) => {
+                            const updatedPorts = [...(type.ports || [])];
+                            updatedPorts[index] = {
+                              ...port,
+                              point: { ...port.point, z: value },
+                            };
+                            handleChange({ ...type, ports: updatedPorts });
+                          }}
+                          onPointerDown={startTransaction}
+                          onPointerUp={finalizeTransaction}
+                          onPointerCancel={abortTransaction}
+                          step={0.1}
+                        />
+                      </TreeContent>
+                    </TreeItem>
+                  </TreeItem>
+                  <TreeItem label={t("type.portDirection")}>
+                    <TreeItem>
+                      <TreeContent>
+                        <Stepper
+                          label={t("common.x")}
+                          value={port.direction.x}
+                          onChange={(value) => {
+                            const updatedPorts = [...(type.ports || [])];
+                            updatedPorts[index] = {
+                              ...port,
+                              direction: { ...port.direction, x: value },
+                            };
+                            handleChange({ ...type, ports: updatedPorts });
+                          }}
+                          onPointerDown={startTransaction}
+                          onPointerUp={finalizeTransaction}
+                          onPointerCancel={abortTransaction}
+                          step={0.1}
+                        />
+                      </TreeContent>
+                    </TreeItem>
+                    <TreeItem>
+                      <TreeContent>
+                        <Stepper
+                          label={t("common.y")}
+                          value={port.direction.y}
+                          onChange={(value) => {
+                            const updatedPorts = [...(type.ports || [])];
+                            updatedPorts[index] = {
+                              ...port,
+                              direction: { ...port.direction, y: value },
+                            };
+                            handleChange({ ...type, ports: updatedPorts });
+                          }}
+                          onPointerDown={startTransaction}
+                          onPointerUp={finalizeTransaction}
+                          onPointerCancel={abortTransaction}
+                          step={0.1}
+                        />
+                      </TreeContent>
+                    </TreeItem>
+                    <TreeItem>
+                      <TreeContent>
+                        <Stepper
+                          label={t("common.z")}
+                          value={port.direction.z}
+                          onChange={(value) => {
+                            const updatedPorts = [...(type.ports || [])];
+                            updatedPorts[index] = {
+                              ...port,
+                              direction: { ...port.direction, z: value },
+                            };
+                            handleChange({ ...type, ports: updatedPorts });
+                          }}
+                          onPointerDown={startTransaction}
+                          onPointerUp={finalizeTransaction}
+                          onPointerCancel={abortTransaction}
+                          step={0.1}
+                        />
+                      </TreeContent>
+                    </TreeItem>
+                  </TreeItem>
+                  <TreeItem>
+                    <TreeContent>
+                      <Input
+                        label={t("type.portCompatibleFamilies")}
+                        value={(port.compatibleFamilies || []).join(", ")}
+                        placeholder={t("type.portCompatibleFamiliesPlaceholder")}
+                        onChange={(e) => {
+                          const updatedPorts = [...(type.ports || [])];
+                          updatedPorts[index] = {
+                            ...port,
+                            compatibleFamilies: e.target.value
+                              .split(",")
+                              .map((family) => family.trim())
+                              .filter((family) => family),
+                          };
+                          handleChange({ ...type, ports: updatedPorts });
+                        }}
+                        onFocus={startTransaction}
+                        onBlur={finalizeTransaction}
+                      />
+                    </TreeContent>
+                  </TreeItem>
                 </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Stepper
-                      label={t("common.y")}
-                      value={port.point.y}
-                      onChange={(value) => {
-                        const updatedPorts = [...(type.ports || [])];
-                        updatedPorts[index] = {
-                          ...port,
-                          point: { ...port.point, y: value },
-                        };
-                        handleChange({ ...type, ports: updatedPorts });
-                      }}
-                      onPointerDown={startTransaction}
-                      onPointerUp={finalizeTransaction}
-                      onPointerCancel={abortTransaction}
-                      step={0.1}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Stepper
-                      label={t("common.z")}
-                      value={port.point.z}
-                      onChange={(value) => {
-                        const updatedPorts = [...(type.ports || [])];
-                        updatedPorts[index] = {
-                          ...port,
-                          point: { ...port.point, z: value },
-                        };
-                        handleChange({ ...type, ports: updatedPorts });
-                      }}
-                      onPointerDown={startTransaction}
-                      onPointerUp={finalizeTransaction}
-                      onPointerCancel={abortTransaction}
-                      step={0.1}
-                    />
-                  </TreeContent>
-                </TreeItem>
-              </TreeItem>
-              <TreeItem label={t("type.portDirection")}>
-                <TreeItem>
-                  <TreeContent>
-                    <Stepper
-                      label={t("common.x")}
-                      value={port.direction.x}
-                      onChange={(value) => {
-                        const updatedPorts = [...(type.ports || [])];
-                        updatedPorts[index] = {
-                          ...port,
-                          direction: { ...port.direction, x: value },
-                        };
-                        handleChange({ ...type, ports: updatedPorts });
-                      }}
-                      onPointerDown={startTransaction}
-                      onPointerUp={finalizeTransaction}
-                      onPointerCancel={abortTransaction}
-                      step={0.1}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Stepper
-                      label={t("common.y")}
-                      value={port.direction.y}
-                      onChange={(value) => {
-                        const updatedPorts = [...(type.ports || [])];
-                        updatedPorts[index] = {
-                          ...port,
-                          direction: { ...port.direction, y: value },
-                        };
-                        handleChange({ ...type, ports: updatedPorts });
-                      }}
-                      onPointerDown={startTransaction}
-                      onPointerUp={finalizeTransaction}
-                      onPointerCancel={abortTransaction}
-                      step={0.1}
-                    />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
-                    <Stepper
-                      label={t("common.z")}
-                      value={port.direction.z}
-                      onChange={(value) => {
-                        const updatedPorts = [...(type.ports || [])];
-                        updatedPorts[index] = {
-                          ...port,
-                          direction: { ...port.direction, z: value },
-                        };
-                        handleChange({ ...type, ports: updatedPorts });
-                      }}
-                      onPointerDown={startTransaction}
-                      onPointerUp={finalizeTransaction}
-                      onPointerCancel={abortTransaction}
-                      step={0.1}
-                    />
-                  </TreeContent>
-                </TreeItem>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("type.portCompatibleFamilies")}
-                    value={(port.compatibleFamilies || []).join(", ")}
-                    placeholder={t("type.portCompatibleFamiliesPlaceholder")}
-                    onChange={(e) => {
-                      const updatedPorts = [...(type.ports || [])];
-                      updatedPorts[index] = {
-                        ...port,
-                        compatibleFamilies: e.target.value
-                          .split(",")
-                          .map((family) => family.trim())
-                          .filter((family) => family),
-                      };
-                      handleChange({ ...type, ports: updatedPorts });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-            </TreeItem>
-          )}
+              </div>
+            );
+          }}
         </SortableTreeItems>
       </TreeItem>
     </>
@@ -522,6 +566,7 @@ const AuthorsSectionForm: FC = () => {
   const { startTransaction, finalizeTransaction } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
   const type = useType() as Type;
+  const kit = useKit() as Kit;
 
   const handleChange = (updatedType: any) => {
     kitCommands.updateType(type.guid, updatedType);
@@ -536,9 +581,15 @@ const AuthorsSectionForm: FC = () => {
             icon: <Plus />,
             onClick: () => {
               startTransaction();
+              const newAuthorGuid = guid();
+              kitCommands.createAuthor({
+                guid: newAuthorGuid,
+                name: "",
+                email: "",
+              });
               handleChange({
                 ...type,
-                authors: [...(type.authors || []), ""],
+                authors: [...(type.authors || []), newAuthorGuid],
               });
               finalizeTransaction();
             },
@@ -547,11 +598,16 @@ const AuthorsSectionForm: FC = () => {
         ]}
       >
         <SortableTreeItems
-          items={(type.authors || []).map((author: string, index: number) => ({
-            id: `author-${index}`,
-            index,
-            name: author,
-          }))}
+          items={(type.authors || []).map((authorGuid: string, index: number) => {
+            const author = kit.authors?.find((a: Author) => a.guid === authorGuid);
+            return {
+              id: `author-${index}`,
+              index,
+              guid: authorGuid,
+              name: author?.name || "",
+              email: author?.email || "",
+            };
+          })}
           onReorder={(oldIndex, newIndex) => {
             startTransaction();
             handleChange({
@@ -589,9 +645,20 @@ const AuthorsSectionForm: FC = () => {
                     label={t("type.authorName")}
                     value={item.name}
                     onChange={(e) => {
-                      const updatedAuthors = [...(type.authors || [])];
-                      updatedAuthors[index] = e.target.value;
-                      handleChange({ ...type, authors: updatedAuthors });
+                      kitCommands.updateAuthor(item.guid, { name: e.target.value });
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeContent>
+              </TreeItem>
+              <TreeItem>
+                <TreeContent>
+                  <Input
+                    label={t("type.authorEmail")}
+                    value={item.email}
+                    onChange={(e) => {
+                      kitCommands.updateAuthor(item.guid, { email: e.target.value });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
