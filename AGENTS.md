@@ -149,7 +149,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── Tabs.stories.tsx
 │ │ │ │ ├── Tabs.tsx
 │ │ │ │ ├── Tree.stories.tsx
-│ │ │ │ └── Tree.tsx
+│ │ │ │ ├── Tree.tsx
+│ │ │ │ └── TreeStateProvider.tsx
 │ │ │ ├── display
 │ │ │ │ ├── Avatar.stories.tsx
 │ │ │ │ ├── Avatar.tsx
@@ -160,6 +161,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── Tooltip.stories.tsx
 │ │ │ │ └── Tooltip.tsx
 │ │ │ ├── input
+│ │ │ │ ├── Action.stories.tsx
+│ │ │ │ ├── Action.tsx
 │ │ │ │ ├── Button.stories.tsx
 │ │ │ │ ├── Button.tsx
 │ │ │ │ ├── ButtonGroup.stories.tsx
@@ -178,16 +181,15 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── Textarea.tsx
 │ │ │ │ ├── Toggle.stories.tsx
 │ │ │ │ ├── Toggle.tsx
-│ │ │ │ ├── ToggleCycle.stories.tsx
-│ │ │ │ ├── ToggleCycle.tsx
 │ │ │ │ ├── ToggleGroup.stories.tsx
 │ │ │ │ └── ToggleGroup.tsx
 │ │ │ ├── navigation
 │ │ │ │ ├── Breadcrumb.stories.tsx
 │ │ │ │ └── Breadcrumb.tsx
+│ │ │ ├── Command.stories.tsx
+│ │ │ ├── Command.tsx
 │ │ │ ├── Popover.stories.tsx
 │ │ │ ├── Popover.tsx
-│ │ │ ├── Scene.stories.tsx
 │ │ │ └── Scene.tsx
 │ │ ├── locales
 │ │ │ ├── de.json
@@ -201,20 +203,24 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── panels
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ ├── Toolbar.tsx
 │ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ └── store.tsx
+│ │ │ │ │ ├── store.tsx
+│ │ │ │ │ └── Tools.tsx
 │ │ │ │ ├── home
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Table.tsx
+│ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Table.tsx
 │ │ │ │ │ ├── panels
-│ │ │ │ │ │ └── Details.tsx
+│ │ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ │ └── Settings.tsx
+│ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ └── type
@@ -223,16 +229,25 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── panels
 │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ └── Toolbar.tsx
+│ │ │ │ │ └── Workbench.tsx
+│ │ │ │ ├── commands.ts
 │ │ │ │ ├── Editor.tsx
+│ │ │ │ ├── store.tsx
+│ │ │ │ └── Tools.tsx
+│ │ │ ├── kits
+│ │ │ │ ├── commands.ts
 │ │ │ │ └── store.tsx
 │ │ │ ├── panels
 │ │ │ │ ├── Chat.tsx
 │ │ │ │ ├── Details.tsx
+│ │ │ │ ├── Hud.tsx
 │ │ │ │ ├── Settings.tsx
+│ │ │ │ ├── Stats.tsx
 │ │ │ │ ├── Toolbar.tsx
+│ │ │ │ ├── Tools.tsx
 │ │ │ │ └── Workbench.tsx
 │ │ │ ├── Canvas.tsx
+│ │ │ ├── commands.ts
 │ │ │ ├── Editor.tsx
 │ │ │ ├── Footer.tsx
 │ │ │ ├── Navbar.tsx

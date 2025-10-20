@@ -25,22 +25,11 @@ import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffS
 
 import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
+import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands } from "../../../kits/store";
+import { useEditorPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
-  ConnectionScopeProvider,
   DesignEditorFullscreenWindow,
   DesignEditorPresenceOther,
-  PieceScopeProvider,
-  useClusterableGroups,
-  useDesign,
-  useEditorPanelVisibility,
-  useExplodeableDesignNodes,
-  useIsConnectionHovered,
-  useIsPieceHovered,
-  useKit,
-  useKitCommands,
-  useSketchpadCommands,
-} from "../../../store";
-import {
   DesignEditorSelection,
   useDesignEditorCommands,
   useDesignEditorDiagramCenter,

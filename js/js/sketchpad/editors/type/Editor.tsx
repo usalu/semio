@@ -24,6 +24,7 @@ import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, useEditorType } from "../../store";
 import TypeScene from "./canvas/Scene";
 import { AttributesSection, AuthorsSection, PortsSection, RepresentationsSection, TypeDetails } from "./panels/Details";
+import { ToolsToggleGroup } from "./Tools";
 
 const Editor: FC = () => {
   const addSection = useAddPanelSection();
@@ -32,6 +33,14 @@ const Editor: FC = () => {
 
   useEffect(() => {
     if (editorType !== EditorType.TYPE) return;
+
+    addSection("toolbar", {
+      id: "type-tools",
+      label: "Tools",
+      order: 0,
+      defaultOpen: true,
+      content: () => <ToolsToggleGroup />,
+    });
 
     addSection("details", {
       id: "type-details",
@@ -74,6 +83,7 @@ const Editor: FC = () => {
     });
 
     return () => {
+      removeSection("toolbar", "type-tools");
       removeSection("details", "type-details");
       removeSection("details", "type-representations");
       removeSection("details", "type-ports");

@@ -10,7 +10,9 @@ import { FC, useMemo } from "react";
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
 import { Design, Guid, Type } from "../../../../semio";
-import { useActiveInteraction, useDesign, useDesignEditorCommands, useDesignEditorHover, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection, useSketchpadCommands, useType } from "../../../store";
+import { useDesign, useType } from "../../../kits/store";
+import { useActiveInteraction, useSketchpadCommands } from "../../../store";
+import { useDesignEditorCommands, useDesignEditorHover, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection } from "../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;
@@ -72,15 +74,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       className={`cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)] ${isActiveSelection ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : ""}`}
       style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
     >
-      <AvatarFallback
-        className={`select-none ${
-          isActiveSelection
-            ? "bg-[var(--active-base)] text-[var(--active-foreground)]"
-            : isHovered
-              ? "bg-[var(--hover-base)] text-foreground"
-              : "bg-muted"
-        }`}
-      >
+      <AvatarFallback className={`select-none ${isActiveSelection ? "bg-[var(--active-base)] text-[var(--active-foreground)]" : isHovered ? "bg-[var(--hover-base)] text-foreground" : "bg-muted"}`}>
         {displayVariant.substring(0, 2).toUpperCase()}
       </AvatarFallback>
     </Avatar>
@@ -171,15 +165,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[color:var(--border-color)] ${isSelectedDesign ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : ""}`}
       style={{ opacity: shouldFade ? 0 : isActive ? 0.5 : 1, transition: "opacity 150ms" }}
     >
-      <AvatarFallback
-        className={`select-none ${
-          isSelectedDesign
-            ? "bg-[var(--active-base)] text-[var(--active-foreground)]"
-            : isHovered
-              ? "bg-[var(--hover-base)] text-foreground"
-              : "bg-muted"
-        }`}
-      >
+      <AvatarFallback className={`select-none ${isSelectedDesign ? "bg-[var(--active-base)] text-[var(--active-foreground)]" : isHovered ? "bg-[var(--hover-base)] text-foreground" : "bg-muted"}`}>
         {displayVariant.substring(0, 2).toUpperCase()}
       </AvatarFallback>
     </Avatar>

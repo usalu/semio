@@ -7,7 +7,8 @@ import { Input } from "../../../../elements/input/Input";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { guid, Type } from "../../../../semio";
-import { useIsInTypeScope, useKitCommands, useType, useTypeEditorCommands } from "../../../store";
+import { useIsInTypeScope, useKitCommands, useType } from "../../../kits/store";
+import { useTypeEditorCommands } from "../store";
 
 export const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();

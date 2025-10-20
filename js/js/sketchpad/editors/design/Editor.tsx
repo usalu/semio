@@ -48,15 +48,17 @@ import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../elements/aggregation/Resizable";
 import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import { Design, findConnectionsInDesign, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
+import { useDesign, useKit } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
-import { EditorType, useDesign, useEditorPanelVisibility, useEditorType, useKit, useKitEditorCommands, useSketchpad, useSketchpadCommands } from "../../store";
+import { EditorType, useEditorPanelVisibility, useEditorType, useSketchpad, useSketchpadCommands } from "../../store";
+import { useKitEditorCommands } from "../kit/store";
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignEditorFullscreenWindow, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
-import { ToolsToggleGroup } from "./Toolbar";
+import { ToolsToggleGroup } from "./Tools";
 
 export interface EditorProps {}
 

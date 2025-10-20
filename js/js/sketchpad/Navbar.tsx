@@ -57,18 +57,19 @@ import { Toggle } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../elements/navigation/Breadcrumb";
 import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
+import { useDesignEditorCommands } from "./editors/design/store";
+import { useHomeCommands } from "./editors/home/store";
+import { useKitEditorCommands } from "./editors/kit/store";
+import { useTypeEditorCommands } from "./editors/type/store";
 import {
   EditorType,
   PanelVisibility,
   SketchpadScope,
-  useDesignEditorCommands,
   useEditorPanelVisibility,
   useEditorType,
-  useHomeCommands,
   useIsFullscreen,
   useIsMobile,
   useIsNavbarExpanded,
-  useKitEditorCommands,
   useKits,
   useNavigation,
   useNavigationHistory,
@@ -76,7 +77,6 @@ import {
   useSketchpadScope,
   useSketchpadStore,
   useTooltip,
-  useTypeEditorCommands,
 } from "./store";
 
 export interface PanelSection {
@@ -1469,7 +1469,27 @@ const Navbar: FC<NavbarProps> = ({}) => {
     }
     add(currentPath);
     return items;
-  }, [kitKind, homeKind, kitGuid, currentKit, homeName, homeVersion, isKitEditorPath, filteredKind, filteredName, filteredVariant, filteredView, selectedGuid, isDesignEditorPath, currentDesign, isTypeEditorPath, currentType, currentPath, allDesigns, allTypes]);
+  }, [
+    kitKind,
+    homeKind,
+    kitGuid,
+    currentKit,
+    homeName,
+    homeVersion,
+    isKitEditorPath,
+    filteredKind,
+    filteredName,
+    filteredVariant,
+    filteredView,
+    selectedGuid,
+    isDesignEditorPath,
+    currentDesign,
+    isTypeEditorPath,
+    currentType,
+    currentPath,
+    allDesigns,
+    allTypes,
+  ]);
   const upTarget = useMemo(() => {
     if (breadcrumbTrail.length < 2) return undefined;
     const current = breadcrumbTrail[breadcrumbTrail.length - 1];

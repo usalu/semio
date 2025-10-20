@@ -86,12 +86,12 @@ const Toolbar: FC<ToolbarProps> = ({ visible, onHeightChange, height, leftOffset
         transition: "opacity 150ms",
       }}
     >
-      <div className="h-full flex items-center overflow-x-auto overflow-y-hidden">
-        <div className={`flex items-center gap-2 h-full ${isMobile ? "px-3" : "px-2"}`}>
-          {sortedSections.length === 0 ? (
-            <div className="text-muted-foreground text-xs py-2">No tools</div>
-          ) : (
-            sortedSections.map((section, index) => {
+      <div className="h-full flex items-center justify-center overflow-x-auto overflow-y-hidden">
+        {sortedSections.length === 0 ? (
+          <div className="text-muted-foreground text-xs py-2">No tools</div>
+        ) : (
+          <div className={`inline-flex items-center gap-2 h-full ${isMobile ? "px-3" : "px-2"}`}>
+            {sortedSections.map((section, index) => {
               const content = typeof section.content === "function" ? section.content() : section.content;
               return (
                 <div key={section.id} className="flex items-center h-full">
@@ -99,9 +99,9 @@ const Toolbar: FC<ToolbarProps> = ({ visible, onHeightChange, height, leftOffset
                   <div className="flex items-center gap-1">{content}</div>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
       </div>
       <div className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />
     </div>
