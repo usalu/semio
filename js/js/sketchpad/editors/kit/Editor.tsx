@@ -31,6 +31,7 @@ import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { Author, Design, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
+import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, useEditorType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 import { KitDetails } from "./panels/Details";
@@ -1466,7 +1467,11 @@ const Editor: FC = () => {
         </div>
       }
     >
-      <EditorContent />
+      <Canvas>
+        <Window id="kit-table">
+          <EditorContent />
+        </Window>
+      </Canvas>
     </ErrorBoundary>
   );
 };

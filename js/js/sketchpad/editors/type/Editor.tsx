@@ -20,6 +20,7 @@
 // #endregion
 
 import { FC, useEffect } from "react";
+import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, ToolType, useEditorType } from "../../store";
 import TypeScene from "./canvas/Scene";
@@ -121,7 +122,13 @@ const Editor: FC = () => {
     };
   }, [addSection, removeSection, editorType]);
 
-  return <TypeScene />;
+  return (
+    <Canvas>
+      <Window id="type-scene">
+        <TypeScene />
+      </Window>
+    </Canvas>
+  );
 };
 
 export default Editor;

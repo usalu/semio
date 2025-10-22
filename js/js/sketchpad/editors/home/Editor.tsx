@@ -31,6 +31,7 @@ import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
+import { Canvas, Window } from "../../Canvas";
 import { useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 import { useHome, useHomeCommands } from "./store";
 
@@ -533,20 +534,22 @@ const Home: FC = ({}) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Flexible filter layout with automatic wrapping */}
-      <div className="flex flex-wrap items-center gap-1 p-1 border-b">
-        {selectedKind && (
-          <Toggle
-            type="withAction"
-            pressed={true}
-            onPressedChange={() => toggleKind(selectedKind)}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
-            onActionClick={() => handleCreateKit(selectedKind)}
-            tooltip={tooltip("home.hideKind")}
-            actionTooltip={tooltip("home.createKit")}
-          >
-            {selectedKind === "temporary" && <Clock className="size-4" />}
+    <Canvas>
+      <Window id="home-table">
+        <div className="flex flex-col h-full">
+          {/* Flexible filter layout with automatic wrapping */}
+          <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+            {selectedKind && (
+              <Toggle
+                type="withAction"
+                pressed={true}
+                onPressedChange={() => toggleKind(selectedKind)}
+                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                onActionClick={() => handleCreateKit(selectedKind)}
+                tooltip={tooltip("home.hideKind")}
+                actionTooltip={tooltip("home.createKit")}
+              >
+                {selectedKind === "temporary" && <Clock className="size-4" />}
             {selectedKind === "local" && <HardDrive className="size-4" />}
             {selectedKind === "remote" && <Cloud className="size-4" />}
           </Toggle>
@@ -768,7 +771,9 @@ const Home: FC = ({}) => {
           </tbody>
         </table>
       </ScrollArea>
-    </div>
+        </div>
+      </Window>
+    </Canvas>
   );
 };
 

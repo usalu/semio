@@ -25,7 +25,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
-import { useDesignEditorSafe, useDesignEditorCommands } from "./store";
+import { useDesignEditorCommands, useDesignEditorSafe } from "./store";
 
 const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
   {

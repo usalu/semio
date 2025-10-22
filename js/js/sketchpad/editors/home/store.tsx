@@ -207,9 +207,11 @@ export class HomeStore {
   }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    console.group(`Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
-      throw new Error(`Command "${command}" not found`);
+      console.groupEnd();
+      throw new Error(`Command "${command}" not found in home store`);
     }
     const state = this.snapshot();
     const context: HomeCommandContext = { home: state };
@@ -217,6 +219,7 @@ export class HomeStore {
     if (result.diff) {
       this.change(result.diff);
     }
+    console.groupEnd();
     return result as T;
   }
 

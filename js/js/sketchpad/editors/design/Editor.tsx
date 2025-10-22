@@ -34,14 +34,14 @@
 
 import { DragEndEvent } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
-import { FC, useEffect, useRef } from "react";
+import { FC, ReactNode, useEffect, useRef, useMemo, memo } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 
 import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../elements/aggregation/Resizable";
 import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import { Design, findConnectionsInDesign, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
+import { Canvas, HorizontalWindows, useCanvasContext } from "../../Canvas";
 import { useDesign, useKit } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
@@ -55,6 +55,33 @@ import { DesignEditorFullscreenWindow, useDesignEditor, useDesignEditorCommands,
 import { ToolsToggleGroup } from "./Tools";
 
 export interface EditorProps {}
+
+const CanvasWithSync: FC<{ fullscreenWindow: DesignEditorFullscreenWindow; children: ReactNode }> = memo(({ fullscreenWindow, children }) => {
+  const { setFullscreenWindow } = useCanvasContext();
+
+  useEffect(() => {
+    switch (fullscreenWindow) {
+      case DesignEditorFullscreenWindow.Diagram:
+        setFullscreenWindow(DesignEditorFullscreenWindow.Diagram);
+        break;
+      case DesignEditorFullscreenWindow.Accessl:
+        setFullscreenWindow(DesignEditorFullscreenWindow.Accessl);
+        break;
+      default:
+        setFullscreenWindow(null);
+    }
+  }, [fullscreenWindow, setFullscreenWindow]);
+
+  return <>{children}</>;
+});
+
+CanvasWithSync.displayName = "CanvasWithSync";
+
+const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />);
+DiagramWindow.displayName = "DiagramWindow";
+
+const SceneWindow = memo(() => <DesignScene />);
+SceneWindow.displayName = "SceneWindow";
 
 const Editor: FC<EditorProps> = () => {
   const { t } = useTranslation();
@@ -469,15 +496,25 @@ const Editor: FC<EditorProps> = () => {
 
   return (
     <ReactFlowProvider>
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={fullscreenWindow === DesignEditorFullscreenWindow.Diagram ? 100 : 50} className={`${fullscreenWindow === DesignEditorFullscreenWindow.Accessl ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
-          <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />
-        </ResizablePanel>
-        <ResizableHandle className={`border-r ${fullscreenWindow !== DesignEditorFullscreenWindow.None ? "hidden" : "block"}`} />
-        <ResizablePanel defaultSize={fullscreenWindow === DesignEditorFullscreenWindow.Accessl ? 100 : 50} className={`${fullscreenWindow === DesignEditorFullscreenWindow.Diagram ? "hidden" : "block"}`}>
-          <DesignScene />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      <Canvas>
+        <CanvasWithSync fullscreenWindow={fullscreenWindow}>
+          <HorizontalWindows
+            windows={[
+              {
+                id: DesignEditorFullscreenWindow.Diagram,
+                children: <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
+                defaultSize: 50,
+                onDoubleClick: toggleDiagramFullscreen,
+              },
+              {
+                id: DesignEditorFullscreenWindow.Accessl,
+                children: <SceneWindow />,
+                defaultSize: 50,
+              },
+            ]}
+          />
+        </CanvasWithSync>
+      </Canvas>
     </ReactFlowProvider>
   );
 };

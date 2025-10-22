@@ -533,28 +533,37 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
   }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    console.group(`Executing command: "${command}"`);
     if (command === "semio.kitEditor.startTransaction") {
+      console.group(`Executing (special) command: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.kitEditor.finalizeTransaction") {
+      console.group(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitEditor.abortTransaction") {
+      console.group(`Executing (special) command: "${command}"`);
       this.abortTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitEditor.undo") {
+      console.group(`Executing (special) command: "${command}"`);
       this.undo();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitEditor.redo") {
+      console.group(`Executing (special) command: "${command}"`);
       this.redo();
+      console.groupEnd();
       return {} as T;
     }
 
+    console.group(`Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit editor store`);
 

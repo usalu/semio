@@ -31,6 +31,7 @@ import {
   DesignEditorFullscreenWindow,
   DesignEditorPresenceOther,
   DesignEditorSelection,
+  useDesignEditor,
   useDesignEditorCommands,
   useDesignEditorDiagramCenter,
   useDesignEditorDiagramScale,
@@ -38,7 +39,6 @@ import {
   useDesignEditorHover,
   useDesignEditorOthers,
   useDesignEditorPieceColor,
-  useDesignEditor,
   useDesignEditorSelection,
 } from "../store";
 
@@ -1030,10 +1030,12 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const { nodes, edges } = useMemo(() => {
     if (!design) return { nodes: [], edges: [] };
-    return designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
-      nodes: [],
-      edges: [],
-    };
+    return (
+      designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
+        nodes: [],
+        edges: [],
+      }
+    );
   }, [design, flattenedDesign, metadata, kit, selection]);
 
   if (!design) return null;
@@ -1744,13 +1746,16 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         nodeTypes={nodeComponents}
         edgeTypes={edgeComponents}
         connectionMode={ConnectionMode.Loose}
+        connectionLineComponent={ConnectionConnectionLine}
         elementsSelectable={false}
+        nodesFocusable={false}
+        edgesFocusable={false}
         nodesDraggable={true}
         minZoom={0.1}
         maxZoom={12}
         fitView={!savedDiagramCenter && !savedDiagramScale}
-        zoomOnDoubleClick={false}
         panOnDrag={[0]}
+        zoomOnDoubleClick={false}
         proOptions={{ hideAttribution: true }}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
@@ -1762,7 +1767,6 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         onDoubleClick={onDoubleClick}
         onConnect={onConnect}
         onMoveEnd={onMoveEnd}
-        connectionLineComponent={ConnectionConnectionLine}
         className="bg-background"
       >
         {fullscreen && panelVisibility.toolbar && <Controls className="border border-border " showZoom={false} showInteractive={false} />}
@@ -1780,4 +1784,3 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 };
 
 export default Diagram;
-

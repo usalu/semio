@@ -1123,37 +1123,33 @@ export class SketchpadStore {
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     if (command === "semio.sketchpad.createKit") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.log(`Executing (special) command: "${command}"`);
       const kit = rest[0] as Kit;
       const local = rest[1] as boolean | undefined;
       const remote = rest[2] as boolean | undefined;
       this.createKit(kit, local, remote);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.sketchpad.createKitEditor") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.log(`Executing (special) command: "${command}"`);
       const id = rest[0] as KitEditorId;
       this.createKitEditor(id);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.sketchpad.createDesignEditor") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.log(`Executing (special) command: "${command}"`);
       const id = rest[0] as DesignEditorId;
       this.createDesignEditor(id);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.sketchpad.importKit") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.log(`Executing (special) command: "${command}"`);
       const Guid = rest[0] as Guid;
       const url = rest[1] as string;
       const kitStore = this.kits.get(Guid);
       if (kitStore) {
         await kitStore.execute("semio.kit.import", url);
       }
-      console.groupEnd();
       return {} as T;
     }
     console.group(`Executing command: "${command}"`);

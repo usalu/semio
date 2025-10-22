@@ -1556,106 +1556,106 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   }, [isFullscreen]);
 
   return (
-      <div id="navbar" className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`} style={{ WebkitAppRegion: "drag" } as any}>
-        {/* Unexpanded navbar */}
-        <div className="h-12 flex items-center justify-between px-1 gap-1">
-          <ButtonGroup>
-            <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
-              <ArrowLeft size={16} />
-            </ButtonGroupItem>
-            <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
-              <ArrowRight size={16} />
-            </ButtonGroupItem>
-            <ButtonGroupItem
-              value="up"
-              tooltip={tooltip("navbar.up")}
-              onClick={() => {
-                if (upTarget) navigate(upTarget);
-              }}
-              disabled={isAtRoot}
-            >
-              <ArrowUp size={16} />
-            </ButtonGroupItem>
-          </ButtonGroup>
+    <div id="navbar" className={`w-full border-b flex flex-col [-webkit-app-region: drag] transition-transform duration-200 ${isFullscreen && !isVisible ? "-translate-y-full" : "translate-y-0"}`} style={{ WebkitAppRegion: "drag" } as any}>
+      {/* Unexpanded navbar */}
+      <div className="h-12 flex items-center justify-between px-1 gap-1">
+        <ButtonGroup>
+          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
+            <ArrowLeft size={16} />
+          </ButtonGroupItem>
+          <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
+            <ArrowRight size={16} />
+          </ButtonGroupItem>
+          <ButtonGroupItem
+            value="up"
+            tooltip={tooltip("navbar.up")}
+            onClick={() => {
+              if (upTarget) navigate(upTarget);
+            }}
+            disabled={isAtRoot}
+          >
+            <ArrowUp size={16} />
+          </ButtonGroupItem>
+        </ButtonGroup>
 
-          {/* Single dropdown toggle for all panels on mobile */}
-          {panelConfig.filter((p) => p.key !== "toolbar").length > 0 && (
-            <Toggle
-              type="dropdown"
-              pressed={isAnyPanelOpen}
-              onPressedChange={handleMobilePanelToggle}
-              value={activePanel}
-              onValueChange={handleMobilePanelChange}
-              tooltip={panelConfig.find((p) => p.key === activePanel)?.tooltip || t("navbar.panels")}
-              dropdownTooltip={t("navbar.changePanelType")}
-              items={panelConfig
-                .filter((p) => p.key !== "toolbar")
-                .map(({ key, icon: Icon, tooltip, hotkey }) => ({
-                  value: key,
-                  label: <Icon />,
-                  tooltip,
-                  hotkey,
-                }))}
-            />
-          )}
-
-          <div className="flex gap-1">
-            {toolbarConfig && (
-              <Toggle
-                tooltip={toolbarConfig.tooltip}
-                hotkey={toolbarConfig.hotkey}
-                pressed={!!visiblePanels.toolbar}
-                onPressedChange={() => {
-                  commands[editorType]?.togglePanel("toolbar");
-                }}
-              >
-                <toolbarConfig.icon size={16} />
-              </Toggle>
-            )}
-            <Toggle tooltip={tooltip("navbar.search")} pressed={searchOpen} onPressedChange={setSearchOpen}>
-              <SearchIcon size={16} />
-            </Toggle>
-            <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
-              <Fullscreen size={16} />
-            </Toggle>
-            <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
-              {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
-            </Toggle>
-          </div>
-        </div>
-
-        {/* Expanded navbar content */}
-        {isNavbarExpanded && (
-          <div className="flex flex-col gap-1 px-1 pb-1">
-            <Navigation />
-
-            {onWindowEvents && (
-              <ButtonGroup>
-                <ButtonGroupItem value="minimize" tooltip={tooltip("navbar.minimize")} onClick={onWindowEvents.minimize}>
-                  <Minus size={16} />
-                </ButtonGroupItem>
-                <ButtonGroupItem value="maximize" tooltip={tooltip("navbar.maximize")} onClick={onWindowEvents.maximize}>
-                  <Square size={16} />
-                </ButtonGroupItem>
-                <ButtonGroupItem value="close" tooltip={tooltip("navbar.close")} onClick={onWindowEvents.close}>
-                  <X size={16} />
-                </ButtonGroupItem>
-              </ButtonGroup>
-            )}
-          </div>
+        {/* Single dropdown toggle for all panels on mobile */}
+        {panelConfig.filter((p) => p.key !== "toolbar").length > 0 && (
+          <Toggle
+            type="dropdown"
+            pressed={isAnyPanelOpen}
+            onPressedChange={handleMobilePanelToggle}
+            value={activePanel}
+            onValueChange={handleMobilePanelChange}
+            tooltip={panelConfig.find((p) => p.key === activePanel)?.tooltip || t("navbar.panels")}
+            dropdownTooltip={t("navbar.changePanelType")}
+            items={panelConfig
+              .filter((p) => p.key !== "toolbar")
+              .map(({ key, icon: Icon, tooltip, hotkey }) => ({
+                value: key,
+                label: <Icon />,
+                tooltip,
+                hotkey,
+              }))}
+          />
         )}
 
-        {/* Search dialog */}
-        <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={searchOpen} onOpenChange={setSearchOpen}>
-          <CommandInput placeholder={t("navbar.searchPlaceholder")} />
-          <CommandList>
-            <CommandEmpty>{t("navbar.noResults")}</CommandEmpty>
-            <CommandGroup heading={t("navbar.suggestions")}>{/* TODO: Add command items here */}</CommandGroup>
-          </CommandList>
-        </CommandDialog>
+        <div className="flex gap-1">
+          {toolbarConfig && (
+            <Toggle
+              tooltip={toolbarConfig.tooltip}
+              hotkey={toolbarConfig.hotkey}
+              pressed={!!visiblePanels.toolbar}
+              onPressedChange={() => {
+                commands[editorType]?.togglePanel("toolbar");
+              }}
+            >
+              <toolbarConfig.icon size={16} />
+            </Toggle>
+          )}
+          <Toggle tooltip={tooltip("navbar.search")} pressed={searchOpen} onPressedChange={setSearchOpen}>
+            <SearchIcon size={16} />
+          </Toggle>
+          <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+            <Fullscreen size={16} />
+          </Toggle>
+          <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+            {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
+          </Toggle>
+        </div>
       </div>
-    );
-};
+
+      {/* Expanded navbar content */}
+      {isNavbarExpanded && (
+        <div className="flex flex-col gap-1 px-1 pb-1">
+          <Navigation />
+
+          {onWindowEvents && (
+            <ButtonGroup>
+              <ButtonGroupItem value="minimize" tooltip={tooltip("navbar.minimize")} onClick={onWindowEvents.minimize}>
+                <Minus size={16} />
+              </ButtonGroupItem>
+              <ButtonGroupItem value="maximize" tooltip={tooltip("navbar.maximize")} onClick={onWindowEvents.maximize}>
+                <Square size={16} />
+              </ButtonGroupItem>
+              <ButtonGroupItem value="close" tooltip={tooltip("navbar.close")} onClick={onWindowEvents.close}>
+                <X size={16} />
+              </ButtonGroupItem>
+            </ButtonGroup>
+          )}
+        </div>
+      )}
+
+      {/* Search dialog */}
+      <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput placeholder={t("navbar.searchPlaceholder")} />
+        <CommandList>
+          <CommandEmpty>{t("navbar.noResults")}</CommandEmpty>
+          <CommandGroup heading={t("navbar.suggestions")}>{/* TODO: Add command items here */}</CommandGroup>
+        </CommandList>
+      </CommandDialog>
+    </div>
+  );
+}
 
 function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents }: NavbarBaseProps) {
   const { t } = useTranslation();
@@ -1668,23 +1668,23 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
   const { canGoBack, canGoForward } = useNavigationHistory();
   const [searchParams] = useSearchParams();
   const kits = useKits();
-  
+
   const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-  
+
   const pathParts = currentPathname.split("/").filter(Boolean);
   const isKitsPath = pathParts[0] === "kits";
   const kitGuid = isKitsPath && pathParts[1] && isUuidPattern(pathParts[1]) ? pathParts[1] : null;
   const homeKind = !kitGuid ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !kitGuid ? searchParams.get("name") : null;
-  
+
   const upTarget = currentPath === "/" ? undefined : currentPath === "/kits" ? "/" : currentPath.split("/").slice(0, -1).join("/") || "/";
   const isAtRoot = currentPath === "/" || currentPath === "/kits";
-  
+
   const secondPart = pathParts[2];
   const thirdPart = pathParts[3];
   const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
   const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  
+
   const editorType = useEditorType();
   const visiblePanels = useEditorPanelVisibility();
   const panelConfig = getPanelConfigs(t)[editorType];

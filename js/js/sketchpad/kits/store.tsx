@@ -1801,18 +1801,19 @@ export const TypeScopeProvider = (props: { guid: string; children: React.ReactNo
 export const useTypeScope = () => useContext(TypeScopeContext);
 export const useIsInTypeScope = () => useTypeScope() !== null;
 
-function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore {
+function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore | null {
   const kitStore = useKitStore() as KitStore;
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid ?? guid;
-  if (!typeGuid) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with a guid");
-  if (!kitStore.hasType(typeGuid)) throw new Error(`Type store not found for type ${typeGuid}`);
+  if (!typeGuid) return null;
+  if (!kitStore.hasType(typeGuid)) return null;
   const typeStore = kitStore.type(typeGuid);
+  if (!typeStore) return null;
   return selector ? selector(typeStore) : typeStore;
 }
 
-export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type {
-  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
+export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type | null {
+  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore | null, selector ? selector : identitySelector, deep);
 }
 
 export function usePortColoredTypes(): Type[] {

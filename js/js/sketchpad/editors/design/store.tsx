@@ -560,34 +560,33 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    console.group(`Executing command: "${command}"`);
     if (command === "semio.designEditor.startTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
       this.startTransaction();
-      console.log("[ORIGIN] Transaction started, isActive:", this.isTransactionActive);
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.finalizeTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.abortTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
       this.abortTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.undo") {
+      console.log(`Executing (special) command: "${command}"`);
       this.undo();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designEditor.redo") {
+      console.log(`Executing (special) command: "${command}"`);
       this.redo();
-      console.groupEnd();
       return {} as T;
     }
 
+    console.group(`Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
 
@@ -609,6 +608,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
       kitStore.change(result.kitDiff);
     }
     this.recordEdit(state, result);
+    console.groupEnd();
     return result as T;
   }
 

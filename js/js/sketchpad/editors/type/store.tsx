@@ -403,9 +403,36 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.typeEditor.startTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
+      this.startTransaction();
+      return {} as T;
+    }
+    if (command === "semio.typeEditor.finalizeTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
+      this.finalizeTransaction();
+      return {} as T;
+    }
+    if (command === "semio.typeEditor.abortTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
+      this.abortTransaction();
+      return {} as T;
+    }
+    if (command === "semio.typeEditor.undo") {
+      console.log(`Executing (special) command: "${command}"`);
+      this.undo();
+      return {} as T;
+    }
+    if (command === "semio.typeEditor.redo") {
+      console.log(`Executing (special) command: "${command}"`);
+      this.redo();
+      return {} as T;
+    }
+    console.group(`Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
-      throw new Error(`Command "${command}" not found`);
+      console.groupEnd();
+      throw new Error(`Command "${command}" not found in type editor store`);
     }
     const typeEditor = this.snapshot();
     const kitStore = this.kit();
@@ -430,6 +457,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
       }
     }
     this.recordEdit(typeEditor, result);
+    console.groupEnd();
     return result as T;
   }
 
