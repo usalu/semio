@@ -185,7 +185,25 @@ export const commands = {
                     updated: [
                         {
                             id: context.Guid,
-                            diff: { pieces: { added: [piece] } },
+                            diff: {
+                                pieces: {
+                                    added: [
+                                        piece.plane ||
+                                        (findDesignInKit(context.kit, context.Guid)?.connections ?? []).some(
+                                            (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
+                                        )
+                                            ? piece
+                                            : {
+                                                  ...piece,
+                                                  plane: {
+                                                      origin: { x: 0, y: 0, z: 0 },
+                                                      xAxis: { x: 1, y: 0, z: 0 },
+                                                      yAxis: { x: 0, y: 1, z: 0 },
+                                                  },
+                                              },
+                                    ],
+                                },
+                            },
                         },
                     ],
                 },
@@ -193,6 +211,7 @@ export const commands = {
         };
     },
     "semio.designEditor.addPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
+        const design = findDesignInKit(context.kit, context.Guid);
         return {
             diff: {},
             kitDiff: {
@@ -200,7 +219,26 @@ export const commands = {
                     updated: [
                         {
                             id: context.Guid,
-                            diff: { pieces: { added: pieces } },
+                            diff: {
+                                pieces: {
+                                    added: pieces.map((candidate) =>
+                                        candidate.plane ||
+                                        (design?.connections ?? []).some(
+                                            (connection) =>
+                                                connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
+                                        )
+                                            ? candidate
+                                            : {
+                                                  ...candidate,
+                                                  plane: {
+                                                      origin: { x: 0, y: 0, z: 0 },
+                                                      xAxis: { x: 1, y: 0, z: 0 },
+                                                      yAxis: { x: 0, y: 1, z: 0 },
+                                                  },
+                                              },
+                                    ),
+                                },
+                            },
                         },
                     ],
                 },

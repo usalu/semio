@@ -20,7 +20,6 @@
 // #endregion
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { Slider } from "@radix-ui/react-slider";
 import { Connection } from "@xyflow/react";
 import { Minus, Pin, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
@@ -28,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { SortableTreeItems, TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import Combobox from "../../../../elements/input/Combobox";
 import { Input } from "../../../../elements/input/Input";
+import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Design, Guid, Kit, Piece, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
@@ -171,9 +171,9 @@ const DesignSectionForm: FC = () => {
                     location: { ...design.location!, longitude: value },
                   })
                 }
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.000001}
               />
             </TreeContent>
@@ -189,9 +189,9 @@ const DesignSectionForm: FC = () => {
                     location: { ...design.location!, latitude: value },
                   })
                 }
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.000001}
               />
             </TreeContent>
@@ -826,9 +826,9 @@ const PiecesSectionForm: FC = () => {
                 label={t("common.x")}
                 value={isSingle && piece ? piece.center?.x : commonCenterX}
                 onChange={handleCenterXChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.1}
               />
             </TreeContent>
@@ -839,9 +839,9 @@ const PiecesSectionForm: FC = () => {
                 label={t("common.y")}
                 value={isSingle && piece ? piece.center?.y : commonCenterY}
                 onChange={handleCenterYChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.1}
               />
             </TreeContent>
@@ -856,9 +856,9 @@ const PiecesSectionForm: FC = () => {
                 label={t("common.x")}
                 value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
                 onChange={handlePlaneOriginXChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.1}
               />
             </TreeContent>
@@ -869,9 +869,9 @@ const PiecesSectionForm: FC = () => {
                 label={t("common.y")}
                 value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
                 onChange={handlePlaneOriginYChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.1}
               />
             </TreeContent>
@@ -882,9 +882,9 @@ const PiecesSectionForm: FC = () => {
                 label={t("common.z")}
                 value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
                 onChange={handlePlaneOriginZChange}
-                onPointerDown={startTransaction}
-                onPointerUp={finalizeTransaction}
-                onPointerCancel={abortTransaction}
+                startTransaction={startTransaction}
+                finalizeTransaction={finalizeTransaction}
+                abortTransaction={abortTransaction}
                 step={0.1}
               />
             </TreeContent>
@@ -1039,7 +1039,15 @@ const ConnectionsSectionForm: FC<{
       )}
       <TreeItem>
         <TreeContent>
-          <Stepper label={t("connection.gap")} value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)} onChange={handleGapChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          <Stepper
+            label={t("connection.gap")}
+            value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
+            onChange={handleGapChange}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+            step={0.1}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -1048,9 +1056,9 @@ const ConnectionsSectionForm: FC<{
             label={t("connection.shift")}
             value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
             onChange={handleShiftChange}
-            onPointerDown={startTransaction}
-            onPointerUp={finalizeTransaction}
-            onPointerCancel={abortTransaction}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
             step={0.1}
           />
         </TreeContent>
@@ -1061,9 +1069,9 @@ const ConnectionsSectionForm: FC<{
             label={t("connection.rise")}
             value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
             onChange={handleRiseChange}
-            onPointerDown={startTransaction}
-            onPointerUp={finalizeTransaction}
-            onPointerCancel={abortTransaction}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
             step={0.1}
           />
         </TreeContent>
@@ -1075,9 +1083,9 @@ const ConnectionsSectionForm: FC<{
             <Slider
               value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
               onValueChange={([value]) => handleRotationChange(value)}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
               min={-180}
               max={180}
               step={1}
@@ -1092,9 +1100,9 @@ const ConnectionsSectionForm: FC<{
             <Slider
               value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
               onValueChange={([value]) => handleTurnChange(value)}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
               min={-180}
               max={180}
               step={1}
@@ -1109,9 +1117,9 @@ const ConnectionsSectionForm: FC<{
             <Slider
               value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
               onValueChange={([value]) => handleTiltChange(value)}
-              onPointerDown={startTransaction}
-              onPointerUp={finalizeTransaction}
-              onPointerCancel={abortTransaction}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
               min={-180}
               max={180}
               step={1}
@@ -1121,12 +1129,28 @@ const ConnectionsSectionForm: FC<{
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Stepper label="X Offset" value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)} onChange={handleXOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          <Stepper
+            label="X Offset"
+            value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)}
+            onChange={handleXOffsetChange}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+            step={0.1}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Stepper label="Y Offset" value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)} onChange={handleYOffsetChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+          <Stepper
+            label="Y Offset"
+            value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)}
+            onChange={handleYOffsetChange}
+            startTransaction={startTransaction}
+            finalizeTransaction={finalizeTransaction}
+            abortTransaction={abortTransaction}
+            step={0.1}
+          />
         </TreeContent>
       </TreeItem>
     </TreeItem>

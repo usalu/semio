@@ -2,8 +2,6 @@ This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 
 # Specs
 
-# Specs
-
 ## Kit
 
 A `kit` is a collection of `types`, `designs`, `authors`, `qualities`, `attributes`, and `concepts`.
@@ -210,6 +208,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
 - The ui ALWAYS consists of three layers: 1. base, 2. panel and 3. temporary. Every layer has a darker background color and is on top of the previous layer. Every ui element ALWAYS has an enum for the layer and hence ALWAYS has three different color sets.
+- ALWAYS indicate on the element and the cursor when it is interactive. Clickable elements have a pointer cursor and a hover effect. Dragable elements have a grab cursor. While dragging, the cursor changes to a grabbing cursor.
 
 ## Glossary
 

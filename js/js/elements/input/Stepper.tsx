@@ -37,12 +37,16 @@ interface StepperProps {
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  abortTransaction?: () => void;
   label?: string;
   interactionId?: string;
 }
 
-const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, label, interactionId }) => {
+const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, label, interactionId }) => {
   const [internalValue, setInternalValue] = useState(value ?? defaultValue);
+  const [isEditing, setIsEditing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { setActiveInteraction } = useSketchpadCommands();
@@ -128,6 +132,10 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
   const handleMouseDown = (increment: number) => {
     return () => {
       if (interactionId) setActiveInteraction(interactionId);
+      if (!isEditing) {
+        setIsEditing(true);
+        startTransaction?.();
+      }
       onPointerDown?.();
       if (increment > 0) {
         handleStepUp();
@@ -141,12 +149,20 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
   const handleMouseUp = () => {
     stopContinuousChange();
     if (interactionId) setActiveInteraction(undefined);
+    if (isEditing) {
+      setIsEditing(false);
+      finalizeTransaction?.();
+    }
     onPointerUp?.();
   };
 
   const handleMouseLeave = () => {
     stopContinuousChange();
     if (interactionId) setActiveInteraction(undefined);
+    if (isEditing) {
+      setIsEditing(false);
+      finalizeTransaction?.();
+    }
     onPointerCancel?.();
   };
 
@@ -176,7 +192,56 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
         >
           <Minus className="h-4 w-4" />
         </button>
-        <Input type="number" value={internalValue.toString()} onChange={handleInputChange} onFocus={onPointerDown} onBlur={onPointerUp} className="border-l-0 border-r-0 text-center" step={step} min={min} max={max} />
+        <Input
+          type="number"
+          value={internalValue.toString()}
+          onChange={handleInputChange}
+          onFocus={() => {
+            if (!isEditing) {
+              setIsEditing(true);
+              startTransaction?.();
+            }
+            onPointerDown?.();
+          }}
+          onBlur={() => {
+            if (isEditing) {
+              setIsEditing(false);
+              finalizeTransaction?.();
+            }
+            onPointerUp?.();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+              e.preventDefault();
+              if (!isEditing) {
+                setIsEditing(true);
+                startTransaction?.();
+              }
+              if (e.key === "ArrowUp") {
+                handleStepUp();
+              } else {
+                handleStepDown();
+              }
+            } else if (e.key === "Escape") {
+              if (isEditing) {
+                setIsEditing(false);
+                setInternalValue(value ?? defaultValue);
+                abortTransaction?.();
+                (e.target as HTMLInputElement).blur();
+              }
+            } else if (e.key === "Enter") {
+              if (isEditing) {
+                setIsEditing(false);
+                finalizeTransaction?.();
+                (e.target as HTMLInputElement).blur();
+              }
+            }
+          }}
+          className="border-l-0 border-r-0 text-center"
+          step={step}
+          min={min}
+          max={max}
+        />
         <button
           type="button"
           onMouseDown={handleMouseDown(step)}

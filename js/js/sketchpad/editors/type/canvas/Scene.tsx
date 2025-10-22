@@ -250,10 +250,9 @@ const SceneContent: FC = () => {
             added: [newPort],
           },
         });
-        selectPort(newPort.guid);
       }
     },
-    [type, kit, kitCommands, selectPort],
+    [type, kit, kitCommands],
   );
 
   const handleClearPreview = useCallback(() => {
@@ -306,7 +305,7 @@ const SceneContent: FC = () => {
 };
 
 const Scene: FC = () => {
-  const { setCamera } = useTypeEditorCommands();
+  const { setCamera, deselectAll } = useTypeEditorCommands();
   const camera = useTypeEditorCamera();
 
   const onCameraChange = useCallback(
@@ -316,8 +315,15 @@ const Scene: FC = () => {
     [setCamera],
   );
 
+  const onPointerMissed = useCallback(
+    (event: MouseEvent) => {
+      if (!(event.ctrlKey || event.metaKey) && !event.shiftKey) deselectAll();
+    },
+    [deselectAll],
+  );
+
   return (
-    <SceneComponent camera={camera} onCameraChange={onCameraChange}>
+    <SceneComponent camera={camera} onCameraChange={onCameraChange} onPointerMissed={onPointerMissed}>
       <SceneContent />
     </SceneComponent>
   );

@@ -24,10 +24,10 @@ import * as Y from "yjs";
 import { Camera, Coord, Guid, TypeDiff } from "../../../semio";
 import { TypeStore } from "../../kits/store";
 import {
-  KitDiffEditorStore,
-  KitDiffEditorEdit,
   identitySelector,
   KitCommandContext,
+  KitDiffEditorEdit,
+  KitDiffEditorStore,
   KitStore,
   PanelVisibility,
   registerTypeEditorStoreFactory,

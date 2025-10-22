@@ -36,6 +36,9 @@ function Slider({
   onPointerDown,
   onPointerUp,
   onPointerCancel,
+  startTransaction,
+  finalizeTransaction,
+  abortTransaction,
   interactionId,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
@@ -43,9 +46,13 @@ function Slider({
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  abortTransaction?: () => void;
   interactionId?: string;
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
+  const [isSliding, setIsSliding] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
@@ -60,6 +67,7 @@ function Slider({
   const handleValueClick = () => {
     setEditValue(displayValue.toString());
     setIsEditing(true);
+    startTransaction?.();
   };
 
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
@@ -69,28 +77,66 @@ function Slider({
         onValueChange?.([newValue]);
       }
       setIsEditing(false);
+      finalizeTransaction?.();
     } else if (e.key === "Escape") {
       setIsEditing(false);
+      abortTransaction?.();
     }
   };
 
   const handleEditBlur = () => {
     setIsEditing(false);
+    finalizeTransaction?.();
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (interactionId) setActiveInteraction(interactionId);
+    if (!isSliding) {
+      setIsSliding(true);
+      startTransaction?.();
+    }
     onPointerDown?.();
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (interactionId) setActiveInteraction(undefined);
+    if (isSliding) {
+      setIsSliding(false);
+      finalizeTransaction?.();
+    }
     onPointerUp?.();
   };
 
   const handlePointerCancel = (e: React.PointerEvent) => {
     if (interactionId) setActiveInteraction(undefined);
+    if (isSliding) {
+      setIsSliding(false);
+      abortTransaction?.();
+    }
     onPointerCancel?.();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
+      if (!isSliding) {
+        setIsSliding(true);
+        startTransaction?.();
+      }
+    }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
+      if (isSliding) {
+        setIsSliding(false);
+        finalizeTransaction?.();
+      }
+    } else if (e.key === "Escape") {
+      if (isSliding) {
+        setIsSliding(false);
+        abortTransaction?.();
+      }
+    }
   };
 
   return (
@@ -111,6 +157,8 @@ function Slider({
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
           className={cn(
             "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
           )}

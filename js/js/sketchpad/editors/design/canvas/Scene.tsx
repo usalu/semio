@@ -21,11 +21,11 @@
 // #endregion
 
 import { Edges, Line, Select, TransformControls } from "@react-three/drei";
-import React, { FC, useCallback, useMemo, useRef } from "react";
+import React, { FC, useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
-import { Camera, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
-import { PieceScopeProvider, useDesign, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../kits/store";
+import { Camera, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
+import { PieceScopeProvider, useDesign, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus, usePieceWithDiff, useDiffedPiece } from "../../../kits/store";
 import { useEditorPanelVisibility } from "../../../store";
 import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
 
@@ -63,6 +63,7 @@ interface ModelPieceProps {}
 
 const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const piece = usePiece() as Piece;
+  const diffedPiece = useDiffedPiece() as Piece;
   const isSelected = useIsPieceSelected();
   const selection = useDesignEditorSelection();
   const isHovered = useIsPieceTransitiveHovered();
@@ -74,8 +75,13 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const groupRef = useRef<THREE.Group>(null);
   const plasterColor = useMemo(() => getComputedColor("--plaster"), []);
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
+  const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
   const hoverColor = useMemo(() => getComputedColor("--hover-base"), []);
   const activeColor = useMemo(() => getComputedColor("--active-base"), []);
+  const successColor = useMemo(() => getComputedColor("--color-success"), []);
+  const warningColor = useMemo(() => getComputedColor("--color-warning"), []);
+
+  const hasDiff = status !== DiffStatus.Unchanged && piece.plane !== undefined && diffedPiece.plane !== undefined && piece.plane !== diffedPiece.plane;
 
   // const piece = flatDesign.pieces?.[pieceIndex];
   // const plane = piecePlanes[pieceIndex];
@@ -160,22 +166,34 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   }, [isSelected, isHovered, activeColor, plasterColor, plasterColor]);
   const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : plasterColor;
 
-  const matrix = useMemo(() => {
-    if (!piecePlane || !piece.plane) return null;
-    const planeMatrix = planeToMatrix(piecePlane as unknown as Plane);
+  // Original piece matrix
+  const originalMatrix = useMemo(() => {
+    if (!piece.plane) return null;
+    const planeMatrix = planeToMatrix(piece.plane as Plane);
     const threeMatrix = new THREE.Matrix4().copy(planeMatrix);
     threeMatrix.multiply(toThreeRotation());
     return threeMatrix;
-  }, [piecePlane, piece.plane]);
+  }, [piece.plane]);
 
+  // Diffed piece matrix
+  const diffedMatrix = useMemo(() => {
+    if (!diffedPiece.plane || !hasDiff) return null;
+    const planeMatrix = planeToMatrix(diffedPiece.plane as Plane);
+    const threeMatrix = new THREE.Matrix4().copy(planeMatrix);
+    threeMatrix.multiply(toThreeRotation());
+    return threeMatrix;
+  }, [diffedPiece.plane, hasDiff]);
+
+  // Use diffed matrix for transform controls, original for visual reference
   const transformProps = useMemo(() => {
+    const matrix = diffedMatrix || originalMatrix;
     if (!matrix || !piece.plane) return null;
     const position = new THREE.Vector3();
     const quaternion = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     matrix.decompose(position, quaternion, scale);
     return { position, quaternion, scale };
-  }, [matrix, piece.plane]);
+  }, [diffedMatrix, originalMatrix, piece.plane]);
 
   const handleTransformStart = useCallback((e?: THREE.Event) => {
     startTransaction();
@@ -192,25 +210,50 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     finalizeTransaction();
   }, [piece.guid, updatePiece, finalizeTransaction]);
 
-  const meshContent = (
+  // Original piece mesh (edges only when there's a diff)
+  const originalMeshContent = hasDiff && originalMatrix ? (
+    <group matrix={originalMatrix} matrixAutoUpdate={false}>
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial transparent opacity={0} />
+        <Edges scale={1.001} color={mutedForegroundColor} />
+      </mesh>
+    </group>
+  ) : null;
+
+  // Diffed/current piece mesh
+  const diffedMeshContent = (
     <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={materialColor} emissive={emissiveColor} emissiveIntensity={0.45} />
+      <meshStandardMaterial
+        color={hasDiff ? (status === DiffStatus.Modified ? warningColor : successColor) : materialColor}
+        emissive={hasDiff ? (status === DiffStatus.Modified ? warningColor : successColor) : emissiveColor}
+        emissiveIntensity={0.45}
+      />
       <Edges scale={1.001} color={foregroundColor} />
     </mesh>
   );
 
-  if (piece.plane && transformProps) {
-    return (
-      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={isSelected} onMouseDown={handleTransformStart} onMouseUp={handleTransformEnd}>
-        <group ref={groupRef} position={transformProps.position} quaternion={transformProps.quaternion} scale={transformProps.scale}>
-          {meshContent}
+  const hasValidPlane = !!(piece.plane && transformProps);
+
+  useLayoutEffect(() => {
+    if (groupRef.current && transformProps) {
+      groupRef.current.position.copy(transformProps.position);
+      groupRef.current.quaternion.copy(transformProps.quaternion);
+      groupRef.current.scale.copy(transformProps.scale);
+    }
+  }, [transformProps]);
+
+  return (
+    <>
+      {originalMeshContent}
+      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} onMouseDown={handleTransformStart} onMouseUp={handleTransformEnd}>
+        <group ref={groupRef}>
+          {diffedMeshContent}
         </group>
       </TransformControls>
-    );
-  }
-
-  return meshContent;
+    </>
+  );
 
   // const transformControlRef = useRef(null);
 

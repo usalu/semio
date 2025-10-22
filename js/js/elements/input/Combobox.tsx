@@ -16,15 +16,26 @@ interface ComboboxProps {
   placeholder?: string;
   emptyMessage?: string;
   onValueChange?: (value: string) => void;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
   className?: string;
   allowClear?: boolean;
   label?: string;
 }
 
-const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, className, allowClear = false, label }) => {
+const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, label }) => {
   const [open, setOpen] = useState(false);
 
   const selectedOption = options.find((option) => option.value === value);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      startTransaction?.();
+    } else {
+      finalizeTransaction?.();
+    }
+  };
 
   const handleSelect = (optionValue: string) => {
     if (allowClear && optionValue === value) {
@@ -33,14 +44,15 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
       onValueChange?.(optionValue);
     }
     setOpen(false);
+    finalizeTransaction?.();
   };
 
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
       {label && <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
+          <Button variant="default" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
             {selectedOption ? selectedOption.label : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

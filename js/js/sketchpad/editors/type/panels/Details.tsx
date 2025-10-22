@@ -438,9 +438,9 @@ const PortsSectionForm: FC = () => {
                           onChange={(value) => {
                             updatePort(port.guid, { point: { x: value } });
                           }}
-                          onPointerDown={startTransaction}
-                          onPointerUp={finalizeTransaction}
-                          onPointerCancel={abortTransaction}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
                           step={0.1}
                         />
                       </TreeContent>
@@ -453,9 +453,9 @@ const PortsSectionForm: FC = () => {
                           onChange={(value) => {
                             updatePort(port.guid, { point: { y: value } });
                           }}
-                          onPointerDown={startTransaction}
-                          onPointerUp={finalizeTransaction}
-                          onPointerCancel={abortTransaction}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
                           step={0.1}
                         />
                       </TreeContent>
@@ -468,9 +468,9 @@ const PortsSectionForm: FC = () => {
                           onChange={(value) => {
                             updatePort(port.guid, { point: { z: value } });
                           }}
-                          onPointerDown={startTransaction}
-                          onPointerUp={finalizeTransaction}
-                          onPointerCancel={abortTransaction}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
                           step={0.1}
                         />
                       </TreeContent>
@@ -485,9 +485,9 @@ const PortsSectionForm: FC = () => {
                           onChange={(value) => {
                             updatePort(port.guid, { direction: { x: value } });
                           }}
-                          onPointerDown={startTransaction}
-                          onPointerUp={finalizeTransaction}
-                          onPointerCancel={abortTransaction}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
                           step={0.1}
                         />
                       </TreeContent>
@@ -500,9 +500,9 @@ const PortsSectionForm: FC = () => {
                           onChange={(value) => {
                             updatePort(port.guid, { direction: { y: value } });
                           }}
-                          onPointerDown={startTransaction}
-                          onPointerUp={finalizeTransaction}
-                          onPointerCancel={abortTransaction}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
                           step={0.1}
                         />
                       </TreeContent>
@@ -515,9 +515,9 @@ const PortsSectionForm: FC = () => {
                           onChange={(value) => {
                             updatePort(port.guid, { direction: { z: value } });
                           }}
-                          onPointerDown={startTransaction}
-                          onPointerUp={finalizeTransaction}
-                          onPointerCancel={abortTransaction}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
                           step={0.1}
                         />
                       </TreeContent>

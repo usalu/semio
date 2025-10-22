@@ -29,7 +29,7 @@ import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffS
 
 import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
-import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands } from "../../../kits/store";
+import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands, useDiffedPiece } from "../../../kits/store";
 import { ToolType, useEditorPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
   DesignEditorFullscreenWindow,
@@ -372,6 +372,15 @@ type PieceNodeInnerProps = {
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const { fill, stroke, opacity } = useDesignEditorPieceColor(id, piece.guid);
 
+  // Always call the hook to maintain hook order (Rules of Hooks)
+  const diffedPiece = useDiffedPiece() as Piece;
+
+  // Check if piece has a center diff - only show ghost if there's an actual position change
+  const hasCenterDiff = diff === DiffStatus.Modified &&
+    piece.center &&
+    diffedPiece.center &&
+    (piece.center.x !== diffedPiece.center.x || piece.center.y !== diffedPiece.center.y);
+
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
 
@@ -395,12 +404,52 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
   const fillClass = fill === "transparent" ? "fill-transparent" : `fill-[${fill}]`;
   const strokeClass = `stroke-[${stroke}] stroke-2`;
 
+  // Calculate original position in pixels for the ghost node
+  const originalPixelPos = hasCenterDiff
+    ? {
+        x: (piece.center?.x ?? 0) * ICON_WIDTH,
+        y: -(piece.center?.y ?? 0) * ICON_WIDTH,
+      }
+    : null;
+
   return (
-    <div className="nodrag" style={{ opacity, cursor: "pointer" }} onPointerEnter={onMouseEnter} onPointerLeave={onMouseLeave}>
-      <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
+    <div
+      className="nodrag"
+      style={{
+        opacity,
+        cursor: "pointer",
+        width: ICON_WIDTH,
+        height: ICON_WIDTH,
+        position: "relative",
+        pointerEvents: "all",
+      }}
+      onPointerEnter={onMouseEnter}
+      onPointerLeave={onMouseLeave}
+    >
+      {/* Original node (muted border only) - rendered at absolute position */}
+      {hasCenterDiff && originalPixelPos && (
+        <div
+          style={{
+            position: "absolute",
+            left: originalPixelPos.x - ((diffedPiece.center?.x ?? 0) * ICON_WIDTH),
+            top: originalPixelPos.y - (-(diffedPiece.center?.y ?? 0) * ICON_WIDTH),
+            pointerEvents: "none",
+            width: ICON_WIDTH,
+            height: ICON_WIDTH,
+          }}
+        >
+          <svg width={ICON_WIDTH} height={ICON_WIDTH}>
+            <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className="stroke-[var(--muted-foreground)] stroke-2 fill-transparent" strokeDasharray="4 4" />
+            {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--muted-foreground)] stroke-2 fill-transparent" strokeDasharray="4 4" />}
+          </svg>
+        </div>
+      )}
+
+      {/* Current/diffed node */}
+      <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button" style={{ pointerEvents: "all" }}>
         <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
         {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
-        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
+        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
           {piece.guid}
         </text>
       </svg>
@@ -587,10 +636,22 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
   }
 
   return (
-    <div className="nodrag" style={{ opacity, cursor: "pointer" }} onPointerEnter={onMouseEnter} onPointerLeave={onMouseLeave}>
-      <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
+    <div
+      className="nodrag"
+      style={{
+        opacity,
+        cursor: "pointer",
+        width: ICON_WIDTH,
+        height: ICON_WIDTH,
+        position: "relative",
+        pointerEvents: "all"
+      }}
+      onPointerEnter={onMouseEnter}
+      onPointerLeave={onMouseLeave}
+    >
+      <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button" style={{ pointerEvents: "all" }}>
         <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
+        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
           {piece.guid}
         </text>
       </svg>
@@ -1152,7 +1213,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   }, [reactFlowInstance, setDiagramCenter, setDiagramScale]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
-    console.log("onNodeClick fired", node.id, e.target);
+    console.log("onNodeClick fired", node.id, "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
     if (e.ctrlKey || e.metaKey) removePieceFromSelection(pieceId);
@@ -1182,7 +1243,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
-    console.log("onPaneClick fired", e.target);
+    console.log("onPaneClick fired", "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
     e.stopPropagation();
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
       deselectAll();
@@ -1802,7 +1863,9 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       id="diagram"
       className="h-full w-full relative"
       onClick={(e) => {
+        console.log("Outer div onClick", "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
         if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("react-flow__pane")) {
+          console.log("Outer div - deselecting all");
           if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
             deselectAll();
           }

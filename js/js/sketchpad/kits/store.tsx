@@ -83,7 +83,7 @@ import {
   getPieceRepresentationUrls,
   piecesMetadata,
 } from "../../semio";
-import { useDesignEditorDiff, useDesignEditorHover, useDesignEditorIsPieceTransitiveHovered, useDesignEditorSelection } from "../editors/design/store";
+import { useDesignEditorDiff, useDesignEditorHover, useDesignEditorIsPieceTransitiveHovered, useDesignEditorSelection, useDesignEditorStore } from "../editors/design/store";
 import type { SketchpadStore, Url } from "../store";
 import { Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
@@ -1745,7 +1745,7 @@ export class TypeStore {
         if (diff.ports.updated) {
           diff.ports.updated.forEach(({ id, diff: portDiff }) => {
             const port = this.ports.get(id);
-            if (port) port.apply(portDiff);
+            if (port) port.change(portDiff);
           });
         }
       }
@@ -2319,6 +2319,80 @@ export function usePieceStatus(): DiffStatus {
   }
 
   return DiffStatus.Unchanged;
+}
+
+/**
+ * Returns the diffed version of a piece if there's a diff in the current transaction,
+ * otherwise returns the original piece. This is used to visualize the "after" state.
+ */
+export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece {
+  const originalPiece = usePiece(identitySelector, id, deep) as Piece;
+  const pieceScope = usePieceScope();
+  const designScope = useDesignScope();
+  const store = useDesignEditorStore(identitySelector);
+
+  if (!pieceScope || !designScope || !store) {
+    return selector ? selector(originalPiece) : originalPiece;
+  }
+
+  // Get the current transaction stack
+  const currentStack = (store as any).currentTransactionStack;
+
+  if (!currentStack || currentStack.length === 0) {
+    return selector ? selector(originalPiece) : originalPiece;
+  }
+
+  // Apply all diffs from the current transaction stack to get the final diffed piece
+  let diffedPiece = { ...originalPiece };
+
+  for (const edit of currentStack) {
+    if (edit.do?.kitDiff?.designs) {
+      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+        // Check if this is the current design - designUpdate.id is a Guid which has a guid property
+        const designUpdateGuid = typeof designUpdate.id === 'string' ? designUpdate.id : designUpdate.id.guid;
+        if (designUpdateGuid !== designScope.guid) continue;
+
+        // Check if piece is in updated pieces
+        if (designUpdate.diff.pieces?.updated) {
+          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
+            // Match by guid
+            if (pieceUpdate.id === pieceScope.guid) {
+              // Apply the diff to the piece
+              if (pieceUpdate.diff.center !== undefined) diffedPiece.center = pieceUpdate.diff.center;
+              if (pieceUpdate.diff.plane !== undefined) diffedPiece.plane = pieceUpdate.diff.plane;
+              if (pieceUpdate.diff.scale !== undefined) diffedPiece.scale = pieceUpdate.diff.scale;
+              if (pieceUpdate.diff.color !== undefined) diffedPiece.color = pieceUpdate.diff.color;
+              if (pieceUpdate.diff.description !== undefined) diffedPiece.description = pieceUpdate.diff.description;
+              if (pieceUpdate.diff.isHidden !== undefined) diffedPiece.isHidden = pieceUpdate.diff.isHidden;
+              if (pieceUpdate.diff.isLocked !== undefined) diffedPiece.isLocked = pieceUpdate.diff.isLocked;
+              // Note: We don't apply 'added' status here as added pieces won't have an original
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return selector ? selector(diffedPiece) : diffedPiece;
+}
+
+/**
+ * Returns both the original piece and the diffed piece.
+ * Returns { original: Piece, diffed: Piece | null, hasDiff: boolean }
+ * If hasDiff is false, diffed will be null
+ */
+export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
+  const originalPiece = usePiece() as Piece;
+  const diffedPiece = useDiffedPiece() as Piece;
+  const status = usePieceStatus();
+
+  const hasDiff = status !== DiffStatus.Unchanged;
+
+  return {
+    original: originalPiece,
+    diffed: hasDiff ? diffedPiece : null,
+    hasDiff,
+  };
 }
 
 // #endregion Piece

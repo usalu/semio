@@ -1019,7 +1019,7 @@ const Search: FC = ({}) => {
 
   return (
     <>
-      <Toggle tooltip={tooltip("navbar.search")} pressed={open} onPressedChange={setOpen}>
+      <Toggle tooltip={tooltip("navbar.search.open")} tooltipPressed={tooltip("navbar.search.close")} pressed={open} onPressedChange={setOpen}>
         <SearchIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={open} onOpenChange={setOpen}>
@@ -1086,6 +1086,7 @@ const Search: FC = ({}) => {
 
 const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
+  const tooltipText = useTooltip();
   const { kit, design, type } = useParams();
   const editorType = useEditorType();
   const panelConfig = getPanelConfigs(t)[editorType];
@@ -1119,6 +1120,9 @@ const PanelToggles: FC = ({}) => {
   const isAnyRightPanelOpen = rightConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
 
   const otherConfigs = panelConfig.filter((p) => !workbenchPanels.includes(p.key) && !hudPanels.includes(p.key) && !rightPanels.includes(p.key) && p.key !== "toolbar");
+
+  const panelToggleTooltip = (panelKey: string, open: boolean) => (panelKey ? tooltipText(`navbar.panelToggle.${panelKey}.${open ? "hide" : "show"}`) : undefined);
+  const rightDropdownAriaLabel = tooltipText("navbar.panelToggle.right.label") || undefined;
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
@@ -1259,13 +1263,13 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleWorkbenchPressedChange}
           value={activeWorkbenchPanel}
           onValueChange={handleWorkbenchValueChange}
-          tooltip={workbenchConfigs.find((p) => p.key === activeWorkbenchPanel)?.tooltip}
-          dropdownTooltip={t("navbar.changePanelType")}
+          tooltip={panelToggleTooltip(activeWorkbenchPanel, isAnyWorkbenchPanelOpen)}
+          dropdownTooltip={tooltipText("navbar.changePanelType")}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
-          items={workbenchConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+          items={workbenchConfigs.map(({ key, icon: Icon, hotkey }) => ({
             value: key,
             label: <Icon />,
-            tooltip,
+            tooltip: panelToggleTooltip(key, key === activeWorkbenchPanel ? isAnyWorkbenchPanelOpen : false),
             hotkey,
           }))}
         />
@@ -1278,13 +1282,13 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleHudPressedChange}
           value={activeHudPanel}
           onValueChange={handleHudValueChange}
-          tooltip={hudConfigs.find((p) => p.key === activeHudPanel)?.tooltip}
-          dropdownTooltip={t("navbar.changePanelType")}
+          tooltip={panelToggleTooltip(activeHudPanel, isAnyHudPanelOpen)}
+          dropdownTooltip={tooltipText("navbar.changePanelType")}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
-          items={hudConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+          items={hudConfigs.map(({ key, icon: Icon, hotkey }) => ({
             value: key,
             label: <Icon />,
-            tooltip,
+            tooltip: panelToggleTooltip(key, key === activeHudPanel ? isAnyHudPanelOpen : false),
             hotkey,
           }))}
         />
@@ -1300,11 +1304,11 @@ const PanelToggles: FC = ({}) => {
         ]}
         className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
       >
-        {otherConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => (
+        {otherConfigs.map(({ key, icon: Icon, hotkey }) => (
           <ToggleGroupItem
             key={key}
             value={key}
-            tooltip={tooltip}
+            tooltip={panelToggleTooltip(key, Boolean(visiblePanels[key as keyof PanelVisibility]))}
             hotkey={hotkey}
             onClick={() => {
               handleToggle(key as keyof PanelVisibility);
@@ -1322,13 +1326,14 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleRightPressedChange}
           value={activeRightPanel}
           onValueChange={handleRightValueChange}
-          tooltip={rightConfigs.find((p) => p.key === activeRightPanel)?.tooltip}
-          dropdownTooltip={t("navbar.changePanelType")}
+          tooltip={panelToggleTooltip(activeRightPanel, isAnyRightPanelOpen)}
+          dropdownTooltip={tooltipText("navbar.changePanelType")}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
-          items={rightConfigs.map(({ key, icon: Icon, tooltip, hotkey }) => ({
+          aria-label={rightDropdownAriaLabel}
+          items={rightConfigs.map(({ key, icon: Icon, hotkey }) => ({
             value: key,
             label: <Icon />,
-            tooltip,
+            tooltip: panelToggleTooltip(key, key === activeRightPanel ? isAnyRightPanelOpen : false),
             hotkey,
           }))}
         />
@@ -1505,6 +1510,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   // Default to first panel if none is open
   const activePanel = panelConfig.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || panelConfig[0]?.key || "";
   const isAnyPanelOpen = panelConfig.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+  const mobilePanelTooltip = activePanel ? tooltip(`navbar.panelToggle.${activePanel}.${isAnyPanelOpen ? "hide" : "show"}`) : undefined;
 
   const handleMobilePanelToggle = (pressed: boolean) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
@@ -1587,14 +1593,14 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
             onPressedChange={handleMobilePanelToggle}
             value={activePanel}
             onValueChange={handleMobilePanelChange}
-            tooltip={panelConfig.find((p) => p.key === activePanel)?.tooltip || t("navbar.panels")}
-            dropdownTooltip={t("navbar.changePanelType")}
+            tooltip={mobilePanelTooltip}
+            dropdownTooltip={tooltip("navbar.changePanelType")}
             items={panelConfig
               .filter((p) => p.key !== "toolbar")
-              .map(({ key, icon: Icon, tooltip, hotkey }) => ({
+              .map(({ key, icon: Icon, hotkey }) => ({
                 value: key,
                 label: <Icon />,
-                tooltip,
+                tooltip: tooltip(`navbar.panelToggle.${key}.${key === activePanel && isAnyPanelOpen ? "hide" : "show"}`),
                 hotkey,
               }))}
           />
@@ -1603,7 +1609,8 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
         <div className="flex gap-1">
           {toolbarConfig && (
             <Toggle
-              tooltip={toolbarConfig.tooltip}
+              tooltip={tooltip("navbar.panelToggle.toolbar.show")}
+              tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide")}
               hotkey={toolbarConfig.hotkey}
               pressed={!!visiblePanels.toolbar}
               onPressedChange={() => {
@@ -1613,10 +1620,10 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
               <toolbarConfig.icon size={16} />
             </Toggle>
           )}
-          <Toggle tooltip={tooltip("navbar.search")} pressed={searchOpen} onPressedChange={setSearchOpen}>
+          <Toggle tooltip={tooltip("navbar.search.open")} tooltipPressed={tooltip("navbar.search.close")} pressed={searchOpen} onPressedChange={setSearchOpen}>
             <SearchIcon size={16} />
           </Toggle>
-          <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          <Toggle tooltip={tooltip("navbar.fullscreen")} tooltipPressed={tooltip("navbar.exitFullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
             <Fullscreen size={16} />
           </Toggle>
           <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
@@ -1750,7 +1757,8 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
         <PanelToggles />
         {toolbarConfig && (
           <Toggle
-            tooltip={toolbarConfig.tooltip}
+            tooltip={tooltip("navbar.panelToggle.toolbar.show")}
+            tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide")}
             hotkey={toolbarConfig.hotkey}
             pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
@@ -1760,7 +1768,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
             <toolbarConfig.icon />
           </Toggle>
         )}
-        <Toggle tooltip={isFullscreen ? t("navbar.exitFullscreen") : t("navbar.fullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle tooltip={tooltip("navbar.fullscreen")} tooltipPressed={tooltip("navbar.exitFullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           <Fullscreen />
         </Toggle>
         {onWindowEvents && (

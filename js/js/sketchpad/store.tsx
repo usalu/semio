@@ -238,14 +238,7 @@ export interface PanelVisibility {
   settings?: boolean;
 }
 
-export abstract class EditorStore<
-  TState,
-  TDiff extends EditorDiff<TSelectionDiff>,
-  TSelectionDiff,
-  TEdit extends EditorEdit<TSelectionDiff>,
-  TCommandContext,
-  TCommandResult extends EditorCommandResult<TDiff>
-> extends Store<TState> {
+export abstract class EditorStore<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> extends Store<TState> {
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
   private lastDeletedTransactionEdit?: TEdit;
 
@@ -475,7 +468,7 @@ export abstract class KitDiffEditorStore<
   TSelectionDiff,
   TEdit extends KitDiffEditorEdit<TSelectionDiff>,
   TCommandContext,
-  TCommandResult extends KitDiffEditorCommandResult<TDiff>
+  TCommandResult extends KitDiffEditorCommandResult<TDiff>,
 > extends EditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
     super(parent, yMap, transact);

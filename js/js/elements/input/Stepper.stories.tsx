@@ -154,3 +154,90 @@ export const WithCallbacks: Story = {
     );
   },
 };
+
+export const WithTransactions: Story = {
+  render: () => {
+    const [value, setValue] = useState(0);
+    const [history, setHistory] = useState<number[]>([0]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isInTransaction, setIsInTransaction] = useState(false);
+    const [transactionLog, setTransactionLog] = useState<string[]>([]);
+
+    const addLog = (message: string) => {
+      setTransactionLog((prev) => [...prev.slice(-4), message]);
+    };
+
+    const startTransaction = () => {
+      setIsInTransaction(true);
+      addLog("Transaction started");
+    };
+
+    const finalizeTransaction = () => {
+      setIsInTransaction(false);
+      setHistory((prev) => [...prev.slice(0, currentIndex + 1), value]);
+      setCurrentIndex((prev) => prev + 1);
+      addLog("Transaction finalized");
+    };
+
+    const abortTransaction = () => {
+      setIsInTransaction(false);
+      const lastValue = history[currentIndex];
+      setValue(lastValue);
+      addLog("Transaction aborted");
+    };
+
+    const undo = () => {
+      if (currentIndex > 0) {
+        const newIndex = currentIndex - 1;
+        setCurrentIndex(newIndex);
+        setValue(history[newIndex]);
+        addLog(`Undo to: ${history[newIndex]}`);
+      }
+    };
+
+    const redo = () => {
+      if (currentIndex < history.length - 1) {
+        const newIndex = currentIndex + 1;
+        setCurrentIndex(newIndex);
+        setValue(history[newIndex]);
+        addLog(`Redo to: ${history[newIndex]}`);
+      }
+    };
+
+    return (
+      <div className="w-96 space-y-4">
+        <div className="space-y-2">
+          <Stepper label="Value" value={value} onChange={setValue} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} step={1} />
+          <p className="text-xs text-muted-foreground">Try: Click buttons, use arrow keys in input, or type and press Enter/Escape</p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <button onClick={undo} disabled={currentIndex === 0} className="px-3 py-1 text-sm border rounded disabled:opacity-50">
+              Undo
+            </button>
+            <button onClick={redo} disabled={currentIndex === history.length - 1} className="px-3 py-1 text-sm border rounded disabled:opacity-50">
+              Redo
+            </button>
+          </div>
+          <div className="text-xs space-y-1">
+            <div>In Transaction: {isInTransaction ? "Yes" : "No"}</div>
+            <div>History: [{history.join(", ")}]</div>
+            <div>Current Index: {currentIndex}</div>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="text-xs font-medium">Transaction Log:</div>
+          <div className="text-xs space-y-0.5">
+            {transactionLog.map((log, i) => (
+              <div key={i} className="text-muted-foreground">
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  },
+};

@@ -22,7 +22,7 @@
 import { Connection } from "@xyflow/react";
 import JSZip from "jszip";
 import { Database, SqlJsStatic } from "sql.js";
-import { Attribute, Author, AuthorDiff, Design, DesignDiff, FileDiff, Guid, Kit, Piece, Type, TypeDiff } from "../../semio";
+import { Attribute, Author, AuthorDiff, Design, DesignDiff, FileDiff, Guid, Kit, Piece, Type, TypeDiff, findDesignInKit } from "../../semio";
 import type { KitCommandContext, KitCommandResult, Url } from "../store";
 
 export const commands = {
@@ -354,7 +354,25 @@ export const commands = {
                     updated: [
                         {
                             id: guid,
-                            diff: { pieces: { added: [piece] } },
+                            diff: {
+                                pieces: {
+                                    added: [
+                                        piece.plane ||
+                                        (findDesignInKit(context.kit, guid)?.connections ?? []).some(
+                                            (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
+                                        )
+                                            ? piece
+                                            : {
+                                                  ...piece,
+                                                  plane: {
+                                                      origin: { x: 0, y: 0, z: 0 },
+                                                      xAxis: { x: 1, y: 0, z: 0 },
+                                                      yAxis: { x: 0, y: 1, z: 0 },
+                                                  },
+                                              },
+                                    ],
+                                },
+                            },
                         },
                     ],
                 },
@@ -362,13 +380,33 @@ export const commands = {
         };
     },
     "semio.kit.addPieces": (context: KitCommandContext, guid: Guid, pieces: Piece[]): KitCommandResult => {
+        const design = findDesignInKit(context.kit, guid);
         return {
             diff: {
                 designs: {
                     updated: [
                         {
                             id: guid,
-                            diff: { pieces: { added: pieces } },
+                            diff: {
+                                pieces: {
+                                    added: pieces.map((candidate) =>
+                                        candidate.plane ||
+                                        (design?.connections ?? []).some(
+                                            (connection) =>
+                                                connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
+                                        )
+                                            ? candidate
+                                            : {
+                                                  ...candidate,
+                                                  plane: {
+                                                      origin: { x: 0, y: 0, z: 0 },
+                                                      xAxis: { x: 1, y: 0, z: 0 },
+                                                      yAxis: { x: 0, y: 1, z: 0 },
+                                                  },
+                                              },
+                                    ),
+                                },
+                            },
                         },
                     ],
                 },

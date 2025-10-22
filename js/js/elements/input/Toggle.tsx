@@ -220,7 +220,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, placeholder = "Select...", dropdownTooltip, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, hotkey, label, dropdownTooltip, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -228,8 +228,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const hasValue = value !== undefined && value !== null;
     const matchingItem = hasValue ? items.find((item) => item.value === value) : undefined;
     const fallbackItem = matchingItem ?? items[0];
-    const resolvedValue = fallbackItem?.value;
     const currentItem = fallbackItem;
+    const dropdownItems = matchingItem ? items.filter((item) => item.value !== matchingItem.value) : items;
 
     const handleSelect = (selectedValue: T) => {
       onValueChange?.(selectedValue);
@@ -239,25 +239,12 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const activeTooltip = currentItem?.tooltip || tooltip;
     const activeHotkey = currentItem?.hotkey || hotkey;
 
-    const mainContent = activeTooltip ? (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="truncate flex-1 min-w-0">{currentItem?.label || placeholder}</span>
-        </TooltipTrigger>
-        <TooltipContent>
-          {activeTooltip}
-          {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
-        </TooltipContent>
-      </Tooltip>
-    ) : (
-      <span className="truncate flex-1 min-w-0">{currentItem?.label || placeholder}</span>
-    );
-
-    const toggleElement = (
+    const toggleRoot = (
       <TogglePrimitive.Root
         data-slot="toggle"
         className={cn(toggleVariants({ level }), "border gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)}
         pressed={pressed}
+        aria-label={activeTooltip || undefined}
         onPressedChange={(newPressed) => {
           if (!open) {
             onPressedChange?.(newPressed);
@@ -265,7 +252,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         }}
         {...restProps}
       >
-        {mainContent}
+        {currentItem?.label && <span className="flex-1 flex items-center justify-center">{currentItem.label}</span>}
         <Action
           level={level}
           onClick={(e) => {
@@ -279,22 +266,31 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       </TogglePrimitive.Root>
     );
 
-    const wrappedToggle = toggleElement;
-
     const dropdownElement = (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverAnchor asChild>{wrappedToggle}</PopoverAnchor>
+        {(activeTooltip || activeHotkey) ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverAnchor asChild>{toggleRoot}</PopoverAnchor>
+            </TooltipTrigger>
+            <TooltipContent>
+              {activeTooltip}
+              {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <PopoverAnchor asChild>{toggleRoot}</PopoverAnchor>
+        )}
         <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
           <div className="flex flex-col">
-            {items.map((item) => {
-              const isSelected = resolvedValue !== undefined ? item.value === resolvedValue : item.value === value;
+            {dropdownItems.map((item) => {
               const itemHoverClass = level === "panel" ? "hover:bg-hover-panel focus:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary focus:bg-hover-temporary" : "hover:bg-hover-base focus:bg-hover-base";
               const itemButton = (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => handleSelect(item.value)}
-                  className={cn("flex items-center justify-center text-sm outline-none transition-colors", toggleVariants({ level }), "border-0 min-w-0 w-auto", itemHoverClass, isSelected && "bg-active-base/10 font-medium")}
+                  className={cn("flex items-center justify-center text-sm outline-none transition-colors", toggleVariants({ level }), "border-0 min-w-0 w-auto", itemHoverClass)}
                 >
                   {item.label}
                 </button>

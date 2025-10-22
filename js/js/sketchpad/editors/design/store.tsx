@@ -25,7 +25,22 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, ConnectionDiff, Coord, DiffStatus, Guid, KitDiff, Piece, PieceDiff } from "../../../semio";
 import { DesignStore, KitCommandContext, KitStore, useDesignScope, useKitScope } from "../../kits/store";
-import { KitDiffEditorStore, KitDiffEditorEdit, identitySelector, PanelVisibility, registerDesignEditorStoreFactory, SketchpadStore, ToolType, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
+import {
+  identitySelector,
+  KitDiffEditorEdit,
+  KitDiffEditorStore,
+  PanelVisibility,
+  registerDesignEditorStoreFactory,
+  SketchpadStore,
+  ToolType,
+  useSketchpadStore,
+  useSync,
+  useSyncDeep,
+  YAttributes,
+  YLeafMapNumber,
+  YLeafMapString,
+  YStringArray,
+} from "../../store";
 import { commands as designEditorCommands } from "./commands";
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y.Map<boolean> | YAttributes | YStringArray;

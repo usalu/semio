@@ -24,7 +24,16 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 
-function Select({ label, children, value, defaultValue, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & { label?: string }) {
+function Select({
+  label,
+  children,
+  value,
+  defaultValue,
+  onOpenChange,
+  startTransaction,
+  finalizeTransaction,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root> & { label?: string; startTransaction?: () => void; finalizeTransaction?: () => void }) {
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -47,16 +56,20 @@ function Select({ label, children, value, defaultValue, ...props }: React.Compon
     return findValue(React.Children.toArray(children));
   }, [children]);
 
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      startTransaction?.();
+    } else {
+      finalizeTransaction?.();
+    }
+    onOpenChange?.(open);
+  };
+
   const selectElement = (
     <SelectPrimitive.Root
       data-slot="select"
-      {...(value !== null && value !== undefined
-        ? { value }
-        : defaultValue !== null && defaultValue !== undefined
-          ? { defaultValue }
-          : fallbackValue !== undefined
-            ? { defaultValue: fallbackValue }
-            : {})}
+      {...(value !== null && value !== undefined ? { value } : defaultValue !== null && defaultValue !== undefined ? { defaultValue } : fallbackValue !== undefined ? { defaultValue: fallbackValue } : {})}
+      onOpenChange={handleOpenChange}
       {...props}
     >
       {children}
