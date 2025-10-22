@@ -23,7 +23,7 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, Coord, Design, DesignDiff, DiffStatus, Guid, KitDiff, Type, TypeDiff } from "../../../semio";
 import { KitCommandContext, KitStore, useKitScope } from "../../kits/store";
-import { Editor, identitySelector, PanelVisibility, registerKitEditorStoreFactory, SketchpadStore, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
+import { KitDiffEditorStore, KitDiffEditorEdit, identitySelector, PanelVisibility, registerKitEditorStoreFactory, SketchpadStore, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
 import { commands as kitEditorCommands } from "./commands";
 
 type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
@@ -98,14 +98,7 @@ export interface KitEditorDiff {
   sortColumn?: KitEditorSortColumn;
   sortDirection?: KitEditorSortDirection;
 }
-export interface KitEditorStep {
-  kitDiff?: KitDiff;
-  selectionDiff?: KitEditorSelectionDiff;
-}
-export interface KitEditorEdit {
-  do: KitEditorStep;
-  undo: KitEditorStep;
-}
+export interface KitEditorEdit extends KitDiffEditorEdit<KitEditorSelectionDiff> {}
 export interface KitEditorState {
   fullscreenWindow: KitEditorFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -190,7 +183,7 @@ export const inverseKitEditorSelectionDiff = (selection: KitEditorSelection, dif
 export const areSameKitEditor = (kitEditor: KitEditorId, other: KitEditorId): boolean => areSameKit(kitEditor.kit, other.kit);
 export const hasSameKitEditor = (kitEditor: KitEditorId, others: KitEditorId[]): boolean => others.some((other) => areSameKitEditor(kitEditor, other));
 
-class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSelectionDiff, KitEditorEdit, KitEditorCommandContext, KitEditorCommandResult> {
+class KitEditorStore extends KitDiffEditorStore<KitEditorState, KitEditorDiff, KitEditorSelectionDiff, KitEditorEdit, KitEditorCommandContext, KitEditorCommandResult> {
   constructor(parent: SketchpadStore, yMap: YKitEditor, transact: (fn: () => void) => void, id: KitEditorId, state?: KitEditorState) {
     super(parent, yMap, transact);
 
@@ -582,7 +575,7 @@ class KitEditorStore extends Editor<KitEditorState, KitEditorDiff, KitEditorSele
     if (result.kitDiff) {
       kitStore.change(result.kitDiff);
     }
-    this.recordEdit(state, result);
+    this.recordEdit(result);
     console.groupEnd();
     return result as T;
   }
@@ -601,12 +594,23 @@ function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitE
   if (!resolvedKitId) {
     return null;
   }
-  const kitEditorStore = store.kitEditor(resolvedKitId);
-  return selector ? selector(kitEditorStore) : kitEditorStore;
+  try {
+    const kitEditorStore = store.kitEditor(resolvedKitId);
+    const result = selector ? selector(kitEditorStore) : kitEditorStore;
+    return result;
+  } catch (error) {
+    console.error("[ORIGIN] Error in useKitEditorStore:", error);
+    return null;
+  }
 }
 
-export function useKitEditor<T>(selector?: (state: KitEditorState) => T, id?: KitEditorId): T | KitEditorState {
-  return useSyncDeep<KitEditorState, T>(useKitEditorStore(identitySelector, id) as KitEditorStore, selector ? selector : identitySelector);
+export function useKitEditor<T>(selector?: (state: KitEditorState) => T, id?: KitEditorId): T | KitEditorState | null {
+  const store = useKitEditorStore(undefined, id);
+  if (!store) {
+    return null;
+  }
+  const result = useSyncDeep<KitEditorState, T>(store as KitEditorStore, selector ? selector : identitySelector);
+  return result;
 }
 
 export function useKitEditorSelection(id?: KitEditorId): KitEditorSelection {

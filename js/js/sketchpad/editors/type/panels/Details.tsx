@@ -288,9 +288,25 @@ const PortsSectionForm: FC = () => {
   };
 
   const updatePort = (id: string, portDiff: any) => {
+    const port = type.ports?.find((existingPort) => existingPort.guid === id);
+    const diff: any = { ...portDiff };
+    if (port) {
+      if (portDiff.point) {
+        diff.point = {};
+        if (portDiff.point.x !== undefined) diff.point.x = portDiff.point.x - port.point.x;
+        if (portDiff.point.y !== undefined) diff.point.y = portDiff.point.y - port.point.y;
+        if (portDiff.point.z !== undefined) diff.point.z = portDiff.point.z - port.point.z;
+      }
+      if (portDiff.direction) {
+        diff.direction = {};
+        if (portDiff.direction.x !== undefined) diff.direction.x = portDiff.direction.x - port.direction.x;
+        if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
+        if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
+      }
+    }
     applyDiff({
       ports: {
-        updated: [{ id, diff: portDiff }],
+        updated: [{ id, diff }],
       },
     });
   };

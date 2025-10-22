@@ -21,6 +21,10 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+// Global state for hover management - shared across all piece nodes
+let globalHoverClearTimeout: NodeJS.Timeout | null = null;
+let currentHoveredPieceGuid: string | null = null;
+
 import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, Guid, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
@@ -253,7 +257,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
   const { x, y } = getPortPositionStyle(port);
   const portColor = findAttributeValue(port, "semio.color", "var(--foreground)")!;
   const hover = useDesignEditorHover();
-  const { hoverPort, hoverPiece } = useDesignEditorCommands();
+  const { hoverPort } = useDesignEditorCommands();
   const isHovered = hover?.port?.piece === pieceId && hover.port?.port === port.guid;
 
   const onClick = (event: React.MouseEvent) => {
@@ -280,7 +284,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
         if (port.guid) hoverPort(pieceId, port.guid);
       }}
       onPointerLeave={() => {
-        hoverPiece(pieceId);
+        // Do nothing - let parent handle hover clear
       }}
     />
   );
@@ -298,6 +302,38 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isDesignPiece = !!piece.design;
 
+  const handleMouseEnter = useCallback(() => {
+    // Clear any global pending clear hover
+    if (globalHoverClearTimeout) {
+      clearTimeout(globalHoverClearTimeout);
+      globalHoverClearTimeout = null;
+    }
+
+    // Only set hover if this is a different piece
+    if (currentHoveredPieceGuid !== guid) {
+      currentHoveredPieceGuid = guid;
+      hoverPiece(guid);
+    }
+  }, [guid, hoverPiece]);
+
+  const handleMouseLeave = useCallback(() => {
+    // Clear any existing global timeout
+    if (globalHoverClearTimeout) {
+      clearTimeout(globalHoverClearTimeout);
+    }
+
+    // Set a global timeout for clearing hover
+    // Only clear if this piece is still the currently hovered one
+    const pieceGuidAtLeave = guid;
+    globalHoverClearTimeout = setTimeout(() => {
+      if (currentHoveredPieceGuid === pieceGuidAtLeave) {
+        clearHover();
+        currentHoveredPieceGuid = null;
+      }
+      globalHoverClearTimeout = null;
+    }, 50);
+  }, [guid, clearHover]);
+
   return (
     <PieceScopeProvider guid={guid}>
       <PieceNodeInner
@@ -308,11 +344,11 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
         diff={diff}
         isDesignPiece={isDesignPiece}
         selection={selection}
-        hoverPiece={hoverPiece}
-        clearHover={clearHover}
         selectPiecePort={selectPiecePort}
         deselectPiecePort={deselectPiecePort}
         addConnection={addConnection}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       />
     </PieceScopeProvider>
   );
@@ -326,14 +362,14 @@ type PieceNodeInnerProps = {
   diff: DiffStatus;
   isDesignPiece: boolean;
   selection: DesignEditorSelection | undefined;
-  hoverPiece: (guid: Guid) => void;
-  clearHover: () => void;
   selectPiecePort: (piece: Guid, port: Guid) => void;
   deselectPiecePort: () => void;
-  addConnection: (connection: Connection) => void;
+  addConnection: (connection: any) => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 };
 
-const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, hoverPiece, clearHover, selectPiecePort, deselectPiecePort, addConnection }) => {
+const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const { fill, stroke, opacity } = useDesignEditorPieceColor(id, piece.guid);
 
   const onPortClick = (port: Port) => {
@@ -360,10 +396,10 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
   const strokeClass = `stroke-[${stroke}] stroke-2`;
 
   return (
-    <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
+    <div className="nodrag" style={{ opacity, cursor: "pointer" }} onPointerEnter={onMouseEnter} onPointerLeave={onMouseLeave}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} pointerEvents="all" />
-        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} pointerEvents="none" />}
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
           {piece.guid}
         </text>
@@ -385,6 +421,38 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const selection = useDesignEditorSelection();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+
+  const handleMouseEnter = useCallback(() => {
+    // Clear any global pending clear hover
+    if (globalHoverClearTimeout) {
+      clearTimeout(globalHoverClearTimeout);
+      globalHoverClearTimeout = null;
+    }
+
+    // Only set hover if this is a different piece
+    if (currentHoveredPieceGuid !== guid) {
+      currentHoveredPieceGuid = guid;
+      hoverPiece(guid);
+    }
+  }, [guid, hoverPiece]);
+
+  const handleMouseLeave = useCallback(() => {
+    // Clear any existing global timeout
+    if (globalHoverClearTimeout) {
+      clearTimeout(globalHoverClearTimeout);
+    }
+
+    // Set a global timeout for clearing hover
+    // Only clear if this piece is still the currently hovered one
+    const pieceGuidAtLeave = guid;
+    globalHoverClearTimeout = setTimeout(() => {
+      if (currentHoveredPieceGuid === pieceGuidAtLeave) {
+        clearHover();
+        currentHoveredPieceGuid = null;
+      }
+      globalHoverClearTimeout = null;
+    }, 50);
+  }, [guid, clearHover]);
 
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
     const connectedIsDesignPiece = connection.connected.piece === piece.guid || connection.connected.designPiece === piece.guid;
@@ -445,11 +513,11 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         isSelected={isSelected}
         diff={diff}
         selection={selection}
-        hoverPiece={hoverPiece}
-        clearHover={clearHover}
         selectPiecePort={selectPiecePort}
         deselectPiecePort={deselectPiecePort}
         addConnection={addConnection}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       />
     </PieceScopeProvider>
   );
@@ -462,14 +530,14 @@ type DesignNodeInnerProps = {
   isSelected: boolean;
   diff: DiffStatus;
   selection: DesignEditorSelection | undefined;
-  hoverPiece: (guid: Guid) => void;
-  clearHover: () => void;
   selectPiecePort: (piece: Guid, port: Guid) => void;
   deselectPiecePort: () => void;
-  addConnection: (connection: Connection) => void;
+  addConnection: (connection: any) => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 };
 
-const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isSelected, diff, selection, hoverPiece, clearHover, selectPiecePort, deselectPiecePort, addConnection }) => {
+const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isSelected, diff, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const isHovered = useIsPieceHovered();
 
   const onPortClick = (port: Port) => {
@@ -519,9 +587,9 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
   }
 
   return (
-    <div style={{ opacity }} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
+    <div className="nodrag" style={{ opacity, cursor: "pointer" }} onPointerEnter={onMouseEnter} onPointerLeave={onMouseLeave}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button">
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} pointerEvents="all" />
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`}>
           {piece.guid}
         </text>
@@ -1084,6 +1152,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   }, [reactFlowInstance, setDiagramCenter, setDiagramScale]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
+    console.log("onNodeClick fired", node.id, e.target);
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
     if (e.ctrlKey || e.metaKey) removePieceFromSelection(pieceId);
@@ -1113,6 +1182,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
+    console.log("onPaneClick fired", e.target);
     e.stopPropagation();
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
       deselectAll();

@@ -378,7 +378,7 @@ const Home: FC = ({}) => {
               type="withAction"
               pressed={true}
               onPressedChange={() => toggleKind(selectedKind)}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateKit(selectedKind)}
               tooltip={tooltip("home.hideKind")}
               actionTooltip={tooltip("home.createKit")}
@@ -404,7 +404,7 @@ const Home: FC = ({}) => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("temporary")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("temporary")}
                 tooltip={tooltip("home.showTemporary")}
                 actionTooltip={tooltip("home.createTemporary")}
@@ -415,7 +415,7 @@ const Home: FC = ({}) => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("local")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("local")}
                 tooltip={tooltip("home.showLocal")}
                 actionTooltip={tooltip("home.createLocal")}
@@ -426,7 +426,7 @@ const Home: FC = ({}) => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("remote")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("remote")}
                 tooltip={tooltip("home.showRemote")}
                 actionTooltip={tooltip("home.createRemote")}
@@ -544,233 +544,233 @@ const Home: FC = ({}) => {
                 type="withAction"
                 pressed={true}
                 onPressedChange={() => toggleKind(selectedKind)}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit(selectedKind)}
                 tooltip={tooltip("home.hideKind")}
                 actionTooltip={tooltip("home.createKit")}
               >
                 {selectedKind === "temporary" && <Clock className="size-4" />}
-            {selectedKind === "local" && <HardDrive className="size-4" />}
-            {selectedKind === "remote" && <Cloud className="size-4" />}
-          </Toggle>
-        )}
-        {selectedName && (
-          <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-            {selectedName}
-          </Toggle>
-        )}
-        {selectedVersion !== null && (
-          <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-            {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
-          </Toggle>
-        )}
-        {!selectedKind && (
-          <>
-            <Toggle
-              type="withAction"
-              pressed={false}
-              onPressedChange={() => toggleKind("temporary")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateKit("temporary")}
-              tooltip={tooltip("home.showTemporary")}
-              actionTooltip={tooltip("home.createTemporary")}
-            >
-              <Clock className="size-4" />
-            </Toggle>
-            <Toggle
-              type="withAction"
-              pressed={false}
-              onPressedChange={() => toggleKind("local")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateKit("local")}
-              tooltip={tooltip("home.showLocal")}
-              actionTooltip={tooltip("home.createLocal")}
-            >
-              <HardDrive className="size-4" />
-            </Toggle>
-            <Toggle
-              type="withAction"
-              pressed={false}
-              onPressedChange={() => toggleKind("remote")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
-              onActionClick={() => handleCreateKit("remote")}
-              tooltip={tooltip("home.showRemote")}
-              actionTooltip={tooltip("home.createRemote")}
-            >
-              <Cloud className="size-4" />
-            </Toggle>
-          </>
-        )}
-        {selectedKind &&
-          !selectedName &&
-          uniqueNames.length > 0 &&
-          uniqueNames.map((name) => (
-            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
-              {name}
-            </Toggle>
-          ))}
-        {selectedKind &&
-          selectedName &&
-          selectedVersion === null &&
-          uniqueVersions.length > 0 &&
-          uniqueVersions.map((version) => (
-            <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-              {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
-            </Toggle>
-          ))}
-        <Input className="flex-1 min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
-      </div>
-      <ScrollArea className="flex-1">
-        <table className="w-full border-collapse">
-          <thead className="sticky top-0 border-b">
-            <tr className="h-9">
-              <th className="text-left p-1 font-medium relative group">
-                <div className="flex items-center justify-between w-full">
-                  <span>{t("home.name")}</span>
-                  <Toggle
-                    type="dropdown"
-                    pressed={sortColumn === "name"}
-                    value={sortColumn === "name" ? sortDirection : "asc"}
-                    onValueChange={(value) => {
-                      homeCommands.setSortColumn("name");
-                      homeCommands.setSortDirection(value as "asc" | "desc");
-                    }}
-                    items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
-                    ]}
-                    className="px-1 min-w-0"
-                  />
-                </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-              </th>
-              {!selectedKind && (
-                <th className="text-left p-1 font-medium relative group">
-                  <div className="flex items-center justify-between w-full">
-                    <span>{t("home.kind")}</span>
-                    <Toggle
-                      type="dropdown"
-                      pressed={sortColumn === "type"}
-                      value={sortColumn === "type" ? sortDirection : "asc"}
-                      onValueChange={(value) => {
-                        homeCommands.setSortColumn("type");
-                        homeCommands.setSortDirection(value as "asc" | "desc");
-                      }}
-                      items={[
-                        { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                        { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
-                      ]}
-                      className="px-1 min-w-0"
-                    />
-                  </div>
-                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-                </th>
-              )}
-              <th className="text-left p-1 font-medium relative group">
-                <div className="flex items-center justify-between w-full">
-                  <span>{t("home.lastUpdated")}</span>
-                  <Toggle
-                    type="dropdown"
-                    pressed={sortColumn === "updatedAt"}
-                    value={sortColumn === "updatedAt" ? sortDirection : "asc"}
-                    onValueChange={(value) => {
-                      homeCommands.setSortColumn("updatedAt");
-                      homeCommands.setSortDirection(value as "asc" | "desc");
-                    }}
-                    items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
-                    ]}
-                    className="px-1 min-w-0"
-                  />
-                </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-              </th>
-              <th className="text-left p-1 font-medium relative group">
-                <div className="flex items-center justify-between w-full">
-                  <span>{t("home.created")}</span>
-                  <Toggle
-                    type="dropdown"
-                    pressed={sortColumn === "createdAt"}
-                    value={sortColumn === "createdAt" ? sortDirection : "asc"}
-                    onValueChange={(value) => {
-                      homeCommands.setSortColumn("createdAt");
-                      homeCommands.setSortDirection(value as "asc" | "desc");
-                    }}
-                    items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
-                    ]}
-                    className="px-1 min-w-0"
-                  />
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const isSelected = selection.includes(row.kit.guid);
-              return (
-                <tr key={row.id} className={`border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row.kit.guid, e)} role="button" tabIndex={0}>
-                  <td className="p-1" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
-                      <div className="flex items-center gap-1 flex-1 min-w-0">
-                        {row.hasChildren ? (
-                          <Action
-                            level="base"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleRow(row.id);
-                            }}
-                          >
-                            {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-                          </Action>
-                        ) : (
-                          <span className="w-4 h-4 shrink-0" />
-                        )}
-                        <span
-                          className="hover:underline text-left flex-1 min-w-0 truncate"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigateToKit(row.kit.guid);
-                          }}
-                          role="link"
-                          tabIndex={0}
-                        >
-                          {row.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        {row.level === 0 && (
-                          <Action
-                            level="base"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateVersion(row.name, row.type);
-                            }}
-                            tooltip={t("home.createVersion")}
-                          >
-                            <Plus />
-                          </Action>
-                        )}
-                      </div>
+                {selectedKind === "local" && <HardDrive className="size-4" />}
+                {selectedKind === "remote" && <Cloud className="size-4" />}
+              </Toggle>
+            )}
+            {selectedName && (
+              <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+                {selectedName}
+              </Toggle>
+            )}
+            {selectedVersion !== null && (
+              <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
+                {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+              </Toggle>
+            )}
+            {!selectedKind && (
+              <>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("temporary")}
+                  actionIcon={<Plus className="size-3.5" />}
+                  onActionClick={() => handleCreateKit("temporary")}
+                  tooltip={tooltip("home.showTemporary")}
+                  actionTooltip={tooltip("home.createTemporary")}
+                >
+                  <Clock className="size-4" />
+                </Toggle>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("local")}
+                  actionIcon={<Plus className="size-3.5" />}
+                  onActionClick={() => handleCreateKit("local")}
+                  tooltip={tooltip("home.showLocal")}
+                  actionTooltip={tooltip("home.createLocal")}
+                >
+                  <HardDrive className="size-4" />
+                </Toggle>
+                <Toggle
+                  type="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("remote")}
+                  actionIcon={<Plus className="size-3.5" />}
+                  onActionClick={() => handleCreateKit("remote")}
+                  tooltip={tooltip("home.showRemote")}
+                  actionTooltip={tooltip("home.createRemote")}
+                >
+                  <Cloud className="size-4" />
+                </Toggle>
+              </>
+            )}
+            {selectedKind &&
+              !selectedName &&
+              uniqueNames.length > 0 &&
+              uniqueNames.map((name) => (
+                <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+                  {name}
+                </Toggle>
+              ))}
+            {selectedKind &&
+              selectedName &&
+              selectedVersion === null &&
+              uniqueVersions.length > 0 &&
+              uniqueVersions.map((version) => (
+                <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
+                  {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+                </Toggle>
+              ))}
+            <Input className="flex-1 min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+          </div>
+          <ScrollArea className="flex-1">
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 border-b">
+                <tr className="h-9">
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("home.name")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "name"}
+                        value={sortColumn === "name" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          homeCommands.setSortColumn("name");
+                          homeCommands.setSortDirection(value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
                     </div>
-                  </td>
+                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                  </th>
                   {!selectedKind && (
-                    <td className="p-1">
-                      {row.type === "temporary" && <Clock className="size-4" />}
-                      {row.type === "local" && <HardDrive className="size-4" />}
-                      {row.type === "remote" && <Cloud className="size-4" />}
-                    </td>
+                    <th className="text-left p-1 font-medium relative group">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{t("home.kind")}</span>
+                        <Toggle
+                          type="dropdown"
+                          pressed={sortColumn === "type"}
+                          value={sortColumn === "type" ? sortDirection : "asc"}
+                          onValueChange={(value) => {
+                            homeCommands.setSortColumn("type");
+                            homeCommands.setSortDirection(value as "asc" | "desc");
+                          }}
+                          items={[
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                          ]}
+                          className="px-1 min-w-0"
+                        />
+                      </div>
+                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                    </th>
                   )}
-                  <td className="p-1">{row.updatedAt}</td>
-                  <td className="p-1">{row.createdAt}</td>
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("home.lastUpdated")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "updatedAt"}
+                        value={sortColumn === "updatedAt" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          homeCommands.setSortColumn("updatedAt");
+                          homeCommands.setSortDirection(value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
+                    </div>
+                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                  </th>
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("home.created")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "createdAt"}
+                        value={sortColumn === "createdAt" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          homeCommands.setSortColumn("createdAt");
+                          homeCommands.setSortDirection(value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
+                    </div>
+                  </th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </ScrollArea>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const isSelected = selection.includes(row.kit.guid);
+                  return (
+                    <tr key={row.id} className={`border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row.kit.guid, e)} role="button" tabIndex={0}>
+                      <td className="p-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
+                          <div className="flex items-center gap-1 flex-1 min-w-0">
+                            {row.hasChildren ? (
+                              <Action
+                                level="base"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleRow(row.id);
+                                }}
+                              >
+                                {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                              </Action>
+                            ) : (
+                              <span className="w-4 h-4 shrink-0" />
+                            )}
+                            <span
+                              className="hover:underline text-left flex-1 min-w-0 truncate"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigateToKit(row.kit.guid);
+                              }}
+                              role="link"
+                              tabIndex={0}
+                            >
+                              {row.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            {row.level === 0 && (
+                              <Action
+                                level="base"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateVersion(row.name, row.type);
+                                }}
+                                tooltip={t("home.createVersion")}
+                              >
+                                <Plus />
+                              </Action>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      {!selectedKind && (
+                        <td className="p-1">
+                          {row.type === "temporary" && <Clock className="size-4" />}
+                          {row.type === "local" && <HardDrive className="size-4" />}
+                          {row.type === "remote" && <Cloud className="size-4" />}
+                        </td>
+                      )}
+                      <td className="p-1">{row.updatedAt}</td>
+                      <td className="p-1">{row.createdAt}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </ScrollArea>
         </div>
       </Window>
     </Canvas>

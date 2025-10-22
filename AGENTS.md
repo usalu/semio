@@ -1,6 +1,173 @@
-# Monorepo
-
 This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
+
+# Specs
+
+# Specs
+
+## Kit
+
+A `kit` is a collection of `types`, `designs`, `authors`, `qualities`, `attributes`, and `concepts`.
+
+A `kit` is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime).
+
+A _static_ `kit` contains a reserved `.semio` folder that contains a `kit.db` sqlite file.
+
+The SQL-schema of `kit.db` is found in `./sqlite/schema.sql`.
+
+For Inter-Process-Communication (IPC) the JSON-schema in `./jsonschema/kit.json` is used.
+
+## Design
+
+A `design` is an undirected graph of `pieces` (nodes) and `connections` (edges) with organizational `layers`, `groups`, `stats`, `attributes`, and `concepts`.
+
+A _flat_ `design` has no `connections` and all `pieces` are _fixed_.
+
+The `pieces` are _placed_ _hierarchically_ (breadth-first) for every _component_.
+
+Additional `connections` which where not used in the _placement_ can be used to validate the computed `planes`.
+
+## Type
+
+A `type` is a reusable component with different `representations`, `ports`, `attributes`, `concepts`, and `authors`.
+
+A `type` can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location**.
+
+## Connection
+
+A `connection` is a 3D-Link between two `pieces` with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis).
+
+The _translation_ is applied first, then the _rotation_.
+
+The two `pieces` are called **_connected_** and **_connecting_** but there is no difference between them.
+
+The _direction_ of a `connection` goes from the lower _hierarchy_ to the higher _hierarchy_ of the `pieces`.
+
+A `connection` can have `attributes` and diagram positioning with **x** and **y** offsets.
+
+## Piece
+
+A `piece` is an instance of either a `type` or a `design` with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and `attributes`.
+
+A `piece` is either _fixed_ (with a `plane`) or _linked_ (with a `connection`).
+
+A group of _connected_ `pieces` is called a _component_.
+
+The _hierarchy_ of a `piece` is the length of the shortest path to the next _fixed_ `piece`.
+
+## Port
+
+A `port` is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning.
+
+A `port` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
+
+A `port` can have a port **family** and a list of **compatible families** for explicit compatibility control.
+
+No **family** means the _default_ family and no **compatible families** means the port is compatible with all other ports.
+
+It is enough for one `port` to be compatible with another `port` to be compatible with each other.
+
+A `port` can have `props` that define measurable characteristics and `attributes` for additional metadata.
+
+## Representation
+
+A `representation` is a `tagged` `url` to a resource with an optional **description**.
+
+No **`tags`** means the _default_ representation.
+
+The similarity of `representations` is determined by the jaccard index of their **`tags`**.
+
+## Attribute
+
+A `attribute` is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** (`url` or text).
+
+The **name** is kebab-cased and with `.`-separated string similar to toml keys.
+
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute.
+
+The **unit** is a unit identifier.
+
+- `mm` for millimeter, `cm` for centimeter, `dm` for decimeter, `m` for meter, `km` for kilometer
+- `m²` for square meter, `m³` for cubic meter, `m⁴` for quartic meter
+- `°` for degree, `rad` for radian
+- `N` for newton, `kN` for kilonewton, `MN` for meganewton
+- `°C` for degree Celsius, `°F` for degree Fahrenheit
+- `W` for watt, `kW` for kilowatt, `MW` for megawatt, `GW` for gigawatt
+- `Wh` for watt-hour, `kWh` for kilowatt-hour, `MWh` for megawatt-hour, `GWh` for gigawatt-hour
+- `J` for joule, `kJ` for kilojoule, `kcal` for kilocalorie
+- `kWh/m²a` for kilowatt-hour per square meter per year
+- `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
+- `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
+- ...
+
+A list of attributes is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value**.
+
+## Tag
+
+A `tag` is a kebab-cased **name**.
+
+## Plane
+
+A `plane` is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space.
+
+The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis.
+
+## Url
+
+A `url` is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, ...) string.
+
+A _relative_ `url` is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, ....
+
+## Quality
+
+A `quality` is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Port), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula**.
+
+A `quality` can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation.
+
+The **kind** determines which entities the quality can be applied to using a bitwise enum system.
+
+## Benchmark
+
+A `benchmark` is a performance standard within a `quality` with a **name**, optional **icon**, and **range** (min/max with exclusion flags).
+
+Benchmarks provide reference points for evaluating quality measurements against industry or design standards.
+
+## Concept
+
+A `concept` is a **name** and **order** pair that provides semantic grouping for `kits`, `types`, or `designs`.
+
+Concepts enable hierarchical organization and categorization of design elements beyond simple naming.
+
+## Author
+
+An `author` has a **name** and **email** and can be associated with `kits`, `types`, or `designs` with a **rank** indicating contribution level.
+
+Authors provide attribution and contact information for design ownership and collaboration.
+
+## Layer
+
+A `layer` is an organizational grouping within a `design` with a **name**, optional **description**, and **color** for visual organization.
+
+Layers provide a way to group and manage pieces logically within complex designs.
+
+## Group
+
+A `group` is a collection of `pieces` within a `design` with optional **name**, **description**, **color**, and **attributes**.
+
+Groups enable semantic clustering of pieces that belong together functionally or conceptually.
+
+## Prop
+
+A `prop` is a **key-value** pair on a `port` that references a `quality` with a specific **value** and optional **unit**.
+
+Props define measurable characteristics of ports using the quality system for standardized measurement.
+
+## Stat
+
+A `stat` is a statistical measurement on a `design` that references a `quality` with **range** (min/max) and optional **unit**.
+
+Stats provide computed or measured performance data for entire designs using the quality framework.
+
+# Monorepo
 
 ## Rules
 
@@ -344,6 +511,250 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 #### Styling
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from global.css. Only global.css uses colors and pixels directly.
+
+### Store Architecture
+
+This document describes the generalized store hierarchy for the Semio application.
+
+#### Overview
+
+The store architecture consists of three levels of abstraction:
+
+1. **Store** - Base class for any component with data
+2. **EditorStore** - Base class for editors with transaction support and undo/redo
+3. **KitDiffEditorStore** - Base class for editors that modify kits and track both editor-specific and kit diffs
+
+#### Store Hierarchy
+
+```
+Store<TState>
+  ↓ extends
+EditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult>
+  ↓ extends
+KitDiffEditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult>
+```
+
+#### 1. Store (Base Class)
+
+The `Store` class is the foundation for all components that hold data.
+
+##### Responsibilities
+
+- State management with snapshot caching
+- Observable pattern (onChanged, onChangedDeep)
+- Access to parent SketchpadStore
+- Y.js integration via yMap
+
+##### Abstract Methods
+
+- `hash(state: TState): string` - Generate a hash for cache invalidation
+- `buildSnapshot(): TState` - Build the current state snapshot
+
+##### Usage
+
+Use this for simple components that only need state management without editing capabilities (e.g., HomeStore).
+
+#### 2. EditorStore (extends Store)
+
+The `EditorStore` adds transaction support with undo/redo functionality for any editor.
+
+##### Responsibilities
+
+- Transaction management (start, finalize, abort)
+- Undo/redo with two stacks:
+  - **Current transaction stack**: Edits in the active transaction (merged on finalize)
+  - **Past transactions stack**: Finalized transactions
+- Selection management with diff-based updates
+- Panel visibility and fullscreen management
+
+##### Transaction Model
+
+Every editor supports transactions:
+
+1. **Start Transaction**: `startTransaction()`
+   - Activates transaction mode
+   - New edits go to current transaction stack
+
+2. **During Transaction**: `executeCommand(...)`
+   - Each command creates an edit with `do` and `undo` steps
+   - Edits accumulate in current transaction stack
+   - Undo/redo work within the current transaction
+
+3. **Finalize Transaction**: `finalizeTransaction()`
+   - Merges all edits in current transaction into one edit
+   - Moves merged edit to past transactions stack
+   - Clears redo stack
+
+4. **Abort Transaction**: `abortTransaction()`
+   - Undoes all edits in current transaction
+   - Clears current transaction stack
+
+##### Edit Structure
+
+```typescript
+interface EditorEdit<TSelectionDiff> {
+  do: EditorStep<TSelectionDiff>;
+  undo: EditorStep<TSelectionDiff>;
+}
+
+interface EditorStep<TSelectionDiff> {
+  selectionDiff?: TSelectionDiff;
+}
+```
+
+Each edit stores:
+
+- **do**: Forward diff to apply the change
+- **undo**: Inverse diff to revert the change
+
+### Abstract Methods (in addition to Store)
+
+- `applySelectionDiff(selectionDiff: TSelectionDiff): void` - Apply selection changes to Y.js
+- `inverseSelectionDiff(selection, diff): TSelectionDiff` - Calculate inverse diff for undo
+- `getSelection()` - Get current selection state
+
+##### Undo/Redo Behavior
+
+**Within Transaction:**
+
+- Undo: Pops from current transaction stack, stores in temp variable
+- Redo: Pushes temp variable back to current transaction stack
+
+**Outside Transaction:**
+
+- Undo: Moves edit from past transactions stack to redo stack
+- Redo: Moves edit from redo stack back to past transactions stack
+
+##### Usage
+
+Use this for editors that don't modify kits (e.g., HomeStore for managing the home screen).
+
+#### 3. KitDiffEditorStore (extends EditorStore)
+
+The `KitDiffEditorStore` extends EditorStore for editors that modify kits (designs, types).
+
+##### Additional Responsibilities
+
+- Tracks kit diffs alongside editor-specific diffs
+- Applies kit changes through KitStore
+- Records both editor and kit changes in edits
+
+##### Edit Structure
+
+```typescript
+interface KitDiffEditorEdit<TSelectionDiff> {
+  do: KitDiffEditorStep<TSelectionDiff>;
+  undo: KitDiffEditorStep<TSelectionDiff>;
+}
+
+interface KitDiffEditorStep<TSelectionDiff> {
+  kitDiff?: KitDiff;
+  selectionDiff?: TSelectionDiff;
+}
+```
+
+Each edit stores:
+
+- **do.kitDiff**: Forward kit diff to apply changes
+- **do.selectionDiff**: Forward selection diff
+- **undo.kitDiff**: Inverse kit diff to revert changes
+- **undo.selectionDiff**: Inverse selection diff
+
+##### Undo/Redo Behavior
+
+Extends EditorStore undo/redo to also:
+
+- Apply/revert kit diffs through `kit().change(kitDiff)`
+- Handle both kit and selection changes atomically
+
+##### Abstract Methods
+
+- `kit(): KitStore` - Get the associated kit store
+
+##### Usage
+
+Use this for editors that modify kits:
+
+- **DesignEditorStore** - Edit designs (pieces, connections)
+- **TypeEditorStore** - Edit types (ports, representations)
+- **KitEditorStore** - Edit kits (types, designs, qualities, files, authors)
+
+#### Concrete Implementations
+
+##### DesignEditorStore
+
+Edits design content:
+
+- Selection: pieces, connections, ports
+- Kit diffs: piece changes, connection changes
+- Transaction support for complex multi-step operations
+
+##### TypeEditorStore
+
+Edits type definitions:
+
+- Selection: ports, representations
+- Kit diffs: port changes, representation changes
+- Transaction support for type modifications
+
+##### KitEditorStore
+
+Edits kit metadata:
+
+- Selection: types, designs, qualities, files, authors
+- Kit diffs: add/remove artifacts
+- Transaction support for kit-level operations
+
+##### HomeStore
+
+Manages home screen (extends EditorStore, not KitDiffEditorStore):
+
+- Selection: kits
+- No kit diffs (doesn't modify kit content)
+- Sorting and filtering state
+
+#### Command Pattern
+
+All editors use a command pattern:
+
+```typescript
+interface CommandContext {
+  // Current state
+}
+
+interface CommandResult {
+  diff?: TDiff;      // Editor-specific diff
+  kitDiff?: KitDiff; // Kit diff (only for KitDiffEditorStore)
+}
+
+executeCommand<T>(command: string, ...args): Promise<T>
+```
+
+##### Command Execution Flow
+
+1. Look up command in registry
+2. Build context with current state
+3. Execute command function
+4. Apply diffs (editor diff + kit diff)
+5. Record edit for undo/redo
+6. Return result
+
+#### Best Practices
+
+1. **Always use transactions** for multi-step operations
+2. **Keep edits atomic** - each edit should be independently undoable
+3. **Calculate inverse diffs correctly** - critical for undo
+4. **Don't nest transactions** - finish one before starting another
+5. **Clear redo stack on new edits** - standard undo/redo behavior
+6. **Use selection diffs** for all selection changes
+
+#### Files
+
+- `js/js/sketchpad/store.tsx` - Base Store, EditorStore, KitDiffEditorStore
+- `js/js/sketchpad/editors/design/store.tsx` - DesignEditorStore
+- `js/js/sketchpad/editors/type/store.tsx` - TypeEditorStore
+- `js/js/sketchpad/editors/kit/store.tsx` - KitEditorStore
+- `js/js/sketchpad/editors/home/store.tsx` - HomeStore
 
 # Hierarchies
 

@@ -20,11 +20,11 @@
 
 // #endregion
 
-import { Edges, Line, Select } from "@react-three/drei";
-import React, { FC, useCallback, useMemo } from "react";
+import { Edges, Line, Select, TransformControls } from "@react-three/drei";
+import React, { FC, useCallback, useMemo, useRef } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
-import { Camera, Piece, Plane, planeToMatrix } from "../../../../semio";
+import { Camera, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
 import { PieceScopeProvider, useDesign, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../kits/store";
 import { useEditorPanelVisibility } from "../../../store";
 import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
@@ -62,11 +62,6 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 interface ModelPieceProps {}
 
 const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
-  // const flatDesign = useFlatDesign();
-  // const piecePlanes = usePiecePlanes();
-  // const pieceRepresentationUrls = usePieceRepresentationUrls();
-  // const pieceDiffStatuses = usePieceDiffStatuses();
-  // const fileUrls = useFileUrls();
   const piece = usePiece() as Piece;
   const isSelected = useIsPieceSelected();
   const selection = useDesignEditorSelection();
@@ -74,7 +69,9 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const piecePlane = usePiecePlane();
   const status = usePieceStatus();
 
-  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignEditorCommands();
+  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover, updatePiece, startTransaction, finalizeTransaction } = useDesignEditorCommands();
+  const transformControlsRef = useRef<any>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const plasterColor = useMemo(() => getComputedColor("--plaster"), []);
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const hoverColor = useMemo(() => getComputedColor("--hover-base"), []);
@@ -162,13 +159,58 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     return plasterColor;
   }, [isSelected, isHovered, activeColor, plasterColor, plasterColor]);
   const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : plasterColor;
-  return (
+
+  const matrix = useMemo(() => {
+    if (!piecePlane || !piece.plane) return null;
+    const planeMatrix = planeToMatrix(piecePlane as unknown as Plane);
+    const threeMatrix = new THREE.Matrix4().copy(planeMatrix);
+    threeMatrix.multiply(toThreeRotation());
+    return threeMatrix;
+  }, [piecePlane, piece.plane]);
+
+  const transformProps = useMemo(() => {
+    if (!matrix || !piece.plane) return null;
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    matrix.decompose(position, quaternion, scale);
+    return { position, quaternion, scale };
+  }, [matrix, piece.plane]);
+
+  const handleTransformStart = useCallback((e?: THREE.Event) => {
+    startTransaction();
+  }, [startTransaction]);
+
+  const handleTransformEnd = useCallback((e?: THREE.Event) => {
+    if (!groupRef.current) return;
+    groupRef.current.updateMatrixWorld(true);
+    const worldMatrix = new THREE.Matrix4().copy(groupRef.current.matrixWorld);
+    const semioMatrix = new THREE.Matrix4().copy(worldMatrix);
+    semioMatrix.multiply(toSemioRotation());
+    const newPlane = matrixToPlane(semioMatrix);
+    updatePiece(piece.guid, { plane: newPlane });
+    finalizeTransaction();
+  }, [piece.guid, updatePiece, finalizeTransaction]);
+
+  const meshContent = (
     <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={materialColor} emissive={emissiveColor} emissiveIntensity={0.45} />
       <Edges scale={1.001} color={foregroundColor} />
     </mesh>
   );
+
+  if (piece.plane && transformProps) {
+    return (
+      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={isSelected} onMouseDown={handleTransformStart} onMouseUp={handleTransformEnd}>
+        <group ref={groupRef} position={transformProps.position} quaternion={transformProps.quaternion} scale={transformProps.scale}>
+          {meshContent}
+        </group>
+      </TransformControls>
+    );
+  }
+
+  return meshContent;
 
   // const transformControlRef = useRef(null);
 

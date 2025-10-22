@@ -274,7 +274,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           }}
           tooltip={dropdownTooltip}
         >
-          <ChevronDown className="size-3 opacity-50" />
+          <ChevronDown className="size-3" />
         </Action>
       </TogglePrimitive.Root>
     );

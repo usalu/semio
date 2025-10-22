@@ -25,7 +25,7 @@ import { FC, useMemo } from "react";
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
 import { Design, Guid, Piece, Type } from "../../../../semio";
-import { useDesign, useDesignScope, useIsInDesignScope, useType } from "../../../kits/store";
+import { useDesign, useDesignScope, useIsInDesignScope, useKitScope, useType } from "../../../kits/store";
 import { useActiveInteraction, useSketchpadCommands } from "../../../store";
 import type { DesignEditorSelection } from "../store";
 import { useDesignEditorCommandsSafe, useDesignEditorCommands, useDesignEditorHover, useDesignEditorHoverSafe, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection, useDesignEditorSelectionSafe } from "../store";
@@ -40,10 +40,11 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   // Always call useType unconditionally, even if typeId is undefined
   const typeFromStore = useType(undefined, typeId || "") as Type | null;
   const type = typeProp || typeFromStore;
-  const { setActiveInteraction } = useSketchpadCommands();
+  const { setActiveInteraction, navigateToType } = useSketchpadCommands();
   const { hoverType, clearHover } = useDesignEditorCommands();
   const activeInteraction = useActiveInteraction();
   const isInDesignScope = useIsInDesignScope();
+  const kitGuid = useKitScope()?.guid;
   let design: Design | null = null;
   try {
     design = useDesign() as Design | null;
@@ -121,6 +122,13 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
         ref={setNodeRef}
         {...enhancedListeners}
         {...attributes}
+        onDoubleClick={() => {
+          setActiveInteraction(undefined);
+          if (!kitGuid) {
+            return;
+          }
+          navigateToType(kitGuid, type.guid);
+        }}
         onPointerEnter={() => {
           if (isInDesignScope) hoverType(type.guid);
         }}
@@ -138,6 +146,13 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       ref={setNodeRef}
       {...enhancedListeners}
       {...attributes}
+      onDoubleClick={() => {
+        setActiveInteraction(undefined);
+        if (!kitGuid) {
+          return;
+        }
+        navigateToType(kitGuid, type.guid);
+      }}
       onPointerEnter={() => {
         if (isInDesignScope) hoverType(type.guid);
       }}
@@ -173,12 +188,13 @@ interface DesignAvatarProps {
 
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
   const isInDesignScope = useIsInDesignScope();
-  const { setActiveInteraction } = useSketchpadCommands();
+  const { setActiveInteraction, navigateToDesign } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
 
   const designFromStore = designId && !designProp ? (useDesign(undefined, designId) as Design | null) : null;
   const design = designProp || designFromStore;
 
+  const kitGuid = useKitScope()?.guid;
   const designScope = useDesignScope();
   const currentDesignFromScope = designScope ? (useDesign() as Design | null) : null;
 
@@ -239,6 +255,13 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
         ref={setNodeRef}
         {...enhancedListeners}
         {...attributes}
+        onDoubleClick={() => {
+          setActiveInteraction(undefined);
+          if (!kitGuid) {
+            return;
+          }
+          navigateToDesign(kitGuid, design.guid);
+        }}
         onPointerEnter={() => {
           if (!isActive && isInDesignScope) commandsFromScope.hoverDesign(design.guid);
         }}
@@ -256,6 +279,13 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       ref={setNodeRef}
       {...enhancedListeners}
       {...attributes}
+      onDoubleClick={() => {
+        setActiveInteraction(undefined);
+        if (!kitGuid) {
+          return;
+        }
+        navigateToDesign(kitGuid, design.guid);
+      }}
       onPointerEnter={() => {
         if (!isActive && isInDesignScope) commandsFromScope.hoverDesign(design.guid);
       }}

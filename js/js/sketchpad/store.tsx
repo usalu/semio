@@ -165,6 +165,456 @@ export function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscrib
   }
 }
 
+// #endregion General
+
+// #region Store Hierarchy
+
+export abstract class Store<TState> {
+  public readonly guid: Guid;
+  public readonly parent: SketchpadStore;
+  public readonly yMap: Y.Map<any>;
+  protected readonly transact: Transact;
+  protected cache?: TState;
+  protected cacheHash?: string;
+
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
+    this.guid = guid();
+    this.parent = parent;
+    this.yMap = yMap;
+    this.transact = transact;
+  }
+
+  protected abstract hash(state: TState): string;
+  protected abstract buildSnapshot(): TState;
+
+  snapshot(): TState {
+    const currentData = this.buildSnapshot();
+    const currentHash = this.hash(currentData);
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+    return this.cache;
+  }
+
+  onChanged(subscribe: Subscribe): Unsubscribe {
+    return createObserver(this.yMap, subscribe);
+  }
+
+  onChangedDeep(subscribe: Subscribe): Unsubscribe {
+    return createObserver(this.yMap, subscribe, true);
+  }
+}
+
+export interface EditorStep<TSelectionDiff = any> {
+  selectionDiff?: TSelectionDiff;
+}
+
+export interface EditorEdit<TSelectionDiff = any> {
+  do: EditorStep<TSelectionDiff>;
+  undo: EditorStep<TSelectionDiff>;
+}
+
+export interface EditorDiff<TSelectionDiff = any> {
+  selection?: TSelectionDiff;
+  presence?: any;
+  hover?: any;
+  fullscreenWindow?: any;
+  panelVisibility?: Partial<PanelVisibility>;
+}
+
+export interface EditorCommandResult<TDiff = any> {
+  diff?: TDiff;
+}
+
+export interface PanelVisibility {
+  toolbar?: boolean;
+  workbench?: boolean;
+  tools?: boolean;
+  hud?: boolean;
+  stats?: boolean;
+  details?: boolean;
+  chat?: boolean;
+  settings?: boolean;
+}
+
+export abstract class EditorStore<
+  TState,
+  TDiff extends EditorDiff<TSelectionDiff>,
+  TSelectionDiff,
+  TEdit extends EditorEdit<TSelectionDiff>,
+  TCommandContext,
+  TCommandResult extends EditorCommandResult<TDiff>
+> extends Store<TState> {
+  protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
+  private lastDeletedTransactionEdit?: TEdit;
+
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
+    super(parent, yMap, transact);
+  }
+
+  protected abstract applySelectionDiff(selectionDiff: TSelectionDiff): void;
+  protected abstract inverseSelectionDiff(selection: any, diff: TSelectionDiff): TSelectionDiff;
+  protected abstract getSelection(): any;
+
+  get isTransactionActive(): boolean {
+    return (this.yMap.get("isTransactionActive") as boolean) || false;
+  }
+
+  set isTransactionActive(active: boolean) {
+    this.yMap.set("isTransactionActive", active);
+  }
+
+  get currentTransactionStack(): TEdit[] {
+    const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+
+  get pastTransactionsStack(): TEdit[] {
+    const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+
+  get redoStack(): TEdit[] {
+    const yStack = this.yMap.get("redoStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+
+  canUndo(): boolean {
+    if (this.isTransactionActive) return this.currentTransactionStack.length > 0;
+    return this.pastTransactionsStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    if (this.isTransactionActive) return false;
+    return this.redoStack.length > 0;
+  }
+
+  change(diff: TDiff): void {
+    this.transact(() => {
+      if (diff.fullscreenWindow !== undefined) {
+        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
+      }
+      if (diff.panelVisibility !== undefined) {
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            yPanelVisibility.set(key, value);
+          }
+        });
+      }
+      if (diff.selection) {
+        this.applySelectionDiff(diff.selection);
+      }
+    });
+  }
+
+  startTransaction(): void {
+    this.isTransactionActive = true;
+  }
+
+  abortTransaction(): void {
+    if (this.isTransactionActive) {
+      this.transact(() => {
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          for (let i = currentStack.length - 1; i >= 0; i--) {
+            const edit = currentStack.get(i);
+            if (edit?.undo?.selectionDiff) {
+              this.applySelectionDiff(edit.undo.selectionDiff);
+            }
+          }
+          currentStack.delete(0, currentStack.length);
+        }
+        this.isTransactionActive = false;
+      });
+    }
+  }
+
+  finalizeTransaction(): void {
+    if (this.isTransactionActive) {
+      this.transact(() => {
+        let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+        if (redoStack && redoStack.length > 0) {
+          redoStack.delete(0, redoStack.length);
+        }
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        let pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+        if (!pastStack) {
+          pastStack = new Y.Array<any>();
+          this.yMap.set("pastTransactionsStack", pastStack);
+        }
+        if (currentStack && currentStack.length > 0) {
+          const edits = currentStack.toArray();
+          if (edits.length === 1) {
+            pastStack.push([edits[0]]);
+          } else if (edits.length > 1) {
+            const firstEdit = edits[0];
+            const lastEdit = edits[edits.length - 1];
+            const mergedEdit = { do: lastEdit.do, undo: firstEdit.undo };
+            pastStack.push([mergedEdit]);
+          }
+          currentStack.delete(0, currentStack.length);
+        }
+        this.isTransactionActive = false;
+      });
+    }
+  }
+
+  undo(): void {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        this.lastDeletedTransactionEdit = edit;
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (!redoStack) {
+        redoStack = new Y.Array<any>();
+        this.yMap.set("redoStack", redoStack);
+      }
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        redoStack.push([edit]);
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+      }
+    }
+  }
+
+  redo(): void {
+    if (this.isTransactionActive) {
+      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (!currentStack) {
+        currentStack = new Y.Array<any>();
+        this.yMap.set("currentTransactionStack", currentStack);
+      }
+      const lastDeletedEdit = this.lastDeletedTransactionEdit;
+      if (lastDeletedEdit) {
+        currentStack.push([lastDeletedEdit]);
+        this.lastDeletedTransactionEdit = undefined;
+        if (lastDeletedEdit.do?.selectionDiff) {
+          this.applySelectionDiff(lastDeletedEdit.do.selectionDiff);
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      const redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (redoStack && redoStack.length > 0) {
+        const edit = redoStack.get(redoStack.length - 1);
+        redoStack.delete(redoStack.length - 1, 1);
+        if (pastStack) {
+          pastStack.push([edit]);
+        }
+        if (edit?.do?.selectionDiff) {
+          this.applySelectionDiff(edit.do.selectionDiff);
+        }
+      }
+    }
+  }
+
+  protected recordEdit(result: TCommandResult): void {
+    if (this.isTransactionActive && result.diff) {
+      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (redoStack && redoStack.length > 0) {
+        redoStack.delete(0, redoStack.length);
+      }
+      this.lastDeletedTransactionEdit = undefined;
+      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (!currentStack) {
+        currentStack = new Y.Array<any>();
+        this.yMap.set("currentTransactionStack", currentStack);
+      }
+      const selection = this.getSelection();
+      const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
+      const doStep: EditorStep<TSelectionDiff> = { selectionDiff: result.diff?.selection };
+      const undoStep: EditorStep<TSelectionDiff> = { selectionDiff: inversedSelectionDiff };
+      const edit = { do: doStep, undo: undoStep };
+      currentStack.push([edit]);
+    }
+  }
+
+  registerCommand(command: string, callback: (context: TCommandContext, ...rest: any[]) => TCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
+}
+
+export interface KitDiffEditorStep<TSelectionDiff = any> extends EditorStep<TSelectionDiff> {
+  kitDiff?: KitDiff;
+}
+
+export interface KitDiffEditorEdit<TSelectionDiff = any> {
+  do: KitDiffEditorStep<TSelectionDiff>;
+  undo: KitDiffEditorStep<TSelectionDiff>;
+}
+
+export interface KitDiffEditorCommandResult<TDiff = any> extends EditorCommandResult<TDiff> {
+  kitDiff?: KitDiff;
+}
+
+export abstract class KitDiffEditorStore<
+  TState,
+  TDiff extends EditorDiff<TSelectionDiff>,
+  TSelectionDiff,
+  TEdit extends KitDiffEditorEdit<TSelectionDiff>,
+  TCommandContext,
+  TCommandResult extends KitDiffEditorCommandResult<TDiff>
+> extends EditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
+    super(parent, yMap, transact);
+  }
+
+  abstract kit(): KitStore;
+
+  abortTransaction(): void {
+    if (this.isTransactionActive) {
+      this.transact(() => {
+        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          for (let i = currentStack.length - 1; i >= 0; i--) {
+            const edit = currentStack.get(i);
+            if (edit?.undo) {
+              if (edit.undo.kitDiff) {
+                this.kit().change(edit.undo.kitDiff);
+              }
+              if (edit.undo.selectionDiff) {
+                this.applySelectionDiff(edit.undo.selectionDiff);
+              }
+            }
+          }
+          currentStack.delete(0, currentStack.length);
+        }
+        this.isTransactionActive = false;
+      });
+    }
+  }
+
+  undo(): void {
+    if (this.isTransactionActive) {
+      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        (this as any).lastDeletedTransactionEdit = edit;
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit?.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
+          }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
+          }
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (!redoStack) {
+        redoStack = new Y.Array<any>();
+        this.yMap.set("redoStack", redoStack);
+      }
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        redoStack.push([edit]);
+        if (edit?.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
+          }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
+          }
+        }
+      }
+    }
+  }
+
+  redo(): void {
+    if (this.isTransactionActive) {
+      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (!currentStack) {
+        currentStack = new Y.Array<any>();
+        this.yMap.set("currentTransactionStack", currentStack);
+      }
+      const lastDeletedEdit = (this as any).lastDeletedTransactionEdit;
+      if (lastDeletedEdit) {
+        currentStack.push([lastDeletedEdit]);
+        (this as any).lastDeletedTransactionEdit = undefined;
+        if (lastDeletedEdit.do) {
+          if (lastDeletedEdit.do.kitDiff) {
+            this.kit().change(lastDeletedEdit.do.kitDiff);
+          }
+          if (lastDeletedEdit.do.selectionDiff) {
+            this.applySelectionDiff(lastDeletedEdit.do.selectionDiff);
+          }
+        }
+      }
+    } else {
+      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
+      const redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (redoStack && redoStack.length > 0) {
+        const edit = redoStack.get(redoStack.length - 1);
+        redoStack.delete(redoStack.length - 1, 1);
+        if (pastStack) {
+          pastStack.push([edit]);
+        }
+        if (edit?.do) {
+          if (edit.do.kitDiff) {
+            this.kit().change(edit.do.kitDiff);
+          }
+          if (edit.do.selectionDiff) {
+            this.applySelectionDiff(edit.do.selectionDiff);
+          }
+        }
+      }
+    }
+  }
+
+  protected recordEdit(result: TCommandResult): void {
+    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
+      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
+      if (redoStack && redoStack.length > 0) {
+        redoStack.delete(0, redoStack.length);
+      }
+      (this as any).lastDeletedTransactionEdit = undefined;
+      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
+      if (!currentStack) {
+        currentStack = new Y.Array<any>();
+        this.yMap.set("currentTransactionStack", currentStack);
+      }
+      const selection = this.getSelection();
+      const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
+      const kitStore = this.kit();
+      const kitState = kitStore.snapshot();
+      const inversedKitDiff = result.kitDiff ? inverseKitDiff(kitState, result.kitDiff) : undefined;
+      const doStep: KitDiffEditorStep<TSelectionDiff> = { kitDiff: result.kitDiff, selectionDiff: result.diff?.selection };
+      const undoStep: KitDiffEditorStep<TSelectionDiff> = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
+      const edit = { do: doStep, undo: undoStep };
+      currentStack.push([edit]);
+    }
+  }
+}
+
+// #endregion Store Hierarchy
+
+// #region Synchronizable
+
 export interface Synchronizable<TAccessl> {
   onChanged: (subscribe: Subscribe) => Unsubscribe;
   onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
@@ -181,7 +631,7 @@ const nullStore: Synchronizable<null> = {
 
 export function useSync<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl> | null, selector?: (state: TAccessl) => TSelected, deep: boolean = false): TAccessl | TSelected | null {
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl>);
-  const state = deep ? useSyncExternalStore(actualStore.onChangedDeep, actualStore.snapshot) : useSyncExternalStore(actualStore.onChanged, actualStore.snapshot);
+  const state = deep ? useSyncExternalStore(actualStore.onChangedDeep.bind(actualStore), actualStore.snapshot.bind(actualStore)) : useSyncExternalStore(actualStore.onChanged.bind(actualStore), actualStore.snapshot.bind(actualStore));
   if (!store) return null;
   return selector ? selector(state) : state;
 }
@@ -274,401 +724,10 @@ function resolveHomeStoreFactory(): HomeStoreFactory {
 
 // #endregion General
 
-// #region Editor
-
-interface EditorStep<TSelectionDiff = any> {
-  kitDiff?: KitDiff;
-  selectionDiff?: TSelectionDiff;
-}
-
-interface EditorEdit<TSelectionDiff = any> {
-  do: EditorStep<TSelectionDiff>;
-  undo: EditorStep<TSelectionDiff>;
-}
-
-interface EditorDiff<TSelectionDiff = any> {
-  selection?: TSelectionDiff;
-  presence?: any;
-  hover?: any;
-  fullscreenWindow?: any;
-  panelVisibility?: Partial<PanelVisibility>;
-}
-
-interface EditorCommandResult<TDiff = any> {
-  diff?: TDiff;
-  kitDiff?: KitDiff;
-}
-
-export abstract class Editor<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> {
-  public readonly guid: string;
-  public readonly parent: SketchpadStore;
-  public readonly yMap: Y.Map<any>;
-  protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
-  protected readonly transact: (fn: () => void) => void;
-  protected cache?: TState;
-  protected cacheHash?: string;
-  private lastDeletedTransactionEdit?: TEdit;
-
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
-    this.guid = guid();
-    this.parent = parent;
-    this.yMap = yMap;
-    this.transact = transact;
-  }
-
-  protected abstract applySelectionDiff(selectionDiff: TSelectionDiff): void;
-  protected abstract inverseSelectionDiff(selection: any, diff: TSelectionDiff): TSelectionDiff;
-  protected abstract getSelection(): any;
-  protected abstract hash(state: TState): string;
-  protected abstract buildSnapshot(): TState;
-  abstract kit(): KitStore;
-
-  get isTransactionActive(): boolean {
-    return (this.yMap.get("isTransactionActive") as boolean) || false;
-  }
-
-  set isTransactionActive(active: boolean) {
-    this.yMap.set("isTransactionActive", active);
-  }
-
-  get diff(): KitDiff {
-    return {};
-  }
-
-  get currentTransactionStack(): TEdit[] {
-    const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
-
-  get pastTransactionsStack(): TEdit[] {
-    const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
-
-  get redoStack(): TEdit[] {
-    const yStack = this.yMap.get("redoStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
-  }
-
-  canUndo(): boolean {
-    if (this.isTransactionActive) {
-      return this.currentTransactionStack.length > 0;
-    }
-    return this.pastTransactionsStack.length > 0;
-  }
-
-  canRedo(): boolean {
-    if (this.isTransactionActive) {
-      return false;
-    }
-    return this.redoStack.length > 0;
-  }
-
-  snapshot = (): TState => {
-    const currentData = this.buildSnapshot();
-    const currentHash = this.hash(currentData);
-
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
-
-    return this.cache;
-  };
-
-  change = (diff: TDiff) => {
-    this.transact(() => {
-      if (diff.fullscreenWindow !== undefined) {
-        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
-      }
-      if (diff.panelVisibility !== undefined) {
-        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-        if (!yPanelVisibility) {
-          yPanelVisibility = new Y.Map<boolean>();
-          this.yMap.set("panelVisibility", yPanelVisibility);
-        }
-        yPanelVisibility.set("__editor", this.constructor.name as any); // DEBUG: mark which editor owns this
-        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
-          if (value !== undefined) {
-            yPanelVisibility.set(key, value);
-          }
-        });
-      }
-      if (diff.selection) {
-        this.applySelectionDiff(diff.selection);
-      }
-      if (diff.presence) {
-        // Handle presence changes if needed
-      }
-      if (diff.hover) {
-        // Handle hover changes if needed
-      }
-    });
-  };
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yMap, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yMap, subscribe, true);
-  };
-
-  startTransaction = () => {
-    this.isTransactionActive = true;
-  };
-
-  onTransactionStarted = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  abortTransaction = () => {
-    if (this.isTransactionActive) {
-      this.transact(() => {
-        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-        if (currentStack && currentStack.length > 0) {
-          for (let i = currentStack.length - 1; i >= 0; i--) {
-            const edit = currentStack.get(i);
-            if (edit && edit.undo) {
-              if (edit.undo.kitDiff) {
-                this.kit().change(edit.undo.kitDiff);
-              }
-              if (edit.undo.selectionDiff) {
-                this.applySelectionDiff(edit.undo.selectionDiff);
-              }
-            }
-          }
-          currentStack.delete(0, currentStack.length);
-        }
-        this.isTransactionActive = false;
-      });
-    }
-  };
-
-  onTransactionAborted = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  finalizeTransaction = () => {
-    if (this.isTransactionActive) {
-      this.transact(() => {
-        let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
-        if (redoStack && redoStack.length > 0) {
-          redoStack.delete(0, redoStack.length);
-        }
-
-        const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-        let pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-        if (!pastStack) {
-          pastStack = new Y.Array<any>();
-          this.yMap.set("pastTransactionsStack", pastStack);
-        }
-        if (currentStack && currentStack.length > 0) {
-          const edits = currentStack.toArray();
-          if (edits.length === 1) {
-            pastStack.push([edits[0]]);
-          } else if (edits.length > 1) {
-            const firstEdit = edits[0];
-            const lastEdit = edits[edits.length - 1];
-            const mergedEdit = {
-              do: lastEdit.do,
-              undo: firstEdit.undo,
-            };
-            pastStack.push([mergedEdit]);
-          }
-          currentStack.delete(0, currentStack.length);
-        }
-        this.isTransactionActive = false;
-      });
-    }
-  };
-
-  onTransactionFinalized = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  undo = () => {
-    if (this.isTransactionActive) {
-      const currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (currentStack && currentStack.length > 0) {
-        const edit = currentStack.get(currentStack.length - 1);
-        this.lastDeletedTransactionEdit = edit;
-        currentStack.delete(currentStack.length - 1, 1);
-        if (edit && edit.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().change(edit.undo.kitDiff);
-          }
-          if (edit.undo.selectionDiff) {
-            this.applySelectionDiff(edit.undo.selectionDiff);
-          }
-        }
-      }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
-      if (!redoStack) {
-        redoStack = new Y.Array<any>();
-        this.yMap.set("redoStack", redoStack);
-      }
-      if (pastStack && pastStack.length > 0) {
-        const edit = pastStack.get(pastStack.length - 1);
-        pastStack.delete(pastStack.length - 1, 1);
-        redoStack.push([edit]);
-        if (edit && edit.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().change(edit.undo.kitDiff);
-          }
-          if (edit.undo.selectionDiff) {
-            this.applySelectionDiff(edit.undo.selectionDiff);
-          }
-        }
-      }
-    }
-  };
-
-  onUndone = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  redo = () => {
-    if (this.isTransactionActive) {
-      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (!currentStack) {
-        currentStack = new Y.Array<any>();
-        this.yMap.set("currentTransactionStack", currentStack);
-      }
-      const lastDeletedEdit = this.lastDeletedTransactionEdit;
-      if (lastDeletedEdit) {
-        currentStack.push([lastDeletedEdit]);
-        this.lastDeletedTransactionEdit = undefined;
-        if (lastDeletedEdit.do) {
-          if (lastDeletedEdit.do.kitDiff) {
-            this.kit().change(lastDeletedEdit.do.kitDiff);
-          }
-          if (lastDeletedEdit.do.selectionDiff) {
-            this.applySelectionDiff(lastDeletedEdit.do.selectionDiff);
-          }
-        }
-      }
-    } else {
-      const pastStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
-      const redoStack = this.yMap.get("redoStack") as Y.Array<any>;
-      if (redoStack && redoStack.length > 0) {
-        const edit = redoStack.get(redoStack.length - 1);
-        redoStack.delete(redoStack.length - 1, 1);
-        if (pastStack) {
-          pastStack.push([edit]);
-        }
-        if (edit && edit.do) {
-          if (edit.do.kitDiff) {
-            this.kit().change(edit.do.kitDiff);
-          }
-          if (edit.do.selectionDiff) {
-            this.applySelectionDiff(edit.do.selectionDiff);
-          }
-        }
-      }
-    }
-  };
-
-  onRedone = (subscribe: Subscribe) => {
-    const observer = () => subscribe();
-    this.yMap.observe(observer);
-    return () => {
-      this.yMap.unobserve(observer);
-    };
-  };
-
-  protected recordEdit(state: any, result: TCommandResult) {
-    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
-      let redoStack = this.yMap.get("redoStack") as Y.Array<any>;
-      if (redoStack && redoStack.length > 0) {
-        redoStack.delete(0, redoStack.length);
-      }
-      this.lastDeletedTransactionEdit = undefined;
-
-      let currentStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-      if (!currentStack) {
-        currentStack = new Y.Array<any>();
-        this.yMap.set("currentTransactionStack", currentStack);
-      }
-      const selection = this.getSelection();
-      const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
-      const kitStore = this.kit();
-      const kitState = kitStore.snapshot();
-      const inversedKitDiff = result.kitDiff ? inverseKitDiff(kitState, result.kitDiff) : undefined;
-
-      const doStep = {
-        kitDiff: result.kitDiff,
-        selectionDiff: result.diff?.selection,
-      };
-      const undoStep = {
-        kitDiff: inversedKitDiff,
-        selectionDiff: inversedSelectionDiff,
-      };
-      const edit = {
-        do: doStep,
-        undo: undoStep,
-      };
-      currentStack.push([edit]);
-    }
-  }
-
-  registerCommand(command: string, callback: (context: TCommandContext, ...rest: any[]) => TCommandResult): Disposable {
-    this.commandRegistry.set(command, callback);
-    return () => {
-      this.commandRegistry.delete(command);
-    };
-  }
-
-  register(command: string, callback: (context: TCommandContext, ...rest: any[]) => TCommandResult): Disposable {
-    return this.registerCommand(command, callback);
-  }
-
-  get commands() {
-    return {
-      execute: this.executeCommand.bind(this),
-      register: this.registerCommand.bind(this),
-    };
-  }
-
-  abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
-  abstract execute<T>(command: string, ...rest: any[]): Promise<T>;
-}
-
-// #endregion Editor
-
 // #region Sketchpad
 
 type YSketchpadVal = string | number | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
-
-export interface PanelVisibility {
-  toolbar?: boolean;
-  workbench?: boolean;
-  tools?: boolean;
-  hud?: boolean;
-  stats?: boolean;
-  details?: boolean;
-  chat?: boolean;
-  settings?: boolean;
-}
 
 export interface EditorSettings {
   design?: {
@@ -1133,13 +1192,13 @@ export class SketchpadStore {
     if (command === "semio.sketchpad.createKitEditor") {
       console.log(`Executing (special) command: "${command}"`);
       const id = rest[0] as KitEditorId;
-      this.createKitEditor(id);
+      this.createKitEditor(id.kit);
       return {} as T;
     }
     if (command === "semio.sketchpad.createDesignEditor") {
       console.log(`Executing (special) command: "${command}"`);
       const id = rest[0] as DesignEditorId;
-      this.createDesignEditor(id);
+      this.createDesignEditor(id.kit, id.design);
       return {} as T;
     }
     if (command === "semio.sketchpad.importKit") {
@@ -1189,7 +1248,11 @@ export class SketchpadStore {
   }
 
   kit(guid: string): KitStore {
-    return this.kits.get(guid)!;
+    const kitStore = this.kits.get(guid);
+    if (!kitStore) {
+      throw new Error(`Kit with guid ${guid} not found`);
+    }
+    return kitStore;
   }
 
   kitShallows(): KitShallow[] {
@@ -1679,7 +1742,7 @@ export function useSketchpadCommands() {
       createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
       createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
       createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-      navigateToKit: (kit: Guid) => navigate(`/kits/${kit}`),
+      navigateToKit: (kit: Guid, search?: string) => navigate(`/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`),
       navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
       navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
       navigateBack: () => {

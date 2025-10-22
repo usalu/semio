@@ -18,7 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { createContext, FC, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
@@ -140,6 +140,7 @@ const SketchpadBase: FC = () => {
   const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile, setActiveInteraction } = useSketchpadCommands();
   const currentPath = useNavigation();
   const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 12 } }), useSensor(TouchSensor));
 
   // Store the desktop layout preference when not on mobile
   const desktopLayoutRef = useRef<Layout>(layout);
@@ -245,7 +246,7 @@ const SketchpadBase: FC = () => {
   const mobileVisiblePanel = isMobile ? Object.entries(visiblePanels).find(([_, isVisible]) => isVisible)?.[0] : null;
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <PanelSectionProvider>
         <FooterItemProvider>
           <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">

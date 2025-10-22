@@ -103,7 +103,7 @@ const Editor: FC<EditorProps> = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const kitEditorCommands = useKitEditorCommands();
-  const { navigateToType, navigateToDesign } = useSketchpadCommands();
+  const { navigateToType, navigateToDesign, navigateToKit } = useSketchpadCommands();
 
   useHotkeys("ctrl+a", () => selectAll());
   useHotkeys("ctrl+d", () => deselectAll());
@@ -243,10 +243,25 @@ const Editor: FC<EditorProps> = () => {
     return (
       <>
         {Object.entries(typesByName).map(([name, variants]) => (
-          <div key={name} onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))} onPointerLeave={() => clearHover()}>
+          <div
+            key={name}
+            onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))}
+            onPointerLeave={() => clearHover()}
+          >
             <TreeItem
               label={name}
               defaultOpen={true}
+              onDoubleClick={(event) => {
+                if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                if (!kit?.guid) {
+                  return;
+                }
+                navigateToKit(kit.guid, `kind=types&name=${encodeURIComponent(name)}`);
+              }}
               actions={[
                 {
                   icon: <Plus size={12} />,
@@ -293,10 +308,25 @@ const Editor: FC<EditorProps> = () => {
     return (
       <>
         {Object.entries(designsByName).map(([name, designs]) => (
-          <div key={name} onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))} onPointerLeave={() => clearHover()}>
+          <div
+            key={name}
+            onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))}
+            onPointerLeave={() => clearHover()}
+          >
             <TreeItem
               label={name}
               defaultOpen={true}
+              onDoubleClick={(event) => {
+                if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                if (!kit?.guid) {
+                  return;
+                }
+                navigateToKit(kit.guid, `kind=designs&name=${encodeURIComponent(name)}`);
+              }}
               actions={[
                 {
                   icon: <Plus size={12} />,
@@ -381,6 +411,10 @@ const Editor: FC<EditorProps> = () => {
         hoverTypes(kit.types.map((type) => type.guid));
       },
       onPointerLeave: () => clearHover(),
+      onDoubleClick: () => {
+        if (!kit?.guid) return;
+        navigateToKit(kit.guid, "kind=types");
+      },
     });
 
     addSection("workbench", {
@@ -401,6 +435,10 @@ const Editor: FC<EditorProps> = () => {
         hoverDesigns(kit.designs.map((design) => design.guid));
       },
       onPointerLeave: () => clearHover(),
+      onDoubleClick: () => {
+        if (!kit?.guid) return;
+        navigateToKit(kit.guid, "kind=designs");
+      },
     });
     return () => {
       removeSection("workbench", "design-types");
@@ -520,3 +558,6 @@ const Editor: FC<EditorProps> = () => {
 };
 
 export default Editor;
+
+
+

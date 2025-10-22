@@ -840,7 +840,7 @@ const EditorContent: FC = () => {
               type="withAction"
               pressed={true}
               onPressedChange={() => toggleKind(selectedKind)}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact(selectedKind)}
               tooltip={tooltip("kitEditor.hideKind")}
               actionTooltip={tooltip("kitEditor.createArtifact")}
@@ -879,7 +879,7 @@ const EditorContent: FC = () => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("designs")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("designs")}
                 tooltip={tooltip("kitEditor.showDesigns")}
                 actionTooltip={tooltip("kitEditor.createDesign")}
@@ -890,7 +890,7 @@ const EditorContent: FC = () => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("types")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("types")}
                 tooltip={tooltip("kitEditor.showTypes")}
                 actionTooltip={tooltip("kitEditor.createType")}
@@ -901,7 +901,7 @@ const EditorContent: FC = () => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("qualities")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("qualities")}
                 tooltip={tooltip("kitEditor.showQualities")}
                 actionTooltip={tooltip("kitEditor.createQuality")}
@@ -912,7 +912,7 @@ const EditorContent: FC = () => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("files")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("files")}
                 tooltip={tooltip("kitEditor.showFiles")}
                 actionTooltip={tooltip("kitEditor.createFile")}
@@ -923,7 +923,7 @@ const EditorContent: FC = () => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("authors")}
-                actionIcon={<Plus className="size-3.5 opacity-50" />}
+                actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("authors")}
                 tooltip={tooltip("kitEditor.showAuthors")}
                 actionTooltip={tooltip("kitEditor.createAuthor")}
@@ -1103,7 +1103,7 @@ const EditorContent: FC = () => {
             type="withAction"
             pressed={true}
             onPressedChange={() => toggleKind(selectedKind)}
-            actionIcon={<Plus className="size-3.5 opacity-50" />}
+            actionIcon={<Plus className="size-3.5" />}
             onActionClick={() => handleCreateArtifact(selectedKind)}
             tooltip={tooltip("kitEditor.hideKind")}
             actionTooltip={tooltip("kitEditor.createArtifact")}
@@ -1142,7 +1142,7 @@ const EditorContent: FC = () => {
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("designs")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("designs")}
               tooltip={tooltip("kitEditor.showDesigns")}
               actionTooltip={tooltip("kitEditor.createDesign")}
@@ -1153,7 +1153,7 @@ const EditorContent: FC = () => {
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("types")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("types")}
               tooltip={tooltip("kitEditor.showTypes")}
               actionTooltip={tooltip("kitEditor.createType")}
@@ -1164,7 +1164,7 @@ const EditorContent: FC = () => {
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("qualities")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("qualities")}
               tooltip={tooltip("kitEditor.showQualities")}
               actionTooltip={tooltip("kitEditor.createQuality")}
@@ -1175,7 +1175,7 @@ const EditorContent: FC = () => {
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("files")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("files")}
               tooltip={tooltip("kitEditor.showFiles")}
               actionTooltip={tooltip("kitEditor.createFile")}
@@ -1186,7 +1186,7 @@ const EditorContent: FC = () => {
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("authors")}
-              actionIcon={<Plus className="size-3.5 opacity-50" />}
+              actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("authors")}
               tooltip={tooltip("kitEditor.showAuthors")}
               actionTooltip={tooltip("kitEditor.createAuthor")}

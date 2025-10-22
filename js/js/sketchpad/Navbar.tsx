@@ -93,6 +93,7 @@ export interface PanelSection {
   }>;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
+  onDoubleClick?: () => void;
 }
 
 export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar";

@@ -25,7 +25,7 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, ConnectionDiff, Coord, DiffStatus, Guid, KitDiff, Piece, PieceDiff } from "../../../semio";
 import { DesignStore, KitCommandContext, KitStore, useDesignScope, useKitScope } from "../../kits/store";
-import { Editor, identitySelector, PanelVisibility, registerDesignEditorStoreFactory, SketchpadStore, ToolType, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
+import { KitDiffEditorStore, KitDiffEditorEdit, identitySelector, PanelVisibility, registerDesignEditorStoreFactory, SketchpadStore, ToolType, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
 import { commands as designEditorCommands } from "./commands";
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y.Map<boolean> | YAttributes | YStringArray;
@@ -91,14 +91,7 @@ export interface DesignEditorDiff {
   diagramCenter?: Coord;
   diagramScale?: number;
 }
-export interface DesignEditorStep {
-  kitDiff?: KitDiff;
-  selectionDiff?: DesignEditorSelectionDiff;
-}
-export interface DesignEditorEdit {
-  do: DesignEditorStep;
-  undo: DesignEditorStep;
-}
+export interface DesignEditorEdit extends KitDiffEditorEdit<DesignEditorSelectionDiff> {}
 export interface DesignEditorState {
   fullscreenWindow: DesignEditorFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -160,7 +153,7 @@ export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelectio
 export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && designEditor.design === other.design;
 export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
 
-class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorEdit, DesignEditorCommandContext, DesignEditorCommandResult> {
+class DesignEditorStore extends KitDiffEditorStore<DesignEditorState, DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorEdit, DesignEditorCommandContext, DesignEditorCommandResult> {
   constructor(parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
     super(parent, yMap, transact);
 
@@ -607,7 +600,7 @@ class DesignEditorStore extends Editor<DesignEditorState, DesignEditorDiff, Desi
     if (result.kitDiff) {
       kitStore.change(result.kitDiff);
     }
-    this.recordEdit(state, result);
+    this.recordEdit(result);
     console.groupEnd();
     return result as T;
   }

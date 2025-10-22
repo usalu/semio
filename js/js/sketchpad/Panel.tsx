@@ -107,7 +107,7 @@ const Panel: FC<PanelProps> = ({
       <Tree className="min-w-0 overflow-hidden">
         {additionalSections}
         {sortedSections.map((section) => (
-          <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave}>
+          <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
             {typeof section.content === "function" ? section.content() : section.content}
           </TreeSection>
         ))}
@@ -135,3 +135,4 @@ const Panel: FC<PanelProps> = ({
 };
 
 export default Panel;
+

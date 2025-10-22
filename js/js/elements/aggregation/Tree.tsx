@@ -29,7 +29,7 @@ import { closestCenter, DndContext, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
-import { createContext, FC, ReactNode, useContext, useState } from "react";
+import { createContext, FC, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 import { useTreeState } from "./TreeStateProvider";
@@ -76,6 +76,7 @@ interface TreeSectionProps {
   actions?: TreeSectionAction[];
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
+  onDoubleClick?: (event: ReactMouseEvent) => void;
 }
 
 interface SortableTreeItemProps {
@@ -83,7 +84,7 @@ interface SortableTreeItemProps {
   label?: ReactNode;
   icon?: ReactNode;
   children?: ReactNode;
-  onClick?: () => void;
+  onClick?: (event: ReactMouseEvent) => void;
   className?: string;
   isSelected?: boolean;
   isHighlighted?: boolean;
@@ -91,13 +92,14 @@ interface SortableTreeItemProps {
   defaultOpen?: boolean;
   isLastItem?: boolean;
   actions?: TreeSectionAction[];
+  onDoubleClick?: (event: ReactMouseEvent) => void;
 }
 
 interface TreeItemProps {
   label?: ReactNode;
   icon?: ReactNode;
   children?: ReactNode;
-  onClick?: () => void;
+  onClick?: (event: ReactMouseEvent) => void;
   className?: string;
   isSelected?: boolean;
   isHighlighted?: boolean;
@@ -107,6 +109,7 @@ interface TreeItemProps {
   defaultOpen?: boolean;
   isLastItem?: boolean;
   actions?: TreeSectionAction[];
+  onDoubleClick?: (event: ReactMouseEvent) => void;
 }
 
 interface SortableTreeItemsProps {
@@ -115,7 +118,7 @@ interface SortableTreeItemsProps {
   children: (item: any, index: number) => ReactNode;
 }
 
-export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave }) => {
+export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
   const sectionId = `section-${label}`;
@@ -137,6 +140,12 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           setIsHovered(false);
           onSectionPointerLeave?.();
         }}
+        onDoubleClick={(event) => {
+          if (!onDoubleClick) return;
+          event.preventDefault();
+          event.stopPropagation();
+          onDoubleClick(event);
+        }}
       >
         <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
         <div className="w-[14px] flex-shrink-0" />
@@ -145,19 +154,18 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
         {actions.length > 0 && (
           <div className="flex items-center gap-0.5">
             {actions.map((action, index) => (
-              <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
-                <Action
-                  level="panel"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    action.onClick();
-                  }}
-                  tooltip={action.title}
-                >
-                  {action.icon}
-                </Action>
-              </div>
+              <Action
+                key={index}
+                level="panel"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                }}
+                tooltip={action.title}
+              >
+                {action.icon}
+              </Action>
             ))}
           </div>
         )}
@@ -180,6 +188,12 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
             setIsHovered(false);
             onSectionPointerLeave?.();
           }}
+          onDoubleClick={(event) => {
+            if (!onDoubleClick) return;
+            event.preventDefault();
+            event.stopPropagation();
+            onDoubleClick(event);
+          }}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />}
@@ -188,19 +202,18 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
-                <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
-                  <Action
-                    level="panel"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      action.onClick();
-                    }}
-                    tooltip={action.title}
-                  >
-                    {action.icon}
-                  </Action>
-                </div>
+                <Action
+                  key={index}
+                  level="panel"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  tooltip={action.title}
+                >
+                  {action.icon}
+                </Action>
               ))}
             </div>
           )}
@@ -213,7 +226,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   );
 };
 
-const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [] }) => {
+const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
   const itemId = `item-${id}-${label}`;
@@ -242,10 +255,17 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           style={style}
           className={itemClasses}
           onClick={(e) => {
+            if (e.detail > 1) return;
             e.preventDefault();
             e.stopPropagation();
             setOpen(!open);
-            onClick?.();
+            onClick?.(e);
+          }}
+          onDoubleClick={(event) => {
+            if (!onDoubleClick) return;
+            event.preventDefault();
+            event.stopPropagation();
+            onDoubleClick(event);
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -261,21 +281,20 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
-              {actions.map((action, index) => (
-                <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
-                  <Action
-                    level="panel"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      action.onClick();
-                    }}
-                    tooltip={action.title}
-                  >
-                    {action.icon}
-                  </Action>
-                </div>
-              ))}
+            {actions.map((action, index) => (
+              <Action
+                key={index}
+                level="panel"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                }}
+                tooltip={action.title}
+              >
+                {action.icon}
+              </Action>
+            ))}
             </div>
           )}
         </div>
@@ -289,7 +308,23 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={itemClasses} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={itemClasses}
+      onClick={(event) => {
+        if (event.detail > 1) return;
+        onClick?.(event);
+      }}
+      onDoubleClick={(event) => {
+        if (!onDoubleClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDoubleClick(event);
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {isDragHandle && (
         <Action level="panel" className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
@@ -300,9 +335,9 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
       <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
       {actions.length > 0 && (
         <div className="flex items-center gap-0.5">
-          {actions.map((action, index) => (
-            <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
+            {actions.map((action, index) => (
               <Action
+                key={index}
                 level="panel"
                 onClick={(e) => {
                   e.preventDefault();
@@ -313,8 +348,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
               >
                 {action.icon}
               </Action>
-            </div>
-          ))}
+            ))}
         </div>
       )}
     </div>
@@ -342,7 +376,7 @@ export const SortableTreeItems: FC<SortableTreeItemsProps> = ({ items, onReorder
   );
 };
 
-export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [] }) => {
+export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
   if (sortable && sortableId) {
     return (
       <SortableTreeItem
@@ -358,6 +392,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
         defaultOpen={defaultOpen}
         isLastItem={isLastItem}
         actions={actions}
+        onDoubleClick={onDoubleClick}
       />
     );
   }
@@ -380,10 +415,17 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           className={itemClasses}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           onClick={(e) => {
+            if (e.detail > 1) return;
             e.preventDefault();
             e.stopPropagation();
             setOpen(!open);
-            onClick?.();
+            onClick?.(e);
+          }}
+          onDoubleClick={(event) => {
+            if (!onDoubleClick) return;
+            event.preventDefault();
+            event.stopPropagation();
+            onDoubleClick(event);
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -394,21 +436,20 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
-              {actions.map((action, index) => (
-                <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
-                  <Action
-                    level="panel"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      action.onClick();
-                    }}
-                    tooltip={action.title}
-                  >
-                    {action.icon}
-                  </Action>
-                </div>
-              ))}
+            {actions.map((action, index) => (
+              <Action
+                key={index}
+                level="panel"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                }}
+                tooltip={action.title}
+              >
+                {action.icon}
+              </Action>
+            ))}
             </div>
           )}
         </div>
@@ -429,19 +470,18 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
       {actions.length > 0 && (
         <div className="flex items-center gap-0.5">
           {actions.map((action, index) => (
-            <div key={index} className={`transition-opacity ${isHovered ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`}>
-              <Action
-                level="panel"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  action.onClick();
-                }}
-                tooltip={action.title}
-              >
-                {action.icon}
-              </Action>
-            </div>
+            <Action
+              key={index}
+              level="panel"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action.onClick();
+              }}
+              tooltip={action.title}
+            >
+              {action.icon}
+            </Action>
           ))}
         </div>
       )}
@@ -460,3 +500,4 @@ export const Tree: FC<{ children: ReactNode; className?: string; showLines?: boo
     </TreeContext.Provider>
   );
 };
+

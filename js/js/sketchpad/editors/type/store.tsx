@@ -24,7 +24,8 @@ import * as Y from "yjs";
 import { Camera, Coord, Guid, TypeDiff } from "../../../semio";
 import { TypeStore } from "../../kits/store";
 import {
-  Editor,
+  KitDiffEditorStore,
+  KitDiffEditorEdit,
   identitySelector,
   KitCommandContext,
   KitStore,
@@ -93,14 +94,7 @@ export interface TypeEditorDiff {
   activeTool?: ToolType;
   camera?: Camera;
 }
-export interface TypeEditorStep {
-  typeDiff?: TypeDiff;
-  selectionDiff?: TypeEditorSelectionDiff;
-}
-export interface TypeEditorEdit {
-  do: TypeEditorStep;
-  undo: TypeEditorStep;
-}
+export interface TypeEditorEdit extends KitDiffEditorEdit<TypeEditorSelectionDiff> {}
 export interface TypeEditorState {
   fullscreenWindow: TypeEditorFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -138,7 +132,7 @@ function inverseTypeEditorSelectionDiff(selection: TypeEditorSelection, diff: Ty
   return inverse;
 }
 
-class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult> {
+class TypeEditorStore extends KitDiffEditorStore<TypeEditorState, TypeEditorDiff, TypeEditorSelectionDiff, TypeEditorEdit, TypeEditorCommandContext, TypeEditorCommandResult> {
   private readonly Guid: TypeEditorId;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, id: TypeEditorId) {
@@ -456,7 +450,7 @@ class TypeEditorStore extends Editor<TypeEditorState, TypeEditorDiff, TypeEditor
         typeStore.change(result.typeDiff);
       }
     }
-    this.recordEdit(typeEditor, result);
+    this.recordEdit(result);
     console.groupEnd();
     return result as T;
   }
