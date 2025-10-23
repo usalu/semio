@@ -89,18 +89,10 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
 
   return (
     <group>
-      {/* Base point sphere */}
       <Sphere args={[0.03]} position={posArray}>
         <meshBasicMaterial color={previewColor} />
       </Sphere>
-
-      {/* Direction line */}
       <Line points={points} color={previewColor} lineWidth={2} />
-
-      {/* Arrow head sphere */}
-      <Sphere args={[0.05]} position={endPoint}>
-        <meshBasicMaterial color={previewColor} />
-      </Sphere>
     </group>
   );
 };

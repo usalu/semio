@@ -125,6 +125,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const toggleElement = (
       <TogglePrimitive.Root
         data-slot="toggle"
+        data-state={pressed ? "on" : "off"}
         className={cn(toggleVariants({ level }), "border", className)}
         pressed={pressed}
         onPressedChange={(newPressed) => {
@@ -170,7 +171,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // WithAction type
   if ("type" in props && props.type === "withAction") {
-    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, level = "base", type, ...restProps } = props;
+    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, level = "base", type, pressed, ...restProps } = props;
 
     const mainContent = tooltip ? (
       <Tooltip>
@@ -187,10 +188,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "border gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" data-state={pressed ? "on" : "off"} className={cn(toggleVariants({ level }), "border gap-1 pr-1", className)} {...restProps}>
         {mainContent}
         <Action
           level={level}
+          className={pressed ? "bg-active-base text-active-foreground hover:bg-active-base" : undefined}
           onClick={(e) => {
             e.stopPropagation();
             onActionClick();
@@ -230,6 +232,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const fallbackItem = matchingItem ?? items[0];
     const currentItem = fallbackItem;
     const dropdownItems = matchingItem ? items.filter((item) => item.value !== matchingItem.value) : items;
+    const hasDropdownOptions = dropdownItems.length > 0;
+
+    React.useEffect(() => {
+      if (!hasDropdownOptions && open) {
+        setOpen(false);
+      }
+    }, [hasDropdownOptions, open]);
 
     const handleSelect = (selectedValue: T) => {
       onValueChange?.(selectedValue);
@@ -242,7 +251,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const toggleRoot = (
       <TogglePrimitive.Root
         data-slot="toggle"
-        className={cn(toggleVariants({ level }), "border gap-1 pr-1 [&:has(button:hover)]:bg-transparent", className)}
+        data-state={pressed ? "on" : "off"}
+        className={cn(toggleVariants({ level }), "border gap-1 pr-1", className)}
         pressed={pressed}
         aria-label={activeTooltip || undefined}
         onPressedChange={(newPressed) => {
@@ -255,10 +265,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         {currentItem?.label && <span className="flex-1 flex items-center justify-center">{currentItem.label}</span>}
         <Action
           level={level}
+          className={pressed ? "bg-active-base text-active-foreground hover:bg-active-base" : undefined}
           onClick={(e) => {
+            if (!hasDropdownOptions) return;
             e.stopPropagation();
             setOpen(!open);
           }}
+          disabled={!hasDropdownOptions}
           tooltip={dropdownTooltip}
         >
           <ChevronDown className="size-3" />
@@ -267,7 +280,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const dropdownElement = (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={hasDropdownOptions && open}
+        onOpenChange={(nextOpen) => {
+          if (!hasDropdownOptions) return;
+          setOpen(nextOpen);
+        }}
+      >
         {(activeTooltip || activeHotkey) ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -334,7 +353,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   const activeTooltip = pressed && tooltipPressed ? tooltipPressed : tooltip;
 
-  const toggleElement = <TogglePrimitive.Root data-slot="toggle" className={cn(toggleVariants({ level }), "border", className)} pressed={pressed} {...restProps} />;
+  const toggleElement = <TogglePrimitive.Root data-slot="toggle" data-state={pressed ? "on" : "off"} className={cn(toggleVariants({ level }), "border", className)} pressed={pressed} {...restProps} />;
 
   const wrappedToggle = activeTooltip ? (
     <Tooltip>

@@ -48,7 +48,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../elements/Command";
@@ -1106,18 +1106,45 @@ const PanelToggles: FC = ({}) => {
 
   const workbenchPanels = ["workbench", "tools"];
   const workbenchConfigs = panelConfig.filter((p) => workbenchPanels.includes(p.key));
-  const activeWorkbenchPanel = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || workbenchConfigs[0]?.key || "";
-  const isAnyWorkbenchPanelOpen = workbenchConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+  const workbenchDefaultKey = workbenchConfigs[0]?.key || "";
+  const workbenchSelectionRef = useRef<string>(workbenchDefaultKey);
+  if (!workbenchConfigs.some((config) => config.key === workbenchSelectionRef.current)) {
+    workbenchSelectionRef.current = workbenchDefaultKey;
+  }
+  const openWorkbenchPanelKey = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key;
+  const isAnyWorkbenchPanelOpen = Boolean(openWorkbenchPanelKey);
+  if (openWorkbenchPanelKey && workbenchSelectionRef.current !== openWorkbenchPanelKey) {
+    workbenchSelectionRef.current = openWorkbenchPanelKey;
+  }
+  const activeWorkbenchPanel = workbenchSelectionRef.current || workbenchDefaultKey;
 
   const hudPanels = ["hud", "stats"];
   const hudConfigs = panelConfig.filter((p) => hudPanels.includes(p.key));
-  const activeHudPanel = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || hudConfigs[0]?.key || "";
-  const isAnyHudPanelOpen = hudConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+  const hudDefaultKey = hudConfigs[0]?.key || "";
+  const hudSelectionRef = useRef<string>(hudDefaultKey);
+  if (!hudConfigs.some((config) => config.key === hudSelectionRef.current)) {
+    hudSelectionRef.current = hudDefaultKey;
+  }
+  const openHudPanelKey = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key;
+  const isAnyHudPanelOpen = Boolean(openHudPanelKey);
+  if (openHudPanelKey && hudSelectionRef.current !== openHudPanelKey) {
+    hudSelectionRef.current = openHudPanelKey;
+  }
+  const activeHudPanel = hudSelectionRef.current || hudDefaultKey;
 
   const rightPanels = ["details", "chat", "settings"];
   const rightConfigs = panelConfig.filter((p) => rightPanels.includes(p.key));
-  const activeRightPanel = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || rightConfigs[0]?.key || "";
-  const isAnyRightPanelOpen = rightConfigs.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
+  const rightDefaultKey = rightConfigs[0]?.key || "";
+  const rightSelectionRef = useRef<string>(rightDefaultKey);
+  if (!rightConfigs.some((config) => config.key === rightSelectionRef.current)) {
+    rightSelectionRef.current = rightDefaultKey;
+  }
+  const openRightPanelKey = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key;
+  const isAnyRightPanelOpen = Boolean(openRightPanelKey);
+  if (openRightPanelKey && rightSelectionRef.current !== openRightPanelKey) {
+    rightSelectionRef.current = openRightPanelKey;
+  }
+  const activeRightPanel = rightSelectionRef.current || rightDefaultKey;
 
   const otherConfigs = panelConfig.filter((p) => !workbenchPanels.includes(p.key) && !hudPanels.includes(p.key) && !rightPanels.includes(p.key) && p.key !== "toolbar");
 
@@ -1179,6 +1206,7 @@ const PanelToggles: FC = ({}) => {
   const handleWorkbenchValueChange = (value: string | undefined) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
+    workbenchSelectionRef.current = value;
 
     (workbenchPanels as Array<keyof PanelVisibility>).forEach((p) => {
       const isOpen = visiblePanels[p];
@@ -1209,6 +1237,7 @@ const PanelToggles: FC = ({}) => {
   const handleHudValueChange = (value: string | undefined) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
+    hudSelectionRef.current = value;
 
     (hudPanels as Array<keyof PanelVisibility>).forEach((p) => {
       const isOpen = visiblePanels[p];
@@ -1239,6 +1268,7 @@ const PanelToggles: FC = ({}) => {
   const handleRightValueChange = (value: string | undefined) => {
     const togglePanel = commands[editorType]?.togglePanel || (() => {});
     if (!value) return;
+    rightSelectionRef.current = value;
 
     (rightPanels as Array<keyof PanelVisibility>).forEach((p) => {
       const isOpen = visiblePanels[p];

@@ -20,7 +20,7 @@
 // #endregion
 
 import { FC, Fragment, ReactNode, createContext, memo, useCallback, useContext, useMemo, useState } from "react";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../elements/aggregation/Resizable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./aggregation/Resizable";
 
 export enum WindowLayout {
   SINGLE = "single",
@@ -58,13 +58,10 @@ interface CanvasProps {
 
 export const Canvas: FC<CanvasProps> = ({ children, className = "" }) => {
   const [fullscreenWindow, setFullscreenWindow] = useState<string | null>(null);
-
   const toggleFullscreenWindow = useCallback((windowId: string) => {
     setFullscreenWindow((current) => (current === windowId ? null : windowId));
   }, []);
-
   const contextValue = useMemo(() => ({ fullscreenWindow, setFullscreenWindow, toggleFullscreenWindow }), [fullscreenWindow, toggleFullscreenWindow]);
-
   return (
     <CanvasContext.Provider value={contextValue}>
       <div className={`relative h-full w-full ${className}`}>{children}</div>
@@ -93,13 +90,11 @@ interface HorizontalWindowsProps {
 export const HorizontalWindows: FC<HorizontalWindowsProps> = memo(({ windows, handleClassName = "border-r" }) => {
   const { fullscreenWindow } = useCanvasContext();
   const visibleWindows = useMemo(() => (fullscreenWindow ? windows.filter((w) => w.id === fullscreenWindow) : windows), [fullscreenWindow, windows]);
-
   if (visibleWindows.length === 0) return null;
   if (visibleWindows.length === 1) {
     const window = visibleWindows[0];
     return <Window {...window} />;
   }
-
   return (
     <ResizablePanelGroup direction="horizontal">
       {visibleWindows.map((window, index) => (
@@ -124,13 +119,11 @@ interface VerticalWindowsProps {
 export const VerticalWindows: FC<VerticalWindowsProps> = memo(({ windows, handleClassName = "border-b" }) => {
   const { fullscreenWindow } = useCanvasContext();
   const visibleWindows = useMemo(() => (fullscreenWindow ? windows.filter((w) => w.id === fullscreenWindow) : windows), [fullscreenWindow, windows]);
-
   if (visibleWindows.length === 0) return null;
   if (visibleWindows.length === 1) {
     const window = visibleWindows[0];
     return <Window {...window} />;
   }
-
   return (
     <ResizablePanelGroup direction="vertical">
       {visibleWindows.map((window, index) => (

@@ -34,7 +34,7 @@
 
 import { DragEndEvent } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
-import { FC, ReactNode, useEffect, useRef, useMemo, memo } from "react";
+import { FC, memo, ReactNode, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 
@@ -243,11 +243,7 @@ const Editor: FC<EditorProps> = () => {
     return (
       <>
         {Object.entries(typesByName).map(([name, variants]) => (
-          <div
-            key={name}
-            onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))}
-            onPointerLeave={() => clearHover()}
-          >
+          <div key={name} onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))} onPointerLeave={() => clearHover()}>
             <TreeItem
               label={name}
               defaultOpen={true}
@@ -308,11 +304,7 @@ const Editor: FC<EditorProps> = () => {
     return (
       <>
         {Object.entries(designsByName).map(([name, designs]) => (
-          <div
-            key={name}
-            onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))}
-            onPointerLeave={() => clearHover()}
-          >
+          <div key={name} onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))} onPointerLeave={() => clearHover()}>
             <TreeItem
               label={name}
               defaultOpen={true}
@@ -558,6 +550,3 @@ const Editor: FC<EditorProps> = () => {
 };
 
 export default Editor;
-
-
-
