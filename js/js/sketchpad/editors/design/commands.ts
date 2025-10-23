@@ -19,9 +19,8 @@
 
 // #endregion
 
-import { Connection } from "@xyflow/react";
 import { Camera } from "three";
-import { ConnectionDiff, Coord, findDesignInKit, Guid, Piece, PieceDiff } from "../../../semio";
+import { Connection, ConnectionDiff, Coord, findDesignInKit, Guid, Piece, PieceDiff } from "../../../semio";
 import { Access, Layout, Theme, ToolType } from "../../store";
 import { DesignEditorCommandContext, DesignEditorCommandResult, DesignEditorFullscreenWindow } from "./store";
 
@@ -189,18 +188,18 @@ export const commands = {
                                 pieces: {
                                     added: [
                                         piece.plane ||
-                                        (findDesignInKit(context.kit, context.Guid)?.connections ?? []).some(
-                                            (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
-                                        )
+                                            (findDesignInKit(context.kit, context.Guid)?.connections ?? []).some(
+                                                (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
+                                            )
                                             ? piece
                                             : {
-                                                  ...piece,
-                                                  plane: {
-                                                      origin: { x: 0, y: 0, z: 0 },
-                                                      xAxis: { x: 1, y: 0, z: 0 },
-                                                      yAxis: { x: 0, y: 1, z: 0 },
-                                                  },
-                                              },
+                                                ...piece,
+                                                plane: {
+                                                    origin: { x: 0, y: 0, z: 0 },
+                                                    xAxis: { x: 1, y: 0, z: 0 },
+                                                    yAxis: { x: 0, y: 1, z: 0 },
+                                                },
+                                            },
                                     ],
                                 },
                             },
@@ -223,19 +222,19 @@ export const commands = {
                                 pieces: {
                                     added: pieces.map((candidate) =>
                                         candidate.plane ||
-                                        (design?.connections ?? []).some(
-                                            (connection) =>
-                                                connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
-                                        )
+                                            (design?.connections ?? []).some(
+                                                (connection) =>
+                                                    connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
+                                            )
                                             ? candidate
                                             : {
-                                                  ...candidate,
-                                                  plane: {
-                                                      origin: { x: 0, y: 0, z: 0 },
-                                                      xAxis: { x: 1, y: 0, z: 0 },
-                                                      yAxis: { x: 0, y: 1, z: 0 },
-                                                  },
-                                              },
+                                                ...candidate,
+                                                plane: {
+                                                    origin: { x: 0, y: 0, z: 0 },
+                                                    xAxis: { x: 1, y: 0, z: 0 },
+                                                    yAxis: { x: 0, y: 1, z: 0 },
+                                                },
+                                            },
                                     ),
                                 },
                             },

@@ -20,7 +20,7 @@
 // #endregion
 
 import { FC } from "react";
-import Panel from "../Panel";
+import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
 
 interface StatsProps extends ResizablePanelProps {}

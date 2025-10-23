@@ -19,11 +19,11 @@
 
 // #endregion
 
-import { FC, ReactNode, ReactElement } from "react";
+import { FC, ReactElement, ReactNode } from "react";
 import { Toggle, ToggleItem } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
-import { ToolType } from "./store";
 import { Kit } from "../semio";
+import { ToolType } from "./store";
 
 export enum WindowType {
   TABLE = "table",

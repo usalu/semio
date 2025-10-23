@@ -558,7 +558,16 @@ const EditorContent: FC = () => {
         break;
       }
       case "qualities": {
-        // TODO: Implement quality creationbreak;
+        const existingKeys = (kit.qualities || []).map((q: Quality) => q.key);
+        const uniqueKey = generateUniqueName(t("quality.defaultKey"), existingKeys);
+        const newQuality: Quality = {
+          guid: guid(),
+          key: uniqueKey,
+          name: t("quality.defaultName"),
+        };
+        kitCommands.createQuality(newQuality);
+        sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
+        break;
       }
       case "files": {
         // TODO: Implement file creationbreak;
@@ -1027,6 +1036,7 @@ const EditorContent: FC = () => {
                           e.stopPropagation();
                           if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
                           else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+                          else if (row.kind === "qualities") sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).guid);
                         }}
                         role="link"
                         tabIndex={0}
@@ -1352,6 +1362,7 @@ const EditorContent: FC = () => {
                             e.stopPropagation();
                             if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
                             else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+                            else if (row.kind === "qualities") sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).guid);
                           }}
                           role="link"
                           tabIndex={0}

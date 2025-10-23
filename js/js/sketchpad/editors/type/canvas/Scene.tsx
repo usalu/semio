@@ -27,7 +27,7 @@ import SceneComponent from "../../../../elements/Scene";
 import { guid, Point, Port, Type, Vector } from "../../../../semio";
 import { useKit, useKitCommands, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
-import { useTypeEditorActiveTool, useTypeEditorCamera, useTypeEditorCommands, useTypeEditorHover, useTypeEditorSelection, useTypeEditor } from "../store";
+import { useTypeEditor, useTypeEditorActiveTool, useTypeEditorCamera, useTypeEditorCommands, useTypeEditorHover, useTypeEditorSelection } from "../store";
 import { TypeEditorTools } from "../tools_registry";
 
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick }) => {

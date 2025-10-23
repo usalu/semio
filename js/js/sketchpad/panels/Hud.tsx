@@ -21,7 +21,7 @@
 
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import Panel from "../Panel";
+import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
 
 interface HudProps extends ResizablePanelProps {}

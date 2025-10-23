@@ -29,6 +29,7 @@ import DesignEditor from "./editors/design/Editor";
 import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
 import Home from "./editors/home/Editor";
 import KitEditor from "./editors/kit/Editor";
+import QualityEditor from "./editors/quality/Editor";
 import TypeEditor from "./editors/type/Editor";
 import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { PanelSectionProvider } from "./Navbar";
@@ -44,6 +45,7 @@ import {
   DesignScopeProvider,
   KitScopeProvider,
   Layout,
+  QualityScopeProvider,
   SketchpadScopeProvider,
   SketchpadState,
   Theme,
@@ -126,8 +128,20 @@ const TypeRoute: FC = () => {
   );
 };
 
+const QualityRoute: FC = () => {
+  let { quality } = useParams();
+
+  if (!quality) return null;
+
+  return (
+    <QualityScopeProvider guid={quality}>
+      <Outlet />
+    </QualityScopeProvider>
+  );
+};
+
 const SketchpadBase: FC = () => {
-  const { kit, design, type: typeParam } = useParams();
+  const { kit, design, type: typeParam, quality } = useParams();
   const layout = useLayout();
   const theme = useTheme();
   const editorType = useEditorType();
@@ -236,7 +250,9 @@ const SketchpadBase: FC = () => {
     if (design) setActiveDraggedDesign(design);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {window.dispatchEvent(new CustomEvent("design-drag-end", { detail: event }));
+  const handleDragEnd = (event: DragEndEvent) => {
+    window.dispatchEvent(new CustomEvent("design-drag-end", { detail: event }));
+    window.dispatchEvent(new CustomEvent("quality-drag-end", { detail: event }));
     setActiveDraggedType(null);
     setActiveDraggedDesign(null);
     setActiveInteraction(undefined);
@@ -403,6 +419,9 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
                   </Route>
                   <Route path="types/:type" element={<TypeRoute />}>
                     <Route index element={<TypeEditor />} />
+                  </Route>
+                  <Route path="qualities/:quality" element={<QualityRoute />}>
+                    <Route index element={<QualityEditor />} />
                   </Route>
                 </Route>
               </Route>

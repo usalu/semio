@@ -19,16 +19,16 @@
 
 // #endregion
 
-import { Crosshair } from "lucide-react";
 import { Line, Sphere, useGLTF } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
+import { Crosshair } from "lucide-react";
 import { FC, useCallback, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { guid, Point, Port, Type, Vector } from "../../../../semio";
 import { Tool, ToolRenderContext } from "../../../Tool";
+import { useKitCommands, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
 import { TypeEditorState } from "../store";
-import { guid, Point, Port, Type, Vector } from "../../../../semio";
-import { useKit, useKitCommands, useType } from "../../../kits/store";
 
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick }) => {
   const position = useMemo(() => [port.point.x, port.point.y, port.point.z] as [number, number, number], [port.point]);
@@ -113,7 +113,11 @@ const LoadedTypeMesh: FC<{
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
-const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({ onPortPreview, onPortCreate, onClearPreview }) => {
+const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
+  onPortPreview,
+  onPortCreate,
+  onClearPreview,
+}) => {
   const type = useType() as Type | undefined;
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);

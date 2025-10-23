@@ -1,6 +1,6 @@
 // #region Header
 
-// Tools.tsx
+// index.tsx
 
 // 2025 Ueli Saluz
 
@@ -19,17 +19,6 @@
 
 // #endregion
 
-import { FC } from "react";
-import { useTranslation } from "react-i18next";
-import Panel from "../Panel.js";
-import { ResizablePanelProps } from "../Sketchpad";
+import { Tool } from "../../../Tool";
 
-interface ToolsProps extends ResizablePanelProps {}
-
-const Tools: FC<ToolsProps> = ({ visible, onWidthChange, width }) => {
-  const { t } = useTranslation();
-
-  return <Panel panelId="tools" visible={visible} onWidthChange={onWidthChange} width={width} resizeSide="right" emptyMessage={t("panels.tools.noSections")} />;
-};
-
-export default Tools;
+export const tools: Tool[] = [];

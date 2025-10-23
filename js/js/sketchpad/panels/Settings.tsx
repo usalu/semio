@@ -26,7 +26,7 @@ import { useTranslation } from "react-i18next";
 import { TreeContent, TreeItem, TreeSection } from "../../elements/aggregation/Tree";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../elements/input/Select";
 import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
-import Panel from "../Panel";
+import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
 import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme } from "../store";
 

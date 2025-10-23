@@ -534,18 +534,22 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
       direction: { x: directionX, y: directionY, z: directionZ },
       attributes: [
         {
+          guid: crypto.randomUUID(),
           key: "semio.originalPieceId",
           value: designSide.piece || "",
         },
         {
+          guid: crypto.randomUUID(),
           key: "semio.originalPortId",
           value: designSide.port || "",
         },
         {
+          guid: crypto.randomUUID(),
           key: "semio.externalPieceId",
           value: originalSide.piece || "",
         },
         {
+          guid: crypto.randomUUID(),
           key: "semio.externalPortId",
           value: originalSide.port || "",
         },
@@ -878,47 +882,47 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
 };
 
 const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: Connection[]): ConnectionEdge => {
-  let sourcePieceId = connection.connecting.piece.guid;
-  let targetPieceId = connection.connected.piece.guid;
-  let sourcePortId = connection.connecting.port.guid ?? "undefined";
-  let targetPortId = connection.connected.port.guid ?? "undefined";
+  let sourcePieceId = connection.connecting.piece;
+  let targetPieceId = connection.connected.piece;
+  let sourcePortId = connection.connecting.port ?? "undefined";
+  let targetPortId = connection.connected.port ?? "undefined";
 
   if (connection.connecting.designPiece && allConnections) {
-    const designPieceId = connection.connecting.designPiece.guid;
+    const designPieceId = connection.connecting.designPiece;
     sourcePieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece?.guid === connection.connecting.designPiece?.guid;
-      const connectingToDesign = conn.connecting.designPiece?.guid === connection.connecting.designPiece?.guid;
+      const connectedToDesign = conn.connected.designPiece === connection.connecting.designPiece;
+      const connectingToDesign = conn.connecting.designPiece === connection.connecting.designPiece;
       return connectedToDesign || connectingToDesign;
     });
 
     const portIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece.guid === connection.connected.piece.guid &&
-        conn.connecting.piece.guid === connection.connecting.piece.guid &&
-        conn.connected.port.guid === connection.connected.port.guid &&
-        conn.connecting.port.guid === connection.connecting.port.guid,
+        conn.connected.piece === connection.connected.piece &&
+        conn.connecting.piece === connection.connecting.piece &&
+        conn.connected.port === connection.connected.port &&
+        conn.connecting.port === connection.connecting.port,
     );
     sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
 
   if (connection.connected.designPiece && allConnections) {
-    const designPieceId = connection.connected.designPiece.guid;
+    const designPieceId = connection.connected.designPiece;
     targetPieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece?.guid === connection.connected.designPiece?.guid;
-      const connectingToDesign = conn.connecting.designPiece?.guid === connection.connected.designPiece?.guid;
+      const connectedToDesign = conn.connected.designPiece === connection.connected.designPiece;
+      const connectingToDesign = conn.connecting.designPiece === connection.connected.designPiece;
       return connectedToDesign || connectingToDesign;
     });
 
     const portIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece.guid === connection.connected.piece.guid &&
-        conn.connecting.piece.guid === connection.connecting.piece.guid &&
-        conn.connected.port.guid === connection.connected.port.guid &&
-        conn.connecting.port.guid === connection.connecting.port.guid,
+        conn.connected.piece === connection.connected.piece &&
+        conn.connecting.piece === connection.connecting.piece &&
+        conn.connected.port === connection.connected.port &&
+        conn.connecting.port === connection.connecting.port,
     );
     targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
@@ -1013,10 +1017,10 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
       if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
         const connectedPieceIds = new Set<string>();
         includedDesign.externalConnections.forEach((conn) => {
-          if (conn.connected.designPiece?.guid === includedDesign.designId.name) {
-            connectedPieceIds.add(conn.connecting.piece.guid);
-          } else if (conn.connecting.designPiece?.guid === includedDesign.designId.name) {
-            connectedPieceIds.add(conn.connected.piece.guid);
+          if (conn.connected.designPiece === includedDesign.designGuid) {
+            connectedPieceIds.add(conn.connecting.piece);
+          } else if (conn.connecting.designPiece === includedDesign.designGuid) {
+            connectedPieceIds.add(conn.connected.piece);
           }
         });
 
@@ -1040,10 +1044,10 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
       }
 
       const designPiece: Piece = {
-        guid: includedDesign.id,
-        type: { name: "design", variant: includedDesign.designId.name },
+        guid: includedDesign.guid,
+        type: includedDesign.designGuid,
         center: calculatedCenter,
-        description: `Clustered design: ${includedDesign.designId.name}`,
+        description: `Clustered design: ${includedDesign.designGuid}`,
       };
 
       return designToNode(designPiece, includedDesign.externalConnections || [], calculatedCenter, isSelected, design.pieces!.length + i);
@@ -1051,11 +1055,11 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
       const displayCenter = includedDesign.center || { x: 0, y: 0 };
 
       const designPiece: Piece = {
-        guid: includedDesign.id,
-        type: { name: "design", variant: `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}` },
+        guid: includedDesign.guid,
+        type: includedDesign.designGuid,
         center: displayCenter,
         plane: includedDesign.plane,
-        description: `Fixed design: ${includedDesign.designId.name}`,
+        description: `Fixed design: ${includedDesign.designGuid}`,
       };
 
       return designToNode(designPiece, [], displayCenter, isSelected, design.pieces!.length + i);
@@ -1070,8 +1074,8 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   });
 
   includedDesigns.forEach((includedDesign, index) => {
-    if (!pieceIndexMap.has(includedDesign.id)) {
-      pieceIndexMap.set(includedDesign.id, design.pieces!.length + index);
+    if (!pieceIndexMap.has(includedDesign.guid)) {
+      pieceIndexMap.set(includedDesign.guid, design.pieces!.length + index);
     }
   });
 
@@ -1081,7 +1085,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   });
   includedDesigns.forEach((includedDesign, index) => {
     const nodeIndex = design.pieces!.length + index;
-    nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${includedDesign.id}`, nodeIndex);
+    nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${includedDesign.guid}`, nodeIndex);
   });
 
   const parentConnectionGuid =
@@ -1150,7 +1154,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const panelVisibility = useEditorPanelVisibility();
 
   // const design = useDiffedDesign();
-  const design = useDesign();
+  const design = useDesign() as Design | null;
   // const types = usePortColoredTypes();
   // const flattenedDesign = useFlatDesign();
   const flattenedDesign = design;
@@ -1158,7 +1162,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const metadata = useMemo(() => new Map(), []);
 
   const { nodes, edges } = useMemo(() => {
-    if (!design) return { nodes: [], edges: [] };
+    if (!design || !flattenedDesign) return { nodes: [], edges: [] };
     return (
       designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
         nodes: [],
@@ -1734,20 +1738,18 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design?.connections?.find((c) =>
               areSameConnection(c, {
-                connected: { piece: { guid: selectedNode.data.piece.guid } },
-                connecting: { piece: { guid: otherNode.data.piece.guid } },
-              }),
+                connected: { piece: selectedNode.data.piece.guid },
+                connecting: { piece: otherNode.data.piece.guid },
+              } as Connection),
             );
             if (existingConnection) continue;
             const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!;
             for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
-              const port = findPortInType(type, { guid: handle.id! });
+              const port = findPortInType(type, handle.id!);
               for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
-                const otherPort = findPortInType((otherNode as PieceNode).data.type, {
-                  guid: otherHandle.id!,
-                });
+                const otherPort = findPortInType((otherNode as PieceNode).data.type, otherHandle.id!);
                 const haveSameFixedPiece = fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId;
-                if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || isPortInUse(design, piece, port) || isPortInUse(design, otherNode.data.piece, otherPort)) continue;
+                if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || (design && isPortInUse(design, piece.guid, port.guid)) || (design && isPortInUse(design, otherNode.data.piece.guid, otherPort.guid))) continue;
                 const dx = selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x);
                 const dy = selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y);
                 const distance = Math.sqrt(dx * dx + dy * dy);

@@ -26,17 +26,18 @@ import { TreeContent, TreeItem, TreeSection } from "../../elements/aggregation/T
 import { usePanelSections } from "../Navbar";
 import Panel from "../Panel";
 import { ResizablePanelProps } from "../Sketchpad";
-import { DesignScopeProvider, KitScopeProvider, TypeScopeProvider, useNavigation } from "../store";
+import { DesignScopeProvider, KitScopeProvider, QualityScopeProvider, TypeScopeProvider, useNavigation } from "../store";
 
 interface DetailsProps extends ResizablePanelProps {}
 
 const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
   const params = useParams();
   const navigation = useNavigation();
-  const match = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
+  const match = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kit = params.kit ?? match?.[1];
   const design = params.design ?? (match?.[2] === "designs" ? match?.[3] : undefined);
   const type = params.type ?? (match?.[2] === "types" ? match?.[3] : undefined);
+  const quality = params.quality ?? (match?.[2] === "qualities" ? match?.[3] : undefined);
   if (design && kit) {
     return (
       <KitScopeProvider guid={kit}>
@@ -48,6 +49,13 @@ const ScopedContent: FC<{ children: ReactNode }> = ({ children }) => {
     return (
       <KitScopeProvider guid={kit}>
         <TypeScopeProvider guid={type}>{children}</TypeScopeProvider>
+      </KitScopeProvider>
+    );
+  }
+  if (quality && kit) {
+    return (
+      <KitScopeProvider guid={kit}>
+        <QualityScopeProvider guid={quality}>{children}</QualityScopeProvider>
       </KitScopeProvider>
     );
   }

@@ -1,6 +1,6 @@
 // #region Header
 
-// Tools.tsx
+// Settings.tsx
 
 // 2025 Ueli Saluz
 
@@ -21,15 +21,18 @@
 
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import Panel from "../Panel.js";
-import { ResizablePanelProps } from "../Sketchpad";
+import { TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 
-interface ToolsProps extends ResizablePanelProps {}
-
-const Tools: FC<ToolsProps> = ({ visible, onWidthChange, width }) => {
+export const QualitySettings: FC = () => {
   const { t } = useTranslation();
 
-  return <Panel panelId="tools" visible={visible} onWidthChange={onWidthChange} width={width} resizeSide="right" emptyMessage={t("panels.tools.noSections")} />;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("quality.editorSettings")}</p>
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
 };
-
-export default Tools;

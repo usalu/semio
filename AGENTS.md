@@ -393,6 +393,20 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
 │ │ │ │ │ └── store.tsx
+│ │ │ │ ├── quality
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ │ └── Formula.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ │ ├── Settings.tsx
+│ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── tools_registry
+│ │ │ │ │ │ └── index.tsx
+│ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── store.tsx
+│ │ │ │ │ └── Tools.tsx
 │ │ │ │ └── type
 │ │ │ │ ├── canvas
 │ │ │ │ │ └── Scene.tsx

@@ -19,11 +19,12 @@
 
 // #endregion
 
-import { Connection } from "@xyflow/react";
 import JSZip from "jszip";
-import { Database, SqlJsStatic } from "sql.js";
-import { Attribute, Author, AuthorDiff, Design, DesignDiff, FileDiff, Guid, Kit, Piece, Type, TypeDiff, findDesignInKit } from "../../semio";
+import initSqlJs, { Database, SqlJsStatic } from "sql.js";
+import { Attribute, Author, AuthorDiff, Connection, Design, DesignDiff, FileDiff, Guid, Kit, Piece, Quality, QualityDiff, File as SemioFile, Type, TypeDiff, findDesignInKit } from "../../semio";
 import type { KitCommandContext, KitCommandResult, Url } from "../store";
+
+const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 
 export const commands = {
     "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
@@ -71,6 +72,21 @@ export const commands = {
             diff: { designs: { removed: [guid] } },
         };
     },
+    "semio.kit.createQuality": (context: KitCommandContext, quality: Quality): KitCommandResult => {
+        return {
+            diff: { qualities: { added: [quality] } },
+        };
+    },
+    "semio.kit.updateQuality": (context: KitCommandContext, guid: Guid, diff: QualityDiff): KitCommandResult => {
+        return {
+            diff: { qualities: { updated: [{ id: guid, diff: diff }] } },
+        };
+    },
+    "semio.kit.deleteQuality": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+        return {
+            diff: { qualities: { removed: [guid] } },
+        };
+    },
     "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
         const files: File[] = blob ? [new File([blob], file.path.split("/").pop() || file.path)] : [];
         return {
@@ -81,13 +97,13 @@ export const commands = {
     "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
         const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
         return {
-            diff: { files: { updated: [{ id: { path: url }, diff: fileDiff }] } },
+            diff: { files: { updated: [{ id: url, diff: fileDiff }] } },
             files,
         };
     },
     "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
         return {
-            diff: { files: { removed: [{ path: url }] } },
+            diff: { files: { removed: [url] } },
         };
     },
     "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
@@ -154,7 +170,7 @@ export const commands = {
                             const kitRow = kitResult[0];
                             const kitData = Object.fromEntries(kitRow.columns.map((col, i) => [col, kitRow.values[0][i]]));
                             kit = {
-                                uri: (kitData.uri as string) || (kitData.name as string),
+                                guid: (kitData.uri as string) || `urn:kit:${kitData.name as string}:${kitData.version as string}`,
                                 name: kitData.name as string,
                                 description: kitData.description as string,
                                 version: kitData.version as string,
@@ -167,6 +183,8 @@ export const commands = {
                                 types: [],
                                 designs: [],
                                 files: [],
+                                createdAt: new Date(kitData.createdAt as string),
+                                updatedAt: new Date(kitData.updatedAt as string),
                             };
                         }
                         db.close();
@@ -194,9 +212,9 @@ export const commands = {
                             name: kit.name,
                             description: kit.description,
                             version: kit.version,
-                            types: kit.types ? { added: kit.types } : undefined,
-                            designs: kit.designs ? { added: kit.designs } : undefined,
-                            files: kit.files ? { added: kit.files } : undefined,
+                            types: kit.types && kit.types.length > 0 ? { added: kit.types } : undefined,
+                            designs: kit.designs && kit.designs.length > 0 ? { added: kit.designs } : undefined,
+                            files: kit.files && kit.files.length > 0 ? { added: kit.files } : undefined,
                         },
                         files,
                     };
@@ -245,11 +263,16 @@ export const commands = {
                     qualities.forEach((q) => stmt.run([q.key, q.value ?? "", "", q.definition ?? "", fkValue]));
                     stmt.free();
                 };
-                const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
-                    if (!authors) return;
+                const insertAuthors = (authorGuids: string[] | undefined, fkColumn: string, fkValue: number) => {
+                    if (!authorGuids) return;
                     const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
                     let rank = 0;
-                    authors.forEach((a) => stmt.run([a.name, a.email ?? "", rank++, fkValue]));
+                    authorGuids.forEach((authorGuid) => {
+                        const author = kit.authors?.find(a => a.guid === authorGuid);
+                        if (author) {
+                            stmt.run([author.name, author.email ?? "", rank++, fkValue]);
+                        }
+                    });
                     stmt.free();
                 };
 
@@ -273,7 +296,7 @@ export const commands = {
                     const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                     for (const type of kit.types) {
-                        typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit, nowIso, nowIso, Guid]);
+                        typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit || "", nowIso, nowIso, Guid]);
                         const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                         insertQualities(type.attributes, "type_id", typeDbId);
                         insertAuthors(type.authors, "type_id", typeDbId);
@@ -301,7 +324,7 @@ export const commands = {
                         if (type.ports) {
                             for (const port of type.ports) {
                                 portStmt.run([
-                                    port.id_ || "",
+                                    port.guid || "",
                                     port.description || "",
                                     port.family || "default",
                                     port.t || 0,
@@ -358,18 +381,18 @@ export const commands = {
                                 pieces: {
                                     added: [
                                         piece.plane ||
-                                        (findDesignInKit(context.kit, guid)?.connections ?? []).some(
-                                            (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
-                                        )
+                                            (findDesignInKit(context.kit, guid)?.connections ?? []).some(
+                                                (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
+                                            )
                                             ? piece
                                             : {
-                                                  ...piece,
-                                                  plane: {
-                                                      origin: { x: 0, y: 0, z: 0 },
-                                                      xAxis: { x: 1, y: 0, z: 0 },
-                                                      yAxis: { x: 0, y: 1, z: 0 },
-                                                  },
-                                              },
+                                                ...piece,
+                                                plane: {
+                                                    origin: { x: 0, y: 0, z: 0 },
+                                                    xAxis: { x: 1, y: 0, z: 0 },
+                                                    yAxis: { x: 0, y: 1, z: 0 },
+                                                },
+                                            },
                                     ],
                                 },
                             },
@@ -391,19 +414,19 @@ export const commands = {
                                 pieces: {
                                     added: pieces.map((candidate) =>
                                         candidate.plane ||
-                                        (design?.connections ?? []).some(
-                                            (connection) =>
-                                                connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
-                                        )
+                                            (design?.connections ?? []).some(
+                                                (connection) =>
+                                                    connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
+                                            )
                                             ? candidate
                                             : {
-                                                  ...candidate,
-                                                  plane: {
-                                                      origin: { x: 0, y: 0, z: 0 },
-                                                      xAxis: { x: 1, y: 0, z: 0 },
-                                                      yAxis: { x: 0, y: 1, z: 0 },
-                                                  },
-                                              },
+                                                ...candidate,
+                                                plane: {
+                                                    origin: { x: 0, y: 0, z: 0 },
+                                                    xAxis: { x: 1, y: 0, z: 0 },
+                                                    yAxis: { x: 0, y: 1, z: 0 },
+                                                },
+                                            },
                                     ),
                                 },
                             },
@@ -469,28 +492,37 @@ export const commands = {
             },
         };
     },
-    "semio.kit.removeConnection": (context: KitCommandContext, guid: Guid, connection: Guid): KitCommandResult => {
+    "semio.kit.removeConnection": (context: KitCommandContext, guid: Guid, connectionGuid: Guid): KitCommandResult => {
+        const design = findDesignInKit(context.kit, guid);
+        const connection = design?.connections?.find((c) => c.guid === connectionGuid);
+        if (!connection) return { diff: {} };
         return {
             diff: {
                 designs: {
                     updated: [
                         {
                             id: guid,
-                            diff: { connections: { removed: [connection] } },
+                            diff: { connections: { removed: [{ connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }] } },
                         },
                     ],
                 },
             },
         };
     },
-    "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connections: Guid[]): KitCommandResult => {
+    "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connectionGuids: Guid[]): KitCommandResult => {
+        const design = findDesignInKit(context.kit, guid);
+        const connectionsToRemove =
+            connectionGuids
+                .map((connGuid) => design?.connections?.find((c) => c.guid === connGuid))
+                .filter((c): c is Connection => c !== undefined)
+                .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } })) ?? [];
         return {
             diff: {
                 designs: {
                     updated: [
                         {
                             id: guid,
-                            diff: { connections: { removed: connections } },
+                            diff: { connections: { removed: connectionsToRemove } },
                         },
                     ],
                 },

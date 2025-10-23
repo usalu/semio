@@ -60,6 +60,7 @@ import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, File
 import { useDesignEditorCommands } from "./editors/design/store";
 import { useHomeCommands } from "./editors/home/store";
 import { useKitEditorCommands } from "./editors/kit/store";
+import { useQualityEditorCommands } from "./editors/quality/store";
 import { useTypeEditorCommands } from "./editors/type/store";
 import {
   EditorType,
@@ -203,6 +204,12 @@ export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, 
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],
+  [EditorType.QUALITY]: [
+    { key: "workbench", icon: Box, tooltip: t("panels.workbench"), hotkey: "⌘J" },
+    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
+  ],
 });
 
 interface NavigationProps {
@@ -233,14 +240,15 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const thirdPart = pathParts[3];
   const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
   const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  const itemGuid = isDesignEditor || isTypeEditor ? thirdPart : null;
+  const isQualityEditor = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
+  const itemGuid = isDesignEditor || isTypeEditor || isQualityEditor ? thirdPart : null;
 
-  const filteredKind = kitGuid && !isDesignEditor && !isTypeEditor ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
-  const filteredName = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("name") : null;
-  const filteredVariant = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("variant") : null;
-  const filteredView = kitGuid && !isDesignEditor && !isTypeEditor ? searchParams.get("view") : null;
+  const filteredKind = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? searchParams.get("name") : null;
+  const filteredVariant = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? searchParams.get("variant") : null;
+  const filteredView = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? searchParams.get("view") : null;
 
-  const isKitEditor = kitGuid && !isDesignEditor && !isTypeEditor;
+  const isKitEditor = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor;
 
   const kit = kits.find((k) => k.guid === kitGuid);
   const store = useSketchpadStore();
@@ -323,6 +331,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     if (!kit?.types) return [];
     return (kit.types as any[]).filter((t): t is Type => typeof t === "object" && t.guid !== undefined);
   }, [kit?.types]);
+
+  const allQualities: Quality[] = useMemo(() => {
+    if (!kit?.qualities) return [];
+    return (kit.qualities as any[]).filter((q): q is Quality => typeof q === "object" && q.guid !== undefined);
+  }, [kit?.qualities]);
 
   const handleCreateKit = useCallback(() => {
     const guid = crypto.randomUUID();
@@ -454,9 +467,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }
   }, [kit, filteredKind, kitCommands, handleCreateDesign, handleCreateType]);
 
-  // Find current design or type
+  // Find current design or type or quality
   const design = isDesignEditor ? allDesigns.find((d) => d.guid === itemGuid) : undefined;
   const type = isTypeEditor ? allTypes.find((t) => t.guid === itemGuid) : undefined;
+  const quality = isQualityEditor ? allQualities.find((q) => q.guid === itemGuid) : undefined;
 
   // Build breadcrumb items for designs
   const designNameItems = useMemo(() => {
@@ -932,6 +946,30 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
           </>
         )}
+        {isQualityEditor && quality && (
+          <>
+            <BreadcrumbBreak />
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.qualities")}>
+              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }}>
+                <Award size={16} />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbBreak />
+            <BreadcrumbItem tooltip={tooltip("navbar.quality")}>
+              <BreadcrumbLink
+                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/kits/${kitGuid}?kind=qualities&key=${encodeURIComponent(quality.key)}&select=${quality.guid}`);
+                }}
+              >
+                <button type="button">{quality.name}</button>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );
@@ -1087,7 +1125,7 @@ const Search: FC = ({}) => {
 const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const tooltipText = useTooltip();
-  const { kit, design, type } = useParams();
+  const { kit, design, type, quality } = useParams();
   const editorType = useEditorType();
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
@@ -1096,11 +1134,13 @@ const PanelToggles: FC = ({}) => {
   const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit } : undefined);
   const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
   const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
+  const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit, quality } : undefined);
   const commands = {
     [EditorType.HOME]: homeCommands,
     [EditorType.KIT]: kitEditorCommands,
     [EditorType.DESIGN]: designEditorCommands,
     [EditorType.TYPE]: typeEditorCommands,
+    [EditorType.QUALITY]: qualityEditorCommands,
   };
   const isMobile = useIsMobile();
 
@@ -1422,6 +1462,11 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
     if (!currentKit?.types) return [];
     return (currentKit.types as any[]).filter((t): t is Type => typeof t === "object" && t.guid !== undefined);
   }, [currentKit?.types]);
+
+  const allQualities = useMemo(() => {
+    if (!currentKit?.qualities) return [];
+    return (currentKit.qualities as any[]).filter((q): q is Quality => typeof q === "object" && q.guid !== undefined);
+  }, [currentKit?.qualities]);
   const filteredKind = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
   const filteredName = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("name") : null;
   const filteredVariant = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("variant") : null;
@@ -1523,17 +1568,19 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
   const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
-  const { kit, design, type } = useParams();
+  const { kit, design, type, quality } = useParams();
   const homeCommands = useHomeCommands();
   const isValidKit = kit && !["temporary", "local", "remote"].includes(kit);
   const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit } : undefined);
   const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
   const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
+  const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit, quality } : undefined);
   const commands = {
     [EditorType.HOME]: homeCommands,
     [EditorType.KIT]: kitEditorCommands,
     [EditorType.DESIGN]: designEditorCommands,
     [EditorType.TYPE]: typeEditorCommands,
+    [EditorType.QUALITY]: qualityEditorCommands,
   };
 
   // Find the currently active panel (used by mobile)
@@ -1722,6 +1769,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
   const thirdPart = pathParts[3];
   const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
   const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
+  const isQualityEditor = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
 
   const editorType = useEditorType();
   const visiblePanels = useEditorPanelVisibility();
@@ -1732,13 +1780,16 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
   const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit: kitGuid } : undefined);
   const design = thirdPart && isDesignEditor ? thirdPart : null;
   const type = thirdPart && isTypeEditor ? thirdPart : null;
+  const quality = thirdPart && secondPart === "qualities" && thirdPart ? thirdPart : null;
   const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
   const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
+  const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit: kitGuid, quality } : undefined);
   const commands = {
     [EditorType.HOME]: homeCommands,
     [EditorType.KIT]: kitEditorCommands,
     [EditorType.DESIGN]: designEditorCommands,
     [EditorType.TYPE]: typeEditorCommands,
+    [EditorType.QUALITY]: qualityEditorCommands,
   };
 
   useEffect(() => {

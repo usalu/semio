@@ -19,9 +19,9 @@
 
 // #endregion
 
-import { Connection } from "@xyflow/react";
+import { Connection as XYFlowConnection } from "@xyflow/react";
 import React, { createContext, useContext, useMemo } from "react";
-import { Camera, Group, Plane, Side } from "three";
+import { Group as THREEGroup, Side as THREESide } from "three";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import {
@@ -30,7 +30,9 @@ import {
   AuthorDiff,
   Benchmark,
   BenchmarkDiff,
+  Camera,
   CameraDiff,
+  Connection,
   ConnectionDiff,
   Coord,
   CoordDiff,
@@ -38,7 +40,9 @@ import {
   DesignDiff,
   DesignShallow,
   DiffStatus,
+  File as SemioFile,
   FileDiff,
+  Group,
   GroupDiff,
   Guid,
   Kit,
@@ -46,7 +50,9 @@ import {
   KitShallow,
   Layer,
   LayerDiff,
+  Location,
   LocationDiff,
+  Plane,
   Piece,
   PieceDiff,
   PlaneDiff,
@@ -60,6 +66,7 @@ import {
   QualityDiff,
   Representation,
   RepresentationDiff,
+  Side,
   SideDiff,
   Stat,
   StatDiff,
@@ -85,7 +92,7 @@ import {
 } from "../../semio";
 import { useDesignEditorDiff, useDesignEditorHover, useDesignEditorIsPieceTransitiveHovered, useDesignEditorSelection, useDesignEditorStore } from "../editors/design/store";
 import type { SketchpadStore, Url } from "../store";
-import { Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
+import { Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep, Disposable } from "../store";
 import { commands as kitCommands } from "./commands";
 
 type YAttributeVal = string;
@@ -516,16 +523,31 @@ class YPlaneStore {
 
 // #region Camera
 
-type YCameraVal = YPoint | YVector | number;
+type YCameraVal = YPoint | YVector;
 type YCamera = Y.Map<YCameraVal>;
 
 class YCameraStore {
   private yCamera: YCamera;
+  private position: YPointStore;
+  private forward: YVectorStore;
+  private up: YVectorStore;
   private cache?: Camera;
   private cacheHash?: string;
 
   constructor(yCamera: YCamera, camera: Camera) {
     this.yCamera = yCamera;
+
+    const yPosition = new Y.Map<YPointVal>();
+    this.yCamera.set("position", yPosition);
+    this.position = new YPointStore(yPosition, camera.position);
+
+    const yForward = new Y.Map<YVectorVal>();
+    this.yCamera.set("forward", yForward);
+    this.forward = new YVectorStore(yForward, camera.forward);
+
+    const yUp = new Y.Map<YVectorVal>();
+    this.yCamera.set("up", yUp);
+    this.up = new YVectorStore(yUp, camera.up);
   }
 
   hash = (camera: Camera): string => {
@@ -533,7 +555,11 @@ class YCameraStore {
   };
 
   snapshot = (): Camera => {
-    const currentData = {};
+    const currentData = {
+      position: this.position.snapshot(),
+      forward: this.forward.snapshot(),
+      up: this.up.snapshot(),
+    };
     const currentHash = this.hash(currentData);
 
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -545,9 +571,9 @@ class YCameraStore {
   };
 
   change = (diff: CameraDiff) => {
-    if (diff.distance !== undefined) this.distance = diff.distance;
-    if (diff.phi !== undefined) this.phi = diff.phi;
-    if (diff.theta !== undefined) this.theta = diff.theta;
+    if (diff.position !== undefined) this.position.change(diff.position);
+    if (diff.forward !== undefined) this.forward.change(diff.forward);
+    if (diff.up !== undefined) this.up.change(diff.up);
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -563,19 +589,29 @@ class YCameraStore {
 
 // #region Location
 
-type YLocationVal = number;
+type YLocationVal = number | string | YAttributes;
 type YLocation = Y.Map<YLocationVal>;
 
 class YLocationStore {
   private yLocation: YLocation;
+  private attributes: Map<string, AttributeStore>;
   private cache?: Location;
   private cacheHash?: string;
 
   constructor(yLocation: YLocation, location: Location) {
     this.yLocation = yLocation;
+    this.guid = location.guid;
     this.latitude = location.latitude;
     this.longitude = location.longitude;
     this.altitude = location.altitude;
+    this.attributes = new Map();
+  }
+
+  get guid(): string {
+    return this.yLocation.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yLocation.set("guid", guid);
   }
 
   get latitude(): number {
@@ -596,7 +632,11 @@ class YLocationStore {
     return this.yLocation.get("altitude") as number | undefined;
   }
   set altitude(altitude: number | undefined) {
-    this.yLocation.set("altitude", altitude);
+    if (altitude !== undefined) {
+      this.yLocation.set("altitude", altitude);
+    } else {
+      this.yLocation.delete("altitude");
+    }
   }
 
   hash = (location: Location): string => {
@@ -605,6 +645,7 @@ class YLocationStore {
 
   snapshot = (): Location => {
     const currentData = {
+      guid: this.guid,
       latitude: this.latitude,
       longitude: this.longitude,
       altitude: this.altitude,
@@ -620,6 +661,7 @@ class YLocationStore {
   };
 
   change = (diff: LocationDiff) => {
+    if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.latitude !== undefined) this.latitude = diff.latitude;
     if (diff.longitude !== undefined) this.longitude = diff.longitude;
     if (diff.altitude !== undefined) this.altitude = diff.altitude;
@@ -752,7 +794,7 @@ function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string):
   return selector ? selector(authorStore) : authorStore;
 }
 
-export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author {
+export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author | null {
   return useSync<Author, T>(useAuthorStore(identitySelector, id) as AuthorStore, selector ? selector : identitySelector, deep);
 }
 
@@ -760,7 +802,7 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
 
 // #region File
 
-type YFile = Y.Map<string | YAttributes>;
+type YFile = Y.Map<string | number | YAttributes>;
 type YFiles = Y.Array<YFile>;
 
 class FileStore {
@@ -805,7 +847,9 @@ class FileStore {
     return this.yFile.get("size") as number | undefined;
   }
   set size(size: number | undefined) {
-    this.yFile.set("size", size || 0);
+    if (size !== undefined) {
+      this.yFile.set("size", size);
+    }
   }
   get fileHash(): string | undefined {
     return this.yFile.get("hash") as string | undefined;
@@ -846,6 +890,7 @@ class FileStore {
 
   snapshot = (): SemioFile => {
     const currentData = {
+      guid: this.guid,
       path: this.path,
       remote: this.remote,
       size: this.size,
@@ -891,7 +936,7 @@ class FileStore {
 
 // #region Benchmark
 
-type YBenchmark = Y.Map<string | number | YAttributes>;
+type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
 
 class BenchmarkStore {
@@ -984,7 +1029,7 @@ class BenchmarkStore {
   };
 
   id = (): Guid => {
-    return { name: this.name };
+    return this.guid;
   };
 
   change = (diff: BenchmarkDiff) => {
@@ -1014,7 +1059,7 @@ class BenchmarkStore {
 type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
 
-class QualityStore {
+export class QualityStore {
   private yQuality: YQuality;
   private cache?: Quality;
   private cacheHash?: string;
@@ -1127,9 +1172,17 @@ class PropStore {
 
   constructor(yProp: YProp, prop: Prop) {
     this.yProp = yProp;
+    this.guid = prop.guid;
     this.key = prop.key;
     this.value = prop.value;
     this.unit = prop.unit;
+  }
+
+  get guid(): string {
+    return this.yProp.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yProp.set("guid", guid);
   }
 
   get key(): string {
@@ -1154,7 +1207,7 @@ class PropStore {
   }
 
   id(): Guid {
-    return { key: this.key };
+    return this.guid;
   }
 
   hash = (prop: Prop): string => {
@@ -1163,6 +1216,7 @@ class PropStore {
 
   snapshot(): Prop {
     const currentHash = this.hash({
+      guid: this.guid,
       key: this.key,
       value: this.value || "",
       unit: this.unit,
@@ -1173,6 +1227,7 @@ class PropStore {
     }
 
     const prop: Prop = {
+      guid: this.guid,
       key: this.key,
       value: this.value || "",
       unit: this.unit,
@@ -1202,15 +1257,15 @@ class PropStore {
 
 // #region Representation
 
-type YRepresentationVal = string | YStringArray | YAttributes;
+type YRepresentationVal = string | Y.Array<string> | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentations = Y.Array<YRepresentation>;
 
 class RepresentationStore {
   private yRepresentation: YRepresentation;
-  private yTags: YStringArray;
+  private yTags: Y.Array<string>;
   private yAttributes: YAttributes;
-  private attributes: Attribute[];
+  private attributes: Map<string, AttributeStore>;
   private cache?: Representation;
   private cacheHash?: string;
 
@@ -1221,11 +1276,14 @@ class RepresentationStore {
     this.description = representation.description;
     this.yTags = this.yRepresentation.set("tags", new Y.Array<string>());
     if (representation.tags) this.yTags.push(representation.tags);
-    this.attributes = new Array();
+    this.attributes = new Map();
     this.yAttributes = this.yRepresentation.set("attributes", new Y.Array<YAttribute>());
     if (representation.attributes) {
       for (const attribute of representation.attributes) {
-        this.createAttribute(attribute);
+        const yAttribute = new Y.Map<YAttributeVal>();
+        this.yAttributes.push([yAttribute]);
+        const attributeStore = new AttributeStore(yAttribute, attribute);
+        this.attributes.set(attribute.guid, attributeStore);
       }
     }
   }
@@ -1308,7 +1366,7 @@ class RepresentationStore {
 
 // #region Port
 
-type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
+type YPortVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
 type YPort = Y.Map<YPortVal>;
 type YPorts = Y.Array<YPort>;
 
@@ -1324,7 +1382,7 @@ class PortStore {
   constructor(yPort: YPort, port: Port) {
     this.yPort = yPort;
     this.guid = port.guid;
-    this.localId = port.id_;
+    this.localId = port.guid;
     this.description = port.description;
     this.family = port.family;
     this.mandatory = port.mandatory;
@@ -1371,7 +1429,7 @@ class PortStore {
     return this.yPort.get("mandatory") as boolean | undefined;
   }
   set mandatory(mandatory: boolean | undefined) {
-    this.yPort.set("mandatory", mandatory);
+    if (mandatory !== undefined) this.yPort.set("mandatory", mandatory);
   }
 
   get t(): number {
@@ -1407,7 +1465,7 @@ class PortStore {
   };
 
   apply(diff: PortDiff): void {
-    if (diff.id_ !== undefined) this.localId = diff.id_;
+    if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.family !== undefined) this.family = diff.family;
     if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
@@ -1532,13 +1590,13 @@ export class TypeStore {
     return this.yType.get("stock") as number | undefined;
   }
   set stock(stock: number | undefined) {
-    this.yType.set("stock", stock);
+    if (stock !== undefined) this.yType.set("stock", stock);
   }
   get virtual(): boolean | undefined {
     return this.yType.get("virtual") as boolean | undefined;
   }
   set virtual(virtual: boolean | undefined) {
-    this.yType.set("virtual", virtual);
+    if (virtual !== undefined) this.yType.set("virtual", virtual);
   }
   get unit(): string | undefined {
     return this.yType.get("unit") as string | undefined;
@@ -1632,7 +1690,7 @@ export class TypeStore {
   }
 
   createPort(port: Port): void {
-    if (this.hasPort(port.guid)) throw new Error(`Port (${port.id_}) already exists.`);
+    if (this.hasPort(port.guid)) throw new Error(`Port (${port.guid}) already exists.`);
     const yPort = new Y.Map<YPortVal>();
     this.yPorts.push([yPort]);
     const yPortStore = new PortStore(yPort, port);
@@ -1690,8 +1748,8 @@ export class TypeStore {
       if (diff.icon !== undefined) this.yType.set("icon", diff.icon);
       if (diff.image !== undefined) this.yType.set("image", diff.image);
       if (diff.description !== undefined) this.yType.set("description", diff.description);
-      if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt);
-      if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt);
+      if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt.toISOString());
+      if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt.toISOString());
 
       if (diff.authors !== undefined) {
         this.yAuthors.delete(0, this.yAuthors.length);
@@ -1816,6 +1874,30 @@ export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolea
   return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore | null, selector ? selector : identitySelector, deep);
 }
 
+type QualityScope = { guid: string };
+const QualityScopeContext = createContext<QualityScope | null>(null);
+export const QualityScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
+  const value = { guid: props.guid };
+  return React.createElement(QualityScopeContext.Provider, { value }, props.children as any);
+};
+export const useQualityScope = () => useContext(QualityScopeContext);
+export const useIsInQualityScope = () => useQualityScope() !== null;
+
+function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string): T | QualityStore | null {
+  const kitStore = useKitStore() as KitStore;
+  const qualityScope = useQualityScope();
+  const qualityGuid = qualityScope?.guid ?? guid;
+  if (!qualityGuid) return null;
+  if (!kitStore.hasQuality(qualityGuid)) return null;
+  const qualityStore = kitStore.quality(qualityGuid);
+  if (!qualityStore) return null;
+  return selector ? selector(qualityStore) : qualityStore;
+}
+
+export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, deep: boolean = false): T | Quality | null {
+  return useSync<Quality, T>(useQualityStore(identitySelector, id) as QualityStore | null, selector ? selector : identitySelector, deep);
+}
+
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
   const typesWithColoredPorts = useMemo(() => {
@@ -1824,7 +1906,7 @@ export function usePortColoredTypes(): Type[] {
     return colorDiff.updated
       ? diffedKit.types.map((type) => {
           const update = colorDiff.updated?.find((u) => u.id === type.guid);
-          return update ? { ...type, ports: update.diff.ports } : type;
+          return update && update.diff.ports?.added ? { ...type, ports: update.diff.ports.added } : type;
         })
       : diffedKit.types;
   }, [diffedKit.types]);
@@ -1846,19 +1928,11 @@ class LayerStore {
 
   constructor(yLayer: YLayer, layer: Layer) {
     this.yLayer = yLayer;
-    this.guid = layer.guid;
     this.path = layer.path;
     this.isHidden = layer.isHidden;
     this.isLocked = layer.isLocked;
     this.color = layer.color;
     this.description = layer.description;
-  }
-
-  get guid(): string {
-    return this.yLayer.get("guid") as string;
-  }
-  set guid(guid: string) {
-    this.yLayer.set("guid", guid);
   }
 
   get path(): string {
@@ -1872,14 +1946,14 @@ class LayerStore {
     return this.yLayer.get("isHidden") as boolean | undefined;
   }
   set isHidden(isHidden: boolean | undefined) {
-    this.yLayer.set("isHidden", isHidden);
+    if (isHidden !== undefined) this.yLayer.set("isHidden", isHidden);
   }
 
   get isLocked(): boolean | undefined {
     return this.yLayer.get("isLocked") as boolean | undefined;
   }
   set isLocked(isLocked: boolean | undefined) {
-    this.yLayer.set("isLocked", isLocked);
+    if (isLocked !== undefined) this.yLayer.set("isLocked", isLocked);
   }
 
   get color(): string | undefined {
@@ -1896,8 +1970,8 @@ class LayerStore {
     this.yLayer.set("description", description || "");
   }
 
-  id(): LayerId {
-    return { path: this.path };
+  id(): string {
+    return this.path;
   }
 
   hash = (layer: Layer): string => {
@@ -1906,7 +1980,6 @@ class LayerStore {
 
   snapshot(): Layer {
     const currentHash = this.hash({
-      guid: this.guid,
       path: this.path,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -1919,7 +1992,6 @@ class LayerStore {
     }
 
     const layer: Layer = {
-      guid: this.guid,
       path: this.path,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -1953,7 +2025,7 @@ class LayerStore {
 
 // #region Piece
 
-type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
+type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
 type YPieces = Y.Array<YPiece>;
 
@@ -1977,10 +2049,10 @@ class PieceStore {
     this.guid = piece.guid;
     this.attributes = new Map();
 
-    this.localId = piece.id_;
+    this.localId = piece.guid;
     if (piece.type) {
       const type = this.parent.parent.type(piece.type);
-      this.yPiece.set("type", type.guid);
+      if (type) this.yPiece.set("type", type.guid);
     } else {
       const design = this.parent.parent.design(piece.design!);
       this.yPiece.set("design", design.guid);
@@ -2041,11 +2113,13 @@ class PieceStore {
   }
   get type(): Guid | undefined {
     const typeUuid = this.yPiece.get("type") as string;
-    return typeUuid ? this.parent.parent.type(typeUuid).id() : undefined;
+    const typeStore = typeUuid ? this.parent.parent.type(typeUuid) : undefined;
+    return typeStore ? typeStore.id() : undefined;
   }
   set type(type: Guid | undefined) {
     if (type) {
-      this.yPiece.set("type", this.parent.parent.type(type).guid);
+      const typeStore = this.parent.parent.type(type);
+      if (typeStore) this.yPiece.set("type", typeStore.guid);
     } else {
       this.yPiece.delete("type");
     }
@@ -2143,7 +2217,7 @@ class PieceStore {
   };
 
   change = (diff: PieceDiff) => {
-    if (diff.id_) this.localId = diff.id_;
+    if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.type !== undefined) this.type = diff.type;
     if (diff.design !== undefined) this.design = diff.design;
     if (diff.scale !== undefined) this.scale = diff.scale;
@@ -2155,10 +2229,10 @@ class PieceStore {
     if (diff.plane !== undefined) {
       if (diff.plane) {
         if (!this.plane) {
-          const yPlane = new Y.Map();
+          const yPlane = new Y.Map() as YPlane;
           this.yPiece.set("plane", yPlane);
           this.yPlane = yPlane;
-          this.plane = new YPlaneStore(this.yPlane, diff.plane);
+          this.plane = new YPlaneStore(this.yPlane, diff.plane as Plane);
         } else {
           this.plane.change(diff.plane);
         }
@@ -2172,7 +2246,7 @@ class PieceStore {
     if (diff.center !== undefined) {
       if (diff.center) {
         if (!this.center) {
-          const yCenter = new Y.Map();
+          const yCenter = new Y.Map() as YCoord;
           this.yPiece.set("center", yCenter);
           this.yCenter = yCenter;
           this.center = new YCoordStore(this.yCenter, diff.center);
@@ -2189,7 +2263,7 @@ class PieceStore {
     if (diff.mirrorPlane !== undefined) {
       if (diff.mirrorPlane) {
         if (!this.mirrorPlane) {
-          const yMirrorPlane = new Y.Map();
+          const yMirrorPlane = new Y.Map() as YPlane;
           this.yPiece.set("mirrorPlane", yMirrorPlane);
           this.yMirrorPlane = yMirrorPlane;
           this.mirrorPlane = new YPlaneStore(this.yMirrorPlane, diff.mirrorPlane);
@@ -2205,11 +2279,11 @@ class PieceStore {
 
     if (diff.attributes !== undefined) {
       // Clear existing attributes
-      this.attributes = [];
+      this.attributes = new Map();
       this.yAttributes.delete(0, this.yAttributes.length);
 
-      if (diff.attributes) {
-        for (const attribute of diff.attributes) {
+      if (diff.attributes.added) {
+        for (const attribute of diff.attributes.added) {
           this.createAttribute(attribute);
         }
       }
@@ -2243,7 +2317,7 @@ function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T
   return selector ? selector(pieceStore) : pieceStore;
 }
 
-export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece {
+export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece | null {
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
 
@@ -2271,7 +2345,7 @@ export function useIsPieceTransitiveHovered(): boolean {
 }
 
 export function usePiecePlane(): Plane {
-  const plane = usePiece((p) => p.plane);
+  const plane = usePiece((p) => p.plane) as Plane | undefined;
 
   if (!plane) {
     // Return default flat piece plane (XY plane at origin)
@@ -2295,7 +2369,7 @@ export function usePieceStatus(): DiffStatus {
   }
 
   // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find((d) => d.id.guid === designScope.id.guid);
+  const designDiff = kitDiff.designs.updated.find((d) => d.id === designScope.guid);
 
   if (!designDiff?.diff.pieces) {
     return DiffStatus.Unchanged;
@@ -2304,17 +2378,17 @@ export function usePieceStatus(): DiffStatus {
   const piecesDiff = designDiff.diff.pieces;
 
   // Check if piece is removed
-  if (piecesDiff.removed?.some((p) => p.id_ === piece.id.id_)) {
+  if (piecesDiff.removed?.some((p) => p === piece.guid)) {
     return DiffStatus.Removed;
   }
 
   // Check if piece is added
-  if (piecesDiff.added?.some((p) => p.id_ === piece.id.id_)) {
+  if (piecesDiff.added?.some((p) => p.guid === piece.guid)) {
     return DiffStatus.Added;
   }
 
   // Check if piece is updated
-  if (piecesDiff.updated?.some((p) => p.id.id_ === piece.id.id_)) {
+  if (piecesDiff.updated?.some((p) => p.id === piece.guid)) {
     return DiffStatus.Modified;
   }
 
@@ -2349,7 +2423,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: Guid, dee
     if (edit.do?.kitDiff?.designs) {
       for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
         // Check if this is the current design - designUpdate.id is a Guid which has a guid property
-        const designUpdateGuid = typeof designUpdate.id === 'string' ? designUpdate.id : designUpdate.id.guid;
+        const designUpdateGuid = typeof designUpdate.id === "string" ? designUpdate.id : designUpdate.id.guid;
         if (designUpdateGuid !== designScope.guid) continue;
 
         // Check if piece is in updated pieces
@@ -2399,7 +2473,7 @@ export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; has
 
 // #region Group
 
-type YGroupVal = string | YStringArray | YAttributes;
+type YGroupVal = string | Y.Array<string> | YAttributes;
 type YGroup = Y.Map<YGroupVal>;
 type YGroups = Y.Array<YGroup>;
 
@@ -2410,26 +2484,15 @@ class GroupStore {
 
   constructor(yGroup: YGroup, group: Group) {
     this.yGroup = yGroup;
-    this.guid = group.guid;
     this.color = group.color;
     this.name = group.name;
     this.description = group.description;
 
     if (group.pieces) {
       const yPieces = new Y.Array<string>();
-      yPieces.insert(
-        0,
-        group.pieces.map((p) => p.id_),
-      );
+      yPieces.insert(0, group.pieces);
       this.yGroup.set("pieces", yPieces);
     }
-  }
-
-  get guid(): string {
-    return this.yGroup.get("guid") as string;
-  }
-  set guid(guid: string) {
-    this.yGroup.set("guid", guid);
   }
 
   get color(): string | undefined {
@@ -2453,25 +2516,19 @@ class GroupStore {
     this.yGroup.set("description", description || "");
   }
 
-  get pieces(): Guid[] {
+  get pieces(): string[] {
     const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
     if (!yPieces) return [];
-    return yPieces.toArray().map((id_) => ({ id_ }));
+    return yPieces.toArray();
   }
-  set pieces(pieces: Guid[]) {
+  set pieces(pieces: string[]) {
     const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
     if (yPieces) {
       yPieces.delete(0, yPieces.length);
-      yPieces.insert(
-        0,
-        pieces.map((p) => p.id_),
-      );
+      yPieces.insert(0, pieces);
     } else {
       const newYPieces = new Y.Array<string>();
-      newYPieces.insert(
-        0,
-        pieces.map((p) => p.id_),
-      );
+      newYPieces.insert(0, pieces);
       this.yGroup.set("pieces", newYPieces);
     }
   }
@@ -2482,7 +2539,6 @@ class GroupStore {
 
   snapshot = (): Group => {
     const currentData = {
-      guid: this.guid,
       pieces: this.pieces,
       color: this.color,
       name: this.name,
@@ -2530,14 +2586,14 @@ class SideStore {
     this.guid = side.guid;
 
     // Store piece UUID
-    const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), side.piece));
+    const pieceStore = this.parent.piece(side.piece);
     if (pieceStore) {
       this.ySide.set("piece", pieceStore.guid);
     }
 
     // Store designPiece UUID if present
     if (side.designPiece) {
-      const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), side.designPiece!));
+      const designPieceStore = this.parent.piece(side.designPiece);
       if (designPieceStore) {
         this.ySide.set("designPiece", designPieceStore.guid);
       }
@@ -2545,11 +2601,15 @@ class SideStore {
 
     // Store port UUID - need to find it through the piece's type
     if (pieceStore) {
-      const Guid = pieceStore.type;
-      const typeStore = this.parent.parent.type(Guid);
-      const portStore = typeStore.ports.get(side.port.id_);
-      if (portStore) {
-        this.ySide.set("port", portStore.guid);
+      const typeGuid = pieceStore.type;
+      if (typeGuid) {
+        const typeStore = this.parent.parent.type(typeGuid);
+        if (typeStore) {
+          const portStore = typeStore.ports.get(side.port);
+          if (portStore) {
+            this.ySide.set("port", portStore.guid);
+          }
+        }
       }
     }
   }
@@ -2563,10 +2623,10 @@ class SideStore {
 
   get piece(): Guid {
     const pieceUuid = this.ySide.get("piece") as string;
-    return this.parent.piece(pieceUuid).id();
+    return this.parent.piece(pieceUuid).guid;
   }
   set piece(piece: Guid) {
-    const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), piece));
+    const pieceStore = this.parent.piece(piece);
     if (pieceStore) {
       this.ySide.set("piece", pieceStore.guid);
     }
@@ -2575,11 +2635,11 @@ class SideStore {
   get designPiece(): Guid | undefined {
     const designPieceUuid = this.ySide.get("designPiece") as string | undefined;
     if (!designPieceUuid) return undefined;
-    return this.parent.piece(designPieceUuid).id();
+    return this.parent.piece(designPieceUuid).guid;
   }
   set designPiece(designPiece: Guid | undefined) {
     if (designPiece) {
-      const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), designPiece));
+      const designPieceStore = this.parent.piece(designPiece);
       if (designPieceStore) {
         this.ySide.set("designPiece", designPieceStore.guid);
       }
@@ -2592,20 +2652,29 @@ class SideStore {
     const portUuid = this.ySide.get("port") as string;
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
-    const Guid = pieceStore.type;
-    const typeStore = this.parent.parent.type(Guid);
-    const portStore = typeStore.port(portUuid);
-    return portStore.id();
+    const typeGuid = pieceStore.type;
+    if (typeGuid) {
+      const typeStore = this.parent.parent.type(typeGuid);
+      if (typeStore) {
+        const portStore = typeStore.port(portUuid);
+        return portStore.guid;
+      }
+    }
+    return portUuid;
   }
   set port(port: Guid) {
     // Find the port through the piece's type
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
-    const Guid = pieceStore.type;
-    const typeStore = this.parent.parent.type(Guid);
-    const portStore = typeStore.ports.get(port.id_);
-    if (portStore) {
-      this.ySide.set("port", portStore.guid);
+    const typeGuid = pieceStore.type;
+    if (typeGuid) {
+      const typeStore = this.parent.parent.type(typeGuid);
+      if (typeStore) {
+        const portStore = typeStore.ports.get(port);
+        if (portStore) {
+          this.ySide.set("port", portStore.guid);
+        }
+      }
     }
   }
 
@@ -2630,8 +2699,8 @@ class SideStore {
     return this.cache;
   };
 
-  id = (): SideId => {
-    return { piece: this.piece, designPiece: this.designPiece };
+  id = (): string => {
+    return this.guid;
   };
 
   change = (diff: SideDiff) => {
@@ -2715,56 +2784,56 @@ class ConnectionStore {
     return this.yConnection.get("gap") as number | undefined;
   }
   set gap(gap: number | undefined) {
-    this.yConnection.set("gap", gap);
+    if (gap !== undefined) this.yConnection.set("gap", gap);
   }
 
   get shift(): number | undefined {
     return this.yConnection.get("shift") as number | undefined;
   }
   set shift(shift: number | undefined) {
-    this.yConnection.set("shift", shift);
+    if (shift !== undefined) this.yConnection.set("shift", shift);
   }
 
   get rise(): number | undefined {
     return this.yConnection.get("rise") as number | undefined;
   }
   set rise(rise: number | undefined) {
-    this.yConnection.set("rise", rise);
+    if (rise !== undefined) this.yConnection.set("rise", rise);
   }
 
   get rotation(): number | undefined {
     return this.yConnection.get("rotation") as number | undefined;
   }
   set rotation(rotation: number | undefined) {
-    this.yConnection.set("rotation", rotation);
+    if (rotation !== undefined) this.yConnection.set("rotation", rotation);
   }
 
   get turn(): number | undefined {
     return this.yConnection.get("turn") as number | undefined;
   }
   set turn(turn: number | undefined) {
-    this.yConnection.set("turn", turn);
+    if (turn !== undefined) this.yConnection.set("turn", turn);
   }
 
   get tilt(): number | undefined {
     return this.yConnection.get("tilt") as number | undefined;
   }
   set tilt(tilt: number | undefined) {
-    this.yConnection.set("tilt", tilt);
+    if (tilt !== undefined) this.yConnection.set("tilt", tilt);
   }
 
   get x(): number | undefined {
     return this.yConnection.get("x") as number | undefined;
   }
   set x(x: number | undefined) {
-    this.yConnection.set("x", x);
+    if (x !== undefined) this.yConnection.set("x", x);
   }
 
   get y(): number | undefined {
     return this.yConnection.get("y") as number | undefined;
   }
   set y(y: number | undefined) {
-    this.yConnection.set("y", y);
+    if (y !== undefined) this.yConnection.set("y", y);
   }
 
   id(): Guid {
@@ -2802,7 +2871,7 @@ class ConnectionStore {
   };
 
   hasAttribute(guid: string): boolean {
-    return this.attributes.some((a) => a.guid === guid);
+    return this.attributes.has(guid);
   }
 
   createAttribute(attribute: Attribute): void {
@@ -2810,7 +2879,7 @@ class ConnectionStore {
     const yAttribute = new Y.Map<YAttributeVal>();
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
-    this.attributes.push(yAttributeStore);
+    this.attributes.set(attribute.guid, yAttributeStore);
   }
 
   change = (diff: ConnectionDiff): void => {
@@ -2854,7 +2923,7 @@ function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: 
   return selector ? selector(connectionStore) : connectionStore;
 }
 
-export function useConnection<T>(selector?: (connection: Connection) => T, id?: Guid, deep: boolean = false): T | Connection {
+export function useConnection<T>(selector?: (connection: Connection) => T, id?: Guid, deep: boolean = false): T | Connection | null {
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
 }
 
@@ -2882,7 +2951,7 @@ export function useConnectionStatus(): DiffStatus {
   }
 
   // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find((d) => d.id.guid === designScope.id.guid);
+  const designDiff = kitDiff.designs.updated.find((d) => d.id === designScope.guid);
 
   if (!designDiff?.diff.connections) {
     return DiffStatus.Unchanged;
@@ -2890,18 +2959,18 @@ export function useConnectionStatus(): DiffStatus {
 
   const connectionsDiff = designDiff.diff.connections;
 
-  // Check if connection is removed
-  if (connectionsDiff.removed?.some((c) => c.id_ === connection.id.id_)) {
+  // Check if connection is removed (using composite id)
+  if (connectionsDiff.removed?.some((c) => c.connected.piece === connection.guid && c.connecting.piece === connection.guid)) {
     return DiffStatus.Removed;
   }
 
   // Check if connection is added
-  if (connectionsDiff.added?.some((c) => c.id_ === connection.id.id_)) {
+  if (connectionsDiff.added?.some((c) => c.guid === connection.guid)) {
     return DiffStatus.Added;
   }
 
-  // Check if connection is updated
-  if (connectionsDiff.updated?.some((c) => c.id.id_ === connection.id.id_)) {
+  // Check if connection is updated (using composite id)
+  if (connectionsDiff.updated?.some((c) => c.id.connected.piece === connection.guid && c.id.connecting.piece === connection.guid)) {
     return DiffStatus.Modified;
   }
 
@@ -2922,12 +2991,20 @@ class StatStore {
 
   constructor(yStat: YStat, stat: Stat) {
     this.yStat = yStat;
+    this.guid = stat.guid;
     this.key = stat.key;
     this.unit = stat.unit;
     this.min = stat.min;
     this.minExcluded = stat.minExcluded;
     this.max = stat.max;
     this.maxExcluded = stat.maxExcluded;
+  }
+
+  get guid(): string {
+    return this.yStat.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yStat.set("guid", guid);
   }
 
   get key(): string {
@@ -2941,40 +3018,50 @@ class StatStore {
     return this.yStat.get("unit") as string | undefined;
   }
   set unit(unit: string | undefined) {
-    this.yStat.set("unit", unit || "");
+    if (unit !== undefined) {
+      this.yStat.set("unit", unit);
+    }
   }
 
   get min(): number | undefined {
     return this.yStat.get("min") as number | undefined;
   }
   set min(min: number | undefined) {
-    this.yStat.set("min", min);
+    if (min !== undefined) {
+      this.yStat.set("min", min);
+    }
   }
 
   get minExcluded(): boolean | undefined {
     return this.yStat.get("minExcluded") as boolean | undefined;
   }
   set minExcluded(minExcluded: boolean | undefined) {
-    this.yStat.set("minExcluded", minExcluded);
+    if (minExcluded !== undefined) {
+      this.yStat.set("minExcluded", minExcluded);
+    }
   }
 
   get max(): number | undefined {
     return this.yStat.get("max") as number | undefined;
   }
   set max(max: number | undefined) {
-    this.yStat.set("max", max);
+    if (max !== undefined) {
+      this.yStat.set("max", max);
+    }
   }
 
   get maxExcluded(): boolean | undefined {
     return this.yStat.get("maxExcluded") as boolean | undefined;
   }
   set maxExcluded(maxExcluded: boolean | undefined) {
-    this.yStat.set("maxExcluded", maxExcluded);
+    if (maxExcluded !== undefined) {
+      this.yStat.set("maxExcluded", maxExcluded);
+    }
   }
 
-  id(): StatId {
-    return { key: this.key };
-  }
+  id = (): string => {
+    return this.guid;
+  };
 
   hash = (stat: Stat): string => {
     return JSON.stringify(stat);
@@ -2982,6 +3069,7 @@ class StatStore {
 
   snapshot(): Stat {
     const currentData = {
+      guid: this.guid,
       key: this.key,
       unit: this.unit,
       min: this.min,
@@ -2998,6 +3086,7 @@ class StatStore {
   }
 
   change = (diff: StatDiff) => {
+    if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.key !== undefined) this.key = diff.key;
     if (diff.unit !== undefined) this.unit = diff.unit;
     if (diff.min !== undefined) this.min = diff.min;
@@ -3019,7 +3108,7 @@ class StatStore {
 
 // #region Design
 
-type YDesignVal = string | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
+type YDesignVal = string | boolean | number | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats | YProps | YLocation | Y.Array<string>;
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
@@ -3037,12 +3126,13 @@ export class DesignStore {
   private props: Map<string, PropStore>;
   private yProps: YProps;
   private layers: Map<string, LayerStore>;
+  private yLayers: YLayers;
   private groups: Map<string, GroupStore>;
   private yGroups: YGroups;
   private location?: YLocationStore;
   private yAuthors: YAuthorUuids;
   private authors: Map<string, AuthorStore>;
-  private yConcepts: YConcepts;
+  private yConcepts: Y.Array<string>;
   private cache?: Design;
   private cacheHash?: string;
 
@@ -3091,55 +3181,56 @@ export class DesignStore {
       }
     }
 
-    // if (design.stats) {
-    //   const yStats = new Y.Array<YStat>();
-    //   this.yDesign.set("stats", yStats);
-    //   for (const stat of design.stats) {
-    //     this.createStat(stat);
-    //   }
-    // }
+    this.yStats = this.yDesign.set("stats", new Y.Array<YStat>());
+    if (design.stats) {
+      for (const stat of design.stats) {
+        this.createStat(stat);
+      }
+    }
 
-    // if (design.props) {
-    //   const yProps = new Y.Array<YProp>();
-    //   this.yDesign.set("props", yProps);
-    //   for (const prop of design.props) {
-    //     this.createProp(prop);
-    //   }
-    // }
+    this.yProps = this.yDesign.set("props", new Y.Array<YProp>());
+    if (design.props) {
+      for (const prop of design.props) {
+        this.createProp(prop);
+      }
+    }
 
-    // if (design.layers) {
-    //   const yLayers = new Y.Array<YLayer>();
-    //   this.yDesign.set("layers", yLayers);
-    //   for (const layer of design.layers) {
-    //     this.createLayer(layer);
-    //   }
-    // }
+    this.yLayers = this.yDesign.set("layers", new Y.Array<YLayer>());
+    if (design.layers) {
+      for (const layer of design.layers) {
+        this.createLayer(layer);
+      }
+    }
 
-    // if (design.activeLayer) {
-    //   this.yDesign.set("activeLayer", design.activeLayer.path || "");
-    // }
+    if (design.activeLayer) {
+      this.yDesign.set("activeLayer", design.activeLayer);
+    }
 
-    // if (design.groups) {
-    //   const yGroups = new Y.Array<YGroup>();
-    //   this.yDesign.set("groups", yGroups);
-    //   for (const group of design.groups) {
-    //     this.createGroup(group);
-    //   }
-    // }
+    this.yGroups = this.yDesign.set("groups", new Y.Array<YGroup>());
+    if (design.groups) {
+      for (const group of design.groups) {
+        this.createGroup(group);
+      }
+    }
 
-    // if (design.location) {
-    //   const yLocation = new Y.Map();
-    //   this.yDesign.set("location", yLocation);
-    //   this.location = new YLocationStore(yLocation, design.location);
-    // }
+    if (design.location) {
+      const yLocation = new Y.Map() as YLocation;
+      this.yDesign.set("location", yLocation);
+      this.location = new YLocationStore(yLocation, design.location);
+    }
 
-    // if (design.concepts) {
-    //   const yConcepts = new Y.Array<string>();
-    //   design.concepts.forEach((concept) => yConcepts.push([concept]));
-    //   this.yDesign.set("concepts", yConcepts);
-    // }
+    this.yConcepts = this.yDesign.set("concepts", new Y.Array<string>());
+    if (design.concepts) {
+      design.concepts.forEach((concept) => this.yConcepts.push([concept]));
+    }
 
-    this.authors = design.authors?.map((author) => this.parent.author(author)) || [];
+    this.authors = new Map();
+    if (design.authors) {
+      design.authors.forEach((authorGuid) => {
+        const authorStore = this.parent.author(authorGuid);
+        this.authors.set(authorGuid, authorStore);
+      });
+    }
     this.yAuthors = this.yDesign.set("authors", new Y.Array<YAuthorUuid>());
     this.authors.forEach((author) => this.yAuthors.push([author.guid]));
 
@@ -3176,13 +3267,17 @@ export class DesignStore {
     return this.yDesign.get("canScale") as boolean | undefined;
   }
   set canScale(canScale: boolean | undefined) {
-    this.yDesign.set("canScale", canScale);
+    if (canScale !== undefined) {
+      this.yDesign.set("canScale", canScale);
+    }
   }
   get canMirror(): boolean | undefined {
     return this.yDesign.get("canMirror") as boolean | undefined;
   }
   set canMirror(canMirror: boolean | undefined) {
-    this.yDesign.set("canMirror", canMirror);
+    if (canMirror !== undefined) {
+      this.yDesign.set("canMirror", canMirror);
+    }
   }
   get unit(): string | undefined {
     return this.yDesign.get("unit") as string | undefined;
@@ -3245,31 +3340,32 @@ export class DesignStore {
   }
 
   createStat(stat: Stat): void {
-    const yStat = new Y.Map<YStatVal>();
+    const yStat = new Y.Map() as YStat;
     this.yStats.push([yStat]);
     const yStatStore = new StatStore(yStat, stat);
     this.stats.set(stat.key, yStatStore);
   }
 
   createProp(prop: Prop): void {
-    const yProp = new Y.Map<YPropVal>();
+    const yProp = new Y.Map() as YProp;
     this.yProps.push([yProp]);
     const yPropStore = new PropStore(yProp, prop);
     this.props.set(prop.key, yPropStore);
   }
 
   createLayer(layer: Layer): void {
-    const yLayer = new Y.Map<YLayerVal>();
+    const yLayer = new Y.Map() as YLayer;
     this.yLayers.push([yLayer]);
     const yLayerStore = new LayerStore(yLayer, layer);
-    this.layers.set(layer.guid, yLayerStore);
+    this.layers.set(layer.path, yLayerStore);
   }
 
   createGroup(group: Group): void {
-    const yGroup = new Y.Map<YGroupVal>();
+    const yGroup = new Y.Map() as YGroup;
     this.yGroups.push([yGroup]);
     const yGroupStore = new GroupStore(yGroup, group);
-    this.groups.set(group.guid, yGroupStore);
+    const groupKey = group.pieces.join(',');
+    this.groups.set(groupKey, yGroupStore);
   }
 
   piece(guid: string): PieceStore {
@@ -3323,14 +3419,14 @@ export class DesignStore {
       stats: Array.from(this.stats.values()).map((stat) => stat.snapshot()),
       props: Array.from(this.props.values()).map((prop) => prop.snapshot()),
       layers: Array.from(this.layers.values()).map((layer) => layer.snapshot()),
-      activeLayer: this.yDesign.get("activeLayer") ? { path: this.yDesign.get("activeLayer") as string } : undefined,
+      activeLayer: this.yDesign.get("activeLayer") as string | undefined,
       groups: Array.from(this.groups.values()).map((group) => group.snapshot()),
       location: this.location?.snapshot(),
-      authors: Array.from(this.authors.values()),
+      authors: Array.from(this.authors.values()).map((author) => author.guid),
       concepts: (this.yDesign.get("concepts") as Y.Array<string> | undefined)?.toArray(),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
     const currentHash = this.hash(currentData);
 
@@ -3352,7 +3448,6 @@ export class DesignStore {
     if (diff.icon !== undefined) this.icon = diff.icon;
     if (diff.image !== undefined) this.image = diff.image;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.authors !== undefined) this.authors = diff.authors;
 
     if (diff.pieces !== undefined) {
       if (typeof diff.pieces === "object" && !Array.isArray(diff.pieces)) {
@@ -3402,19 +3497,28 @@ export class DesignStore {
         }
         if (diff.connections.updated) {
           diff.connections.updated.forEach(({ id, diff: connectionDiff }) => {
-            const connectionStore = this.connections.get(id);
+            // Find connection by composite id (connected/connecting pieces)
+            const connectionStore = Array.from(this.connections.values()).find((c) => {
+              const snapshot = c.snapshot();
+              return snapshot.connected.piece === id.connected.piece && snapshot.connecting.piece === id.connecting.piece;
+            });
             if (connectionStore) {
               connectionStore.change(connectionDiff);
             }
           });
         }
         if (diff.connections.removed) {
-          diff.connections.removed.forEach((guid) => {
-            if (this.connections.has(guid)) {
+          diff.connections.removed.forEach((compositeId) => {
+            // Find connection by composite id
+            const connectionStore = Array.from(this.connections.values()).find((c) => {
+              const snapshot = c.snapshot();
+              return snapshot.connected.piece === compositeId.connected.piece && snapshot.connecting.piece === compositeId.connecting.piece;
+            });
+            if (connectionStore) {
               const connectionArray = Array.from(this.connections.values());
-              const connectionIndex = connectionArray.findIndex((c) => c.guid === guid);
+              const connectionIndex = connectionArray.findIndex((c) => c.guid === connectionStore.guid);
               if (connectionIndex !== -1) {
-                this.connections.delete(guid);
+                this.connections.delete(connectionStore.guid);
                 this.yConnections.delete(connectionIndex, 1);
               }
             }
@@ -3434,101 +3538,122 @@ export class DesignStore {
     }
 
     if (diff.stats !== undefined) {
-      if (diff.stats) {
-        // Clear existing stats
-        this.stats.clear();
-        const yStats = this.yDesign.get("stats") as Y.Array<YStat>;
-        if (yStats) {
-          yStats.delete(0, yStats.length);
-        } else {
-          const newYStats = new Y.Array<YStat>();
-          this.yDesign.set("stats", newYStats);
-        }
-        for (const stat of diff.stats) {
+      if (diff.stats.removed) {
+        diff.stats.removed.forEach((guid) => {
+          this.stats.delete(guid);
+          const yStats = this.yDesign.get("stats") as Y.Array<YStat>;
+          if (yStats) {
+            const index = yStats.toArray().findIndex((yStat) => (yStat as Y.Map<unknown>).get("guid") === guid);
+            if (index >= 0) yStats.delete(index, 1);
+          }
+        });
+      }
+      if (diff.stats.updated) {
+        diff.stats.updated.forEach(({ id, diff: statDiff }) => {
+          const statStore = this.stats.get(id);
+          if (statStore) statStore.change(statDiff);
+        });
+      }
+      if (diff.stats.added) {
+        diff.stats.added.forEach((stat) => {
           this.createStat(stat);
-        }
-      } else {
-        this.yDesign.delete("stats");
-        this.stats.clear();
+        });
       }
     }
 
     if (diff.props !== undefined) {
-      if (diff.props) {
-        // Clear existing props
-        this.props.clear();
-        const yProps = this.yDesign.get("props") as Y.Array<YProp>;
-        if (yProps) {
-          yProps.delete(0, yProps.length);
-        } else {
-          const newYProps = new Y.Array<YProp>();
-          this.yDesign.set("props", newYProps);
-        }
-        for (const prop of diff.props) {
+      if (diff.props.removed) {
+        diff.props.removed.forEach((key) => {
+          this.props.delete(key);
+          const yProps = this.yDesign.get("props") as Y.Array<YProp>;
+          if (yProps) {
+            const index = yProps.toArray().findIndex((yProp) => (yProp as Y.Map<unknown>).get("key") === key);
+            if (index >= 0) yProps.delete(index, 1);
+          }
+        });
+      }
+      if (diff.props.updated) {
+        diff.props.updated.forEach(({ id, diff: propDiff }) => {
+          const propStore = this.props.get(id);
+          if (propStore) propStore.change(propDiff);
+        });
+      }
+      if (diff.props.added) {
+        diff.props.added.forEach((prop) => {
           this.createProp(prop);
-        }
-      } else {
-        this.yDesign.delete("props");
-        this.props.clear();
+        });
       }
     }
 
     if (diff.layers !== undefined) {
-      if (diff.layers) {
-        // Clear existing layers
-        this.layers.clear();
-        const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
-        if (yLayers) {
-          yLayers.delete(0, yLayers.length);
-        } else {
-          const newYLayers = new Y.Array<YLayer>();
-          this.yDesign.set("layers", newYLayers);
-        }
-        for (const layer of diff.layers) {
+      if (diff.layers.removed) {
+        diff.layers.removed.forEach((path) => {
+          this.layers.delete(path);
+          const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
+          if (yLayers) {
+            const index = yLayers.toArray().findIndex((yLayer) => (yLayer as Y.Map<unknown>).get("path") === path);
+            if (index >= 0) yLayers.delete(index, 1);
+          }
+        });
+      }
+      if (diff.layers.updated) {
+        diff.layers.updated.forEach(({ id, diff: layerDiff }) => {
+          const layerStore = this.layers.get(id);
+          if (layerStore) layerStore.change(layerDiff);
+        });
+      }
+      if (diff.layers.added) {
+        diff.layers.added.forEach((layer) => {
           this.createLayer(layer);
-        }
-      } else {
-        this.yDesign.delete("layers");
-        this.layers.clear();
+        });
       }
     }
 
     if (diff.activeLayer !== undefined) {
       if (diff.activeLayer) {
-        this.yDesign.set("activeLayer", diff.activeLayer.path || "");
+        this.yDesign.set("activeLayer", diff.activeLayer);
       } else {
         this.yDesign.delete("activeLayer");
       }
     }
 
     if (diff.groups !== undefined) {
-      if (diff.groups) {
-        // Clear existing groups
-        this.groups.clear();
-        const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
-        if (yGroups) {
-          yGroups.delete(0, yGroups.length);
-        } else {
-          const newYGroups = new Y.Array<YGroup>();
-          this.yDesign.set("groups", newYGroups);
-        }
-        for (const group of diff.groups) {
+      if (diff.groups.removed) {
+        diff.groups.removed.forEach((pieces) => {
+          const groupKey = pieces.join(',');
+          this.groups.delete(groupKey);
+          const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
+          if (yGroups) {
+            const index = yGroups.toArray().findIndex((yGroup) => {
+              const groupPieces = (yGroup as Y.Map<unknown>).get("pieces") as Y.Array<string>;
+              return groupPieces?.toArray().join(',') === groupKey;
+            });
+            if (index >= 0) yGroups.delete(index, 1);
+          }
+        });
+      }
+      if (diff.groups.updated) {
+        diff.groups.updated.forEach(({ id, diff: groupDiff }) => {
+          const groupKey = id.join(',');
+          const groupStore = this.groups.get(groupKey);
+          if (groupStore) groupStore.change(groupDiff);
+        });
+      }
+      if (diff.groups.added) {
+        diff.groups.added.forEach((group) => {
           this.createGroup(group);
-        }
-      } else {
-        this.yDesign.delete("groups");
-        this.groups.clear();
+        });
       }
     }
 
     if ("location" in diff) {
       if (diff.location) {
         if (!this.location) {
-          const yLocation = new Y.Map();
+          const yLocation = new Y.Map() as YLocation;
           this.yDesign.set("location", yLocation);
-          this.location = new YLocationStore(yLocation, diff.location);
+          this.location = new YLocationStore(yLocation, diff.location as Location);
         } else {
-          this.location.change(diff.location);
+          this.location.change(diff.location as LocationDiff);
         }
       } else {
         this.yDesign.delete("location");
@@ -3537,16 +3662,22 @@ export class DesignStore {
     }
 
     if (diff.authors !== undefined) {
-      if (diff.authors) {
-        const yAuthors = new Y.Array<YAuthor>();
-        diff.authors.forEach((author) => {
-          const yAuthor = new Y.Map<string>();
-          yAuthor.set("email", author.email || "");
-          yAuthors.push([yAuthor]);
+      if (diff.authors.removed) {
+        diff.authors.removed.forEach((authorGuid) => {
+          this.authors.delete(authorGuid);
         });
-        this.yDesign.set("authors", yAuthors);
-      } else {
-        this.yDesign.delete("authors");
+      }
+      if (diff.authors.updated) {
+        diff.authors.updated.forEach(({ id, diff: authorDiff }) => {
+          const authorStore = this.authors.get(id);
+          if (authorStore) authorStore.change(authorDiff);
+        });
+      }
+      if (diff.authors.added) {
+        diff.authors.added.forEach((author) => {
+          const authorStore = this.parent.author(author.guid);
+          this.authors.set(author.guid, authorStore);
+        });
       }
     }
 
@@ -3634,11 +3765,11 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
   return selector ? selector(designStore) : designStore;
 }
 
-export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: Guid, deep: boolean = false): T | DesignShallow | Design {
+export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: Guid, deep: boolean = false): T | DesignShallow | Design | null {
   if (deep) {
     return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
   }
-  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
+  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as any, selector ? selector : identitySelector, deep);
 }
 
 export function usePieces(): Piece[] {
@@ -3650,20 +3781,20 @@ export function useDiffedDesign(): Design {
   const kit = useDiffedKit();
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
-  return findDesignInKit(kit, designScope.id);
+  return findDesignInKit(kit, designScope.guid);
 }
 
 export function useFlattenDiff(): DesignDiff {
   const designScope = useDesignScope();
   const kit = useKit() as Kit;
   if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
-  return flattenDesign(kit, designScope.id);
+  return flattenDesign(kit, designScope.guid);
 }
 
 export function useFlatDesign(): Design {
   const design = useDesign() as Design;
   const diff = useFlattenDiff();
-  return applyDesignDiff(design, diff, true);
+  return applyDesignDiff(design, diff);
 }
 
 export function useFlatPieces(): Piece[] {
@@ -3684,25 +3815,25 @@ export function usePiecesMetadata(): Map<
   const kit = useKit(undefined, undefined, true) as Kit;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
-  return piecesMetadata(kit, designScope.id);
+  return piecesMetadata(kit, designScope.guid);
 }
 
 export function useIncludedDesigns() {
-  const design = useDesign();
+  const design = useDesign() as Design;
   return useMemo(() => getIncludedDesigns(design), [design]);
 }
 
 export function useDesignId() {
-  const design = useDesign();
+  const design = useDesign() as Design;
   return useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
 }
 
 export function useClusterableGroups() {
-  const design = useDesign();
+  const design = useDesign() as Design;
   const selection = useDesignEditorSelection();
   return useMemo(() => {
     if (!design) return [];
-    return getClusterableGroups(design, selection.pieces);
+    return getClusterableGroups(design, selection.pieces ?? []);
   }, [design, selection.pieces]);
 }
 
@@ -3730,9 +3861,9 @@ export function usePieceDiffStatuses(): DiffStatus[] {
 }
 
 export function usePiecesFromIds(pieceIds: Guid[]) {
-  const design = useDesign();
+  const design = useDesign() as Design;
   const includedDesigns = useIncludedDesigns();
-  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
+  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.guid, d])), [includedDesigns]);
 
   return useMemo(() => {
     return pieceIds.map((id) => {
@@ -3740,21 +3871,21 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
         const foundPiece = findPieceInDesign(design, id);
         return {
           ...foundPiece,
-          id_: typeof foundPiece.id_ === "string" ? foundPiece.id_ : (foundPiece.id_ as any).id_,
+          id_: foundPiece.guid,
         };
       } catch {
-        const pieceIdString = typeof id === "string" ? id : (id as any).id_;
+        const pieceIdString = typeof id === "string" ? id : (id as any).guid;
         const includedDesign = includedDesignMap.get(pieceIdString);
         if (includedDesign) {
           return {
             id_: pieceIdString,
             type: {
               name: "design",
-              variant: includedDesign.type === "fixed" ? `${includedDesign.Guid.name}${includedDesign.Guid.variant ? `-${includedDesign.Guid.variant}` : ""}${includedDesign.Guid.view ? `-${includedDesign.Guid.view}` : ""}` : includedDesign.Guid.name,
+              variant: includedDesign.designGuid,
             },
             center: includedDesign.center,
             plane: includedDesign.plane,
-            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.Guid.name}`,
+            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design`,
           };
         }
         return {
@@ -3771,7 +3902,7 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
 }
 
 export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
-  const kit = useKit();
+  const kit = useKit() as Kit;
   const design = useDesign() as Design;
   const designGuid = design.guid;
 
@@ -3785,7 +3916,7 @@ export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]
 }
 
 export function useReplacableDesigns(piece: Piece) {
-  const kit = useKit();
+  const kit = useKit() as Kit;
   const design = useDesign() as Design;
   const designGuid = design.guid;
 
@@ -3795,7 +3926,7 @@ export function useReplacableDesigns(piece: Piece) {
 }
 
 export function useExplodeableDesignNodes(nodes: any[], selection: any) {
-  const kit = useKit();
+  const kit = useKit() as Kit;
   return useMemo(() => {
     return nodes.filter((node) => {
       if (node.type !== "design") return false;
@@ -3803,7 +3934,7 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
       if (!selection.pieces?.includes(Guid)) return false;
       const designName = (node.data.piece as any).type?.variant;
       if (!designName) return false;
-      if (!kit?.designs?.find((d) => d.name === designName)) return false;
+      if (!kit?.designs?.find((d: any) => d.name === designName)) return false;
       return true;
     });
   }, [nodes, selection.pieces, kit]);
@@ -3814,7 +3945,7 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 // #region Kit
 
 type YIdMap = Y.Map<string>;
-type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
+type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
 type YKit = Y.Map<YKitVal>;
 type YKits = Y.Array<YKit>;
 
@@ -3847,7 +3978,7 @@ export class KitStore {
   private readonly authors: Map<string, AuthorStore>;
   private readonly yAttributes: YAttributes;
   private readonly attributes: Map<string, AttributeStore>;
-  private readonly persistence: IndexeddbPersistence;
+  private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
   private readonly regularFiles: Map<Url, string>;
   private cache?: Kit;
@@ -4053,7 +4184,7 @@ export class KitStore {
 
   createFile(file: SemioFile): void {
     if (this.hasFile(file.guid)) throw new Error(`File (${file.path}) already exists.`);
-    const yFile = new Y.Map<YFile>();
+    const yFile = new Y.Map() as YFile;
     this.yFiles.push([yFile]);
     const yFileStore = new FileStore(yFile, file);
     this.files.set(file.guid, yFileStore);
@@ -4069,7 +4200,7 @@ export class KitStore {
 
   createQuality(quality: Quality): void {
     if (this.hasQuality(quality.guid)) throw new Error(`Quality (${quality.key}) already exists.`);
-    const yQuality = new Y.Map<YQuality>();
+    const yQuality = new Y.Map() as YQuality;
     this.yQualities.push([yQuality]);
     const yQualityStore = new QualityStore(yQuality, quality);
     this.qualities.set(quality.guid, yQualityStore);
@@ -4085,7 +4216,7 @@ export class KitStore {
 
   createBenchmark(benchmark: Benchmark): void {
     if (this.hasBenchmark(benchmark.guid)) throw new Error(`Benchmark (${benchmark.name}) already exists.`);
-    const yBenchmark = new Y.Map<YBenchmark>();
+    const yBenchmark = new Y.Map() as YBenchmark;
     this.yBenchmarks.push([yBenchmark]);
     const yBenchmarkStore = new BenchmarkStore(yBenchmark, benchmark);
     this.benchmarks.set(benchmark.guid, yBenchmarkStore);
@@ -4111,13 +4242,13 @@ export class KitStore {
     return this.authors.get(guid)!;
   }
 
-  hasAttribute(attribute: AttributeIdLike): boolean {
-    return this.attributes.some((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key));
+  hasAttribute(attribute: string | Attribute): boolean {
+    return Array.from(this.attributes.values()).some((a) => a.snapshot().key === (typeof attribute === "string" ? attribute : attribute.key));
   }
 
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const yAttribute = new Y.Map<YAttribute>();
+    const yAttribute = new Y.Map() as YAttribute;
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -4146,10 +4277,10 @@ export class KitStore {
       description: this.description,
       types: Array.from(this.types.values()).map((type) => type.snapshot()),
       designs: Array.from(this.designs.values()).map((design) => design.snapshot()),
-      qualities: Array.from(this.qualities.values()).map((quality) => quality.snapshot),
+      qualities: Array.from(this.qualities.values()).map((quality) => quality.snapshot()),
       files: Array.from(this.files.values()).map((file) => file.snapshot()),
       authors: Array.from(this.authors.values()).map((author) => author.snapshot()),
-      attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot),
+      attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -4183,8 +4314,8 @@ export class KitStore {
           });
         }
         if (diff.authors.removed) {
-          diff.authors.removed.forEach((Guid) => {
-            const authorGuid = typeof Guid === "string" ? Guid : Guid.email;
+          diff.authors.removed.forEach((authorGuidOrObject) => {
+            const authorGuid = typeof authorGuidOrObject === "string" ? authorGuidOrObject : (authorGuidOrObject as any).guid;
             if (this.authors.has(authorGuid)) {
               this.authors.delete(authorGuid);
               // Find and delete from Y.Array
@@ -4333,11 +4464,11 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string)
   return selector ? selector(kitStore) : kitStore;
 }
 
-export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, deep: boolean = false): T | KitShallow | Kit {
+export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, deep: boolean = false): T | KitShallow | Kit | null {
   if (deep) {
     return useSyncDeep<Kit, T>(useKitStore(identitySelector, guid) as KitStore, selector ? selector : identitySelector);
   }
-  return useSync<KitShallow, T>(useKitStore(identitySelector, guid) as KitStore, selector ? selector : identitySelector, deep);
+  return useSync<KitShallow, T>(useKitStore(identitySelector, guid) as any, selector ? selector : identitySelector, deep);
 }
 
 export function useDiffedKit(): Kit {
@@ -4351,7 +4482,7 @@ export function useDesigns(): Design[] {
 }
 
 export function useFileUrls(): Map<Url, Url> {
-  return (useKitStore() as KitStore).fileUrls();
+  return (useKitStore() as KitStore).fileUrls;
 }
 
 export function useKitCommandsSafe() {
@@ -4376,6 +4507,9 @@ export function useKitCommandsSafe() {
     createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
     updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", guid, diff),
     deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", guid),
+    createQuality: (quality: Quality) => kitStore.execute("semio.kit.createQuality", quality),
+    updateQuality: (guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", guid, diff),
+    deleteQuality: (guid: Guid) => kitStore.execute("semio.kit.deleteQuality", guid),
     addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
     updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
     removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
@@ -4405,6 +4539,9 @@ export function useKitCommands() {
     createDesign: (design: Design) => store.execute("semio.kit.createDesign", design),
     updateDesign: (guid: Guid, diff: DesignDiff) => store.execute("semio.kit.updateDesign", guid, diff),
     deleteDesign: (guid: Guid) => store.execute("semio.kit.deleteDesign", guid),
+    createQuality: (quality: Quality) => store.execute("semio.kit.createQuality", quality),
+    updateQuality: (guid: Guid, diff: QualityDiff) => store.execute("semio.kit.updateQuality", guid, diff),
+    deleteQuality: (guid: Guid) => store.execute("semio.kit.deleteQuality", guid),
     addFile: (file: SemioFile, blob?: Blob) => store.execute("semio.kit.addFile", file, blob),
     updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => store.execute("semio.kit.updateFile", url, fileDiff, blob),
     removeFile: (url: Url) => store.execute("semio.kit.removeFile", url),

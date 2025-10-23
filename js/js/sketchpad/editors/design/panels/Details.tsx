@@ -20,7 +20,7 @@
 // #endregion
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { Connection } from "@xyflow/react";
+import { Connection as RFConnection } from "@xyflow/react";
 import { Minus, Pin, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,7 +30,7 @@ import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Design, Guid, Kit, Piece, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
+import { Connection, Design, Guid, Kit, Piece, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
 import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import { useDesignEditorCommands } from "../store";
 
@@ -996,35 +996,35 @@ const ConnectionsSectionForm: FC<{
         <>
           <TreeItem>
             <TreeContent>
-              <Input label="Connecting Piece ID" value={connection!.connecting.piece.id_} disabled />
+              <Input label="Connecting Piece ID" value={connection!.connecting.piece} disabled />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Input label="Connecting Port ID" value={connection!.connecting.port.id_} disabled />
+              <Input label="Connecting Port ID" value={connection!.connecting.port} disabled />
             </TreeContent>
           </TreeItem>
           {connection!.connecting.designPiece && (
             <TreeItem>
               <TreeContent>
-                <Input label="Connecting Design Piece ID" value={connection!.connecting.designPiece.id_} disabled />
+                <Input label="Connecting Design Piece ID" value={connection!.connecting.designPiece} disabled />
               </TreeContent>
             </TreeItem>
           )}
           <TreeItem>
             <TreeContent>
-              <Input label="Connected Piece ID" value={connection!.connected.piece.id_} disabled />
+              <Input label="Connected Piece ID" value={connection!.connected.piece} disabled />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Input label="Connected Port ID" value={connection!.connected.port.id_} disabled />
+              <Input label="Connected Port ID" value={connection!.connected.port} disabled />
             </TreeContent>
           </TreeItem>
           {connection!.connected.designPiece && (
             <TreeItem>
               <TreeContent>
-                <Input label="Connected Design Piece ID" value={connection!.connected.designPiece.id_} disabled />
+                <Input label="Connected Design Piece ID" value={connection!.connected.designPiece} disabled />
               </TreeContent>
             </TreeItem>
           )}

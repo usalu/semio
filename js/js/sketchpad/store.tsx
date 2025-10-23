@@ -28,6 +28,7 @@ import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from
 import { commands as sketchpadCommands } from "./commands";
 import type { DesignEditorId, DesignEditorState } from "./editors/design/store";
 import type { KitEditorId, KitEditorState } from "./editors/kit/store";
+import type { QualityEditorId, QualityEditorState } from "./editors/quality/store";
 import type { TypeEditorId, TypeEditorState } from "./editors/type/store";
 import { KitStore } from "./kits/store";
 export {
@@ -38,6 +39,7 @@ export {
   KitScopeProvider,
   KitStore,
   PieceScopeProvider,
+  QualityScopeProvider,
   TypeScopeProvider,
   useAuthor,
   useClusterableGroups,
@@ -59,6 +61,7 @@ export {
   useIsConnectionSelected,
   useIsInDesignScope,
   useIsInKitScope,
+  useIsInQualityScope,
   useIsInTypeScope,
   useIsPieceHovered,
   useIsPieceSelected,
@@ -78,6 +81,8 @@ export {
   usePiecesMetadata,
   usePieceStatus,
   usePortColoredTypes,
+  useQuality,
+  useQualityScope,
   useReplacableDesigns,
   useReplacableTypes,
   useType,
@@ -114,6 +119,7 @@ export enum EditorType {
   KIT = "kit",
   DESIGN = "design",
   TYPE = "type",
+  QUALITY = "quality",
 }
 
 export enum ToolType {
@@ -655,11 +661,15 @@ type YKitEditors = Y.Map<YKitEditor>;
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Map<YDesignEditor>;
+type YDesignEditors = Y.Map<Y.Map<YDesignEditor>>;
 
 type YTypeEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YTypeEditor = Y.Map<YTypeEditorVal>;
 type YTypeEditors = Y.Map<YTypeEditor>;
+
+type YQualityEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YQualityEditor = Y.Map<YQualityEditorVal>;
+type YQualityEditors = Y.Map<YQualityEditor>;
 
 type YKitMetadata = Y.Map<string | boolean>;
 type YKits = Y.Array<YKitMetadata>;
@@ -667,16 +677,19 @@ type YKits = Y.Array<YKitMetadata>;
 type KitEditorStoreInstance = any;
 type DesignEditorStoreInstance = any;
 type TypeEditorStoreInstance = any;
+type QualityEditorStoreInstance = any;
 type HomeStoreInstance = any;
 
 type KitEditorStoreFactory = (parent: SketchpadStore, yMap: YKitEditor, transact: (fn: () => void) => void, id: KitEditorId, state?: KitEditorState) => KitEditorStoreInstance;
 type DesignEditorStoreFactory = (parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) => DesignEditorStoreInstance;
 type TypeEditorStoreFactory = (parent: SketchpadStore, yMap: YTypeEditor, transact: (fn: () => void) => void, id: TypeEditorId, state?: TypeEditorState) => TypeEditorStoreInstance;
+type QualityEditorStoreFactory = (parent: SketchpadStore, yMap: YQualityEditor, transact: (fn: () => void) => void, id: QualityEditorId, state?: QualityEditorState) => QualityEditorStoreInstance;
 type HomeStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => HomeStoreInstance;
 
 let kitEditorStoreFactory: KitEditorStoreFactory | undefined;
 let designEditorStoreFactory: DesignEditorStoreFactory | undefined;
 let typeEditorStoreFactory: TypeEditorStoreFactory | undefined;
+let qualityEditorStoreFactory: QualityEditorStoreFactory | undefined;
 let homeStoreFactory: HomeStoreFactory | undefined;
 
 export function registerKitEditorStoreFactory(factory: KitEditorStoreFactory) {
@@ -689,6 +702,10 @@ export function registerDesignEditorStoreFactory(factory: DesignEditorStoreFacto
 
 export function registerTypeEditorStoreFactory(factory: TypeEditorStoreFactory) {
   typeEditorStoreFactory = factory;
+}
+
+export function registerQualityEditorStoreFactory(factory: QualityEditorStoreFactory) {
+  qualityEditorStoreFactory = factory;
 }
 
 export function registerHomeStoreFactory(factory: HomeStoreFactory) {
@@ -708,6 +725,11 @@ function resolveDesignEditorStoreFactory(): DesignEditorStoreFactory {
 function resolveTypeEditorStoreFactory(): TypeEditorStoreFactory {
   if (!typeEditorStoreFactory) throw new Error("Type editor store factory not registered");
   return typeEditorStoreFactory;
+}
+
+function resolveQualityEditorStoreFactory(): QualityEditorStoreFactory {
+  if (!qualityEditorStoreFactory) throw new Error("Quality editor store factory not registered");
+  return qualityEditorStoreFactory;
 }
 
 function resolveHomeStoreFactory(): HomeStoreFactory {
@@ -798,6 +820,8 @@ export class SketchpadStore {
   private readonly kitEditors: Map<string, KitEditorStoreInstance>;
   private readonly yTypeEditors: YTypeEditors;
   private readonly typeEditors: Map<string, TypeEditorStoreInstance>;
+  private readonly yQualityEditors: YQualityEditors;
+  private readonly qualityEditors: Map<string, QualityEditorStoreInstance>;
   private readonly yDesignEditors: YDesignEditors;
   private readonly designEditors: Map<string, Map<string, DesignEditorStoreInstance>>;
   private readonly persistence?: IndexeddbPersistence;
@@ -812,6 +836,8 @@ export class SketchpadStore {
   private readonly kitEditorDeletedSubscribers: Set<Subscribe>;
   private readonly typeEditorCreatedSubscribers: Set<Subscribe>;
   private readonly typeEditorDeletedSubscribers: Set<Subscribe>;
+  private readonly qualityEditorCreatedSubscribers: Set<Subscribe>;
+  private readonly qualityEditorDeletedSubscribers: Set<Subscribe>;
   private readonly designEditorCreatedSubscribers: Set<Subscribe>;
   private readonly designEditorDeletedSubscribers: Set<Subscribe>;
   // private readonly broadcastChannel: BroadcastChannel;
@@ -824,6 +850,7 @@ export class SketchpadStore {
     this.kits = new Map();
     this.kitEditors = new Map();
     this.typeEditors = new Map();
+    this.qualityEditors = new Map();
     this.designEditors = new Map();
     this.commandRegistry = new Map();
     this.kitCreatedSubscribers = new Set();
@@ -832,15 +859,16 @@ export class SketchpadStore {
     this.kitEditorDeletedSubscribers = new Set();
     this.typeEditorCreatedSubscribers = new Set();
     this.typeEditorDeletedSubscribers = new Set();
+    this.qualityEditorCreatedSubscribers = new Set();
+    this.qualityEditorDeletedSubscribers = new Set();
     this.designEditorCreatedSubscribers = new Set();
     this.designEditorDeletedSubscribers = new Set();
 
     if (id) {
       this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
-    }
-
-    if (yProviderFactory) {
-      yProviderFactory(this.yDoc, id);
+      if (yProviderFactory) {
+        yProviderFactory(this.yDoc, id);
+      }
     }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
@@ -848,6 +876,7 @@ export class SketchpadStore {
     this.yHome = this.yDoc.getMap("home");
     this.yKitEditors = this.yDoc.getMap("kitEditors");
     this.yTypeEditors = this.yDoc.getMap("typeEditors");
+    this.yQualityEditors = this.yDoc.getMap("qualityEditors");
     this.yDesignEditors = this.yDoc.getMap("designEditors");
 
     // Load persisted kits from IndexedDB
@@ -1006,9 +1035,9 @@ export class SketchpadStore {
 
   createDesignEditor = (kit: Guid, design: Guid) => {
     this.yDoc.transact(() => {
-      let yKitMap = this.yDesignEditors.get(kit) as Y.Map<string, YDesignEditor>;
+      let yKitMap = this.yDesignEditors.get(kit) as Y.Map<YDesignEditor>;
       if (!yKitMap) {
-        yKitMap = new Y.Map<string, YDesignEditor>();
+        yKitMap = new Y.Map<YDesignEditor>();
         this.yDesignEditors.set(kit, yKitMap);
       }
       let yDesignEditor = yKitMap.get(design) as Y.Map<YDesignEditorVal>;
@@ -1111,7 +1140,7 @@ export class SketchpadStore {
         this.designEditors.delete(kit);
       }
       this.yDoc.transact(() => {
-        const yKitMap = this.yDesignEditors.get(kit) as Y.Map<string, YDesignEditor> | undefined;
+        const yKitMap = this.yDesignEditors.get(kit) as Y.Map<YDesignEditor> | undefined;
         if (yKitMap) {
           yKitMap.delete(design);
           if (yKitMap.size === 0) {
@@ -1304,7 +1333,7 @@ export class SketchpadStore {
   }
 
   createTypeEditor = (kit: Guid, type: Guid) => {
-    const Guid: Guid = { kit, guid: type };
+    const id: TypeEditorId = { kit, type };
     const key = `${kit}:${type}`;
     this.yDoc.transact(() => {
       let yTypeEditor = this.yTypeEditors.get(key) as Y.Map<YTypeEditorVal>;
@@ -1313,7 +1342,7 @@ export class SketchpadStore {
         this.yTypeEditors.set(key, yTypeEditor);
       }
       const typeEditorFactory = resolveTypeEditorStoreFactory();
-      const typeEditor = typeEditorFactory(this, yTypeEditor, this.yDoc.transact.bind(this.yDoc), Guid);
+      const typeEditor = typeEditorFactory(this, yTypeEditor, this.yDoc.transact.bind(this.yDoc), id);
       this.typeEditors.set(key, typeEditor);
     });
     this.typeEditorCreatedSubscribers.forEach((subscriber) => subscriber());
@@ -1332,7 +1361,7 @@ export class SketchpadStore {
   };
 
   hasTypeEditor(typeEditor: TypeEditorId): boolean {
-    const key = `${typeEditor.type.kit}:${typeEditor.type.guid}`;
+    const key = `${typeEditor.kit}:${typeEditor.type}`;
     return this.typeEditors.has(key);
   }
 
@@ -1347,7 +1376,54 @@ export class SketchpadStore {
   }
 
   typeEditorIds(): TypeEditorId[] {
-    return Array.from(this.typeEditors.values()).map((t) => ({ type: t.Guid }));
+    return Array.from(this.typeEditors.values()).map((t) => ({ kit: t.id.kit, type: t.id.type }));
+  }
+
+  createQualityEditor = (kit: Guid, quality: Guid) => {
+    const Guid: QualityEditorId = { kit, quality };
+    const key = `${kit}:${quality}`;
+    this.yDoc.transact(() => {
+      let yQualityEditor = this.yQualityEditors.get(key) as Y.Map<YQualityEditorVal>;
+      if (!yQualityEditor) {
+        yQualityEditor = new Y.Map<YQualityEditorVal>();
+        this.yQualityEditors.set(key, yQualityEditor);
+      }
+      const qualityEditorFactory = resolveQualityEditorStoreFactory();
+      const qualityEditor = qualityEditorFactory(this, yQualityEditor, this.yDoc.transact.bind(this.yDoc), Guid);
+      this.qualityEditors.set(key, qualityEditor);
+    });
+    this.qualityEditorCreatedSubscribers.forEach((subscriber) => subscriber());
+  };
+
+  deleteQualityEditor = (kit: Guid, quality: Guid) => {
+    const key = `${kit}:${quality}`;
+    const qualityEditor = this.qualityEditors.get(key);
+    if (qualityEditor) {
+      this.qualityEditors.delete(key);
+      this.yDoc.transact(() => {
+        this.yQualityEditors.delete(key);
+      });
+      this.qualityEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+    }
+  };
+
+  hasQualityEditor(qualityEditor: QualityEditorId): boolean {
+    const key = `${qualityEditor.kit}:${qualityEditor.quality}`;
+    return this.qualityEditors.has(key);
+  }
+
+  qualityEditor(kit: Guid, quality: Guid): QualityEditorStoreInstance {
+    const key = `${kit}:${quality}`;
+    let editor = this.qualityEditors.get(key);
+    if (!editor) {
+      this.createQualityEditor(kit, quality);
+      editor = this.qualityEditors.get(key)!;
+    }
+    return editor;
+  }
+
+  qualityEditorIds(): QualityEditorId[] {
+    return Array.from(this.qualityEditors.values()).map((q) => ({ kit: q.Guid.kit, quality: q.Guid.quality }));
   }
 
   hasDesignEditor(designEditor: DesignEditorId): boolean {
@@ -1527,6 +1603,7 @@ export function getEditorTypeFromPath(path: string): EditorType {
   if (path === "/" || path === "/kits") return EditorType.HOME;
   if (path.match(/^\/kits\/[^/]+\/designs\/[^/]+/)) return EditorType.DESIGN;
   if (path.match(/^\/kits\/[^/]+\/types\/[^/]+/)) return EditorType.TYPE;
+  if (path.match(/^\/kits\/[^/]+\/qualities\/[^/]+/)) return EditorType.QUALITY;
   if (path.match(/^\/kits\/[^/]+$/)) return EditorType.KIT;
   return EditorType.HOME;
 }
@@ -1603,7 +1680,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
   const store = useSketchpadStore();
 
   // Parse the navigation path to get IDs
-  const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
+  const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
   const editorKind = pathMatch?.[2];
   const itemGuid = pathMatch?.[3];
@@ -1634,6 +1711,9 @@ export function useEditorPanelVisibility(): PanelVisibility {
           break;
         case EditorType.TYPE:
           if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
+          break;
+        case EditorType.QUALITY:
+          if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
           break;
         default:
       }
@@ -1673,7 +1753,7 @@ export function useEditorCommands() {
   const store = useSketchpadStore();
 
   // Parse the navigation path to get IDs
-  const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types)\/([^/?]+))?/);
+  const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
   const itemGuid = pathMatch?.[3];
 
@@ -1692,6 +1772,9 @@ export function useEditorCommands() {
           break;
         case EditorType.TYPE:
           if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
+          break;
+        case EditorType.QUALITY:
+          if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
           break;
       }
     } catch (e) {}
@@ -1738,6 +1821,7 @@ export function useSketchpadCommands() {
       navigateToKit: (kit: Guid, search?: string) => navigate(`/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`),
       navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
       navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
+      navigateToQuality: (kit: Guid, quality: Guid) => navigate(`/kits/${kit}/qualities/${quality}`),
       navigateBack: () => {
         store.execute("semio.sketchpad.navigateBack");
         const state = store.snapshot();
@@ -1782,8 +1866,8 @@ export function useKits(): KitShallow[] {
     (onStoreChange) => {
       const unsubscribeCreated = store.onKitCreated(onStoreChange);
       const unsubscribeDeleted = store.onKitDeleted(onStoreChange);
-      const unsubscribers = Array.from(store.kits.values()).map((kit) => {
-        const kitStore = store.kit(kit.guid);
+      const unsubscribers = store.kitShallows().map((kitShallow) => {
+        const kitStore = store.kit(kitShallow.guid);
         return kitStore.onChanged(onStoreChange);
       });
       return () => {

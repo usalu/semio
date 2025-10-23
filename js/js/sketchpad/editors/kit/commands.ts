@@ -59,11 +59,11 @@ export const commands = {
                 selection: {
                     types: {
                         removed: currentSelection?.types ?? [],
-                        added: kit.types ?? [],
+                        added: kit.types?.map(t => t.guid) ?? [],
                     },
                     designs: {
                         removed: currentSelection?.designs ?? [],
-                        added: kit.designs ?? [],
+                        added: kit.designs?.map(d => d.guid) ?? [],
                     },
                 },
             },
