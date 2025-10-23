@@ -19,10 +19,39 @@
 
 // #endregion
 
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, ReactElement } from "react";
 import { Toggle, ToggleItem } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { ToolType } from "./store";
+import { Kit } from "../semio";
+
+export enum WindowType {
+  TABLE = "table",
+  SCENE = "scene",
+  DIAGRAM = "diagram",
+}
+
+export interface ToolRenderContext<TState = any, TSelection = any> {
+  state: TState;
+  selection: TSelection;
+  kit: Kit;
+  activeTool: ToolType;
+}
+
+export interface ToolContribution {
+  scene?: ReactElement | null;
+  diagram?: { nodes?: ReactElement[]; edges?: ReactElement[] } | null;
+  table?: ReactElement | null;
+}
+
+export interface Tool<TState = any, TSelection = any> {
+  id: ToolType;
+  label: string;
+  icon: ReactNode;
+  tooltip?: string;
+  hotkey?: string;
+  render: (context: ToolRenderContext<TState, TSelection>) => ToolContribution;
+}
 
 export interface ToolMode {
   id: ToolType;

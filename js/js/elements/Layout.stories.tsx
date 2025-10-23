@@ -144,11 +144,7 @@ export const Complete: Story = {
 export const MinimalLayout: Story = {
   render: () => (
     <Layout
-      navbar={
-        <Navbar
-          centerItems={[{ id: "title", content: <span className="font-bold">Minimal App</span>, order: 0 }]}
-        />
-      }
+      navbar={<Navbar centerItems={[{ id: "title", content: <span className="font-bold">Minimal App</span>, order: 0 }]} />}
       canvas={
         <Canvas>
           <ExampleContent title="Main Content" />
@@ -164,11 +160,7 @@ export const WithoutFooter: Story = {
 
     return (
       <Layout
-        navbar={
-          <Navbar
-            leftItems={[{ id: "title", content: <span className="font-bold">App Without Footer</span>, order: 0 }]}
-          />
-        }
+        navbar={<Navbar leftItems={[{ id: "title", content: <span className="font-bold">App Without Footer</span>, order: 0 }]} />}
         leftPanel={{
           visible: true,
           size: leftSize,

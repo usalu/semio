@@ -42,9 +42,7 @@ export const Default: Story = {
       { id: "home", content: <Home size={20} />, onClick: () => alert("Home"), order: 1 },
       { id: "title", content: <span className="font-bold ml-2">Application</span>, order: 2 },
     ],
-    centerItems: [
-      { id: "search", content: <Search size={20} />, onClick: () => alert("Search"), order: 0 },
-    ],
+    centerItems: [{ id: "search", content: <Search size={20} />, onClick: () => alert("Search"), order: 0 }],
     rightItems: [
       { id: "bell", content: <Bell size={20} />, onClick: () => alert("Notifications"), order: 0 },
       { id: "settings", content: <Settings size={20} />, onClick: () => alert("Settings"), order: 1 },
@@ -56,9 +54,7 @@ export const Default: Story = {
 
 export const WithSearchBar: Story = {
   args: {
-    leftItems: [
-      { id: "logo", content: <span className="font-bold text-lg">Logo</span>, order: 0 },
-    ],
+    leftItems: [{ id: "logo", content: <span className="font-bold text-lg">Logo</span>, order: 0 }],
     centerItems: [
       {
         id: "search",
@@ -72,7 +68,16 @@ export const WithSearchBar: Story = {
       },
     ],
     rightItems: [
-      { id: "user", content: <div className="flex items-center gap-2"><User size={20} /><ChevronDown size={16} /></div>, order: 0 },
+      {
+        id: "user",
+        content: (
+          <div className="flex items-center gap-2">
+            <User size={20} />
+            <ChevronDown size={16} />
+          </div>
+        ),
+        order: 0,
+      },
     ],
     height: 48,
   },
@@ -80,18 +85,14 @@ export const WithSearchBar: Story = {
 
 export const MinimalCentered: Story = {
   args: {
-    centerItems: [
-      { id: "title", content: <h1 className="text-xl font-bold">Centered Title</h1>, order: 0 },
-    ],
+    centerItems: [{ id: "title", content: <h1 className="text-xl font-bold">Centered Title</h1>, order: 0 }],
     height: 48,
   },
 };
 
 export const Tall: Story = {
   args: {
-    leftItems: [
-      { id: "logo", content: <div className="text-2xl font-bold">BRAND</div>, order: 0 },
-    ],
+    leftItems: [{ id: "logo", content: <div className="text-2xl font-bold">BRAND</div>, order: 0 }],
     rightItems: [
       { id: "nav1", content: <button className="px-4 py-2">Home</button>, order: 0 },
       { id: "nav2", content: <button className="px-4 py-2">About</button>, order: 1 },

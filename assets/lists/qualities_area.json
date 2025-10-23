@@ -3,7 +3,7 @@
     {
       "key": "semio.area.floor.gross",
       "name": "Gross Floor Area",
-      "translation": {
+      "locales": {
         "de": "Brutto-Grundfläche"
       },
       "description": "The gross floor area encompasses all floor areas within the external dimensions of a building.",
@@ -16,7 +16,7 @@
     {
       "key": "semio.area.floor.gross.net",
       "name": "Net Floor Area",
-      "translation": {
+      "locales": {
         "de": "Netto-Raumfläche"
       },
       "description": "The net floor area is the usable floor area excluding construction elements.",
@@ -29,7 +29,7 @@
     {
       "key": "semio.area.floor.gross.net.usable",
       "name": "Usable Floor Area",
-      "translation": {
+      "locales": {
         "de": "Nutzungsfläche"
       },
       "description": "The usable floor area includes all areas directly used for the building's intended purpose.",
@@ -42,7 +42,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying",
       "name": "Living And Staying Floor Area",
-      "translation": {
+      "locales": {
         "de": "Wohnen und Aufenthalt"
       },
       "description": "Floor area designated for living and staying purposes including residential and common areas.",
@@ -55,7 +55,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living-room",
       "name": "Living Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Wohnzimmerfläche"
       },
       "description": "Floor area for actual living rooms and main residential spaces.",
@@ -67,7 +67,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living",
       "name": "Living Floor Area",
-      "translation": {
+      "locales": {
         "de": "Wohnfläche"
       },
       "description": "The main living area floor space including living rooms and associated areas.",
@@ -80,7 +80,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living.kitchen",
       "name": "Kitchen Floor Area",
-      "translation": {
+      "locales": {
         "de": "Küchenfläche"
       },
       "description": "Floor area designated for kitchen facilities.",
@@ -92,7 +92,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living.sanitary",
       "name": "Sanitary Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sanitärfläche"
       },
       "description": "Floor area for sanitary facilities including bathrooms and toilets.",
@@ -104,7 +104,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living.circulation",
       "name": "Circulation Floor Area (Living)",
-      "translation": {
+      "locales": {
         "de": "Verkehrsfläche (Wohnen)"
       },
       "description": "Circulation areas within living spaces.",
@@ -116,7 +116,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living.outdoor-seating",
       "name": "Outdoor Seating Floor Area",
-      "translation": {
+      "locales": {
         "de": "Freisitzfläche"
       },
       "description": "Floor area for outdoor seating and relaxation areas.",
@@ -128,7 +128,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.living.storage",
       "name": "Storage Floor Area",
-      "translation": {
+      "locales": {
         "de": "Abstellraumfläche"
       },
       "description": "Floor area designated for storage purposes.",
@@ -140,7 +140,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.common-room",
       "name": "Common Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Gemeinschaftsraumfläche"
       },
       "description": "Floor area for common rooms and shared spaces.",
@@ -152,7 +152,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.break-room",
       "name": "Break Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Pausenraumfläche"
       },
       "description": "Floor area designated for break rooms and rest areas.",
@@ -164,7 +164,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.waiting-room",
       "name": "Waiting Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Warteraumfläche"
       },
       "description": "Floor area for waiting rooms and reception areas.",
@@ -176,7 +176,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.dining-room",
       "name": "Dining Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Speiseraumfläche"
       },
       "description": "Floor area designated for dining rooms and eating areas.",
@@ -188,7 +188,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.living-staying.detention-room",
       "name": "Detention Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Haftraumfläche"
       },
       "description": "Floor area for detention rooms and secure spaces.",
@@ -200,7 +200,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work",
       "name": "Office Work Floor Area",
-      "translation": {
+      "locales": {
         "de": "Büroarbeit"
       },
       "description": "Floor area designated for office work and administrative functions.",
@@ -213,7 +213,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.office-room",
       "name": "Office Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Büroraumfläche"
       },
       "description": "Floor area for individual office rooms.",
@@ -225,7 +225,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.open-office",
       "name": "Open Plan Office Floor Area",
-      "translation": {
+      "locales": {
         "de": "Großraumbürofläche"
       },
       "description": "Floor area for open plan office spaces.",
@@ -237,7 +237,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.meeting-room",
       "name": "Meeting Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Besprechungsraumfläche"
       },
       "description": "Floor area for meeting rooms and conference spaces.",
@@ -249,7 +249,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.design-room",
       "name": "Design Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Konstruktionsraumfläche"
       },
       "description": "Floor area for design rooms and drafting spaces.",
@@ -261,7 +261,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.counter-room",
       "name": "Counter Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Schalterraumfläche"
       },
       "description": "Floor area for counter rooms and service areas.",
@@ -273,7 +273,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.control-room",
       "name": "Control Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Kontrollraumfläche"
       },
       "description": "Floor area for control rooms and monitoring spaces.",
@@ -285,7 +285,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.supervision-room",
       "name": "Supervision Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Aufsichtsraumfläche"
       },
       "description": "Floor area for supervision rooms and oversight spaces.",
@@ -297,7 +297,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.technology-room",
       "name": "Office Technology Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Bürotechnikraumfläche"
       },
       "description": "Floor area for office technology rooms and equipment spaces.",
@@ -309,7 +309,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.office-work.other",
       "name": "Other Office Work Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Büroarbeitsfläche"
       },
       "description": "Floor area for other office work spaces not classified elsewhere.",
@@ -321,7 +321,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments",
       "name": "Production Experiments Work Floor Area",
-      "translation": {
+      "locales": {
         "de": "Produktion, Hand- und Maschinenarbeit, Experimente"
       },
       "description": "Floor area designated for production work, experiments and manufacturing activities.",
@@ -334,7 +334,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.production-hall",
       "name": "Production Hall Floor Area",
-      "translation": {
+      "locales": {
         "de": "Produktionshallenfläche"
       },
       "description": "Floor area for production halls and manufacturing spaces.",
@@ -346,7 +346,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.workshop",
       "name": "Workshop Floor Area",
-      "translation": {
+      "locales": {
         "de": "Werkstattfläche"
       },
       "description": "Floor area for workshops and manual work spaces.",
@@ -358,7 +358,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.technology-lab",
       "name": "Technology Lab Floor Area",
-      "translation": {
+      "locales": {
         "de": "Techniklaborfläche"
       },
       "description": "Floor area for technology laboratories and research spaces.",
@@ -370,7 +370,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.physics-electrical-lab",
       "name": "Physics Electrical Lab Floor Area",
-      "translation": {
+      "locales": {
         "de": "Physik- und Elektrolaborfläche"
       },
       "description": "Floor area for physics and electrical laboratories.",
@@ -382,7 +382,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.chemistry-biology-lab",
       "name": "Chemistry Biology Lab Floor Area",
-      "translation": {
+      "locales": {
         "de": "Chemie- und Biologielaborfläche"
       },
       "description": "Floor area for chemistry and biology laboratories.",
@@ -394,7 +394,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.animal-room",
       "name": "Animal Husbandry Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Tierhaltungsraumfläche"
       },
       "description": "Floor area for animal husbandry and care facilities.",
@@ -406,7 +406,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.plant-room",
       "name": "Plant Cultivation Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Pflanzenzuchtraumfläche"
       },
       "description": "Floor area for plant cultivation and greenhouse facilities.",
@@ -418,7 +418,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.kitchen",
       "name": "Kitchen Floor Area (Production)",
-      "translation": {
+      "locales": {
         "de": "Küchenfläche (Produktion)"
       },
       "description": "Floor area for production kitchen facilities and food preparation.",
@@ -430,7 +430,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.production-experiments.special-work-room",
       "name": "Special Work Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonderarbeitsraumfläche"
       },
       "description": "Floor area for special work rooms and specialized activities.",
@@ -442,7 +442,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales",
       "name": "Storage Distribution Sales Floor Area",
-      "translation": {
+      "locales": {
         "de": "Lagern, Verteilen und Verkaufen"
       },
       "description": "Floor area for storage, distribution and sales activities.",
@@ -455,7 +455,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.storage-room",
       "name": "Storage Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Lagerraumfläche"
       },
       "description": "Floor area for storage rooms and warehousing.",
@@ -467,7 +467,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.collection-archive",
       "name": "Collection Archive Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sammlungs- und Archivfläche"
       },
       "description": "Floor area for collections and archive storage.",
@@ -479,7 +479,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.cold-storage",
       "name": "Cold Storage Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Kühllagerraumfläche"
       },
       "description": "Floor area for cold storage and refrigerated spaces.",
@@ -491,7 +491,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.receiving-dispatch",
       "name": "Receiving Dispatch Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Warenannahme- und Versandfläche"
       },
       "description": "Floor area for receiving and dispatching goods.",
@@ -503,7 +503,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.sales-room",
       "name": "Sales Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Verkaufsraumfläche"
       },
       "description": "Floor area for sales rooms and retail spaces.",
@@ -515,7 +515,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.exhibition-room",
       "name": "Exhibition Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Ausstellungsraumfläche"
       },
       "description": "Floor area for exhibition rooms and display spaces.",
@@ -527,7 +527,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.other",
       "name": "Other Storage Distribution Sales Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Lager-, Verteil- und Verkaufsfläche"
       },
       "description": "Floor area for other storage, distribution and sales activities not classified elsewhere.",
@@ -539,7 +539,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture",
       "name": "Education Culture Instruction Floor Area",
-      "translation": {
+      "locales": {
         "de": "Bildung, Unterricht und Kultur"
       },
       "description": "Floor area designated for education, instruction and cultural activities.",
@@ -552,7 +552,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.classroom-fixed-seating",
       "name": "Class With Fixed Seating Floor Area",
-      "translation": {
+      "locales": {
         "de": "Hörsaalfläche"
       },
       "description": "Floor area for lecture halls and classrooms with fixed seating.",
@@ -564,7 +564,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.teaching-practice",
       "name": "Teaching Practice Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Unterrichts- und Übungsraumfläche"
       },
       "description": "Floor area for teaching and practice rooms.",
@@ -576,7 +576,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.special-classroom",
       "name": "Special Classroom Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonderunterrichtsraumfläche"
       },
       "description": "Floor area for special classrooms and specialized instruction spaces.",
@@ -588,7 +588,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.library",
       "name": "Library Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Bibliotheks- und Lesesaalfläche"
       },
       "description": "Floor area for libraries and reading rooms.",
@@ -600,7 +600,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.sports",
       "name": "Sports Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sportraumfläche"
       },
       "description": "Floor area for sports rooms and athletic facilities.",
@@ -612,7 +612,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.assembly-room",
       "name": "Assembly Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Versammlungsraumfläche"
       },
       "description": "Floor area for assembly rooms and meeting halls.",
@@ -624,7 +624,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.stage-studio",
       "name": "Stage Studio Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Bühnen- und Studioraumfläche"
       },
       "description": "Floor area for stages, studios and performance spaces.",
@@ -636,7 +636,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.display-room",
       "name": "Display Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Schau- und Vorführraumfläche"
       },
       "description": "Floor area for display rooms and demonstration spaces.",
@@ -648,7 +648,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.education-culture.sacred-room",
       "name": "Sacred Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sakralraumfläche"
       },
       "description": "Floor area for sacred rooms and religious spaces.",
@@ -660,7 +660,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care",
       "name": "Healing And Care Floor Area",
-      "translation": {
+      "locales": {
         "de": "Heilen und Pflegen"
       },
       "description": "Floor area designated for healing, care and medical activities.",
@@ -673,7 +673,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.general-medical-equipment",
       "name": "General Medical Equipment Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Raum für allgemeine medizinische Ausstattung"
       },
       "description": "Floor area for general medical equipment rooms.",
@@ -685,7 +685,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.special-medical-equipment",
       "name": "Special Medical Equipment Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Raum für spezielle medizinische Ausstattung"
       },
       "description": "Floor area for special medical equipment rooms.",
@@ -697,7 +697,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.surgical-room",
       "name": "Surgical Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Operationsraumfläche"
       },
       "description": "Floor area for surgical rooms and operating theaters.",
@@ -709,7 +709,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.radiation-diagnostic",
       "name": "Radiation Diagnostic Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Strahlendiagnostikraumfläche"
       },
       "description": "Floor area for radiation diagnostic rooms and imaging facilities.",
@@ -721,7 +721,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.radiation-therapy",
       "name": "Radiation Therapy Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Strahlentherapieraumfläche"
       },
       "description": "Floor area for radiation therapy rooms and treatment facilities.",
@@ -733,7 +733,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.rehabilitation-physiotherapy",
       "name": "Rehabilitation Physiotherapy Floor Area",
-      "translation": {
+      "locales": {
         "de": "Rehabilitations- und Physiotherapiefläche"
       },
       "description": "Floor area for rehabilitation and physiotherapy facilities.",
@@ -745,7 +745,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.general-patient-room",
       "name": "General Patient Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Allgemeines Patientenzimmerfläche"
       },
       "description": "Floor area for general patient rooms.",
@@ -757,7 +757,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.special-patient-room",
       "name": "Special Patient Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Spezielles Patientenzimmerfläche"
       },
       "description": "Floor area for special patient rooms and intensive care units.",
@@ -769,7 +769,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.healing-care.other",
       "name": "Other Healing And Care Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Heil- und Pflegefläche"
       },
       "description": "Floor area for other healing and care activities not classified elsewhere.",
@@ -781,7 +781,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other",
       "name": "Other Usable Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Nutzungsfläche"
       },
       "description": "Floor area for other usable spaces not classified in main categories.",
@@ -794,7 +794,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.sanitary-room",
       "name": "Sanitary Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sanitärraumfläche"
       },
       "description": "Floor area for sanitary rooms and facilities.",
@@ -806,7 +806,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.cloakroom",
       "name": "Cloakroom Floor Area",
-      "translation": {
+      "locales": {
         "de": "Garderobenfläche"
       },
       "description": "Floor area for cloakrooms and wardrobe facilities.",
@@ -818,7 +818,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.storage-room",
       "name": "Storage Room Floor Area (Other)",
-      "translation": {
+      "locales": {
         "de": "Abstellraumfläche (Sonstige)"
       },
       "description": "Floor area for general storage rooms and utility spaces.",
@@ -830,7 +830,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.vehicle-parking",
       "name": "Vehicle Parking Floor Area",
-      "translation": {
+      "locales": {
         "de": "Fahrzeugabstellfläche"
       },
       "description": "Floor area for vehicle parking and garage spaces.",
@@ -842,7 +842,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.passenger",
       "name": "Passenger Floor Area",
-      "translation": {
+      "locales": {
         "de": "Personenverkehrsfläche"
       },
       "description": "Floor area for passenger circulation and transit spaces.",
@@ -854,7 +854,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.central-technical",
       "name": "Central Technical Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Zentraler Technikraum"
       },
       "description": "Floor area for central technical rooms and equipment spaces.",
@@ -866,7 +866,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.protective-room",
       "name": "Protective Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Schutzraumfläche"
       },
       "description": "Floor area for protective rooms and secure spaces.",
@@ -878,7 +878,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.laundry",
       "name": "Laundry Room Floor Area",
-      "translation": {
+      "locales": {
         "de": "Wäschereiraumfläche"
       },
       "description": "Floor area for laundry rooms and cleaning facilities.",
@@ -890,7 +890,7 @@
     {
       "key": "semio.area.floor.gross.net.usable.other.miscellaneous",
       "name": "Other Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Nutzungsfläche"
       },
       "description": "Floor area for other miscellaneous usable spaces.",
@@ -902,7 +902,7 @@
     {
       "key": "semio.area.floor.gross.net.technical",
       "name": "Technical Floor Area",
-      "translation": {
+      "locales": {
         "de": "Technikfläche"
       },
       "description": "Floor area designated for technical installations and building services.",
@@ -915,7 +915,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.wastewater-gas-water-supply",
       "name": "Wastewater Gases Water Supply Floor Area",
-      "translation": {
+      "locales": {
         "de": "Abwasser-, Gas- und Wasserversorgung"
       },
       "description": "Floor area for wastewater, gas and water supply systems.",
@@ -927,7 +927,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.heating-hot-water",
       "name": "Heating Hot Water Floor Area",
-      "translation": {
+      "locales": {
         "de": "Heizung und Warmwasser"
       },
       "description": "Floor area for heating and hot water systems.",
@@ -939,7 +939,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.ventilation-air-conditioning",
       "name": "Ventilation Air Conditioning Floor Area",
-      "translation": {
+      "locales": {
         "de": "Lüftung und Klimatisierung"
       },
       "description": "Floor area for ventilation and air conditioning systems.",
@@ -951,7 +951,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.electrical-power-supply",
       "name": "Electrical Power Supply Floor Area",
-      "translation": {
+      "locales": {
         "de": "Stromversorgung"
       },
       "description": "Floor area for electrical power supply systems.",
@@ -963,7 +963,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.telecommunications",
       "name": "Telecommunications Floor Area",
-      "translation": {
+      "locales": {
         "de": "Telekommunikation"
       },
       "description": "Floor area for telecommunications and IT systems.",
@@ -975,7 +975,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.elevator-conveyor-systems",
       "name": "Elevator Conveyor Systems Floor Area",
-      "translation": {
+      "locales": {
         "de": "Aufzugs- und Förderanlagen"
       },
       "description": "Floor area for elevator and conveyor systems.",
@@ -987,7 +987,7 @@
     {
       "key": "semio.area.floor.gross.net.technical.other",
       "name": "Other Technical Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Technikfläche"
       },
       "description": "Floor area for other technical systems not classified elsewhere.",
@@ -999,7 +999,7 @@
     {
       "key": "semio.area.floor.gross.net.circulation",
       "name": "Circulation Floor Area",
-      "translation": {
+      "locales": {
         "de": "Verkehrsfläche"
       },
       "description": "Floor area designated for circulation and movement within the building.",
@@ -1012,7 +1012,7 @@
     {
       "key": "semio.area.floor.gross.net.circulation.corridor-hall",
       "name": "Corridor Hall Floor Area",
-      "translation": {
+      "locales": {
         "de": "Flur und Halle"
       },
       "description": "Floor area for corridors, hallways and entrance halls.",
@@ -1024,7 +1024,7 @@
     {
       "key": "semio.area.floor.gross.net.circulation.stair",
       "name": "Stair Floor Area",
-      "translation": {
+      "locales": {
         "de": "Treppenraum"
       },
       "description": "Floor area for stairways and stair landings.",
@@ -1036,7 +1036,7 @@
     {
       "key": "semio.area.floor.gross.net.circulation.shaft-conveyor",
       "name": "Shaft For Conveyor System Floor Area",
-      "translation": {
+      "locales": {
         "de": "Schacht für Förderanlage"
       },
       "description": "Floor area for shafts and conveyor system spaces.",
@@ -1048,7 +1048,7 @@
     {
       "key": "semio.area.floor.gross.net.circulation.vehicle-traffic",
       "name": "Vehicle Traffic Floor Area",
-      "translation": {
+      "locales": {
         "de": "Fahrzeugverkehr"
       },
       "description": "Floor area for vehicle traffic and internal roads.",
@@ -1060,7 +1060,7 @@
     {
       "key": "semio.area.floor.gross.net.circulation.other",
       "name": "Other Circulation Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Verkehrsfläche"
       },
       "description": "Floor area for other circulation spaces not classified elsewhere.",
@@ -1072,7 +1072,7 @@
     {
       "key": "semio.area.floor.gross.construction",
       "name": "Construction Floor Area",
-      "translation": {
+      "locales": {
         "de": "Konstruktions-Grundfläche"
       },
       "description": "Floor area occupied by structural construction elements.",
@@ -1085,7 +1085,7 @@
     {
       "key": "semio.area.floor.gross.construction.exterior-wall",
       "name": "Exterior Wall Construction Floor Area",
-      "translation": {
+      "locales": {
         "de": "Außenwandkonstruktion"
       },
       "description": "Floor area occupied by exterior wall construction.",
@@ -1097,7 +1097,7 @@
     {
       "key": "semio.area.floor.gross.construction.interior-wall",
       "name": "Interior Wall Construction Floor Area",
-      "translation": {
+      "locales": {
         "de": "Innenwandkonstruktion"
       },
       "description": "Floor area occupied by interior wall construction.",
@@ -1109,7 +1109,7 @@
     {
       "key": "semio.area.floor.gross.construction.partition-wall",
       "name": "Partition Wall Floor Area",
-      "translation": {
+      "locales": {
         "de": "Trennwandausbildung"
       },
       "description": "Floor area occupied by partition walls and dividers.",
@@ -1121,7 +1121,7 @@
     {
       "key": "semio.area.floor.gross.construction.column",
       "name": "Column Floor Area",
-      "translation": {
+      "locales": {
         "de": "Stütze"
       },
       "description": "Floor area occupied by columns and supports.",
@@ -1133,7 +1133,7 @@
     {
       "key": "semio.area.floor.gross.construction.shaft",
       "name": "Shaft Floor Area",
-      "translation": {
+      "locales": {
         "de": "Schacht"
       },
       "description": "Floor area occupied by structural shafts.",
@@ -1145,7 +1145,7 @@
     {
       "key": "semio.area.floor.gross.construction.beam",
       "name": "Beam Floor Area",
-      "translation": {
+      "locales": {
         "de": "Träger"
       },
       "description": "Floor area occupied by structural beams.",
@@ -1157,7 +1157,7 @@
     {
       "key": "semio.area.floor.gross.construction.other",
       "name": "Other Construction Floor Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Konstruktionsfläche"
       },
       "description": "Floor area occupied by other construction elements not classified elsewhere.",
@@ -1169,7 +1169,7 @@
     {
       "key": "semio.area.floor.property",
       "name": "Property Area",
-      "translation": {
+      "locales": {
         "de": "Grundstücksfläche"
       },
       "description": "Total area of the property including built and unbuilt areas.",
@@ -1182,7 +1182,7 @@
     {
       "key": "semio.area.floor.property.built",
       "name": "Built Up Area",
-      "translation": {
+      "locales": {
         "de": "Bebaute Fläche"
       },
       "description": "Area of the property that is built up with structures.",
@@ -1194,7 +1194,7 @@
     {
       "key": "semio.area.floor.property.unbuilt",
       "name": "Unbuilt Area",
-      "translation": {
+      "locales": {
         "de": "Unbebaute Fläche"
       },
       "description": "Area of the property that is not built up with structures.",
@@ -1207,7 +1207,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility",
       "name": "Outdoor Facility Area",
-      "translation": {
+      "locales": {
         "de": "Außenanlagenfläche"
       },
       "description": "Area designated for outdoor facilities and infrastructure.",
@@ -1220,7 +1220,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.traffic",
       "name": "Traffic Area",
-      "translation": {
+      "locales": {
         "de": "Verkehrsfläche"
       },
       "description": "Area designated for vehicular traffic and transportation.",
@@ -1232,7 +1232,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.sidewalk",
       "name": "Sidewalk Area",
-      "translation": {
+      "locales": {
         "de": "Gehwegfläche"
       },
       "description": "Area designated for sidewalks and pedestrian walkways.",
@@ -1244,7 +1244,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.driveway",
       "name": "Driveway Area",
-      "translation": {
+      "locales": {
         "de": "Zufahrtsfläche"
       },
       "description": "Area designated for driveways and vehicle access roads.",
@@ -1256,7 +1256,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.parking-space",
       "name": "Parking Space Area",
-      "translation": {
+      "locales": {
         "de": "Stellplatzfläche"
       },
       "description": "Area designated for parking spaces and vehicle storage.",
@@ -1268,7 +1268,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.bicycle-parking",
       "name": "Bicycle Parking Area",
-      "translation": {
+      "locales": {
         "de": "Fahrradabstellfläche"
       },
       "description": "Area designated for bicycle parking and storage.",
@@ -1280,7 +1280,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.turning",
       "name": "Turning Area",
-      "translation": {
+      "locales": {
         "de": "Wendeplatzfläche"
       },
       "description": "Area designated for vehicle turning and maneuvering.",
@@ -1292,7 +1292,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.outdoor-facility.other-traffic",
       "name": "Other Traffic Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Verkehrsfläche"
       },
       "description": "Area for other traffic-related facilities not classified elsewhere.",
@@ -1304,7 +1304,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green",
       "name": "Green Area",
-      "translation": {
+      "locales": {
         "de": "Grünfläche"
       },
       "description": "Area designated for green spaces and vegetation.",
@@ -1317,7 +1317,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.lawn",
       "name": "Lawn Area",
-      "translation": {
+      "locales": {
         "de": "Rasenfläche"
       },
       "description": "Area covered with lawn and grass surfaces.",
@@ -1329,7 +1329,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.plant-bed",
       "name": "Planted Bed Area",
-      "translation": {
+      "locales": {
         "de": "Pflanzbeetfläche"
       },
       "description": "Area designated for planted beds and flower gardens.",
@@ -1341,7 +1341,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.hedge",
       "name": "Hedge Area",
-      "translation": {
+      "locales": {
         "de": "Heckenfläche"
       },
       "description": "Area covered with hedges and shrub borders.",
@@ -1353,7 +1353,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.tree",
       "name": "Tree Area",
-      "translation": {
+      "locales": {
         "de": "Baumfläche"
       },
       "description": "Area designated for trees and tree canopy coverage.",
@@ -1365,7 +1365,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.roof-greening",
       "name": "Roof Greening Area",
-      "translation": {
+      "locales": {
         "de": "Dachbegrünungsfläche"
       },
       "description": "Area of roof surfaces with green vegetation coverage.",
@@ -1377,7 +1377,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.facade-greening",
       "name": "Facade Greening Area",
-      "translation": {
+      "locales": {
         "de": "Fassadenbegrünungsfläche"
       },
       "description": "Area of facade surfaces with green vegetation coverage.",
@@ -1389,7 +1389,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.green.other",
       "name": "Other Green Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Grünfläche"
       },
       "description": "Area for other green spaces not classified elsewhere.",
@@ -1401,7 +1401,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved",
       "name": "Paved Area",
-      "translation": {
+      "locales": {
         "de": "Befestigte Fläche"
       },
       "description": "Area with paved or hard surface treatments.",
@@ -1414,7 +1414,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved.terrace",
       "name": "Terrace Area",
-      "translation": {
+      "locales": {
         "de": "Terrassenfläche"
       },
       "description": "Area designated for terraces and outdoor decking.",
@@ -1426,7 +1426,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved.balcony",
       "name": "Balcony Area",
-      "translation": {
+      "locales": {
         "de": "Balkonfläche"
       },
       "description": "Area designated for balconies and elevated outdoor spaces.",
@@ -1438,7 +1438,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved.courtyard",
       "name": "Courtyard Area",
-      "translation": {
+      "locales": {
         "de": "Hoffläche"
       },
       "description": "Area designated for courtyards and enclosed outdoor spaces.",
@@ -1450,7 +1450,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved.storage-utility",
       "name": "Storage Utility Area",
-      "translation": {
+      "locales": {
         "de": "Lager- und Nutzfläche"
       },
       "description": "Paved area designated for storage and utility purposes.",
@@ -1462,7 +1462,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved.playground",
       "name": "Playground Area",
-      "translation": {
+      "locales": {
         "de": "Spielplatzfläche"
       },
       "description": "Area designated for playgrounds and recreational activities.",
@@ -1474,7 +1474,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.paved.other",
       "name": "Other Paved Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige befestigte Fläche"
       },
       "description": "Area for other paved surfaces not classified elsewhere.",
@@ -1486,7 +1486,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility",
       "name": "Technical Facility Area",
-      "translation": {
+      "locales": {
         "de": "Technische Anlagenfläche"
       },
       "description": "Area designated for technical facilities and outdoor installations.",
@@ -1499,7 +1499,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility.waste-collection",
       "name": "Waste Collection Point Area",
-      "translation": {
+      "locales": {
         "de": "Müllsammelplatzfläche"
       },
       "description": "Area designated for waste collection and disposal facilities.",
@@ -1511,7 +1511,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility.utility-line",
       "name": "Utility Line Area",
-      "translation": {
+      "locales": {
         "de": "Versorgungsleitungsfläche"
       },
       "description": "Area occupied by utility lines and service corridors.",
@@ -1523,7 +1523,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility.stormwater-management",
       "name": "Stormwater Management Area",
-      "translation": {
+      "locales": {
         "de": "Regenwasserbewirtschaftungsfläche"
       },
       "description": "Area designated for stormwater management and drainage systems.",
@@ -1535,7 +1535,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility.lighting-system",
       "name": "Lighting System Area",
-      "translation": {
+      "locales": {
         "de": "Beleuchtungsanlagenfläche"
       },
       "description": "Area occupied by outdoor lighting systems and installations.",
@@ -1547,7 +1547,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility.fence",
       "name": "Fence Enclosure Area",
-      "translation": {
+      "locales": {
         "de": "Zaun- und Einfriedungsfläche"
       },
       "description": "Area occupied by fencing and enclosure systems.",
@@ -1559,7 +1559,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.technical-facility.other",
       "name": "Other Technical Facility Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige technische Anlagenfläche"
       },
       "description": "Area for other technical facilities not classified elsewhere.",
@@ -1571,7 +1571,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.water",
       "name": "Water Area",
-      "translation": {
+      "locales": {
         "de": "Wasserfläche"
       },
       "description": "Area designated for water features and aquatic installations.",
@@ -1584,7 +1584,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.water.pond",
       "name": "Pond Area",
-      "translation": {
+      "locales": {
         "de": "Teichfläche"
       },
       "description": "Area designated for ponds and decorative water bodies.",
@@ -1596,7 +1596,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.water.fountain",
       "name": "Fountain Area",
-      "translation": {
+      "locales": {
         "de": "Brunnenfläche"
       },
       "description": "Area designated for fountains and water features.",
@@ -1608,7 +1608,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.water.stormwater-retention",
       "name": "Stormwater Retention Area",
-      "translation": {
+      "locales": {
         "de": "Regenwasserrückhaltefläche"
       },
       "description": "Area designated for stormwater retention and management.",
@@ -1620,7 +1620,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.water.other",
       "name": "Other Water Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Wasserfläche"
       },
       "description": "Area for other water features not classified elsewhere.",
@@ -1632,7 +1632,7 @@
     {
       "key": "semio.area.floor.property.unbuilt.other-outdoor",
       "name": "Other Outdoor Facility Area",
-      "translation": {
+      "locales": {
         "de": "Sonstige Außenanlagenfläche"
       },
       "description": "Area for other outdoor facilities not classified elsewhere.",

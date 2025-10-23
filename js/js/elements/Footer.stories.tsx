@@ -51,22 +51,37 @@ export const Default: Story = {
 export const WithIcons: Story = {
   args: {
     items: [
-      { 
-        id: "success", 
-        content: <div className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /><span>Success</span></div>, 
-        tooltip: "Operation completed", 
-        order: 0 
+      {
+        id: "success",
+        content: (
+          <div className="flex items-center gap-1">
+            <CheckCircle2 size={14} className="text-green-500" />
+            <span>Success</span>
+          </div>
+        ),
+        tooltip: "Operation completed",
+        order: 0,
       },
-      { 
-        id: "warning", 
-        content: <div className="flex items-center gap-1"><AlertCircle size={14} className="text-yellow-500" /><span>2 warnings</span></div>, 
-        tooltip: "Click to view warnings", 
-        order: 1 
+      {
+        id: "warning",
+        content: (
+          <div className="flex items-center gap-1">
+            <AlertCircle size={14} className="text-yellow-500" />
+            <span>2 warnings</span>
+          </div>
+        ),
+        tooltip: "Click to view warnings",
+        order: 1,
       },
-      { 
-        id: "time", 
-        content: <div className="flex items-center gap-1"><Clock size={14} /><span>2:30 PM</span></div>, 
-        order: 2 
+      {
+        id: "time",
+        content: (
+          <div className="flex items-center gap-1">
+            <Clock size={14} />
+            <span>2:30 PM</span>
+          </div>
+        ),
+        order: 2,
       },
     ],
     height: 24,
@@ -75,18 +90,14 @@ export const WithIcons: Story = {
 
 export const Minimal: Story = {
   args: {
-    items: [
-      { id: "info", content: "Application v1.0.0", order: 0 },
-    ],
+    items: [{ id: "info", content: "Application v1.0.0", order: 0 }],
     height: 20,
   },
 };
 
 export const Hidden: Story = {
   args: {
-    items: [
-      { id: "status", content: "Hidden footer", order: 0 },
-    ],
+    items: [{ id: "status", content: "Hidden footer", order: 0 }],
     height: 20,
     isVisible: false,
   },

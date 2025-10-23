@@ -59,7 +59,6 @@ export interface PanelProps {
   opacity?: number;
 }
 
-
 const Panel: FC<PanelProps> = ({
   visible = true,
   onSizeChange,
@@ -145,9 +144,7 @@ const Panel: FC<PanelProps> = ({
         </div>
         {footer}
       </ScrollArea>
-      {onSizeChange && (
-        <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />
-      )}
+      {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
     </div>
   );
 };

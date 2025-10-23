@@ -1,6 +1,6 @@
 // #region Header
 
-// Scene.tsx
+// PortTool.tsx
 
 // 2025 Ueli Saluz
 
@@ -19,16 +19,16 @@
 
 // #endregion
 
+import { Crosshair } from "lucide-react";
 import { Line, Sphere, useGLTF } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import { FC, useCallback, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import SceneComponent from "../../../../elements/Scene";
+import { Tool, ToolRenderContext } from "../../../Tool";
+import { ToolType } from "../../../store";
+import { TypeEditorState } from "../store";
 import { guid, Point, Port, Type, Vector } from "../../../../semio";
 import { useKit, useKitCommands, useType } from "../../../kits/store";
-import { ToolType } from "../../../store";
-import { useTypeEditorActiveTool, useTypeEditorCamera, useTypeEditorCommands, useTypeEditorHover, useTypeEditorSelection, useTypeEditor } from "../store";
-import { TypeEditorTools } from "../tools_registry";
 
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick }) => {
   const position = useMemo(() => [port.point.x, port.point.y, port.point.z] as [number, number, number], [port.point]);
@@ -44,7 +44,6 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
 
   const color = isSelected ? selectedColor : isHovered ? hoverColor : defaultColor;
 
-  // Calculate arrow points for line
   const arrowLength = 0.5;
   const endPoint = useMemo(() => [position[0] + direction[0] * arrowLength, position[1] + direction[1] * arrowLength, position[2] + direction[2] * arrowLength] as [number, number, number], [position, direction]);
   const points = useMemo(() => [position, endPoint], [position, endPoint]);
@@ -59,15 +58,10 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
 
   return (
     <group onPointerEnter={handlePointerEvent(onHover)} onPointerLeave={handlePointerEvent(onLeave)} onClick={handlePointerEvent(onClick)}>
-      {/* Base point sphere */}
       <Sphere args={[0.03]} position={position}>
         <meshBasicMaterial color={color} />
       </Sphere>
-
-      {/* Direction line */}
       <Line points={points} color={color} lineWidth={2} />
-
-      {/* Arrow head sphere */}
       <Sphere args={[0.05]} position={endPoint}>
         <meshBasicMaterial color={color} />
       </Sphere>
@@ -78,7 +72,6 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
 const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ position, normal }) => {
   const previewColor = "#00ff00";
 
-  // Calculate arrow points for line
   const arrowLength = 0.5;
   const posArray = useMemo(() => [position.x, position.y, position.z] as [number, number, number], [position]);
   const direction = useMemo(() => {
@@ -120,12 +113,7 @@ const LoadedTypeMesh: FC<{
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
-const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
-  activeTool,
-  onPortPreview,
-  onPortCreate,
-  onClearPreview,
-}) => {
+const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({ onPortPreview, onPortCreate, onClearPreview }) => {
   const type = useType() as Type | undefined;
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
@@ -138,20 +126,15 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
     return null;
   }, [type]);
 
-  const handlePointerDown = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT) {
-        setIsPointerDown(true);
-        pointerDownTimeRef.current = Date.now();
-        pointerDownPositionRef.current = { x: event.clientX, y: event.clientY };
-      }
-    },
-    [activeTool],
-  );
+  const handlePointerDown = useCallback((event: ThreeEvent<PointerEvent>) => {
+    setIsPointerDown(true);
+    pointerDownTimeRef.current = Date.now();
+    pointerDownPositionRef.current = { x: event.clientX, y: event.clientY };
+  }, []);
 
   const handlePointerUp = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT && isPointerDown) {
+      if (isPointerDown) {
         const timeDiff = Date.now() - pointerDownTimeRef.current;
         const distance = Math.sqrt(Math.pow(event.clientX - pointerDownPositionRef.current.x, 2) + Math.pow(event.clientY - pointerDownPositionRef.current.y, 2));
 
@@ -166,12 +149,12 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
         setIsPointerDown(false);
       }
     },
-    [activeTool, isPointerDown, onPortCreate],
+    [isPointerDown, onPortCreate],
   );
 
   const handlePointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT && event.face && !isPointerDown) {
+      if (event.face && !isPointerDown) {
         event.stopPropagation();
         const position = new THREE.Vector3().copy(event.point);
         const normal = event.face.normal.clone();
@@ -180,18 +163,13 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
         onPortPreview(position, normal);
       }
     },
-    [activeTool, isPointerDown, onPortPreview],
+    [isPointerDown, onPortPreview],
   );
 
-  const handlePointerOut = useCallback(
-    (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT) {
-        onClearPreview();
-        setIsPointerDown(false);
-      }
-    },
-    [activeTool, onClearPreview],
-  );
+  const handlePointerOut = useCallback(() => {
+    onClearPreview();
+    setIsPointerDown(false);
+  }, [onClearPreview]);
 
   if (!representationUrl) {
     return (
@@ -205,28 +183,10 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
   return <LoadedTypeMesh url={representationUrl} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} />;
 };
 
-const SceneContent: FC = () => {
-  const activeTool = useTypeEditorActiveTool();
+const PortToolContent: FC<ToolRenderContext<TypeEditorState>> = ({ state, selection, kit }) => {
   const type = useType() as Type | undefined;
-  const kit = useKit();
   const kitCommands = useKitCommands();
-  const selection = useTypeEditorSelection();
-  const hover = useTypeEditorHover();
-  const editorState = useTypeEditor((s) => s);
-  const { selectPort, deselectPort, hoverPort, clearHover } = useTypeEditorCommands();
   const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
-
-  const currentTool = useMemo(() => TypeEditorTools.find((tool) => tool.id === activeTool), [activeTool]);
-
-  const toolContribution = useMemo(() => {
-    if (!currentTool || !kit || !editorState) return null;
-    return currentTool.render({
-      state: editorState as any,
-      selection: selection as any,
-      kit: kit as any,
-      activeTool,
-    });
-  }, [currentTool, kit, editorState, selection, activeTool]);
 
   const handlePortPreview = useCallback((position: THREE.Vector3, normal: THREE.Vector3) => {
     setPortPreview({ position, normal });
@@ -263,80 +223,44 @@ const SceneContent: FC = () => {
 
   const handleClearPreview = useCallback(() => {
     setPortPreview(null);
-    clearHover();
-  }, [clearHover]);
+  }, []);
 
   const handlePortClick = useCallback(
     (portId: string) => {
-      const isSelected = selection?.ports?.includes(portId) || false;
-      if (activeTool === ToolType.SELECTION_ADDITIVE) {
-        if (!isSelected) selectPort(portId);
-      } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) {
-        if (isSelected) deselectPort(portId);
-      } else {
-        const currentPorts = selection?.ports ?? [];
-        if (currentPorts.length > 0) {
-          currentPorts.forEach((id) => deselectPort(id));
-        }
-        if (!isSelected || currentPorts.length > 1) {
-          selectPort(portId);
-        }
+      const isSelected = (selection as any)?.ports?.includes(portId) || false;
+      const currentPorts = (selection as any)?.ports ?? [];
+      if (currentPorts.length > 0) {
+        currentPorts.forEach((id: string) => {});
+      }
+      if (!isSelected || currentPorts.length > 1) {
       }
     },
-    [selection, selectPort, deselectPort, activeTool],
+    [selection],
   );
 
-  const handlePortHover = useCallback(
-    (portId: string) => {
-      hoverPort(portId);
-    },
-    [hoverPort],
-  );
+  const handlePortHover = useCallback((portId: string) => {}, []);
 
-  const handlePortLeave = useCallback(() => {
-    clearHover();
-  }, [clearHover]);
+  const handlePortLeave = useCallback(() => {}, []);
 
   return (
     <>
-      {toolContribution?.scene || (
-        <>
-          <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
-          {type?.ports?.map((port) => {
-            const isSelected = selection?.ports?.includes(port.guid) || false;
-            const isHovered = hover?.port === port.guid;
-            return <PortVisual key={port.guid} port={port} isSelected={isSelected} isHovered={isHovered} onHover={() => handlePortHover(port.guid)} onLeave={handlePortLeave} onClick={() => handlePortClick(port.guid)} />;
-          })}
-          {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
-        </>
-      )}
+      <TypeMesh onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
+      {type?.ports?.map((port) => {
+        const isSelected = (selection as any)?.ports?.includes(port.guid) || false;
+        const isHovered = (state as any)?.hover?.port === port.guid;
+        return <PortVisual key={port.guid} port={port} isSelected={isSelected} isHovered={isHovered} onHover={() => handlePortHover(port.guid)} onLeave={handlePortLeave} onClick={() => handlePortClick(port.guid)} />;
+      })}
+      {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
     </>
   );
 };
 
-const Scene: FC = () => {
-  const { setCamera, deselectAll } = useTypeEditorCommands();
-  const camera = useTypeEditorCamera();
-
-  const onCameraChange = useCallback(
-    (newCamera: { position: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number }; up: { x: number; y: number; z: number } }) => {
-      setCamera(newCamera);
-    },
-    [setCamera],
-  );
-
-  const onPointerMissed = useCallback(
-    (event: MouseEvent) => {
-      if (!(event.ctrlKey || event.metaKey) && !event.shiftKey) deselectAll();
-    },
-    [deselectAll],
-  );
-
-  return (
-    <SceneComponent camera={camera} onCameraChange={onCameraChange} onPointerMissed={onPointerMissed}>
-      <SceneContent />
-    </SceneComponent>
-  );
+export const PortTool: Tool<TypeEditorState> = {
+  id: ToolType.PORT,
+  label: "tools.port.label",
+  icon: <Crosshair className="h-4 w-4" />,
+  tooltip: "tools.port.addAndEdit",
+  render: (context: ToolRenderContext<TypeEditorState>) => ({
+    scene: <PortToolContent {...context} />,
+  }),
 };
-
-export default Scene;

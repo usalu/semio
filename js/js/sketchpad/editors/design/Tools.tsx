@@ -19,59 +19,36 @@
 
 // #endregion
 
-import { Lasso, Minus, MousePointer2, Plus, Square } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
 import { useDesignEditorCommands, useDesignEditorSafe } from "./store";
+import { DesignEditorTools } from "./tools_registry";
 
 const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolType.SELECTION_NORMAL,
-    modes: [
-      {
-        id: ToolType.SELECTION_NORMAL,
-        label: t("tools.selection.normal"),
-        icon: <MousePointer2 className="h-4 w-4" />,
-        tooltip: t("tools.selection.selectPieces"),
-        hotkey: "Click",
-      },
-      {
-        id: ToolType.SELECTION_ADDITIVE,
-        label: t("tools.selection.additive"),
-        icon: <Plus className="h-4 w-4" />,
-        tooltip: t("tools.selection.addToSelection"),
-        hotkey: "Shift",
-      },
-      {
-        id: ToolType.SELECTION_SUBTRACTIVE,
-        label: t("tools.selection.subtractive"),
-        icon: <Minus className="h-4 w-4" />,
-        tooltip: t("tools.selection.removeFromSelection"),
-        hotkey: "Ctrl",
-      },
-    ],
+    modes: DesignEditorTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
+      id: tool.id,
+      label: t(tool.label),
+      icon: tool.icon,
+      tooltip: tool.tooltip ? t(tool.tooltip) : undefined,
+      hotkey: tool.hotkey,
+    })),
   },
   {
     id: "lasso",
     defaultMode: ToolType.LASSO_RECTANGULAR,
-    modes: [
-      {
-        id: ToolType.LASSO_RECTANGULAR,
-        label: t("tools.lasso.rectangular"),
-        icon: <Square className="h-4 w-4" />,
-        tooltip: t("tools.lasso.rectangular.extensive"),
-      },
-      {
-        id: ToolType.LASSO_FREEFORM,
-        label: t("tools.lasso.freeform"),
-        icon: <Lasso className="h-4 w-4" />,
-        tooltip: t("tools.lasso.freeform.extensive"),
-      },
-    ],
+    modes: DesignEditorTools.filter((tool) => tool.id.startsWith("lasso")).map((tool) => ({
+      id: tool.id,
+      label: t(tool.label),
+      icon: tool.icon,
+      tooltip: tool.tooltip ? t(tool.tooltip) : undefined,
+      hotkey: tool.hotkey,
+    })),
   },
 ];
 

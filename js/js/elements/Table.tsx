@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { FC, ReactNode, ReactElement } from "react";
+import { ReactElement, ReactNode } from "react";
 import { ScrollArea } from "./aggregation/ScrollArea";
 
 export interface TableColumn<T = unknown> {
@@ -61,12 +61,7 @@ const Table = <T,>({ columns, data, onRowClick, onRowDoubleClick, rowClassName, 
           </tr>
         ) : (
           data.map((row, index) => (
-            <tr
-              key={index}
-              className={`border-b hover:bg-panel cursor-pointer ${rowClassName ? rowClassName(row, index) : ""}`}
-              onClick={() => onRowClick?.(row, index)}
-              onDoubleClick={() => onRowDoubleClick?.(row, index)}
-            >
+            <tr key={index} className={`border-b hover:bg-panel cursor-pointer ${rowClassName ? rowClassName(row, index) : ""}`} onClick={() => onRowClick?.(row, index)} onDoubleClick={() => onRowDoubleClick?.(row, index)}>
               {columns.map((column) => (
                 <td key={column.id} className={`p-2 text-sm ${column.className || ""}`}>
                   {column.accessor(row)}

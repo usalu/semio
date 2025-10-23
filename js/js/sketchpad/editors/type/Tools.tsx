@@ -19,53 +19,36 @@
 
 // #endregion
 
-import { Crosshair, Minus, MousePointer2, Plus } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
 import { useTypeEditorCommands, useTypeEditorSafe } from "./store";
+import { TypeEditorTools } from "./tools_registry";
 
 const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolType.SELECTION_NORMAL,
-    modes: [
-      {
-        id: ToolType.SELECTION_NORMAL,
-        label: t("tools.selection.normal"),
-        icon: <MousePointer2 className="h-4 w-4" />,
-        tooltip: t("tools.selection.selectPorts"),
-        hotkey: "Click",
-      },
-      {
-        id: ToolType.SELECTION_ADDITIVE,
-        label: t("tools.selection.additive"),
-        icon: <Plus className="h-4 w-4" />,
-        tooltip: t("tools.selection.addToSelection"),
-        hotkey: "Shift",
-      },
-      {
-        id: ToolType.SELECTION_SUBTRACTIVE,
-        label: t("tools.selection.subtractive"),
-        icon: <Minus className="h-4 w-4" />,
-        tooltip: t("tools.selection.removeFromSelection"),
-        hotkey: "Ctrl",
-      },
-    ],
+    modes: TypeEditorTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
+      id: tool.id,
+      label: t(tool.label),
+      icon: tool.icon,
+      tooltip: tool.tooltip ? t(tool.tooltip) : undefined,
+      hotkey: tool.hotkey,
+    })),
   },
   {
     id: "port",
     defaultMode: ToolType.PORT,
-    modes: [
-      {
-        id: ToolType.PORT,
-        label: t("tools.port.label"),
-        icon: <Crosshair className="h-4 w-4" />,
-        tooltip: t("tools.port.addAndEdit"),
-      },
-    ],
+    modes: TypeEditorTools.filter((tool) => tool.id === ToolType.PORT).map((tool) => ({
+      id: tool.id,
+      label: t(tool.label),
+      icon: tool.icon,
+      tooltip: tool.tooltip ? t(tool.tooltip) : undefined,
+      hotkey: tool.hotkey,
+    })),
   },
 ];
 

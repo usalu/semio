@@ -1,6 +1,6 @@
 // #region Header
 
-// PanelGroup.tsx
+// index.tsx
 
 // 2025 Ueli Saluz
 
@@ -19,18 +19,11 @@
 
 // #endregion
 
-import { FC, ReactNode } from "react";
+import { Tool } from "../../../Tool";
+import { TypeEditorState } from "../store";
+import { SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool } from "./SelectionTool";
+import { PortTool } from "./PortTool";
 
-export interface PanelGroupProps {
-  children: ReactNode;
-  className?: string;
-  position?: "left" | "right" | "middle" | "bottom";
-}
+export const TypeEditorTools: Tool<TypeEditorState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, PortTool];
 
-const PanelGroup: FC<PanelGroupProps> = ({ children, className = "", position = "middle" }) => {
-  const baseClass = "flex";
-  const positionClass = position === "left" || position === "right" || position === "middle" ? "flex-col" : "flex-row";
-  return <div className={`${baseClass} ${positionClass} ${className}`}>{children}</div>;
-};
-
-export default PanelGroup;
+export { SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, PortTool };

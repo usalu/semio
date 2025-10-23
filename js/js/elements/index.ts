@@ -1,11 +1,10 @@
 export { default as Navbar } from "./Navbar";
-export type { NavbarProps, NavbarItem } from "./Navbar";
+export type { NavbarItem, NavbarProps } from "./Navbar";
 
 export { default as Footer } from "./Footer";
-export type { FooterProps, FooterItem } from "./Footer";
+export type { FooterItem, FooterProps } from "./Footer";
 
-export { Canvas, Window, HorizontalWindows, VerticalWindows, useCanvasContext } from "./Canvas";
-export { WindowLayout } from "./Canvas";
+export { Canvas, HorizontalWindows, useCanvasContext, VerticalWindows, Window, WindowLayout } from "./Canvas";
 export type { WindowConfig } from "./Canvas";
 
 export { default as Panel } from "./panels/Panel";
@@ -27,9 +26,10 @@ export { default as PanelGroup } from "./panels/PanelGroup";
 export type { PanelGroupProps } from "./panels/PanelGroup";
 
 export { default as Table } from "./Table";
-export type { TableProps, TableColumn } from "./Table";
+export type { TableColumn, TableProps } from "./Table";
 
 export { default as Scene } from "./Scene";
 
 export { default as Layout } from "./Layout";
 export type { LayoutProps } from "./Layout";
+

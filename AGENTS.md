@@ -370,6 +370,10 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── tools_registry
+│ │ │ │ │ │ ├── index.tsx
+│ │ │ │ │ │ ├── LassoTool.tsx
+│ │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
 │ │ │ │ │ ├── store.tsx
@@ -396,6 +400,10 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ ├── tools_registry
+│ │ │ │ │ ├── index.tsx
+│ │ │ │ │ ├── PortTool.tsx
+│ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ ├── commands.ts
 │ │ │ │ ├── Editor.tsx
 │ │ │ │ ├── store.tsx

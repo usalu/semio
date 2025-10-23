@@ -64,10 +64,15 @@ const Panel: FC<PanelProps> = ({
   const wrappedSections = ScopeWrapper
     ? sections.map((section) => ({
         ...section,
-        content: typeof section.content === "function" ? (() => {
-          const ContentFn = section.content as () => ReactNode;
-          return () => <ScopeWrapper>{ContentFn()}</ScopeWrapper>;
-        })() : <ScopeWrapper>{section.content}</ScopeWrapper>,
+        content:
+          typeof section.content === "function" ? (
+            (() => {
+              const ContentFn = section.content as () => ReactNode;
+              return () => <ScopeWrapper>{ContentFn()}</ScopeWrapper>;
+            })()
+          ) : (
+            <ScopeWrapper>{section.content}</ScopeWrapper>
+          ),
       }))
     : sections;
   return (

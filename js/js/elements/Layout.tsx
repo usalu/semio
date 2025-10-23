@@ -36,16 +36,7 @@ export interface LayoutProps {
   className?: string;
 }
 
-const Layout: FC<LayoutProps> = ({
-  navbar,
-  footer,
-  leftPanel,
-  middlePanel,
-  rightPanel,
-  bottomPanel,
-  canvas,
-  className = "",
-}) => (
+const Layout: FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel, rightPanel, bottomPanel, canvas, className = "" }) => (
   <div className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}>
     {navbar && <div className="flex-shrink-0">{navbar}</div>}
     <div className="flex flex-1 min-h-0">
