@@ -191,6 +191,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       <TogglePrimitive.Root data-slot="toggle" data-state={pressed ? "on" : "off"} className={cn(toggleVariants({ level }), "border gap-1 pr-1", className)} {...restProps}>
         {mainContent}
         <Action
+          as="div"
           level={level}
           className={pressed ? "bg-active-base text-active-foreground hover:bg-active-base" : undefined}
           onClick={(e) => {
@@ -264,6 +265,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       >
         {currentItem?.label && <span className="flex-1 flex items-center justify-center">{currentItem.label}</span>}
         <Action
+          as="div"
           level={level}
           className={pressed ? "bg-active-base text-active-foreground hover:bg-active-base" : undefined}
           onClick={(e) => {

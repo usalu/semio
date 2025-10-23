@@ -373,7 +373,7 @@ type PieceNodeInnerProps = {
 };
 
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
-  const { fill, stroke, opacity } = useDesignEditorPieceColor(undefined, piece.guid);
+  const { fill, stroke, opacity: colorOpacity } = useDesignEditorPieceColor(undefined, piece.guid);
 
   // Always call the hook to maintain hook order (Rules of Hooks)
   const diffedPiece = useDiffedPiece() as Piece;
@@ -404,9 +404,6 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
     } else if (port.guid) selectPiecePort(piece.guid, port.guid);
   };
 
-  const fillClass = fill === "transparent" ? "fill-transparent" : `fill-[${fill}]`;
-  const strokeClass = `stroke-[${stroke}] stroke-2`;
-
   // Calculate original position in pixels for the ghost node
   const originalPixelPos = hasCenterDiff
     ? {
@@ -417,9 +414,8 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
 
   return (
     <div
-      className="nodrag"
       style={{
-        opacity,
+        opacity: colorOpacity,
         cursor: "pointer",
         width: ICON_WIDTH,
         height: ICON_WIDTH,
@@ -450,8 +446,8 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
 
       {/* Current/diffed node */}
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button" style={{ pointerEvents: "all" }}>
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className={`${strokeClass} fill-transparent`} />}
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} style={{ fill, stroke, strokeWidth: 2 }} />
+        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} style={{ fill: "transparent", stroke, strokeWidth: 2 }} />}
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
           {piece.guid}
         </text>
@@ -644,7 +640,6 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
 
   return (
     <div
-      className="nodrag"
       style={{
         opacity,
         cursor: "pointer",
@@ -1190,14 +1185,20 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && dragState) {
+        // Abort the transaction and reset drag state
         abortTransaction();
         setDragState(null);
+        setHelperLines([]);
+
+        // Reset the node positions to their original state by triggering a re-render
+        // The transaction abort will have restored the data, we just need to update the UI
+        reactFlowInstance.setNodes((nodes) => nodes.map((node) => ({ ...node })));
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [dragState, abortTransaction]);
+  }, [dragState, abortTransaction, reactFlowInstance]);
 
   useEffect(() => {
     if (!viewportRestoredRef.current && savedDiagramCenter && savedDiagramScale !== undefined) {
@@ -1299,7 +1300,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeDrag = useCallback(
     (event: any, node: DiagramNode) => {
-      if (node.type !== "piece") return;
+      // Allow dragging for both piece and design nodes
       const piece = node.data.piece as Piece;
       const MIN_DISTANCE = 150;
       const SNAP_THRESHOLD = 20;
@@ -1320,13 +1321,39 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       let draggedY = node.position.y;
 
       for (const selectedNode of nodes.filter((n) => selection?.pieces?.includes(getPieceIdFromNode(n)))) {
-        if (selectedNode.type !== "piece") continue;
-        const piece = (selectedNode as PieceNode).data.piece;
+        const piece = selectedNode.data.piece;
+        const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!;
+
+        // Design nodes are moved without port snapping
+        if (selectedNode.type === "design") {
+          if (selectedNode.id === node.id) {
+            selectedInternalNode.internals.positionAbsolute.x = draggedX;
+            selectedInternalNode.internals.positionAbsolute.y = draggedY;
+            node.position.x = draggedX;
+            node.position.y = draggedY;
+          }
+
+          const scaledOffset = {
+            x: (draggedX - lastPostition.x) / ICON_WIDTH,
+            y: -(draggedY - lastPostition.y) / ICON_WIDTH,
+          };
+          updatedPieces.push({
+            id: piece.guid,
+            diff: {
+              center: {
+                x: (piece.center?.x ?? 0) + scaledOffset.x,
+                y: (piece.center?.y ?? 0) + scaledOffset.y,
+              },
+            },
+          });
+          continue;
+        }
+
+        // Handle piece nodes with port snapping
         const type = (selectedNode as PieceNode).data.type;
         const fixedPieceId = metadata.get(piece.guid)?.fixedPieceId;
         let closestConnection: SemioConnection | null = null;
         let closestDistance = Number.MAX_VALUE;
-        const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!;
 
         if (!altPressed) {
           const EQUAL_DISTANCE_THRESHOLD = 15;
@@ -1867,15 +1894,6 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     <div
       id="diagram"
       className="h-full w-full relative"
-      onClick={(e) => {
-        console.log("Outer div onClick", "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
-        if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("react-flow__pane")) {
-          console.log("Outer div - deselecting all");
-          if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-            deselectAll();
-          }
-        }
-      }}
     >
       <ReactFlow
         ref={setDroppableRef}

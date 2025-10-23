@@ -639,13 +639,10 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 export function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.guid ?? id?.kit;
-  if (!resolvedKitId) {
-    return null;
-  }
   const designScope = useDesignScope();
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
   const resolvedDesignId = designScope?.guid ?? id?.design;
-  if (!resolvedDesignId) {
+  if (!resolvedKitId || !resolvedDesignId) {
     return null;
   }
   const designEditorStore = store.designEditor(resolvedKitId, resolvedDesignId);

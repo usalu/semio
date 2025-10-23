@@ -405,13 +405,10 @@ const useQualityEditorScope = () => useContext(QualityEditorScopeContext);
 export function useQualityEditorStore<T>(selector?: (store: QualityEditorStore) => T, id?: QualityEditorId): T | QualityEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.guid ?? id?.kit;
-  if (!resolvedKitId) {
-    return null;
-  }
   const qualityScope = useQualityScope();
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
   const resolvedQualityId = qualityScope?.guid ?? id?.quality;
-  if (!resolvedQualityId) {
+  if (!resolvedKitId || !resolvedQualityId) {
     return null;
   }
   const qualityEditorStore = store.qualityEditor(resolvedKitId, resolvedQualityId);

@@ -130,7 +130,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   if (!hasChildren) {
     return (
       <div
-        className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 ${className}`}
+        className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-pointer ${className}`}
         style={{ paddingLeft: `${level * 0.75}rem` }}
         onPointerEnter={() => {
           setIsHovered(true);
@@ -177,7 +177,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
-          className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 ${className}`}
+          className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-pointer ${className}`}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           role="button"
           onPointerEnter={() => {
@@ -243,7 +243,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
     paddingLeft: `${level * 0.75}rem`,
   };
 
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group";
+  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group cursor-pointer";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -404,7 +404,7 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = Boolean(children);
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group";
+  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group cursor-pointer";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 

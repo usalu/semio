@@ -465,11 +465,10 @@ registerTypeEditorStoreFactory((parent, yMap, transact, id) => new TypeEditorSto
 export function useTypeEditorStore<T>(selector?: (store: TypeEditorStore) => T, id?: TypeEditorId): T | TypeEditorStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
-  const resolvedKitId = kitScope?.guid ?? id?.kit;
-  if (!resolvedKitId) return null;
   const typeScope = useTypeScope();
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
   const resolvedTypeId = typeScope?.guid ?? id?.type;
-  if (!resolvedTypeId) return null;
+  if (!resolvedKitId || !resolvedTypeId) return null;
   const typeEditorStore = store.typeEditor(resolvedKitId, resolvedTypeId);
   return selector ? selector(typeEditorStore) : typeEditorStore;
 }

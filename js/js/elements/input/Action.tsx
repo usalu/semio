@@ -52,13 +52,21 @@ type ActionProps = React.ComponentProps<"button"> &
   VariantProps<typeof actionVariants> & {
     tooltip?: string;
     hotkey?: string;
+    as?: "button" | "div";
   };
 
-function Action({ className, variant, level, tooltip, hotkey, children, ...props }: ActionProps) {
+function Action({ className, variant, level, tooltip, hotkey, children, as: Component = "button", ...props }: ActionProps) {
   const buttonElement = (
-    <button data-slot="action" type="button" className={cn(actionVariants({ variant, level }), className)} {...props}>
+    <Component
+      data-slot="action"
+      type={Component === "button" ? "button" : undefined}
+      role={Component === "div" ? "button" : undefined}
+      tabIndex={Component === "div" ? 0 : undefined}
+      className={cn(actionVariants({ variant, level }), className)}
+      {...(props as any)}
+    >
       {children}
-    </button>
+    </Component>
   );
 
   if (tooltip) {
