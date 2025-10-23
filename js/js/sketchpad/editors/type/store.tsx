@@ -267,7 +267,7 @@ class TypeEditorStore extends KitDiffEditorStore<TypeEditorState, TypeEditorDiff
       canRedo: this.canRedo(),
       presence: this.presence,
       others: this.others,
-      diff: this.diff,
+      // diff: this.diff, // TODO: TypeEditorState doesn't have a diff property
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
       camera: this.camera,

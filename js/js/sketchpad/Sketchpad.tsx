@@ -19,18 +19,15 @@
 
 // #endregion
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { createContext, FC, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, FC, Fragment, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../elements/display/Tooltip";
 
 import { Design, Type } from "../semio";
-import DesignEditor from "./editors/design/Editor";
 import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
-import Home from "./editors/home/Editor";
-import KitEditor from "./editors/kit/Editor";
-import QualityEditor from "./editors/quality/Editor";
-import TypeEditor from "./editors/type/Editor";
+import "./editors";
+import { editorRegistry } from "./editors";
 import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
@@ -91,53 +88,70 @@ export interface ResizablePanelProps {
   width: number;
 }
 
-const KitRoute: FC = () => {
-  let params = useParams();
-  const { kit } = params;
-
-  if (!kit) return null;
-
-  return (
-    <KitScopeProvider guid={kit}>
-      <Outlet />
-    </KitScopeProvider>
-  );
+const createScopeRoute = (ParamName: string, ScopeProvider?: React.ComponentType<{ guid: string; children: ReactNode }>): FC => {
+  const ScopeRoute: FC = () => {
+    const params = useParams();
+    const guid = params[ParamName];
+    if (!guid) return null;
+    if (!ScopeProvider) return <Outlet />;
+    return (
+      <ScopeProvider guid={guid}>
+        <Outlet />
+      </ScopeProvider>
+    );
+  };
+  return ScopeRoute;
 };
 
-const DesignRoute: FC = () => {
-  let { design } = useParams();
-
-  if (!design) return null;
-
-  return (
-    <DesignScopeProvider guid={design}>
-      <Outlet />
-    </DesignScopeProvider>
-  );
-};
-
-const TypeRoute: FC = () => {
-  let { type } = useParams();
-
-  if (!type) return null;
-
-  return (
-    <TypeScopeProvider guid={type}>
-      <Outlet />
-    </TypeScopeProvider>
-  );
-};
-
-const QualityRoute: FC = () => {
-  let { quality } = useParams();
-
-  if (!quality) return null;
-
-  return (
-    <QualityScopeProvider guid={quality}>
-      <Outlet />
-    </QualityScopeProvider>
-  );
+const generateRoutes = (): ReactNode[] => {
+  const editors = editorRegistry.getAllEditors();
+  const buildRoute = (editor: typeof editors[0]): ReactNode[] => {
+    const { routeSegments, component: EditorComponent, additionalPaths } = editor;
+    const routes: ReactNode[] = [];
+    if (routeSegments.length === 0) {
+      routes.push(<Route key={editor.id} index element={<EditorComponent />} />);
+      if (additionalPaths) {
+        additionalPaths.forEach((path) => {
+          routes.push(<Route key={`${editor.id}-${path}`} path={path} element={<EditorComponent />} />);
+        });
+      }
+      return routes;
+    }
+    let currentElement: ReactNode = <Route key={`${editor.id}-index`} index element={<EditorComponent />} />;
+    for (let i = routeSegments.length - 1; i >= 0; i--) {
+      const segment = routeSegments[i];
+      const ScopeRoute = segment.paramName && segment.scopeProvider ? createScopeRoute(segment.paramName, segment.scopeProvider) : undefined;
+      if (ScopeRoute) {
+        currentElement = (
+          <Route key={`${editor.id}-${i}`} path={segment.path} element={<ScopeRoute />}>
+            {currentElement}
+          </Route>
+        );
+      } else {
+        currentElement = (
+          <Route key={`${editor.id}-${i}`} path={segment.path}>
+            {currentElement}
+          </Route>
+        );
+      }
+    }
+    routes.push(currentElement);
+    return routes;
+  };
+  const groupedRoutes: Record<string, ReactNode[]> = {};
+  editors.forEach((editor) => {
+    const depth = editor.routeSegments.length;
+    if (!groupedRoutes[depth]) groupedRoutes[depth] = [];
+    groupedRoutes[depth].push(...buildRoute(editor));
+  });
+  const sortedDepths = Object.keys(groupedRoutes)
+    .map(Number)
+    .sort((a, b) => b - a);
+  const allRoutes: ReactNode[] = [];
+  sortedDepths.forEach((depth) => {
+    allRoutes.push(...groupedRoutes[depth]);
+  });
+  return allRoutes;
 };
 
 const SketchpadBase: FC = () => {
@@ -409,22 +423,7 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
         <DragDropProvider>
           <MemoryRouter>
             <Routes>
-              <Route element={<SketchpadBase />}>
-                <Route index element={<Home />} />
-                <Route path="kits" element={<Home />} />
-                <Route path="kits/:kit" element={<KitRoute />}>
-                  <Route index element={<KitEditor />} />
-                  <Route path="designs/:design" element={<DesignRoute />}>
-                    <Route index element={<DesignEditor />} />
-                  </Route>
-                  <Route path="types/:type" element={<TypeRoute />}>
-                    <Route index element={<TypeEditor />} />
-                  </Route>
-                  <Route path="qualities/:quality" element={<QualityRoute />}>
-                    <Route index element={<QualityEditor />} />
-                  </Route>
-                </Route>
-              </Route>
+              <Route element={<SketchpadBase />}>{generateRoutes()}</Route>
             </Routes>
           </MemoryRouter>
         </DragDropProvider>

@@ -24,7 +24,7 @@ import { Edges, Line, Select, TransformControls } from "@react-three/drei";
 import React, { FC, useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
-import { Camera, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
+import { Camera, Design, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
 import { PieceScopeProvider, useDesign, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus, usePieceWithDiff, useDiffedPiece } from "../../../kits/store";
 import { useEditorPanelVisibility } from "../../../store";
 import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
@@ -308,7 +308,7 @@ const ModelDesign: FC = () => {
   const others = useDesignEditorOthers();
   const design = useDesign();
   // const flatDesign = useFlatDesign();
-  const flatDesign = design;
+  const flatDesign = design as Design;
   // const pieceRepresentationUrls = usePieceRepresentationUrls();
 
   const { selectPieces, startTransaction, finalizeTransaction, abortTransaction } = commands;

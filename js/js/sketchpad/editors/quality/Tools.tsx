@@ -33,13 +33,13 @@ export const ToolsToggleGroup: FC = () => {
     <ToggleGroup
       type="single"
       value={activeTool}
-      onValueChange={(value) => {
+      onValueChange={(value: string) => {
         if (value) setActiveTool(value as ToolType);
       }}
     >
       {tools.map((tool) => (
-        <ToggleGroupItem key={tool.type} value={tool.type} aria-label={tool.name}>
-          {tool.icon}
+        <ToggleGroupItem key={(tool as any).type} value={(tool as any).type} aria-label={(tool as any).name}>
+          {(tool as any).icon}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

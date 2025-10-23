@@ -81,7 +81,7 @@ const Editor: FC<EditorProps> = () => {
   useHotkeys("ctrl+shift+z", () => redo());
 
   useEffect(() => {
-    if (editorType !== EditorType.QUALITY) return;
+    if (editorType !== "quality") return;
 
     addSection("details", {
       id: "quality-details",
@@ -97,7 +97,7 @@ const Editor: FC<EditorProps> = () => {
   }, [editorType, addSection, removeSection, t]);
 
   useEffect(() => {
-    if (editorType !== EditorType.QUALITY) return;
+    if (editorType !== "quality") return;
 
     addSection("workbench", {
       id: "quality-functions",

@@ -19,11 +19,10 @@
 
 // #endregion
 
-import { Connection } from "@xyflow/react";
+import { Connection as RFConnection } from "@xyflow/react";
 import React, { createContext, useContext } from "react";
-import { Camera } from "three";
 import * as Y from "yjs";
-import { areSameKit, ConnectionDiff, Coord, DiffStatus, Guid, KitDiff, Piece, PieceDiff } from "../../../semio";
+import { areSameKit, Camera, Connection, ConnectionDiff, Coord, DiffStatus, Guid, KitDiff, Piece, PieceDiff } from "../../../semio";
 import { DesignStore, KitCommandContext, KitStore, useDesignScope, useKitScope } from "../../kits/store";
 import {
   identitySelector,
@@ -45,7 +44,7 @@ import { commands as designEditorCommands } from "./commands";
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y.Map<boolean> | YAttributes | YStringArray;
 type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Map<string, Y.Map<string, YDesignEditor>>;
+type YDesignEditors = Y.Map<Y.Map<YDesignEditor>>;
 
 export interface DesignEditorId {
   kit: Guid;
@@ -186,18 +185,20 @@ class DesignEditorStore extends KitDiffEditorStore<DesignEditorState, DesignEdit
     if (!yMap.has("selection")) {
       const selection = new Y.Map<any>();
       const selectedPieces = new Y.Array<Guid>();
-      if (state?.selection.pieces) {
-        selectedPieces.push(state?.selection.pieces.map((piece) => pieceIdToString(piece)) || []);
+      if (state?.selection?.pieces) {
+        selectedPieces.push(state.selection.pieces);
       }
       const selectedConnections = new Y.Array<Guid>();
-      if (state?.selection.connections) {
-        selectedConnections.push(state?.selection.connections.map((connection) => connectionIdToString(connection)) || []);
+      if (state?.selection?.connections) {
+        selectedConnections.push(state.selection.connections);
       }
       const selectionPort = new Y.Map<any>();
-      if (state?.selection.port) {
-        selectionPort.set("piece", pieceIdToString(state?.selection.port.piece!));
-        selectionPort.set("port", portIdToString(state?.selection.port.port!));
-        selectionPort.set("designPiece", pieceIdToString(state?.selection.port.designPiece!));
+      if (state?.selection?.port) {
+        selectionPort.set("piece", state.selection.port.piece);
+        selectionPort.set("port", state.selection.port.port);
+        if (state.selection.port.designPiece) {
+          selectionPort.set("designPiece", state.selection.port.designPiece);
+        }
       }
       selection.set("pieces", selectedPieces);
       selection.set("connections", selectedConnections);
@@ -625,7 +626,7 @@ class DesignEditorStore extends KitDiffEditorStore<DesignEditorState, DesignEdit
   }
 }
 
-registerDesignEditorStoreFactory((parent, yMap, transact, id, state) => new DesignEditorStore(parent, yMap, transact, id, state));
+registerDesignEditorStoreFactory((parent, yMap, transact, id, state) => new DesignEditorStore(parent, yMap as any, transact, id, state));
 
 type DesignEditorScope = { id: string };
 const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
@@ -672,8 +673,10 @@ export function useDesignEditorFullscreen(): DesignEditorFullscreenWindow {
   return useDesignEditor((s) => s.fullscreenWindow) as DesignEditorFullscreenWindow;
 }
 
-export function useDesignEditorDiff(): KitDiff {
-  return useDesignEditor((s) => s.diff) as KitDiff;
+// TODO: DesignEditorState doesn't have a diff property - this needs to be rethought
+export function useDesignEditorDiff(): KitDiff | undefined {
+  // return useDesignEditor((s) => s.diff) as KitDiff;
+  return undefined;
 }
 
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {

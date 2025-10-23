@@ -141,7 +141,7 @@ const Editor: FC<EditorProps> = () => {
 
   // Add/remove details panel sections based on selection
   useEffect(() => {
-    if (editorType !== EditorType.DESIGN) return;
+    if (editorType !== "design") return;
 
     const hasPieces = (selection.pieces || []).length > 0;
     const hasConnections = (selection.connections || []).length > 0;
@@ -343,7 +343,7 @@ const Editor: FC<EditorProps> = () => {
 
   // Add toolbar tools
   useEffect(() => {
-    if (editorType !== EditorType.DESIGN) return;
+    if (editorType !== "design") return;
 
     addSection("toolbar", {
       id: "design-tools",
@@ -358,7 +358,7 @@ const Editor: FC<EditorProps> = () => {
   }, [editorType, addSection, removeSection]);
 
   useEffect(() => {
-    if (editorType !== EditorType.DESIGN) return;
+    if (editorType !== "design") return;
     const handleCreateType = () => {
       const existingTypes = kit.types || [];
       const typeNumber = existingTypes.length + 1;

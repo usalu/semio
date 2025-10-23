@@ -57,6 +57,8 @@ import { Toggle } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../elements/navigation/Breadcrumb";
 import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
+import "./editors";
+import { editorRegistry } from "./editors";
 import { useDesignEditorCommands } from "./editors/design/store";
 import { useHomeCommands } from "./editors/home/store";
 import { useKitEditorCommands } from "./editors/kit/store";
@@ -174,43 +176,7 @@ export interface PanelDefinition {
   hotkey: string;
 }
 
-export const getPanelConfigs = (t: (key: string) => string): Record<EditorType, PanelDefinition[]> => ({
-  [EditorType.HOME]: [
-    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
-  ],
-  [EditorType.KIT]: [
-    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
-  ],
-  [EditorType.DESIGN]: [
-    { key: "workbench", icon: Box, tooltip: t("panels.workbench"), hotkey: "⌘J" },
-    { key: "tools", icon: Wrench, tooltip: t("panels.tools"), hotkey: "⌘U" },
-    { key: "toolbar", icon: Hammer, tooltip: t("panels.toolbar"), hotkey: "⌘K" },
-    { key: "hud", icon: Layers, tooltip: t("panels.hud"), hotkey: "⌘H" },
-    { key: "stats", icon: BarChart3, tooltip: t("panels.stats"), hotkey: "⌘I" },
-    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
-  ],
-  [EditorType.TYPE]: [
-    { key: "workbench", icon: Box, tooltip: t("panels.workbench"), hotkey: "⌘J" },
-    { key: "tools", icon: Wrench, tooltip: t("panels.tools"), hotkey: "⌘U" },
-    { key: "toolbar", icon: Hammer, tooltip: t("panels.toolbar"), hotkey: "⌘K" },
-    { key: "hud", icon: Layers, tooltip: t("panels.hud"), hotkey: "⌘H" },
-    { key: "stats", icon: BarChart3, tooltip: t("panels.stats"), hotkey: "⌘I" },
-    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
-  ],
-  [EditorType.QUALITY]: [
-    { key: "workbench", icon: Box, tooltip: t("panels.workbench"), hotkey: "⌘J" },
-    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
-  ],
-});
+export const getPanelConfigs = (t: (key: string) => string): Record<string, PanelDefinition[]> => editorRegistry.getPanelConfigs(t);
 
 interface NavigationProps {
   mobile?: boolean;
@@ -1135,12 +1101,12 @@ const PanelToggles: FC = ({}) => {
   const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
   const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
   const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit, quality } : undefined);
-  const commands = {
-    [EditorType.HOME]: homeCommands,
-    [EditorType.KIT]: kitEditorCommands,
-    [EditorType.DESIGN]: designEditorCommands,
-    [EditorType.TYPE]: typeEditorCommands,
-    [EditorType.QUALITY]: qualityEditorCommands,
+  const commands: Record<string, any> = {
+    home: homeCommands,
+    kit: kitEditorCommands,
+    design: designEditorCommands,
+    type: typeEditorCommands,
+    quality: qualityEditorCommands,
   };
   const isMobile = useIsMobile();
 
@@ -1575,12 +1541,12 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
   const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
   const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit, quality } : undefined);
-  const commands = {
-    [EditorType.HOME]: homeCommands,
-    [EditorType.KIT]: kitEditorCommands,
-    [EditorType.DESIGN]: designEditorCommands,
-    [EditorType.TYPE]: typeEditorCommands,
-    [EditorType.QUALITY]: qualityEditorCommands,
+  const commands: Record<string, any> = {
+    home: homeCommands,
+    kit: kitEditorCommands,
+    design: designEditorCommands,
+    type: typeEditorCommands,
+    quality: qualityEditorCommands,
   };
 
   // Find the currently active panel (used by mobile)
@@ -1784,12 +1750,12 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
   const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
   const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
   const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit: kitGuid, quality } : undefined);
-  const commands = {
-    [EditorType.HOME]: homeCommands,
-    [EditorType.KIT]: kitEditorCommands,
-    [EditorType.DESIGN]: designEditorCommands,
-    [EditorType.TYPE]: typeEditorCommands,
-    [EditorType.QUALITY]: qualityEditorCommands,
+  const commands: Record<string, any> = {
+    home: homeCommands,
+    kit: kitEditorCommands,
+    design: designEditorCommands,
+    type: typeEditorCommands,
+    quality: qualityEditorCommands,
   };
 
   useEffect(() => {

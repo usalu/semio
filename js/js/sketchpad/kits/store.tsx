@@ -4474,7 +4474,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
 export function useDiffedKit(): Kit {
   const kit = useKit() as Kit;
   const diff = useDesignEditorDiff();
-  return applyKitDiff(kit, diff);
+  return diff ? applyKitDiff(kit, diff) : kit;
 }
 
 export function useDesigns(): Design[] {

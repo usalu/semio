@@ -26,6 +26,7 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
 import { commands as sketchpadCommands } from "./commands";
+import { editorRegistry } from "./editors/registry";
 import type { DesignEditorId, DesignEditorState } from "./editors/design/store";
 import type { KitEditorId, KitEditorState } from "./editors/kit/store";
 import type { QualityEditorId, QualityEditorState } from "./editors/quality/store";
@@ -114,13 +115,7 @@ export enum Mode {
   EXPERT = "expert",
 }
 
-export enum EditorType {
-  HOME = "home",
-  KIT = "kit",
-  DESIGN = "design",
-  TYPE = "type",
-  QUALITY = "quality",
-}
+export type EditorType = string;
 
 export enum ToolType {
   // Selection tools
@@ -1600,12 +1595,9 @@ export function migratePath(path: string): string {
 }
 
 export function getEditorTypeFromPath(path: string): EditorType {
-  if (path === "/" || path === "/kits") return EditorType.HOME;
-  if (path.match(/^\/kits\/[^/]+\/designs\/[^/]+/)) return EditorType.DESIGN;
-  if (path.match(/^\/kits\/[^/]+\/types\/[^/]+/)) return EditorType.TYPE;
-  if (path.match(/^\/kits\/[^/]+\/qualities\/[^/]+/)) return EditorType.QUALITY;
-  if (path.match(/^\/kits\/[^/]+$/)) return EditorType.KIT;
-  return EditorType.HOME;
+  const pathParts = path.split("/").filter((p) => p);
+  const editor = editorRegistry.getEditorForPath(pathParts);
+  return editor?.id || "home";
 }
 
 export function useEditorType(): EditorType {
@@ -1697,22 +1689,22 @@ export function useEditorPanelVisibility(): PanelVisibility {
     try {
       let editor: any;
       switch (editorType) {
-        case EditorType.HOME:
+        case "home":
           editor = store.home();
           break;
-        case EditorType.KIT:
+        case "kit":
           if (kitGuid) {
             editor = store.kitEditor(kitGuid);
           } else {
           }
           break;
-        case EditorType.DESIGN:
+        case "design":
           if (kitGuid && itemGuid) editor = store.designEditor(kitGuid, itemGuid);
           break;
-        case EditorType.TYPE:
+        case "type":
           if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
           break;
-        case EditorType.QUALITY:
+        case "quality":
           if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
           break;
         default:
@@ -1761,19 +1753,19 @@ export function useEditorCommands() {
     let editor: any;
     try {
       switch (editorType) {
-        case EditorType.HOME:
+        case "home":
           editor = store.home();
           break;
-        case EditorType.KIT:
+        case "kit":
           if (kitGuid) editor = store.kitEditor(kitGuid);
           break;
-        case EditorType.DESIGN:
+        case "design":
           if (kitGuid && itemGuid) editor = store.designEditor(kitGuid, itemGuid);
           break;
-        case EditorType.TYPE:
+        case "type":
           if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
           break;
-        case EditorType.QUALITY:
+        case "quality":
           if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
           break;
       }

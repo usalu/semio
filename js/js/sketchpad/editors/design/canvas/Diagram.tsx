@@ -1,6 +1,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import {
   BaseEdge,
+  Connection as RFConnection,
   ConnectionLineComponentProps,
   ConnectionMode,
   Controls,
@@ -14,7 +15,6 @@ import {
   Position,
   ReactFlow,
   ReactFlowInstance,
-  Connection as RFConnection,
   useReactFlow,
   ViewportPortal,
   XYPosition,
@@ -25,7 +25,7 @@ import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "re
 let globalHoverClearTimeout: NodeJS.Timeout | null = null;
 let currentHoveredPieceGuid: string | null = null;
 
-import { arePortsCompatible, areSameConnection, Connection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, Guid, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
+import { arePortsCompatible, areSameConnection, Connection as SemioConnection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, Guid, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
@@ -132,6 +132,7 @@ type ExpandMenuProps = {
 
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
   const selection = useDesignEditorSelection();
+  const kit = useKit() as Kit;
   const explodeableDesignNodes = useExplodeableDesignNodes(nodes, selection);
 
   const getBoundingBoxForNode = useCallback((node: DiagramNode) => {
@@ -157,7 +158,9 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
     <ViewportPortal>
       {explodeableDesignNodes.map((node) => {
         const boundingBox = getBoundingBoxForNode(node);
-        const designName = (node.data.piece as Piece).type?.variant ?? "";
+        const piece = node.data.piece as Piece;
+        const type = piece.type ? findTypeInKit(kit, piece.type) : null;
+        const designName = type?.variant ?? type?.name ?? "";
 
         return (
           <div
@@ -172,7 +175,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button level="temporary" className="px-3 py-1 text-sm h-auto" onClick={() => onExpand({ name: designName })}>
+              <Button level="temporary" className="px-3 py-1 text-sm h-auto" onClick={() => onExpand(designName)}>
                 Expand
               </Button>
             </div>
@@ -223,14 +226,14 @@ type PieceNodeProps = {
 
 type DesignNodeProps = {
   piece: Piece;
-  externalConnections: Connection[];
+  externalConnections: SemioConnection[];
 };
 
 type PieceNode = Node<PieceNodeProps, "piece">;
 type DesignNode = Node<DesignNodeProps, "design">;
 type DiagramNode = PieceNode | DesignNode;
 
-type ConnectionEdge = Edge<{ connection: Connection; isParentConnection?: boolean }, "connection">;
+type ConnectionEdge = Edge<{ SemioConnection: SemioConnection; isParentConnection?: boolean }, "SemioConnection">;
 type DiagramEdge = ConnectionEdge;
 
 type PortHandleProps = {
@@ -258,7 +261,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
   const portColor = findAttributeValue(port, "semio.color", "var(--foreground)")!;
   const hover = useDesignEditorHover();
   const { hoverPort } = useDesignEditorCommands();
-  const isHovered = hover?.port?.piece === pieceId && hover.port?.port === port.guid;
+  const isHovered = hover?.ports?.some((p) => p.piece === pieceId && p.port === port.guid) ?? false;
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -364,13 +367,13 @@ type PieceNodeInnerProps = {
   selection: DesignEditorSelection | undefined;
   selectPiecePort: (piece: Guid, port: Guid) => void;
   deselectPiecePort: () => void;
-  addConnection: (connection: any) => void;
+  addConnection: (SemioConnection: any) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 };
 
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
-  const { fill, stroke, opacity } = useDesignEditorPieceColor(id, piece.guid);
+  const { fill, stroke, opacity } = useDesignEditorPieceColor(undefined, piece.guid);
 
   // Always call the hook to maintain hook order (Rules of Hooks)
   const diffedPiece = useDiffedPiece() as Piece;
@@ -385,7 +388,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
     const currentSelectedPort = selection?.port;
 
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
-      const connection: Connection = {
+      const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
           guid: crypto.randomUUID(),
@@ -394,7 +397,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
         },
         connected: { guid: crypto.randomUUID(), piece: piece.guid, port: port.guid },
       };
-      addConnection(connection);
+      addConnection(SemioConnection);
       deselectPiecePort();
     } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
       deselectPiecePort();
@@ -503,12 +506,12 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     }, 50);
   }, [guid, clearHover]);
 
-  const ports: Port[] = externalConnections.map((connection, portIndex) => {
-    const connectedIsDesignPiece = connection.connected.piece === piece.guid || connection.connected.designPiece === piece.guid;
-    const connectingIsDesignPiece = connection.connecting.piece === piece.guid || connection.connecting.designPiece === piece.guid;
+  const ports: Port[] = externalConnections.map((SemioConnection, portIndex) => {
+    const connectedIsDesignPiece = SemioConnection.connected.piece === piece.guid || SemioConnection.connected.designPiece === piece.guid;
+    const connectingIsDesignPiece = SemioConnection.connecting.piece === piece.guid || SemioConnection.connecting.designPiece === piece.guid;
 
-    const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
-    const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
+    const designSide = connectedIsDesignPiece ? SemioConnection.connected : SemioConnection.connecting;
+    const originalSide = connectedIsDesignPiece ? SemioConnection.connecting : SemioConnection.connected;
 
     const totalPorts = externalConnections.length;
     const t = portIndex / totalPorts;
@@ -526,7 +529,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
     return {
       guid: `port-${portIndex}`,
-      description: `Port for connection to ${originalSide.piece}:${originalSide.port}`,
+      description: `Port for SemioConnection to ${originalSide.piece}:${originalSide.port}`,
       family: "default",
       mandatory: false,
       t: t,
@@ -585,7 +588,7 @@ type DesignNodeInnerProps = {
   selection: DesignEditorSelection | undefined;
   selectPiecePort: (piece: Guid, port: Guid) => void;
   deselectPiecePort: () => void;
-  addConnection: (connection: any) => void;
+  addConnection: (SemioConnection: any) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 };
@@ -597,7 +600,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
     const currentSelectedPort = selection?.port;
 
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
-      const connection: Connection = {
+      const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
           guid: crypto.randomUUID(),
@@ -606,7 +609,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
         },
         connected: { guid: crypto.randomUUID(), piece: piece.guid, port: port.guid },
       };
-      addConnection(connection);
+      addConnection(SemioConnection);
       deselectPiecePort();
     } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
       deselectPiecePort();
@@ -668,7 +671,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
 const nodeComponents = { piece: PieceNodeComponent, design: DesignNodeComponent };
 
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = (props) => {
-  const connectionGuid = props.data?.connection?.guid;
+  const connectionGuid = props.data?.SemioConnection?.guid;
   if (!connectionGuid) {
     return <ConnectionEdgeFallback {...props} />;
   }
@@ -682,7 +685,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = (props) => 
 const ConnectionEdgeFallback: React.FC<EdgeProps<ConnectionEdge>> = ({ sourceX, sourceY, targetX, targetY, data, selected }) => {
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
-  const diff = (data?.connection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (data?.SemioConnection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = "var(--foreground)";
@@ -732,7 +735,7 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
-  const diff = (data?.connection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (data?.SemioConnection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = "var(--foreground)";
@@ -791,7 +794,7 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
     </g>
   );
 };
-const edgeComponents = { connection: ConnectionEdgeComponent };
+const edgeComponents = { SemioConnection: ConnectionEdgeComponent };
 
 const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
   const { fromX, fromY, toX, toY } = props;
@@ -860,7 +863,7 @@ const pieceToNode = (piece: Piece, type: Type, center: Coord, selected: boolean,
   className: selected ? "selected" : "",
 });
 
-const designToNode = (piece: Piece, externalConnections: Connection[], center: Coord, selected: boolean, index: number): DesignNode => ({
+const designToNode = (piece: Piece, externalConnections: SemioConnection[], center: Coord, selected: boolean, index: number): DesignNode => ({
   type: "design",
   id: `piece-${index}-${piece.guid}`,
   position: {
@@ -881,48 +884,48 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
   return node.data.piece.guid;
 };
 
-const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: Connection[]): ConnectionEdge => {
-  let sourcePieceId = connection.connecting.piece;
-  let targetPieceId = connection.connected.piece;
-  let sourcePortId = connection.connecting.port ?? "undefined";
-  let targetPortId = connection.connected.port ?? "undefined";
+const connectionToEdge = (SemioConnection: SemioConnection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: SemioConnection[]): ConnectionEdge => {
+  let sourcePieceId = SemioConnection.connecting.piece;
+  let targetPieceId = SemioConnection.connected.piece;
+  let sourcePortId = SemioConnection.connecting.port ?? "undefined";
+  let targetPortId = SemioConnection.connected.port ?? "undefined";
 
-  if (connection.connecting.designPiece && allConnections) {
-    const designPieceId = connection.connecting.designPiece;
+  if (SemioConnection.connecting.designPiece && allConnections) {
+    const designPieceId = SemioConnection.connecting.designPiece;
     sourcePieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece === connection.connecting.designPiece;
-      const connectingToDesign = conn.connecting.designPiece === connection.connecting.designPiece;
+      const connectedToDesign = conn.connected.designPiece === SemioConnection.connecting.designPiece;
+      const connectingToDesign = conn.connecting.designPiece === SemioConnection.connecting.designPiece;
       return connectedToDesign || connectingToDesign;
     });
 
     const portIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === connection.connected.piece &&
-        conn.connecting.piece === connection.connecting.piece &&
-        conn.connected.port === connection.connected.port &&
-        conn.connecting.port === connection.connecting.port,
+        conn.connected.piece === SemioConnection.connected.piece &&
+        conn.connecting.piece === SemioConnection.connecting.piece &&
+        conn.connected.port === SemioConnection.connected.port &&
+        conn.connecting.port === SemioConnection.connecting.port,
     );
     sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
 
-  if (connection.connected.designPiece && allConnections) {
-    const designPieceId = connection.connected.designPiece;
+  if (SemioConnection.connected.designPiece && allConnections) {
+    const designPieceId = SemioConnection.connected.designPiece;
     targetPieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece === connection.connected.designPiece;
-      const connectingToDesign = conn.connecting.designPiece === connection.connected.designPiece;
+      const connectedToDesign = conn.connected.designPiece === SemioConnection.connected.designPiece;
+      const connectingToDesign = conn.connecting.designPiece === SemioConnection.connected.designPiece;
       return connectedToDesign || connectingToDesign;
     });
 
     const portIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === connection.connected.piece &&
-        conn.connecting.piece === connection.connecting.piece &&
-        conn.connected.port === connection.connected.port &&
-        conn.connecting.port === connection.connecting.port,
+        conn.connected.piece === SemioConnection.connected.piece &&
+        conn.connecting.piece === SemioConnection.connecting.piece &&
+        conn.connected.port === SemioConnection.connected.port &&
+        conn.connecting.port === SemioConnection.connecting.port,
     );
     targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
@@ -933,13 +936,13 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
   const targetNodeId = `piece-${targetIndex}-${targetPieceId}`;
 
   return {
-    type: "connection",
-    id: connection.guid,
+    type: "SemioConnection",
+    id: SemioConnection.guid,
     source: sourceNodeId,
     sourceHandle: sourcePortId,
     target: targetNodeId,
     targetHandle: targetPortId,
-    data: { connection, isParentConnection },
+    data: { SemioConnection, isParentConnection },
     selected,
   };
 };
@@ -1104,12 +1107,12 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
       : null;
 
   const connectionEdges =
-    design.connections?.map((connection, connectionIndex) => {
-      const isSelected = selection?.connections?.includes(connection.guid) ?? false;
+    design.connections?.map((SemioConnection, connectionIndex) => {
+      const isSelected = selection?.connections?.includes(SemioConnection.guid) ?? false;
 
-      const isParentConnection = parentConnectionGuid === connection.guid;
+      const isParentConnection = parentConnectionGuid === SemioConnection.guid;
 
-      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
+      return connectionToEdge(SemioConnection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
     }) ?? [];
   return { nodes: [...pieceNodes, ...designNodes], edges: connectionEdges };
 };
@@ -1238,7 +1241,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
     e.stopPropagation();
-    const connectionId = edge.data!.connection.guid;
+    const connectionId = edge.data!.SemioConnection.guid;
     if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(connectionId);
     else if (e.shiftKey) addConnectionToSelection(connectionId);
     else if (activeTool === ToolType.SELECTION_ADDITIVE) addConnectionToSelection(connectionId);
@@ -1267,7 +1270,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   const onExpand = useCallback(
-    (target: DesignId) => {
+    (target: string) => {
       execute?.("explode", { designId: target }).catch(() => {});
     },
     [execute],
@@ -1310,7 +1313,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       const draggedCenterX = node.position.x + ICON_WIDTH / 2;
       const draggedCenterY = node.position.y + ICON_WIDTH / 2;
 
-      const addedConnections: Connection[] = [];
+      const addedConnections: SemioConnection[] = [];
       const updatedPieces: Array<{ id: string; diff: any }> = [];
 
       let draggedX = node.position.x;
@@ -1321,7 +1324,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         const piece = (selectedNode as PieceNode).data.piece;
         const type = (selectedNode as PieceNode).data.type;
         const fixedPieceId = metadata.get(piece.guid)?.fixedPieceId;
-        let closestConnection: Connection | null = null;
+        let closestConnection: SemioConnection | null = null;
         let closestDistance = Number.MAX_VALUE;
         const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!;
 
@@ -1740,7 +1743,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
               areSameConnection(c, {
                 connected: { piece: selectedNode.data.piece.guid },
                 connecting: { piece: otherNode.data.piece.guid },
-              } as Connection),
+              } as SemioConnection),
             );
             if (existingConnection) continue;
             const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!;
@@ -1854,7 +1857,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       };
 
       if (!design) return;
-      if (((design as Design).connections ?? []).find((c: Connection) => areSameConnection(c, newConnection))) return;
+      if (((design as Design).connections ?? []).find((c: SemioConnection) => areSameConnection(c, newConnection))) return;
       addConnection(newConnection);
     },
     [addConnection, reactFlowInstance, design],

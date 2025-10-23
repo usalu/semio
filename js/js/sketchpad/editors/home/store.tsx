@@ -188,14 +188,14 @@ export class HomeStore {
     return createObserver(this.yMap, subscribe, true);
   };
 
-  registerCommand(command: string, callback: (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult): Disposable {
+  registerCommand(command: string, callback: (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult): () => void {
     this.commandRegistry.set(command, callback);
     return () => {
       this.commandRegistry.delete(command);
     };
   }
 
-  register(command: string, callback: (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult): Disposable {
+  register(command: string, callback: (context: HomeCommandContext, ...rest: any[]) => HomeCommandResult): () => void {
     return this.registerCommand(command, callback);
   }
 
@@ -237,7 +237,7 @@ function useHomeStore<T>(selector?: (store: HomeStore) => T): T | HomeStore {
 }
 
 export function useHome<T>(selector?: (state: HomeState) => T): T | HomeState {
-  return useSyncDeep<HomeState, T>(useHomeStore(identitySelector) as HomeStore, selector ? selector : identitySelector);
+  return useSyncDeep<HomeState, T>(useHomeStore(identitySelector) as HomeStore, selector ? selector : identitySelector) as T | HomeState;
 }
 
 export function useHomePanelVisibility(): PanelVisibility {

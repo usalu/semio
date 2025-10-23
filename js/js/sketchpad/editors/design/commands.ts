@@ -19,8 +19,7 @@
 
 // #endregion
 
-import { Camera } from "three";
-import { Connection, ConnectionDiff, Coord, findDesignInKit, Guid, Piece, PieceDiff } from "../../../semio";
+import { Camera, Connection, ConnectionDiff, Coord, findDesignInKit, Guid, Piece, PieceDiff } from "../../../semio";
 import { Access, Layout, Theme, ToolType } from "../../store";
 import { DesignEditorCommandContext, DesignEditorCommandResult, DesignEditorFullscreenWindow } from "./store";
 

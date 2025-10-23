@@ -62,7 +62,7 @@ const Editor: FC = () => {
   }, [activeTool, setActiveTool]);
 
   useEffect(() => {
-    if (editorType !== EditorType.TYPE) return;
+    if (editorType !== "type") return;
 
     addSection("toolbar", {
       id: "type-tools",

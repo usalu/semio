@@ -28,7 +28,7 @@ import { commands as kitEditorCommands } from "./commands";
 
 type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitEditor = Y.Map<YKitEditorVal>;
-type YKitEditors = Y.Map<string, YKitEditor>;
+type YKitEditors = Y.Map<YKitEditor>;
 
 export interface KitEditorId {
   kit: Guid;
@@ -342,7 +342,7 @@ class KitEditorStore extends KitDiffEditorStore<KitEditorState, KitEditorDiff, K
       canRedo: this.canRedo(),
       presence: this.presence,
       others: this.others,
-      diff: this.diff,
+      // diff: this.diff, // TODO: KitEditorState doesn't have a diff property
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
       filterSearch: this.filterSearch,
@@ -616,7 +616,7 @@ export function useKitEditor<T>(selector?: (state: KitEditorState) => T, id?: Ki
 export function useKitEditorSelection(id?: KitEditorId): KitEditorSelection {
   const store = useKitEditorStore(identitySelector, id) as KitEditorStore | null;
   if (!store) return emptyKitEditorSelection;
-  return useSync<KitEditorState, KitEditorSelection>(store, (state) => state.selection, true) as KitEditorSelection;
+  return (useSync<KitEditorState, KitEditorSelection>(store, (state) => state.selection ?? emptyKitEditorSelection, true) as KitEditorSelection) ?? emptyKitEditorSelection;
 }
 
 export function useKitEditorFullscreen(): KitEditorFullscreenWindow {

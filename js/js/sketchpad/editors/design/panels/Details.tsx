@@ -30,7 +30,7 @@ import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Connection, Design, Guid, Kit, Piece, findConnectionInDesign, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
+import { Connection, Design, Guid, Kit, Piece, findConnectionInDesign, findDesignInKit, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
 import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import { useDesignEditorCommands } from "../store";
 
@@ -634,26 +634,27 @@ const PiecesSectionForm: FC = () => {
   const availableDesigns = isDesignPiece && isSingle && piece ? replacableDesignsRaw : [];
   const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
 
-  // Parse current design ID for design pieces
-  const currentDesignId = isDesignPiece && isSingle ? parseDesignIdFromVariant(piece!.type.variant || "") : null;
+  // Get piece type/design for pieces
+  const pieceType = piece?.type && typeof piece.type === "string" && piece.type !== "design" ? findTypeInKit(kit, piece.type) : null;
+  const pieceDesign = piece?.design && typeof piece.design === "string" ? findDesignInKit(kit, piece.design) : null;
 
   // Get available design variants and views
-  const availableDesignVariants = currentDesignId
+  const availableDesignVariants = pieceDesign
     ? [
         ...new Set(
           availableDesigns
-            .filter((d) => d.name === currentDesignId.name)
+            .filter((d) => d.name === pieceDesign.name)
             .map((d) => d.variant)
             .filter((v): v is string => Boolean(v)),
         ),
       ]
     : [];
 
-  const availableDesignViews = currentDesignId
+  const availableDesignViews = pieceDesign
     ? [
         ...new Set(
           availableDesigns
-            .filter((d) => d.name === currentDesignId.name && (d.variant || "") === (currentDesignId.variant || ""))
+            .filter((d) => d.name === pieceDesign.name && (d.variant || "") === (pieceDesign.variant || ""))
             .map((d) => d.view)
             .filter((v): v is string => Boolean(v)),
         ),
@@ -663,36 +664,30 @@ const PiecesSectionForm: FC = () => {
   let parentConnection: Connection | null = null;
   let parentConnections: Connection[] = [];
 
-  if (isSingle && piece) {
-    const pieceMetadata = metadata.get(getPieceId(piece));
-    if (pieceMetadata?.parentPieceId) {
-      try {
-        parentConnection = findConnectionInDesign(design, {
-          connected: { piece: { id_: getPieceId(piece) } },
-          connecting: { piece: { id_: pieceMetadata.parentPieceId } },
-        });
-      } catch {}
-    }
-  } else if (!isSingle) {
-    // For multiple pieces, find all their parent connections
-    parentConnections = pieces
-      .map((piece) => {
-        const pieceMetadata = metadata.get(getPieceId(piece));
-        if (pieceMetadata?.parentPieceId) {
-          try {
-            return findConnectionInDesign(design, {
-              connected: { piece: { id_: getPieceId(piece) } },
-              connecting: { piece: { id_: pieceMetadata.parentPieceId } },
-            });
-          } catch {
-            return null;
-          }
-        }
-
-        return null;
-      })
-      .filter((conn) => conn !== null) as Connection[];
-  }
+  // TODO: Re-implement parent connection finding once metadata is available
+  // if (isSingle && piece) {
+  //   const pieceMetadata = metadata.get(getPieceId(piece));
+  //   if (pieceMetadata?.parentPieceId && pieceMetadata?.parentConnectionId) {
+  //     try {
+  //       parentConnection = findConnectionInDesign(design, pieceMetadata.parentConnectionId);
+  //     } catch {}
+  //   }
+  // } else if (!isSingle) {
+  //   // For multiple pieces, find all their parent connections
+  //   parentConnections = pieces
+  //     .map((piece) => {
+  //       const pieceMetadata = metadata.get(getPieceId(piece));
+  //       if (pieceMetadata?.parentPieceId && pieceMetadata?.parentConnectionId) {
+  //         try {
+  //           return findConnectionInDesign(design, pieceMetadata.parentConnectionId);
+  //         } catch {
+  //           return null;
+  //         }
+  //       }
+  //       return null;
+  //     })
+  //     .filter((conn) => conn !== null) as Connection[];
+  // }
 
   return (
     <>
@@ -739,7 +734,7 @@ const PiecesSectionForm: FC = () => {
                       value: name,
                       label: name,
                     }))}
-                    value={currentDesignId?.name || ""}
+                    value={pieceDesign?.name || pieceType?.name || ""}
                     placeholder={t("common.selectDesign")}
                     onValueChange={handleDesignNameChange}
                   />
@@ -754,7 +749,7 @@ const PiecesSectionForm: FC = () => {
                         value: variant,
                         label: variant,
                       }))}
-                      value={currentDesignId?.variant || ""}
+                      value={pieceDesign?.variant || pieceType?.variant || ""}
                       placeholder={t("common.selectVariant")}
                       onValueChange={handleDesignVariantChange}
                       allowClear={true}
@@ -771,7 +766,7 @@ const PiecesSectionForm: FC = () => {
                         value: view,
                         label: view,
                       }))}
-                      value={currentDesignId?.view || ""}
+                      value={pieceDesign?.view || ""}
                       placeholder={t("common.selectView")}
                       onValueChange={handleDesignViewChange}
                       allowClear={true}
@@ -914,7 +909,7 @@ const ConnectionsSectionForm: FC<{
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
   const { t } = useTranslation();
-  const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { /* setConnection, setConnections, */ startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const connectionObjects = connections;
 
   const isSingle = connections.length === 1;
@@ -927,58 +922,49 @@ const ConnectionsSectionForm: FC<{
     return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
   };
 
-  const handleChange = (updatedConnection: Connection) => setConnection(updatedConnection);
+  // TODO: Implement setConnection and setConnections commands
+  const handleChange = (updatedConnection: Connection) => {
+    console.warn("[ORIGIN] setConnection not implemented", updatedConnection);
+  };
 
   const handleGapChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, gap: value });
-    else setConnections(connectionObjects.map((connection) => ({ ...connection, gap: value })));
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleShiftChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, shift: value });
-    else
-      setConnections(
-        connectionObjects.map((connection) => ({
-          ...connection,
-          shift: value,
-        })),
-      );
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleRiseChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, rise: value });
-    else setConnections(connectionObjects.map((connection) => ({ ...connection, rise: value })));
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleXOffsetChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, x: value });
-    else setConnections(connectionObjects.map((connection) => ({ ...connection, x: value })));
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleYOffsetChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, y: value });
-    else setConnections(connectionObjects.map((connection) => ({ ...connection, y: value })));
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleRotationChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, rotation: value });
-    else
-      setConnections(
-        connectionObjects.map((connection) => ({
-          ...connection,
-          rotation: value,
-        })),
-      );
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleTurnChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, turn: value });
-    else setConnections(connectionObjects.map((connection) => ({ ...connection, turn: value })));
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleTiltChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, tilt: value });
-    else setConnections(connectionObjects.map((connection) => ({ ...connection, tilt: value })));
+    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const commonGap = getCommonValue((c) => c.gap);
@@ -1164,8 +1150,9 @@ export const PortSection: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid
 };
 
 const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, portGuid }) => {
-  const design = useDesign();
-  const kit = useKit();
+  const { t } = useTranslation();
+  const design = useDesign() as Design;
+  const kit = useKit() as Kit;
 
   const piece = (() => {
     try {
@@ -1175,8 +1162,8 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
     }
   })();
 
-  const type = piece ? findTypeInKit(kit, piece.type) : null;
-  const port = type?.ports?.find((p: any) => p.id_ === portGuid);
+  const type = piece?.type && typeof piece.type === "string" ? findTypeInKit(kit, piece.type) : null;
+  const port = type?.ports?.find((p) => p.guid === portGuid);
 
   if (!piece || !type || !port) {
     return (
@@ -1192,7 +1179,7 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
 
   return (
     <TreeItem label="Port" defaultOpen={true}>
-      <Input label={t("piece.id")} value={port.id_ || "~default~"} disabled />
+      <Input label={t("piece.id")} value={port.guid || "~default~"} disabled />
       {port.description && <Textarea label="Description" value={port.description} disabled />}
       {port.family && <Input label="Family" value={port.family} disabled />}
       {port.mandatory !== undefined && <Input label="Mandatory" value={port.mandatory ? "Yes" : "No"} disabled />}

@@ -174,7 +174,7 @@ const EditorContent: FC = () => {
   }, [kit?.designs, selectedKind, selectedName, selectedVariant]);
 
   useEffect(() => {
-    if (editorType !== EditorType.KIT) {
+    if (editorType !== "kit") {
       return;
     }
 
