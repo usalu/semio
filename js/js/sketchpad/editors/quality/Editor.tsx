@@ -23,7 +23,7 @@ import { DragEndEvent } from "@dnd-kit/core";
 import { FC, memo, ReactNode, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
+import { ReactFlowInstance } from "@xyflow/react";
 import { guid, Quality } from "../../../semio";
 import { Canvas, useCanvasContext, VerticalWindows } from "../../Canvas";
 import { useQuality } from "../../kits/store";
@@ -67,7 +67,7 @@ DiagramWindow.displayName = "DiagramWindow";
 const Editor: FC<EditorProps> = () => {
   const { t } = useTranslation();
   const fullscreenWindow = useQualityEditor((s) => s.fullscreenWindow) as QualityEditorFullscreenWindow;
-  const { undo, redo, toggleFormulaFullscreen, toggleDiagramFullscreen, deselectAll, togglePanel, addFormulaNode, startTransaction, finalizeTransaction } = useQualityEditorCommands();
+  const { undo, redo, toggleFormulaFullscreen, toggleDiagramFullscreen, deselectAll, togglePanel, addFormulaNode, connectNodes, startTransaction, finalizeTransaction } = useQualityEditorCommands();
   const quality = useQuality() as Quality | undefined;
   const editorType = useEditorType();
 
@@ -125,17 +125,64 @@ const Editor: FC<EditorProps> = () => {
         y: event.activatorEvent.clientY + delta.y,
       });
 
-      const dragData = active.data.current as { name: string; type: "function" | "quality" | "variable" | "unit" | "value" };
+      const dragData = active.data.current as any;
+
       if (dragData) {
         startTransaction();
-        const node: FormulaNode = {
-          id: guid(),
-          type: dragData.type,
-          name: dragData.name,
-          x,
-          y,
-        };
+
+        // Check if we're dropping on a placeholder node
+        const targetNode = reactFlowInstanceRef.current.getNodes().find(n => {
+          const nodeBounds = {
+            left: n.position.x,
+            right: n.position.x + 48, // node width (12 * 4px = 48px)
+            top: n.position.y,
+            bottom: n.position.y + 48, // node height
+          };
+          return (
+            x >= nodeBounds.left &&
+            x <= nodeBounds.right &&
+            y >= nodeBounds.top &&
+            y <= nodeBounds.bottom
+          );
+        });
+
+        const isPlaceholder = targetNode?.type === "placeholder";
+        const parentId = isPlaceholder ? (targetNode?.data as any)?.parentId : undefined;
+        const operandIndex = isPlaceholder ? (targetNode?.data as any)?.operandIndex : undefined;
+
+        let node: FormulaNode;
+
+        // Handle quality avatar drops
+        if (dragData.quality) {
+          node = {
+            id: guid(),
+            type: "quality",
+            name: dragData.quality.key,
+            x: isPlaceholder ? 0 : x,
+            y: isPlaceholder ? 0 : y,
+          };
+        }
+        // Handle function/variable/unit/value drops
+        else if (dragData.type && dragData.name) {
+          node = {
+            id: guid(),
+            type: dragData.type,
+            name: dragData.name,
+            x: isPlaceholder ? 0 : x,
+            y: isPlaceholder ? 0 : y,
+          };
+        } else {
+          finalizeTransaction();
+          return;
+        }
+
         addFormulaNode(node);
+
+        // If dropping on placeholder, connect to parent
+        if (isPlaceholder && parentId) {
+          connectNodes(parentId, node.id);
+        }
+
         finalizeTransaction();
       }
     }
@@ -151,28 +198,26 @@ const Editor: FC<EditorProps> = () => {
   }, [handleDragEnd]);
 
   return (
-    <ReactFlowProvider>
-      <Canvas>
-        <CanvasWithSync fullscreenWindow={fullscreenWindow}>
-          <VerticalWindows
-            windows={[
-              {
-                id: QualityEditorFullscreenWindow.Formula,
-                children: <FormulaWindow />,
-                defaultSize: 20,
-                onDoubleClick: toggleFormulaFullscreen,
-              },
-              {
-                id: QualityEditorFullscreenWindow.Diagram,
-                children: <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
-                defaultSize: 80,
-                onDoubleClick: toggleDiagramFullscreen,
-              },
-            ]}
-          />
-        </CanvasWithSync>
-      </Canvas>
-    </ReactFlowProvider>
+    <Canvas>
+      <CanvasWithSync fullscreenWindow={fullscreenWindow}>
+        <VerticalWindows
+          windows={[
+            {
+              id: QualityEditorFullscreenWindow.Formula,
+              children: <FormulaWindow />,
+              defaultSize: 20,
+              onDoubleClick: toggleFormulaFullscreen,
+            },
+            {
+              id: QualityEditorFullscreenWindow.Diagram,
+              children: <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
+              defaultSize: 80,
+              onDoubleClick: toggleDiagramFullscreen,
+            },
+          ]}
+        />
+      </CanvasWithSync>
+    </Canvas>
   );
 };
 

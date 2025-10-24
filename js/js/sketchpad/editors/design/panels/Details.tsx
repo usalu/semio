@@ -31,8 +31,8 @@ import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Connection, Design, Guid, Kit, Piece, findConnectionInDesign, findDesignInKit, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
-import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePieces, useReplacableDesigns, useReplacableTypes } from "../../../store";
-import { useDesignEditorCommands } from "../store";
+import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePieces, usePiecesFromIds, useReplacableDesigns, useReplacableTypes } from "../../../store";
+import { useDesignEditorCommands, useDesignEditorSelection } from "../store";
 
 export const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
@@ -482,7 +482,8 @@ const PiecesSectionForm: FC = () => {
   const kit = useKit() as Kit;
   // const metadata = usePiecesMetadata();
   const metadata = new Map();
-  const pieces = usePieces();
+  const selection = useDesignEditorSelection();
+  const pieces = usePiecesFromIds(selection.pieces || []);
   // const includedDesigns = useIncludedDesigns();
 
   // const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
@@ -575,6 +576,60 @@ const PiecesSectionForm: FC = () => {
     }
   };
 
+  const handlePlaneXAxisXChange = (value: number) => {
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, x: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, xAxis: { ...p.plane!.xAxis, x: value } } } }));
+      updatePieces(updates);
+    }
+  };
+
+  const handlePlaneXAxisYChange = (value: number) => {
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, y: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, xAxis: { ...p.plane!.xAxis, y: value } } } }));
+      updatePieces(updates);
+    }
+  };
+
+  const handlePlaneXAxisZChange = (value: number) => {
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, z: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, xAxis: { ...p.plane!.xAxis, z: value } } } }));
+      updatePieces(updates);
+    }
+  };
+
+  const handlePlaneYAxisXChange = (value: number) => {
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, x: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, yAxis: { ...p.plane!.yAxis, x: value } } } }));
+      updatePieces(updates);
+    }
+  };
+
+  const handlePlaneYAxisYChange = (value: number) => {
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, y: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, yAxis: { ...p.plane!.yAxis, y: value } } } }));
+      updatePieces(updates);
+    }
+  };
+
+  const handlePlaneYAxisZChange = (value: number) => {
+    if (isSingle && piece && piece.plane) {
+      updatePiece(piece.guid, { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, z: value } } });
+    } else {
+      const updates = pieces.filter((p) => p.plane).map((p) => ({ id: p.guid, diff: { plane: { ...p.plane!, yAxis: { ...p.plane!.yAxis, z: value } } } }));
+      updatePieces(updates);
+    }
+  };
+
   const commonTypeName = getCommonValue((p) => {
     const type = p.type ? findTypeInKit(kit, p.type) : null;
     return type?.name;
@@ -588,6 +643,12 @@ const PiecesSectionForm: FC = () => {
   const commonPlaneOriginX = getCommonValue((p) => p.plane?.origin.x);
   const commonPlaneOriginY = getCommonValue((p) => p.plane?.origin.y);
   const commonPlaneOriginZ = getCommonValue((p) => p.plane?.origin.z);
+  const commonPlaneXAxisX = getCommonValue((p) => p.plane?.xAxis.x);
+  const commonPlaneXAxisY = getCommonValue((p) => p.plane?.xAxis.y);
+  const commonPlaneXAxisZ = getCommonValue((p) => p.plane?.xAxis.z);
+  const commonPlaneYAxisX = getCommonValue((p) => p.plane?.yAxis.x);
+  const commonPlaneYAxisY = getCommonValue((p) => p.plane?.yAxis.y);
+  const commonPlaneYAxisZ = getCommonValue((p) => p.plane?.yAxis.z);
 
   const hasCenter = pieces.some((p) => p.center);
   const hasPlane = pieces.some((p) => p.plane);
@@ -845,44 +906,128 @@ const PiecesSectionForm: FC = () => {
       )}
       {hasPlane && (
         <TreeItem label={t("piece.plane")}>
-          <TreeItem>
-            <TreeContent>
-              <Stepper
-                label={t("common.x")}
-                value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
-                onChange={handlePlaneOriginXChange}
-                startTransaction={startTransaction}
-                finalizeTransaction={finalizeTransaction}
-                abortTransaction={abortTransaction}
-                step={0.1}
-              />
-            </TreeContent>
+          <TreeItem label={t("piece.planeOrigin")}>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.x")}
+                  value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
+                  onChange={handlePlaneOriginXChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.y")}
+                  value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
+                  onChange={handlePlaneOriginYChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.z")}
+                  value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
+                  onChange={handlePlaneOriginZChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
           </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Stepper
-                label={t("common.y")}
-                value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
-                onChange={handlePlaneOriginYChange}
-                startTransaction={startTransaction}
-                finalizeTransaction={finalizeTransaction}
-                abortTransaction={abortTransaction}
-                step={0.1}
-              />
-            </TreeContent>
+          <TreeItem label={t("piece.planeXAxis")}>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.x")}
+                  value={isSingle && piece ? piece.plane?.xAxis.x : commonPlaneXAxisX}
+                  onChange={handlePlaneXAxisXChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.y")}
+                  value={isSingle && piece ? piece.plane?.xAxis.y : commonPlaneXAxisY}
+                  onChange={handlePlaneXAxisYChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.z")}
+                  value={isSingle && piece ? piece.plane?.xAxis.z : commonPlaneXAxisZ}
+                  onChange={handlePlaneXAxisZChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
           </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Stepper
-                label={t("common.z")}
-                value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
-                onChange={handlePlaneOriginZChange}
-                startTransaction={startTransaction}
-                finalizeTransaction={finalizeTransaction}
-                abortTransaction={abortTransaction}
-                step={0.1}
-              />
-            </TreeContent>
+          <TreeItem label={t("piece.planeYAxis")}>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.x")}
+                  value={isSingle && piece ? piece.plane?.yAxis.x : commonPlaneYAxisX}
+                  onChange={handlePlaneYAxisXChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.y")}
+                  value={isSingle && piece ? piece.plane?.yAxis.y : commonPlaneYAxisY}
+                  onChange={handlePlaneYAxisYChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Stepper
+                  label={t("common.z")}
+                  value={isSingle && piece ? piece.plane?.yAxis.z : commonPlaneYAxisZ}
+                  onChange={handlePlaneYAxisZChange}
+                  startTransaction={startTransaction}
+                  finalizeTransaction={finalizeTransaction}
+                  abortTransaction={abortTransaction}
+                  step={0.1}
+                />
+              </TreeContent>
+            </TreeItem>
           </TreeItem>
         </TreeItem>
       )}

@@ -362,6 +362,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ └── en.json
 │ │ ├── sketchpad
 │ │ │ ├── editors
+│ │ │ │ ├── index.tsx
+│ │ │ │ ├── registry.tsx
 │ │ │ │ ├── design
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ ├── Diagram.tsx
@@ -376,6 +378,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
 │ │ │ │ ├── home
@@ -383,6 +386,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ └── Table.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
 │ │ │ │ │ ├── canvas
@@ -392,6 +396,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ └── Settings.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── quality
 │ │ │ │ │ ├── canvas
@@ -405,6 +410,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ └── index.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── functions.ts
+│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
 │ │ │ │ └── type
@@ -420,6 +427,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ ├── commands.ts
 │ │ │ │ ├── Editor.tsx
+│ │ │ │ ├── registration.tsx
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
 │ │ │ ├── kits

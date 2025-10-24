@@ -19,9 +19,7 @@
 
 // #endregion
 
-import { Connection as XYFlowConnection } from "@xyflow/react";
 import React, { createContext, useContext, useMemo } from "react";
-import { Group as THREEGroup, Side as THREESide } from "three";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import {
@@ -40,7 +38,6 @@ import {
   DesignDiff,
   DesignShallow,
   DiffStatus,
-  File as SemioFile,
   FileDiff,
   Group,
   GroupDiff,
@@ -52,9 +49,9 @@ import {
   LayerDiff,
   Location,
   LocationDiff,
-  Plane,
   Piece,
   PieceDiff,
+  Plane,
   PlaneDiff,
   Point,
   PointDiff,
@@ -66,6 +63,7 @@ import {
   QualityDiff,
   Representation,
   RepresentationDiff,
+  File as SemioFile,
   Side,
   SideDiff,
   Stat,
@@ -92,7 +90,7 @@ import {
 } from "../../semio";
 import { useDesignEditorDiff, useDesignEditorHover, useDesignEditorIsPieceTransitiveHovered, useDesignEditorSelection, useDesignEditorStore } from "../editors/design/store";
 import type { SketchpadStore, Url } from "../store";
-import { Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep, Disposable } from "../store";
+import { Disposable, Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
 
 type YAttributeVal = string;
@@ -2361,38 +2359,56 @@ export function usePiecePlane(): Plane {
 
 export function usePieceStatus(): DiffStatus {
   const piece = usePieceScope();
-  const kitDiff = useDesignEditorDiff();
   const designScope = useDesignScope();
+  const designEditorStore = useDesignEditorStore(identitySelector) as any;
 
-  if (!piece || !designScope || !kitDiff?.designs?.updated) {
+  if (!designEditorStore || !piece || !designScope) {
     return DiffStatus.Unchanged;
   }
 
-  // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find((d) => d.id === designScope.guid);
+  // Subscribe to store changes including transaction stack
+  // The selector must return a stable value for the same state to prevent infinite loops
+  return useSync<any, DiffStatus>(
+    designEditorStore,
+    () => {
+      const currentStack = designEditorStore.currentTransactionStack;
+      if (!currentStack || currentStack.length === 0) {
+        return DiffStatus.Unchanged;
+      }
 
-  if (!designDiff?.diff.pieces) {
-    return DiffStatus.Unchanged;
-  }
+      // Check the transaction stack for this piece's status
+      for (const edit of currentStack) {
+        if (edit.do?.kitDiff?.designs) {
+          for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+            const designUpdateGuid = typeof designUpdate.id === "string" ? designUpdate.id : designUpdate.id.guid;
+            if (designUpdateGuid !== designScope.guid) continue;
 
-  const piecesDiff = designDiff.diff.pieces;
+            if (!designUpdate.diff.pieces) continue;
 
-  // Check if piece is removed
-  if (piecesDiff.removed?.some((p) => p === piece.guid)) {
-    return DiffStatus.Removed;
-  }
+            const piecesDiff = designUpdate.diff.pieces;
 
-  // Check if piece is added
-  if (piecesDiff.added?.some((p) => p.guid === piece.guid)) {
-    return DiffStatus.Added;
-  }
+            // Check if piece is removed
+            if (piecesDiff.removed?.some((p: string) => p === piece.guid)) {
+              return DiffStatus.Removed;
+            }
 
-  // Check if piece is updated
-  if (piecesDiff.updated?.some((p) => p.id === piece.guid)) {
-    return DiffStatus.Modified;
-  }
+            // Check if piece is added
+            if (piecesDiff.added?.some((p: Piece) => p.guid === piece.guid)) {
+              return DiffStatus.Added;
+            }
 
-  return DiffStatus.Unchanged;
+            // Check if piece is updated
+            if (piecesDiff.updated?.some((p: { id: string }) => p.id === piece.guid)) {
+              return DiffStatus.Modified;
+            }
+          }
+        }
+      }
+
+      return DiffStatus.Unchanged;
+    },
+    true,
+  ) as DiffStatus;
 }
 
 /**
@@ -2403,51 +2419,57 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: Guid, dee
   const originalPiece = usePiece(identitySelector, id, deep) as Piece;
   const pieceScope = usePieceScope();
   const designScope = useDesignScope();
-  const store = useDesignEditorStore(identitySelector);
+  const designEditorStore = useDesignEditorStore(identitySelector) as any;
 
-  if (!pieceScope || !designScope || !store) {
+  if (!designEditorStore || !pieceScope || !designScope) {
     return selector ? selector(originalPiece) : originalPiece;
   }
 
-  // Get the current transaction stack
-  const currentStack = (store as any).currentTransactionStack;
+  // Subscribe to store changes including transaction stack
+  // The selector must return a stable value for the same state to prevent infinite loops
+  return useSync<any, T | Piece>(
+    designEditorStore,
+    () => {
+      const currentStack = designEditorStore.currentTransactionStack;
+      if (!currentStack || currentStack.length === 0) {
+        return selector ? selector(originalPiece) : originalPiece;
+      }
 
-  if (!currentStack || currentStack.length === 0) {
-    return selector ? selector(originalPiece) : originalPiece;
-  }
+      // Apply all diffs from the current transaction stack to get the final diffed piece
+      let diffedPiece = { ...originalPiece };
 
-  // Apply all diffs from the current transaction stack to get the final diffed piece
-  let diffedPiece = { ...originalPiece };
+      for (const edit of currentStack) {
+        if (edit.do?.kitDiff?.designs) {
+          for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+            // Check if this is the current design - designUpdate.id is a Guid which has a guid property
+            const designUpdateGuid = typeof designUpdate.id === "string" ? designUpdate.id : designUpdate.id.guid;
+            if (designUpdateGuid !== designScope.guid) continue;
 
-  for (const edit of currentStack) {
-    if (edit.do?.kitDiff?.designs) {
-      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-        // Check if this is the current design - designUpdate.id is a Guid which has a guid property
-        const designUpdateGuid = typeof designUpdate.id === "string" ? designUpdate.id : designUpdate.id.guid;
-        if (designUpdateGuid !== designScope.guid) continue;
-
-        // Check if piece is in updated pieces
-        if (designUpdate.diff.pieces?.updated) {
-          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-            // Match by guid
-            if (pieceUpdate.id === pieceScope.guid) {
-              // Apply the diff to the piece
-              if (pieceUpdate.diff.center !== undefined) diffedPiece.center = pieceUpdate.diff.center;
-              if (pieceUpdate.diff.plane !== undefined) diffedPiece.plane = pieceUpdate.diff.plane;
-              if (pieceUpdate.diff.scale !== undefined) diffedPiece.scale = pieceUpdate.diff.scale;
-              if (pieceUpdate.diff.color !== undefined) diffedPiece.color = pieceUpdate.diff.color;
-              if (pieceUpdate.diff.description !== undefined) diffedPiece.description = pieceUpdate.diff.description;
-              if (pieceUpdate.diff.isHidden !== undefined) diffedPiece.isHidden = pieceUpdate.diff.isHidden;
-              if (pieceUpdate.diff.isLocked !== undefined) diffedPiece.isLocked = pieceUpdate.diff.isLocked;
-              // Note: We don't apply 'added' status here as added pieces won't have an original
+            // Check if piece is in updated pieces
+            if (designUpdate.diff.pieces?.updated) {
+              for (const pieceUpdate of designUpdate.diff.pieces.updated) {
+                // Match by guid
+                if (pieceUpdate.id === pieceScope.guid) {
+                  // Apply the diff to the piece
+                  if (pieceUpdate.diff.center !== undefined) diffedPiece.center = pieceUpdate.diff.center;
+                  if (pieceUpdate.diff.plane !== undefined) diffedPiece.plane = pieceUpdate.diff.plane;
+                  if (pieceUpdate.diff.scale !== undefined) diffedPiece.scale = pieceUpdate.diff.scale;
+                  if (pieceUpdate.diff.color !== undefined) diffedPiece.color = pieceUpdate.diff.color;
+                  if (pieceUpdate.diff.description !== undefined) diffedPiece.description = pieceUpdate.diff.description;
+                  if (pieceUpdate.diff.isHidden !== undefined) diffedPiece.isHidden = pieceUpdate.diff.isHidden;
+                  if (pieceUpdate.diff.isLocked !== undefined) diffedPiece.isLocked = pieceUpdate.diff.isLocked;
+                  // Note: We don't apply 'added' status here as added pieces won't have an original
+                }
+              }
             }
           }
         }
       }
-    }
-  }
 
-  return selector ? selector(diffedPiece) : diffedPiece;
+      return selector ? selector(diffedPiece) : diffedPiece;
+    },
+    true,
+  ) as T | Piece;
 }
 
 /**
@@ -3364,7 +3386,7 @@ export class DesignStore {
     const yGroup = new Y.Map() as YGroup;
     this.yGroups.push([yGroup]);
     const yGroupStore = new GroupStore(yGroup, group);
-    const groupKey = group.pieces.join(',');
+    const groupKey = group.pieces.join(",");
     this.groups.set(groupKey, yGroupStore);
   }
 
@@ -3620,13 +3642,13 @@ export class DesignStore {
     if (diff.groups !== undefined) {
       if (diff.groups.removed) {
         diff.groups.removed.forEach((pieces) => {
-          const groupKey = pieces.join(',');
+          const groupKey = pieces.join(",");
           this.groups.delete(groupKey);
           const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
           if (yGroups) {
             const index = yGroups.toArray().findIndex((yGroup) => {
               const groupPieces = (yGroup as Y.Map<unknown>).get("pieces") as Y.Array<string>;
-              return groupPieces?.toArray().join(',') === groupKey;
+              return groupPieces?.toArray().join(",") === groupKey;
             });
             if (index >= 0) yGroups.delete(index, 1);
           }
@@ -3634,7 +3656,7 @@ export class DesignStore {
       }
       if (diff.groups.updated) {
         diff.groups.updated.forEach(({ id, diff: groupDiff }) => {
-          const groupKey = id.join(',');
+          const groupKey = id.join(",");
           const groupStore = this.groups.get(groupKey);
           if (groupStore) groupStore.change(groupDiff);
         });

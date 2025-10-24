@@ -24,8 +24,10 @@ import { createPortal } from "react-dom";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../elements/display/Tooltip";
 
-import { Design, Type } from "../semio";
+import { Design, Type, Quality } from "../semio";
 import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
+import { QualityAvatar } from "./editors/quality/panels/Workbench";
+import { DraggableAvatar } from "../elements/display/Avatar";
 import "./editors";
 import { editorRegistry } from "./editors";
 import Footer, { FooterItemProvider } from "./Footer";
@@ -63,8 +65,12 @@ import {
 interface DragDropContextValue {
   activeDraggedType: Type | null;
   activeDraggedDesign: Design | null;
+  activeDraggedFunction: { name: string; label: string } | null;
+  activeDraggedQuality: any | null;
   setActiveDraggedType: (type: Type | null) => void;
   setActiveDraggedDesign: (design: Design | null) => void;
+  setActiveDraggedFunction: (func: { name: string; label: string } | null) => void;
+  setActiveDraggedQuality: (quality: any | null) => void;
 }
 
 const DragDropContext = createContext<DragDropContextValue | null>(null);
@@ -72,8 +78,25 @@ const DragDropContext = createContext<DragDropContextValue | null>(null);
 export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
   const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
+  const [activeDraggedFunction, setActiveDraggedFunction] = useState<{ name: string; label: string } | null>(null);
+  const [activeDraggedQuality, setActiveDraggedQuality] = useState<any | null>(null);
 
-  return <DragDropContext.Provider value={{ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }}>{children}</DragDropContext.Provider>;
+  return (
+    <DragDropContext.Provider
+      value={{
+        activeDraggedType,
+        activeDraggedDesign,
+        activeDraggedFunction,
+        activeDraggedQuality,
+        setActiveDraggedType,
+        setActiveDraggedDesign,
+        setActiveDraggedFunction,
+        setActiveDraggedQuality,
+      }}
+    >
+      {children}
+    </DragDropContext.Provider>
+  );
 };
 
 export const useDragDrop = () => {
@@ -167,7 +190,7 @@ const SketchpadBase: FC = () => {
   const isMobile = useIsMobile();
   const { setTheme, setLayout, setPanelSize, syncNavigation, setIsMobile: updateIsMobile, setActiveInteraction } = useSketchpadCommands();
   const currentPath = useNavigation();
-  const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
+  const { activeDraggedType, activeDraggedDesign, activeDraggedFunction, activeDraggedQuality, setActiveDraggedType, setActiveDraggedDesign, setActiveDraggedFunction, setActiveDraggedQuality } = useDragDrop();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 12 } }), useSensor(TouchSensor));
 
   // Store the desktop layout preference when not on mobile
@@ -257,11 +280,19 @@ const SketchpadBase: FC = () => {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const type = active.data.current?.type as Type | undefined;
-    const design = active.data.current?.design as Design | undefined;
+    const data = active.data.current;
+    const type = data?.type as Type | undefined;
+    const design = data?.design as Design | undefined;
+    const quality = data?.quality;
+    // Check if it's a function drag (has name and type is "function")
+    const isFunction = data?.name && (data?.type === "function" || data?.type === "quality" || data?.type === "variable" || data?.type === "unit" || data?.type === "value");
 
-    if (type) setActiveDraggedType(type);
+    if (type && !isFunction) setActiveDraggedType(type);
     if (design) setActiveDraggedDesign(design);
+    if (quality) setActiveDraggedQuality(quality);
+    if (isFunction && typeof data.name === "string") {
+      setActiveDraggedFunction({ name: data.name, label: data.name });
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -269,6 +300,8 @@ const SketchpadBase: FC = () => {
     window.dispatchEvent(new CustomEvent("quality-drag-end", { detail: event }));
     setActiveDraggedType(null);
     setActiveDraggedDesign(null);
+    setActiveDraggedFunction(null);
+    setActiveDraggedQuality(null);
     setActiveInteraction(undefined);
   };
 
@@ -379,6 +412,8 @@ const SketchpadBase: FC = () => {
               <DragOverlay>
                 {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
                 {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+                {activeDraggedQuality && <QualityAvatar quality={activeDraggedQuality} />}
+                {activeDraggedFunction && <DraggableAvatar content={activeDraggedFunction.name.substring(0, 2).toUpperCase()} />}
               </DragOverlay>
             </DesignScopeProvider>
           </KitScopeProvider>
@@ -388,6 +423,8 @@ const SketchpadBase: FC = () => {
               <DragOverlay>
                 {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
                 {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+                {activeDraggedQuality && <QualityAvatar quality={activeDraggedQuality} />}
+                {activeDraggedFunction && <DraggableAvatar content={activeDraggedFunction.name.substring(0, 2).toUpperCase()} />}
               </DragOverlay>
             </TypeScopeProvider>
           </KitScopeProvider>
@@ -396,12 +433,16 @@ const SketchpadBase: FC = () => {
             <DragOverlay>
               {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
               {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+              {activeDraggedQuality && <QualityAvatar quality={activeDraggedQuality} />}
+              {activeDraggedFunction && <DraggableAvatar content={activeDraggedFunction.name.substring(0, 2).toUpperCase()} />}
             </DragOverlay>
           </KitScopeProvider>
         ) : (
           <DragOverlay>
             {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
             {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
+            {activeDraggedQuality && <QualityAvatar quality={activeDraggedQuality} />}
+            {activeDraggedFunction && <DraggableAvatar content={activeDraggedFunction.name.substring(0, 2).toUpperCase()} />}
           </DragOverlay>
         ),
         document.body,

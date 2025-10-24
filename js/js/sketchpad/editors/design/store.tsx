@@ -117,6 +117,7 @@ export interface DesignEditorState {
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
+  currentTransactionStackLength?: number; // Added to trigger re-renders when stack changes
 }
 
 export interface DesignEditorCommandContext extends KitCommandContext {
@@ -389,6 +390,7 @@ class DesignEditorStore extends KitDiffEditorStore<DesignEditorState, DesignEdit
       camera: this.camera,
       diagramCenter: this.diagramCenter,
       diagramScale: this.diagramScale,
+      currentTransactionStackLength: this.currentTransactionStack.length, // Include stack length in snapshot
     };
   }
 

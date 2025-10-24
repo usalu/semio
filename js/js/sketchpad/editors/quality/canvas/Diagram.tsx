@@ -20,93 +20,124 @@
 // #endregion
 
 import { useDroppable } from "@dnd-kit/core";
-import { ReactFlow, Background, Controls, Edge, Connection as FlowConnection, Node, NodeTypes, addEdge, useEdgesState, useNodesState, ReactFlowInstance, useReactFlow } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import dagre from "dagre";
-import { FC, useCallback, useEffect, useMemo, RefObject } from "react";
+import { Connection as FlowConnection, Node, Edge, NodeTypes, ReactFlowInstance } from "@xyflow/react";
+import { FC, useCallback, useMemo, RefObject } from "react";
 import { useQualityEditor, useQualityEditorCommands } from "../store";
+import { formulaFunctions } from "../functions";
+import { DiagramNode, PlaceholderDiagramNode } from "@semio/js/elements/display/DiagramNode";
+import { Diagram as BaseDiagram, calculateDiagramLayout } from "@semio/js/elements/Diagram";
+
+// Function node with circular design using DiagramNode
+const FunctionNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
+  const initials = data.label.substring(0, 2).toUpperCase();
+  
+  return (
+    <DiagramNode
+      content={initials}
+      selected={selected}
+      showTopHandle
+      showBottomHandle
+    />
+  );
+};
+
+// Quality node with circular design
+const QualityNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
+  const initials = data.label
+    .split(".")
+    .map((part: string) => part[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+    
+  return (
+    <DiagramNode
+      content={initials}
+      selected={selected}
+      showTopHandle
+      showBottomHandle
+    />
+  );
+};
+
+// Variable node
+const VariableNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
+  const varName = data.label.startsWith("$") ? data.label.substring(1) : data.label;
+  const initials = varName.substring(0, 2).toUpperCase();
+  
+  return (
+    <DiagramNode
+      content={initials}
+      selected={selected}
+      showTopHandle
+      showBottomHandle
+    />
+  );
+};
+
+// Value node (units, literals)
+const ValueNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
+  const display = data.label.length > 4 ? data.label.substring(0, 4) : data.label;
+  
+  return (
+    <DiagramNode
+      content={display}
+      selected={selected}
+      showTopHandle
+    />
+  );
+};
+
+// Placeholder node for empty formula or drop targets
+const PlaceholderNode: FC<{ data: any }> = ({ data }) => {
+  return <PlaceholderDiagramNode label={data.label || "+ Drop"} />;
+};
 
 const nodeTypes: NodeTypes = {
-  function: ({ data }: any) => (
-    <div className="border border-foreground bg-panel p-2 min-w-[calc(var(--spacing)*20)] text-center">
-      <div className="text-xs font-bold">{data.label}</div>
-    </div>
-  ),
-  quality: ({ data }: any) => (
-    <div className="border border-foreground bg-panel p-2 min-w-[calc(var(--spacing)*20)] text-center">
-      <div className="text-xs text-foreground">{data.label}</div>
-    </div>
-  ),
-  variable: ({ data }: any) => (
-    <div className="border border-foreground bg-panel p-2 min-w-[calc(var(--spacing)*20)] text-center">
-      <div className="text-xs text-foreground">{data.label}</div>
-    </div>
-  ),
-  unit: ({ data }: any) => (
-    <div className="border border-foreground bg-panel p-2 min-w-[calc(var(--spacing)*20)] text-center">
-      <div className="text-xs text-foreground">{data.label}</div>
-    </div>
-  ),
-  value: ({ data }: any) => (
-    <div className="border border-foreground bg-panel p-2 min-w-[calc(var(--spacing)*20)] text-center">
-      <div className="text-xs text-foreground">{data.label}</div>
-    </div>
-  ),
+  function: FunctionNode,
+  quality: QualityNode,
+  variable: VariableNode,
+  unit: ValueNode,
+  value: ValueNode,
+  placeholder: PlaceholderNode,
 };
 
-const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 160, height: 40 });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    return {
-      ...node,
-      position: {
-        x: nodeWithPosition.x - 80,
-        y: nodeWithPosition.y - 20,
-      },
-    };
-  });
-
-  return { nodes: layoutedNodes, edges };
-};
-
-interface DiagramProps {
+interface QualityDiagramProps {
   reactFlowInstanceRef: RefObject<ReactFlowInstance | null>;
 }
 
-const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
+const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
   const formulaNodes = useQualityEditor((s) => s.formulaNodes) as any[];
   const { selectFormulaNode, hoverFormulaNode, clearHover, connectNodes } = useQualityEditorCommands();
-  const reactFlowInstance = useReactFlow();
   const { setNodeRef: setDroppableRef } = useDroppable({ id: "quality-diagram-drop-zone" });
 
-  useEffect(() => {
-    reactFlowInstanceRef.current = reactFlowInstance;
-  }, [reactFlowInstance, reactFlowInstanceRef]);
-
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
-    const nodes: Node[] = formulaNodes.map((node) => ({
-      id: node.id,
-      type: node.type,
-      position: { x: node.x ?? 0, y: node.y ?? 0 },
-      data: { label: node.name },
-    }));
+    // If no formula nodes exist, show a root placeholder
+    if (!formulaNodes || formulaNodes.length === 0) {
+      const placeholderNode: Node = {
+        id: "root-placeholder",
+        type: "placeholder",
+        position: { x: 0, y: 0 },
+        data: { label: "+ Start formula" },
+      };
+      return { nodes: [placeholderNode], edges: [] };
+    }
 
+    const nodes: Node[] = [];
     const edges: Edge[] = [];
+    const placeholderNodes: Node[] = [];
+    const placeholderEdges: Edge[] = [];
+
+    // Create nodes for existing formula nodes
     formulaNodes.forEach((node) => {
+      nodes.push({
+        id: node.id,
+        type: node.type,
+        position: { x: node.x ?? 0, y: node.y ?? 0 },
+        data: { label: node.name },
+      });
+
+      // Create edges for children
       if (node.children) {
         node.children.forEach((childId: string) => {
           edges.push({
@@ -116,43 +147,81 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
           });
         });
       }
+
+      // Add placeholder nodes for missing operands of function nodes
+      if (node.type === "function") {
+        const fn = formulaFunctions[node.name];
+        const arity = fn?.arity;
+        const currentChildCount = node.children?.length || 0;
+        
+        if (arity === "variadic" || (typeof arity === "number" && currentChildCount < arity)) {
+          // Add placeholders for missing operands
+          const maxPlaceholders = arity === "variadic" ? 1 : (arity - currentChildCount);
+          
+          for (let i = 0; i < maxPlaceholders; i++) {
+            const placeholderId = `${node.id}-placeholder-${currentChildCount + i}`;
+            placeholderNodes.push({
+              id: placeholderId,
+              type: "placeholder",
+              position: { x: 0, y: 0 },
+              data: { 
+                label: `+ ${i + 1}`,
+                parentId: node.id,
+                operandIndex: currentChildCount + i
+              },
+            });
+
+            // Add dashed edge from parent to placeholder
+            placeholderEdges.push({
+              id: `${node.id}-${placeholderId}`,
+              source: node.id,
+              target: placeholderId,
+              style: { strokeDasharray: "5 5", opacity: 0.5 },
+              animated: false,
+            });
+          }
+        }
+      }
     });
 
-    return getLayoutedElements(nodes, edges, "TB");
+    // Combine all nodes and edges, then layout
+    const allNodes = [...nodes, ...placeholderNodes];
+    const allEdges = [...edges, ...placeholderEdges];
+
+    return calculateDiagramLayout(allNodes, allEdges, {
+      direction: "TB",
+      nodeWidth: 48,
+      nodeHeight: 48,
+      rankSep: 80,
+      nodeSep: 50,
+    });
   }, [formulaNodes]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  const onConnect = useCallback(
+  const handleConnect = useCallback(
     (connection: FlowConnection) => {
       if (connection.source && connection.target) {
         connectNodes?.(connection.source, connection.target);
-        setEdges((eds) => addEdge(connection, eds));
       }
     },
-    [connectNodes, setEdges]
+    [connectNodes]
   );
 
   return (
     <div ref={setDroppableRef} className="h-full w-full bg-base">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+      <BaseDiagram
         nodeTypes={nodeTypes}
-        fitView
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
+        onConnect={handleConnect}
         onNodeClick={(_, node) => selectFormulaNode(node.id)}
         onNodeMouseEnter={(_, node) => hoverFormulaNode(node.id)}
         onNodeMouseLeave={() => clearHover()}
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
+        reactFlowInstanceRef={reactFlowInstanceRef}
+        showControls
+        fitView
+      />
     </div>
   );
 };
 
-export default Diagram;
+export default QualityDiagram;

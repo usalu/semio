@@ -558,12 +558,14 @@ const EditorContent: FC = () => {
         break;
       }
       case "qualities": {
+        const existingNames = (kit.qualities || []).map((q: Quality) => q.name || "");
+        const uniqueName = generateUniqueName(t("quality.defaultName"), existingNames);
         const existingKeys = (kit.qualities || []).map((q: Quality) => q.key);
-        const uniqueKey = generateUniqueName(t("quality.defaultKey"), existingKeys);
+        const uniqueKey = generateUniqueName("new.quality", existingKeys, ".");
         const newQuality: Quality = {
           guid: guid(),
           key: uniqueKey,
-          name: t("quality.defaultName"),
+          name: uniqueName,
         };
         kitCommands.createQuality(newQuality);
         sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);

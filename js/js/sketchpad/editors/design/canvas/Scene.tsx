@@ -21,13 +21,13 @@
 // #endregion
 
 import { Edges, Line, Select, TransformControls } from "@react-three/drei";
-import React, { FC, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import Scene from "../../../../elements/Scene";
 import { Camera, Design, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
 import { PieceScopeProvider, useDesign, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus, usePieceWithDiff, useDiffedPiece } from "../../../kits/store";
 import { useEditorPanelVisibility } from "../../../store";
-import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection } from "../store";
+import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection, useDesignEditorPieceColor } from "../store";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -61,7 +61,7 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 interface ModelPieceProps {}
 
-const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
+const ModelPiece: FC<ModelPieceProps> = (() => {
   const piece = usePiece() as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
   const isSelected = useIsPieceSelected();
@@ -71,17 +71,36 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const status = usePieceStatus();
 
   const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover, updatePiece, startTransaction, finalizeTransaction } = useDesignEditorCommands();
+
+  // Use the same color logic as diagram nodes
+  const { fill } = useDesignEditorPieceColor(undefined, piece.guid);
+
   const transformControlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group>(null);
-  const plasterColor = useMemo(() => getComputedColor("--plaster"), []);
+  const isDraggingRef = useRef(false);
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
-  const hoverColor = useMemo(() => getComputedColor("--hover-base"), []);
-  const activeColor = useMemo(() => getComputedColor("--active-base"), []);
-  const successColor = useMemo(() => getComputedColor("--color-success"), []);
-  const warningColor = useMemo(() => getComputedColor("--color-warning"), []);
 
-  const hasDiff = status !== DiffStatus.Unchanged && piece.plane !== undefined && diffedPiece.plane !== undefined && piece.plane !== diffedPiece.plane;
+  // Check if there's an actual plane difference (compare values, not just references)
+  const hasDiff = useMemo(() => {
+    if (status === DiffStatus.Unchanged) return false;
+    if (!piece.plane || !diffedPiece.plane) return false;
+
+    // Compare plane values
+    const p1 = piece.plane;
+    const p2 = diffedPiece.plane;
+    return (
+      p1.origin.x !== p2.origin.x ||
+      p1.origin.y !== p2.origin.y ||
+      p1.origin.z !== p2.origin.z ||
+      p1.xAxis.x !== p2.xAxis.x ||
+      p1.xAxis.y !== p2.xAxis.y ||
+      p1.xAxis.z !== p2.xAxis.z ||
+      p1.yAxis.x !== p2.yAxis.x ||
+      p1.yAxis.y !== p2.yAxis.y ||
+      p1.yAxis.z !== p2.yAxis.z
+    );
+  }, [status, piece.plane, diffedPiece.plane]);
 
   // const piece = flatDesign.pieces?.[pieceIndex];
   // const plane = piecePlanes[pieceIndex];
@@ -159,19 +178,42 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     },
     [selectPiece, removePieceFromSelection, addPieceToSelection],
   );
+  // Get computed color including color-mix() resolution
   const materialColor = useMemo(() => {
-    if (isSelected) return activeColor;
-    if (isHovered) return hoverColor;
-    return plasterColor;
-  }, [isSelected, isHovered, activeColor, plasterColor, plasterColor]);
-  const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : plasterColor;
+    // First resolve CSS variables and color-mix() using DOM
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.pointerEvents = 'none';
+    document.body.appendChild(tempDiv);
+    tempDiv.style.color = fill;
+    const computedColor = getComputedStyle(tempDiv).color;
+    document.body.removeChild(tempDiv);
+    
+    // Use Canvas 2D context to convert any color format (including OKLCH) to RGB
+    // Canvas always returns colors in rgba(r, g, b, a) format
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return computedColor;
+    
+    ctx.fillStyle = computedColor;
+    ctx.fillRect(0, 0, 1, 1);
+    const imageData = ctx.getImageData(0, 0, 1, 1);
+    const [r, g, b, a] = imageData.data;
+    
+    // Return RGB or RGBA format
+    return a === 255 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+  }, [fill]);
+  const emissiveColor = materialColor;
 
   // Original piece matrix
   const originalMatrix = useMemo(() => {
     if (!piece.plane) return null;
     const planeMatrix = planeToMatrix(piece.plane as Plane);
-    const threeMatrix = new THREE.Matrix4().copy(planeMatrix);
-    threeMatrix.multiply(toThreeRotation());
+    // Apply coordinate system transformation: rotationMatrix * planeMatrix
+    const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeMatrix);
     return threeMatrix;
   }, [piece.plane]);
 
@@ -179,10 +221,10 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const diffedMatrix = useMemo(() => {
     if (!diffedPiece.plane || !hasDiff) return null;
     const planeMatrix = planeToMatrix(diffedPiece.plane as Plane);
-    const threeMatrix = new THREE.Matrix4().copy(planeMatrix);
-    threeMatrix.multiply(toThreeRotation());
+    // Apply coordinate system transformation: rotationMatrix * planeMatrix
+    const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeMatrix);
     return threeMatrix;
-  }, [diffedPiece.plane, hasDiff]);
+  }, [diffedPiece, hasDiff]);
 
   // Use diffed matrix for transform controls, original for visual reference
   const transformProps = useMemo(() => {
@@ -195,20 +237,50 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     return { position, quaternion, scale };
   }, [diffedMatrix, originalMatrix, piece.plane]);
 
-  const handleTransformStart = useCallback((e?: THREE.Event) => {
-    startTransaction();
-  }, [startTransaction]);
+  // Listen to dragging-changed event from TransformControls
+  useEffect(() => {
+    const controls = transformControlsRef.current;
+    if (!controls) return;
 
-  const handleTransformEnd = useCallback((e?: THREE.Event) => {
-    if (!groupRef.current) return;
-    groupRef.current.updateMatrixWorld(true);
-    const worldMatrix = new THREE.Matrix4().copy(groupRef.current.matrixWorld);
-    const semioMatrix = new THREE.Matrix4().copy(worldMatrix);
-    semioMatrix.multiply(toSemioRotation());
-    const newPlane = matrixToPlane(semioMatrix);
-    updatePiece(piece.guid, { plane: newPlane });
-    finalizeTransaction();
-  }, [piece.guid, updatePiece, finalizeTransaction]);
+    const handleDraggingChanged = (event: any) => {
+      console.log('Dragging changed:', event.value, piece.guid);
+
+      if (event.value) {
+        // Started dragging
+        console.log('Started dragging');
+        isDraggingRef.current = true;
+        startTransaction();
+      } else {
+        // Stopped dragging
+        console.log('Stopped dragging');
+        if (!groupRef.current) {
+          console.log('No groupRef');
+          return;
+        }
+        isDraggingRef.current = false;
+
+        // Get the local matrix (not world matrix - we don't want parent transforms)
+        groupRef.current.updateMatrix();
+        const threeMatrix = new THREE.Matrix4().copy(groupRef.current.matrix);
+        console.log('Three.js local matrix:', threeMatrix.elements);
+
+        // Apply inverse coordinate transformation: inverseRotation * threeMatrix
+        const semioMatrix = new THREE.Matrix4().multiplyMatrices(toSemioRotation(), threeMatrix);
+        console.log('Semio matrix:', semioMatrix.elements);
+
+        const newPlane = matrixToPlane(semioMatrix);
+        console.log('Old plane:', piece.plane);
+        console.log('New plane:', newPlane);
+        updatePiece(piece.guid, { plane: newPlane });
+        finalizeTransaction();
+      }
+    };
+
+    controls.addEventListener('dragging-changed', handleDraggingChanged);
+    return () => {
+      controls.removeEventListener('dragging-changed', handleDraggingChanged);
+    };
+  }, [piece.guid, startTransaction, updatePiece, finalizeTransaction]);
 
   // Original piece mesh (edges only when there's a diff)
   const originalMeshContent = hasDiff && originalMatrix ? (
@@ -226,8 +298,8 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
     <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial
-        color={hasDiff ? (status === DiffStatus.Modified ? warningColor : successColor) : materialColor}
-        emissive={hasDiff ? (status === DiffStatus.Modified ? warningColor : successColor) : emissiveColor}
+        color={materialColor}
+        emissive={emissiveColor}
         emissiveIntensity={0.45}
       />
       <Edges scale={1.001} color={foregroundColor} />
@@ -237,17 +309,23 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   const hasValidPlane = !!(piece.plane && transformProps);
 
   useLayoutEffect(() => {
-    if (groupRef.current && transformProps) {
+    if (groupRef.current && transformProps && !isDraggingRef.current) {
       groupRef.current.position.copy(transformProps.position);
       groupRef.current.quaternion.copy(transformProps.quaternion);
       groupRef.current.scale.copy(transformProps.scale);
     }
   }, [transformProps]);
 
+
   return (
     <>
       {originalMeshContent}
-      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} onMouseDown={handleTransformStart} onMouseUp={handleTransformEnd}>
+      <TransformControls
+        key={piece.guid}
+        ref={transformControlsRef}
+        enabled={hasValidPlane && isSelected}
+        visible={hasValidPlane}
+      >
         <group ref={groupRef}>
           {diffedMeshContent}
         </group>

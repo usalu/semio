@@ -223,6 +223,9 @@
         "fixPieces": "Fix pieces",
         "center": "Center",
         "plane": "Plane",
+        "planeOrigin": "Origin",
+        "planeXAxis": "X Axis",
+        "planeYAxis": "Y Axis",
         "origin": "Origin"
     },
     "connection": {
@@ -452,6 +455,8 @@
         "defaultImperialUnit": "Imperial Unit",
         "editorSettings": "Quality editor settings",
         "functions": "Functions",
+        "qualities": "Qualities",
+        "noQualities": "No qualities available",
         "numericFunctions": "Numeric",
         "branchingFunctions": "Branching",
         "dataStructures": "Data Structures",

@@ -124,13 +124,13 @@ export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean 
   return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
 };
 
-export const generateUniqueName = (baseName: string, existingNames: string[]): string => {
+export const generateUniqueName = (baseName: string, existingNames: string[], separator: string = " "): string => {
   if (!existingNames.includes(baseName)) return baseName;
   let counter = 2;
-  while (existingNames.includes(`${baseName} ${counter}`)) {
+  while (existingNames.includes(`${baseName}${separator}${counter}`)) {
     counter++;
   }
-  return `${baseName} ${counter}`;
+  return `${baseName}${separator}${counter}`;
 };
 
 
@@ -143,7 +143,15 @@ export enum DiffStatus {
   Modified = "modified",
 }
 
+// Coordinate system conversion between Semio and Three.js
+// Semio: X-right, Y-forward, Z-up
+// Three.js: X-right, Y-up, Z-backward
+// Desired mapping: semioX->threeX, semioY->-threeZ, semioZ->threeY
+// Matrix columns represent where basis vectors go:
+// [1,0,0,0,  0,0,1,0,  0,-1,0,0,  0,0,0,1]
 export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+// Inverse: threeX->semioX, threeY->semioZ, threeZ->-semioY
+// [1,0,0,0,  0,0,-1,0,  0,1,0,0,  0,0,0,1]
 export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
 export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);

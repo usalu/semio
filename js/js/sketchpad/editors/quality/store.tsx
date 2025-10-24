@@ -365,11 +365,12 @@ class QualityEditorStore extends KitDiffEditorStore<QualityEditorState, QualityE
     const kitStore = this.kit();
     const state = this.snapshot();
     const kitState = kitStore.snapshot();
+    const quality = this.quality();
 
     const context: QualityEditorCommandContext = {
       qualityEditor: state,
       kit: kitState,
-      Guid: this.quality()!.guid,
+      Guid: quality?.guid || this.Guid.quality,
       fileUrls: kitStore.fileUrls,
     };
     const result = callback(context, ...rest);

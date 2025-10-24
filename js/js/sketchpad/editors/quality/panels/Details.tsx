@@ -30,7 +30,7 @@ import { useQualityEditorCommands } from "../store";
 
 export const QualityDetails: FC = () => {
   const { t } = useTranslation();
-  const quality = useQuality() as Quality | undefined;
+  const quality = useQuality(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityEditorCommands();
 
   if (!quality) return null;

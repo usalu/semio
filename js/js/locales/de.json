@@ -223,6 +223,9 @@
         "fixPieces": "Teile fixieren",
         "center": "Zentrum",
         "plane": "Ebene",
+        "planeOrigin": "Ursprung",
+        "planeXAxis": "X-Achse",
+        "planeYAxis": "Y-Achse",
         "origin": "Ursprung"
     },
     "connection": {
@@ -452,6 +455,8 @@
         "defaultImperialUnit": "Imperial-Einheit",
         "editorSettings": "Qualitätseditor-Einstellungen",
         "functions": "Funktionen",
+        "qualities": "Qualitäten",
+        "noQualities": "Keine Qualitäten verfügbar",
         "numericFunctions": "Numerisch",
         "branchingFunctions": "Verzweigung",
         "dataStructures": "Datenstrukturen",
