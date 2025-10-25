@@ -19,8 +19,8 @@
 
 // #endregion
 
-import { ReactElement, ReactNode } from "react";
-import { ScrollArea } from "./aggregation/ScrollArea";
+import { FC, ReactElement, ReactNode } from "react";
+import { ScrollArea } from "../aggregation/ScrollArea";
 
 export interface TableColumn<T = unknown> {
   id: string;
@@ -76,3 +76,36 @@ const Table = <T,>({ columns, data, onRowClick, onRowDoubleClick, rowClassName, 
 );
 
 export default Table as <T>(props: TableProps<T>) => ReactElement;
+
+export interface TableSkeletonProps {
+  columns: TableColumn[];
+  rowCount?: number;
+  className?: string;
+}
+
+export const TableSkeleton: FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
+  <ScrollArea className={`h-full w-full ${className}`}>
+    <table className="w-full border-collapse">
+      <thead className="bg-panel border-b sticky top-0 z-10">
+        <tr>
+          {columns.map((column) => (
+            <th key={column.id} className={`text-left p-2 text-sm font-medium ${column.className || ""}`} style={{ width: column.width }}>
+              {column.header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {Array.from({ length: rowCount }).map((_, index) => (
+          <tr key={index} className="border-b">
+            {columns.map((column) => (
+              <td key={column.id} className={`p-2 text-sm ${column.className || ""}`}>
+                <div className="h-4 bg-muted-foreground/20 rounded animate-pulse" />
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </ScrollArea>
+);

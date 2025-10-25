@@ -33,7 +33,12 @@ export const QualityDetails: FC = () => {
   const quality = useQuality(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityEditorCommands();
 
-  if (!quality) return null;
+  console.log("[ORIGIN] QualityDetails - quality:", quality);
+
+  if (!quality) {
+    console.log("[ORIGIN] QualityDetails - no quality found, returning null");
+    return null;
+  }
 
   return (
     <TreeSection label={t("quality.title")} defaultOpen={true}>
@@ -65,6 +70,41 @@ export const QualityDetails: FC = () => {
       <TreeItem label={t("quality.defaultImperialUnit")}>
         <TreeContent>
           <Input value={quality.defaultImperialUnit ?? ""} readOnly className="w-full" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.kind")}>
+        <TreeContent>
+          <Input type="number" value={quality.kind?.toString() ?? ""} readOnly className="w-full" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.canScale")}>
+        <TreeContent>
+          <Input type="checkbox" checked={quality.canScale ?? false} disabled className="h-4 w-4" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.defaultValue")}>
+        <TreeContent>
+          <Input type="number" value={quality.defaultValue?.toString() ?? ""} readOnly className="w-full" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.min")}>
+        <TreeContent>
+          <Input type="number" value={quality.min?.toString() ?? ""} readOnly className="w-full" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.isMinExcluded")}>
+        <TreeContent>
+          <Input type="checkbox" checked={quality.isMinExcluded ?? false} disabled className="h-4 w-4" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.max")}>
+        <TreeContent>
+          <Input type="number" value={quality.max?.toString() ?? ""} readOnly className="w-full" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("quality.isMaxExcluded")}>
+        <TreeContent>
+          <Input type="checkbox" checked={quality.isMaxExcluded ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
     </TreeSection>

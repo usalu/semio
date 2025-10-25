@@ -23,7 +23,7 @@ import { Line, Sphere, useGLTF } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import { FC, useCallback, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import SceneComponent from "../../../../elements/Scene";
+import SceneComponent from "../../../../elements/windows/Scene";
 import { guid, Point, Port, Type, Vector } from "../../../../semio";
 import { useKit, useKitCommands, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";

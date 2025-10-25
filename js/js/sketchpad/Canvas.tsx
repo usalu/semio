@@ -19,8 +19,10 @@
 
 // #endregion
 
-import { FC, Fragment, ReactNode, createContext, memo, useCallback, useContext, useMemo, useState } from "react";
+import { FC, Fragment, memo, useMemo } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../elements/aggregation/Resizable";
+import BaseCanvas, { useCanvasContext as useBaseCanvasContext } from "../elements/Canvas";
+import BaseWindow, { WindowConfig as BaseWindowConfig } from "../elements/windows/Window";
 
 export enum WindowLayout {
   SINGLE = "single",
@@ -29,61 +31,13 @@ export enum WindowLayout {
   GRID = "grid",
 }
 
-export interface WindowConfig {
-  id: string;
-  children: ReactNode;
+export interface WindowConfig extends BaseWindowConfig {
   defaultSize?: number;
-  onDoubleClick?: () => void;
-  className?: string;
 }
 
-interface CanvasContextValue {
-  fullscreenWindow: string | null;
-  setFullscreenWindow: (windowId: string | null) => void;
-  toggleFullscreenWindow: (windowId: string) => void;
-}
-
-const CanvasContext = createContext<CanvasContextValue | null>(null);
-
-export const useCanvasContext = () => {
-  const context = useContext(CanvasContext);
-  if (!context) throw new Error("useCanvasContext must be used within Canvas");
-  return context;
-};
-
-interface CanvasProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export const Canvas: FC<CanvasProps> = ({ children, className = "" }) => {
-  const [fullscreenWindow, setFullscreenWindow] = useState<string | null>(null);
-
-  const toggleFullscreenWindow = useCallback((windowId: string) => {
-    setFullscreenWindow((current) => (current === windowId ? null : windowId));
-  }, []);
-
-  const contextValue = useMemo(() => ({ fullscreenWindow, setFullscreenWindow, toggleFullscreenWindow }), [fullscreenWindow, toggleFullscreenWindow]);
-
-  return (
-    <CanvasContext.Provider value={contextValue}>
-      <div className={`relative h-full w-full ${className}`}>{children}</div>
-    </CanvasContext.Provider>
-  );
-};
-
-interface WindowProps extends WindowConfig {
-  isVisible?: boolean;
-}
-
-export const Window: FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true }) => {
-  if (!isVisible) return null;
-  return (
-    <div className={`relative h-full w-full ${className}`} onDoubleClick={onDoubleClick}>
-      {children}
-    </div>
-  );
-};
+export const Canvas = BaseCanvas;
+export const useCanvasContext = useBaseCanvasContext;
+export const Window = BaseWindow;
 
 interface HorizontalWindowsProps {
   windows: WindowConfig[];

@@ -20,25 +20,18 @@
 // #endregion
 
 import { useDroppable } from "@dnd-kit/core";
-import { Connection as FlowConnection, Node, Edge, NodeTypes, ReactFlowInstance } from "@xyflow/react";
-import { FC, useCallback, useMemo, RefObject } from "react";
-import { useQualityEditor, useQualityEditorCommands } from "../store";
-import { formulaFunctions } from "../functions";
 import { DiagramNode, PlaceholderDiagramNode } from "@semio/js/elements/display/DiagramNode";
-import { Diagram as BaseDiagram, calculateDiagramLayout } from "@semio/js/elements/Diagram";
+import { Edge, Connection as FlowConnection, Node, NodeTypes, ReactFlowInstance } from "@xyflow/react";
+import { FC, RefObject, useCallback, useMemo } from "react";
+import BaseDiagram, { calculateDiagramLayout } from "../../../../elements/windows/Diagram";
+import { formulaFunctions } from "../functions";
+import { useQualityEditor, useQualityEditorCommands } from "../store";
 
 // Function node with circular design using DiagramNode
 const FunctionNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
   const initials = data.label.substring(0, 2).toUpperCase();
-  
-  return (
-    <DiagramNode
-      content={initials}
-      selected={selected}
-      showTopHandle
-      showBottomHandle
-    />
-  );
+
+  return <DiagramNode content={initials} selected={selected} showTopHandle showBottomHandle />;
 };
 
 // Quality node with circular design
@@ -49,43 +42,23 @@ const QualityNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) 
     .join("")
     .substring(0, 2)
     .toUpperCase();
-    
-  return (
-    <DiagramNode
-      content={initials}
-      selected={selected}
-      showTopHandle
-      showBottomHandle
-    />
-  );
+
+  return <DiagramNode content={initials} selected={selected} showTopHandle showBottomHandle />;
 };
 
 // Variable node
 const VariableNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
   const varName = data.label.startsWith("$") ? data.label.substring(1) : data.label;
   const initials = varName.substring(0, 2).toUpperCase();
-  
-  return (
-    <DiagramNode
-      content={initials}
-      selected={selected}
-      showTopHandle
-      showBottomHandle
-    />
-  );
+
+  return <DiagramNode content={initials} selected={selected} showTopHandle showBottomHandle />;
 };
 
 // Value node (units, literals)
 const ValueNode: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
   const display = data.label.length > 4 ? data.label.substring(0, 4) : data.label;
-  
-  return (
-    <DiagramNode
-      content={display}
-      selected={selected}
-      showTopHandle
-    />
-  );
+
+  return <DiagramNode content={display} selected={selected} showTopHandle />;
 };
 
 // Placeholder node for empty formula or drop targets
@@ -153,21 +126,21 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
         const fn = formulaFunctions[node.name];
         const arity = fn?.arity;
         const currentChildCount = node.children?.length || 0;
-        
+
         if (arity === "variadic" || (typeof arity === "number" && currentChildCount < arity)) {
           // Add placeholders for missing operands
-          const maxPlaceholders = arity === "variadic" ? 1 : (arity - currentChildCount);
-          
+          const maxPlaceholders = arity === "variadic" ? 1 : arity - currentChildCount;
+
           for (let i = 0; i < maxPlaceholders; i++) {
             const placeholderId = `${node.id}-placeholder-${currentChildCount + i}`;
             placeholderNodes.push({
               id: placeholderId,
               type: "placeholder",
               position: { x: 0, y: 0 },
-              data: { 
+              data: {
                 label: `+ ${i + 1}`,
                 parentId: node.id,
-                operandIndex: currentChildCount + i
+                operandIndex: currentChildCount + i,
               },
             });
 
@@ -203,7 +176,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
         connectNodes?.(connection.source, connection.target);
       }
     },
-    [connectNodes]
+    [connectNodes],
   );
 
   return (

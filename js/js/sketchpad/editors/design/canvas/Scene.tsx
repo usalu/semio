@@ -23,11 +23,11 @@
 import { Edges, Line, Select, TransformControls } from "@react-three/drei";
 import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import Scene from "../../../../elements/Scene";
+import Scene, { Model } from "../../../../elements/windows/Scene";
 import { Camera, Design, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
-import { PieceScopeProvider, useDesign, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus, usePieceWithDiff, useDiffedPiece } from "../../../kits/store";
+import { PieceScopeProvider, useDesign, useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../kits/store";
 import { useEditorPanelVisibility } from "../../../store";
-import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorSelection, useDesignEditorPieceColor } from "../store";
+import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorPieceColor, useDesignEditorSelection } from "../store";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -61,7 +61,7 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 interface ModelPieceProps {}
 
-const ModelPiece: FC<ModelPieceProps> = (() => {
+const ModelPiece: FC<ModelPieceProps> = () => {
   const piece = usePiece() as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
   const isSelected = useIsPieceSelected();
@@ -78,6 +78,7 @@ const ModelPiece: FC<ModelPieceProps> = (() => {
   const transformControlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group>(null);
   const isDraggingRef = useRef(false);
+  const isUpdatingPlaneRef = useRef(false);
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
 
@@ -181,31 +182,36 @@ const ModelPiece: FC<ModelPieceProps> = (() => {
   // Get computed color including color-mix() resolution
   const materialColor = useMemo(() => {
     // First resolve CSS variables and color-mix() using DOM
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.visibility = 'hidden';
-    tempDiv.style.pointerEvents = 'none';
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.visibility = "hidden";
+    tempDiv.style.pointerEvents = "none";
     document.body.appendChild(tempDiv);
     tempDiv.style.color = fill;
     const computedColor = getComputedStyle(tempDiv).color;
     document.body.removeChild(tempDiv);
-    
+
     // Use Canvas 2D context to convert any color format (including OKLCH) to RGB
     // Canvas always returns colors in rgba(r, g, b, a) format
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = 1;
     canvas.height = 1;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return computedColor;
-    
+
     ctx.fillStyle = computedColor;
     ctx.fillRect(0, 0, 1, 1);
     const imageData = ctx.getImageData(0, 0, 1, 1);
     const [r, g, b, a] = imageData.data;
-    
-    // Return RGB or RGBA format
-    return a === 255 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-  }, [fill]);
+
+    // If transparent (alpha = 0), use foreground color as fallback
+    if (a === 0) {
+      return foregroundColor;
+    }
+
+    // Return RGB format (ignore alpha since THREE.js materials handle transparency differently)
+    return `rgb(${r}, ${g}, ${b})`;
+  }, [fill, foregroundColor]);
   const emissiveColor = materialColor;
 
   // Original piece matrix
@@ -237,98 +243,130 @@ const ModelPiece: FC<ModelPieceProps> = (() => {
     return { position, quaternion, scale };
   }, [diffedMatrix, originalMatrix, piece.plane]);
 
-  // Listen to dragging-changed event from TransformControls
+  // Listen to dragging-changed and object-change events from TransformControls
   useEffect(() => {
     const controls = transformControlsRef.current;
-    if (!controls) return;
+    console.log("Setting up event listeners for", piece.guid, "controls:", controls);
+
+    if (!controls) {
+      console.warn("No TransformControls ref available");
+      return;
+    }
+
+    const updatePlaneFromTransform = () => {
+      const transformedObject = controls.object;
+      if (!transformedObject) {
+        console.error("No object attached to TransformControls!");
+        return;
+      }
+
+      isUpdatingPlaneRef.current = true;
+
+      // Get the transform from position/rotation/scale that TransformControls modified
+      const position = transformedObject.position.clone();
+      const quaternion = transformedObject.quaternion.clone();
+      const scale = transformedObject.scale.clone();
+
+      // Compose the matrix from position, rotation, scale
+      const threeMatrix = new THREE.Matrix4().compose(position, quaternion, scale);
+
+      // Apply inverse coordinate transformation: inverseRotation * threeMatrix
+      const semioMatrix = new THREE.Matrix4().multiplyMatrices(toSemioRotation(), threeMatrix);
+
+      const newPlane = matrixToPlane(semioMatrix);
+      console.log("Updating plane during drag:", JSON.stringify(newPlane, null, 2));
+
+      updatePiece(piece.guid, { plane: newPlane });
+
+      // Re-enable useLayoutEffect after a brief delay
+      setTimeout(() => {
+        isUpdatingPlaneRef.current = false;
+      }, 10);
+    };
 
     const handleDraggingChanged = (event: any) => {
-      console.log('Dragging changed:', event.value, piece.guid);
+      console.log("=== DRAGGING CHANGED ===", event.value, piece.guid);
 
       if (event.value) {
         // Started dragging
-        console.log('Started dragging');
+        console.log("Started dragging piece", piece.guid);
         isDraggingRef.current = true;
         startTransaction();
       } else {
         // Stopped dragging
-        console.log('Stopped dragging');
-        if (!groupRef.current) {
-          console.log('No groupRef');
-          return;
-        }
+        console.log("Stopped dragging piece", piece.guid);
         isDraggingRef.current = false;
 
-        // Get the local matrix (not world matrix - we don't want parent transforms)
-        groupRef.current.updateMatrix();
-        const threeMatrix = new THREE.Matrix4().copy(groupRef.current.matrix);
-        console.log('Three.js local matrix:', threeMatrix.elements);
+        // Final update
+        updatePlaneFromTransform();
 
-        // Apply inverse coordinate transformation: inverseRotation * threeMatrix
-        const semioMatrix = new THREE.Matrix4().multiplyMatrices(toSemioRotation(), threeMatrix);
-        console.log('Semio matrix:', semioMatrix.elements);
-
-        const newPlane = matrixToPlane(semioMatrix);
-        console.log('Old plane:', piece.plane);
-        console.log('New plane:', newPlane);
-        updatePiece(piece.guid, { plane: newPlane });
+        console.log("Calling finalizeTransaction...");
         finalizeTransaction();
+        console.log("=== DONE ===");
       }
     };
 
-    controls.addEventListener('dragging-changed', handleDraggingChanged);
+    const handleObjectChange = () => {
+      // Only update while actively dragging
+      if (isDraggingRef.current) {
+        updatePlaneFromTransform();
+      }
+    };
+
+    console.log("Adding event listeners to controls");
+    controls.addEventListener("dragging-changed", handleDraggingChanged);
+    controls.addEventListener("objectChange", handleObjectChange);
+
     return () => {
-      controls.removeEventListener('dragging-changed', handleDraggingChanged);
+      console.log("Removing event listeners from controls");
+      controls.removeEventListener("dragging-changed", handleDraggingChanged);
+      controls.removeEventListener("objectChange", handleObjectChange);
     };
   }, [piece.guid, startTransaction, updatePiece, finalizeTransaction]);
 
   // Original piece mesh (edges only when there's a diff)
-  const originalMeshContent = hasDiff && originalMatrix ? (
-    <group matrix={originalMatrix} matrixAutoUpdate={false}>
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial transparent opacity={0} />
-        <Edges scale={1.001} color={mutedForegroundColor} />
-      </mesh>
-    </group>
-  ) : null;
+  const originalMeshContent =
+    hasDiff && originalMatrix ? (
+      <group matrix={originalMatrix} matrixAutoUpdate={false}>
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial transparent opacity={0} />
+          <Edges scale={1.001} color={mutedForegroundColor} />
+        </mesh>
+      </group>
+    ) : null;
 
-  // Diffed/current piece mesh
+  // Diffed/current piece mesh using Model component
   const diffedMeshContent = (
-    <mesh onClick={onSelect} onPointerEnter={() => hoverPiece(piece.guid)} onPointerLeave={() => clearHover()}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial
-        color={materialColor}
-        emissive={emissiveColor}
-        emissiveIntensity={0.45}
-      />
-      <Edges scale={1.001} color={foregroundColor} />
-    </mesh>
+    <Model
+      selected={isSelected}
+      hovered={isHovered}
+      onClick={onSelect}
+      onPointerEnter={() => hoverPiece(piece.guid)}
+      onPointerLeave={() => clearHover()}
+      color={materialColor}
+      emissiveColor={emissiveColor}
+      emissiveIntensity={0.45}
+      showEdges
+      edgeColor={foregroundColor}
+    />
   );
 
   const hasValidPlane = !!(piece.plane && transformProps);
 
   useLayoutEffect(() => {
-    if (groupRef.current && transformProps && !isDraggingRef.current) {
+    if (groupRef.current && transformProps && !isDraggingRef.current && !isUpdatingPlaneRef.current) {
       groupRef.current.position.copy(transformProps.position);
       groupRef.current.quaternion.copy(transformProps.quaternion);
       groupRef.current.scale.copy(transformProps.scale);
     }
   }, [transformProps]);
 
-
   return (
     <>
       {originalMeshContent}
-      <TransformControls
-        key={piece.guid}
-        ref={transformControlsRef}
-        enabled={hasValidPlane && isSelected}
-        visible={hasValidPlane}
-      >
-        <group ref={groupRef}>
-          {diffedMeshContent}
-        </group>
+      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} mode="translate">
+        <group ref={groupRef}>{diffedMeshContent}</group>
       </TransformControls>
     </>
   );
@@ -377,7 +415,7 @@ const ModelPiece: FC<ModelPieceProps> = (() => {
   //   );
 
   // return group;
-});
+};
 
 const ModelDesign: FC = () => {
   const commands = useDesignEditorCommands();

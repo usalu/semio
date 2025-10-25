@@ -22,10 +22,10 @@
 import { useDraggable } from "@dnd-kit/core";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { TreeContent, TreeSection } from "../../../../elements/aggregation/Tree";
 import { DraggableAvatar } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
-import { TreeContent, TreeSection } from "../../../../elements/aggregation/Tree";
-import { Guid, Quality, Kit } from "../../../../semio";
+import { Guid, Kit, Quality } from "../../../../semio";
 import { useKit, useQuality } from "../../../kits/store";
 import { useActiveInteraction, useSketchpadCommands } from "../../../store";
 import { formulaFunctions } from "../functions";
@@ -65,14 +65,7 @@ const FunctionNode: FC<FunctionNodeProps> = ({ name, type, label }) => {
     <HoverCard openDelay={500}>
       <HoverCardTrigger asChild>
         <div>
-          <DraggableAvatar
-            content={initials}
-            shouldFade={shouldFade}
-            title={label}
-            dragRef={setNodeRef}
-            dragListeners={enhancedListeners}
-            dragAttributes={attributes}
-          />
+          <DraggableAvatar content={initials} shouldFade={shouldFade} title={label} dragRef={setNodeRef} dragListeners={enhancedListeners} dragAttributes={attributes} />
         </div>
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
@@ -119,39 +112,24 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
   }
 
   const displayName = quality.name || quality.key || "Q";
-  const initials = displayName
-    .split(".")
-    .map((part) => part[0])
-    .filter(Boolean)
-    .join("")
-    .substring(0, 2)
-    .toUpperCase() || "Q";
+  const initials =
+    displayName
+      .split(".")
+      .map((part) => part[0])
+      .filter(Boolean)
+      .join("")
+      .substring(0, 2)
+      .toUpperCase() || "Q";
 
   if (!showHoverCard) {
-    return (
-      <DraggableAvatar
-        content={initials}
-        shouldFade={shouldFade}
-        title={quality.name || quality.key}
-        dragRef={setNodeRef}
-        dragListeners={enhancedListeners}
-        dragAttributes={attributes}
-      />
-    );
+    return <DraggableAvatar content={initials} shouldFade={shouldFade} title={quality.name || quality.key} dragRef={setNodeRef} dragListeners={enhancedListeners} dragAttributes={attributes} />;
   }
 
   return (
     <HoverCard openDelay={500}>
       <HoverCardTrigger asChild>
         <div>
-          <DraggableAvatar
-            content={initials}
-            shouldFade={shouldFade}
-            title={quality.name || quality.key}
-            dragRef={setNodeRef}
-            dragListeners={enhancedListeners}
-            dragAttributes={attributes}
-          />
+          <DraggableAvatar content={initials} shouldFade={shouldFade} title={quality.name || quality.key} dragRef={setNodeRef} dragListeners={enhancedListeners} dragAttributes={attributes} />
         </div>
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
@@ -174,6 +152,9 @@ export const QualityWorkbench: FC = () => {
   const { t } = useTranslation();
   const kit = useKit(undefined, undefined, true) as Kit | null;
   const qualities = kit?.qualities || [];
+
+  console.log("[ORIGIN] QualityWorkbench - kit:", kit);
+  console.log("[ORIGIN] QualityWorkbench - qualities:", qualities);
 
   return (
     <>
@@ -204,13 +185,7 @@ export const QualityWorkbench: FC = () => {
         </TreeContent>
       </TreeSection>
       <TreeSection label={t("quality.qualities")} defaultOpen={true}>
-        <TreeContent>
-          {qualities.length === 0 ? (
-            <div className="text-sm text-muted-foreground p-2">{t("quality.noQualities")}</div>
-          ) : (
-            <QualityTree qualities={qualities} />
-          )}
-        </TreeContent>
+        <TreeContent>{qualities.length === 0 ? <div className="text-sm text-muted-foreground p-2">{t("quality.noQualities")}</div> : <QualityTree qualities={qualities} />}</TreeContent>
       </TreeSection>
     </>
   );
@@ -244,7 +219,7 @@ const buildQualityTree = (qualities: Quality[]): Map<string, QualityTreeNode> =>
       }
 
       const node = currentLevel.get(part)!;
-      
+
       // If this is the last part, add the quality to this node
       if (index === parts.length - 1) {
         node.qualities.push(quality);
@@ -279,9 +254,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
                 ))}
               </div>
             )}
-            {Array.from(node.children.entries()).map(([childKey, childNode]) =>
-              renderNode(childKey, childNode, level + 1)
-            )}
+            {Array.from(node.children.entries()).map(([childKey, childNode]) => renderNode(childKey, childNode, level + 1))}
           </TreeContent>
         </TreeSection>
       );
@@ -299,9 +272,5 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
     return <></>;
   };
 
-  return (
-    <>
-      {Array.from(tree.entries()).map(([key, node]) => renderNode(key, node))}
-    </>
-  );
+  return <>{Array.from(tree.entries()).map(([key, node]) => renderNode(key, node))}</>;
 };

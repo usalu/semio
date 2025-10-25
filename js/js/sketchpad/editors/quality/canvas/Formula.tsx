@@ -22,7 +22,7 @@
 import { FC, useEffect, useRef } from "react";
 import { Quality } from "../../../../semio";
 import { useQuality } from "../../../kits/store";
-import { parseFormula, formulaToLatex as convertToLatex } from "../functions";
+import { formulaToLatex as convertToLatex, parseFormula } from "../functions";
 
 declare global {
   interface Window {
@@ -79,19 +79,18 @@ const Formula: FC = () => {
   useEffect(() => {
     if (window.MathJax && mathRef.current) {
       console.log("[ORIGIN] Rendering formula:", quality?.formula);
+      // Clear previous MathJax content
+      mathRef.current.innerHTML = "";
+      const latex = formulaToLatex(quality?.formula);
+      console.log("[ORIGIN] Generated LaTeX:", latex);
+      mathRef.current.textContent = `\\[${latex}\\]`;
       window.MathJax.typesetPromise([mathRef.current]).catch((err: any) => console.error("[ORIGIN] MathJax typeset error:", err));
     }
-  }, [quality?.formula]);
+  }, [quality?.formula, formulaToLatex]);
 
   return (
     <div className="h-full w-full border-b border-foreground bg-base flex items-center justify-center overflow-auto">
-      <div ref={mathRef} className="text-foreground p-4" style={{ fontSize: "1.5rem" }}>
-        {(() => {
-          const latex = formulaToLatex(quality?.formula);
-          console.log("[ORIGIN] Generated LaTeX:", latex);
-          return `\\[${latex}\\]`;
-        })()}
-      </div>
+      <div ref={mathRef} className="text-foreground p-4" style={{ fontSize: "1.5rem" }}></div>
     </div>
   );
 };

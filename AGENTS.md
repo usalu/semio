@@ -352,11 +352,31 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── navigation
 │ │ │ │ ├── Breadcrumb.stories.tsx
 │ │ │ │ └── Breadcrumb.tsx
+│ │ │ ├── panels
+│ │ │ │ ├── BottomPanel.tsx
+│ │ │ │ ├── LeftPanel.tsx
+│ │ │ │ ├── MiddlePanel.tsx
+│ │ │ │ ├── Panel.tsx
+│ │ │ │ ├── PanelGroup.tsx
+│ │ │ │ └── RightPanel.tsx
+│ │ │ ├── windows
+│ │ │ │ ├── Diagram.tsx
+│ │ │ │ ├── Scene.tsx
+│ │ │ │ ├── Table.tsx
+│ │ │ │ └── Window.tsx
+│ │ │ ├── Canvas.stories.tsx
+│ │ │ ├── Canvas.tsx
 │ │ │ ├── Command.stories.tsx
 │ │ │ ├── Command.tsx
+│ │ │ ├── Footer.stories.tsx
+│ │ │ ├── Footer.tsx
+│ │ │ ├── Layout.stories.tsx
+│ │ │ ├── Layout.tsx
+│ │ │ ├── Navbar.stories.tsx
+│ │ │ ├── Navbar.tsx
 │ │ │ ├── Popover.stories.tsx
 │ │ │ ├── Popover.tsx
-│ │ │ └── Scene.tsx
+│ │ │ └── index.ts
 │ │ ├── locales
 │ │ │ ├── de.json
 │ │ │ └── en.json

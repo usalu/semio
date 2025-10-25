@@ -20,15 +20,15 @@
 // #endregion
 
 import { DragEndEvent } from "@dnd-kit/core";
+import { ReactFlowInstance } from "@xyflow/react";
 import { FC, memo, ReactNode, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { ReactFlowInstance } from "@xyflow/react";
 import { guid, Quality } from "../../../semio";
 import { Canvas, useCanvasContext, VerticalWindows } from "../../Canvas";
 import { useQuality } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
-import { EditorType, useEditorType } from "../../store";
+import { useEditorType } from "../../store";
 import Diagram from "./canvas/Diagram";
 import Formula from "./canvas/Formula";
 import { QualityDetails } from "./panels/Details";
@@ -131,19 +131,14 @@ const Editor: FC<EditorProps> = () => {
         startTransaction();
 
         // Check if we're dropping on a placeholder node
-        const targetNode = reactFlowInstanceRef.current.getNodes().find(n => {
+        const targetNode = reactFlowInstanceRef.current.getNodes().find((n) => {
           const nodeBounds = {
             left: n.position.x,
             right: n.position.x + 48, // node width (12 * 4px = 48px)
             top: n.position.y,
             bottom: n.position.y + 48, // node height
           };
-          return (
-            x >= nodeBounds.left &&
-            x <= nodeBounds.right &&
-            y >= nodeBounds.top &&
-            y <= nodeBounds.bottom
-          );
+          return x >= nodeBounds.left && x <= nodeBounds.right && y >= nodeBounds.top && y <= nodeBounds.bottom;
         });
 
         const isPlaceholder = targetNode?.type === "placeholder";

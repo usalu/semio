@@ -20,11 +20,71 @@
 
 // #endregion
 
-import { GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas, ThreeEvent, useThree } from "@react-three/fiber";
 import React, { FC, ReactNode, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Camera } from "../semio";
+
+const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+
+interface ModelProps {
+  children?: ReactNode;
+  selected?: boolean;
+  hovered?: boolean;
+  onClick?: (event: ThreeEvent<MouseEvent>) => void;
+  onPointerEnter?: (event: ThreeEvent<PointerEvent>) => void;
+  onPointerLeave?: (event: ThreeEvent<PointerEvent>) => void;
+  color?: string;
+  emissiveColor?: string;
+  emissiveIntensity?: number;
+  showEdges?: boolean;
+  edgeColor?: string;
+  userData?: any;
+}
+
+export const Model: FC<ModelProps> = ({
+  children,
+  selected = false,
+  hovered = false,
+  onClick,
+  onPointerEnter,
+  onPointerLeave,
+  color,
+  emissiveColor,
+  emissiveIntensity = 0.45,
+  showEdges = true,
+  edgeColor,
+  userData,
+}) => {
+  const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
+  const activeBaseColor = useMemo(() => getComputedColor("--active-base"), []);
+  const hoverBaseColor = useMemo(() => getComputedColor("--hover-base"), []);
+
+  const resolvedColor = useMemo(() => {
+    if (color) return color;
+    if (selected) return activeBaseColor;
+    if (hovered) return hoverBaseColor;
+    return foregroundColor;
+  }, [color, selected, hovered, activeBaseColor, hoverBaseColor, foregroundColor]);
+
+  const resolvedEmissiveColor = emissiveColor || resolvedColor;
+  const resolvedEdgeColor = edgeColor || foregroundColor;
+
+  return (
+    <group userData={userData} onClick={onClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+      {children ? (
+        children
+      ) : (
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={resolvedColor} emissive={resolvedEmissiveColor} emissiveIntensity={emissiveIntensity} />
+          {showEdges && <Edges scale={1.001} color={resolvedEdgeColor} />}
+        </mesh>
+      )}
+    </group>
+  );
+};
 
 interface GltfProps {
   src: string;
@@ -38,7 +98,6 @@ const Gltf: FC<GltfProps> = ({ src, roughness, metalness }) => {
     if (roughness !== undefined || metalness !== undefined) {
       scene.traverse((node) => {
         if ((node as any).isMesh && (node as any).material) {
-          // Apply to single material
           if ((node as any).material.roughness !== undefined && roughness !== undefined) {
             (node as any).material.roughness = roughness;
           }
@@ -46,7 +105,6 @@ const Gltf: FC<GltfProps> = ({ src, roughness, metalness }) => {
             (node as any).material.metalness = metalness;
           }
 
-          // Handle array of materials if present
           if (Array.isArray((node as any).material)) {
             (node as any).material.forEach((material: any) => {
               if (material.roughness !== undefined && roughness !== undefined) {
@@ -58,7 +116,6 @@ const Gltf: FC<GltfProps> = ({ src, roughness, metalness }) => {
             });
           }
 
-          // Make sure changes are visible
           if ((node as any).material.needsUpdate !== undefined) {
             (node as any).material.needsUpdate = true;
           }
@@ -87,8 +144,6 @@ const File: FC<FileProps> = ({ src, environment, roughness, metalness }) => {
     </div>
   );
 };
-
-const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
 interface GizmoProps {
   show?: boolean;
@@ -272,6 +327,16 @@ const Scene: FC<SceneProps> = ({ children, showGrid = true, showGizmo = true, ca
         {children}
       </SceneInner>
     </Canvas>
+  </div>
+);
+
+export const SceneSkeleton: FC = () => (
+  <div className="h-full w-full bg-background flex items-center justify-center">
+    <div className="relative w-32 h-32 animate-pulse">
+      <div className="absolute inset-0 border-4 border-muted-foreground/20 rounded-lg" />
+      <div className="absolute inset-2 border-2 border-muted-foreground/20 rounded-lg" />
+      <div className="absolute inset-4 border border-muted-foreground/20 rounded-lg" />
+    </div>
   </div>
 );
 

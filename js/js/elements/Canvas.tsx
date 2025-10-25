@@ -21,6 +21,7 @@
 
 import { FC, Fragment, ReactNode, createContext, memo, useCallback, useContext, useMemo, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./aggregation/Resizable";
+import Window, { WindowConfig } from "./windows/Window";
 
 export enum WindowLayout {
   SINGLE = "single",
@@ -29,18 +30,14 @@ export enum WindowLayout {
   GRID = "grid",
 }
 
-export interface WindowConfig {
-  id: string;
-  children: ReactNode;
-  defaultSize?: number;
-  onDoubleClick?: () => void;
-  className?: string;
-}
-
 interface CanvasContextValue {
   fullscreenWindow: string | null;
   setFullscreenWindow: (windowId: string | null) => void;
   toggleFullscreenWindow: (windowId: string) => void;
+  windowErrors: Map<string, Error>;
+  setWindowError: (windowId: string, error: Error | null) => void;
+  windowLoadingStates: Map<string, boolean>;
+  setWindowLoading: (windowId: string, loading: boolean) => void;
 }
 
 const CanvasContext = createContext<CanvasContextValue | null>(null);
@@ -56,12 +53,39 @@ interface CanvasProps {
   className?: string;
 }
 
-export const Canvas: FC<CanvasProps> = ({ children, className = "" }) => {
+const Canvas: FC<CanvasProps> = ({ children, className = "" }) => {
   const [fullscreenWindow, setFullscreenWindow] = useState<string | null>(null);
+  const [windowErrors, setWindowErrors] = useState<Map<string, Error>>(new Map());
+  const [windowLoadingStates, setWindowLoadingStates] = useState<Map<string, boolean>>(new Map());
   const toggleFullscreenWindow = useCallback((windowId: string) => {
     setFullscreenWindow((current) => (current === windowId ? null : windowId));
   }, []);
-  const contextValue = useMemo(() => ({ fullscreenWindow, setFullscreenWindow, toggleFullscreenWindow }), [fullscreenWindow, toggleFullscreenWindow]);
+  const setWindowError = useCallback((windowId: string, error: Error | null) => {
+    setWindowErrors((prev) => {
+      const next = new Map(prev);
+      if (error) {
+        next.set(windowId, error);
+      } else {
+        next.delete(windowId);
+      }
+      return next;
+    });
+  }, []);
+  const setWindowLoading = useCallback((windowId: string, loading: boolean) => {
+    setWindowLoadingStates((prev) => {
+      const next = new Map(prev);
+      if (loading) {
+        next.set(windowId, loading);
+      } else {
+        next.delete(windowId);
+      }
+      return next;
+    });
+  }, []);
+  const contextValue = useMemo(
+    () => ({ fullscreenWindow, setFullscreenWindow, toggleFullscreenWindow, windowErrors, setWindowError, windowLoadingStates, setWindowLoading }),
+    [fullscreenWindow, toggleFullscreenWindow, windowErrors, setWindowError, windowLoadingStates, setWindowLoading],
+  );
   return (
     <CanvasContext.Provider value={contextValue}>
       <div className={`relative h-full w-full ${className}`}>{children}</div>
@@ -69,18 +93,7 @@ export const Canvas: FC<CanvasProps> = ({ children, className = "" }) => {
   );
 };
 
-interface WindowProps extends WindowConfig {
-  isVisible?: boolean;
-}
-
-export const Window: FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true }) => {
-  if (!isVisible) return null;
-  return (
-    <div className={`relative h-full w-full ${className}`} onDoubleClick={onDoubleClick}>
-      {children}
-    </div>
-  );
-};
+export default Canvas;
 
 interface HorizontalWindowsProps {
   windows: WindowConfig[];
