@@ -380,7 +380,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   return (
     <>
       {originalMeshContent}
-      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} mode="translate">
+      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} mode="translate" makeDefault>
         <group ref={groupRef}>{diffedMeshContent}</group>
       </TransformControls>
     </>

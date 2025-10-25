@@ -10,6 +10,7 @@
         "home.extensive": "Click to go to home",
         "kits": "All kits",
         "kits.extensive": "Click to see all kits",
+        "docs": "Documentation",
         "kitKinds": "Expand kit kinds",
         "kitKinds.extensive": "Click to expand all kit kinds",
         "kit": "Go to kit",
@@ -498,5 +499,30 @@
     "sort": {
         "ascending": "Sort ascending",
         "descending": "Sort descending"
+    },
+    "docs": {
+        "onThisPage": "On This Page",
+        "noHeadings": "No headings available",
+        "pagesCompleted": "pages completed",
+        "sections": {
+            "getting-started": {
+                "description": "Get started with Semio"
+            },
+            "tutorials": {
+                "description": "Step-by-step tutorials"
+            },
+            "integrations": {
+                "description": "Integration guides"
+            },
+            "manuals": {
+                "description": "Reference manuals"
+            },
+            "theory": {
+                "description": "Theoretical concepts"
+            },
+            "showcases": {
+                "description": "Real-world examples"
+            }
+        }
     }
 }

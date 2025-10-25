@@ -942,9 +942,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 };
 
 type SearchResult = {
-  type: "kit" | "design" | "type" | "quality";
-  item: KitShallow | DesignShallow | TypeShallow | Quality;
-  kitGuid: string;
+  type: "kit" | "design" | "type" | "quality" | "docs";
+  item: KitShallow | DesignShallow | TypeShallow | Quality | { title: string; description?: string; path: string };
+  kitGuid?: string;
 };
 
 const Search: FC = ({}) => {
@@ -969,6 +969,22 @@ const Search: FC = ({}) => {
         if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitGuid: kit.guid });
       });
     });
+    const docsPages = [
+      { title: "Getting Started", description: "Learn the basics of Semio", path: "docs/getting-started" },
+      { title: "Installation", description: "Install Semio in your project", path: "docs/getting-started/installation" },
+      { title: "Tutorials", description: "Step-by-step guides", path: "docs/tutorials" },
+      { title: "Hello Semio", description: "Your first Semio project", path: "docs/tutorials/hello-semio" },
+      { title: "Model Brick Set", description: "Create brick molds", path: "docs/tutorials/hello-semio/model-brick-set" },
+      { title: "Integrations", description: "Connect with other tools", path: "docs/integrations" },
+      { title: "Grasshopper", description: "Use Semio in Grasshopper", path: "docs/integrations/grasshopper" },
+      { title: "Manuals", description: "Reference documentation", path: "docs/manuals" },
+      { title: "Theory", description: "Understand the concepts", path: "docs/theory" },
+      { title: "Design Information Modeling", description: "Core concepts of Semio", path: "docs/theory/design-information-modeling" },
+      { title: "Showcases", description: "Real-world examples", path: "docs/showcases" },
+    ];
+    docsPages.forEach((page) => {
+      results.push({ type: "docs", item: page });
+    });
     return results;
   }, [kits]);
 
@@ -977,10 +993,12 @@ const Search: FC = ({}) => {
       new Fuse(searchData, {
         keys: [
           { name: "item.name", weight: 2 },
+          { name: "item.title", weight: 2 },
           { name: "item.variant", weight: 1.5 },
           { name: "item.view", weight: 1 },
           { name: "item.description", weight: 0.5 },
           { name: "item.key", weight: 1.5 },
+          { name: "item.path", weight: 1 },
         ],
         threshold: 0.4,
         includeScore: true,
@@ -996,10 +1014,11 @@ const Search: FC = ({}) => {
       setOpen(false);
       setQuery("");
 
-      if (type === "kit") navigate(`/kits/${item.guid}`);
-      else if (type === "design") navigate(`/kits/${kitGuid}/designs/${item.guid}`);
-      else if (type === "type") navigate(`/kits/${kitGuid}/types/${item.guid}`);
-      else if (type === "quality") navigate(`/kits/${kitGuid}?kind=qualities&select=${item.guid}`);
+      if (type === "kit") navigate(`/kits/${(item as KitShallow).guid}`);
+      else if (type === "design") navigate(`/kits/${kitGuid}/designs/${(item as DesignShallow).guid}`);
+      else if (type === "type") navigate(`/kits/${kitGuid}/types/${(item as TypeShallow).guid}`);
+      else if (type === "quality") navigate(`/kits/${kitGuid}?kind=qualities&select=${(item as Quality).guid}`);
+      else if (type === "docs") navigate(`/${(item as { path: string }).path}`);
     },
     [navigate],
   );
@@ -1009,12 +1028,14 @@ const Search: FC = ({}) => {
     if (type === "design") return <Layout size={16} />;
     if (type === "type") return <Box size={16} />;
     if (type === "quality") return <Award size={16} />;
+    if (type === "docs") return <FileText size={16} />;
     return null;
   };
 
   const getDisplayName = (result: SearchResult) => {
     const { type, item } = result;
     if (type === "quality") return (item as Quality).name;
+    if (type === "docs") return (item as { title: string }).title;
     const name = (item as any).name || "";
     const variant = (item as any).variant || "";
     const view = (item as any).view || "";
@@ -1036,7 +1057,7 @@ const Search: FC = ({}) => {
                 {searchResults
                   .filter((r: FuseResult<SearchResult>) => r.item.type === "kit")
                   .map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`kit-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                    <CommandItem key={`kit-${(r.item.item as KitShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
@@ -1048,7 +1069,7 @@ const Search: FC = ({}) => {
                 {searchResults
                   .filter((r: FuseResult<SearchResult>) => r.item.type === "design")
                   .map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`design-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                    <CommandItem key={`design-${(r.item.item as DesignShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
@@ -1060,7 +1081,7 @@ const Search: FC = ({}) => {
                 {searchResults
                   .filter((r: FuseResult<SearchResult>) => r.item.type === "type")
                   .map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`type-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                    <CommandItem key={`type-${(r.item.item as TypeShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
@@ -1072,7 +1093,19 @@ const Search: FC = ({}) => {
                 {searchResults
                   .filter((r: FuseResult<SearchResult>) => r.item.type === "quality")
                   .map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`quality-${r.item.item.guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                    <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                      <div className="flex items-center gap-2">
+                        {getIcon(r.item.type)}
+                        <span>{getDisplayName(r.item)}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+              <CommandGroup heading={t("navbar.docs", "Documentation")}>
+                {searchResults
+                  .filter((r: FuseResult<SearchResult>) => r.item.type === "docs")
+                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                    <CommandItem key={`docs-${(r.item.item as { path: string }).path}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>

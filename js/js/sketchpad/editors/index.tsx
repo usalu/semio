@@ -12,6 +12,7 @@ import "./kit/registration";
 import "./design/registration";
 import "./type/registration";
 import "./quality/registration";
+import "./docs/registration";
 
 export { editorRegistry } from "./registry";
 export type { EditorRegistration, PanelDefinition, RouteSegment } from "./registry";
