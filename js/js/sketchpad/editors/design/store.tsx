@@ -773,11 +773,21 @@ export function useDesignEditorCommandsSafe(id?: DesignEditorId) {
 export function useDesignEditorCommands(id?: DesignEditorId) {
   const store = useDesignEditorStore(undefined, id) as DesignEditorStore;
   return {
-    startTransaction: () => store.startTransaction(),
-    finalizeTransaction: () => store.finalizeTransaction(),
-    abortTransaction: () => store.abortTransaction(),
-    undo: () => store.undo(),
-    redo: () => store.redo(),
+    startTransaction: () => {
+      void store.execute("semio.designEditor.startTransaction");
+    },
+    finalizeTransaction: () => {
+      void store.execute("semio.designEditor.finalizeTransaction");
+    },
+    abortTransaction: () => {
+      void store.execute("semio.designEditor.abortTransaction");
+    },
+    undo: () => {
+      void store.execute("semio.designEditor.undo");
+    },
+    redo: () => {
+      void store.execute("semio.designEditor.redo");
+    },
     selectAll: () => store.execute("semio.designEditor.selectAll"),
     deselectAll: () => store.execute("semio.designEditor.deselectAll"),
     selectPiece: (guid: Guid) => store.execute("semio.designEditor.selectPiece", guid),

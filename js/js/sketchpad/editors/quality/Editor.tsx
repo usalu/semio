@@ -32,7 +32,7 @@ import { useEditorType } from "../../store";
 import Diagram from "./canvas/Diagram";
 import Formula from "./canvas/Formula";
 import { QualityDetails } from "./panels/Details";
-import { QualityWorkbench } from "./panels/Workbench";
+import { QualityWorkbench, QualityWorkbenchQualities } from "./panels/Workbench";
 import { FormulaNode, QualityEditorFullscreenWindow, useQualityEditor, useQualityEditorCommands } from "./store";
 
 export interface EditorProps {}
@@ -107,8 +107,17 @@ const Editor: FC<EditorProps> = () => {
       content: () => <QualityWorkbench />,
     });
 
+    addSection("workbench", {
+      id: "quality-qualities",
+      label: t("quality.qualities"),
+      order: 1,
+      defaultOpen: true,
+      content: () => <QualityWorkbenchQualities />,
+    });
+
     return () => {
       removeSection("workbench", "quality-functions");
+      removeSection("workbench", "quality-qualities");
     };
   }, [editorType, addSection, removeSection, t]);
 

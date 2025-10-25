@@ -318,11 +318,30 @@ interface SceneProps {
   onCameraChange?: (camera: Camera) => void;
   onDoubleClickCapture?: (e: React.MouseEvent) => void;
   onPointerMissed?: (e: MouseEvent) => void;
+  orthographic?: boolean;
+  shadows?: boolean;
+  className?: string;
 }
 
-const Scene: FC<SceneProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed }) => (
-  <div className="h-full w-full" onDoubleClick={onDoubleClickCapture}>
-    <Canvas onPointerMissed={onPointerMissed}>
+const Scene: FC<SceneProps> = ({
+  children,
+  showGrid = true,
+  showGizmo = true,
+  camera,
+  onCameraChange,
+  onDoubleClickCapture,
+  onPointerMissed,
+  orthographic = true,
+  shadows = false,
+  className = "",
+}) => (
+  <div className={`h-full w-full ${className}`} onDoubleClick={onDoubleClickCapture}>
+    <Canvas
+      onPointerMissed={onPointerMissed}
+      orthographic={orthographic}
+      shadows={shadows}
+      camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined}
+    >
       <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
         {children}
       </SceneInner>

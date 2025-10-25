@@ -22,7 +22,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { TreeContent, TreeSection } from "../../../../elements/aggregation/Tree";
+import { TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import { DraggableAvatar } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
 import { Guid, Kit, Quality } from "../../../../semio";
@@ -158,7 +158,7 @@ export const QualityWorkbench: FC = () => {
 
   return (
     <>
-      <TreeSection label={t("quality.numericFunctions")} defaultOpen={true}>
+      <TreeItem label={t("quality.numericFunctions")}>
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
             <FunctionNode name="Add" type="function" label={t("quality.add")} />
@@ -167,29 +167,44 @@ export const QualityWorkbench: FC = () => {
             <FunctionNode name="Divide" type="function" label={t("quality.divide")} />
           </div>
         </TreeContent>
-      </TreeSection>
-      <TreeSection label={t("quality.branchingFunctions")} defaultOpen={true}>
+      </TreeItem>
+      <TreeItem label={t("quality.branchingFunctions")}>
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
             <FunctionNode name="If" type="function" label={t("quality.if")} />
             <FunctionNode name="Switch" type="function" label={t("quality.switch")} />
           </div>
         </TreeContent>
-      </TreeSection>
-      <TreeSection label={t("quality.dataStructures")} defaultOpen={true}>
+      </TreeItem>
+      <TreeItem label={t("quality.dataStructures")}>
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
             <FunctionNode name="List" type="function" label={t("quality.list")} />
             <FunctionNode name="Dictionary" type="function" label={t("quality.dictionary")} />
           </div>
         </TreeContent>
-      </TreeSection>
-      <TreeSection label={t("quality.qualities")} defaultOpen={true}>
-        <TreeContent>{qualities.length === 0 ? <div className="text-sm text-muted-foreground p-2">{t("quality.noQualities")}</div> : <QualityTree qualities={qualities} />}</TreeContent>
-      </TreeSection>
+      </TreeItem>
     </>
   );
 };
+
+const QualityWorkbenchQualities: FC = () => {
+  const { t } = useTranslation();
+  const kit = useKit(undefined, undefined, true) as Kit | null;
+  const qualities = kit?.qualities || [];
+
+  if (qualities.length === 0) {
+    return (
+      <TreeContent>
+        <div className="text-sm text-muted-foreground p-2">{t("quality.noQualities")}</div>
+      </TreeContent>
+    );
+  }
+
+  return <QualityTree qualities={qualities} />;
+};
+
+export { QualityWorkbenchQualities };
 
 /**
  * Build nested quality tree structure based on quality keys
@@ -243,9 +258,8 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
     const hasQualities = node.qualities.length > 0;
 
     if (hasChildren) {
-      // Render as a tree section with children
       return (
-        <TreeSection key={key} label={key} defaultOpen={level < 2}>
+        <TreeItem key={key} label={key}>
           <TreeContent>
             {hasQualities && (
               <div className="flex flex-wrap gap-1 p-1">
@@ -256,16 +270,17 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
             )}
             {Array.from(node.children.entries()).map(([childKey, childNode]) => renderNode(childKey, childNode, level + 1))}
           </TreeContent>
-        </TreeSection>
+        </TreeItem>
       );
     } else if (hasQualities) {
-      // Render as a flat list of quality avatars
       return (
-        <div key={key} className="flex flex-wrap gap-1 p-1">
-          {node.qualities.map((quality) => (
-            <QualityAvatar key={quality.guid} quality={quality} showHoverCard={true} />
-          ))}
-        </div>
+        <TreeContent key={key}>
+          <div className="flex flex-wrap gap-1 p-1">
+            {node.qualities.map((quality) => (
+              <QualityAvatar key={quality.guid} quality={quality} showHoverCard={true} />
+            ))}
+          </div>
+        </TreeContent>
       );
     }
 

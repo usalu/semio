@@ -79,6 +79,19 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const groupRef = useRef<THREE.Group>(null);
   const isDraggingRef = useRef(false);
   const isUpdatingPlaneRef = useRef(false);
+
+  // Use refs to store callbacks to avoid re-running the effect
+  const updatePieceRef = useRef(updatePiece);
+  const startTransactionRef = useRef(startTransaction);
+  const finalizeTransactionRef = useRef(finalizeTransaction);
+
+  // Keep refs up to date
+  useEffect(() => {
+    updatePieceRef.current = updatePiece;
+    startTransactionRef.current = startTransaction;
+    finalizeTransactionRef.current = finalizeTransaction;
+  }, [updatePiece, startTransaction, finalizeTransaction]);
+
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
 
@@ -260,8 +273,6 @@ const ModelPiece: FC<ModelPieceProps> = () => {
         return;
       }
 
-      isUpdatingPlaneRef.current = true;
-
       // Get the transform from position/rotation/scale that TransformControls modified
       const position = transformedObject.position.clone();
       const quaternion = transformedObject.quaternion.clone();
@@ -276,12 +287,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       const newPlane = matrixToPlane(semioMatrix);
       console.log("Updating plane during drag:", JSON.stringify(newPlane, null, 2));
 
-      updatePiece(piece.guid, { plane: newPlane });
-
-      // Re-enable useLayoutEffect after a brief delay
-      setTimeout(() => {
-        isUpdatingPlaneRef.current = false;
-      }, 10);
+      updatePieceRef.current(piece.guid, { plane: newPlane });
     };
 
     const handleDraggingChanged = (event: any) => {
@@ -291,7 +297,8 @@ const ModelPiece: FC<ModelPieceProps> = () => {
         // Started dragging
         console.log("Started dragging piece", piece.guid);
         isDraggingRef.current = true;
-        startTransaction();
+        isUpdatingPlaneRef.current = true; // Disable useLayoutEffect during entire drag
+        startTransactionRef.current();
       } else {
         // Stopped dragging
         console.log("Stopped dragging piece", piece.guid);
@@ -301,15 +308,23 @@ const ModelPiece: FC<ModelPieceProps> = () => {
         updatePlaneFromTransform();
 
         console.log("Calling finalizeTransaction...");
-        finalizeTransaction();
+        finalizeTransactionRef.current();
         console.log("=== DONE ===");
+
+        // Re-enable useLayoutEffect after transaction completes
+        setTimeout(() => {
+          isUpdatingPlaneRef.current = false;
+        }, 50);
       }
     };
 
     const handleObjectChange = () => {
       // Only update while actively dragging
       if (isDraggingRef.current) {
+        console.log("Object changed, updating plane...");
         updatePlaneFromTransform();
+      } else {
+        console.log("Object changed but not dragging, ignoring");
       }
     };
 
@@ -322,7 +337,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       controls.removeEventListener("dragging-changed", handleDraggingChanged);
       controls.removeEventListener("objectChange", handleObjectChange);
     };
-  }, [piece.guid, startTransaction, updatePiece, finalizeTransaction]);
+  }, [piece.guid]); // Only re-run when piece.guid changes, not when callbacks change
 
   // Original piece mesh (edges only when there's a diff)
   const originalMeshContent =

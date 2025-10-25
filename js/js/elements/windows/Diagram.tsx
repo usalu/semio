@@ -19,10 +19,29 @@
 
 // #endregion
 
-import { Background, BackgroundVariant, Controls, Edge, EdgeTypes, MiniMap, Node, NodeTypes, ReactFlow, ReactFlowInstance, ReactFlowProvider, useEdgesState, useNodesState } from "@xyflow/react";
+import { BackgroundVariant, Edge, EdgeTypes, MiniMap, Node, NodeTypes, ReactFlow, ReactFlowInstance, ReactFlowProvider, useEdgesState, useNodesState } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import * as dagre from "dagre";
 import { FC, ReactNode, RefObject, useCallback, useEffect, useMemo } from "react";
+
+export {
+  BaseEdge,
+  ConnectionMode,
+  Handle,
+  Position,
+  useReactFlow,
+  ViewportPortal,
+  type ConnectionLineComponentProps,
+  type Edge,
+  type EdgeProps,
+  type EdgeTypes,
+  type MiniMapNodeProps,
+  type Node,
+  type NodeProps,
+  type NodeTypes,
+  type Connection as ReactFlowConnection,
+  type ReactFlowInstance,
+} from "@xyflow/react";
 
 /**
  * Layout direction for dagre
@@ -122,10 +141,14 @@ export interface DiagramProps {
   onEdgeMouseLeave?: (event: React.MouseEvent, edge: Edge) => void;
   /** Callback when pane is clicked */
   onPaneClick?: (event: React.MouseEvent) => void;
+  /** Callback when pane is double-clicked */
+  onPaneDoubleClick?: (event: React.MouseEvent) => void;
   /** Callback when viewport moves */
   onMoveEnd?: () => void;
   /** Ref to access ReactFlow instance */
   reactFlowInstanceRef?: RefObject<ReactFlowInstance | null>;
+  /** Ref to forward to the wrapper div (for drag-and-drop zones) */
+  wrapperRef?: React.RefObject<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
   /** Show background */
   showBackground?: boolean;
   /** Background variant */
@@ -202,36 +225,35 @@ const DiagramInner: FC<DiagramProps> = ({
   onEdgeMouseEnter,
   onEdgeMouseLeave,
   onPaneClick,
+  onPaneDoubleClick,
   onMoveEnd,
   reactFlowInstanceRef,
-  showBackground = false,
-  backgroundVariant = BackgroundVariant.Dots,
-  showControls = true,
+  wrapperRef,
   showMinimap = false,
   panels,
   className = "",
   fitView = true,
   minZoom = 0.1,
-  maxZoom = 4,
-  connectionMode = "strict",
+  maxZoom = 12,
+  connectionMode = "loose",
   connectionLineComponent,
   deleteKeyCode = "Delete",
-  panOnDrag = true,
+  panOnDrag = [0],
   selectionOnDrag = false,
   zoomOnScroll = true,
   zoomOnPinch = true,
   zoomOnDoubleClick = false,
-  elementsSelectable = true,
-  nodesFocusable = true,
-  edgesFocusable = true,
+  elementsSelectable = false,
+  nodesFocusable = false,
+  edgesFocusable = false,
   nodesDraggable = true,
   miniMapNodeComponent,
 }) => {
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
-  
+
   const [internalNodes, setInternalNodes, onInternalNodesChange] = useNodesState(initialNodes);
   const [internalEdges, setInternalEdges, onInternalEdgesChange] = useEdgesState(initialEdges);
-  
+
   const finalNodes = isControlled ? controlledNodes : internalNodes;
   const finalEdges = isControlled ? controlledEdges : internalEdges;
   const finalOnNodesChange = isControlled ? onNodesChangeReactFlow : onInternalNodesChange;
@@ -269,7 +291,7 @@ const DiagramInner: FC<DiagramProps> = ({
   }, [internalEdges, onEdgesChangeProp, isControlled]);
 
   return (
-    <div className={`relative w-full h-full ${className}`}>
+    <div ref={wrapperRef} className={`relative w-full h-full ${className}`}>
       <ReactFlow
         nodes={finalNodes}
         edges={finalEdges}
@@ -288,6 +310,7 @@ const DiagramInner: FC<DiagramProps> = ({
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseLeave={onEdgeMouseLeave}
         onPaneClick={onPaneClick}
+        onDoubleClick={onPaneDoubleClick}
         onMoveEnd={onMoveEnd}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -309,8 +332,6 @@ const DiagramInner: FC<DiagramProps> = ({
         proOptions={{ hideAttribution: true }}
         className="bg-background"
       >
-        {showBackground && <Background variant={backgroundVariant} gap={12} size={1} color="var(--border)" />}
-        {showControls && <Controls className="border border-border" showZoom={false} showInteractive={false} />}
         {showMinimap && <MiniMap className="border border-border" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
         {panels}
       </ReactFlow>
@@ -346,12 +367,10 @@ export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], lay
 interface DiagramSkeletonProps {
   nodeCount?: number;
   edgeCount?: number;
-  showBackground?: boolean;
-  showControls?: boolean;
   className?: string;
 }
 
-export const DiagramSkeleton: FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, showBackground = false, showControls = true, className = "" }) => {
+export const DiagramSkeleton: FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, className = "" }) => {
   const skeletonNodes: Node[] = useMemo(
     () =>
       Array.from({ length: nodeCount }).map((_, i) => ({
@@ -388,10 +407,7 @@ export const DiagramSkeleton: FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeC
         zoomOnPinch={false}
         proOptions={{ hideAttribution: true }}
         className="bg-background animate-pulse opacity-50"
-      >
-        {showBackground && <Background variant={BackgroundVariant.Dots} gap={12} size={1} color="var(--border)" />}
-        {showControls && <Controls className="border border-border" showZoom={false} showInteractive={false} />}
-      </ReactFlow>
+      ></ReactFlow>
     </div>
   );
 };

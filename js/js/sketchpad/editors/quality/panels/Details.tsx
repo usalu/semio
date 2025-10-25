@@ -21,7 +21,7 @@
 
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
+import { TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import { Input } from "../../../../elements/input/Input";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Quality } from "../../../../semio";
@@ -41,7 +41,7 @@ export const QualityDetails: FC = () => {
   }
 
   return (
-    <TreeSection label={t("quality.title")} defaultOpen={true}>
+    <>
       <TreeItem label={t("quality.key")}>
         <TreeContent>
           <Input value={quality.key ?? ""} readOnly className="w-full" />
@@ -107,6 +107,6 @@ export const QualityDetails: FC = () => {
           <Input type="checkbox" checked={quality.isMaxExcluded ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
-    </TreeSection>
+    </>
   );
 };

@@ -21,7 +21,7 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { DiagramNode, PlaceholderDiagramNode } from "@semio/js/elements/display/DiagramNode";
-import { Edge, Connection as FlowConnection, Node, NodeTypes, ReactFlowInstance } from "@xyflow/react";
+import { Edge, Node, NodeTypes, ReactFlowInstance } from "@xyflow/react";
 import { FC, RefObject, useCallback, useMemo } from "react";
 import BaseDiagram, { calculateDiagramLayout } from "../../../../elements/windows/Diagram";
 import { formulaFunctions } from "../functions";
@@ -180,7 +180,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   return (
-    <div ref={setDroppableRef} className="h-full w-full bg-base">
+    <div ref={setDroppableRef} className="h-full w-full">
       <BaseDiagram
         nodeTypes={nodeTypes}
         initialNodes={initialNodes}
@@ -190,8 +190,6 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
         onNodeMouseEnter={(_, node) => hoverFormulaNode(node.id)}
         onNodeMouseLeave={() => clearHover()}
         reactFlowInstanceRef={reactFlowInstanceRef}
-        showControls
-        fitView
       />
     </div>
   );

@@ -1,35 +1,51 @@
 import { useDroppable } from "@dnd-kit/core";
-import {
+import type { XYPosition } from "@xyflow/react";
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import BaseDiagram, {
   BaseEdge,
-  Connection as RFConnection,
-  ConnectionLineComponentProps,
-  ConnectionMode,
-  Controls,
-  Edge,
-  EdgeProps,
+  type ConnectionLineComponentProps,
+  type Edge,
+  type EdgeProps,
+  type EdgeTypes,
   Handle,
-  MiniMap,
-  MiniMapNodeProps,
-  Node,
-  NodeProps,
+  type MiniMapNodeProps,
+  type Node,
+  type NodeProps,
+  type NodeTypes,
   Position,
-  ReactFlow,
-  ReactFlowInstance,
+  type ReactFlowInstance,
+  type ReactFlowConnection as RFConnection,
   useReactFlow,
   ViewportPortal,
-  XYPosition,
-} from "@xyflow/react";
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+} from "../../../../elements/windows/Diagram";
 
 // Global state for hover management - shared across all piece nodes
 let globalHoverClearTimeout: NodeJS.Timeout | null = null;
 let currentHoveredPieceGuid: string | null = null;
 
-import { arePortsCompatible, areSameConnection, Connection as SemioConnection, Coord, Design, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, Guid, ICON_WIDTH, isPortInUse, Kit, Piece, Port, TOLERANCE, Type } from "../../../../semio";
+import {
+  arePortsCompatible,
+  areSameConnection,
+  Coord,
+  Design,
+  DiffStatus,
+  findAttributeValue,
+  findPortInType,
+  findTypeInKit,
+  getIncludedDesigns,
+  Guid,
+  ICON_WIDTH,
+  isPortInUse,
+  Kit,
+  Piece,
+  Port,
+  Connection as SemioConnection,
+  TOLERANCE,
+  Type,
+} from "../../../../semio";
 
-import "@xyflow/react/dist/style.css";
 import { Button } from "../../../../elements/input/Button";
-import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands, useDiffedPiece } from "../../../kits/store";
+import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useDiffedPiece, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands } from "../../../kits/store";
 import { ToolType, useEditorPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
   DesignEditorFullscreenWindow,
@@ -379,10 +395,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
   const diffedPiece = useDiffedPiece() as Piece;
 
   // Check if piece has a center diff - only show ghost if there's an actual position change
-  const hasCenterDiff = diff === DiffStatus.Modified &&
-    piece.center &&
-    diffedPiece.center &&
-    (piece.center.x !== diffedPiece.center.x || piece.center.y !== diffedPiece.center.y);
+  const hasCenterDiff = diff === DiffStatus.Modified && piece.center && diffedPiece.center && (piece.center.x !== diffedPiece.center.x || piece.center.y !== diffedPiece.center.y);
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
@@ -430,8 +443,8 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
         <div
           style={{
             position: "absolute",
-            left: originalPixelPos.x - ((diffedPiece.center?.x ?? 0) * ICON_WIDTH),
-            top: originalPixelPos.y - (-(diffedPiece.center?.y ?? 0) * ICON_WIDTH),
+            left: originalPixelPos.x - (diffedPiece.center?.x ?? 0) * ICON_WIDTH,
+            top: originalPixelPos.y - -(diffedPiece.center?.y ?? 0) * ICON_WIDTH,
             pointerEvents: "none",
             width: ICON_WIDTH,
             height: ICON_WIDTH,
@@ -646,7 +659,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
         width: ICON_WIDTH,
         height: ICON_WIDTH,
         position: "relative",
-        pointerEvents: "all"
+        pointerEvents: "all",
       }}
       onPointerEnter={onMouseEnter}
       onPointerLeave={onMouseLeave}
@@ -680,7 +693,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = (props) => 
 const ConnectionEdgeFallback: React.FC<EdgeProps<ConnectionEdge>> = ({ sourceX, sourceY, targetX, targetY, data, selected }) => {
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
-  const diff = (data?.SemioConnection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (data?.SemioConnection?.attributes?.find((q: any) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = "var(--foreground)";
@@ -730,7 +743,7 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
-  const diff = (data?.SemioConnection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (data?.SemioConnection?.attributes?.find((q: any) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = "var(--foreground)";
@@ -879,7 +892,15 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
   return node.data.piece.guid;
 };
 
-const connectionToEdge = (SemioConnection: SemioConnection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: SemioConnection[]): ConnectionEdge => {
+const connectionToEdge = (
+  SemioConnection: SemioConnection,
+  selected: boolean,
+  isParentConnection: boolean = false,
+  pieceIndexMap: Map<string, number>,
+  connectionIndex: number = 0,
+  designPieces?: Piece[],
+  allConnections?: SemioConnection[],
+): ConnectionEdge => {
   let sourcePieceId = SemioConnection.connecting.piece;
   let targetPieceId = SemioConnection.connected.piece;
   let sourcePortId = SemioConnection.connecting.port ?? "undefined";
@@ -897,10 +918,7 @@ const connectionToEdge = (SemioConnection: SemioConnection, selected: boolean, i
 
     const portIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === SemioConnection.connected.piece &&
-        conn.connecting.piece === SemioConnection.connecting.piece &&
-        conn.connected.port === SemioConnection.connected.port &&
-        conn.connecting.port === SemioConnection.connecting.port,
+        conn.connected.piece === SemioConnection.connected.piece && conn.connecting.piece === SemioConnection.connecting.piece && conn.connected.port === SemioConnection.connected.port && conn.connecting.port === SemioConnection.connecting.port,
     );
     sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
@@ -917,10 +935,7 @@ const connectionToEdge = (SemioConnection: SemioConnection, selected: boolean, i
 
     const portIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === SemioConnection.connected.piece &&
-        conn.connecting.piece === SemioConnection.connecting.piece &&
-        conn.connected.port === SemioConnection.connected.port &&
-        conn.connecting.port === SemioConnection.connecting.port,
+        conn.connected.piece === SemioConnection.connected.piece && conn.connecting.piece === SemioConnection.connecting.piece && conn.connected.port === SemioConnection.connected.port && conn.connecting.port === SemioConnection.connecting.port,
     );
     targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
@@ -1171,16 +1186,12 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   if (!design) return null;
 
-  const reactFlowInstance = useReactFlow();
   const [dragState, setDragState] = useState<{ lastPostition: XYPosition } | null>(null);
   const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
   const fullscreen = fullscreenWindow === DesignEditorFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
   const { setNodeRef: setDroppableRef } = useDroppable({ id: "diagram-drop-zone" });
-  useEffect(() => {
-    reactFlowInstanceRef.current = reactFlowInstance;
-  }, [reactFlowInstance, reactFlowInstanceRef]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -1192,33 +1203,37 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
         // Reset the node positions to their original state by triggering a re-render
         // The transaction abort will have restored the data, we just need to update the UI
-        reactFlowInstance.setNodes((nodes) => nodes.map((node) => ({ ...node })));
+        if (reactFlowInstanceRef.current) {
+          reactFlowInstanceRef.current.setNodes((nodes) => nodes.map((node) => ({ ...node })));
+        }
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [dragState, abortTransaction, reactFlowInstance]);
+  }, [dragState, abortTransaction, reactFlowInstanceRef]);
 
   useEffect(() => {
-    if (!viewportRestoredRef.current && savedDiagramCenter && savedDiagramScale !== undefined) {
+    if (!viewportRestoredRef.current && savedDiagramCenter && savedDiagramScale !== undefined && reactFlowInstanceRef.current) {
       isUpdatingViewportRef.current = true;
       setTimeout(() => {
-        reactFlowInstance.setViewport({ x: savedDiagramCenter.x, y: savedDiagramCenter.y, zoom: savedDiagramScale });
-        viewportRestoredRef.current = true;
-        setTimeout(() => {
-          isUpdatingViewportRef.current = false;
-        }, 100);
+        if (reactFlowInstanceRef.current) {
+          reactFlowInstanceRef.current.setViewport({ x: savedDiagramCenter.x, y: savedDiagramCenter.y, zoom: savedDiagramScale });
+          viewportRestoredRef.current = true;
+          setTimeout(() => {
+            isUpdatingViewportRef.current = false;
+          }, 100);
+        }
       }, 0);
     }
-  }, [savedDiagramCenter, savedDiagramScale, reactFlowInstance]);
+  }, [savedDiagramCenter, savedDiagramScale, reactFlowInstanceRef]);
 
   const onMoveEnd = useCallback(() => {
-    if (isUpdatingViewportRef.current) return;
-    const viewport = reactFlowInstance.getViewport();
+    if (isUpdatingViewportRef.current || !reactFlowInstanceRef.current) return;
+    const viewport = reactFlowInstanceRef.current.getViewport();
     setDiagramCenter({ x: viewport.x, y: viewport.y });
     setDiagramScale(viewport.zoom);
-  }, [reactFlowInstance, setDiagramCenter, setDiagramScale]);
+  }, [reactFlowInstanceRef, setDiagramCenter, setDiagramScale]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     console.log("onNodeClick fired", node.id, "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
@@ -1301,10 +1316,11 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const onNodeDrag = useCallback(
     (event: any, node: DiagramNode) => {
       // Allow dragging for both piece and design nodes
+      if (!dragState || !reactFlowInstanceRef.current) return;
+
       const piece = node.data.piece as Piece;
       const MIN_DISTANCE = 150;
       const SNAP_THRESHOLD = 20;
-      if (!dragState) return;
       const { lastPostition } = dragState;
 
       const altPressed = event.altKey;
@@ -1322,7 +1338,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
       for (const selectedNode of nodes.filter((n) => selection?.pieces?.includes(getPieceIdFromNode(n)))) {
         const piece = selectedNode.data.piece;
-        const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!;
+        const selectedInternalNode = reactFlowInstanceRef.current.getInternalNode(selectedNode.id)!;
 
         // Design nodes are moved without port snapping
         if (selectedNode.type === "design") {
@@ -1773,7 +1789,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
               } as SemioConnection),
             );
             if (existingConnection) continue;
-            const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!;
+            const otherInternalNode = reactFlowInstanceRef.current.getInternalNode(otherNode.id)!;
             for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
               const port = findPortInType(type, handle.id!);
               for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
@@ -1843,7 +1859,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         lastPostition: { x: draggedX, y: draggedY },
       });
     },
-    [addConnection, updatePieces, design, reactFlowInstance, selection, nodes, metadata, dragState],
+    [addConnection, updatePieces, design, reactFlowInstanceRef, selection, nodes, metadata, dragState],
   );
 
   const onNodeDragStop = useCallback(() => {
@@ -1854,14 +1870,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onConnect = useCallback(
     (params: RFConnection) => {
-      if (params.source === params.target) return;
+      if (params.source === params.target || !reactFlowInstanceRef.current) return;
 
-      const sourceInternalNode = reactFlowInstance.getInternalNode(params.source);
-      const targetInternalNode = reactFlowInstance.getInternalNode(params.target);
+      const sourceInternalNode = reactFlowInstanceRef.current.getInternalNode(params.source);
+      const targetInternalNode = reactFlowInstanceRef.current.getInternalNode(params.target);
       if (!sourceInternalNode || !targetInternalNode) return;
 
-      const sourceHandle = (sourceInternalNode.internals.handleBounds?.source ?? []).find((h) => h.id === params.sourceHandle);
-      const targetHandle = (targetInternalNode.internals.handleBounds?.source ?? []).find((h) => h.id === params.targetHandle);
+      const sourceHandle = (sourceInternalNode.internals.handleBounds?.source ?? []).find((h: any) => h.id === params.sourceHandle);
+      const targetHandle = (targetInternalNode.internals.handleBounds?.source ?? []).find((h: any) => h.id === params.targetHandle);
       if (!sourceHandle || !targetHandle) return;
 
       const sourcePieceId = extractPieceIdFromNodeId(params.source!);
@@ -1887,21 +1903,18 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       if (((design as Design).connections ?? []).find((c: SemioConnection) => areSameConnection(c, newConnection))) return;
       addConnection(newConnection);
     },
-    [addConnection, reactFlowInstance, design],
+    [addConnection, reactFlowInstanceRef, design],
   );
 
   return (
-    <div
-      id="diagram"
-      className="h-full w-full relative"
-    >
-      <ReactFlow
-        ref={setDroppableRef}
+    <div id="diagram" className="h-full w-full relative">
+      <BaseDiagram
+        wrapperRef={setDroppableRef}
         nodes={nodes}
         edges={edges}
-        nodeTypes={nodeComponents}
-        edgeTypes={edgeComponents}
-        connectionMode={ConnectionMode.Loose}
+        nodeTypes={nodeComponents as NodeTypes}
+        edgeTypes={edgeComponents as EdgeTypes}
+        connectionMode="loose"
         connectionLineComponent={ConnectionConnectionLine}
         elementsSelectable={false}
         nodesFocusable={false}
@@ -1912,26 +1925,29 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         fitView={!savedDiagramCenter && !savedDiagramScale}
         panOnDrag={[0]}
         zoomOnDoubleClick={false}
-        proOptions={{ hideAttribution: true }}
-        onNodeClick={onNodeClick}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onEdgeClick={onEdgeClick}
-        onNodeDragStart={onNodeDragStart}
-        onNodeDrag={onNodeDrag}
-        onNodeDragStop={onNodeDragStop}
+        onNodeClick={onNodeClick as any}
+        onNodeDoubleClick={onNodeDoubleClick as any}
+        onEdgeClick={onEdgeClick as any}
+        onNodeDragStart={onNodeDragStart as any}
+        onNodeDrag={onNodeDrag as any}
+        onNodeDragStop={onNodeDragStop as any}
         onPaneClick={onPaneClick}
-        onDoubleClick={onDoubleClick}
-        onConnect={onConnect}
+        onPaneDoubleClick={onDoubleClick}
         onMoveEnd={onMoveEnd}
-        className="bg-background"
-      >
-        {fullscreen && panelVisibility.toolbar && <Controls className="border border-border " showZoom={false} showInteractive={false} />}
-        {fullscreen && panelVisibility.toolbar && <MiniMap className="border border-border " maskColor="var(--accent)" bgColor="var(--background)" nodeComponent={MiniMapNode} />}
-        <ViewportPortal>⌞</ViewportPortal>
-        {others.map((presence, idx) => (
-          <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.x || 0}-${presence.cursor?.y || 0}`} {...presence} />
-        ))}
-      </ReactFlow>
+        onConnect={onConnect}
+        reactFlowInstanceRef={reactFlowInstanceRef}
+        showControls={fullscreen && panelVisibility.toolbar}
+        showMinimap={fullscreen && panelVisibility.toolbar}
+        miniMapNodeComponent={MiniMapNode}
+        panels={
+          <>
+            <ViewportPortal>⌞</ViewportPortal>
+            {others.map((presence, idx) => (
+              <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.x || 0}-${presence.cursor?.y || 0}`} {...presence} />
+            ))}
+          </>
+        }
+      />
       <HelperLines lines={helperLines} nodes={nodes} />
       {/* <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} /> */}
       {/* <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} /> */}

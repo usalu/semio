@@ -22,58 +22,119 @@
 import { FC, ReactElement, ReactNode } from "react";
 import { ScrollArea } from "../aggregation/ScrollArea";
 
+export type SortDirection = "asc" | "desc";
+
 export interface TableColumn<T = unknown> {
   id: string;
   header: ReactNode;
   accessor: (row: T) => ReactNode;
   width?: string;
   className?: string;
+  sortable?: boolean;
+  visible?: boolean | ((data: T[]) => boolean);
 }
 
 export interface TableProps<T = unknown> {
   columns: TableColumn<T>[];
   data: T[];
-  onRowClick?: (row: T, index: number) => void;
+  onRowClick?: (row: T, index: number, event: React.MouseEvent) => void;
   onRowDoubleClick?: (row: T, index: number) => void;
   rowClassName?: (row: T, index: number) => string;
+  rowKey?: (row: T, index: number) => string;
   emptyMessage?: string;
   className?: string;
+  sortColumn?: string;
+  sortDirection?: SortDirection;
+  onSort?: (columnId: string, direction: SortDirection) => void;
+  selectedRows?: Set<string> | string[];
+  getRowId?: (row: T) => string;
+  stickyHeader?: boolean;
+  headerClassName?: string;
+  rowHeight?: "compact" | "normal" | "comfortable";
 }
 
-const Table = <T,>({ columns, data, onRowClick, onRowDoubleClick, rowClassName, emptyMessage = "No data", className = "" }: TableProps<T>) => (
-  <ScrollArea className={`h-full w-full ${className}`}>
-    <table className="w-full border-collapse">
-      <thead className="bg-panel border-b sticky top-0 z-10">
-        <tr>
-          {columns.map((column) => (
-            <th key={column.id} className={`text-left p-2 text-sm font-medium ${column.className || ""}`} style={{ width: column.width }}>
-              {column.header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan={columns.length} className="p-4 text-center text-muted-foreground">
-              {emptyMessage}
-            </td>
+const Table = <T,>({
+  columns,
+  data,
+  onRowClick,
+  onRowDoubleClick,
+  rowClassName,
+  rowKey,
+  emptyMessage = "No data",
+  className = "",
+  sortColumn,
+  sortDirection,
+  onSort,
+  selectedRows,
+  getRowId,
+  stickyHeader = true,
+  headerClassName = "",
+  rowHeight = "normal",
+}: TableProps<T>) => {
+  const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
+  
+  const rowHeightClass = {
+    compact: "h-8",
+    normal: "h-9",
+    comfortable: "h-10",
+  }[rowHeight];
+
+  const visibleColumns = columns.filter((col) => {
+    if (col.visible === undefined) return true;
+    if (typeof col.visible === "boolean") return col.visible;
+    return col.visible(data);
+  });
+
+  return (
+    <ScrollArea className={`h-full w-full ${className}`}>
+      <table className="w-full border-collapse">
+        <thead className={`border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
+          <tr className={rowHeightClass}>
+            {visibleColumns.map((column) => (
+              <th key={column.id} className={`text-left p-1 font-medium ${column.className || ""}`} style={{ width: column.width }}>
+                {column.header}
+              </th>
+            ))}
           </tr>
-        ) : (
-          data.map((row, index) => (
-            <tr key={index} className={`border-b hover:bg-panel cursor-pointer ${rowClassName ? rowClassName(row, index) : ""}`} onClick={() => onRowClick?.(row, index)} onDoubleClick={() => onRowDoubleClick?.(row, index)}>
-              {columns.map((column) => (
-                <td key={column.id} className={`p-2 text-sm ${column.className || ""}`}>
-                  {column.accessor(row)}
-                </td>
-              ))}
+        </thead>
+        <tbody>
+          {data.length === 0 ? (
+            <tr>
+              <td colSpan={visibleColumns.length} className="p-4 text-center text-muted-foreground">
+                {emptyMessage}
+              </td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </ScrollArea>
-);
+          ) : (
+            data.map((row, index) => {
+              const key = rowKey ? rowKey(row, index) : index.toString();
+              const rowId = getRowId ? getRowId(row) : key;
+              const isSelected = selectedSet.has(rowId);
+              const baseRowClassName = `border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+              const customRowClassName = rowClassName ? rowClassName(row, index) : "";
+              
+              return (
+                <tr
+                  key={key}
+                  className={`${baseRowClassName} ${customRowClassName} ${onRowClick ? "cursor-pointer" : ""}`}
+                  onClick={(e) => onRowClick?.(row, index, e)}
+                  onDoubleClick={() => onRowDoubleClick?.(row, index)}
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                >
+                  {visibleColumns.map((column) => (
+                    <td key={column.id} className={`p-1 ${column.className || ""}`}>
+                      {column.accessor(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </ScrollArea>
+  );
+};
 
 export default Table as <T>(props: TableProps<T>) => ReactElement;
 
