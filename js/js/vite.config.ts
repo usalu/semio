@@ -34,20 +34,28 @@
 //You should have received a copy of the GNU Lesser General Public License
 //along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 
 export default defineConfig(async () => {
-  // normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   return {
     plugins: [
       tailwind.default(),
+      mdx({
+        remarkPlugins: [remarkGfm, remarkFrontmatter],
+        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+      }),
       react(),
       wasm(),
-      topLevelAwait(), // needed for older browsers to run wasm
+      topLevelAwait(),
     ],
   };
 });

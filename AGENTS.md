@@ -326,6 +326,15 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── Icons.tsx
 │ │ │ │ ├── Tooltip.stories.tsx
 │ │ │ │ └── Tooltip.tsx
+│ │ │ ├── docs
+│ │ │ │ ├── Aside.tsx
+│ │ │ │ ├── Card.tsx
+│ │ │ │ ├── FileTree.tsx
+│ │ │ │ ├── Page.tsx
+│ │ │ │ ├── Section.tsx
+│ │ │ │ ├── Steps.tsx
+│ │ │ │ ├── Tabs.tsx
+│ │ │ │ └── index.ts
 │ │ │ ├── input
 │ │ │ │ ├── Action.stories.tsx
 │ │ │ │ ├── Action.tsx
@@ -401,6 +410,21 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
+│ │ │ │ ├── docs
+│ │ │ │ │ ├── canvas
+│ │ │ │ │ │ └── Page.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ ├── Details.tsx
+│ │ │ │ │ │ ├── Settings.tsx
+│ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── FIX_SUMMARY.md
+│ │ │ │ │ ├── HOW_TO_ADD_DOCS.md
+│ │ │ │ │ ├── README.md
+│ │ │ │ │ ├── registration.tsx
+│ │ │ │ │ ├── registry.ts
+│ │ │ │ │ └── store.tsx
 │ │ │ │ ├── home
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Table.tsx

@@ -59,6 +59,7 @@ import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, Breadcrumb
 import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
 import "./editors";
 import { editorRegistry } from "./editors";
+import { docsRegistry } from "./editors/docs/registry";
 import { useDesignEditorCommands } from "./editors/design/store";
 import { useHomeCommands } from "./editors/home/store";
 import { useKitEditorCommands } from "./editors/kit/store";
@@ -195,10 +196,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const pathParts = navigation.split("/").filter((p) => p);
   const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
   const isKitsPath = pathParts[0] === "kits";
+  const isDocsPath = pathParts[0] === "docs";
 
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
+
+  const docsSection = isDocsPath && pathParts[1] ? pathParts[1] : null;
+  const docsPagePath = isDocsPath && pathParts.length > 1 ? pathParts.slice(1).join("/") : null;
 
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
 
@@ -936,6 +941,49 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
           </>
         )}
+        {isDocsPath && (
+          <>
+            <BreadcrumbItem tooltip={tooltip("navbar.docs")}>
+              <BreadcrumbLink onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>
+                <FileText size={16} />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {docsSection && (
+              <>
+                <BreadcrumbSeparator 
+                  items={docsRegistry.getAllSections().map(s => ({ 
+                    label: `${s.emoji} ${s.label}`, 
+                    href: `/docs/${s.id}` 
+                  }))} 
+                  tooltip={tooltip("navbar.sections")} 
+                  onNavigate={(href) => navigate(href)} 
+                />
+                <BreadcrumbItem>
+                  <BreadcrumbLink onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }}>
+                    {docsRegistry.getAllSections().find(s => s.id === docsSection)?.label || docsSection}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+            {docsPagePath && docsSection && (
+              <>
+                <BreadcrumbSeparator 
+                  items={docsRegistry.getPagesBySection(docsSection).map(p => ({ 
+                    label: p.title, 
+                    href: `/${p.path}` 
+                  }))} 
+                  tooltip={tooltip("navbar.pages")} 
+                  onNavigate={(href) => navigate(href)} 
+                />
+                <BreadcrumbItem>
+                  <BreadcrumbLink style={{ cursor: "default" }}>
+                    {docsRegistry.getAllPages().find(p => p.path === `docs/${docsPagePath}`)?.title || pathParts[pathParts.length - 1]}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+          </>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );
@@ -969,19 +1017,7 @@ const Search: FC = ({}) => {
         if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitGuid: kit.guid });
       });
     });
-    const docsPages = [
-      { title: "Getting Started", description: "Learn the basics of Semio", path: "docs/getting-started" },
-      { title: "Installation", description: "Install Semio in your project", path: "docs/getting-started/installation" },
-      { title: "Tutorials", description: "Step-by-step guides", path: "docs/tutorials" },
-      { title: "Hello Semio", description: "Your first Semio project", path: "docs/tutorials/hello-semio" },
-      { title: "Model Brick Set", description: "Create brick molds", path: "docs/tutorials/hello-semio/model-brick-set" },
-      { title: "Integrations", description: "Connect with other tools", path: "docs/integrations" },
-      { title: "Grasshopper", description: "Use Semio in Grasshopper", path: "docs/integrations/grasshopper" },
-      { title: "Manuals", description: "Reference documentation", path: "docs/manuals" },
-      { title: "Theory", description: "Understand the concepts", path: "docs/theory" },
-      { title: "Design Information Modeling", description: "Core concepts of Semio", path: "docs/theory/design-information-modeling" },
-      { title: "Showcases", description: "Real-world examples", path: "docs/showcases" },
-    ];
+    const docsPages = docsRegistry.getAllPages();
     docsPages.forEach((page) => {
       results.push({ type: "docs", item: page });
     });

@@ -55,7 +55,16 @@ export const commands = {
 };
 
 export function registerDocsCommands(store: DocsEditorStore): void {
-  Object.entries(commands).forEach(([name, handler]) => {
-    store.registerCommand(name, handler);
-  });
+  store.registerCommand("selectPage", (args: { section: string; page: string }) =>
+    commands["semio.docsEditor.selectPage"](store.buildContext(), args.section, args.page)
+  );
+  store.registerCommand("toggleSection", (args: { section: string }) =>
+    commands["semio.docsEditor.toggleSection"](store.buildContext(), args.section)
+  );
+  store.registerCommand("updateSectionProgress", (args: { section: string; progress: number }) =>
+    commands["semio.docsEditor.updateSectionProgress"](store.buildContext(), args.section, args.progress)
+  );
+  store.registerCommand("markPageComplete", (args: { section: string; page: string }) =>
+    commands["semio.docsEditor.markPageComplete"](store.buildContext(), args.section, args.page)
+  );
 }

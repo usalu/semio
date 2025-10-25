@@ -6,18 +6,21 @@
 
 // #endregion
 
-import { FC } from "react";
+import { FC, Suspense } from "react";
 import Page from "../../../../elements/docs/Page";
+import { MDXProvider } from "../mdx-provider";
 
 interface PageCanvasProps {
-  content?: string;
+  MDXContent?: React.ComponentType;
   frontmatter?: any;
 }
 
-const PageCanvas: FC<PageCanvasProps> = ({ content, frontmatter }) => {
+const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
   return (
     <Page frontmatter={frontmatter}>
-      <div dangerouslySetInnerHTML={{ __html: content || "<p>No content</p>" }} />
+      <MDXProvider>
+        <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>{MDXContent ? <MDXContent /> : <p className="text-muted-foreground">No content available</p>}</Suspense>
+      </MDXProvider>
     </Page>
   );
 };

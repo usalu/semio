@@ -501,9 +501,12 @@
         "descending": "Absteigend sortieren"
     },
     "docs": {
+        "navigation": "Navigation",
+        "tableOfContents": "Auf dieser Seite",
+        "settings": "Einstellungen",
+        "pagesCompleted": "Seiten abgeschlossen",
         "onThisPage": "Auf dieser Seite",
         "noHeadings": "Keine Überschriften verfügbar",
-        "pagesCompleted": "Seiten abgeschlossen",
         "sections": {
             "getting-started": {
                 "description": "Erste Schritte mit Semio"

@@ -3,12 +3,16 @@ title: 🥈 Installation
 description: 📝 How to install semio 💻
 ---
 
-import { Steps, FileTree } from "@astrojs/starlight/components";
+export const frontmatter = {
+  title: "🥈 Installation",
+  description: "📝 How to install semio 💻",
+};
 
-:::note[Are you a Mac user?]
-The code of semio is compatible with Windows, Mac and Linux but currently compiled for Windows only ⚠️
-[Reach out to us on Discord](https://discord.gg/m6nnf6pQRc) if you want to help us extend it for Mac 👐
-:::
+import { Aside, FileTree, Steps } from "@semio/js";
+
+<Aside type="note" title="Are you a Mac user?">
+  The code of semio is compatible with Windows, Mac and Linux but currently compiled for Windows only ⚠️ [Reach out to us on Discord](https://discord.gg/m6nnf6pQRc) if you want to help us extend it for Mac 👐
+</Aside>
 
 semio has two user-interfaces:
 
@@ -17,9 +21,9 @@ semio has two user-interfaces:
 
 ### 🦗 Grasshopper (Rhino 8)
 
-:::tip[Are you interested in the latest version? ]
-Then hit `Include pre-releases` and download `5.3.0-beta` ⬇️
-:::
+<Aside type="tip" title="Are you interested in the latest version?">
+  Then hit `Include pre-releases` and download `5.3.0-beta` ⬇️
+</Aside>
 
 The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 
@@ -38,9 +42,9 @@ That's it!
 
 ### ✏️ sketchpad
 
-:::caution[Still a prototype 🧑‍💻]
-It doesn't use the latest versions of the engine and Grasshopper ⚠️
-:::
+<Aside type="caution" title="Still a prototype 🧑‍💻">
+  It doesn't use the latest versions of the engine and Grasshopper ⚠️
+</Aside>
 
 {/* ![sketchpad demo](../../../../../assets/images/sketchpad-demo.gif) */}
 ![sketchpad demo](../../../../../assets/images/sketchpad-demo.png)

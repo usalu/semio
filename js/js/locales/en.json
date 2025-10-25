@@ -501,9 +501,12 @@
         "descending": "Sort descending"
     },
     "docs": {
+        "navigation": "Navigation",
+        "tableOfContents": "On This Page",
+        "settings": "Settings",
+        "pagesCompleted": "pages completed",
         "onThisPage": "On This Page",
         "noHeadings": "No headings available",
-        "pagesCompleted": "pages completed",
         "sections": {
             "getting-started": {
                 "description": "Get started with Semio"

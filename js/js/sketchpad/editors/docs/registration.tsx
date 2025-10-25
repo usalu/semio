@@ -13,7 +13,7 @@ import DocsEditor from "./Editor";
 editorRegistry.register({
   id: "docs",
   component: DocsEditor,
-  routeSegments: [{ path: "docs" }],
+  routeSegments: [{ path: "docs" }, { path: "*" }],
   getPanels: (t) => [
     { key: "workbench", icon: BookOpen, tooltip: t("panels.workbench"), hotkey: "⌘1" },
     { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘2" },

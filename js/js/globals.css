@@ -80,6 +80,18 @@
     --active-foreground: var(--color-dark);
     --border-color: var(--color-foreground);
     --plaster: var(--color-gray);
+    --info-bg: var(--color-light-8-9);
+    --info-foreground: var(--color-dark);
+    --info-border: var(--color-info);
+    --success-bg: var(--color-light-7-9);
+    --success-foreground: var(--color-dark);
+    --success-border: var(--color-success);
+    --warning-bg: var(--color-light-6-7);
+    --warning-foreground: var(--color-dark);
+    --warning-border: var(--color-warning);
+    --destructive-bg: var(--color-light-8-9);
+    --destructive-foreground: var(--color-danger);
+    --destructive-border: var(--color-danger);
     --cursor-default: url("../../assets/cursors/cursor.svg") 0 0, default;
     --cursor-pointer: url("../../assets/cursors/cursor_pointer.svg") 0 0, pointer;
     --cursor-grab: url("../../assets/cursors/cursor_grab.svg") 0 0, grab;
@@ -720,6 +732,21 @@
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
   --color-border: var(--foreground);
+}
+
+.docs-content {
+  .aside-note {
+    @apply my-4 p-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950;
+  }
+  .aside-tip {
+    @apply my-4 p-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-950;
+  }
+  .aside-caution {
+    @apply my-4 p-4 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950;
+  }
+  .aside-danger {
+    @apply my-4 p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950;
+  }
 }
 
 /* #navbar {
