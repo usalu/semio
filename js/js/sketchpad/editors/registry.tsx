@@ -48,10 +48,7 @@ class EditorRegistry {
   private editors: Map<string, EditorRegistration> = new Map();
 
   register(registration: EditorRegistration): void {
-    if (this.editors.has(registration.id)) {
-      console.warn(`[ORIGIN] Editor with id "${registration.id}" is already registered`);
-      return;
-    }
+    if (this.editors.has(registration.id)) return;
     this.editors.set(registration.id, registration);
   }
 

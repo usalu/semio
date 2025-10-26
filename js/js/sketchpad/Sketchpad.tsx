@@ -19,17 +19,17 @@
 
 // #endregion
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
-import React, { createContext, FC, Fragment, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, FC, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
 import { TooltipProvider } from "../elements/display/Tooltip";
 
-import { Design, Type, Quality } from "../semio";
-import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
-import { QualityAvatar } from "./editors/quality/panels/Workbench";
 import { DraggableAvatar } from "../elements/display/Avatar";
+import { Design, Type } from "../semio";
 import "./editors";
 import { editorRegistry } from "./editors";
+import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
+import { QualityAvatar } from "./editors/quality/panels/Workbench";
 import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
@@ -44,7 +44,6 @@ import {
   DesignScopeProvider,
   KitScopeProvider,
   Layout,
-  QualityScopeProvider,
   SketchpadScopeProvider,
   SketchpadState,
   Theme,
@@ -128,7 +127,7 @@ const createScopeRoute = (ParamName: string, ScopeProvider?: React.ComponentType
 
 const generateRoutes = (): ReactNode[] => {
   const editors = editorRegistry.getAllEditors();
-  const buildRoute = (editor: typeof editors[0]): ReactNode[] => {
+  const buildRoute = (editor: (typeof editors)[0]): ReactNode[] => {
     const { routeSegments, component: EditorComponent, additionalPaths } = editor;
     const routes: ReactNode[] = [];
     if (routeSegments.length === 0) {
@@ -140,8 +139,25 @@ const generateRoutes = (): ReactNode[] => {
       }
       return routes;
     }
-    let currentElement: ReactNode = <Route key={`${editor.id}-index`} index element={<EditorComponent />} />;
-    for (let i = routeSegments.length - 1; i >= 0; i--) {
+    // Build routes from innermost to outermost
+    let currentElement: ReactNode;
+    const lastSegment = routeSegments[routeSegments.length - 1];
+
+    // For the last segment, place the component directly on it (not as index child)
+    if (lastSegment.paramName && lastSegment.scopeProvider) {
+      const ScopeRoute = createScopeRoute(lastSegment.paramName, lastSegment.scopeProvider);
+      currentElement = (
+        <Route key={`${editor.id}-${routeSegments.length - 1}`} path={lastSegment.path} element={<ScopeRoute />}>
+          <Route key={`${editor.id}-content`} index element={<EditorComponent />} />
+        </Route>
+      );
+    } else {
+      // For wildcard or regular paths, put the component directly on the route
+      currentElement = <Route key={`${editor.id}-${routeSegments.length - 1}`} path={lastSegment.path} element={<EditorComponent />} />;
+    }
+
+    // Wrap with parent segments
+    for (let i = routeSegments.length - 2; i >= 0; i--) {
       const segment = routeSegments[i];
       const ScopeRoute = segment.paramName && segment.scopeProvider ? createScopeRoute(segment.paramName, segment.scopeProvider) : undefined;
       if (ScopeRoute) {
@@ -152,7 +168,7 @@ const generateRoutes = (): ReactNode[] => {
         );
       } else {
         currentElement = (
-          <Route key={`${editor.id}-${i}`} path={segment.path}>
+          <Route key={`${editor.id}-${i}`} path={segment.path} element={<Outlet />}>
             {currentElement}
           </Route>
         );

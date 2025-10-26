@@ -23,6 +23,7 @@
 import { Edges, Line, Select, TransformControls } from "@react-three/drei";
 import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useThree } from "@react-three/fiber";
 import Scene, { Model } from "../../../../elements/windows/Scene";
 import { Camera, Design, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
 import { PieceScopeProvider, useDesign, useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../kits/store";
@@ -256,6 +257,9 @@ const ModelPiece: FC<ModelPieceProps> = () => {
     return { position, quaternion, scale };
   }, [diffedMatrix, originalMatrix, piece.plane]);
 
+  // Get access to the Three.js controls (OrbitControls)
+  const { controls: orbitControls } = useThree();
+
   // Listen to dragging-changed and object-change events from TransformControls
   useEffect(() => {
     const controls = transformControlsRef.current;
@@ -298,11 +302,24 @@ const ModelPiece: FC<ModelPieceProps> = () => {
         console.log("Started dragging piece", piece.guid);
         isDraggingRef.current = true;
         isUpdatingPlaneRef.current = true; // Disable useLayoutEffect during entire drag
+
+        // Disable OrbitControls to prevent camera movement during drag
+        if (orbitControls) {
+          (orbitControls as any).enabled = false;
+          console.log("Disabled OrbitControls");
+        }
+
         startTransactionRef.current();
       } else {
         // Stopped dragging
         console.log("Stopped dragging piece", piece.guid);
         isDraggingRef.current = false;
+
+        // Re-enable OrbitControls
+        if (orbitControls) {
+          (orbitControls as any).enabled = true;
+          console.log("Re-enabled OrbitControls");
+        }
 
         // Final update
         updatePlaneFromTransform();
@@ -336,8 +353,13 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       console.log("Removing event listeners from controls");
       controls.removeEventListener("dragging-changed", handleDraggingChanged);
       controls.removeEventListener("objectChange", handleObjectChange);
+
+      // Make sure OrbitControls is re-enabled on cleanup
+      if (orbitControls) {
+        (orbitControls as any).enabled = true;
+      }
     };
-  }, [piece.guid]); // Only re-run when piece.guid changes, not when callbacks change
+  }, [piece.guid, orbitControls]); // Re-run when piece.guid or orbitControls changes
 
   // Original piece mesh (edges only when there's a diff)
   const originalMeshContent =
@@ -380,7 +402,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   return (
     <>
       {originalMeshContent}
-      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} mode="translate" makeDefault>
+      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} mode="translate">
         <group ref={groupRef}>{diffedMeshContent}</group>
       </TransformControls>
     </>

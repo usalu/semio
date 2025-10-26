@@ -20,35 +20,8 @@
 // #endregion
 
 import Fuse, { FuseResult } from "fuse.js";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  Award,
-  BarChart3,
-  Box,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Cloud,
-  FileText,
-  Fullscreen,
-  Hammer,
-  HardDrive,
-  Home,
-  Info,
-  Layers,
-  Layout,
-  MessageCircle,
-  Minus,
-  Search as SearchIcon,
-  Settings,
-  Square,
-  User,
-  Wrench,
-  X,
-} from "lucide-react";
-import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Fullscreen, HardDrive, Home, Layout, Minus, Search as SearchIcon, Square, User, X } from "lucide-react";
+import { createContext, FC, Fragment, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../elements/Command";
@@ -59,16 +32,16 @@ import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, Breadcrumb
 import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
 import "./editors";
 import { editorRegistry } from "./editors";
-import { docsRegistry } from "./editors/docs/registry";
 import { useDesignEditorCommands } from "./editors/design/store";
+import { docsRegistry } from "./editors/docs/registry";
 import { useHomeCommands } from "./editors/home/store";
 import { useKitEditorCommands } from "./editors/kit/store";
 import { useQualityEditorCommands } from "./editors/quality/store";
 import { useTypeEditorCommands } from "./editors/type/store";
 import {
-  EditorType,
   PanelVisibility,
   SketchpadScope,
+  useEditorCommands,
   useEditorPanelVisibility,
   useEditorType,
   useIsFullscreen,
@@ -950,38 +923,54 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             {docsSection && (
               <>
-                <BreadcrumbSeparator 
-                  items={docsRegistry.getAllSections().map(s => ({ 
-                    label: `${s.emoji} ${s.label}`, 
-                    href: `/docs/${s.id}` 
-                  }))} 
-                  tooltip={tooltip("navbar.sections")} 
-                  onNavigate={(href) => navigate(href)} 
+                <BreadcrumbSeparator
+                  items={docsRegistry.getAllSections().map((s) => ({
+                    label: `${s.emoji} ${s.label}`,
+                    href: `/docs/${s.id}`,
+                  }))}
+                  tooltip={tooltip("navbar.sections")}
+                  onNavigate={(href) => navigate(href)}
                 />
                 <BreadcrumbItem>
                   <BreadcrumbLink onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }}>
-                    {docsRegistry.getAllSections().find(s => s.id === docsSection)?.label || docsSection}
+                    {docsRegistry.getAllSections().find((s) => s.id === docsSection)?.label || docsSection}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </>
             )}
-            {docsPagePath && docsSection && (
-              <>
-                <BreadcrumbSeparator 
-                  items={docsRegistry.getPagesBySection(docsSection).map(p => ({ 
-                    label: p.title, 
-                    href: `/${p.path}` 
-                  }))} 
-                  tooltip={tooltip("navbar.pages")} 
-                  onNavigate={(href) => navigate(href)} 
-                />
-                <BreadcrumbItem>
-                  <BreadcrumbLink style={{ cursor: "default" }}>
-                    {docsRegistry.getAllPages().find(p => p.path === `docs/${docsPagePath}`)?.title || pathParts[pathParts.length - 1]}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </>
-            )}
+            {docsPagePath &&
+              docsSection &&
+              (() => {
+                // Parse the path to get all folders after the section
+                // E.g., "getting-started/intro/why-semio" -> ["intro", "why-semio"]
+                const pathAfterSection = docsPagePath.split("/").slice(1); // Remove section part
+                const breadcrumbItems: React.ReactElement[] = [];
+
+                // Add breadcrumb items for each folder level
+                pathAfterSection.forEach((part, index) => {
+                  const isLast = index === pathAfterSection.length - 1;
+                  const partialPath = `docs/${docsSection}/${pathAfterSection.slice(0, index + 1).join("/")}`;
+
+                  // Convert folder name to readable label
+                  const label = part
+                    .split("-")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ");
+
+                  breadcrumbItems.push(
+                    <Fragment key={partialPath}>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbLink onClick={() => !isLast && navigate(`/${partialPath}`)} style={{ cursor: isLast ? "default" : "pointer" }}>
+                          {docsRegistry.getAllPages().find((p) => p.path === partialPath)?.title || label}
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    </Fragment>,
+                  );
+                });
+
+                return <>{breadcrumbItems}</>;
+              })()}
           </>
         )}
       </BreadcrumbList>
@@ -1164,6 +1153,7 @@ const PanelToggles: FC = ({}) => {
   const editorType = useEditorType();
   const panelConfig = getPanelConfigs(t)[editorType];
   const visiblePanels = useEditorPanelVisibility();
+  const editorCommands = useEditorCommands();
   const homeCommands = useHomeCommands();
   const isValidKit = kit && !["temporary", "local", "remote"].includes(kit);
   const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit } : undefined);
@@ -1176,6 +1166,7 @@ const PanelToggles: FC = ({}) => {
     design: designEditorCommands,
     type: typeEditorCommands,
     quality: qualityEditorCommands,
+    docs: editorCommands,
   };
   const isMobile = useIsMobile();
 
@@ -1357,7 +1348,7 @@ const PanelToggles: FC = ({}) => {
     });
   };
 
-  if (panelConfig.length === 0) return null;
+  if (!panelConfig || panelConfig.length === 0) return null;
 
   return (
     <div className="flex items-stretch border overflow-hidden h-9">

@@ -1,13 +1,29 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, createContext, useContext, useCallback, useRef, useEffect, useState } from "react";
 import { Aside } from "../../../elements/docs/Aside";
 import { Card, CardGrid } from "../../../elements/docs/Card";
 import { FileTree, FileTreeItem } from "../../../elements/docs/FileTree";
 import Section from "../../../elements/docs/Section";
 import { Steps } from "../../../elements/docs/Steps";
 import { TabItem, Tabs } from "../../../elements/docs/Tabs";
+import { HeadingNode } from "./panels/Details";
 
-const components = {
+interface HeadingsContextValue {
+  headings: HeadingNode[];
+  registerHeading: (heading: HeadingNode) => void;
+}
+
+const HeadingsContext = createContext<HeadingsContextValue | null>(null);
+
+export const useHeadings = () => {
+  const context = useContext(HeadingsContext);
+  if (!context) {
+    return { headings: [] };
+  }
+  return context;
+};
+
+const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   Card,
   CardGrid,
   Steps,
@@ -17,36 +33,84 @@ const components = {
   FileTree,
   FileTreeItem,
   Section,
-  h1: ({ children, id, ...props }: any) => (
-    <h1 id={id} className="text-4xl font-bold mb-4 mt-8" {...props}>
-      {children}
-    </h1>
-  ),
-  h2: ({ children, id, ...props }: any) => (
-    <h2 id={id} className="text-3xl font-semibold mb-3 mt-6" {...props}>
-      {children}
-    </h2>
-  ),
-  h3: ({ children, id, ...props }: any) => (
-    <h3 id={id} className="text-2xl font-semibold mb-2 mt-5" {...props}>
-      {children}
-    </h3>
-  ),
-  h4: ({ children, id, ...props }: any) => (
-    <h4 id={id} className="text-xl font-semibold mb-2 mt-4" {...props}>
-      {children}
-    </h4>
-  ),
-  h5: ({ children, id, ...props }: any) => (
-    <h5 id={id} className="text-lg font-semibold mb-1 mt-3" {...props}>
-      {children}
-    </h5>
-  ),
-  h6: ({ children, id, ...props }: any) => (
-    <h6 id={id} className="text-base font-semibold mb-1 mt-2" {...props}>
-      {children}
-    </h6>
-  ),
+  h1: ({ children, id, ...props }: any) => {
+    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    useEffect(() => {
+      if (generatedId && children) {
+        registerHeading({ id: generatedId, text: children.toString(), level: 1 });
+      }
+    }, [generatedId, children]);
+    return (
+      <h1 id={generatedId} className="text-4xl font-bold mb-4 mt-8" {...props}>
+        {children}
+      </h1>
+    );
+  },
+  h2: ({ children, id, ...props }: any) => {
+    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    useEffect(() => {
+      if (generatedId && children) {
+        registerHeading({ id: generatedId, text: children.toString(), level: 2 });
+      }
+    }, [generatedId, children]);
+    return (
+      <h2 id={generatedId} className="text-3xl font-semibold mb-3 mt-6" {...props}>
+        {children}
+      </h2>
+    );
+  },
+  h3: ({ children, id, ...props }: any) => {
+    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    useEffect(() => {
+      if (generatedId && children) {
+        registerHeading({ id: generatedId, text: children.toString(), level: 3 });
+      }
+    }, [generatedId, children]);
+    return (
+      <h3 id={generatedId} className="text-2xl font-semibold mb-2 mt-5" {...props}>
+        {children}
+      </h3>
+    );
+  },
+  h4: ({ children, id, ...props }: any) => {
+    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    useEffect(() => {
+      if (generatedId && children) {
+        registerHeading({ id: generatedId, text: children.toString(), level: 4 });
+      }
+    }, [generatedId, children]);
+    return (
+      <h4 id={generatedId} className="text-xl font-semibold mb-2 mt-4" {...props}>
+        {children}
+      </h4>
+    );
+  },
+  h5: ({ children, id, ...props }: any) => {
+    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    useEffect(() => {
+      if (generatedId && children) {
+        registerHeading({ id: generatedId, text: children.toString(), level: 5 });
+      }
+    }, [generatedId, children]);
+    return (
+      <h5 id={generatedId} className="text-lg font-semibold mb-1 mt-3" {...props}>
+        {children}
+      </h5>
+    );
+  },
+  h6: ({ children, id, ...props }: any) => {
+    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    useEffect(() => {
+      if (generatedId && children) {
+        registerHeading({ id: generatedId, text: children.toString(), level: 6 });
+      }
+    }, [generatedId, children]);
+    return (
+      <h6 id={generatedId} className="text-base font-semibold mb-1 mt-2" {...props}>
+        {children}
+      </h6>
+    );
+  },
   p: ({ children, ...props }: any) => (
     <p className="mb-4 leading-7" {...props}>
       {children}
@@ -127,12 +191,32 @@ const components = {
       {children}
     </td>
   ),
-};
+});
 
 interface MDXProviderProps {
   children: ReactNode;
 }
 
 export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
-  return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
+  const [headings, setHeadings] = useState<HeadingNode[]>([]);
+  const headingsRef = useRef<Map<string, HeadingNode>>(new Map());
+
+  const registerHeading = useCallback((heading: HeadingNode) => {
+    headingsRef.current.set(heading.id, heading);
+    setHeadings(Array.from(headingsRef.current.values()));
+  }, []);
+
+  useEffect(() => {
+    // Clear headings when component unmounts or children change
+    headingsRef.current.clear();
+    setHeadings([]);
+  }, [children]);
+
+  const components = createComponents(registerHeading);
+
+  return (
+    <HeadingsContext.Provider value={{ headings, registerHeading }}>
+      <BaseMDXProvider components={components}>{children}</BaseMDXProvider>
+    </HeadingsContext.Provider>
+  );
 };

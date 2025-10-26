@@ -153,9 +153,6 @@ export const QualityWorkbench: FC = () => {
   const kit = useKit(undefined, undefined, true) as Kit | null;
   const qualities = kit?.qualities || [];
 
-  console.log("[ORIGIN] QualityWorkbench - kit:", kit);
-  console.log("[ORIGIN] QualityWorkbench - qualities:", qualities);
-
   return (
     <>
       <TreeItem label={t("quality.numericFunctions")}>

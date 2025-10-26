@@ -1068,48 +1068,38 @@ const ConnectionsSectionForm: FC<{
   };
 
   // TODO: Implement setConnection and setConnections commands
-  const handleChange = (updatedConnection: Connection) => {
-    console.warn("[ORIGIN] setConnection not implemented", updatedConnection);
-  };
+  const handleChange = (_updatedConnection: Connection) => {};
 
   const handleGapChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, gap: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleShiftChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, shift: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleRiseChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, rise: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleXOffsetChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, x: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleYOffsetChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, y: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleRotationChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, rotation: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleTurnChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, turn: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const handleTiltChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, tilt: value });
-    else console.warn("[ORIGIN] setConnections not implemented");
   };
 
   const commonGap = getCommonValue((c) => c.gap);

@@ -33,12 +33,7 @@ export const QualityDetails: FC = () => {
   const quality = useQuality(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityEditorCommands();
 
-  console.log("[ORIGIN] QualityDetails - quality:", quality);
-
-  if (!quality) {
-    console.log("[ORIGIN] QualityDetails - no quality found, returning null");
-    return null;
-  }
+  if (!quality) return null;
 
   return (
     <>

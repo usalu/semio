@@ -26,10 +26,10 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
 import { commands as sketchpadCommands } from "./commands";
-import { editorRegistry } from "./editors/registry";
 import type { DesignEditorId, DesignEditorState } from "./editors/design/store";
 import type { KitEditorId, KitEditorState } from "./editors/kit/store";
 import type { QualityEditorId, QualityEditorState } from "./editors/quality/store";
+import { editorRegistry } from "./editors/registry";
 import type { TypeEditorId, TypeEditorState } from "./editors/type/store";
 import { KitStore } from "./kits/store";
 export {
@@ -1685,7 +1685,30 @@ export function useEditorPanelVisibility(): PanelVisibility {
     settings: true,
   });
 
+  const [docsPanelVisibility, setDocsPanelVisibility] = useState<PanelVisibility>({
+    toolbar: false,
+    workbench: true,
+    details: false,
+    chat: false,
+    settings: false,
+    tools: false,
+    hud: false,
+    stats: false,
+  });
+
   useEffect(() => {
+    if (editorType === "docs") {
+      // For docs, use local state
+      setPanelVisibility(docsPanelVisibility);
+
+      // Store the setter in a way that useEditorCommands can access it
+      (window as any).__docsSetPanelVisibility = setDocsPanelVisibility;
+
+      return () => {
+        delete (window as any).__docsSetPanelVisibility;
+      };
+    }
+
     try {
       let editor: any;
       switch (editorType) {
@@ -1734,7 +1757,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
         return unsubscribe;
       }
     } catch (e) {}
-  }, [store, editorType, kitGuid, itemGuid, navigation]);
+  }, [store, editorType, kitGuid, itemGuid, navigation, docsPanelVisibility]);
 
   return panelVisibility;
 }
@@ -1768,6 +1791,20 @@ export function useEditorCommands() {
         case "quality":
           if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
           break;
+        case "docs":
+          // Handle docs editor with local state
+          return {
+            togglePanel: (panelKey: keyof PanelVisibility) => {
+              const setDocsPanelVisibility = (window as any).__docsSetPanelVisibility;
+              if (setDocsPanelVisibility) {
+                setDocsPanelVisibility((prev: PanelVisibility) => ({
+                  ...prev,
+                  [panelKey]: !prev[panelKey],
+                }));
+              }
+            },
+            execute: (command: string, ...args: any[]) => {},
+          };
       }
     } catch (e) {}
 

@@ -36,10 +36,10 @@ const DocsEditor: FC = () => {
 
     addSection("workbench", {
       id: "docs-navigation",
-      label: t("docs.navigation", "Navigation"),
+      label: t("docs.docs", "Docs"),
       order: 1,
       defaultOpen: true,
-      content: () => <DocsWorkbench />,
+      content: () => <DocsWorkbench currentPath={fullPath} />,
     });
 
     addSection("details", {
@@ -63,7 +63,7 @@ const DocsEditor: FC = () => {
       removeSection("details", "docs-toc");
       removeSection("settings", "docs-settings");
     };
-  }, [editorType, addSection, removeSection, t]);
+  }, [editorType, addSection, removeSection, t, fullPath]);
 
   useEffect(() => {
     const loadContent = async () => {

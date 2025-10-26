@@ -7,12 +7,12 @@
 
 // #endregion
 
+import "./design/registration";
+import "./docs/registration";
 import "./home/registration";
 import "./kit/registration";
-import "./design/registration";
-import "./type/registration";
 import "./quality/registration";
-import "./docs/registration";
+import "./type/registration";
 
 export { editorRegistry } from "./registry";
 export type { EditorRegistration, PanelDefinition, RouteSegment } from "./registry";

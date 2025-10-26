@@ -26,6 +26,10 @@ export { default as Sketchpad } from "./sketchpad/Sketchpad";
 export type { YProviderFactory } from "./sketchpad/store";
 export { i18n };
 
+// Export docs elements for MDX
+export { Aside, Card, CardGrid, FileTree, FileTreeItem, Steps, TabItem, Tabs } from "./elements/docs";
+export type { AsideProps, CardGridProps, CardProps, FileTreeItemProps, FileTreeProps, StepsProps, TabItemProps, TabsProps } from "./elements/docs";
+
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";
 export { default as tailwindConfig } from "./tailwind.config";

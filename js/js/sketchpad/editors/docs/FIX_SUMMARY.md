@@ -3,21 +3,26 @@
 ## Issues Fixed
 
 ### 1. Canvas Not Showing MDX Content
+
 **Problem**: Editor was rendering placeholder HTML instead of actual MDX files.
 
-**Solution**: 
+**Solution**:
+
 - Updated `Editor.tsx` to fetch and load MDX files from the file system
 - Implemented frontmatter parsing (title, description, etc.)
 - Added basic MDX directive conversion (`:::note` → `<div class="aside-note">`)
 - Added error handling with fallback content from registry
 
 **Files Modified**:
+
 - `js/js/sketchpad/editors/docs/Editor.tsx`
 
 ### 2. Navbar Missing Breadcrumb Navigation
+
 **Problem**: No breadcrumb showing "Docs > Section > Page" hierarchy.
 
 **Solution**:
+
 - Added `isDocsPath`, `docsSection`, and `docsPagePath` detection in Navbar
 - Implemented breadcrumb rendering for docs paths:
   - Home > Docs icon
@@ -25,12 +30,15 @@
   - Page title (from registry or path)
 
 **Files Modified**:
+
 - `js/js/sketchpad/Navbar.tsx`
 
 ### 3. Astro Starlight Component Imports
+
 **Problem**: All MDX files imported from `@astrojs/starlight/components` which doesn't exist.
 
 **Solution**:
+
 - Created replacement components in `elements/docs/`:
   - `Tabs.tsx` + `TabItem.tsx` - Tab navigation component
   - `Aside.tsx` - Note/tip/caution/danger callouts
@@ -40,11 +48,13 @@
 - Added CSS styling for directive syntax (`.aside-note`, `.aside-tip`, etc.)
 
 **Files Created**:
+
 - `js/js/elements/docs/Tabs.tsx`
 - `js/js/elements/docs/Aside.tsx`
 - `js/js/elements/docs/FileTree.tsx`
 
 **Files Modified**:
+
 - `js/js/elements/docs/index.ts`
 - `js/js/globals.css` (added docs content styles)
 - All `.mdx` files (bulk import replacement)
@@ -68,6 +78,7 @@
 ## Testing
 
 To test the fixes:
+
 1. Navigate to `/docs/getting-started/installation`
 2. Verify content appears in canvas
 3. Check breadcrumb shows: Home > Docs > Getting Started > Installation

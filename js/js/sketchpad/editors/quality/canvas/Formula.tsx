@@ -42,8 +42,7 @@ const Formula: FC = () => {
       const ast = parseFormula(formula);
       // Convert to LaTeX
       return convertToLatex(ast);
-    } catch (error) {
-      console.error("[ORIGIN] Error parsing formula:", error);
+    } catch {
       // Fallback to displaying raw formula
       return `\\text{${formula}}`;
     }
@@ -52,25 +51,20 @@ const Formula: FC = () => {
   useEffect(() => {
     const loadMathJax = () => {
       if (window.MathJax) {
-        console.log("[ORIGIN] MathJax already loaded");
         if (mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch((err: any) => console.error("[ORIGIN] MathJax typeset error:", err));
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
         }
         return;
       }
-      console.log("[ORIGIN] Loading MathJax...");
       const script = document.createElement("script");
       script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
       script.async = true;
       script.onload = () => {
-        console.log("[ORIGIN] MathJax loaded successfully");
         if (window.MathJax && mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch((err: any) => console.error("[ORIGIN] MathJax typeset error:", err));
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
         }
       };
-      script.onerror = () => {
-        console.error("[ORIGIN] Failed to load MathJax script");
-      };
+      script.onerror = () => {};
       document.head.appendChild(script);
     };
     loadMathJax();
@@ -78,13 +72,11 @@ const Formula: FC = () => {
 
   useEffect(() => {
     if (window.MathJax && mathRef.current) {
-      console.log("[ORIGIN] Rendering formula:", quality?.formula);
       // Clear previous MathJax content
       mathRef.current.innerHTML = "";
       const latex = formulaToLatex(quality?.formula);
-      console.log("[ORIGIN] Generated LaTeX:", latex);
       mathRef.current.textContent = `\\[${latex}\\]`;
-      window.MathJax.typesetPromise([mathRef.current]).catch((err: any) => console.error("[ORIGIN] MathJax typeset error:", err));
+      window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
     }
   }, [quality?.formula, formulaToLatex]);
 

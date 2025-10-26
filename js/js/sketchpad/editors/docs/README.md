@@ -34,6 +34,7 @@ This document describes the integration of documentation into Sketchpad, transit
 ### Docs Content (`js/js/sketchpad/docs/`)
 
 Documentation files organized by section:
+
 - `getting-started/` - 🚀 Getting Started
 - `tutorials/` - 📝 Tutorials
 - `integrations/` - 🔀 Integrations
@@ -42,6 +43,7 @@ Documentation files organized by section:
 - `showcases/` - 🌟 Showcases
 
 Each file is an MDX file with:
+
 - Frontmatter (title, description, sidebar config)
 - MDX content using Semio components
 
@@ -50,6 +52,7 @@ Each file is an MDX file with:
 ### Navigation System
 
 The docs use the same navigation system as kits but with `docs/` path prefix:
+
 - `docs/` - Docs home
 - `docs/getting-started/intro` - Specific page
 - `docs/tutorials/hello-semio/model-brick-set` - Nested page
@@ -57,6 +60,7 @@ The docs use the same navigation system as kits but with `docs/` path prefix:
 ### Section State Management
 
 Sections can track:
+
 - **Expansion state**: Whether the section is expanded in the tree
 - **Progress**: Percentage completion (useful for tutorials)
 - **Completed pages**: List of completed pages
@@ -69,11 +73,11 @@ The details panel shows the heading structure. Clicking a heading scrolls to tha
 
 Astro Starlight components have been replaced:
 
-| Astro Starlight | Semio Element |
-|----------------|---------------|
-| `<Card>` | `<Card>` |
-| `<CardGrid>` | `<CardGrid>` |
-| `<Steps>` | `<Steps>` |
+| Astro Starlight       | Semio Element                                     |
+| --------------------- | ------------------------------------------------- |
+| `<Card>`              | `<Card>`                                          |
+| `<CardGrid>`          | `<CardGrid>`                                      |
+| `<Steps>`             | `<Steps>`                                         |
 | `<Tabs>`, `<TabItem>` | Use existing `<Tabs>` from `elements/aggregation` |
 
 ## TODO
@@ -83,7 +87,7 @@ Astro Starlight components have been replaced:
    - Convert MDX to React components
    - Handle component imports
 
-2. **File System Integration**: 
+2. **File System Integration**:
    - Load MDX files from `js/js/sketchpad/docs/`
    - Parse folder structure for navigation
    - Extract headings for details panel

@@ -196,7 +196,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
 - Whenever adding ui elements ALWAYS use i18n setups and provide translations for the existing languages.
-- ALWAYS add `[ORIGIN] ` prefix to temporary logs so that `\[*\]*` can be used to filter them out.
+- ALWAYS add `[ORIGIN] `(replace ORIGIN with a file, function, class, … name to identify the origin) prefix to temporary logs so that `\[*\]*` can be used to filter them out.
 
 ### Styling
 
@@ -474,6 +474,29 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── registration.tsx
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
+│ │ │ ├── docs
+│ │ │ │ ├── getting-started
+│ │ │ │ │ ├── installation.mdx
+│ │ │ │ │ ├── intro
+│ │ │ │ │ │ ├── think-in-semio.mdx
+│ │ │ │ │ │ └── why-semio.mdx
+│ │ │ │ │ └── starter.mdx
+│ │ │ │ ├── integrations
+│ │ │ │ ├── manuals
+│ │ │ │ ├── showcases
+│ │ │ │ │ └── metabolism.mdx
+│ │ │ │ ├── theory
+│ │ │ │ │ ├── design-information-modeling.mdx
+│ │ │ │ │ ├── graphs.mdx
+│ │ │ │ │ └── kit-of-parts-architecture.mdx
+│ │ │ │ ├── tutorials
+│ │ │ │ │ └── hello-semio
+│ │ │ │ │ │ ├── model-brick-set.mdx
+│ │ │ │ │ │ ├── model-design.mdx
+│ │ │ │ │ │ ├── save-kit.mdx
+│ │ │ │ │ │ ├── show-design.mdx
+│ │ │ │ │ │ └── sketch-setup.mdx
+│ │ │ │ └── index.mdx
 │ │ │ ├── kits
 │ │ │ │ ├── commands.ts
 │ │ │ │ └── store.tsx

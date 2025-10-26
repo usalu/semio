@@ -14,7 +14,7 @@ export interface MDXFileInfo {
     module?: MDXModule;
 }
 
-const mdxModules = import.meta.glob<MDXModule>("../../docs/**/*.mdx", { eager: false });
+const mdxModules = import.meta.glob<MDXModule>("../../docs/**/*.mdx", { eager: true });
 
 export async function loadMDXFile(path: string): Promise<MDXModule | null> {
     const cleanPath = path.replace(/^docs\//, "");
@@ -25,10 +25,10 @@ export async function loadMDXFile(path: string): Promise<MDXModule | null> {
     if (possibleKeys.length > 0) {
         const modulePath = possibleKeys[0];
         try {
-            const module = await mdxModules[modulePath]();
+            // With eager: true, modules are already loaded, no need to await
+            const module = mdxModules[modulePath];
             return module;
-        } catch (error) {
-            console.error(`[ORIGIN] Failed to load MDX file: ${path}`, error);
+        } catch {
             return null;
         }
     }
@@ -74,4 +74,3 @@ export function getAllSections(): string[] {
     });
     return Array.from(sections).sort();
 }
-

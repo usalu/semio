@@ -52,6 +52,7 @@ Content goes here...
 ## That's It!
 
 Your page will automatically:
+
 - ✅ Appear in the navigation tree
 - ✅ Be searchable via ⌘K
 - ✅ Have working routing
@@ -60,6 +61,7 @@ Your page will automatically:
 ## No Code Changes Needed!
 
 The system automatically handles:
+
 - Routing (via wildcard `docs/*`)
 - Navigation tree building
 - Search indexing

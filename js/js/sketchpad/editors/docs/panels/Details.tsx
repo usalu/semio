@@ -10,6 +10,7 @@ import { Hash } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
+import { useHeadings } from "../mdx-provider";
 
 export interface HeadingNode {
   id: string;
@@ -53,8 +54,10 @@ const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => vo
   );
 };
 
-const Details: FC<DetailsProps> = ({ headings = [], onNavigate }) => {
+const Details: FC<DetailsProps> = ({ headings: propsHeadings, onNavigate }) => {
   const { t } = useTranslation();
+  const { headings: contextHeadings } = useHeadings();
+  const headings = propsHeadings || contextHeadings;
 
   if (headings.length === 0) {
     return (

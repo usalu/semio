@@ -598,8 +598,7 @@ function useKitEditorStore<T>(selector?: (store: KitEditorStore) => T, id?: KitE
     const kitEditorStore = store.kitEditor(resolvedKitId);
     const result = selector ? selector(kitEditorStore) : kitEditorStore;
     return result;
-  } catch (error) {
-    console.error("[ORIGIN] Error in useKitEditorStore:", error);
+  } catch {
     return null;
   }
 }

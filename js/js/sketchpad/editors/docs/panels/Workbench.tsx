@@ -6,13 +6,12 @@
 
 // #endregion
 
-import { BookOpen, CheckCircle, FileText, Folder, GraduationCap, Lightbulb, Puzzle, Rocket, Star } from "lucide-react";
+import { BookOpen, FileText, Folder, GraduationCap, Lightbulb, Puzzle, Rocket, Star } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
 import { DocsPage, docsRegistry } from "../registry";
-import { useDocs, useDocsCommands } from "../store";
 
 const sectionIcons: Record<string, any> = {
   "getting-started": Rocket,
@@ -29,10 +28,12 @@ interface PageTreeNode {
   name: string;
 }
 
-function buildTree(pages: DocsPage[]): PageTreeNode {
+function buildTree(pages: DocsPage[], sectionId: string): PageTreeNode {
   const root: PageTreeNode = { children: new Map(), name: "root" };
   for (const page of pages) {
-    const pathParts = page.path.replace("docs/", "").split("/");
+    // Remove "docs/" and the section ID from the path
+    // e.g., "docs/getting-started/intro/why-semio" -> "intro/why-semio"
+    const pathParts = page.path.replace("docs/", "").replace(`${sectionId}/`, "").split("/");
     let current = root;
     for (let i = 0; i < pathParts.length; i++) {
       const part = pathParts[i];
@@ -48,24 +49,21 @@ function buildTree(pages: DocsPage[]): PageTreeNode {
   return root;
 }
 
-function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, selectPage: (section: string, page: string) => void, section: string): JSX.Element[] {
+function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, selectPage: (section: string, page: string) => void, section: string, currentPath?: string): React.ReactElement[] {
   const items: JSX.Element[] = [];
   if (node.page) {
+    const isCurrentPage = !!(currentPath && node.page.path === `docs/${currentPath}`);
     items.push(
-      <TreeItem key={node.page.path}>
-        <TreeContent>
-          <div
-            className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors text-sm"
-            onClick={() => {
-              selectPage(section, node.page!.path);
-              navigate(`/${node.page!.path}`);
-            }}
-          >
-            <FileText className="w-3 h-3" />
-            <span>{node.page.title}</span>
-          </div>
-        </TreeContent>
-      </TreeItem>,
+      <TreeItem
+        key={node.page.path}
+        label={node.page.title}
+        icon={<FileText className="w-3 h-3" />}
+        isHighlighted={isCurrentPage}
+        onClick={() => {
+          selectPage(section, node.page!.path);
+          navigate(`/${node.page!.path}`);
+        }}
+      />,
     );
   }
   if (node.children.size > 0) {
@@ -76,67 +74,42 @@ function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, se
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ");
         items.push(
-          <TreeSection key={name} label={folderLabel} icon={Folder} defaultOpen={false}>
-            {renderTreeNode(childNode, navigate, selectPage, section)}
-          </TreeSection>,
+          <TreeItem key={name} label={folderLabel} icon={<Folder className="w-3 h-3" />} defaultOpen={false}>
+            {renderTreeNode(childNode, navigate, selectPage, section, currentPath)}
+          </TreeItem>,
         );
       } else {
-        items.push(...renderTreeNode(childNode, navigate, selectPage, section));
+        items.push(...renderTreeNode(childNode, navigate, selectPage, section, currentPath));
       }
     });
   }
   return items;
 }
 
-interface WorkbenchProps {}
+interface WorkbenchProps {
+  currentPath?: string;
+}
 
-const Workbench: FC<WorkbenchProps> = () => {
+const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const docsState = useDocs();
-  const { selectPage } = useDocsCommands();
 
   const sections = docsRegistry.getAllSections();
 
   return (
     <>
       {sections.map((section) => {
-        const sectionState = docsState.sectionStates[section.id] || { isExpanded: false };
         const Icon = sectionIcons[section.id] || Folder;
         const pages = docsRegistry.getPagesBySection(section.id);
-        const tree = buildTree(pages);
+        const tree = buildTree(pages, section.id);
 
         return (
-          <TreeSection key={section.id} label={`${section.emoji} ${section.label}`} defaultOpen={sectionState.isExpanded} icon={Icon}>
-            {renderTreeNode(tree, navigate, selectPage, section.id)}
+          <TreeSection key={section.id} label={`${section.emoji} ${section.label}`} defaultOpen={true} icon={<Icon size={14} />}>
+            {renderTreeNode(tree, navigate, () => {}, section.id, currentPath)}
             {pages.length === 0 && (
               <TreeItem>
                 <TreeContent>
                   <p className="text-sm text-muted-foreground">{t(`docs.sections.${section.id}.description`, section.description)}</p>
-                </TreeContent>
-              </TreeItem>
-            )}
-            {sectionState.progress !== undefined && (
-              <TreeItem>
-                <TreeContent>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex-1 bg-accent h-2 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full transition-all" style={{ width: `${sectionState.progress}%` }} />
-                    </div>
-                    <span className="text-xs">{Math.round(sectionState.progress)}%</span>
-                  </div>
-                </TreeContent>
-              </TreeItem>
-            )}
-            {sectionState.completedPages && sectionState.completedPages.length > 0 && (
-              <TreeItem>
-                <TreeContent>
-                  <div className="flex items-center gap-1 mt-2 text-xs">
-                    <CheckCircle className="w-3 h-3" />
-                    <span>
-                      {sectionState.completedPages.length} {t("docs.pagesCompleted")}
-                    </span>
-                  </div>
                 </TreeContent>
               </TreeItem>
             )}
