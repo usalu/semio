@@ -656,14 +656,6 @@ export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, i
   return useSyncDeep<DesignEditorState, T>(store as DesignEditorStore, selector ? selector : identitySelector);
 }
 
-export function useDesignEditorSafe<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState | null {
-  try {
-    return useDesignEditor(selector, id);
-  } catch {
-    return null;
-  }
-}
-
 export function useDesignEditorSelection(): DesignEditorSelection {
   return useDesignEditor((s) => s.selection) as DesignEditorSelection;
 }
@@ -696,78 +688,6 @@ export function useDesignEditorDiagramScale(): number | undefined {
 
 export function useDesignEditorHover(): DesignEditorHover | undefined {
   return useDesignEditor((s) => s.hover) as DesignEditorHover | undefined;
-}
-
-export function useDesignEditorSelectionSafe(): DesignEditorSelection | undefined {
-  try {
-    return useDesignEditorSelection();
-  } catch {
-    return undefined;
-  }
-}
-
-export function useDesignEditorHoverSafe(): DesignEditorHover | undefined {
-  try {
-    return useDesignEditorHover();
-  } catch {
-    return undefined;
-  }
-}
-
-export function useDesignEditorCommandsSafe(id?: DesignEditorId) {
-  try {
-    return useDesignEditorCommands(id);
-  } catch {
-    return {
-      startTransaction: () => {},
-      finalizeTransaction: () => {},
-      abortTransaction: () => {},
-      undo: () => {},
-      redo: () => {},
-      selectAll: () => Promise.resolve(),
-      deselectAll: () => Promise.resolve(),
-      selectPiece: () => Promise.resolve(),
-      selectPieces: () => Promise.resolve(),
-      addPieceToSelection: () => Promise.resolve(),
-      removePieceFromSelection: () => Promise.resolve(),
-      selectConnection: () => Promise.resolve(),
-      addConnectionToSelection: () => Promise.resolve(),
-      removeConnectionFromSelection: () => Promise.resolve(),
-      selectPiecePort: () => Promise.resolve(),
-      deselectPiecePort: () => Promise.resolve(),
-      deleteSelected: () => Promise.resolve(),
-      toggleDiagramFullscreen: () => Promise.resolve(),
-      toggleAccesslFullscreen: () => Promise.resolve(),
-      setActiveTool: () => Promise.resolve(),
-      addPiece: () => Promise.resolve(),
-      addPieces: () => Promise.resolve(),
-      removePiece: () => Promise.resolve(),
-      removePieces: () => Promise.resolve(),
-      addConnection: () => Promise.resolve(),
-      addConnections: () => Promise.resolve(),
-      removeConnection: () => Promise.resolve(),
-      removeConnections: () => Promise.resolve(),
-      updatePiece: () => Promise.resolve(),
-      updatePieces: () => Promise.resolve(),
-      updateConnection: () => Promise.resolve(),
-      updateConnections: () => Promise.resolve(),
-      setCamera: () => Promise.resolve(),
-      setDiagramCenter: () => Promise.resolve(),
-      setDiagramScale: () => Promise.resolve(),
-      hoverPiece: () => Promise.resolve(),
-      hoverPieces: () => Promise.resolve(),
-      hoverConnection: () => Promise.resolve(),
-      hoverConnections: () => Promise.resolve(),
-      hoverPort: () => Promise.resolve(),
-      hoverType: () => Promise.resolve(),
-      hoverTypes: () => Promise.resolve(),
-      hoverDesign: () => Promise.resolve(),
-      hoverDesigns: () => Promise.resolve(),
-      clearHover: () => Promise.resolve(),
-      togglePanel: () => {},
-      execute: () => Promise.resolve(),
-    };
-  }
 }
 
 export function useDesignEditorCommands(id?: DesignEditorId) {

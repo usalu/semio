@@ -55,9 +55,10 @@ const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const { t } = useTranslation();
   const { kit, design } = useParams();
-  const editor = useDesignEditorSafe((s) => s, kit && design ? { kit, design } : undefined);
-  const { setActiveTool } = useDesignEditorCommands(kit && design ? { kit, design } : undefined);
+  if (!kit || !design) return null;
+  const editor = useDesignEditor((s) => s, { kit, design });
+  const { setActiveTool } = useDesignEditorCommands({ kit, design });
   const activeTool = editor?.activeTool || ToolType.SELECTION_NORMAL;
-  if (!editor) return <></>;
+  if (!editor) return null;
   return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
 };

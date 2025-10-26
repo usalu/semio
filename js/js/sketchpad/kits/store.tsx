@@ -4507,7 +4507,7 @@ export function useFileUrls(): Map<Url, Url> {
   return (useKitStore() as KitStore).fileUrls;
 }
 
-export function useKitCommandsSafe() {
+export function useKitCommands() {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid;

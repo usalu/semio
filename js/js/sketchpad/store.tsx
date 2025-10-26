@@ -170,6 +170,19 @@ export function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscrib
 
 // #region Store Hierarchy
 
+export enum StoreStatus {
+  IDLE = "idle",
+  LOADING = "loading",
+  ERROR = "error",
+  READY = "ready",
+}
+
+export interface StoreState<TState> {
+  status: StoreStatus;
+  data?: TState;
+  error?: Error;
+}
+
 export abstract class Store<TState> {
   public readonly guid: Guid;
   public readonly parent: SketchpadStore;
@@ -177,18 +190,35 @@ export abstract class Store<TState> {
   protected readonly transact: Transact;
   protected cache?: TState;
   protected cacheHash?: string;
+  protected status: StoreStatus = StoreStatus.IDLE;
+  protected error?: Error;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
     this.guid = guid();
     this.parent = parent;
     this.yMap = yMap;
     this.transact = transact;
+    this.initialize();
+  }
+
+  protected initialize(): void {
+    try {
+      this.status = StoreStatus.LOADING;
+      this.buildSnapshot();
+      this.status = StoreStatus.READY;
+    } catch (error) {
+      this.status = StoreStatus.ERROR;
+      this.error = error instanceof Error ? error : new Error(String(error));
+    }
   }
 
   protected abstract hash(state: TState): string;
   protected abstract buildSnapshot(): TState;
 
   snapshot(): TState {
+    if (this.status === StoreStatus.ERROR) {
+      throw this.error || new Error("Store is in error state");
+    }
     const currentData = this.buildSnapshot();
     const currentHash = this.hash(currentData);
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -196,6 +226,39 @@ export abstract class Store<TState> {
       this.cacheHash = currentHash;
     }
     return this.cache;
+  }
+
+  getState(): StoreState<TState> {
+    return {
+      status: this.status,
+      data: this.status === StoreStatus.READY ? this.snapshot() : undefined,
+      error: this.error,
+    };
+  }
+
+  isReady(): boolean {
+    return this.status === StoreStatus.READY;
+  }
+
+  isLoading(): boolean {
+    return this.status === StoreStatus.LOADING;
+  }
+
+  isError(): boolean {
+    return this.status === StoreStatus.ERROR;
+  }
+
+  protected handleError(error: unknown, context: string): void {
+    this.status = StoreStatus.ERROR;
+    this.error = error instanceof Error ? error : new Error(`${context}: ${String(error)}`);
+    console.error(`[Store ${this.guid}] ${context}:`, error);
+  }
+
+  protected clearError(): void {
+    this.error = undefined;
+    if (this.status === StoreStatus.ERROR) {
+      this.status = StoreStatus.READY;
+    }
   }
 
   onChanged(subscribe: Subscribe): Unsubscribe {
@@ -632,6 +695,19 @@ export function useSync<TAccessl, TSelected = TAccessl>(store: Synchronizable<TA
 
 export function useSyncDeep<TAccessl, TSelected = TAccessl>(store: Synchronizable<TAccessl> | null, selector?: (state: TAccessl) => TSelected): TAccessl | TSelected | null {
   return useSync(store, selector, true);
+}
+
+export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchronizable<TAccessl> & Store<TAccessl>) | null, selector?: (state: TAccessl) => TSelected, deep: boolean = false): StoreState<TAccessl | TSelected> {
+  const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
+  const state = deep ? useSyncExternalStore(actualStore.onChangedDeep.bind(actualStore), actualStore.snapshot.bind(actualStore)) : useSyncExternalStore(actualStore.onChanged.bind(actualStore), actualStore.snapshot.bind(actualStore));
+  if (!store) {
+    return { status: StoreStatus.IDLE, data: null as any };
+  }
+  const storeState = (store as Store<TAccessl>).getState();
+  return {
+    ...storeState,
+    data: storeState.data && selector ? selector(storeState.data) : storeState.data,
+  } as StoreState<TAccessl | TSelected>;
 }
 
 function areSameDesignEditor(designEditor: DesignEditorId, other: DesignEditorId): boolean {

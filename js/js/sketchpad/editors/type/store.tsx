@@ -478,13 +478,6 @@ export function useTypeEditor<T>(selector?: (state: TypeEditorState) => T, id?: 
   return useSyncDeep<TypeEditorState, T>(store as TypeEditorStore, selector ? selector : identitySelector);
 }
 
-export function useTypeEditorSafe<T>(selector?: (state: TypeEditorState) => T, id?: TypeEditorId): T | TypeEditorState | null {
-  try {
-    return useTypeEditor(selector, id);
-  } catch {
-    return null;
-  }
-}
 
 export function useTypeEditorSelection(): TypeEditorSelection {
   return useTypeEditor((s) => s.selection) as TypeEditorSelection;

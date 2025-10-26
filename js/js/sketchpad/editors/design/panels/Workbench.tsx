@@ -197,9 +197,9 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   const designScope = useDesignScope();
   const currentDesignFromScope = designScope ? (useDesign() as Design | null) : null;
 
-  const selectionFromScope = useDesignEditorSelectionSafe();
-  const hoverFromScope = useDesignEditorHoverSafe();
-  const commandsFromScope = useDesignEditorCommandsSafe();
+  const selectionFromScope = designScope ? useDesignEditorSelection() : undefined;
+  const hoverFromScope = designScope ? useDesignEditorHover() : undefined;
+  const commandsFromScope = designScope ? useDesignEditorCommands() : undefined;
 
   const isHovered = hoverFromScope?.designs?.includes(design?.guid || "") ?? false;
 
