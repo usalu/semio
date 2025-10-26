@@ -23,17 +23,18 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 
-function ScrollArea({ className, children, ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
+const ScrollArea = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root>>(({ className, children, ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
-      <ScrollAreaPrimitive.Viewport data-slot="scroll-area-viewport" className="focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0 overflow-hidden">
+      <ScrollAreaPrimitive.Viewport ref={ref} data-slot="scroll-area-viewport" className="focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0 overflow-hidden">
         {children}
       </ScrollAreaPrimitive.Viewport>
       <ScrollBar />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   );
-}
+});
+ScrollArea.displayName = "ScrollArea";
 
 function ScrollBar({ className, orientation = "vertical", ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
   return (

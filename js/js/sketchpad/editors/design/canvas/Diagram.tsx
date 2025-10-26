@@ -46,6 +46,7 @@ import {
 
 import { Button } from "../../../../elements/input/Button";
 import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useDiffedPiece, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands } from "../../../kits/store";
+import { useFocusSafe } from "../../../Navbar";
 import { ToolType, useEditorPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
   DesignEditorFullscreenWindow,
@@ -1184,6 +1185,45 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     );
   }, [design, flattenedDesign, metadata, kit, selection]);
 
+  const focusContext = useFocusSafe();
+  const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
+  const prevItemsRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!focusContext) return;
+    const items = [
+      ...nodes.map((n) => ({
+        id: n.id,
+        label: n.data.piece.description || `Piece ${n.id}`,
+        category: "Pieces",
+      })),
+      ...edges.map((e) => ({
+        id: e.id,
+        label: e.data?.SemioConnection?.description || `Connection ${e.id}`,
+        category: "Connections",
+      })),
+    ];
+    // Only update if the items have actually changed
+    const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
+    if (prevItemsRef.current !== itemsKey) {
+      prevItemsRef.current = itemsKey;
+      focusContext.setFocusItems(items);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, edges]);
+
+  useEffect(() => {
+    if (!focusContext) return;
+    const handleFocus = (itemId: string) => {
+      setFocusedItemId(itemId);
+    };
+    focusContext.setOnFocusItem(handleFocus);
+    return () => {
+      if (focusContext) focusContext.setOnFocusItem(undefined);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!design) return null;
 
   const [dragState, setDragState] = useState<{ lastPostition: XYPosition } | null>(null);
@@ -1939,6 +1979,8 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
         showControls={fullscreen && panelVisibility.toolbar}
         showMinimap={fullscreen && panelVisibility.toolbar}
         miniMapNodeComponent={MiniMapNode}
+        focusedItemId={focusedItemId}
+        onFocusComplete={() => setFocusedItemId(undefined)}
         panels={
           <>
             <ViewportPortal>⌞</ViewportPortal>

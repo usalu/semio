@@ -6,7 +6,7 @@
 
 // #endregion
 
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useEffect, useRef } from "react";
 import { ScrollArea } from "../aggregation/ScrollArea";
 
 export interface PageFrontmatter {
@@ -24,11 +24,27 @@ export interface PageProps {
   frontmatter?: PageFrontmatter;
   children: ReactNode;
   className?: string;
+  focusedItemId?: string;
+  onFocusComplete?: () => void;
 }
 
-const Page: FC<PageProps> = ({ frontmatter, children, className = "" }) => {
+const Page: FC<PageProps> = ({ frontmatter, children, className = "", focusedItemId, onFocusComplete }) => {
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (focusedItemId && scrollAreaRef.current) {
+      const headingElement = scrollAreaRef.current.querySelector(`[id="${focusedItemId}"]`);
+      if (headingElement) {
+        headingElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (onFocusComplete) {
+          setTimeout(() => onFocusComplete(), 600);
+        }
+      }
+    }
+  }, [focusedItemId, onFocusComplete]);
+
   return (
-    <ScrollArea className={`h-full ${className}`}>
+    <ScrollArea ref={scrollAreaRef} className={`h-full ${className}`}>
       <article className="prose prose-sm max-w-4xl mx-auto p-6 md:p-8">
         {frontmatter?.title && <h1 className="text-4xl font-bold mb-2">{frontmatter.title}</h1>}
         {frontmatter?.description && <p className="text-lg text-muted-foreground mb-8">{frontmatter.description}</p>}

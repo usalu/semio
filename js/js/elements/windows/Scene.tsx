@@ -24,7 +24,7 @@ import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from 
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber";
 import React, { FC, ReactNode, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Camera } from "../semio";
+import { Camera } from "../../semio";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -167,9 +167,11 @@ interface SceneInnerProps {
   showGizmo?: boolean;
   camera?: Camera;
   onCameraChange?: (camera: Camera) => void;
+  focusedItemId?: string;
+  onFocusComplete?: () => void;
 }
 
-const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange }) => {
+const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete }) => {
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -190,7 +192,7 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
     return () => observer.disconnect();
   }, []);
 
-  const { camera: threeCamera, gl, size } = useThree();
+  const { camera: threeCamera, gl, size, scene: threeScene } = useThree();
   const controlsRef = useRef<any>(null);
   const isUpdatingCameraRef = useRef(false);
   const prevCameraStringRef = useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
@@ -290,6 +292,55 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
     }
   }, [onCameraChange]);
 
+  useEffect(() => {
+    if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
+
+    let targetObject: THREE.Object3D | null = null;
+
+    threeScene.traverse((obj: THREE.Object3D) => {
+      if (obj.userData?.id === focusedItemId || obj.name === focusedItemId) {
+        targetObject = obj;
+      }
+    });
+
+    if (targetObject) {
+      const box = new THREE.Box3().setFromObject(targetObject);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const distance = maxDim * 2;
+
+      const camera = cameraRef.current;
+      const currentPos = camera.position.clone();
+      const direction = new THREE.Vector3().subVectors(currentPos, controlsRef.current.target).normalize();
+      const newPosition = center.clone().add(direction.multiplyScalar(distance));
+
+      isUpdatingCameraRef.current = true;
+
+      const animate = () => {
+        const t = 0.1;
+        camera.position.lerp(newPosition, t);
+        controlsRef.current.target.lerp(center, t);
+        camera.updateProjectionMatrix();
+        controlsRef.current.update();
+
+        const distanceToTarget = camera.position.distanceTo(newPosition);
+        const targetDistanceToCenter = controlsRef.current.target.distanceTo(center);
+
+        if (distanceToTarget > 0.01 || targetDistanceToCenter > 0.01) {
+          requestAnimationFrame(animate);
+        } else {
+          isUpdatingCameraRef.current = false;
+          if (onFocusComplete) onFocusComplete();
+        }
+      };
+
+      requestAnimationFrame(animate);
+    } else if (onFocusComplete) {
+      onFocusComplete();
+    }
+  }, [focusedItemId, threeScene, onFocusComplete]);
+
   return (
     <>
       <OrbitControls
@@ -321,6 +372,8 @@ interface SceneProps {
   orthographic?: boolean;
   shadows?: boolean;
   className?: string;
+  focusedItemId?: string;
+  onFocusComplete?: () => void;
 }
 
 const Scene: FC<SceneProps> = ({
@@ -334,6 +387,8 @@ const Scene: FC<SceneProps> = ({
   orthographic = true,
   shadows = false,
   className = "",
+  focusedItemId,
+  onFocusComplete,
 }) => (
   <div className={`h-full w-full ${className}`} onDoubleClick={onDoubleClickCapture}>
     <Canvas
@@ -342,7 +397,7 @@ const Scene: FC<SceneProps> = ({
       shadows={shadows}
       camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined}
     >
-      <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
+      <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
         {children}
       </SceneInner>
     </Canvas>

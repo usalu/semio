@@ -16,7 +16,7 @@ export interface DocsPage {
     order?: number;
 }
 
-export interface DocsSection extends SectionInfo {}
+export interface DocsSection extends SectionInfo { }
 
 class DocsRegistry {
     getAllSections(): DocsSection[] {

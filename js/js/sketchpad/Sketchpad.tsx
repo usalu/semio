@@ -31,7 +31,7 @@ import { editorRegistry } from "./editors";
 import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
 import { QualityAvatar } from "./editors/quality/panels/Workbench";
 import Footer, { FooterItemProvider } from "./Footer";
-import Navbar, { PanelSectionProvider } from "./Navbar";
+import Navbar, { FocusProvider, PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
 import Details from "./panels/Details";
 import Hud from "./panels/Hud";
@@ -236,13 +236,8 @@ const SketchpadBase: FC = () => {
         setLayout(Layout.TOUCH);
       }
     } else {
-      // Restore desktop layout when switching back from mobile
-      if (layout === Layout.TOUCH && desktopLayoutRef.current !== Layout.TOUCH) {
-        setLayout(desktopLayoutRef.current);
-      } else if (!isMobile && layout !== Layout.TOUCH) {
-        // Update the saved desktop layout when user changes it on desktop
-        desktopLayoutRef.current = layout;
-      }
+      // On desktop, always update the saved desktop layout when user changes it
+      desktopLayoutRef.current = layout;
     }
   }, [isMobile, layout, setLayout]);
 
@@ -326,12 +321,13 @@ const SketchpadBase: FC = () => {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <PanelSectionProvider>
-        <FooterItemProvider>
-          <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
-            <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
-              <Navbar />
-            </div>
+      <FocusProvider>
+        <PanelSectionProvider>
+          <FooterItemProvider>
+            <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
+              <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+                <Navbar />
+              </div>
             <div className="flex-1 flex overflow-hidden relative" style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}>
               {isMobile ? (
                 <>
@@ -421,6 +417,7 @@ const SketchpadBase: FC = () => {
           </div>
         </FooterItemProvider>
       </PanelSectionProvider>
+      </FocusProvider>
       {createPortal(
         design && kit ? (
           <KitScopeProvider guid={kit}>

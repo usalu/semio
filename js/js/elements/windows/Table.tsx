@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { FC, ReactElement, ReactNode } from "react";
+import { FC, ReactElement, ReactNode, useEffect, useRef } from "react";
 import { ScrollArea } from "../aggregation/ScrollArea";
 
 export type SortDirection = "asc" | "desc";
@@ -51,6 +51,8 @@ export interface TableProps<T = unknown> {
   stickyHeader?: boolean;
   headerClassName?: string;
   rowHeight?: "compact" | "normal" | "comfortable";
+  focusedItemId?: string;
+  onFocusComplete?: () => void;
 }
 
 const Table = <T,>({
@@ -70,8 +72,32 @@ const Table = <T,>({
   stickyHeader = true,
   headerClassName = "",
   rowHeight = "normal",
+  focusedItemId,
+  onFocusComplete,
 }: TableProps<T>) => {
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (focusedItemId && scrollAreaRef.current) {
+      const rowElements = scrollAreaRef.current.querySelectorAll("tbody tr");
+      let focusedIndex = -1;
+
+      data.forEach((row, index) => {
+        const rowId = getRowId ? getRowId(row) : (rowKey ? rowKey(row, index) : index.toString());
+        if (rowId === focusedItemId) {
+          focusedIndex = index;
+        }
+      });
+
+      if (focusedIndex >= 0 && rowElements[focusedIndex]) {
+        rowElements[focusedIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+        if (onFocusComplete) {
+          setTimeout(() => onFocusComplete(), 600);
+        }
+      }
+    }
+  }, [focusedItemId, data, getRowId, rowKey, onFocusComplete]);
   
   const rowHeightClass = {
     compact: "h-8",
@@ -86,7 +112,7 @@ const Table = <T,>({
   });
 
   return (
-    <ScrollArea className={`h-full w-full ${className}`}>
+    <ScrollArea ref={scrollAreaRef} className={`h-full w-full ${className}`}>
       <table className="w-full border-collapse">
         <thead className={`border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
           <tr className={rowHeightClass}>

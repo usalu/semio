@@ -20,7 +20,7 @@
 // #endregion
 
 import Fuse, { FuseResult } from "fuse.js";
-import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Fullscreen, HardDrive, Home, Layout, Minus, Search as SearchIcon, Square, User, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Focus as FocusIcon, Fullscreen, HardDrive, Home, Layout, Minus, Search as SearchIcon, Square, User, X } from "lucide-react";
 import { createContext, FC, Fragment, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
@@ -86,6 +86,62 @@ export interface PanelSections {
   settings: PanelSection[];
   toolbar: PanelSection[];
 }
+
+export interface FocusItem {
+  id: string;
+  label: string;
+  description?: string;
+  category?: string;
+}
+
+interface FocusContextValue {
+  focusItems: FocusItem[];
+  setFocusItems: (items: FocusItem[]) => void;
+  setOnFocusItem: (callback: ((itemId: string) => void) | undefined) => void;
+  triggerFocusItem: (itemId: string) => void;
+}
+
+const FocusContext = createContext<FocusContextValue | null>(null);
+
+export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [focusItems, setFocusItems] = useState<FocusItem[]>([]);
+  const onFocusItemCallbackRef = useRef<((itemId: string) => void) | undefined>(undefined);
+
+  const setFocusItemsStable = useCallback((items: FocusItem[]) => {
+    setFocusItems(items);
+  }, []);
+
+  const setOnFocusItem = useCallback((callback: ((itemId: string) => void) | undefined) => {
+    onFocusItemCallbackRef.current = callback;
+  }, []);
+
+  const triggerFocusItem = useCallback((itemId: string) => {
+    if (onFocusItemCallbackRef.current) {
+      onFocusItemCallbackRef.current(itemId);
+    }
+  }, []);
+
+  // Separate the stable functions from the changing state
+  // This prevents unnecessary re-renders of components that only use the functions
+  const contextValue = useMemo(
+    () => ({ focusItems, setFocusItems: setFocusItemsStable, setOnFocusItem, triggerFocusItem }),
+    // Only include focusItems, as the functions are already stable
+    [focusItems],
+  );
+
+  return <FocusContext.Provider value={contextValue}>{children}</FocusContext.Provider>;
+};
+
+export const useFocus = () => {
+  const context = useContext(FocusContext);
+  if (!context) throw new Error("useFocus must be used within FocusProvider");
+  return context;
+};
+
+export const useFocusSafe = () => {
+  const context = useContext(FocusContext);
+  return context;
+};
 
 interface PanelSectionContextValue {
   sections: PanelSections;
@@ -1146,6 +1202,91 @@ const Search: FC = ({}) => {
   );
 };
 
+const Focus: FC = ({}) => {
+  const { t } = useTranslation();
+  const tooltip = useTooltip();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const focusContext = useFocusSafe();
+
+  const focusItems = focusContext?.focusItems || [];
+  const triggerFocusItem = focusContext?.triggerFocusItem;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const fuse = useMemo(
+    () =>
+      new Fuse(focusItems, {
+        keys: [
+          { name: "label", weight: 2 },
+          { name: "description", weight: 1 },
+          { name: "category", weight: 0.5 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+      }),
+    [focusItems],
+  );
+
+  const focusResults = useMemo(() => (query.trim() ? fuse.search(query).slice(0, 20) : focusItems.slice(0, 20).map((item, idx) => ({ item, refIndex: idx }))), [fuse, query, focusItems]);
+
+  const handleSelect = useCallback(
+    (item: FocusItem) => {
+      setOpen(false);
+      setQuery("");
+      if (triggerFocusItem) triggerFocusItem(item.id);
+    },
+    [triggerFocusItem],
+  );
+
+  const groupedResults = useMemo(() => {
+    const groups: Record<string, typeof focusResults> = {};
+    focusResults.forEach((result) => {
+      const category = result.item.category || t("navbar.focus.other", "Other");
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(result);
+    });
+    return groups;
+  }, [focusResults, t]);
+
+  if (!focusContext) return null;
+
+  return (
+    <>
+      <Toggle tooltip={tooltip("navbar.focus.open")} tooltipPressed={tooltip("navbar.focus.close")} pressed={open} onPressedChange={setOpen} hotkey="Ctrl+F">
+        <FocusIcon size={16} />
+      </Toggle>
+      <CommandDialog title={t("navbar.focus.title", "Focus")} description={t("navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
+        <CommandInput placeholder={t("navbar.focus.placeholder", "Search for an element...")} value={query} onValueChange={setQuery} />
+        <CommandList>
+          <CommandEmpty>{t("navbar.noResults")}</CommandEmpty>
+          {Object.entries(groupedResults).map(([category, items]) => (
+            <CommandGroup key={category} heading={category}>
+              {items.map((result, idx) => (
+                <CommandItem key={`${result.item.id}-${idx}`} onSelect={() => handleSelect(result.item)}>
+                  <div className="flex flex-col">
+                    <span>{result.item.label}</span>
+                    {result.item.description && <span className="text-xs text-muted-foreground">{result.item.description}</span>}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
+        </CommandList>
+      </CommandDialog>
+    </>
+  );
+};
+
 const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const tooltipText = useTooltip();
@@ -1726,6 +1867,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
           <Toggle tooltip={tooltip("navbar.search.open")} tooltipPressed={tooltip("navbar.search.close")} pressed={searchOpen} onPressedChange={setSearchOpen}>
             <SearchIcon size={16} />
           </Toggle>
+          <Focus />
           <Toggle tooltip={tooltip("navbar.fullscreen")} tooltipPressed={tooltip("navbar.exitFullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
             <Fullscreen size={16} />
           </Toggle>
@@ -1861,6 +2003,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
 
       <div className="flex items-center gap-1 ml-auto">
         <Search />
+        <Focus />
         <PanelToggles />
         {toolbarConfig && (
           <Toggle

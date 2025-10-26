@@ -22,7 +22,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Award, Box, FileText, Layout, Plus, User } from "lucide-react";
-import React, { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
@@ -32,7 +32,7 @@ import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { Author, Design, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
-import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
+import { useFocus, useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, useEditorType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 import { KitDetails } from "./panels/Details";
 import { KitEditorState, useKitEditor, useKitEditorCommands } from "./store";
@@ -522,6 +522,49 @@ const EditorContent: FC = () => {
 
     return result;
   }, [kit, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
+
+  const { setFocusItems, setOnFocusItem } = useFocus();
+  const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const prevRowsRef = useRef<string>("");
+
+  useEffect(() => {
+    const items = rows.map((row) => ({
+      id: row.id,
+      label: row.artifact,
+      category: row.kind.charAt(0).toUpperCase() + row.kind.slice(1),
+    }));
+    // Only update if the items have actually changed
+    const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
+    if (prevRowsRef.current !== itemsKey) {
+      prevRowsRef.current = itemsKey;
+      setFocusItems(items);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  useEffect(() => {
+    const handleFocus = (itemId: string) => {
+      setFocusedItemId(itemId);
+    };
+    setOnFocusItem(handleFocus);
+    return () => setOnFocusItem(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (focusedItemId && scrollAreaRef.current) {
+      const tbody = scrollAreaRef.current.querySelector("tbody");
+      if (tbody) {
+        const rowElements = tbody.querySelectorAll("tr");
+        const focusedIndex = rows.findIndex((row) => row.id === focusedItemId);
+        if (focusedIndex >= 0 && rowElements[focusedIndex]) {
+          rowElements[focusedIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setFocusedItemId(undefined), 600);
+        }
+      }
+    }
+  }, [focusedItemId, rows]);
 
   const toggleRow = (rowId: string) => {
     kitEditorCommands.toggleExpandedRow(rowId);
@@ -1245,7 +1288,7 @@ const EditorContent: FC = () => {
             ))}
         <Input className="flex-1 min-w-[200px]" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitEditorCommands.setFilterSearch(e.target.value)} />
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea ref={scrollAreaRef} className="flex-1">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 border-b">
             <tr className="h-9">

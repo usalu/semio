@@ -195,6 +195,10 @@ export interface DiagramProps {
   nodesDraggable?: boolean;
   /** MiniMap node component */
   miniMapNodeComponent?: any;
+  /** ID of node or edge to focus on (will zoom/pan to it) */
+  focusedItemId?: string;
+  /** Callback when focus completes */
+  onFocusComplete?: () => void;
 }
 
 /**
@@ -248,6 +252,8 @@ const DiagramInner: FC<DiagramProps> = ({
   edgesFocusable = false,
   nodesDraggable = true,
   miniMapNodeComponent,
+  focusedItemId,
+  onFocusComplete,
 }) => {
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
 
@@ -268,6 +274,37 @@ const DiagramInner: FC<DiagramProps> = ({
     },
     [reactFlowInstanceRef],
   );
+
+  // Focus on specific node or edge when focusedItemId changes
+  useEffect(() => {
+    if (focusedItemId && reactFlowInstanceRef?.current) {
+      const node = finalNodes.find((n) => n.id === focusedItemId);
+      const edge = finalEdges.find((e) => e.id === focusedItemId);
+
+      if (node) {
+        reactFlowInstanceRef.current.fitView({
+          padding: 0.5,
+          duration: 600,
+          nodes: [node],
+        });
+      } else if (edge) {
+        const sourceNode = finalNodes.find((n) => n.id === edge.source);
+        const targetNode = finalNodes.find((n) => n.id === edge.target);
+        const nodesToFit = [sourceNode, targetNode].filter(Boolean) as Node[];
+        if (nodesToFit.length > 0) {
+          reactFlowInstanceRef.current.fitView({
+            padding: 0.5,
+            duration: 600,
+            nodes: nodesToFit,
+          });
+        }
+      }
+
+      if (onFocusComplete) {
+        setTimeout(() => onFocusComplete(), 600);
+      }
+    }
+  }, [focusedItemId, finalNodes, finalEdges, reactFlowInstanceRef, onFocusComplete]);
 
   // Update nodes and edges when initial values change (uncontrolled mode only)
   useEffect(() => {

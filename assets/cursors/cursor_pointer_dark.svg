@@ -3,8 +3,8 @@
 
 <svg
    width="14.666391"
-   height="23.899563"
-   viewBox="0 0 14.666391 23.899563"
+   height="23.899565"
+   viewBox="0 0 14.666391 23.899565"
    version="1.1"
    id="svg1"
    xmlns="http://www.w3.org/2000/svg"
@@ -15,7 +15,7 @@
      id="layer1"
      transform="translate(-219.91582,-287.95767)">
     <path
-       style="fill:#00a69d;fill-opacity:1;stroke:#001117;stroke-width:0.25;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#ff344f;fill-opacity:1;stroke:#001117;stroke-width:0.25;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
        d="m 220.04082,288.26777 v 23.46446 h 5.64666 v -17.59835 z"
        id="path1-8" />
     <path
