@@ -34,7 +34,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   FileTreeItem,
   Section,
   h1: ({ children, id, ...props }: any) => {
-    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const generatedId =
+      id ||
+      children
+        ?.toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "");
     useEffect(() => {
       if (generatedId && children) {
         registerHeading({ id: generatedId, text: children.toString(), level: 1 });
@@ -47,7 +53,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
     );
   },
   h2: ({ children, id, ...props }: any) => {
-    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const generatedId =
+      id ||
+      children
+        ?.toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "");
     useEffect(() => {
       if (generatedId && children) {
         registerHeading({ id: generatedId, text: children.toString(), level: 2 });
@@ -60,7 +72,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
     );
   },
   h3: ({ children, id, ...props }: any) => {
-    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const generatedId =
+      id ||
+      children
+        ?.toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "");
     useEffect(() => {
       if (generatedId && children) {
         registerHeading({ id: generatedId, text: children.toString(), level: 3 });
@@ -73,7 +91,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
     );
   },
   h4: ({ children, id, ...props }: any) => {
-    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const generatedId =
+      id ||
+      children
+        ?.toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "");
     useEffect(() => {
       if (generatedId && children) {
         registerHeading({ id: generatedId, text: children.toString(), level: 4 });
@@ -86,7 +110,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
     );
   },
   h5: ({ children, id, ...props }: any) => {
-    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const generatedId =
+      id ||
+      children
+        ?.toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "");
     useEffect(() => {
       if (generatedId && children) {
         registerHeading({ id: generatedId, text: children.toString(), level: 5 });
@@ -99,7 +129,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
     );
   },
   h6: ({ children, id, ...props }: any) => {
-    const generatedId = id || children?.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const generatedId =
+      id ||
+      children
+        ?.toString()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "");
     useEffect(() => {
       if (generatedId && children) {
         registerHeading({ id: generatedId, text: children.toString(), level: 6 });

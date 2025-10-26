@@ -49,18 +49,7 @@ export interface DiagramNodeProps {
  * Generalized diagram node component with consistent styling
  * All diagram nodes are circular with borders, consistent hover/selection colors and cursors
  */
-export const DiagramNode: FC<DiagramNodeProps> = ({
-  content,
-  selected = false,
-  hovered = false,
-  isPlaceholder = false,
-  showTopHandle = false,
-  showBottomHandle = false,
-  className = "",
-  onMouseEnter,
-  onMouseLeave,
-  onClick,
-}) => {
+export const DiagramNode: FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick }) => {
   return (
     <div
       className={`
@@ -78,25 +67,11 @@ export const DiagramNode: FC<DiagramNodeProps> = ({
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      {showTopHandle && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="w-2 h-2 !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]"
-        />
-      )}
-      
-      <div className="text-sm font-medium text-[color:var(--foreground-panel)] truncate px-2">
-        {content}
-      </div>
-      
-      {showBottomHandle && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="w-2 h-2 !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]"
-        />
-      )}
+      {showTopHandle && <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
+
+      <div className="text-sm font-medium text-[color:var(--foreground-panel)] truncate px-2">{content}</div>
+
+      {showBottomHandle && <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
     </div>
   );
 };
@@ -104,15 +79,6 @@ export const DiagramNode: FC<DiagramNodeProps> = ({
 /**
  * Placeholder node for showing drop targets
  */
-export const PlaceholderDiagramNode: FC<{ label?: string; onClick?: () => void }> = ({ 
-  label = "+ Drop here", 
-  onClick 
-}) => (
-  <DiagramNode
-    content={label}
-    isPlaceholder
-    showTopHandle
-    onClick={onClick}
-    className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]"
-  />
+export const PlaceholderDiagramNode: FC<{ label?: string; onClick?: () => void }> = ({ label = "+ Drop here", onClick }) => (
+  <DiagramNode content={label} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />
 );

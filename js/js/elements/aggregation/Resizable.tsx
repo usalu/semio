@@ -71,9 +71,7 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
         "after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2",
         "data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full",
         "data-[panel-group-direction=vertical]:border-r-0 data-[panel-group-direction=vertical]:border-t",
-        isDragging || isHovered
-          ? "data-[panel-group-direction=vertical]:bg-accent data-[panel-group-direction=vertical]:border-accent"
-          : "data-[panel-group-direction=vertical]:hover:border-accent",
+        isDragging || isHovered ? "data-[panel-group-direction=vertical]:bg-accent data-[panel-group-direction=vertical]:border-accent" : "data-[panel-group-direction=vertical]:hover:border-accent",
         "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
         "data-[panel-group-direction=vertical]:before:inset-x-0 data-[panel-group-direction=vertical]:before:-top-2 data-[panel-group-direction=vertical]:before:h-4 data-[panel-group-direction=vertical]:before:w-full data-[panel-group-direction=vertical]:before:cursor-ns-resize",
         className,

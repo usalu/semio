@@ -281,20 +281,20 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
-            {actions.map((action, index) => (
-              <Action
-                key={index}
-                level="panel"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  action.onClick();
-                }}
-                tooltip={action.title}
-              >
-                {action.icon}
-              </Action>
-            ))}
+              {actions.map((action, index) => (
+                <Action
+                  key={index}
+                  level="panel"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  tooltip={action.title}
+                >
+                  {action.icon}
+                </Action>
+              ))}
             </div>
           )}
         </div>
@@ -335,20 +335,20 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
       <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
       {actions.length > 0 && (
         <div className="flex items-center gap-0.5">
-            {actions.map((action, index) => (
-              <Action
-                key={index}
-                level="panel"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  action.onClick();
-                }}
-                tooltip={action.title}
-              >
-                {action.icon}
-              </Action>
-            ))}
+          {actions.map((action, index) => (
+            <Action
+              key={index}
+              level="panel"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action.onClick();
+              }}
+              tooltip={action.title}
+            >
+              {action.icon}
+            </Action>
+          ))}
         </div>
       )}
     </div>
@@ -376,7 +376,22 @@ export const SortableTreeItems: FC<SortableTreeItemsProps> = ({ items, onReorder
   );
 };
 
-export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, sortable = false, sortableId, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
+export const TreeItem: FC<TreeItemProps> = ({
+  label,
+  icon,
+  children,
+  onClick,
+  className = "",
+  isSelected = false,
+  isHighlighted = false,
+  sortable = false,
+  sortableId,
+  isDragHandle = false,
+  defaultOpen = true,
+  isLastItem = false,
+  actions = [],
+  onDoubleClick,
+}) => {
   if (sortable && sortableId) {
     return (
       <SortableTreeItem
@@ -436,20 +451,20 @@ export const TreeItem: FC<TreeItemProps> = ({ label, icon, children, onClick, cl
           <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
-            {actions.map((action, index) => (
-              <Action
-                key={index}
-                level="panel"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  action.onClick();
-                }}
-                tooltip={action.title}
-              >
-                {action.icon}
-              </Action>
-            ))}
+              {actions.map((action, index) => (
+                <Action
+                  key={index}
+                  level="panel"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  tooltip={action.title}
+                >
+                  {action.icon}
+                </Action>
+              ))}
             </div>
           )}
         </div>
@@ -500,4 +515,3 @@ export const Tree: FC<{ children: ReactNode; className?: string; showLines?: boo
     </TreeContext.Provider>
   );
 };
-

@@ -71,39 +71,22 @@ export interface DraggableAvatarProps {
 export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
   ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onDoubleClick, onPointerEnter, onPointerLeave, className }, ref) => {
     return (
-      <div
-        ref={dragRef || ref}
-        {...dragListeners}
-        {...dragAttributes}
-        onClick={onClick}
-        onDoubleClick={onDoubleClick}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
-        title={title}
-        className={className}
-      >
+      <div ref={dragRef || ref} {...dragListeners} {...dragAttributes} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} title={title} className={className}>
         <Avatar
           className={cn(
             "cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)]",
             isSelected && "ring-1 ring-inset ring-[color:var(--active-base)]",
-            isHovered && !isSelected && "ring-1 ring-inset ring-[color:var(--hover-base)]"
+            isHovered && !isSelected && "ring-1 ring-inset ring-[color:var(--hover-base)]",
           )}
           style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
         >
-          <AvatarFallback
-            className={cn(
-              "select-none",
-              isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]",
-              isHovered && !isSelected && "bg-[var(--hover-base)] text-foreground",
-              !isSelected && !isHovered && "bg-muted"
-            )}
-          >
+          <AvatarFallback className={cn("select-none", isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]", isHovered && !isSelected && "bg-[var(--hover-base)] text-foreground", !isSelected && !isHovered && "bg-muted")}>
             {content}
           </AvatarFallback>
         </Avatar>
       </div>
     );
-  }
+  },
 );
 DraggableAvatar.displayName = "DraggableAvatar";
 

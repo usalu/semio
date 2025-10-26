@@ -68,7 +68,7 @@ const config: StorybookConfig = {
       const plugin: any = config.plugins[i];
 
       // Check if it's a direct MDX plugin reference
-      if (plugin === '@mdx-js/rollup' || (plugin && typeof plugin === 'object' && plugin.name === '@mdx-js/rollup')) {
+      if (plugin === "@mdx-js/rollup" || (plugin && typeof plugin === "object" && plugin.name === "@mdx-js/rollup")) {
         indicesToRemove.push(i);
         continue;
       }
@@ -77,7 +77,7 @@ const config: StorybookConfig = {
       if (plugin instanceof Promise) {
         try {
           const resolved: any = await plugin;
-          if (resolved && typeof resolved === 'object' && resolved.name === 'storybook:mdx-plugin') {
+          if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
             indicesToRemove.push(i);
           }
         } catch (e) {
@@ -97,7 +97,7 @@ const config: StorybookConfig = {
       mdx.default({
         remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
         rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
-      })
+      }),
     );
 
     return config;

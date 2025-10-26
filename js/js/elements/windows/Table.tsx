@@ -84,7 +84,7 @@ const Table = <T,>({
       let focusedIndex = -1;
 
       data.forEach((row, index) => {
-        const rowId = getRowId ? getRowId(row) : (rowKey ? rowKey(row, index) : index.toString());
+        const rowId = getRowId ? getRowId(row) : rowKey ? rowKey(row, index) : index.toString();
         if (rowId === focusedItemId) {
           focusedIndex = index;
         }
@@ -98,7 +98,7 @@ const Table = <T,>({
       }
     }
   }, [focusedItemId, data, getRowId, rowKey, onFocusComplete]);
-  
+
   const rowHeightClass = {
     compact: "h-8",
     normal: "h-9",
@@ -137,7 +137,7 @@ const Table = <T,>({
               const isSelected = selectedSet.has(rowId);
               const baseRowClassName = `border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
               const customRowClassName = rowClassName ? rowClassName(row, index) : "";
-              
+
               return (
                 <tr
                   key={key}

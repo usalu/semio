@@ -27,219 +27,219 @@ import type { KitCommandContext, KitCommandResult, Url } from "../store";
 const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 
 export const commands = {
-    "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
-        return {
-            diff: { authors: { added: [author] } },
-        };
-    },
-    "semio.kit.updateAuthor": (context: KitCommandContext, guid: Guid, diff: AuthorDiff): KitCommandResult => {
-        return {
-            diff: { authors: { updated: [{ id: guid, diff: diff }] } },
-        };
-    },
-    "semio.kit.deleteAuthor": (context: KitCommandContext, guid: Guid): KitCommandResult => {
-        return {
-            diff: { authors: { removed: [guid] } },
-        };
-    },
-    "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
-        return {
-            diff: { types: { added: [type] } },
-        };
-    },
-    "semio.kit.updateType": (context: KitCommandContext, guid: Guid, diff: TypeDiff): KitCommandResult => {
-        return {
-            diff: { types: { updated: [{ id: guid, diff: diff }] } },
-        };
-    },
-    "semio.kit.deleteType": (context: KitCommandContext, guid: Guid): KitCommandResult => {
-        return {
-            diff: { types: { removed: [guid] } },
-        };
-    },
-    "semio.kit.createDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
-        return {
-            diff: { designs: { added: [design] } },
-        };
-    },
-    "semio.kit.updateDesign": (context: KitCommandContext, guid: Guid, diff: DesignDiff): KitCommandResult => {
-        return {
-            diff: { designs: { updated: [{ id: guid, diff: diff }] } },
-        };
-    },
-    "semio.kit.deleteDesign": (context: KitCommandContext, guid: Guid): KitCommandResult => {
-        return {
-            diff: { designs: { removed: [guid] } },
-        };
-    },
-    "semio.kit.createQuality": (context: KitCommandContext, quality: Quality): KitCommandResult => {
-        return {
-            diff: { qualities: { added: [quality] } },
-        };
-    },
-    "semio.kit.updateQuality": (context: KitCommandContext, guid: Guid, diff: QualityDiff): KitCommandResult => {
-        return {
-            diff: { qualities: { updated: [{ id: guid, diff: diff }] } },
-        };
-    },
-    "semio.kit.deleteQuality": (context: KitCommandContext, guid: Guid): KitCommandResult => {
-        return {
-            diff: { qualities: { removed: [guid] } },
-        };
-    },
-    "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
-        const files: File[] = blob ? [new File([blob], file.path.split("/").pop() || file.path)] : [];
-        return {
-            diff: { files: { added: [file] } },
-            files,
-        };
-    },
-    "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
-        const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
-        return {
-            diff: { files: { updated: [{ id: url, diff: fileDiff }] } },
-            files,
-        };
-    },
-    "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
-        return {
-            diff: { files: { removed: [url] } },
-        };
-    },
-    "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
-        (async () => {
-            try {
-                if (url.endsWith(".json")) {
-                    const response = await fetch(url);
-                    const kit: Kit = await response.json();
-                    const filesToFetch: { path: string; url: string }[] = [];
-                    const extractFileUrls = (obj: any) => {
-                        if (typeof obj === "object" && obj !== null) {
-                            if (Array.isArray(obj)) {
-                                obj.forEach((item) => extractFileUrls(item));
-                            } else {
-                                Object.entries(obj).forEach(([key, value]) => {
-                                    if (key === "url" && typeof value === "string" && !value.startsWith("http")) {
-                                        filesToFetch.push({ path: value, url: new URL(value, url).href });
-                                    }
-                                    extractFileUrls(value);
-                                });
-                            }
-                        }
-                    };
-                    extractFileUrls(kit);
-                    const files: KitCommandResult["files"] = [];
-                    for (const file of filesToFetch) {
-                        try {
-                            const fileResponse = await fetch(file.url);
-                            const fileBlob = await fileResponse.blob();
-                            files.push(new File([fileBlob], file.path));
-                        } catch (error) { }
-                    }
-                    return {
-                        diff: {
-                            name: kit.name,
-                            description: kit.description,
-                            version: kit.version,
-                            types: kit.types ? { added: kit.types } : undefined,
-                            designs: kit.designs ? { added: kit.designs } : undefined,
-                            files: kit.files ? { added: kit.files } : undefined,
-                        },
-                        files,
-                    };
-                } else {
-                    let SQL: SqlJsStatic;
-                    let db: Database;
-                    try {
-                        SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
-                    } catch (err) {
-                        throw new Error("SQL.js failed to initialize for import.");
-                    }
-                    const response = await fetch(url);
-                    const zipData = await response.arrayBuffer();
-                    const zip = await JSZip.loadAsync(zipData);
-                    let kit: Kit | null = null;
-                    const files: KitCommandResult["files"] = [];
-
-                    const kitDbFile = zip.file("kit.db");
-                    if (kitDbFile) {
-                        const dbData = await kitDbFile.async("uint8array");
-                        db = new SQL.Database(dbData);
-                        const kitResult = db.exec("SELECT * FROM kit LIMIT 1");
-                        if (kitResult.length > 0) {
-                            const kitRow = kitResult[0];
-                            const kitData = Object.fromEntries(kitRow.columns.map((col, i) => [col, kitRow.values[0][i]]));
-                            kit = {
-                                guid: (kitData.uri as string) || `urn:kit:${kitData.name as string}:${kitData.version as string}`,
-                                name: kitData.name as string,
-                                description: kitData.description as string,
-                                version: kitData.version as string,
-                                icon: kitData.icon as string,
-                                image: kitData.image as string,
-                                preview: kitData.preview as string,
-                                remote: kitData.remote as string,
-                                homepage: kitData.homepage as string,
-                                license: kitData.license as string,
-                                types: [],
-                                designs: [],
-                                files: [],
-                                createdAt: new Date(kitData.createdAt as string),
-                                updatedAt: new Date(kitData.updatedAt as string),
-                            };
-                        }
-                        db.close();
-                    } else {
-                        const kitJsonFile = zip.file("kit.json");
-                        if (kitJsonFile) {
-                            const kitData = await kitJsonFile.async("text");
-                            kit = JSON.parse(kitData);
-                        }
-                    }
-
-                    for (const [filename, file] of Object.entries(zip.files)) {
-                        if (!(file as any).dir && filename !== "kit.db" && filename !== "kit.json") {
-                            const fileData = await (file as any).async("uint8array");
-                            files.push(new File([new Uint8Array(fileData)], filename));
-                        }
-                    }
-
-                    if (!kit) {
-                        throw new Error("No kit.json or kit.db found in ZIP file");
-                    }
-
-                    return {
-                        diff: {
-                            name: kit.name,
-                            description: kit.description,
-                            version: kit.version,
-                            types: kit.types && kit.types.length > 0 ? { added: kit.types } : undefined,
-                            designs: kit.designs && kit.designs.length > 0 ? { added: kit.designs } : undefined,
-                            files: kit.files && kit.files.length > 0 ? { added: kit.files } : undefined,
-                        },
-                        files,
-                    };
-                }
-            } catch (error) {
-                throw error;
+  "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
+    return {
+      diff: { authors: { added: [author] } },
+    };
+  },
+  "semio.kit.updateAuthor": (context: KitCommandContext, guid: Guid, diff: AuthorDiff): KitCommandResult => {
+    return {
+      diff: { authors: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteAuthor": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { authors: { removed: [guid] } },
+    };
+  },
+  "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
+    return {
+      diff: { types: { added: [type] } },
+    };
+  },
+  "semio.kit.updateType": (context: KitCommandContext, guid: Guid, diff: TypeDiff): KitCommandResult => {
+    return {
+      diff: { types: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteType": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { types: { removed: [guid] } },
+    };
+  },
+  "semio.kit.createDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
+    return {
+      diff: { designs: { added: [design] } },
+    };
+  },
+  "semio.kit.updateDesign": (context: KitCommandContext, guid: Guid, diff: DesignDiff): KitCommandResult => {
+    return {
+      diff: { designs: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteDesign": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { designs: { removed: [guid] } },
+    };
+  },
+  "semio.kit.createQuality": (context: KitCommandContext, quality: Quality): KitCommandResult => {
+    return {
+      diff: { qualities: { added: [quality] } },
+    };
+  },
+  "semio.kit.updateQuality": (context: KitCommandContext, guid: Guid, diff: QualityDiff): KitCommandResult => {
+    return {
+      diff: { qualities: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteQuality": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { qualities: { removed: [guid] } },
+    };
+  },
+  "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
+    const files: File[] = blob ? [new File([blob], file.path.split("/").pop() || file.path)] : [];
+    return {
+      diff: { files: { added: [file] } },
+      files,
+    };
+  },
+  "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
+    const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
+    return {
+      diff: { files: { updated: [{ id: url, diff: fileDiff }] } },
+      files,
+    };
+  },
+  "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
+    return {
+      diff: { files: { removed: [url] } },
+    };
+  },
+  "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
+    (async () => {
+      try {
+        if (url.endsWith(".json")) {
+          const response = await fetch(url);
+          const kit: Kit = await response.json();
+          const filesToFetch: { path: string; url: string }[] = [];
+          const extractFileUrls = (obj: any) => {
+            if (typeof obj === "object" && obj !== null) {
+              if (Array.isArray(obj)) {
+                obj.forEach((item) => extractFileUrls(item));
+              } else {
+                Object.entries(obj).forEach(([key, value]) => {
+                  if (key === "url" && typeof value === "string" && !value.startsWith("http")) {
+                    filesToFetch.push({ path: value, url: new URL(value, url).href });
+                  }
+                  extractFileUrls(value);
+                });
+              }
             }
-        })();
-        return { diff: {} };
-    },
-    "semio.kit.export": (context: KitCommandContext): KitCommandResult => {
-        (async () => {
-            let SQL: SqlJsStatic;
-            let db: Database;
+          };
+          extractFileUrls(kit);
+          const files: KitCommandResult["files"] = [];
+          for (const file of filesToFetch) {
             try {
-                SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
-            } catch (err) {
-                throw new Error("SQL.js failed to initialize for export.");
+              const fileResponse = await fetch(file.url);
+              const fileBlob = await fileResponse.blob();
+              files.push(new File([fileBlob], file.path));
+            } catch (error) {}
+          }
+          return {
+            diff: {
+              name: kit.name,
+              description: kit.description,
+              version: kit.version,
+              types: kit.types ? { added: kit.types } : undefined,
+              designs: kit.designs ? { added: kit.designs } : undefined,
+              files: kit.files ? { added: kit.files } : undefined,
+            },
+            files,
+          };
+        } else {
+          let SQL: SqlJsStatic;
+          let db: Database;
+          try {
+            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
+          } catch (err) {
+            throw new Error("SQL.js failed to initialize for import.");
+          }
+          const response = await fetch(url);
+          const zipData = await response.arrayBuffer();
+          const zip = await JSZip.loadAsync(zipData);
+          let kit: Kit | null = null;
+          const files: KitCommandResult["files"] = [];
+
+          const kitDbFile = zip.file("kit.db");
+          if (kitDbFile) {
+            const dbData = await kitDbFile.async("uint8array");
+            db = new SQL.Database(dbData);
+            const kitResult = db.exec("SELECT * FROM kit LIMIT 1");
+            if (kitResult.length > 0) {
+              const kitRow = kitResult[0];
+              const kitData = Object.fromEntries(kitRow.columns.map((col, i) => [col, kitRow.values[0][i]]));
+              kit = {
+                guid: (kitData.uri as string) || `urn:kit:${kitData.name as string}:${kitData.version as string}`,
+                name: kitData.name as string,
+                description: kitData.description as string,
+                version: kitData.version as string,
+                icon: kitData.icon as string,
+                image: kitData.image as string,
+                preview: kitData.preview as string,
+                remote: kitData.remote as string,
+                homepage: kitData.homepage as string,
+                license: kitData.license as string,
+                types: [],
+                designs: [],
+                files: [],
+                createdAt: new Date(kitData.createdAt as string),
+                updatedAt: new Date(kitData.updatedAt as string),
+              };
             }
+            db.close();
+          } else {
+            const kitJsonFile = zip.file("kit.json");
+            if (kitJsonFile) {
+              const kitData = await kitJsonFile.async("text");
+              kit = JSON.parse(kitData);
+            }
+          }
 
-            db = new SQL.Database();
-            const zip = new JSZip();
-            const kit = context.kit;
+          for (const [filename, file] of Object.entries(zip.files)) {
+            if (!(file as any).dir && filename !== "kit.db" && filename !== "kit.json") {
+              const fileData = await (file as any).async("uint8array");
+              files.push(new File([new Uint8Array(fileData)], filename));
+            }
+          }
 
-            const schema = `
+          if (!kit) {
+            throw new Error("No kit.json or kit.db found in ZIP file");
+          }
+
+          return {
+            diff: {
+              name: kit.name,
+              description: kit.description,
+              version: kit.version,
+              types: kit.types && kit.types.length > 0 ? { added: kit.types } : undefined,
+              designs: kit.designs && kit.designs.length > 0 ? { added: kit.designs } : undefined,
+              files: kit.files && kit.files.length > 0 ? { added: kit.files } : undefined,
+            },
+            files,
+          };
+        }
+      } catch (error) {
+        throw error;
+      }
+    })();
+    return { diff: {} };
+  },
+  "semio.kit.export": (context: KitCommandContext): KitCommandResult => {
+    (async () => {
+      let SQL: SqlJsStatic;
+      let db: Database;
+      try {
+        SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
+      } catch (err) {
+        throw new Error("SQL.js failed to initialize for export.");
+      }
+
+      db = new SQL.Database();
+      const zip = new JSZip();
+      const kit = context.kit;
+
+      const schema = `
         CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
         CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
         CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
@@ -255,278 +255,271 @@ export const commands = {
         CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
       `;
 
-            try {
-                db.run(schema);
-                const insertQualities = (qualities: Attribute[] | undefined, fkColumn: string, fkValue: number) => {
-                    if (!qualities) return;
-                    const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
-                    qualities.forEach((q) => stmt.run([q.key, q.value ?? "", "", q.definition ?? "", fkValue]));
-                    stmt.free();
-                };
-                const insertAuthors = (authorGuids: string[] | undefined, fkColumn: string, fkValue: number) => {
-                    if (!authorGuids) return;
-                    const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
-                    let rank = 0;
-                    authorGuids.forEach((authorGuid) => {
-                        const author = kit.authors?.find(a => a.guid === authorGuid);
-                        if (author) {
-                            stmt.run([author.name, author.email ?? "", rank++, fkValue]);
-                        }
-                    });
-                    stmt.free();
-                };
-
-                const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                const nowIso = new Date().toISOString();
-                kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", nowIso, nowIso]);
-                kitStmt.free();
-                const Guid = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                insertQualities(kit.attributes, "kit_id", Guid);
-
-                if (kit.concepts) {
-                    const conceptStmt = db.prepare('INSERT INTO concept (name, "order", kit_id) VALUES (?, ?, ?)');
-                    kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, Guid]));
-                    conceptStmt.free();
-                }
-
-                if (kit.types) {
-                    const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
-                    const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
-                    const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-                    for (const type of kit.types) {
-                        typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit || "", nowIso, nowIso, Guid]);
-                        const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                        insertQualities(type.attributes, "type_id", typeDbId);
-                        insertAuthors(type.authors, "type_id", typeDbId);
-
-                        if (type.representations) {
-                            for (const rep of type.representations) {
-                                repStmt.run([rep.url, rep.description ?? "", typeDbId]);
-                                const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                                insertQualities(rep.attributes, "representation_id", repDbId);
-                                if (rep.tags) {
-                                    rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
-                                }
-                                const fileUrl = context.fileUrls.get(rep.url);
-                                if (fileUrl) {
-                                    try {
-                                        const response = await fetch(fileUrl);
-                                        const fileBlob = await response.blob();
-                                        const fileData = await fileBlob.arrayBuffer();
-                                        zip.file(rep.url, fileData);
-                                    } catch (error) { }
-                                }
-                            }
-                        }
-
-                        if (type.ports) {
-                            for (const port of type.ports) {
-                                portStmt.run([
-                                    port.guid || "",
-                                    port.description || "",
-                                    port.family || "default",
-                                    port.t || 0,
-                                    port.point?.x || 0,
-                                    port.point?.y || 0,
-                                    port.point?.z || 0,
-                                    port.direction?.x || 0,
-                                    port.direction?.y || 0,
-                                    port.direction?.z || 1,
-                                    typeDbId,
-                                ]);
-                                const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                                insertQualities(port.attributes, "port_id", portDbId);
-                            }
-                        }
-                    }
-                    typeStmt.free();
-                    repStmt.free();
-                    tagStmt.free();
-                    portStmt.free();
-                }
-
-                const dbBuffer = db.export();
-                zip.file("kit.db", dbBuffer);
-                zip.file("kit.json", JSON.stringify(kit, null, 2));
-
-                const blob = await zip.generateAsync({ type: "blob" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${kit.name}-${kit.version || "latest"}.zip`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                throw error;
-            } finally {
-                if (db) {
-                    db.close();
-                }
+      try {
+        db.run(schema);
+        const insertQualities = (qualities: Attribute[] | undefined, fkColumn: string, fkValue: number) => {
+          if (!qualities) return;
+          const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
+          qualities.forEach((q) => stmt.run([q.key, q.value ?? "", "", q.definition ?? "", fkValue]));
+          stmt.free();
+        };
+        const insertAuthors = (authorGuids: string[] | undefined, fkColumn: string, fkValue: number) => {
+          if (!authorGuids) return;
+          const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
+          let rank = 0;
+          authorGuids.forEach((authorGuid) => {
+            const author = kit.authors?.find((a) => a.guid === authorGuid);
+            if (author) {
+              stmt.run([author.name, author.email ?? "", rank++, fkValue]);
             }
-        })();
-        return { diff: {} };
-    },
-    "semio.kit.addPiece": (context: KitCommandContext, guid: Guid, piece: Piece): KitCommandResult => {
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: {
-                                pieces: {
-                                    added: [
-                                        piece.plane ||
-                                            (findDesignInKit(context.kit, guid)?.connections ?? []).some(
-                                                (connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid,
-                                            )
-                                            ? piece
-                                            : {
-                                                ...piece,
-                                                plane: {
-                                                    origin: { x: 0, y: 0, z: 0 },
-                                                    xAxis: { x: 1, y: 0, z: 0 },
-                                                    yAxis: { x: 0, y: 1, z: 0 },
-                                                },
-                                            },
-                                    ],
-                                },
-                            },
-                        },
-                    ],
-                },
-            },
+          });
+          stmt.free();
         };
-    },
-    "semio.kit.addPieces": (context: KitCommandContext, guid: Guid, pieces: Piece[]): KitCommandResult => {
-        const design = findDesignInKit(context.kit, guid);
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: {
-                                pieces: {
-                                    added: pieces.map((candidate) =>
-                                        candidate.plane ||
-                                            (design?.connections ?? []).some(
-                                                (connection) =>
-                                                    connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid,
-                                            )
-                                            ? candidate
-                                            : {
-                                                ...candidate,
-                                                plane: {
-                                                    origin: { x: 0, y: 0, z: 0 },
-                                                    xAxis: { x: 1, y: 0, z: 0 },
-                                                    yAxis: { x: 0, y: 1, z: 0 },
-                                                },
-                                            },
-                                    ),
-                                },
-                            },
+
+        const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        const nowIso = new Date().toISOString();
+        kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", nowIso, nowIso]);
+        kitStmt.free();
+        const Guid = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+        insertQualities(kit.attributes, "kit_id", Guid);
+
+        if (kit.concepts) {
+          const conceptStmt = db.prepare('INSERT INTO concept (name, "order", kit_id) VALUES (?, ?, ?)');
+          kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, Guid]));
+          conceptStmt.free();
+        }
+
+        if (kit.types) {
+          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
+          const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
+          const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+          for (const type of kit.types) {
+            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit || "", nowIso, nowIso, Guid]);
+            const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+            insertQualities(type.attributes, "type_id", typeDbId);
+            insertAuthors(type.authors, "type_id", typeDbId);
+
+            if (type.representations) {
+              for (const rep of type.representations) {
+                repStmt.run([rep.url, rep.description ?? "", typeDbId]);
+                const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                insertQualities(rep.attributes, "representation_id", repDbId);
+                if (rep.tags) {
+                  rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
+                }
+                const fileUrl = context.fileUrls.get(rep.url);
+                if (fileUrl) {
+                  try {
+                    const response = await fetch(fileUrl);
+                    const fileBlob = await response.blob();
+                    const fileData = await fileBlob.arrayBuffer();
+                    zip.file(rep.url, fileData);
+                  } catch (error) {}
+                }
+              }
+            }
+
+            if (type.ports) {
+              for (const port of type.ports) {
+                portStmt.run([
+                  port.guid || "",
+                  port.description || "",
+                  port.family || "default",
+                  port.t || 0,
+                  port.point?.x || 0,
+                  port.point?.y || 0,
+                  port.point?.z || 0,
+                  port.direction?.x || 0,
+                  port.direction?.y || 0,
+                  port.direction?.z || 1,
+                  typeDbId,
+                ]);
+                const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                insertQualities(port.attributes, "port_id", portDbId);
+              }
+            }
+          }
+          typeStmt.free();
+          repStmt.free();
+          tagStmt.free();
+          portStmt.free();
+        }
+
+        const dbBuffer = db.export();
+        zip.file("kit.db", dbBuffer);
+        zip.file("kit.json", JSON.stringify(kit, null, 2));
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${kit.name}-${kit.version || "latest"}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        throw error;
+      } finally {
+        if (db) {
+          db.close();
+        }
+      }
+    })();
+    return { diff: {} };
+  },
+  "semio.kit.addPiece": (context: KitCommandContext, guid: Guid, piece: Piece): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: {
+                pieces: {
+                  added: [
+                    piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid)
+                      ? piece
+                      : {
+                          ...piece,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                    ],
+                  ],
                 },
+              },
             },
-        };
-    },
-    "semio.kit.removePiece": (context: KitCommandContext, guid: Guid, piece: Guid): KitCommandResult => {
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: { pieces: { removed: [piece] } },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.addPieces": (context: KitCommandContext, guid: Guid, pieces: Piece[]): KitCommandResult => {
+    const design = findDesignInKit(context.kit, guid);
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: {
+                pieces: {
+                  added: pieces.map((candidate) =>
+                    candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid)
+                      ? candidate
+                      : {
+                          ...candidate,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                    ],
+                  ),
                 },
+              },
             },
-        };
-    },
-    "semio.kit.removePieces": (context: KitCommandContext, guid: Guid, pieces: Guid[]): KitCommandResult => {
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: { pieces: { removed: pieces } },
-                        },
-                    ],
-                },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removePiece": (context: KitCommandContext, guid: Guid, piece: Guid): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: { pieces: { removed: [piece] } },
             },
-        };
-    },
-    "semio.kit.addConnection": (context: KitCommandContext, guid: Guid, connection: Connection): KitCommandResult => {
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: { connections: { added: [connection] } },
-                        },
-                    ],
-                },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removePieces": (context: KitCommandContext, guid: Guid, pieces: Guid[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: { pieces: { removed: pieces } },
             },
-        };
-    },
-    "semio.kit.addConnections": (context: KitCommandContext, guid: Guid, connections: Connection[]): KitCommandResult => {
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: { connections: { added: connections } },
-                        },
-                    ],
-                },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.addConnection": (context: KitCommandContext, guid: Guid, connection: Connection): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: { connections: { added: [connection] } },
             },
-        };
-    },
-    "semio.kit.removeConnection": (context: KitCommandContext, guid: Guid, connectionGuid: Guid): KitCommandResult => {
-        const design = findDesignInKit(context.kit, guid);
-        const connection = design?.connections?.find((c) => c.guid === connectionGuid);
-        if (!connection) return { diff: {} };
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: { connections: { removed: [{ connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }] } },
-                        },
-                    ],
-                },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.addConnections": (context: KitCommandContext, guid: Guid, connections: Connection[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: { connections: { added: connections } },
             },
-        };
-    },
-    "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connectionGuids: Guid[]): KitCommandResult => {
-        const design = findDesignInKit(context.kit, guid);
-        const connectionsToRemove =
-            connectionGuids
-                .map((connGuid) => design?.connections?.find((c) => c.guid === connGuid))
-                .filter((c): c is Connection => c !== undefined)
-                .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } })) ?? [];
-        return {
-            diff: {
-                designs: {
-                    updated: [
-                        {
-                            id: guid,
-                            diff: { connections: { removed: connectionsToRemove } },
-                        },
-                    ],
-                },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removeConnection": (context: KitCommandContext, guid: Guid, connectionGuid: Guid): KitCommandResult => {
+    const design = findDesignInKit(context.kit, guid);
+    const connection = design?.connections?.find((c) => c.guid === connectionGuid);
+    if (!connection) return { diff: {} };
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: { connections: { removed: [{ connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }] } },
             },
-        };
-    },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connectionGuids: Guid[]): KitCommandResult => {
+    const design = findDesignInKit(context.kit, guid);
+    const connectionsToRemove =
+      connectionGuids
+        .map((connGuid) => design?.connections?.find((c) => c.guid === connGuid))
+        .filter((c): c is Connection => c !== undefined)
+        .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } })) ?? [];
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: guid,
+              diff: { connections: { removed: connectionsToRemove } },
+            },
+          ],
+        },
+      },
+    };
+  },
 };

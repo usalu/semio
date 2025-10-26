@@ -43,7 +43,6 @@ export const TOLERANCE = CONSTANTS.tolerance;
 
 // #endregion Constants
 
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -84,7 +83,6 @@ export class Generator {
   }
 }
 
-
 export const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
 export const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
 export const jaccard = (a: string[] | undefined, b: string[] | undefined): number => {
@@ -108,11 +106,11 @@ export const deepEqual = (a: any, b: any): boolean => {
     return a.every((item, index) => deepEqual(item, b[index]));
   }
 
-  if (typeof a === 'object') {
+  if (typeof a === "object") {
     const keysA = Object.keys(a);
     const keysB = Object.keys(b);
     if (keysA.length !== keysB.length) return false;
-    return keysA.every(key => keysB.includes(key) && deepEqual(a[key], b[key]));
+    return keysA.every((key) => keysB.includes(key) && deepEqual(a[key], b[key]));
   }
 
   return false;
@@ -132,7 +130,6 @@ export const generateUniqueName = (baseName: string, existingNames: string[], se
   }
   return `${baseName}${separator}${counter}`;
 };
-
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
@@ -159,7 +156,12 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 export type Guid = string;
 
-const DateProperty = () => z.string().transform((val) => new Date(val)).or(z.date()).optional()
+const DateProperty = () =>
+  z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional();
 
 // #region Attribute
 // https://github.com/usalu/semio#-attribute-
@@ -185,17 +187,17 @@ export const inverseAttributeDiff = (original: Attribute, appliedDiff: Attribute
     value: appliedDiff.value ? original.value : "",
     definition: appliedDiff.definition ? original.definition : "",
   };
-}
+};
 export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): AttributeDiff => {
   return {
     key: diff2.key ?? diff1.key,
     value: diff2.value ?? diff1.value,
     definition: diff2.definition ?? diff1.definition,
   };
-}
+};
 export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {
   return { ...base, ...diff };
-}
+};
 
 export const AttributesDiffSchema = z.object({
   removed: z.array(z.string()).optional(),
@@ -205,29 +207,29 @@ export const AttributesDiffSchema = z.object({
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
 const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
-  const beforeKeys = before.map(a => a.key);
-  const afterKeys = after.map(a => a.key);
-  const removed = beforeKeys.filter(key => !afterKeys.includes(key));
-  const added = after.filter(a => !beforeKeys.includes(a.key));
-  const updated = after.filter(a => beforeKeys.includes(a.key)).map(a => ({ id: a.key, diff: getAttributeDiff(before.find(b => b.key === a.key)!, a) }));
+  const beforeKeys = before.map((a) => a.key);
+  const afterKeys = after.map((a) => a.key);
+  const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
+  const added = after.filter((a) => !beforeKeys.includes(a.key));
+  const updated = after.filter((a) => beforeKeys.includes(a.key)).map((a) => ({ id: a.key, diff: getAttributeDiff(before.find((b) => b.key === a.key)!, a) }));
   return { removed, updated, added };
 };
 
 export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
   const removedKeys = appliedDiff.removed ?? [];
-  const updatedKeys = appliedDiff.updated?.map(a => a.id) ?? [];
-  const addedKeys = appliedDiff.added?.map(a => a.key) ?? [];
+  const updatedKeys = appliedDiff.updated?.map((a) => a.id) ?? [];
+  const addedKeys = appliedDiff.added?.map((a) => a.key) ?? [];
   return {
     removed: addedKeys,
     updated: updatedKeys
-      .map(key => {
-        const orig = original.find(a => a.key === key);
-        const upd = appliedDiff.updated?.find(a => a.id === key);
+      .map((key) => {
+        const orig = original.find((a) => a.key === key);
+        const upd = appliedDiff.updated?.find((a) => a.id === key);
         if (!orig || !upd) return null;
         return { id: key, diff: inverseAttributeDiff(orig, upd.diff) };
       })
       .filter((item): item is { id: string; diff: AttributeDiff } => item !== null),
-    added: removedKeys.map(key => original.find(a => a.key === key)!).filter(a => a !== undefined)
+    added: removedKeys.map((key) => original.find((a) => a.key === key)!).filter((a) => a !== undefined),
   };
 };
 
@@ -238,11 +240,11 @@ export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDif
 export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter(attr => !diff.removed!.includes(attr.key));
+    result = result.filter((attr) => !diff.removed!.includes(attr.key));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex(attr => attr.key === update.id);
+      const index = result.findIndex((attr) => attr.key === update.id);
       if (index !== -1) {
         result[index] = applyAttributeDiff(result[index], update.diff);
       }
@@ -271,7 +273,7 @@ export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
     x: after.x - before.x,
     y: after.y - before.y,
   };
-}
+};
 export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
   const x = appliedDiff.x ?? 0;
   const y = appliedDiff.y ?? 0;
@@ -279,13 +281,13 @@ export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): Coord
     x: original.x - x,
     y: original.y - y,
   };
-}
+};
 export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
   return {
     x: (diff1.x ?? 0) + (diff2.x ?? 0),
     y: (diff1.y ?? 0) + (diff2.y ?? 0),
   };
-}
+};
 export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
   const x = diff.x ?? 0;
   const y = diff.y ?? 0;
@@ -293,7 +295,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
     x: base.x + x,
     y: base.y + y,
   };
-}
+};
 
 // #endregion Coord
 
@@ -312,7 +314,7 @@ export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
     x: after.x - before.x,
     y: after.y - before.y,
   };
-}
+};
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
   const x = appliedDiff.x ?? 0;
   const y = appliedDiff.y ?? 0;
@@ -320,13 +322,13 @@ export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => 
     x: original.x - x,
     y: original.y - y,
   };
-}
+};
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
   return {
     x: (diff1.x ?? 0) + (diff2.x ?? 0),
     y: (diff1.y ?? 0) + (diff2.y ?? 0),
   };
-}
+};
 export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
   const x = diff.x ?? 0;
   const y = diff.y ?? 0;
@@ -334,7 +336,7 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
     x: base.x + x,
     y: base.y + y,
   };
-}
+};
 
 // #endregion Vec
 
@@ -358,7 +360,7 @@ export const getPointDiff = (before: Point, after: Point): PointDiff => {
     y: after.y - before.y,
     z: after.z - before.z,
   };
-}
+};
 export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
   const x = appliedDiff.x ?? 0;
   const y = appliedDiff.y ?? 0;
@@ -368,14 +370,14 @@ export const inversePointDiff = (original: Point, appliedDiff: PointDiff): Point
     y: original.y - y,
     z: original.z - z,
   };
-}
+};
 export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
   return {
     x: (diff1.x ?? 0) + (diff2.x ?? 0),
     y: (diff1.y ?? 0) + (diff2.y ?? 0),
     z: (diff1.z ?? 0) + (diff2.z ?? 0),
   };
-}
+};
 export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
   const x = diff.x ?? 0;
   const y = diff.y ?? 0;
@@ -385,7 +387,7 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
     y: base.y + y,
     z: base.z + z,
   };
-}
+};
 
 // #endregion Point
 
@@ -409,7 +411,7 @@ export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
     y: after.y - before.y,
     z: after.z - before.z,
   };
-}
+};
 export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
   const x = appliedDiff.x ?? 0;
   const y = appliedDiff.y ?? 0;
@@ -419,14 +421,14 @@ export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): Ve
     y: original.y - y,
     z: original.z - z,
   };
-}
+};
 export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
   return {
     x: (diff1.x ?? 0) + (diff2.x ?? 0),
     y: (diff1.y ?? 0) + (diff2.y ?? 0),
     z: (diff1.z ?? 0) + (diff2.z ?? 0),
   };
-}
+};
 export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
   const x = diff.x ?? 0;
   const y = diff.y ?? 0;
@@ -436,7 +438,7 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
     y: base.y + y,
     z: base.z + z,
   };
-}
+};
 
 // #endregion Vector
 
@@ -491,11 +493,13 @@ const roundPlane = (plane: Plane): Plane => ({
   },
 });
 
-export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true }).extend({
-  origin: PointDiffSchema,
-  xAxis: VectorDiffSchema,
-  yAxis: VectorDiffSchema,
-}).partial();
+export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
+  .extend({
+    origin: PointDiffSchema,
+    xAxis: VectorDiffSchema,
+    yAxis: VectorDiffSchema,
+  })
+  .partial();
 export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
 export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
   return {
@@ -503,7 +507,7 @@ export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
     xAxis: getVectorDiff(before.xAxis, after.xAxis),
     yAxis: getVectorDiff(before.yAxis, after.yAxis),
   };
-}
+};
 export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
   const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
   const xAxis = appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 };
@@ -513,21 +517,21 @@ export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): Plane
     xAxis: inverseVectorDiff(original.xAxis, xAxis),
     yAxis: inverseVectorDiff(original.yAxis, yAxis),
   };
-}
+};
 export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
   return {
-    origin: diff1.origin ?? (diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!)),
-    xAxis: diff1.xAxis ?? (diff2.xAxis ?? mergeVectorDiff(diff1.xAxis!, diff2.xAxis!)),
-    yAxis: diff1.yAxis ?? (diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!)),
+    origin: diff1.origin ?? diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!),
+    xAxis: diff1.xAxis ?? diff2.xAxis ?? mergeVectorDiff(diff1.xAxis!, diff2.xAxis!),
+    yAxis: diff1.yAxis ?? diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!),
   };
-}
+};
 export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
   return {
     origin: diff.origin ? applyPointDiff(base.origin, diff.origin) : base.origin,
     xAxis: diff.xAxis ? applyVectorDiff(base.xAxis, diff.xAxis) : base.xAxis,
     yAxis: diff.yAxis ? applyVectorDiff(base.yAxis, diff.yAxis) : base.yAxis,
   };
-}
+};
 
 // #endregion Plane
 
@@ -543,11 +547,13 @@ export type Camera = z.infer<typeof CameraSchema>;
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
 export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
 
-export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true }).extend({
-  position: PointDiffSchema,
-  forward: VectorDiffSchema,
-  up: VectorDiffSchema,
-}).partial();
+export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true })
+  .extend({
+    position: PointDiffSchema,
+    forward: VectorDiffSchema,
+    up: VectorDiffSchema,
+  })
+  .partial();
 export type CameraDiff = z.infer<typeof CameraDiffSchema>;
 export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
   return {
@@ -555,28 +561,28 @@ export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
     forward: getVectorDiff(before.forward, after.forward),
     up: getVectorDiff(before.up, after.up),
   };
-}
+};
 export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => {
   return {
     position: appliedDiff.position ? inversePointDiff(original.position, appliedDiff.position) : original.position,
     forward: appliedDiff.forward ? inverseVectorDiff(original.forward, appliedDiff.forward) : original.forward,
     up: appliedDiff.up ? inverseVectorDiff(original.up, appliedDiff.up) : original.up,
   };
-}
+};
 export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => {
   return {
-    position: diff1.position ?? (diff2.position ?? mergePointDiff(diff1.position!, diff2.position!)),
-    forward: diff1.forward ?? (diff2.forward ?? mergeVectorDiff(diff1.forward!, diff2.forward!)),
-    up: diff1.up ?? (diff2.up ?? mergeVectorDiff(diff1.up!, diff2.up!)),
+    position: diff1.position ?? diff2.position ?? mergePointDiff(diff1.position!, diff2.position!),
+    forward: diff1.forward ?? diff2.forward ?? mergeVectorDiff(diff1.forward!, diff2.forward!),
+    up: diff1.up ?? diff2.up ?? mergeVectorDiff(diff1.up!, diff2.up!),
   };
-}
+};
 export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
   return {
     position: diff.position ? applyPointDiff(base.position, diff.position) : base.position,
     forward: diff.forward ? applyVectorDiff(base.forward, diff.forward) : base.forward,
     up: diff.up ? applyVectorDiff(base.up, diff.up) : base.up,
   };
-}
+};
 
 // #endregion Camera
 
@@ -605,7 +611,7 @@ export const getLocationDiff = (before: Location, after: Location): LocationDiff
   if (before.altitude !== after.altitude) diff.altitude = after.altitude !== undefined && before.altitude !== undefined ? after.altitude - before.altitude : after.altitude;
   if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
-}
+};
 export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => {
   const inverse: LocationDiff = {};
   if (appliedDiff.longitude !== undefined) inverse.longitude = original.longitude;
@@ -613,10 +619,10 @@ export const inverseLocationDiff = (original: Location, appliedDiff: LocationDif
   if (appliedDiff.altitude !== undefined) inverse.altitude = original.altitude;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
-}
+};
 export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
-}
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+};
 export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
   return {
     ...base,
@@ -625,7 +631,7 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
     altitude: diff.altitude ?? base.altitude,
     attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
-}
+};
 
 // #endregion Location
 
@@ -656,7 +662,7 @@ export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): Au
   return inverse;
 };
 export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
   return {
@@ -804,7 +810,7 @@ export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: Benchmark
   return inverse;
 };
 export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): BenchmarkDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 
 export const BenchmarksDiffSchema = z.object({
@@ -815,30 +821,31 @@ export const BenchmarksDiffSchema = z.object({
 export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
 
 const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
-  const beforeNames = before.map(b => b.name);
-  const afterNames = after.map(b => b.name);
-  const removed = beforeNames.filter(name => !afterNames.includes(name));
-  const added = after.filter(b => !beforeNames.includes(b.name));
-  const updated = after.filter(b => beforeNames.includes(b.name))
-    .map(afterBenchmark => {
-      const beforeBenchmark = before.find(b => b.name === afterBenchmark.name)!;
+  const beforeNames = before.map((b) => b.name);
+  const afterNames = after.map((b) => b.name);
+  const removed = beforeNames.filter((name) => !afterNames.includes(name));
+  const added = after.filter((b) => !beforeNames.includes(b.name));
+  const updated = after
+    .filter((b) => beforeNames.includes(b.name))
+    .map((afterBenchmark) => {
+      const beforeBenchmark = before.find((b) => b.name === afterBenchmark.name)!;
       const diff = getBenchmarkDiff(beforeBenchmark, afterBenchmark);
       return { id: afterBenchmark.name, diff };
     })
-    .filter(update => Object.keys(update.diff).length > 0);
+    .filter((update) => Object.keys(update.diff).length > 0);
   return { removed, added, updated };
 };
 
 const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
-  const addedNames = appliedDiff.added?.map(b => b.name) ?? [];
+  const addedNames = appliedDiff.added?.map((b) => b.name) ?? [];
   const removedNames = appliedDiff.removed ?? [];
-  const updatedNames = appliedDiff.updated?.map(u => u.id) ?? [];
+  const updatedNames = appliedDiff.updated?.map((u) => u.id) ?? [];
   return {
     removed: addedNames,
-    added: original.filter(b => removedNames.includes(b.name)),
-    updated: updatedNames.map(name => {
-      const orig = original.find(b => b.name === name)!;
-      const upd = appliedDiff.updated?.find(u => u.id === name)!;
+    added: original.filter((b) => removedNames.includes(b.name)),
+    updated: updatedNames.map((name) => {
+      const orig = original.find((b) => b.name === name)!;
+      const upd = appliedDiff.updated?.find((u) => u.id === name)!;
       return { id: name, diff: inverseBenchmarkDiff(orig, upd.diff) };
     }),
   };
@@ -851,11 +858,11 @@ const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): Ben
 const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter(benchmark => !diff.removed!.includes(benchmark.name));
+    result = result.filter((benchmark) => !diff.removed!.includes(benchmark.name));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex(benchmark => benchmark.name === update.id);
+      const index = result.findIndex((benchmark) => benchmark.name === update.id);
       if (index !== -1) {
         result[index] = applyBenchmarkDiff(result[index], update.diff);
       }
@@ -962,8 +969,8 @@ export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): Qualit
   return {
     ...diff1,
     ...diff2,
-    benchmarks: diff1.benchmarks && diff2.benchmarks ? mergeBenchmarksDiff(diff1.benchmarks, diff2.benchmarks) : diff2.benchmarks ?? diff1.benchmarks,
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes
+    benchmarks: diff1.benchmarks && diff2.benchmarks ? mergeBenchmarksDiff(diff1.benchmarks, diff2.benchmarks) : (diff2.benchmarks ?? diff1.benchmarks),
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
 export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
@@ -997,8 +1004,6 @@ export const QualitiesDiffSchema = z.object({
   updated: z.array(z.object({ id: z.string(), diff: QualityDiffSchema })).optional(),
   added: z.array(QualitySchema).optional(),
 });
-
-
 
 // #endregion Quality
 
@@ -1037,7 +1042,7 @@ export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff
   return inverse;
 };
 export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
   return {
@@ -1057,30 +1062,31 @@ export const PropsDiffSchema = z.object({
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
 
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
-  const beforeKeys = before.map(p => p.key);
-  const afterKeys = after.map(p => p.key);
-  const removed = beforeKeys.filter(key => !afterKeys.includes(key));
-  const added = after.filter(p => !beforeKeys.includes(p.key));
-  const updated = after.filter(p => beforeKeys.includes(p.key))
-    .map(afterProp => {
-      const beforeProp = before.find(p => p.key === afterProp.key)!;
+  const beforeKeys = before.map((p) => p.key);
+  const afterKeys = after.map((p) => p.key);
+  const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
+  const added = after.filter((p) => !beforeKeys.includes(p.key));
+  const updated = after
+    .filter((p) => beforeKeys.includes(p.key))
+    .map((afterProp) => {
+      const beforeProp = before.find((p) => p.key === afterProp.key)!;
       const diff = getPropDiff(beforeProp, afterProp);
       return { id: afterProp.key, diff };
     })
-    .filter(update => Object.keys(update.diff).length > 0);
+    .filter((update) => Object.keys(update.diff).length > 0);
   return { removed, added, updated };
 };
 
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
-  const addedKeys = appliedDiff.added?.map(p => p.key) ?? [];
+  const addedKeys = appliedDiff.added?.map((p) => p.key) ?? [];
   const removedKeys = appliedDiff.removed ?? [];
-  const updatedKeys = appliedDiff.updated?.map(u => u.id) ?? [];
+  const updatedKeys = appliedDiff.updated?.map((u) => u.id) ?? [];
   return {
     removed: addedKeys,
-    added: original.filter(p => removedKeys.includes(p.key)),
-    updated: updatedKeys.map(key => {
-      const orig = original.find(p => p.key === key)!;
-      const upd = appliedDiff.updated?.find(u => u.id === key)!;
+    added: original.filter((p) => removedKeys.includes(p.key)),
+    updated: updatedKeys.map((key) => {
+      const orig = original.find((p) => p.key === key)!;
+      const upd = appliedDiff.updated?.find((u) => u.id === key)!;
       return { id: key, diff: inversePropDiff(orig, upd.diff) };
     }),
   };
@@ -1093,11 +1099,11 @@ const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
 const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter(prop => !diff.removed!.includes(prop.key));
+    result = result.filter((prop) => !diff.removed!.includes(prop.key));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex(prop => prop.key === update.id);
+      const index = result.findIndex((prop) => prop.key === update.id);
       if (index !== -1) {
         result[index] = applyPropDiff(result[index], update.diff);
       }
@@ -1125,8 +1131,6 @@ export type Representation = z.infer<typeof RepresentationSchema>;
 export const serializeRepresentation = (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation));
 export const deserializeRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
 
-
-
 export const RepresentationDiffSchema = RepresentationSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
@@ -1148,7 +1152,7 @@ export const inverseRepresentationDiff = (original: Representation, appliedDiff:
   return inverse;
 };
 export const mergeRepresentationDiff = (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyRepresentationDiff = (base: Representation, diff: RepresentationDiff): Representation => {
   return {
@@ -1165,7 +1169,6 @@ export const RepresentationsDiffSchema = z.object({
   updated: z.array(z.object({ id: z.string(), diff: RepresentationDiffSchema })).optional(),
   added: z.array(RepresentationSchema).optional(),
 });
-
 
 export const areSameRepresentation = (representation: Representation, other: Representation): boolean => {
   return representation.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
@@ -1199,8 +1202,6 @@ export type Port = z.infer<typeof PortSchema>;
 export const serializePort = (port: Port): string => JSON.stringify(PortSchema.parse(port));
 export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
 
-
-
 export const PortDiffSchema = PortSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
   point: PointDiffSchema.optional(),
   direction: VectorDiffSchema.optional(),
@@ -1228,8 +1229,8 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
     ...diff2,
     point: diff2.point ?? diff1.point,
     direction: diff2.direction ?? diff1.direction,
-    props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : diff2.props ?? diff1.props,
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes
+    props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : (diff2.props ?? diff1.props),
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
@@ -1269,17 +1270,18 @@ export const PortsDiffSchema = z.object({
 });
 
 const getPortsDiff = (before: Port[], after: Port[]): { removed?: string[]; updated?: { id: string; diff: PortDiff }[]; added?: Port[] } => {
-  const beforeGuids = before.map(p => p.guid);
-  const afterGuids = after.map(p => p.guid);
-  const removed = beforeGuids.filter(guid => !afterGuids.includes(guid));
-  const added = after.filter(p => !beforeGuids.includes(p.guid));
-  const updated = after.filter(p => beforeGuids.includes(p.guid))
-    .map(afterPort => {
-      const beforePort = before.find(p => p.guid === afterPort.guid)!;
+  const beforeGuids = before.map((p) => p.guid);
+  const afterGuids = after.map((p) => p.guid);
+  const removed = beforeGuids.filter((guid) => !afterGuids.includes(guid));
+  const added = after.filter((p) => !beforeGuids.includes(p.guid));
+  const updated = after
+    .filter((p) => beforeGuids.includes(p.guid))
+    .map((afterPort) => {
+      const beforePort = before.find((p) => p.guid === afterPort.guid)!;
       const diff = getPortDiff(beforePort, afterPort);
       return { id: afterPort.guid, diff };
     })
-    .filter(update => Object.keys(update.diff).length > 0);
+    .filter((update) => Object.keys(update.diff).length > 0);
   return { removed, added, updated };
 };
 
@@ -1402,8 +1404,8 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
       updated.push({
         id: type.guid,
         diff: {
-          ports: portsDiff
-        }
+          ports: portsDiff,
+        },
       });
     }
   }
@@ -1445,12 +1447,11 @@ export const TypeSchema = z.object({
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
+  attributes: z.array(AttributeSchema).optional(),
 });
 export type Type = z.infer<typeof TypeSchema>;
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
-
 
 export const TypeShallowSchema = TypeSchema.omit({ representations: true, ports: true }).extend({
   representations: z.array(z.string()).optional(),
@@ -1506,7 +1507,7 @@ export const LayerSchema = z.object({
   isLocked: z.boolean().optional(),
   color: z.string().optional(),
   description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
+  attributes: z.array(AttributeSchema).optional(),
 });
 export type Layer = z.infer<typeof LayerSchema>;
 export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
@@ -1538,7 +1539,7 @@ export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): Layer
   return inverse;
 };
 export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : diff2.attributes ?? diff1.attributes };
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
   return {
@@ -1559,7 +1560,6 @@ export const LayersDiffSchema = z.object({
 });
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
-
 // #endregion Layer
 
 // #region Piece
@@ -1577,7 +1577,7 @@ export const PieceSchema = z.object({
   isLocked: z.boolean().optional(),
   color: z.string().optional(),
   description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
+  attributes: z.array(AttributeSchema).optional(),
 });
 export type Piece = z.infer<typeof PieceSchema>;
 export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
@@ -1634,11 +1634,13 @@ export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): D
   const parentConnection = findParentConnectionForPieceInDesign(kit, designId, pieceId);
   return {
     connections: {
-      removed: [{
-        connected: { piece: parentConnection.connected.piece },
-        connecting: { piece: parentConnection.connecting.piece }
-      }]
-    }
+      removed: [
+        {
+          connected: { piece: parentConnection.connected.piece },
+          connecting: { piece: parentConnection.connecting.piece },
+        },
+      ],
+    },
   };
 };
 
@@ -1646,11 +1648,11 @@ export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]
   const parentConnections = pieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, designId, pieceId));
   return {
     connections: {
-      removed: parentConnections.map(c => ({
+      removed: parentConnections.map((c) => ({
         connected: { piece: c.connected.piece },
-        connecting: { piece: c.connecting.piece }
-      }))
-    }
+        connecting: { piece: c.connecting.piece },
+      })),
+    },
   };
 };
 
@@ -1677,7 +1679,7 @@ export const GroupSchema = z.object({
   color: z.string().optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
+  attributes: z.array(AttributeSchema).optional(),
 });
 export type Group = z.infer<typeof GroupSchema>;
 export const GroupDiffSchema = GroupSchema.partial();
@@ -1754,7 +1756,7 @@ export const ConnectionSchema = z.object({
   x: z.number().optional(),
   y: z.number().optional(),
   description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
+  attributes: z.array(AttributeSchema).optional(),
 });
 export type Connection = z.infer<typeof ConnectionSchema>;
 export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ guid: true, connected: true, connecting: true, attributes: true }).extend({
@@ -1958,8 +1960,8 @@ export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
     },
   };
 };
-export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: string, diff: PieceDiff }): any => {
-  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: string, diff: PieceDiff }) => p.id_ === pieceDiff.id_);
+export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: string; diff: PieceDiff }): any => {
+  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: string; diff: PieceDiff }) => p.id_ === pieceDiff.id_);
   const updated = [...(designDiff.pieces?.updated || [])];
   if (existingIndex >= 0) {
     updated[existingIndex] = pieceDiff;
@@ -1988,10 +1990,10 @@ export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => 
     },
   };
 };
-export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: string, diff: PieceDiff }[]): any => {
+export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: string; diff: PieceDiff }[]): any => {
   const updated = [...(designDiff.pieces?.updated || [])];
-  pieceDiffs.forEach((pieceDiff: { id_: string, diff: PieceDiff }) => {
-    const existingIndex = updated.findIndex((p: { id_: string, diff: PieceDiff }) => p.id_ === pieceDiff.id_);
+  pieceDiffs.forEach((pieceDiff: { id_: string; diff: PieceDiff }) => {
+    const existingIndex = updated.findIndex((p: { id_: string; diff: PieceDiff }) => p.id_ === pieceDiff.id_);
     if (existingIndex >= 0) {
       updated[existingIndex] = pieceDiff;
     } else {
@@ -2030,7 +2032,7 @@ export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: Conne
   }
   return { ...designDiff, connections: { ...designDiff.connections, updated } };
 };
-export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: { connected: { piece: string }, connecting: { piece: string } }): any => {
+export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: { connected: { piece: string }; connecting: { piece: string } }): any => {
   return {
     ...designDiff,
     connections: {
@@ -2083,14 +2085,13 @@ export const DesignsDiffSchema = z.object({
 });
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 
-
 export const mergeDesigns = (designs: Design[]): DesignDiff => {
   const pieces = designs.flatMap((d) => d.pieces ?? []);
   const connections = designs.flatMap((d) => d.connections ?? []);
 
   return {
     pieces: pieces.length > 0 ? { added: pieces } : undefined,
-    connections: connections.length > 0 ? { added: connections } : undefined
+    connections: connections.length > 0 ? { added: connections } : undefined,
   };
 };
 
@@ -2106,10 +2107,10 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
 };
 
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignDiff => {
-  const design = kit.designs?.find(d => d.guid === designId);
+  const design = kit.designs?.find((d) => d.guid === designId);
   const removedConnections = connectionIds
-    .map(connId => {
-      const conn = design?.connections?.find(c => c.guid === connId);
+    .map((connId) => {
+      const conn = design?.connections?.find((c) => c.guid === connId);
       if (!conn) return null;
       return { connected: { piece: conn.connected.piece }, connecting: { piece: conn.connecting.piece } };
     })
@@ -2117,11 +2118,11 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
 
   return {
     pieces: {
-      removed: pieceIds
+      removed: pieceIds,
     },
     connections: {
-      removed: removedConnections
-    }
+      removed: removedConnections,
+    },
   };
 };
 
@@ -2255,8 +2256,8 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
     const existingAttrs = piece.attributes || [];
     const updatedAttrs = [...existingAttrs];
-    newAttrs.forEach(newAttr => {
-      const existingIndex = updatedAttrs.findIndex(a => a.key === newAttr.key);
+    newAttrs.forEach((newAttr) => {
+      const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
       if (existingIndex >= 0) {
         updatedAttrs[existingIndex] = { ...updatedAttrs[existingIndex], ...newAttr, guid: updatedAttrs[existingIndex].guid };
       } else {
@@ -2371,32 +2372,34 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   flatDesign.connections = [];
 
   // Return the diff between original expanded design and flattened design
-  const updatedPieces = flatDesign.pieces?.map(flatPiece => {
-    const originalPiece = expandedDesign.pieces?.find(p => p.guid === flatPiece.guid);
-    if (!originalPiece) return null;
+  const updatedPieces = flatDesign.pieces
+    ?.map((flatPiece) => {
+      const originalPiece = expandedDesign.pieces?.find((p) => p.guid === flatPiece.guid);
+      if (!originalPiece) return null;
 
-    // Build piece diff for pieces that changed
-    const pieceDiff: PieceDiff = {};
-    if (flatPiece.plane !== originalPiece.plane) pieceDiff.plane = flatPiece.plane;
-    if (flatPiece.center !== originalPiece.center) pieceDiff.center = flatPiece.center;
-    if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) {
-      pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
-    }
+      // Build piece diff for pieces that changed
+      const pieceDiff: PieceDiff = {};
+      if (flatPiece.plane !== originalPiece.plane) pieceDiff.plane = flatPiece.plane;
+      if (flatPiece.center !== originalPiece.center) pieceDiff.center = flatPiece.center;
+      if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) {
+        pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
+      }
 
-    // Only return diff if there are changes
-    if (Object.keys(pieceDiff).length === 0) return null;
+      // Only return diff if there are changes
+      if (Object.keys(pieceDiff).length === 0) return null;
 
-    return {
-      id: flatPiece.guid,
-      diff: pieceDiff
-    };
-  }).filter(update => update !== null) as Array<{ id: string; diff: PieceDiff }>;
+      return {
+        id: flatPiece.guid,
+        diff: pieceDiff,
+      };
+    })
+    .filter((update) => update !== null) as Array<{ id: string; diff: PieceDiff }>;
 
-  const removedConnections = expandedDesign.connections?.map(c => c.guid) || [];
+  const removedConnections = expandedDesign.connections?.map((c) => c.guid) || [];
 
   return {
     pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
-    connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined
+    connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
   } as DesignDiff;
 };
 
@@ -2467,7 +2470,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
       const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece);
       return connectedInCluster || connectingInCluster;
     })
-    .map(c => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }));
+    .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }));
 
   // Update external connections to use direct design references
   const updatedExternalConnections = externalConnections.map((connection) => {
@@ -2499,12 +2502,12 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
 
   return {
     pieces: {
-      removed: piecesToRemove
+      removed: piecesToRemove,
     },
     connections: {
       removed: connectionsToRemove,
-      added: updatedExternalConnections
-    }
+      added: updatedExternalConnections,
+    },
   };
 };
 
@@ -2817,45 +2820,44 @@ export const KitsDiffSchema = z.object({
 
 export const addTypeToKit = (type: Type): KitDiff => ({
   types: {
-    added: [type]
-  }
+    added: [type],
+  },
 });
 export const setTypeInKit = (type: Type): KitDiff => ({
   types: {
-    added: [type]
-  }
+    added: [type],
+  },
 });
 export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
-  types: { removed: [typeGuid] }
+  types: { removed: [typeGuid] },
 });
-
 
 export const addDesignToKit = (design: Design): KitDiff => ({
   designs: {
-    added: [design]
-  }
+    added: [design],
+  },
 });
 export const setDesignInKit = (design: Design): KitDiff => ({
   designs: {
-    added: [design]
-  }
+    added: [design],
+  },
 });
 export const removeDesignFromKit = (designGuid: string): KitDiff => {
   return {
     designs: {
-      removed: [designGuid]
-    }
+      removed: [designGuid],
+    },
   };
 };
 
 export const updateDesignInKit = (design: Design): KitDiff => ({
   designs: {
-    added: [design]
-  }
+    added: [design],
+  },
 });
 
 export const findFileInKit = (kit: Kit, filePath: string): File => {
-  const file = (kit.files || []).find(f => f.path === filePath);
+  const file = (kit.files || []).find((f) => f.path === filePath);
   if (!file) throw new Error(`File ${filePath} not found in kit`);
   return file;
 };
@@ -2863,11 +2865,11 @@ export const findFileInKit = (kit: Kit, filePath: string): File => {
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
 export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
 export const removeFileFromKit = (filePath: string): KitDiff => ({
-  files: { removed: [filePath] }
+  files: { removed: [filePath] },
 });
 
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
-  attributes: [attribute]
+  attributes: [attribute],
 });
 
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
@@ -3153,15 +3155,15 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
           guid: guid(),
           key: "semio.color",
           value: getColorForText(port.family),
-        }
-      ]
+        },
+      ],
     }));
 
     updated.push({
       id: type.guid,
       diff: {
-        ports: { added: updatedPorts }
-      }
+        ports: { added: updatedPorts },
+      },
     });
   }
 
@@ -3179,7 +3181,7 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
   let size = 0;
   if (sizeMatch) {
     const data = sizeMatch[3];
-    if (sizeMatch[2] === ';base64') {
+    if (sizeMatch[2] === ";base64") {
       size = Math.floor(data.length * 0.75);
     } else {
       size = data.length;
@@ -3190,7 +3192,7 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
   let hash = 0;
   for (let i = 0; i < dataUri.length; i++) {
     const char = dataUri.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
 
@@ -3203,7 +3205,5 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
     updatedAt: new Date(),
   };
 };
-
-
 
 // #endregion Kit

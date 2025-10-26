@@ -1,6 +1,6 @@
 {
-    "tolerance": 1e-5,
-    "icon": {
-        "width": 50
-    }
+  "tolerance": 1e-5,
+  "icon": {
+    "width": 50
+  }
 }

@@ -289,7 +289,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           setOpen(nextOpen);
         }}
       >
-        {(activeTooltip || activeHotkey) ? (
+        {activeTooltip || activeHotkey ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <PopoverAnchor asChild>{toggleRoot}</PopoverAnchor>

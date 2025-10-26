@@ -43,20 +43,7 @@ interface ModelProps {
   userData?: any;
 }
 
-export const Model: FC<ModelProps> = ({
-  children,
-  selected = false,
-  hovered = false,
-  onClick,
-  onPointerEnter,
-  onPointerLeave,
-  color,
-  emissiveColor,
-  emissiveIntensity = 0.45,
-  showEdges = true,
-  edgeColor,
-  userData,
-}) => {
+export const Model: FC<ModelProps> = ({ children, selected = false, hovered = false, onClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const activeBaseColor = useMemo(() => getComputedColor("--active-base"), []);
   const hoverBaseColor = useMemo(() => getComputedColor("--hover-base"), []);
@@ -376,27 +363,9 @@ interface SceneProps {
   onFocusComplete?: () => void;
 }
 
-const Scene: FC<SceneProps> = ({
-  children,
-  showGrid = true,
-  showGizmo = true,
-  camera,
-  onCameraChange,
-  onDoubleClickCapture,
-  onPointerMissed,
-  orthographic = true,
-  shadows = false,
-  className = "",
-  focusedItemId,
-  onFocusComplete,
-}) => (
+const Scene: FC<SceneProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed, orthographic = true, shadows = false, className = "", focusedItemId, onFocusComplete }) => (
   <div className={`h-full w-full ${className}`} onDoubleClick={onDoubleClickCapture}>
-    <Canvas
-      onPointerMissed={onPointerMissed}
-      orthographic={orthographic}
-      shadows={shadows}
-      camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined}
-    >
+    <Canvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined}>
       <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
         {children}
       </SceneInner>
