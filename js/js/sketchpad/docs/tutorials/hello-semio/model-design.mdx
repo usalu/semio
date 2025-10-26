@@ -5,7 +5,9 @@ sidebar:
   order: 3
 ---
 
-This section shows how to **turn your brick molds** — the **Types** and **Variants** you’ve defined — into real, usable building blocks 🧱
+import { Aside } from "@semio/js";
+
+This section shows how to **turn your brick molds** - the **Types** and **Variants** you've defined - into real, usable building blocks 🧱
 
 As explained in _[Think in Semio]_, a Type is just a **blueprint**. It defines how a brick should look and behave — but it’s not a brick yet 📐
 
@@ -262,10 +264,10 @@ when you move or rotate one Piece, all the connected Pieces after it will **upda
 
 ---
 
-:::note
+<Aside type="note">
 📌 You can place Ports exactly where the geometry should land — or adjust the Piece after snapping using Gap, Shift, Rise, or Rotate.  
 emio supports both strategies — choose what fits your design logic best 🧱✨
-:::
+</Aside>
 
 ---
 
@@ -437,9 +439,9 @@ You can update the **Design name**, reorganize the structure, or tweak how certa
 To **see** your model, plug everything into the `Preview Design` component 👀  
 It displays all your Pieces in place — fully connected, correctly oriented, and ready to go 🧱
 
-:::note
+<Aside type="note">
 In Semio, nothing is visualized automatically
 
 This logic stays abstract until you pass it to the `Show Design` component —  
 only then is everything **combined and visualized** as a complete model
-:::
+</Aside>

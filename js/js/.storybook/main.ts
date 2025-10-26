@@ -20,6 +20,11 @@
 // #endregion
 
 import type { StorybookConfig } from "@storybook/react-vite";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import remarkGfm from "remark-gfm";
 
 import { dirname, join } from "path";
 
@@ -51,6 +56,51 @@ const config: StorybookConfig = {
   },
   core: {
     disableTelemetry: true,
+  },
+
+  async viteFinal(config) {
+    config.plugins = config.plugins || [];
+
+    // Find and remove all MDX-related plugins (both @mdx-js/rollup and storybook:mdx-plugin)
+    const indicesToRemove: number[] = [];
+
+    for (let i = 0; i < config.plugins.length; i++) {
+      const plugin: any = config.plugins[i];
+
+      // Check if it's a direct MDX plugin reference
+      if (plugin === '@mdx-js/rollup' || (plugin && typeof plugin === 'object' && plugin.name === '@mdx-js/rollup')) {
+        indicesToRemove.push(i);
+        continue;
+      }
+
+      // Check if it's a Promise that contains storybook:mdx-plugin
+      if (plugin instanceof Promise) {
+        try {
+          const resolved: any = await plugin;
+          if (resolved && typeof resolved === 'object' && resolved.name === 'storybook:mdx-plugin') {
+            indicesToRemove.push(i);
+          }
+        } catch (e) {
+          // Ignore promise resolution errors
+        }
+      }
+    }
+
+    // Remove all MDX plugins in reverse order
+    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+      config.plugins.splice(indicesToRemove[i], 1);
+    }
+
+    // Add our single configured MDX plugin
+    const mdx = await import("@mdx-js/rollup");
+    config.plugins.push(
+      mdx.default({
+        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
+        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+      })
+    );
+
+    return config;
   },
 };
 export default config;

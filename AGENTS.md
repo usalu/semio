@@ -197,6 +197,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER add extra new lines inside of code.
 - Whenever adding ui elements ALWAYS use i18n setups and provide translations for the existing languages.
 - ALWAYS add `[ORIGIN] `(replace ORIGIN with a file, function, class, … name to identify the origin) prefix to temporary logs so that `\[*\]*` can be used to filter them out.
+- NEVER build or run the code.
 
 ### Styling
 
@@ -419,9 +420,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ └── Workbench.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ ├── FIX_SUMMARY.md
-│ │ │ │ │ ├── HOW_TO_ADD_DOCS.md
-│ │ │ │ │ ├── README.md
+│ │ │ │ │ ├── mdx-loader.ts
+│ │ │ │ │ ├── mdx-provider.tsx
 │ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── registry.ts
 │ │ │ │ │ └── store.tsx

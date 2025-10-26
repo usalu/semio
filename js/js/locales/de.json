@@ -507,25 +507,7 @@
         "pagesCompleted": "Seiten abgeschlossen",
         "onThisPage": "Auf dieser Seite",
         "noHeadings": "Keine Überschriften verfügbar",
-        "sections": {
-            "getting-started": {
-                "description": "Erste Schritte mit Semio"
-            },
-            "tutorials": {
-                "description": "Schritt-für-Schritt-Anleitungen"
-            },
-            "integrations": {
-                "description": "Integrationsleitfäden"
-            },
-            "manuals": {
-                "description": "Referenzhandbücher"
-            },
-            "theory": {
-                "description": "Theoretische Konzepte"
-            },
-            "showcases": {
-                "description": "Praxisbeispiele"
-            }
-        }
+        "noPages": "Keine Seiten verfügbar",
+        "docs": "Dokumentation"
     }
 }

@@ -39,6 +39,7 @@ import react from "@vitejs/plugin-react";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import remarkGfm from "remark-gfm";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
@@ -50,7 +51,7 @@ export default defineConfig(async () => {
     plugins: [
       tailwind.default(),
       mdx({
-        remarkPlugins: [remarkGfm, remarkFrontmatter],
+        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
         rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
       }),
       react(),

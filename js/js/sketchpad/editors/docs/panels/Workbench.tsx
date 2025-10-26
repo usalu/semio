@@ -6,21 +6,12 @@
 
 // #endregion
 
-import { BookOpen, FileText, Folder, GraduationCap, Lightbulb, Puzzle, Rocket, Star } from "lucide-react";
+import { FileText, Folder } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
 import { DocsPage, docsRegistry } from "../registry";
-
-const sectionIcons: Record<string, any> = {
-  "getting-started": Rocket,
-  tutorials: GraduationCap,
-  integrations: Puzzle,
-  manuals: BookOpen,
-  theory: Lightbulb,
-  showcases: Star,
-};
 
 interface PageTreeNode {
   page?: DocsPage;
@@ -31,8 +22,6 @@ interface PageTreeNode {
 function buildTree(pages: DocsPage[], sectionId: string): PageTreeNode {
   const root: PageTreeNode = { children: new Map(), name: "root" };
   for (const page of pages) {
-    // Remove "docs/" and the section ID from the path
-    // e.g., "docs/getting-started/intro/why-semio" -> "intro/why-semio"
     const pathParts = page.path.replace("docs/", "").replace(`${sectionId}/`, "").split("/");
     let current = root;
     for (let i = 0; i < pathParts.length; i++) {
@@ -50,7 +39,7 @@ function buildTree(pages: DocsPage[], sectionId: string): PageTreeNode {
 }
 
 function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, selectPage: (section: string, page: string) => void, section: string, currentPath?: string): React.ReactElement[] {
-  const items: JSX.Element[] = [];
+  const items: React.ReactElement[] = [];
   if (node.page) {
     const isCurrentPage = !!(currentPath && node.page.path === `docs/${currentPath}`);
     items.push(
@@ -99,17 +88,17 @@ const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
   return (
     <>
       {sections.map((section) => {
-        const Icon = sectionIcons[section.id] || Folder;
         const pages = docsRegistry.getPagesBySection(section.id);
         const tree = buildTree(pages, section.id);
+        const displayLabel = section.emoji ? `${section.emoji} ${section.label}` : section.label;
 
         return (
-          <TreeSection key={section.id} label={`${section.emoji} ${section.label}`} defaultOpen={true} icon={<Icon size={14} />}>
+          <TreeSection key={section.id} label={displayLabel} defaultOpen={true}>
             {renderTreeNode(tree, navigate, () => {}, section.id, currentPath)}
             {pages.length === 0 && (
               <TreeItem>
                 <TreeContent>
-                  <p className="text-sm text-muted-foreground">{t(`docs.sections.${section.id}.description`, section.description)}</p>
+                  <p className="text-sm text-muted-foreground">{section.description || t("docs.noPages")}</p>
                 </TreeContent>
               </TreeItem>
             )}

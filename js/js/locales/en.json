@@ -507,25 +507,7 @@
         "pagesCompleted": "pages completed",
         "onThisPage": "On This Page",
         "noHeadings": "No headings available",
-        "sections": {
-            "getting-started": {
-                "description": "Get started with Semio"
-            },
-            "tutorials": {
-                "description": "Step-by-step tutorials"
-            },
-            "integrations": {
-                "description": "Integration guides"
-            },
-            "manuals": {
-                "description": "Reference manuals"
-            },
-            "theory": {
-                "description": "Theoretical concepts"
-            },
-            "showcases": {
-                "description": "Real-world examples"
-            }
-        }
+        "noPages": "No pages available",
+        "docs": "Docs"
     }
 }
