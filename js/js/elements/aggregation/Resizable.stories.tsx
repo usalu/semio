@@ -107,7 +107,7 @@ export const Variants: Story = {
         <ResizablePanelGroup direction="vertical" className="w-[600px] h-[400px] border">
           <ResizablePanel defaultSize={50}>
             <div className="flex h-full items-center justify-center p-6">
-              <span className="font-semibold">Editor</span>
+              <span className="font-semibold">App</span>
             </div>
           </ResizablePanel>
           <ResizableHandle />

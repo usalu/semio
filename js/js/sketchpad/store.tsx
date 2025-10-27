@@ -25,12 +25,12 @@ import { useLocation, useNavigate } from "react-router";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
+import type { DesignAppId, DesignAppState } from "./apps/design/store";
+import type { KitAppId, KitAppState } from "./apps/kit/store";
+import type { QualityAppId, QualityAppState } from "./apps/quality/store";
+import { appRegistry } from "./apps/registry";
+import type { TypeAppId, TypeAppState } from "./apps/type/store";
 import { commands as sketchpadCommands } from "./commands";
-import type { DesignEditorId, DesignEditorState } from "./editors/design/store";
-import type { KitEditorId, KitEditorState } from "./editors/kit/store";
-import type { QualityEditorId, QualityEditorState } from "./editors/quality/store";
-import { editorRegistry } from "./editors/registry";
-import type { TypeEditorId, TypeEditorState } from "./editors/type/store";
 import { KitStore } from "./kits/store";
 export {
   AuthorScopeProvider,
@@ -114,7 +114,7 @@ export enum Mode {
   EXPERT = "expert",
 }
 
-export type EditorType = string;
+export type AppType = string;
 
 export enum ToolType {
   // Selection tools
@@ -124,7 +124,7 @@ export enum ToolType {
   // Lasso tools
   LASSO_RECTANGULAR = "lasso-rectangular",
   LASSO_FREEFORM = "lasso-freeform",
-  // Type editor tools
+  // Type app tools
   PORT = "port",
 }
 
@@ -269,16 +269,16 @@ export abstract class Store<TState> {
   }
 }
 
-export interface EditorStep<TSelectionDiff = any> {
+export interface AppStep<TSelectionDiff = any> {
   selectionDiff?: TSelectionDiff;
 }
 
-export interface EditorEdit<TSelectionDiff = any> {
-  do: EditorStep<TSelectionDiff>;
-  undo: EditorStep<TSelectionDiff>;
+export interface AppEdit<TSelectionDiff = any> {
+  do: AppStep<TSelectionDiff>;
+  undo: AppStep<TSelectionDiff>;
 }
 
-export interface EditorDiff<TSelectionDiff = any> {
+export interface AppDiff<TSelectionDiff = any> {
   selection?: TSelectionDiff;
   presence?: any;
   hover?: any;
@@ -286,7 +286,7 @@ export interface EditorDiff<TSelectionDiff = any> {
   panelVisibility?: Partial<PanelVisibility>;
 }
 
-export interface EditorCommandResult<TDiff = any> {
+export interface AppCommandResult<TDiff = any> {
   diff?: TDiff;
 }
 
@@ -301,7 +301,7 @@ export interface PanelVisibility {
   settings?: boolean;
 }
 
-export abstract class EditorStore<TState, TDiff extends EditorDiff<TSelectionDiff>, TSelectionDiff, TEdit extends EditorEdit<TSelectionDiff>, TCommandContext, TCommandResult extends EditorCommandResult<TDiff>> extends Store<TState> {
+export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
   private lastDeletedTransactionEdit?: TEdit;
 
@@ -495,8 +495,8 @@ export abstract class EditorStore<TState, TDiff extends EditorDiff<TSelectionDif
       }
       const selection = this.getSelection();
       const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
-      const doStep: EditorStep<TSelectionDiff> = { selectionDiff: result.diff?.selection };
-      const undoStep: EditorStep<TSelectionDiff> = { selectionDiff: inversedSelectionDiff };
+      const doStep: AppStep<TSelectionDiff> = { selectionDiff: result.diff?.selection };
+      const undoStep: AppStep<TSelectionDiff> = { selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep };
       currentStack.push([edit]);
     }
@@ -512,27 +512,27 @@ export abstract class EditorStore<TState, TDiff extends EditorDiff<TSelectionDif
   abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
-export interface KitDiffEditorStep<TSelectionDiff = any> extends EditorStep<TSelectionDiff> {
+export interface KitDiffAppStep<TSelectionDiff = any> extends AppStep<TSelectionDiff> {
   kitDiff?: KitDiff;
 }
 
-export interface KitDiffEditorEdit<TSelectionDiff = any> {
-  do: KitDiffEditorStep<TSelectionDiff>;
-  undo: KitDiffEditorStep<TSelectionDiff>;
+export interface KitDiffAppEdit<TSelectionDiff = any> {
+  do: KitDiffAppStep<TSelectionDiff>;
+  undo: KitDiffAppStep<TSelectionDiff>;
 }
 
-export interface KitDiffEditorCommandResult<TDiff = any> extends EditorCommandResult<TDiff> {
+export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
   kitDiff?: KitDiff;
 }
 
-export abstract class KitDiffEditorStore<
+export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends KitDiffAppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends KitDiffAppCommandResult<TDiff>> extends AppStore<
   TState,
-  TDiff extends EditorDiff<TSelectionDiff>,
+  TDiff,
   TSelectionDiff,
-  TEdit extends KitDiffEditorEdit<TSelectionDiff>,
+  TEdit,
   TCommandContext,
-  TCommandResult extends KitDiffEditorCommandResult<TDiff>,
-> extends EditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
+  TCommandResult
+> {
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
     super(parent, yMap, transact);
   }
@@ -659,8 +659,8 @@ export abstract class KitDiffEditorStore<
       const kitStore = this.kit();
       const kitState = kitStore.snapshot();
       const inversedKitDiff = result.kitDiff ? inverseKitDiff(kitState, result.kitDiff) : undefined;
-      const doStep: KitDiffEditorStep<TSelectionDiff> = { kitDiff: result.kitDiff, selectionDiff: result.diff?.selection };
-      const undoStep: KitDiffEditorStep<TSelectionDiff> = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
+      const doStep: KitDiffAppStep<TSelectionDiff> = { kitDiff: result.kitDiff, selectionDiff: result.diff?.selection };
+      const undoStep: KitDiffAppStep<TSelectionDiff> = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep };
       currentStack.push([edit]);
     }
@@ -709,97 +709,97 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
   } as StoreState<TAccessl | TSelected>;
 }
 
-function areSameDesignEditor(designEditor: DesignEditorId, other: DesignEditorId): boolean {
-  return !!designEditor && !!other && areSameKit(designEditor.kit, other.kit) && designEditor.design === other.design;
+function areSameDesignApp(designApp: DesignAppId, other: DesignAppId): boolean {
+  return !!designApp && !!other && areSameKit(designApp.kit, other.kit) && designApp.design === other.design;
 }
 
-function hasSameDesignEditor(designEditor: DesignEditorId, others: DesignEditorId[]): boolean {
-  return others.some((other) => areSameDesignEditor(designEditor, other));
+function hasSameDesignApp(designApp: DesignAppId, others: DesignAppId[]): boolean {
+  return others.some((other) => areSameDesignApp(designApp, other));
 }
 
-function areSameKitEditor(kitEditor: KitEditorId, other: KitEditorId): boolean {
-  return !!kitEditor && !!other && areSameKit(kitEditor.kit, other.kit);
+function areSameKitApp(kitApp: KitAppId, other: KitAppId): boolean {
+  return !!kitApp && !!other && areSameKit(kitApp.kit, other.kit);
 }
 
-function hasSameKitEditor(kitEditor: KitEditorId, others: KitEditorId[]): boolean {
-  return others.some((other) => areSameKitEditor(kitEditor, other));
+function hasSameKitApp(kitApp: KitAppId, others: KitAppId[]): boolean {
+  return others.some((other) => areSameKitApp(kitApp, other));
 }
 
-type YKitEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YKitEditor = Y.Map<YKitEditorVal>;
-type YKitEditors = Y.Map<YKitEditor>;
+type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YKitApp = Y.Map<YKitAppVal>;
+type YKitApps = Y.Map<YKitApp>;
 
-type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Map<Y.Map<YDesignEditor>>;
+type YDesignAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignApp = Y.Map<YDesignAppVal>;
+type YDesignApps = Y.Map<Y.Map<YDesignApp>>;
 
-type YTypeEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YTypeEditor = Y.Map<YTypeEditorVal>;
-type YTypeEditors = Y.Map<YTypeEditor>;
+type YTypeAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YTypeApp = Y.Map<YTypeAppVal>;
+type YTypeApps = Y.Map<YTypeApp>;
 
-type YQualityEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YQualityEditor = Y.Map<YQualityEditorVal>;
-type YQualityEditors = Y.Map<YQualityEditor>;
+type YQualityAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YQualityApp = Y.Map<YQualityAppVal>;
+type YQualityApps = Y.Map<YQualityApp>;
 
 type YKitMetadata = Y.Map<string | boolean>;
 type YKits = Y.Array<YKitMetadata>;
 
-type KitEditorStoreInstance = any;
-type DesignEditorStoreInstance = any;
-type TypeEditorStoreInstance = any;
-type QualityEditorStoreInstance = any;
+type KitAppStoreInstance = any;
+type DesignAppStoreInstance = any;
+type TypeAppStoreInstance = any;
+type QualityAppStoreInstance = any;
 type HomeStoreInstance = any;
 
-type KitEditorStoreFactory = (parent: SketchpadStore, yMap: YKitEditor, transact: (fn: () => void) => void, id: KitEditorId, state?: KitEditorState) => KitEditorStoreInstance;
-type DesignEditorStoreFactory = (parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) => DesignEditorStoreInstance;
-type TypeEditorStoreFactory = (parent: SketchpadStore, yMap: YTypeEditor, transact: (fn: () => void) => void, id: TypeEditorId, state?: TypeEditorState) => TypeEditorStoreInstance;
-type QualityEditorStoreFactory = (parent: SketchpadStore, yMap: YQualityEditor, transact: (fn: () => void) => void, id: QualityEditorId, state?: QualityEditorState) => QualityEditorStoreInstance;
+type KitAppStoreFactory = (parent: SketchpadStore, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) => KitAppStoreInstance;
+type DesignAppStoreFactory = (parent: SketchpadStore, yMap: YDesignApp, transact: (fn: () => void) => void, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
+type TypeAppStoreFactory = (parent: SketchpadStore, yMap: YTypeApp, transact: (fn: () => void) => void, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
+type QualityAppStoreFactory = (parent: SketchpadStore, yMap: YQualityApp, transact: (fn: () => void) => void, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
 type HomeStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => HomeStoreInstance;
 
-let kitEditorStoreFactory: KitEditorStoreFactory | undefined;
-let designEditorStoreFactory: DesignEditorStoreFactory | undefined;
-let typeEditorStoreFactory: TypeEditorStoreFactory | undefined;
-let qualityEditorStoreFactory: QualityEditorStoreFactory | undefined;
+let kitAppStoreFactory: KitAppStoreFactory | undefined;
+let designAppStoreFactory: DesignAppStoreFactory | undefined;
+let typeAppStoreFactory: TypeAppStoreFactory | undefined;
+let qualityAppStoreFactory: QualityAppStoreFactory | undefined;
 let homeStoreFactory: HomeStoreFactory | undefined;
 
-export function registerKitEditorStoreFactory(factory: KitEditorStoreFactory) {
-  kitEditorStoreFactory = factory;
+export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
+  kitAppStoreFactory = factory;
 }
 
-export function registerDesignEditorStoreFactory(factory: DesignEditorStoreFactory) {
-  designEditorStoreFactory = factory;
+export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
+  designAppStoreFactory = factory;
 }
 
-export function registerTypeEditorStoreFactory(factory: TypeEditorStoreFactory) {
-  typeEditorStoreFactory = factory;
+export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
+  typeAppStoreFactory = factory;
 }
 
-export function registerQualityEditorStoreFactory(factory: QualityEditorStoreFactory) {
-  qualityEditorStoreFactory = factory;
+export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) {
+  qualityAppStoreFactory = factory;
 }
 
 export function registerHomeStoreFactory(factory: HomeStoreFactory) {
   homeStoreFactory = factory;
 }
 
-function resolveKitEditorStoreFactory(): KitEditorStoreFactory {
-  if (!kitEditorStoreFactory) throw new Error("Kit editor store factory not registered");
-  return kitEditorStoreFactory;
+function resolveKitAppStoreFactory(): KitAppStoreFactory {
+  if (!kitAppStoreFactory) throw new Error("Kit app store factory not registered");
+  return kitAppStoreFactory;
 }
 
-function resolveDesignEditorStoreFactory(): DesignEditorStoreFactory {
-  if (!designEditorStoreFactory) throw new Error("Design editor store factory not registered");
-  return designEditorStoreFactory;
+function resolveDesignAppStoreFactory(): DesignAppStoreFactory {
+  if (!designAppStoreFactory) throw new Error("Design app store factory not registered");
+  return designAppStoreFactory;
 }
 
-function resolveTypeEditorStoreFactory(): TypeEditorStoreFactory {
-  if (!typeEditorStoreFactory) throw new Error("Type editor store factory not registered");
-  return typeEditorStoreFactory;
+function resolveTypeAppStoreFactory(): TypeAppStoreFactory {
+  if (!typeAppStoreFactory) throw new Error("Type app store factory not registered");
+  return typeAppStoreFactory;
 }
 
-function resolveQualityEditorStoreFactory(): QualityEditorStoreFactory {
-  if (!qualityEditorStoreFactory) throw new Error("Quality editor store factory not registered");
-  return qualityEditorStoreFactory;
+function resolveQualityAppStoreFactory(): QualityAppStoreFactory {
+  if (!qualityAppStoreFactory) throw new Error("Quality app store factory not registered");
+  return qualityAppStoreFactory;
 }
 
 function resolveHomeStoreFactory(): HomeStoreFactory {
@@ -811,10 +811,10 @@ function resolveHomeStoreFactory(): HomeStoreFactory {
 
 // #region Sketchpad
 
-type YSketchpadVal = string | number | boolean | YDesignEditors;
+type YSketchpadVal = string | number | boolean | YDesignApps;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
-export interface EditorSettings {
+export interface AppSettings {
   design?: {
     snappiness?: number;
     gridSize?: number;
@@ -843,7 +843,7 @@ export interface SketchpadChangableState {
   theme: Theme;
   layout: Layout;
   mode: Mode;
-  editorSettings: EditorSettings;
+  appSettings: AppSettings;
   panelSizes: PanelSizes;
   isFullscreen: boolean;
   isNavbarExpanded: boolean;
@@ -862,7 +862,7 @@ export interface SketchpadDiff {
   theme?: Theme;
   layout?: Layout;
   mode?: Mode;
-  editorSettings?: EditorSettings;
+  appSettings?: AppSettings;
   panelSizes?: Partial<PanelSizes>;
   isFullscreen?: boolean;
   isNavbarExpanded?: boolean;
@@ -886,14 +886,14 @@ export class SketchpadStore {
   private readonly yKits: YKits;
   private readonly yHome: Y.Map<any>;
   private homeStore?: HomeStoreInstance;
-  private readonly yKitEditors: YKitEditors;
-  private readonly kitEditors: Map<string, KitEditorStoreInstance>;
-  private readonly yTypeEditors: YTypeEditors;
-  private readonly typeEditors: Map<string, TypeEditorStoreInstance>;
-  private readonly yQualityEditors: YQualityEditors;
-  private readonly qualityEditors: Map<string, QualityEditorStoreInstance>;
-  private readonly yDesignEditors: YDesignEditors;
-  private readonly designEditors: Map<string, Map<string, DesignEditorStoreInstance>>;
+  private readonly yKitApps: YKitApps;
+  private readonly kitApps: Map<string, KitAppStoreInstance>;
+  private readonly yTypeApps: YTypeApps;
+  private readonly typeApps: Map<string, TypeAppStoreInstance>;
+  private readonly yQualityApps: YQualityApps;
+  private readonly qualityApps: Map<string, QualityAppStoreInstance>;
+  private readonly yDesignApps: YDesignApps;
+  private readonly designApps: Map<string, Map<string, DesignAppStoreInstance>>;
   private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
@@ -902,14 +902,14 @@ export class SketchpadStore {
   private kitShallowsCacheHash?: string;
   private readonly kitCreatedSubscribers: Set<Subscribe>;
   private readonly kitDeletedSubscribers: Set<Subscribe>;
-  private readonly kitEditorCreatedSubscribers: Set<Subscribe>;
-  private readonly kitEditorDeletedSubscribers: Set<Subscribe>;
-  private readonly typeEditorCreatedSubscribers: Set<Subscribe>;
-  private readonly typeEditorDeletedSubscribers: Set<Subscribe>;
-  private readonly qualityEditorCreatedSubscribers: Set<Subscribe>;
-  private readonly qualityEditorDeletedSubscribers: Set<Subscribe>;
-  private readonly designEditorCreatedSubscribers: Set<Subscribe>;
-  private readonly designEditorDeletedSubscribers: Set<Subscribe>;
+  private readonly kitAppCreatedSubscribers: Set<Subscribe>;
+  private readonly kitAppDeletedSubscribers: Set<Subscribe>;
+  private readonly typeAppCreatedSubscribers: Set<Subscribe>;
+  private readonly typeAppDeletedSubscribers: Set<Subscribe>;
+  private readonly qualityAppCreatedSubscribers: Set<Subscribe>;
+  private readonly qualityAppDeletedSubscribers: Set<Subscribe>;
+  private readonly designAppCreatedSubscribers: Set<Subscribe>;
+  private readonly designAppDeletedSubscribers: Set<Subscribe>;
   // private readonly broadcastChannel: BroadcastChannel;
 
   constructor(id?: string, yProviderFactory?: YProviderFactory) {
@@ -918,21 +918,21 @@ export class SketchpadStore {
     // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Map();
-    this.kitEditors = new Map();
-    this.typeEditors = new Map();
-    this.qualityEditors = new Map();
-    this.designEditors = new Map();
+    this.kitApps = new Map();
+    this.typeApps = new Map();
+    this.qualityApps = new Map();
+    this.designApps = new Map();
     this.commandRegistry = new Map();
     this.kitCreatedSubscribers = new Set();
     this.kitDeletedSubscribers = new Set();
-    this.kitEditorCreatedSubscribers = new Set();
-    this.kitEditorDeletedSubscribers = new Set();
-    this.typeEditorCreatedSubscribers = new Set();
-    this.typeEditorDeletedSubscribers = new Set();
-    this.qualityEditorCreatedSubscribers = new Set();
-    this.qualityEditorDeletedSubscribers = new Set();
-    this.designEditorCreatedSubscribers = new Set();
-    this.designEditorDeletedSubscribers = new Set();
+    this.kitAppCreatedSubscribers = new Set();
+    this.kitAppDeletedSubscribers = new Set();
+    this.typeAppCreatedSubscribers = new Set();
+    this.typeAppDeletedSubscribers = new Set();
+    this.qualityAppCreatedSubscribers = new Set();
+    this.qualityAppDeletedSubscribers = new Set();
+    this.designAppCreatedSubscribers = new Set();
+    this.designAppDeletedSubscribers = new Set();
 
     if (id) {
       this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
@@ -944,10 +944,10 @@ export class SketchpadStore {
     this.ySketchpad = this.yDoc.getMap("sketchpad");
     this.yKits = this.yDoc.getArray("kits");
     this.yHome = this.yDoc.getMap("home");
-    this.yKitEditors = this.yDoc.getMap("kitEditors");
-    this.yTypeEditors = this.yDoc.getMap("typeEditors");
-    this.yQualityEditors = this.yDoc.getMap("qualityEditors");
-    this.yDesignEditors = this.yDoc.getMap("designEditors");
+    this.yKitApps = this.yDoc.getMap("kitApps");
+    this.yTypeApps = this.yDoc.getMap("typeApps");
+    this.yQualityApps = this.yDoc.getMap("qualityApps");
+    this.yDesignApps = this.yDoc.getMap("designApps");
 
     // Load persisted kits from IndexedDB
     this.loadPersistedKits();
@@ -987,9 +987,9 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("activeInteraction")) {
         this.ySketchpad.set("activeInteraction", "");
       }
-      if (!this.ySketchpad.has("editorSettings")) {
+      if (!this.ySketchpad.has("appSettings")) {
         this.ySketchpad.set(
-          "editorSettings",
+          "appSettings",
           JSON.stringify({
             design: { snappiness: 10, gridSize: 24 },
             type: {},
@@ -1025,9 +1025,9 @@ export class SketchpadStore {
   };
 
   snapshot = (): SketchpadState => {
-    const editorSettingsStr = this.ySketchpad.get("editorSettings") as string;
-    const editorSettings = editorSettingsStr
-      ? JSON.parse(editorSettingsStr)
+    const appSettingsStr = this.ySketchpad.get("appSettings") as string;
+    const appSettings = appSettingsStr
+      ? JSON.parse(appSettingsStr)
       : {
           design: { snappiness: 10, gridSize: 24 },
           type: {},
@@ -1057,7 +1057,7 @@ export class SketchpadStore {
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
       mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.NORMAL,
-      editorSettings: editorSettings,
+      appSettings: appSettings,
       panelSizes: panelSizes,
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
       isNavbarExpanded: (this.ySketchpad.get("isNavbarExpanded") as boolean) || false,
@@ -1088,45 +1088,45 @@ export class SketchpadStore {
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  createKitEditor = (kit: Guid) => {
+  createKitApp = (kit: Guid) => {
     this.yDoc.transact(() => {
       const kitStore = this.kit(kit);
-      let yKitEditor = this.yKitEditors.get(kit) as Y.Map<YKitEditorVal>;
-      if (!yKitEditor) {
-        yKitEditor = new Y.Map<YKitEditorVal>();
-        this.yKitEditors.set(kit, yKitEditor);
+      let yKitApp = this.yKitApps.get(kit) as Y.Map<YKitAppVal>;
+      if (!yKitApp) {
+        yKitApp = new Y.Map<YKitAppVal>();
+        this.yKitApps.set(kit, yKitApp);
       }
-      const kitEditorFactory = resolveKitEditorStoreFactory();
-      const kitEditor = kitEditorFactory(this, yKitEditor, this.yDoc.transact.bind(this.yDoc), { kit });
-      this.kitEditors.set(kit, kitEditor);
+      const kitAppFactory = resolveKitAppStoreFactory();
+      const kitApp = kitAppFactory(this, yKitApp, this.yDoc.transact.bind(this.yDoc), { kit });
+      this.kitApps.set(kit, kitApp);
     });
-    this.kitEditorCreatedSubscribers.forEach((subscriber) => subscriber());
+    this.kitAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  createDesignEditor = (kit: Guid, design: Guid) => {
+  createDesignApp = (kit: Guid, design: Guid) => {
     this.yDoc.transact(() => {
-      let yKitMap = this.yDesignEditors.get(kit) as Y.Map<YDesignEditor>;
+      let yKitMap = this.yDesignApps.get(kit) as Y.Map<YDesignApp>;
       if (!yKitMap) {
-        yKitMap = new Y.Map<YDesignEditor>();
-        this.yDesignEditors.set(kit, yKitMap);
+        yKitMap = new Y.Map<YDesignApp>();
+        this.yDesignApps.set(kit, yKitMap);
       }
-      let yDesignEditor = yKitMap.get(design) as Y.Map<YDesignEditorVal>;
-      if (!yDesignEditor) {
-        yDesignEditor = new Y.Map<YDesignEditorVal>();
-        yKitMap.set(design, yDesignEditor);
+      let yDesignApp = yKitMap.get(design) as Y.Map<YDesignAppVal>;
+      if (!yDesignApp) {
+        yDesignApp = new Y.Map<YDesignAppVal>();
+        yKitMap.set(design, yDesignApp);
       }
-      const designEditorFactory = resolveDesignEditorStoreFactory();
-      const designEditor = designEditorFactory(this, yDesignEditor, this.yDoc.transact.bind(this.yDoc), { kit, design });
+      const designAppFactory = resolveDesignAppStoreFactory();
+      const designApp = designAppFactory(this, yDesignApp, this.yDoc.transact.bind(this.yDoc), { kit, design });
 
-      // Ensure the design editors map exists for this kit
-      let designEditorsMap = this.designEditors.get(kit);
-      if (!designEditorsMap) {
-        designEditorsMap = new Map();
-        this.designEditors.set(kit, designEditorsMap);
+      // Ensure the design apps map exists for this kit
+      let designAppsMap = this.designApps.get(kit);
+      if (!designAppsMap) {
+        designAppsMap = new Map();
+        this.designApps.set(kit, designAppsMap);
       }
-      designEditorsMap.set(design, designEditor);
+      designAppsMap.set(design, designApp);
     });
-    this.designEditorCreatedSubscribers.forEach((subscriber) => subscriber());
+    this.designAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
   change(diff: SketchpadDiff) {
@@ -1165,9 +1165,9 @@ export class SketchpadStore {
       if (diff.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", diff.isNavbarExpanded);
       if (diff.isMobile !== undefined) this.ySketchpad.set("isMobile", diff.isMobile);
       if ("activeInteraction" in diff) this.ySketchpad.set("activeInteraction", diff.activeInteraction || "");
-      if (diff.editorSettings) {
-        const current = JSON.parse((this.ySketchpad.get("editorSettings") as string) || "{}");
-        this.ySketchpad.set("editorSettings", JSON.stringify({ ...current, ...diff.editorSettings }));
+      if (diff.appSettings) {
+        const current = JSON.parse((this.ySketchpad.get("appSettings") as string) || "{}");
+        this.ySketchpad.set("appSettings", JSON.stringify({ ...current, ...diff.appSettings }));
       }
       if (diff.panelSizes) {
         const current = JSON.parse((this.ySketchpad.get("panelSizes") as string) || "{}");
@@ -1191,34 +1191,34 @@ export class SketchpadStore {
     }
   };
 
-  deleteKitEditor = (kit: Guid) => {
-    const kitEditor = this.kitEditors.get(kit);
-    if (kitEditor) {
-      this.kitEditors.delete(kit);
+  deleteKitApp = (kit: Guid) => {
+    const kitApp = this.kitApps.get(kit);
+    if (kitApp) {
+      this.kitApps.delete(kit);
       this.yDoc.transact(() => {
-        this.yKitEditors.delete(kit);
+        this.yKitApps.delete(kit);
       });
-      this.kitEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+      this.kitAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
-  deleteDesignEditor = (kit: Guid, design: Guid) => {
-    const designEditor = this.designEditors.get(kit)?.get(design);
-    if (designEditor) {
-      this.designEditors.get(kit)?.delete(design);
-      if (this.designEditors.get(kit)?.size === 0) {
-        this.designEditors.delete(kit);
+  deleteDesignApp = (kit: Guid, design: Guid) => {
+    const designApp = this.designApps.get(kit)?.get(design);
+    if (designApp) {
+      this.designApps.get(kit)?.delete(design);
+      if (this.designApps.get(kit)?.size === 0) {
+        this.designApps.delete(kit);
       }
       this.yDoc.transact(() => {
-        const yKitMap = this.yDesignEditors.get(kit) as Y.Map<YDesignEditor> | undefined;
+        const yKitMap = this.yDesignApps.get(kit) as Y.Map<YDesignApp> | undefined;
         if (yKitMap) {
           yKitMap.delete(design);
           if (yKitMap.size === 0) {
-            this.yDesignEditors.delete(kit);
+            this.yDesignApps.delete(kit);
           }
         }
       });
-      this.designEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+      this.designAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
@@ -1229,17 +1229,17 @@ export class SketchpadStore {
     };
   };
 
-  onKitEditorCreated = (subscribe: Subscribe): Unsubscribe => {
-    this.kitEditorCreatedSubscribers.add(subscribe);
+  onKitAppCreated = (subscribe: Subscribe): Unsubscribe => {
+    this.kitAppCreatedSubscribers.add(subscribe);
     return () => {
-      this.kitEditorCreatedSubscribers.delete(subscribe);
+      this.kitAppCreatedSubscribers.delete(subscribe);
     };
   };
 
-  onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
-    this.designEditorCreatedSubscribers.add(subscribe);
+  onDesignAppCreated = (subscribe: Subscribe): Unsubscribe => {
+    this.designAppCreatedSubscribers.add(subscribe);
     return () => {
-      this.designEditorCreatedSubscribers.delete(subscribe);
+      this.designAppCreatedSubscribers.delete(subscribe);
     };
   };
 
@@ -1250,17 +1250,17 @@ export class SketchpadStore {
     };
   };
 
-  onKitEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
-    this.kitEditorDeletedSubscribers.add(subscribe);
+  onKitAppDeleted = (subscribe: Subscribe): Unsubscribe => {
+    this.kitAppDeletedSubscribers.add(subscribe);
     return () => {
-      this.kitEditorDeletedSubscribers.delete(subscribe);
+      this.kitAppDeletedSubscribers.delete(subscribe);
     };
   };
 
-  onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
-    this.designEditorDeletedSubscribers.add(subscribe);
+  onDesignAppDeleted = (subscribe: Subscribe): Unsubscribe => {
+    this.designAppDeletedSubscribers.add(subscribe);
     return () => {
-      this.designEditorDeletedSubscribers.delete(subscribe);
+      this.designAppDeletedSubscribers.delete(subscribe);
     };
   };
 
@@ -1281,16 +1281,16 @@ export class SketchpadStore {
       this.createKit(kit, local, remote);
       return {} as T;
     }
-    if (command === "semio.sketchpad.createKitEditor") {
+    if (command === "semio.sketchpad.createKitApp") {
       console.log(`Executing (special) command: "${command}"`);
-      const id = rest[0] as KitEditorId;
-      this.createKitEditor(id.kit);
+      const id = rest[0] as KitAppId;
+      this.createKitApp(id.kit);
       return {} as T;
     }
-    if (command === "semio.sketchpad.createDesignEditor") {
+    if (command === "semio.sketchpad.createDesignApp") {
       console.log(`Executing (special) command: "${command}"`);
-      const id = rest[0] as DesignEditorId;
-      this.createDesignEditor(id.kit, id.design);
+      const id = rest[0] as DesignAppId;
+      this.createDesignApp(id.kit, id.design);
       return {} as T;
     }
     if (command === "semio.sketchpad.importKit") {
@@ -1359,10 +1359,10 @@ export class SketchpadStore {
     return this.kitShallowsCache;
   }
 
-  hasKitEditor(kitEditor: KitEditorId): boolean {
-    return hasSameKitEditor(
-      kitEditor,
-      Array.from(this.kitEditors.values()).map((kitEditor) => kitEditor.id()),
+  hasKitApp(kitApp: KitAppId): boolean {
+    return hasSameKitApp(
+      kitApp,
+      Array.from(this.kitApps.values()).map((kitApp) => kitApp.id()),
     );
   }
 
@@ -1374,159 +1374,159 @@ export class SketchpadStore {
     return this.homeStore;
   }
 
-  kitEditor(guid: string): KitEditorStoreInstance {
-    let editor = this.kitEditors.get(guid);
-    if (!editor) {
+  kitApp(guid: string): KitAppStoreInstance {
+    let app = this.kitApps.get(guid);
+    if (!app) {
       if (!this.hasKit(guid)) {
-        throw new Error(`Cannot create kit editor: Kit with guid ${guid} does not exist`);
+        throw new Error(`Cannot create kit app: Kit with guid ${guid} does not exist`);
       }
-      this.createKitEditor(guid);
-      editor = this.kitEditors.get(guid)!;
+      this.createKitApp(guid);
+      app = this.kitApps.get(guid)!;
     }
-    return editor;
+    return app;
   }
 
-  kitEditorIds(): KitEditorId[] {
-    return Array.from(this.kitEditors.values()).map((k) => k.id());
+  kitAppIds(): KitAppId[] {
+    return Array.from(this.kitApps.values()).map((k) => k.id());
   }
 
-  getAllKitEditors(): KitEditorStoreInstance[] {
-    return Array.from(this.kitEditors.values());
+  getAllKitApps(): KitAppStoreInstance[] {
+    return Array.from(this.kitApps.values());
   }
 
-  getAllDesignEditors(): DesignEditorStoreInstance[] {
-    const allDesignEditors: DesignEditorStoreInstance[] = [];
-    for (const kitMap of this.designEditors.values()) {
-      allDesignEditors.push(...Array.from(kitMap.values()));
+  getAllDesignApps(): DesignAppStoreInstance[] {
+    const allDesignApps: DesignAppStoreInstance[] = [];
+    for (const kitMap of this.designApps.values()) {
+      allDesignApps.push(...Array.from(kitMap.values()));
     }
-    return allDesignEditors;
+    return allDesignApps;
   }
 
-  createTypeEditor = (kit: Guid, type: Guid) => {
-    const id: TypeEditorId = { kit, type };
+  createTypeApp = (kit: Guid, type: Guid) => {
+    const id: TypeAppId = { kit, type };
     const key = `${kit}:${type}`;
     this.yDoc.transact(() => {
-      let yTypeEditor = this.yTypeEditors.get(key) as Y.Map<YTypeEditorVal>;
-      if (!yTypeEditor) {
-        yTypeEditor = new Y.Map<YTypeEditorVal>();
-        this.yTypeEditors.set(key, yTypeEditor);
+      let yTypeApp = this.yTypeApps.get(key) as Y.Map<YTypeAppVal>;
+      if (!yTypeApp) {
+        yTypeApp = new Y.Map<YTypeAppVal>();
+        this.yTypeApps.set(key, yTypeApp);
       }
-      const typeEditorFactory = resolveTypeEditorStoreFactory();
-      const typeEditor = typeEditorFactory(this, yTypeEditor, this.yDoc.transact.bind(this.yDoc), id);
-      this.typeEditors.set(key, typeEditor);
+      const typeAppFactory = resolveTypeAppStoreFactory();
+      const typeApp = typeAppFactory(this, yTypeApp, this.yDoc.transact.bind(this.yDoc), id);
+      this.typeApps.set(key, typeApp);
     });
-    this.typeEditorCreatedSubscribers.forEach((subscriber) => subscriber());
+    this.typeAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  deleteTypeEditor = (kit: Guid, type: Guid) => {
+  deleteTypeApp = (kit: Guid, type: Guid) => {
     const key = `${kit}:${type}`;
-    const typeEditor = this.typeEditors.get(key);
-    if (typeEditor) {
-      this.typeEditors.delete(key);
+    const typeApp = this.typeApps.get(key);
+    if (typeApp) {
+      this.typeApps.delete(key);
       this.yDoc.transact(() => {
-        this.yTypeEditors.delete(key);
+        this.yTypeApps.delete(key);
       });
-      this.typeEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+      this.typeAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
-  hasTypeEditor(typeEditor: TypeEditorId): boolean {
-    const key = `${typeEditor.kit}:${typeEditor.type}`;
-    return this.typeEditors.has(key);
+  hasTypeApp(typeApp: TypeAppId): boolean {
+    const key = `${typeApp.kit}:${typeApp.type}`;
+    return this.typeApps.has(key);
   }
 
-  typeEditor(kit: Guid, type: Guid): TypeEditorStoreInstance {
+  typeApp(kit: Guid, type: Guid): TypeAppStoreInstance {
     const key = `${kit}:${type}`;
-    let editor = this.typeEditors.get(key);
-    if (!editor) {
-      this.createTypeEditor(kit, type);
-      editor = this.typeEditors.get(key)!;
+    let app = this.typeApps.get(key);
+    if (!app) {
+      this.createTypeApp(kit, type);
+      app = this.typeApps.get(key)!;
     }
-    return editor;
+    return app;
   }
 
-  typeEditorIds(): TypeEditorId[] {
-    return Array.from(this.typeEditors.values()).map((t) => ({ kit: t.id.kit, type: t.id.type }));
+  typeAppIds(): TypeAppId[] {
+    return Array.from(this.typeApps.values()).map((t) => ({ kit: t.id.kit, type: t.id.type }));
   }
 
-  createQualityEditor = (kit: Guid, quality: Guid) => {
-    const Guid: QualityEditorId = { kit, quality };
+  createQualityApp = (kit: Guid, quality: Guid) => {
+    const Guid: QualityAppId = { kit, quality };
     const key = `${kit}:${quality}`;
     this.yDoc.transact(() => {
-      let yQualityEditor = this.yQualityEditors.get(key) as Y.Map<YQualityEditorVal>;
-      if (!yQualityEditor) {
-        yQualityEditor = new Y.Map<YQualityEditorVal>();
-        this.yQualityEditors.set(key, yQualityEditor);
+      let yQualityApp = this.yQualityApps.get(key) as Y.Map<YQualityAppVal>;
+      if (!yQualityApp) {
+        yQualityApp = new Y.Map<YQualityAppVal>();
+        this.yQualityApps.set(key, yQualityApp);
       }
-      const qualityEditorFactory = resolveQualityEditorStoreFactory();
-      const qualityEditor = qualityEditorFactory(this, yQualityEditor, this.yDoc.transact.bind(this.yDoc), Guid);
-      this.qualityEditors.set(key, qualityEditor);
+      const qualityAppFactory = resolveQualityAppStoreFactory();
+      const qualityApp = qualityAppFactory(this, yQualityApp, this.yDoc.transact.bind(this.yDoc), Guid);
+      this.qualityApps.set(key, qualityApp);
     });
-    this.qualityEditorCreatedSubscribers.forEach((subscriber) => subscriber());
+    this.qualityAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  deleteQualityEditor = (kit: Guid, quality: Guid) => {
+  deleteQualityApp = (kit: Guid, quality: Guid) => {
     const key = `${kit}:${quality}`;
-    const qualityEditor = this.qualityEditors.get(key);
-    if (qualityEditor) {
-      this.qualityEditors.delete(key);
+    const qualityApp = this.qualityApps.get(key);
+    if (qualityApp) {
+      this.qualityApps.delete(key);
       this.yDoc.transact(() => {
-        this.yQualityEditors.delete(key);
+        this.yQualityApps.delete(key);
       });
-      this.qualityEditorDeletedSubscribers.forEach((subscriber) => subscriber());
+      this.qualityAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
 
-  hasQualityEditor(qualityEditor: QualityEditorId): boolean {
-    const key = `${qualityEditor.kit}:${qualityEditor.quality}`;
-    return this.qualityEditors.has(key);
+  hasQualityApp(qualityApp: QualityAppId): boolean {
+    const key = `${qualityApp.kit}:${qualityApp.quality}`;
+    return this.qualityApps.has(key);
   }
 
-  qualityEditor(kit: Guid, quality: Guid): QualityEditorStoreInstance {
+  qualityApp(kit: Guid, quality: Guid): QualityAppStoreInstance {
     const key = `${kit}:${quality}`;
-    let editor = this.qualityEditors.get(key);
-    if (!editor) {
-      this.createQualityEditor(kit, quality);
-      editor = this.qualityEditors.get(key)!;
+    let app = this.qualityApps.get(key);
+    if (!app) {
+      this.createQualityApp(kit, quality);
+      app = this.qualityApps.get(key)!;
     }
-    return editor;
+    return app;
   }
 
-  qualityEditorIds(): QualityEditorId[] {
-    return Array.from(this.qualityEditors.values()).map((q) => ({ kit: q.Guid.kit, quality: q.Guid.quality }));
+  qualityAppIds(): QualityAppId[] {
+    return Array.from(this.qualityApps.values()).map((q) => ({ kit: q.Guid.kit, quality: q.Guid.quality }));
   }
 
-  hasDesignEditor(designEditor: DesignEditorId): boolean {
-    const allDesignEditors: DesignEditorStoreInstance[] = [];
-    for (const kitMap of this.designEditors.values()) {
-      allDesignEditors.push(...Array.from(kitMap.values()));
+  hasDesignApp(designApp: DesignAppId): boolean {
+    const allDesignApps: DesignAppStoreInstance[] = [];
+    for (const kitMap of this.designApps.values()) {
+      allDesignApps.push(...Array.from(kitMap.values()));
     }
-    return hasSameDesignEditor(
-      designEditor,
-      allDesignEditors.map((designEditor) => designEditor.id()),
+    return hasSameDesignApp(
+      designApp,
+      allDesignApps.map((designApp) => designApp.id()),
     );
   }
 
-  designEditor(kitGuid: string, designGuid: string): DesignEditorStoreInstance {
-    let kitMap = this.designEditors.get(kitGuid);
+  designApp(kitGuid: string, designGuid: string): DesignAppStoreInstance {
+    let kitMap = this.designApps.get(kitGuid);
     if (!kitMap) {
       kitMap = new Map();
-      this.designEditors.set(kitGuid, kitMap);
+      this.designApps.set(kitGuid, kitMap);
     }
-    let editor = kitMap.get(designGuid);
-    if (!editor) {
-      this.createDesignEditor(kitGuid, designGuid);
-      editor = kitMap.get(designGuid)!;
+    let app = kitMap.get(designGuid);
+    if (!app) {
+      this.createDesignApp(kitGuid, designGuid);
+      app = kitMap.get(designGuid)!;
     }
-    return editor;
+    return app;
   }
 
-  designEditorIds(): DesignEditorId[] {
-    const allDesignEditors: DesignEditorStoreInstance[] = [];
-    for (const kitMap of this.designEditors.values()) {
-      allDesignEditors.push(...Array.from(kitMap.values()));
+  designAppIds(): DesignAppId[] {
+    const allDesignApps: DesignAppStoreInstance[] = [];
+    for (const kitMap of this.designApps.values()) {
+      allDesignApps.push(...Array.from(kitMap.values()));
     }
-    return allDesignEditors.map((d) => d.id());
+    return allDesignApps.map((d) => d.id());
   }
 
   private async loadPersistedKits() {
@@ -1669,15 +1669,15 @@ export function migratePath(path: string): string {
   return path;
 }
 
-export function getEditorTypeFromPath(path: string): EditorType {
+export function getAppTypeFromPath(path: string): AppType {
   const pathParts = path.split("/").filter((p) => p);
-  const editor = editorRegistry.getEditorForPath(pathParts);
-  return editor?.id || "home";
+  const app = appRegistry.getAppForPath(pathParts);
+  return app?.id || "home";
 }
 
-export function useEditorType(): EditorType {
+export function useAppType(): AppType {
   const navigation = useNavigation();
-  return useMemo(() => getEditorTypeFromPath(navigation), [navigation]);
+  return useMemo(() => getAppTypeFromPath(navigation), [navigation]);
 }
 
 export function useAccess(): Access {
@@ -1741,15 +1741,15 @@ export function useNavigationHistory(): {
   };
 }
 
-export function useEditorPanelVisibility(): PanelVisibility {
+export function useAppPanelVisibility(): PanelVisibility {
   const navigation = useNavigation();
-  const editorType = useEditorType();
+  const appType = useAppType();
   const store = useSketchpadStore();
 
   // Parse the navigation path to get IDs
   const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
-  const editorKind = pathMatch?.[2];
+  const appKind = pathMatch?.[2];
   const itemGuid = pathMatch?.[3];
 
   const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
@@ -1772,11 +1772,11 @@ export function useEditorPanelVisibility(): PanelVisibility {
   });
 
   useEffect(() => {
-    if (editorType === "docs") {
+    if (appType === "docs") {
       // For docs, use local state
       setPanelVisibility(docsPanelVisibility);
 
-      // Store the setter in a way that useEditorCommands can access it
+      // Store the setter in a way that useAppCommands can access it
       (window as any).__docsSetPanelVisibility = setDocsPanelVisibility;
 
       return () => {
@@ -1785,32 +1785,32 @@ export function useEditorPanelVisibility(): PanelVisibility {
     }
 
     try {
-      let editor: any;
-      switch (editorType) {
+      let app: any;
+      switch (appType) {
         case "home":
-          editor = store.home();
+          app = store.home();
           break;
         case "kit":
           if (kitGuid) {
-            editor = store.kitEditor(kitGuid);
+            app = store.kitApp(kitGuid);
           } else {
           }
           break;
         case "design":
-          if (kitGuid && itemGuid) editor = store.designEditor(kitGuid, itemGuid);
+          if (kitGuid && itemGuid) app = store.designApp(kitGuid, itemGuid);
           break;
         case "type":
-          if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
+          if (kitGuid && itemGuid) app = store.typeApp(kitGuid, itemGuid);
           break;
         case "quality":
-          if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
+          if (kitGuid && itemGuid) app = store.qualityApp(kitGuid, itemGuid);
           break;
         default:
       }
 
-      if (editor) {
-        const unsubscribe = editor.onChangedDeep(() => {
-          const newPanelVisibility = editor.snapshot().panelVisibility || {
+      if (app) {
+        const unsubscribe = app.onChangedDeep(() => {
+          const newPanelVisibility = app.snapshot().panelVisibility || {
             toolbar: true,
             workbench: true,
             details: true,
@@ -1820,7 +1820,7 @@ export function useEditorPanelVisibility(): PanelVisibility {
           setPanelVisibility(newPanelVisibility);
         });
 
-        const initialPanelVisibility = editor.snapshot().panelVisibility || {
+        const initialPanelVisibility = app.snapshot().panelVisibility || {
           toolbar: true,
           workbench: true,
           details: true,
@@ -1832,14 +1832,14 @@ export function useEditorPanelVisibility(): PanelVisibility {
         return unsubscribe;
       }
     } catch (e) {}
-  }, [store, editorType, kitGuid, itemGuid, navigation, docsPanelVisibility]);
+  }, [store, appType, kitGuid, itemGuid, navigation, docsPanelVisibility]);
 
   return panelVisibility;
 }
 
-export function useEditorCommands() {
+export function useAppCommands() {
   const navigation = useNavigation();
-  const editorType = useEditorType();
+  const appType = useAppType();
   const store = useSketchpadStore();
 
   // Parse the navigation path to get IDs
@@ -1848,26 +1848,26 @@ export function useEditorCommands() {
   const itemGuid = pathMatch?.[3];
 
   return useMemo(() => {
-    let editor: any;
+    let app: any;
     try {
-      switch (editorType) {
+      switch (appType) {
         case "home":
-          editor = store.home();
+          app = store.home();
           break;
         case "kit":
-          if (kitGuid) editor = store.kitEditor(kitGuid);
+          if (kitGuid) app = store.kitApp(kitGuid);
           break;
         case "design":
-          if (kitGuid && itemGuid) editor = store.designEditor(kitGuid, itemGuid);
+          if (kitGuid && itemGuid) app = store.designApp(kitGuid, itemGuid);
           break;
         case "type":
-          if (kitGuid && itemGuid) editor = store.typeEditor(kitGuid, itemGuid);
+          if (kitGuid && itemGuid) app = store.typeApp(kitGuid, itemGuid);
           break;
         case "quality":
-          if (kitGuid && itemGuid) editor = store.qualityEditor(kitGuid, itemGuid);
+          if (kitGuid && itemGuid) app = store.qualityApp(kitGuid, itemGuid);
           break;
         case "docs":
-          // Handle docs editor with local state
+          // Handle docs app with local state
           return {
             togglePanel: (panelKey: keyof PanelVisibility) => {
               const setDocsPanelVisibility = (window as any).__docsSetPanelVisibility;
@@ -1885,12 +1885,12 @@ export function useEditorCommands() {
 
     return {
       togglePanel: (panelKey: keyof PanelVisibility) => {
-        if (!editor) {
+        if (!app) {
           return;
         }
-        const current = editor.snapshot().panelVisibility;
+        const current = app.snapshot().panelVisibility;
         try {
-          editor.change({
+          app.change({
             panelVisibility: {
               [panelKey]: !current[panelKey],
             },
@@ -1898,11 +1898,11 @@ export function useEditorCommands() {
         } catch (e) {}
       },
       execute: (command: string, ...args: any[]) => {
-        if (!editor) return;
-        return editor.execute(command, ...args);
+        if (!app) return;
+        return app.execute(command, ...args);
       },
     };
-  }, [store, editorType, kitGuid, itemGuid, navigation]);
+  }, [store, appType, kitGuid, itemGuid, navigation]);
 }
 
 export function useSketchpadCommands() {
@@ -1920,8 +1920,8 @@ export function useSketchpadCommands() {
       setActiveInteraction: (interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", interactionId),
       syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
       createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
-      createKitEditor: (kitEditorId: KitEditorId) => store.execute("semio.sketchpad.createKitEditor", kitEditorId),
-      createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
+      createKitApp: (kitAppId: KitAppId) => store.execute("semio.sketchpad.createKitApp", kitAppId),
+      createDesignApp: (designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", designAppId),
       navigateToKit: (kit: Guid, search?: string) => navigate(`/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`),
       navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
       navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
@@ -1942,12 +1942,12 @@ export function useSketchpadCommands() {
           navigate(targetPath);
         }
       },
-      updateEditorSettings: (editorType: "design" | "type" | "kit", settings: Record<string, any>) => {
-        const current = store.snapshot().editorSettings;
+      updateAppSettings: (appType: "design" | "type" | "kit", settings: Record<string, any>) => {
+        const current = store.snapshot().appSettings;
         store.change({
-          editorSettings: {
+          appSettings: {
             ...current,
-            [editorType]: { ...current[editorType], ...settings },
+            [appType]: { ...current[appType], ...settings },
           },
         });
       },

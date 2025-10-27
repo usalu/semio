@@ -26,14 +26,14 @@ Every of those files is affected:
 │ │ │ │ │ │ ├── Chat.tsx
 │ │ │ │ │ │ ├── Commands.tsx
 │ │ │ │ │ │ ├── Console.tsx
-│ │ │ │ │ │ ├── DesignEditor.tsx
+│ │ │ │ │ │ ├── DesignApp.tsx
 │ │ │ │ │ │ ├── Diagram.tsx
 │ │ │ │ │ │ ├── Model.tsx
 │ │ │ │ │ │ ├── Navbar.tsx
 │ │ │ │ │ │ ├── Workbench.tsx
 │ │ │ │ │ │ ├── Sketchpad.stories.tsx
 │ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/
-│ │ │ │ │ │ ├── TypeEditor.tsx
+│ │ │ │ │ │ ├── TypeApp.tsx
 │ │ │ │ │ │ └── Workbench.tsx
 ├── meta
 │ └── dictionary.csv # name, abbreviation, description, … strings for entities, properties, functions, …

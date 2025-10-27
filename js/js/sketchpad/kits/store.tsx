@@ -88,7 +88,7 @@ import {
   getPieceRepresentationUrls,
   piecesMetadata,
 } from "../../semio";
-import { useDesignEditorDiff, useDesignEditorHover, useDesignEditorIsPieceTransitiveHovered, useDesignEditorSelection, useDesignEditorStore } from "../editors/design/store";
+import { useDesignAppDiff, useDesignAppHover, useDesignAppIsPieceTransitiveHovered, useDesignAppSelection, useDesignAppStore } from "../apps/design/store";
 import type { SketchpadStore, Url } from "../store";
 import { Disposable, Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
@@ -2321,12 +2321,12 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
 
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
-  const selection = useDesignEditorSelection();
+  const selection = useDesignAppSelection();
   return selection.pieces?.includes(piece?.guid ?? "") ?? false;
 }
 
 export function useIsPieceHovered(): boolean {
-  const hover = useDesignEditorHover();
+  const hover = useDesignAppHover();
   const pieceScope = usePieceScope();
   if (!pieceScope || !hover) return false;
   return hover.pieces?.includes(pieceScope.guid) ?? false;
@@ -2334,12 +2334,12 @@ export function useIsPieceHovered(): boolean {
 
 /**
  * Check if the current piece (from PieceScope) is transitively hovered
- * (piece itself, or its type/design is hovered in Kit Editor)
+ * (piece itself, or its type/design is hovered in Kit App)
  */
 export function useIsPieceTransitiveHovered(): boolean {
   const pieceScope = usePieceScope();
   if (!pieceScope) return false;
-  return useDesignEditorIsPieceTransitiveHovered(undefined, pieceScope.guid);
+  return useDesignAppIsPieceTransitiveHovered(undefined, pieceScope.guid);
 }
 
 export function usePiecePlane(): Plane {
@@ -2360,18 +2360,18 @@ export function usePiecePlane(): Plane {
 export function usePieceStatus(): DiffStatus {
   const piece = usePieceScope();
   const designScope = useDesignScope();
-  const designEditorStore = useDesignEditorStore(identitySelector) as any;
+  const designAppStore = useDesignAppStore(identitySelector) as any;
 
-  if (!designEditorStore || !piece || !designScope) {
+  if (!designAppStore || !piece || !designScope) {
     return DiffStatus.Unchanged;
   }
 
   // Subscribe to store changes including transaction stack
   // The selector must return a stable value for the same state to prevent infinite loops
   return useSync<any, DiffStatus>(
-    designEditorStore,
+    designAppStore,
     () => {
-      const currentStack = designEditorStore.currentTransactionStack;
+      const currentStack = designAppStore.currentTransactionStack;
       if (!currentStack || currentStack.length === 0) {
         return DiffStatus.Unchanged;
       }
@@ -2419,18 +2419,18 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: Guid, dee
   const originalPiece = usePiece(identitySelector, id, deep) as Piece;
   const pieceScope = usePieceScope();
   const designScope = useDesignScope();
-  const designEditorStore = useDesignEditorStore(identitySelector) as any;
+  const designAppStore = useDesignAppStore(identitySelector) as any;
 
-  if (!designEditorStore || !pieceScope || !designScope) {
+  if (!designAppStore || !pieceScope || !designScope) {
     return selector ? selector(originalPiece) : originalPiece;
   }
 
   // Subscribe to store changes including transaction stack
   // The selector must return a stable value for the same state to prevent infinite loops
   return useSync<any, T | Piece>(
-    designEditorStore,
+    designAppStore,
     () => {
-      const currentStack = designEditorStore.currentTransactionStack;
+      const currentStack = designAppStore.currentTransactionStack;
       if (!currentStack || currentStack.length === 0) {
         return selector ? selector(originalPiece) : originalPiece;
       }
@@ -2951,13 +2951,13 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionScope();
-  const selection = useDesignEditorSelection();
+  const selection = useDesignAppSelection();
   if (!connectionScope) return false;
   return selection.connections?.some((guid) => guid === connectionScope.guid) ?? false;
 }
 
 export function useIsConnectionHovered(): boolean {
-  const hover = useDesignEditorHover();
+  const hover = useDesignAppHover();
   const connectionScope = useConnectionScope();
   if (!connectionScope || !hover) return false;
   return hover.connections?.includes(connectionScope.guid) ?? false;
@@ -2965,7 +2965,7 @@ export function useIsConnectionHovered(): boolean {
 
 export function useConnectionStatus(): DiffStatus {
   const connection = useConnectionScope();
-  const kitDiff = useDesignEditorDiff();
+  const kitDiff = useDesignAppDiff();
   const designScope = useDesignScope();
 
   if (!connection || !designScope || !kitDiff?.designs?.updated) {
@@ -3852,7 +3852,7 @@ export function useDesignId() {
 
 export function useClusterableGroups() {
   const design = useDesign() as Design;
-  const selection = useDesignEditorSelection();
+  const selection = useDesignAppSelection();
   return useMemo(() => {
     if (!design) return [];
     return getClusterableGroups(design, selection.pieces ?? []);
@@ -4495,7 +4495,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
 
 export function useDiffedKit(): Kit {
   const kit = useKit() as Kit;
-  const diff = useDesignEditorDiff();
+  const diff = useDesignAppDiff();
   return diff ? applyKitDiff(kit, diff) : kit;
 }
 

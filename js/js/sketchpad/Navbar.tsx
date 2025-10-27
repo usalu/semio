@@ -30,20 +30,20 @@ import { Toggle } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../elements/navigation/Breadcrumb";
 import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
-import "./editors";
-import { editorRegistry } from "./editors";
-import { useDesignEditorCommands } from "./editors/design/store";
-import { docsRegistry } from "./editors/docs/registry";
-import { useHomeCommands } from "./editors/home/store";
-import { useKitEditorCommands } from "./editors/kit/store";
-import { useQualityEditorCommands } from "./editors/quality/store";
-import { useTypeEditorCommands } from "./editors/type/store";
+import "./apps";
+import { appRegistry } from "./apps";
+import { useDesignAppCommands } from "./apps/design/store";
+import { docsRegistry } from "./apps/docs/registry";
+import { useHomeCommands } from "./apps/home/store";
+import { useKitAppCommands } from "./apps/kit/store";
+import { useQualityAppCommands } from "./apps/quality/store";
+import { useTypeAppCommands } from "./apps/type/store";
 import {
   PanelVisibility,
   SketchpadScope,
-  useEditorCommands,
-  useEditorPanelVisibility,
-  useEditorType,
+  useAppCommands,
+  useAppPanelVisibility,
+  useAppType,
   useIsFullscreen,
   useIsMobile,
   useIsNavbarExpanded,
@@ -206,7 +206,7 @@ export interface PanelDefinition {
   hotkey: string;
 }
 
-export const getPanelConfigs = (t: (key: string) => string): Record<string, PanelDefinition[]> => editorRegistry.getPanelConfigs(t);
+export const getPanelConfigs = (t: (key: string) => string): Record<string, PanelDefinition[]> => appRegistry.getPanelConfigs(t);
 
 interface NavigationProps {
   mobile?: boolean;
@@ -238,17 +238,17 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const secondPart = pathParts[2];
   const thirdPart = pathParts[3];
-  const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
-  const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  const isQualityEditor = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
-  const itemGuid = isDesignEditor || isTypeEditor || isQualityEditor ? thirdPart : null;
+  const isDesignApp = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
+  const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
+  const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
+  const itemGuid = isDesignApp || isTypeApp || isQualityApp ? thirdPart : null;
 
-  const filteredKind = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
-  const filteredName = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? searchParams.get("name") : null;
-  const filteredVariant = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? searchParams.get("variant") : null;
-  const filteredView = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor ? searchParams.get("view") : null;
+  const filteredKind = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("name") : null;
+  const filteredVariant = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("variant") : null;
+  const filteredView = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("view") : null;
 
-  const isKitEditor = kitGuid && !isDesignEditor && !isTypeEditor && !isQualityEditor;
+  const isKitApp = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp;
 
   const kit = kits.find((k) => k.guid === kitGuid);
   const store = useSketchpadStore();
@@ -468,9 +468,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   }, [kit, filteredKind, kitCommands, handleCreateDesign, handleCreateType]);
 
   // Find current design or type or quality
-  const design = isDesignEditor ? allDesigns.find((d) => d.guid === itemGuid) : undefined;
-  const type = isTypeEditor ? allTypes.find((t) => t.guid === itemGuid) : undefined;
-  const quality = isQualityEditor ? allQualities.find((q) => q.guid === itemGuid) : undefined;
+  const design = isDesignApp ? allDesigns.find((d) => d.guid === itemGuid) : undefined;
+  const type = isTypeApp ? allTypes.find((t) => t.guid === itemGuid) : undefined;
+  const quality = isQualityApp ? allQualities.find((q) => q.guid === itemGuid) : undefined;
 
   // Build breadcrumb items for designs
   const designNameItems = useMemo(() => {
@@ -589,7 +589,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       }));
   }, [homeName, homeKind, kits, store, t]);
 
-  // Build breadcrumb items for filtered names in kit editor
+  // Build breadcrumb items for filtered names in kit app
   const filteredNameItems = useMemo(() => {
     if (!kit || !filteredKind) return [];
     const nameSet = new Set<string>();
@@ -606,7 +606,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }));
   }, [kit, filteredKind, allDesigns, allTypes, kitGuid]);
 
-  // Build breadcrumb items for filtered variants in kit editor
+  // Build breadcrumb items for filtered variants in kit app
   const filteredVariantItems = useMemo(() => {
     if (!kit || !filteredKind || !filteredName) return [];
     const variantSet = new Set<string>();
@@ -631,7 +631,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }));
   }, [kit, filteredKind, filteredName, allDesigns, allTypes, kitGuid, t]);
 
-  // Build breadcrumb items for filtered views in kit editor
+  // Build breadcrumb items for filtered views in kit app
   const filteredViewItems = useMemo(() => {
     if (!kit || filteredKind !== "designs" || !filteredName || filteredVariant === null) return [];
     const viewSet = new Set<string>();
@@ -743,7 +743,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             )}
           </>
         ) : null}
-        {isKitEditor && (
+        {isKitApp && (
           <>
             <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
@@ -822,7 +822,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             )}
           </>
         )}
-        {isDesignEditor && design && (
+        {isDesignApp && design && (
           <>
             <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
@@ -894,7 +894,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
           </>
         )}
-        {isTypeEditor && type && (
+        {isTypeApp && type && (
           <>
             <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
@@ -946,7 +946,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
           </>
         )}
-        {isQualityEditor && quality && (
+        {isQualityApp && quality && (
           <>
             <BreadcrumbBreak />
             <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
@@ -1291,23 +1291,23 @@ const PanelToggles: FC = ({}) => {
   const { t } = useTranslation();
   const tooltipText = useTooltip();
   const { kit, design, type, quality } = useParams();
-  const editorType = useEditorType();
-  const panelConfig = getPanelConfigs(t)[editorType];
-  const visiblePanels = useEditorPanelVisibility();
-  const editorCommands = useEditorCommands();
+  const appType = useAppType();
+  const panelConfig = getPanelConfigs(t)[appType];
+  const visiblePanels = useAppPanelVisibility();
+  const appCommands = useAppCommands();
   const homeCommands = useHomeCommands();
   const isValidKit = kit && !["temporary", "local", "remote"].includes(kit);
-  const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit } : undefined);
-  const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
-  const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
-  const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit, quality } : undefined);
+  const kitAppCommands = useKitAppCommands(isValidKit ? { kit } : undefined);
+  const designAppCommands = useDesignAppCommands(isValidKit && design ? { kit, design } : undefined);
+  const typeAppCommands = useTypeAppCommands(isValidKit && type ? { kit, type } : undefined);
+  const qualityAppCommands = useQualityAppCommands(isValidKit && quality ? { kit, quality } : undefined);
   const commands: Record<string, any> = {
     home: homeCommands,
-    kit: kitEditorCommands,
-    design: designEditorCommands,
-    type: typeEditorCommands,
-    quality: qualityEditorCommands,
-    docs: editorCommands,
+    kit: kitAppCommands,
+    design: designAppCommands,
+    type: typeAppCommands,
+    quality: qualityAppCommands,
+    docs: appCommands,
   };
   const isMobile = useIsMobile();
 
@@ -1359,7 +1359,7 @@ const PanelToggles: FC = ({}) => {
   const rightDropdownAriaLabel = tooltipText("navbar.panelToggle.right.label") || undefined;
 
   const handleToggle = (panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -1397,7 +1397,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleWorkbenchPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
         handleToggle(activeWorkbenchPanel as keyof PanelVisibility);
@@ -1411,7 +1411,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleWorkbenchValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
     workbenchSelectionRef.current = value;
 
@@ -1428,7 +1428,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleHudPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
         handleToggle(activeHudPanel as keyof PanelVisibility);
@@ -1442,7 +1442,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleHudValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
     hudSelectionRef.current = value;
 
@@ -1459,7 +1459,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleRightPressedChange = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
         handleToggle(activeRightPanel as keyof PanelVisibility);
@@ -1473,7 +1473,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleRightValueChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
     rightSelectionRef.current = value;
 
@@ -1602,10 +1602,10 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   const pathParts = currentPathname.split("/").filter((p) => p);
   const isKitsPath = pathParts[0] === "kits";
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const isDesignEditorPath = isKitsPath && pathParts[2] === "designs" && uuidRegex.test(pathParts[3] || "");
-  const isTypeEditorPath = isKitsPath && pathParts[2] === "types" && uuidRegex.test(pathParts[3] || "");
+  const isDesignAppPath = isKitsPath && pathParts[2] === "designs" && uuidRegex.test(pathParts[3] || "");
+  const isTypeAppPath = isKitsPath && pathParts[2] === "types" && uuidRegex.test(pathParts[3] || "");
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
-  const itemGuid = isDesignEditorPath || isTypeEditorPath ? pathParts[3] : null;
+  const itemGuid = isDesignAppPath || isTypeAppPath ? pathParts[3] : null;
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
@@ -1634,20 +1634,20 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
     if (!currentKit?.qualities) return [];
     return (currentKit.qualities as any[]).filter((q): q is Quality => typeof q === "object" && q.guid !== undefined);
   }, [currentKit?.qualities]);
-  const filteredKind = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
-  const filteredName = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("name") : null;
-  const filteredVariant = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("variant") : null;
-  const filteredView = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("view") : null;
-  const selectedGuid = kitGuid && !isDesignEditorPath && !isTypeEditorPath ? searchParams.get("select") : null;
+  const filteredKind = kitGuid && !isDesignAppPath && !isTypeAppPath ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitGuid && !isDesignAppPath && !isTypeAppPath ? searchParams.get("name") : null;
+  const filteredVariant = kitGuid && !isDesignAppPath && !isTypeAppPath ? searchParams.get("variant") : null;
+  const filteredView = kitGuid && !isDesignAppPath && !isTypeAppPath ? searchParams.get("view") : null;
+  const selectedGuid = kitGuid && !isDesignAppPath && !isTypeAppPath ? searchParams.get("select") : null;
   const currentDesign = useMemo(() => {
-    if (!isDesignEditorPath || !itemGuid) return undefined;
+    if (!isDesignAppPath || !itemGuid) return undefined;
     return allDesigns.find((d) => d.guid === itemGuid);
-  }, [isDesignEditorPath, allDesigns, itemGuid]);
+  }, [isDesignAppPath, allDesigns, itemGuid]);
   const currentType = useMemo(() => {
-    if (!isTypeEditorPath || !itemGuid) return undefined;
+    if (!isTypeAppPath || !itemGuid) return undefined;
     return allTypes.find((t) => t.guid === itemGuid);
-  }, [isTypeEditorPath, allTypes, itemGuid]);
-  const isKitEditorPath = Boolean(kitGuid && !isDesignEditorPath && !isTypeEditorPath);
+  }, [isTypeAppPath, allTypes, itemGuid]);
+  const isKitAppPath = Boolean(kitGuid && !isDesignAppPath && !isTypeAppPath);
   const breadcrumbTrail = useMemo(() => {
     const items: string[] = [];
     const add = (value: string | null | undefined) => {
@@ -1665,7 +1665,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
       add(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`);
       if (homeVersion !== null) add(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}&version=${encodeURIComponent(homeVersion)}`);
     }
-    if (isKitEditorPath && kitGuid && filteredKind) {
+    if (isKitAppPath && kitGuid && filteredKind) {
       const base = `/kits/${kitGuid}`;
       const kindParams = new URLSearchParams();
       kindParams.set("kind", filteredKind);
@@ -1687,12 +1687,12 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
         }
       }
     }
-    if (isDesignEditorPath && kitGuid && currentDesign) {
+    if (isDesignAppPath && kitGuid && currentDesign) {
       add(`/kits/${kitGuid}?kind=designs`);
       add(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(currentDesign.name)}&select=${currentDesign.guid}`);
       add(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(currentDesign.name)}&variant=${encodeURIComponent(currentDesign.variant || "")}&select=${currentDesign.guid}`);
     }
-    if (isTypeEditorPath && kitGuid && currentType) {
+    if (isTypeAppPath && kitGuid && currentType) {
       add(`/kits/${kitGuid}?kind=types`);
       add(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(currentType.name)}&select=${currentType.guid}`);
       add(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(currentType.name)}&variant=${encodeURIComponent(currentType.variant || "")}&select=${currentType.guid}`);
@@ -1706,15 +1706,15 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
     currentKit,
     homeName,
     homeVersion,
-    isKitEditorPath,
+    isKitAppPath,
     filteredKind,
     filteredName,
     filteredVariant,
     filteredView,
     selectedGuid,
-    isDesignEditorPath,
+    isDesignAppPath,
     currentDesign,
-    isTypeEditorPath,
+    isTypeAppPath,
     currentType,
     currentPath,
     allDesigns,
@@ -1731,23 +1731,23 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   const isAtRoot = !upTarget;
 
   // Always call hooks unconditionally
-  const editorType = useEditorType();
-  const panelConfig = getPanelConfigs(t)[editorType];
-  const visiblePanels = useEditorPanelVisibility();
+  const appType = useAppType();
+  const panelConfig = getPanelConfigs(t)[appType];
+  const visiblePanels = useAppPanelVisibility();
   const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
   const { kit, design, type, quality } = useParams();
   const homeCommands = useHomeCommands();
   const isValidKit = kit && !["temporary", "local", "remote"].includes(kit);
-  const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit } : undefined);
-  const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit, design } : undefined);
-  const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit, type } : undefined);
-  const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit, quality } : undefined);
+  const kitAppCommands = useKitAppCommands(isValidKit ? { kit } : undefined);
+  const designAppCommands = useDesignAppCommands(isValidKit && design ? { kit, design } : undefined);
+  const typeAppCommands = useTypeAppCommands(isValidKit && type ? { kit, type } : undefined);
+  const qualityAppCommands = useQualityAppCommands(isValidKit && quality ? { kit, quality } : undefined);
   const commands: Record<string, any> = {
     home: homeCommands,
-    kit: kitEditorCommands,
-    design: designEditorCommands,
-    type: typeEditorCommands,
-    quality: qualityEditorCommands,
+    kit: kitAppCommands,
+    design: designAppCommands,
+    type: typeAppCommands,
+    quality: qualityAppCommands,
   };
 
   // Find the currently active panel (used by mobile)
@@ -1757,7 +1757,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   const mobilePanelTooltip = activePanel ? tooltip(`navbar.panelToggle.${activePanel}.${isAnyPanelOpen ? "hide" : "show"}`) : undefined;
 
   const handleMobilePanelToggle = (pressed: boolean) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       // Open the active panel if none is open
       if (activePanel && !visiblePanels[activePanel as keyof PanelVisibility]) {
@@ -1776,7 +1776,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   };
 
   const handleMobilePanelChange = (value: string | undefined) => {
-    const togglePanel = commands[editorType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
 
     // Close all other panels and open the selected one
@@ -1858,7 +1858,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
               hotkey={toolbarConfig.hotkey}
               pressed={!!visiblePanels.toolbar}
               onPressedChange={() => {
-                commands[editorType]?.togglePanel("toolbar");
+                commands[appType]?.togglePanel("toolbar");
               }}
             >
               <toolbarConfig.icon size={16} />
@@ -1935,29 +1935,29 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
 
   const secondPart = pathParts[2];
   const thirdPart = pathParts[3];
-  const isDesignEditor = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
-  const isTypeEditor = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  const isQualityEditor = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
+  const isDesignApp = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
+  const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
+  const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
 
-  const editorType = useEditorType();
-  const visiblePanels = useEditorPanelVisibility();
-  const panelConfig = getPanelConfigs(t)[editorType];
+  const appType = useAppType();
+  const visiblePanels = useAppPanelVisibility();
+  const panelConfig = getPanelConfigs(t)[appType];
   const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
   const homeCommands = useHomeCommands();
   const isValidKit = kitGuid && !["temporary", "local", "remote"].includes(kitGuid);
-  const kitEditorCommands = useKitEditorCommands(isValidKit ? { kit: kitGuid } : undefined);
-  const design = thirdPart && isDesignEditor ? thirdPart : null;
-  const type = thirdPart && isTypeEditor ? thirdPart : null;
+  const kitAppCommands = useKitAppCommands(isValidKit ? { kit: kitGuid } : undefined);
+  const design = thirdPart && isDesignApp ? thirdPart : null;
+  const type = thirdPart && isTypeApp ? thirdPart : null;
   const quality = thirdPart && secondPart === "qualities" && thirdPart ? thirdPart : null;
-  const designEditorCommands = useDesignEditorCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
-  const typeEditorCommands = useTypeEditorCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
-  const qualityEditorCommands = useQualityEditorCommands(isValidKit && quality ? { kit: kitGuid, quality } : undefined);
+  const designAppCommands = useDesignAppCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
+  const typeAppCommands = useTypeAppCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
+  const qualityAppCommands = useQualityAppCommands(isValidKit && quality ? { kit: kitGuid, quality } : undefined);
   const commands: Record<string, any> = {
     home: homeCommands,
-    kit: kitEditorCommands,
-    design: designEditorCommands,
-    type: typeEditorCommands,
-    quality: qualityEditorCommands,
+    kit: kitAppCommands,
+    design: designAppCommands,
+    type: typeAppCommands,
+    quality: qualityAppCommands,
   };
 
   useEffect(() => {
@@ -2012,7 +2012,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
             hotkey={toolbarConfig.hotkey}
             pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
-              commands[editorType]?.togglePanel("toolbar");
+              commands[appType]?.togglePanel("toolbar");
             }}
           >
             <toolbarConfig.icon />

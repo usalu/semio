@@ -199,7 +199,7 @@
     "connections.multipleTitle": "Multiple Connections",
     "selection.multipleTitle": "Multiple Selection",
     "selectOnlyPiecesOrConnections": "Select only pieces or only connections to edit details.",
-    "editorTitle": "Design Editor",
+    "appTitle": "Design App",
     "snappiness": "Snappiness",
     "gridSize": "Grid Size",
     "variantPrefix": "Variant",
@@ -318,7 +318,7 @@
     "created": "Created",
     "sortByName": "Sort by name"
   },
-  "kitEditor": {
+  "kitApp": {
     "designs": "Designs",
     "designs.multipleTitle": "Multiple Designs",
     "types": "Types",
@@ -471,7 +471,7 @@
     "isMinExcluded": "Exclude Minimum",
     "max": "Maximum",
     "isMaxExcluded": "Exclude Maximum",
-    "editorSettings": "Quality editor settings",
+    "appSettings": "Quality app settings",
     "functions": "Functions",
     "qualities": "Qualities",
     "noQualities": "No qualities available",

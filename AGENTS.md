@@ -393,7 +393,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── de.json
 │ │ │ └── en.json
 │ │ ├── sketchpad
-│ │ │ ├── editors
+│ │ │ ├── apps
 │ │ │ │ ├── index.tsx
 │ │ │ │ ├── registry.tsx
 │ │ │ │ ├── design
@@ -404,13 +404,13 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── tools_registry
+│ │ │ │ │ ├── tools
 │ │ │ │ │ │ ├── index.tsx
 │ │ │ │ │ │ ├── LassoTool.tsx
 │ │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered editor config
-│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── App.tsx
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
 │ │ │ │ ├── docs
@@ -421,8 +421,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered editor config
-│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── App.tsx
 │ │ │ │ │ ├── mdx-loader.ts
 │ │ │ │ │ ├── mdx-provider.tsx
 │ │ │ │ │ ├── registry.ts
@@ -431,8 +431,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Table.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered editor config
-│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── App.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
 │ │ │ │ │ ├── canvas
@@ -441,8 +441,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ └── Settings.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered editor config
-│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── App.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── quality
 │ │ │ │ │ ├── canvas
@@ -452,11 +452,11 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── tools_registry
+│ │ │ │ │ ├── tools
 │ │ │ │ │ │ └── index.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered editor config
-│ │ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── App.tsx
 │ │ │ │ │ ├── functions.ts
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
@@ -467,13 +467,13 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ ├── tools_registry
+│ │ │ │ ├── tools
 │ │ │ │ │ ├── index.tsx
 │ │ │ │ │ ├── PortTool.tsx
 │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered editor config
-│ │ │ │ ├── Editor.tsx
+│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ ├── App.tsx
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
 │ │ │ ├── docs
@@ -513,7 +513,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ └── Workbench.tsx
 │ │ │ ├── Canvas.tsx
 │ │ │ ├── commands.ts
-│ │ │ ├── Editor.tsx
+│ │ │ ├── App.tsx
 │ │ │ ├── Footer.tsx
 │ │ │ ├── Navbar.tsx
 │ │ │ ├── Panel.tsx
@@ -604,35 +604,35 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - State managment ALWAYS is in the corresponding store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
-- There is a transaction mechanism for kits. Every editor transaction is an extended kit transaction. The undo redo manager is on editor level and stores the diff of the transaction along with the editor state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
+- There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 
 #### Architecture - Open-Closed Principle
 
 The codebase follows the Open-Closed Principle (OCP): closed for modification, open for extension. Adding new features ONLY requires adding new files/folders, NEVER modifying existing ones.
 
-##### Adding a New Editor
+##### Adding a New App
 
-To add a new editor:
-1. Create a folder under `js/js/sketchpad/editors/{editorname}/`
-2. Add `config.ts` exporting `EditorConfig`
-3. Add `Editor.tsx` with default export FC
-4. Add `store.tsx` with editor state
-5. Optionally add `canvas/`, `panels/`, `tools_registry/`, `commands.ts`
+To add a new app:
 
-The editor is automatically discovered via `import.meta.glob('./*/config.ts')`.
+1. Create a folder under `js/js/sketchpad/apps/{appname}/`
+2. Add `config.ts` exporting `AppConfig`
+3. Add `App.tsx` with default export FC
+4. Add `store.tsx` with app state
+5. Optionally add `canvas/`, `panels/`, `tools/`, `commands.ts`
+
+The app is automatically discovered via `import.meta.glob('./*/config.ts')`.
 
 Example `config.ts`:
-```typescript
-import { EditorConfig } from "../registry";
-import MyEditor from "./Editor";
 
-export const config: EditorConfig = {
-  id: "myeditor",
-  component: MyEditor,
+```typescript
+import { AppConfig } from "../registry";
+import MyApp from "./App";
+
+export const config: AppConfig = {
+  id: "myapp",
+  component: MyApp,
   routeSegments: [{ path: "my/:id", paramName: "id" }],
-  getPanels: (t) => [
-    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }
-  ],
+  getPanels: (t) => [{ key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }],
   matchesPath: (pathParts) => pathParts[0] === "my",
   order: 50,
 };
@@ -640,15 +640,17 @@ export const config: EditorConfig = {
 
 ##### Adding a New Tool
 
-To add a new tool to an editor:
-1. Create a file `editors/{editor}/tools_registry/*Tool.tsx`
+To add a new tool to an app:
+
+1. Create a file `apps/{app}/tools/*Tool.tsx`
 2. Export tool objects with `id` and `render` properties
 
 Tools are automatically discovered via `import.meta.glob('./*Tool.tsx')`.
 
 Example:
+
 ```typescript
-export const MyTool: Tool<MyEditorState> = {
+export const MyTool: Tool<MyAppState> = {
   id: ToolType.MY_TOOL,
   label: "My Tool",
   icon: <Icon />,
@@ -658,7 +660,7 @@ export const MyTool: Tool<MyEditorState> = {
 
 ##### Adding Panel Sections
 
-Panel sections are dynamically added in the editor's `useEffect`:
+Panel sections are dynamically added in the app's `useEffect`:
 
 ```typescript
 useEffect(() => {
@@ -669,7 +671,7 @@ useEffect(() => {
     order: 1,
   });
   return () => removeSection("details", "my-section");
-}, [editorType, addSection, removeSection]);
+}, [appType, addSection, removeSection]);
 ```
 
 #### Styling
@@ -685,17 +687,17 @@ This document describes the generalized store hierarchy for the Semio applicatio
 The store architecture consists of three levels of abstraction:
 
 1. **Store** - Base class for any component with data
-2. **EditorStore** - Base class for editors with transaction support and undo/redo
-3. **KitDiffEditorStore** - Base class for editors that modify kits and track both editor-specific and kit diffs
+2. **AppStore** - Base class for apps with transaction support and undo/redo
+3. **KitDiffAppStore** - Base class for apps that modify kits and track both app-specific and kit diffs
 
 #### Store Hierarchy
 
 ```
 Store<TState>
   ↓ extends
-EditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult>
+AppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult>
   ↓ extends
-KitDiffEditorStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult>
+KitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult>
 ```
 
 #### 1. Store (Base Class)
@@ -718,9 +720,9 @@ The `Store` class is the foundation for all components that hold data.
 
 Use this for simple components that only need state management without editing capabilities (e.g., HomeStore).
 
-#### 2. EditorStore (extends Store)
+#### 2. AppStore (extends Store)
 
-The `EditorStore` adds transaction support with undo/redo functionality for any editor.
+The `AppStore` adds transaction support with undo/redo functionality for any app.
 
 ##### Responsibilities
 
@@ -733,7 +735,7 @@ The `EditorStore` adds transaction support with undo/redo functionality for any 
 
 ##### Transaction Model
 
-Every editor supports transactions:
+Every app supports transactions:
 
 1. **Start Transaction**: `startTransaction()`
    - Activates transaction mode
@@ -756,12 +758,12 @@ Every editor supports transactions:
 ##### Edit Structure
 
 ```typescript
-interface EditorEdit<TSelectionDiff> {
-  do: EditorStep<TSelectionDiff>;
-  undo: EditorStep<TSelectionDiff>;
+interface AppEdit<TSelectionDiff> {
+  do: AppStep<TSelectionDiff>;
+  undo: AppStep<TSelectionDiff>;
 }
 
-interface EditorStep<TSelectionDiff> {
+interface AppStep<TSelectionDiff> {
   selectionDiff?: TSelectionDiff;
 }
 ```
@@ -791,27 +793,27 @@ Each edit stores:
 
 ##### Usage
 
-Use this for editors that don't modify kits (e.g., HomeStore for managing the home screen).
+Use this for apps that don't modify kits (e.g., HomeStore for managing the home screen).
 
-#### 3. KitDiffEditorStore (extends EditorStore)
+#### 3. KitDiffAppStore (extends AppStore)
 
-The `KitDiffEditorStore` extends EditorStore for editors that modify kits (designs, types).
+The `KitDiffAppStore` extends AppStore for apps that modify kits (designs, types).
 
 ##### Additional Responsibilities
 
-- Tracks kit diffs alongside editor-specific diffs
+- Tracks kit diffs alongside app-specific diffs
 - Applies kit changes through KitStore
-- Records both editor and kit changes in edits
+- Records both app and kit changes in edits
 
 ##### Edit Structure
 
 ```typescript
-interface KitDiffEditorEdit<TSelectionDiff> {
-  do: KitDiffEditorStep<TSelectionDiff>;
-  undo: KitDiffEditorStep<TSelectionDiff>;
+interface KitDiffAppEdit<TSelectionDiff> {
+  do: KitDiffAppStep<TSelectionDiff>;
+  undo: KitDiffAppStep<TSelectionDiff>;
 }
 
-interface KitDiffEditorStep<TSelectionDiff> {
+interface KitDiffAppStep<TSelectionDiff> {
   kitDiff?: KitDiff;
   selectionDiff?: TSelectionDiff;
 }
@@ -826,7 +828,7 @@ Each edit stores:
 
 ##### Undo/Redo Behavior
 
-Extends EditorStore undo/redo to also:
+Extends AppStore undo/redo to also:
 
 - Apply/revert kit diffs through `kit().change(kitDiff)`
 - Handle both kit and selection changes atomically
@@ -837,15 +839,15 @@ Extends EditorStore undo/redo to also:
 
 ##### Usage
 
-Use this for editors that modify kits:
+Use this for apps that modify kits:
 
-- **DesignEditorStore** - Edit designs (pieces, connections)
-- **TypeEditorStore** - Edit types (ports, representations)
-- **KitEditorStore** - Edit kits (types, designs, qualities, files, authors)
+- **DesignAppStore** - Edit designs (pieces, connections)
+- **TypeAppStore** - Edit types (ports, representations)
+- **KitAppStore** - Edit kits (types, designs, qualities, files, authors)
 
 #### Concrete Implementations
 
-##### DesignEditorStore
+##### DesignAppStore
 
 Edits design content:
 
@@ -853,7 +855,7 @@ Edits design content:
 - Kit diffs: piece changes, connection changes
 - Transaction support for complex multi-step operations
 
-##### TypeEditorStore
+##### TypeAppStore
 
 Edits type definitions:
 
@@ -861,7 +863,7 @@ Edits type definitions:
 - Kit diffs: port changes, representation changes
 - Transaction support for type modifications
 
-##### KitEditorStore
+##### KitAppStore
 
 Edits kit metadata:
 
@@ -871,7 +873,7 @@ Edits kit metadata:
 
 ##### HomeStore
 
-Manages home screen (extends EditorStore, not KitDiffEditorStore):
+Manages home screen (extends AppStore, not KitDiffAppStore):
 
 - Selection: kits
 - No kit diffs (doesn't modify kit content)
@@ -879,7 +881,7 @@ Manages home screen (extends EditorStore, not KitDiffEditorStore):
 
 #### Command Pattern
 
-All editors use a command pattern:
+All apps use a command pattern:
 
 ```typescript
 interface CommandContext {
@@ -887,8 +889,8 @@ interface CommandContext {
 }
 
 interface CommandResult {
-  diff?: TDiff;      // Editor-specific diff
-  kitDiff?: KitDiff; // Kit diff (only for KitDiffEditorStore)
+  diff?: TDiff;      // App-specific diff
+  kitDiff?: KitDiff; // Kit diff (only for KitDiffAppStore)
 }
 
 executeCommand<T>(command: string, ...args): Promise<T>
@@ -899,7 +901,7 @@ executeCommand<T>(command: string, ...args): Promise<T>
 1. Look up command in registry
 2. Build context with current state
 3. Execute command function
-4. Apply diffs (editor diff + kit diff)
+4. Apply diffs (app diff + kit diff)
 5. Record edit for undo/redo
 6. Return result
 
@@ -914,11 +916,11 @@ executeCommand<T>(command: string, ...args): Promise<T>
 
 #### Files
 
-- `js/js/sketchpad/store.tsx` - Base Store, EditorStore, KitDiffEditorStore
-- `js/js/sketchpad/editors/design/store.tsx` - DesignEditorStore
-- `js/js/sketchpad/editors/type/store.tsx` - TypeEditorStore
-- `js/js/sketchpad/editors/kit/store.tsx` - KitEditorStore
-- `js/js/sketchpad/editors/home/store.tsx` - HomeStore
+- `js/js/sketchpad/store.tsx` - Base Store, AppStore, KitDiffAppStore
+- `js/js/sketchpad/apps/design/store.tsx` - DesignAppStore
+- `js/js/sketchpad/apps/type/store.tsx` - TypeAppStore
+- `js/js/sketchpad/apps/kit/store.tsx` - KitAppStore
+- `js/js/sketchpad/apps/home/store.tsx` - HomeStore
 
 # Hierarchies
 

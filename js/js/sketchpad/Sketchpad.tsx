@@ -26,10 +26,10 @@ import { TooltipProvider } from "../elements/display/Tooltip";
 
 import { DraggableAvatar } from "../elements/display/Avatar";
 import { Design, Type } from "../semio";
-import "./editors";
-import { editorRegistry } from "./editors";
-import { DesignAvatar, TypeAvatar } from "./editors/design/panels/Workbench";
-import { QualityAvatar } from "./editors/quality/panels/Workbench";
+import "./apps";
+import { appRegistry } from "./apps";
+import { DesignAvatar, TypeAvatar } from "./apps/design/panels/Workbench";
+import { QualityAvatar } from "./apps/quality/panels/Workbench";
 import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { FocusProvider, PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
@@ -48,8 +48,8 @@ import {
   SketchpadState,
   Theme,
   TypeScopeProvider,
-  useEditorPanelVisibility,
-  useEditorType,
+  useAppPanelVisibility,
+  useAppType,
   useIsMobile,
   useIsNavbarExpanded,
   useLayout,
@@ -126,15 +126,15 @@ const createScopeRoute = (ParamName: string, ScopeProvider?: React.ComponentType
 };
 
 const generateRoutes = (): ReactNode[] => {
-  const editors = editorRegistry.getAllEditors();
-  const buildRoute = (editor: (typeof editors)[0]): ReactNode[] => {
-    const { routeSegments, component: EditorComponent, additionalPaths } = editor;
+  const apps = appRegistry.getAllApps();
+  const buildRoute = (app: (typeof apps)[0]): ReactNode[] => {
+    const { routeSegments, component: AppComponent, additionalPaths } = app;
     const routes: ReactNode[] = [];
     if (routeSegments.length === 0) {
-      routes.push(<Route key={editor.id} index element={<EditorComponent />} />);
+      routes.push(<Route key={app.id} index element={<AppComponent />} />);
       if (additionalPaths) {
         additionalPaths.forEach((path) => {
-          routes.push(<Route key={`${editor.id}-${path}`} path={path} element={<EditorComponent />} />);
+          routes.push(<Route key={`${app.id}-${path}`} path={path} element={<AppComponent />} />);
         });
       }
       return routes;
@@ -147,13 +147,13 @@ const generateRoutes = (): ReactNode[] => {
     if (lastSegment.paramName && lastSegment.scopeProvider) {
       const ScopeRoute = createScopeRoute(lastSegment.paramName, lastSegment.scopeProvider);
       currentElement = (
-        <Route key={`${editor.id}-${routeSegments.length - 1}`} path={lastSegment.path} element={<ScopeRoute />}>
-          <Route key={`${editor.id}-content`} index element={<EditorComponent />} />
+        <Route key={`${app.id}-${routeSegments.length - 1}`} path={lastSegment.path} element={<ScopeRoute />}>
+          <Route key={`${app.id}-content`} index element={<AppComponent />} />
         </Route>
       );
     } else {
       // For wildcard or regular paths, put the component directly on the route
-      currentElement = <Route key={`${editor.id}-${routeSegments.length - 1}`} path={lastSegment.path} element={<EditorComponent />} />;
+      currentElement = <Route key={`${app.id}-${routeSegments.length - 1}`} path={lastSegment.path} element={<AppComponent />} />;
     }
 
     // Wrap with parent segments
@@ -162,13 +162,13 @@ const generateRoutes = (): ReactNode[] => {
       const ScopeRoute = segment.paramName && segment.scopeProvider ? createScopeRoute(segment.paramName, segment.scopeProvider) : undefined;
       if (ScopeRoute) {
         currentElement = (
-          <Route key={`${editor.id}-${i}`} path={segment.path} element={<ScopeRoute />}>
+          <Route key={`${app.id}-${i}`} path={segment.path} element={<ScopeRoute />}>
             {currentElement}
           </Route>
         );
       } else {
         currentElement = (
-          <Route key={`${editor.id}-${i}`} path={segment.path} element={<Outlet />}>
+          <Route key={`${app.id}-${i}`} path={segment.path} element={<Outlet />}>
             {currentElement}
           </Route>
         );
@@ -178,10 +178,10 @@ const generateRoutes = (): ReactNode[] => {
     return routes;
   };
   const groupedRoutes: Record<string, ReactNode[]> = {};
-  editors.forEach((editor) => {
-    const depth = editor.routeSegments.length;
+  apps.forEach((app) => {
+    const depth = app.routeSegments.length;
     if (!groupedRoutes[depth]) groupedRoutes[depth] = [];
-    groupedRoutes[depth].push(...buildRoute(editor));
+    groupedRoutes[depth].push(...buildRoute(app));
   });
   const sortedDepths = Object.keys(groupedRoutes)
     .map(Number)
@@ -197,8 +197,8 @@ const SketchpadBase: FC = () => {
   const { kit, design, type: typeParam, quality } = useParams();
   const layout = useLayout();
   const theme = useTheme();
-  const editorType = useEditorType();
-  const visiblePanels = useEditorPanelVisibility();
+  const appType = useAppType();
+  const visiblePanels = useAppPanelVisibility();
   const sketchpad = useSketchpad() as SketchpadState;
   const panelSizes = sketchpad.panelSizes;
   const isFullscreen = sketchpad.isFullscreen;
