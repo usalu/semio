@@ -339,28 +339,37 @@ class QualityEditorStore extends KitDiffEditorStore<QualityEditorState, QualityE
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     if (command === "semio.qualityEditor.startTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.qualityEditor.finalizeTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
       return {} as T;
     }
     if (command === "semio.qualityEditor.abortTransaction") {
+      console.log(`Executing (special) command: "${command}"`);
       this.abortTransaction();
       return {} as T;
     }
     if (command === "semio.qualityEditor.undo") {
+      console.log(`Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.qualityEditor.redo") {
+      console.log(`Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }
 
+    console.group(`Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
-    if (!callback) throw new Error(`Command "${command}" not found in quality editor store`);
+    if (!callback) {
+      console.groupEnd();
+      throw new Error(`Command "${command}" not found in quality editor store`);
+    }
 
     const kitStore = this.kit();
     const state = this.snapshot();
@@ -385,6 +394,7 @@ class QualityEditorStore extends KitDiffEditorStore<QualityEditorState, QualityE
       });
     }
     this.recordEdit(result);
+    console.groupEnd();
     return result as T;
   }
 

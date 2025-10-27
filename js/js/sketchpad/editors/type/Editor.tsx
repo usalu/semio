@@ -20,15 +20,18 @@
 // #endregion
 
 import { FC, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, ToolType, useEditorType } from "../../store";
 import TypeScene from "./canvas/Scene";
+import { KitSection } from "../kit/panels/Details";
 import { AttributesSection, AuthorsSection, PortSection, PortsListSection, PortsMultipleSection, RepresentationsSection, TypeDetails } from "./panels/Details";
 import { useTypeEditor, useTypeEditorCommands, useTypeEditorSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
 const Editor: FC = () => {
+  const { t } = useTranslation();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const editorType = useEditorType();
@@ -88,84 +91,63 @@ const Editor: FC = () => {
 
     // Remove all previous sections
     removeSection("details", "type-details");
-    removeSection("details", "type-representations");
-    removeSection("details", "type-ports-list");
-    removeSection("details", "type-authors");
-    removeSection("details", "type-attributes");
     removeSection("details", "type-port");
     removeSection("details", "type-ports-multiple");
+    removeSection("details", "type-kit");
 
-    if (!hasPorts) {
-      // No selection: show Type section
-      addSection("details", {
-        id: "type-details",
-        label: "Type",
-        order: 0,
-        defaultOpen: true,
-        content: () => <TypeDetails />,
-      });
-
-      addSection("details", {
-        id: "type-representations",
-        label: "Representations",
-        order: 1,
-        defaultOpen: true,
-        content: () => <RepresentationsSection />,
-      });
-
-      addSection("details", {
-        id: "type-ports-list",
-        label: "Ports",
-        order: 2,
-        defaultOpen: true,
-        content: () => <PortsListSection />,
-      });
-
-      addSection("details", {
-        id: "type-authors",
-        label: "Authors",
-        order: 3,
-        defaultOpen: true,
-        content: () => <AuthorsSection />,
-      });
-
-      addSection("details", {
-        id: "type-attributes",
-        label: "Attributes",
-        order: 4,
-        defaultOpen: true,
-        content: () => <AttributesSection />,
-      });
-    } else if (hasSinglePort) {
-      // Single port selected: show Port section
+    if (hasSinglePort) {
+      // Single port selected: show Port section then Type section
       addSection("details", {
         id: "type-port",
-        label: "Port",
+        label: t("port.title"),
         order: 0,
         defaultOpen: true,
         content: () => <PortSection portGuid={selection.ports![0]} />,
       });
     } else if (hasMultiplePorts) {
-      // Multiple ports selected: show Ports section
+      // Multiple ports selected: show Ports section then Type section
       addSection("details", {
         id: "type-ports-multiple",
-        label: "Ports",
+        label: t("ports.multipleTitle", { count: selection.ports!.length }),
         order: 0,
         defaultOpen: true,
         content: () => <PortsMultipleSection portGuids={selection.ports!} />,
       });
     }
 
+    // Always show Type section (with all subsections)
+    addSection("details", {
+      id: "type-details",
+      label: t("type.title"),
+      order: 50,
+      defaultOpen: true,
+      content: () => (
+        <>
+          <TypeDetails />
+          <RepresentationsSection />
+          <PortsListSection />
+          <AuthorsSection />
+          <AttributesSection />
+        </>
+      ),
+    });
+
+    // Always add Kit section at the bottom
+    addSection("details", {
+      id: "type-kit",
+      label: t("kit.title"),
+      order: 100,
+      defaultOpen: true,
+      content: () => <KitSection />,
+    });
+
     return () => {
       removeSection("details", "type-details");
-      removeSection("details", "type-representations");
-      removeSection("details", "type-ports-list");
-      removeSection("details", "type-authors");
-      removeSection("details", "type-attributes");
       removeSection("details", "type-port");
       removeSection("details", "type-ports-multiple");
+      removeSection("details", "type-kit");
     };
-  }, [addSection, removeSection, editorType, selection]);
+  }, [addSection, removeSection, editorType, selection, t]);
 
   return (
     <Canvas>

@@ -1098,13 +1098,6 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">
-            {t("type.multiplePortsSelected", { count: ports.length })}
-          </p>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
           <Input
             label={t("type.portFamily")}
             value={commonFamily || ""}

@@ -50,6 +50,7 @@ import { useKitEditorCommands } from "../kit/store";
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
+import { KitSection } from "../kit/panels/Details";
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignEditorFullscreenWindow, useDesignEditor, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
@@ -153,12 +154,13 @@ const Editor: FC<EditorProps> = () => {
     removeSection("details", "design-pieces");
     removeSection("details", "design-connections");
     removeSection("details", "design-mixed");
+    removeSection("details", "design-kit");
 
     if (!hasSelection) {
       addSection("details", {
         id: "design-details",
         label: t("design.title"),
-        order: 0,
+        order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
       });
@@ -168,16 +170,23 @@ const Editor: FC<EditorProps> = () => {
       addSection("details", {
         id: "design-port",
         label: t("port.title"),
-        order: 1,
+        order: 0,
         defaultOpen: true,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
+      });
+      addSection("details", {
+        id: "design-details",
+        label: t("design.title"),
+        order: 50,
+        defaultOpen: true,
+        content: () => <DesignSection />,
       });
     } else {
       if (hasPieces) {
         addSection("details", {
           id: "design-pieces",
-          label: selection.pieces!.length === 1 ? t("piece.piece") : t("design.pieces") + ` (${selection.pieces!.length})`,
-          order: 2,
+          label: selection.pieces!.length === 1 ? t("piece.piece") : t("pieces.multipleTitle"),
+          order: 0,
           defaultOpen: true,
           content: () => <PiecesSection />,
         });
@@ -187,8 +196,8 @@ const Editor: FC<EditorProps> = () => {
         const conns = findConnectionsInDesign(design!, connGuids);
         addSection("details", {
           id: "design-connections",
-          label: conns.length === 1 ? t("connection.title") : t("design.connections") + ` (${conns.length})`,
-          order: 3,
+          label: conns.length === 1 ? t("connection.title") : t("connections.multipleTitle"),
+          order: 10,
           defaultOpen: true,
           content: () => <ConnectionsSection connections={conns} />,
         });
@@ -196,8 +205,8 @@ const Editor: FC<EditorProps> = () => {
       if (hasPieces && hasConnections) {
         addSection("details", {
           id: "design-mixed",
-          label: t("piece.mixedSelection", { count: (selection.pieces?.length || 0) + (selection.connections?.length || 0) }),
-          order: 4,
+          label: t("selection.multipleTitle"),
+          order: 20,
           defaultOpen: true,
           content: () => (
             <TreeItem>
@@ -208,7 +217,22 @@ const Editor: FC<EditorProps> = () => {
           ),
         });
       }
+      addSection("details", {
+        id: "design-details",
+        label: t("design.title"),
+        order: 50,
+        defaultOpen: true,
+        content: () => <DesignSection />,
+      });
     }
+
+    addSection("details", {
+      id: "design-kit",
+      label: t("kit.title"),
+      order: 100,
+      defaultOpen: true,
+      content: () => <KitSection />,
+    });
 
     return () => {
       removeSection("details", "design-details");
@@ -216,8 +240,9 @@ const Editor: FC<EditorProps> = () => {
       removeSection("details", "design-pieces");
       removeSection("details", "design-connections");
       removeSection("details", "design-mixed");
+      removeSection("details", "design-kit");
     };
-  }, [selection, addSection, removeSection, editorType]);
+  }, [selection, addSection, removeSection, editorType, t, design]);
 
   const TypesWorkbenchContent: FC = () => {
     const typesByName = (kit.types || []).reduce((acc: Record<string, Type[]>, type: Type) => {
@@ -436,8 +461,7 @@ const Editor: FC<EditorProps> = () => {
       removeSection("workbench", "design-types");
       removeSection("workbench", "design-designs");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorType]);
+  }, [editorType, kit.types, kit.designs]);
 
   // Add settings section
   useEffect(() => {

@@ -1,9 +1,9 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
 import { File, Folder } from "lucide-react";
-import { FC, ReactNode, createContext, useContext, useCallback, useRef, useEffect, useState } from "react";
+import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Tabs as BaseTabs, TabsContent, TabsList, TabsTrigger } from "../../../elements/aggregation/Tabs";
 import { TreeContent, TreeItem, TreeSection } from "../../../elements/aggregation/Tree";
-import { Aside } from "../../../elements/docs/Aside";
+import { Aside } from "../../../elements/display/Aside";
 import { HeadingNode } from "./panels/Details";
 
 interface HeadingsContextValue {

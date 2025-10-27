@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Canvas, HorizontalWindows, VerticalWindows, Window } from "./Canvas";
+import Canvas, { HorizontalWindows, VerticalWindows } from "./Canvas";
 
 const meta = {
   title: "Elements/Canvas",

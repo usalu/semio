@@ -194,7 +194,10 @@
     "created": "Created",
     "updated": "Updated",
     "pieces": "Pieces",
+    "pieces.multipleTitle": "Multiple Pieces",
     "connections": "Connections",
+    "connections.multipleTitle": "Multiple Connections",
+    "selection.multipleTitle": "Multiple Selection",
     "selectOnlyPiecesOrConnections": "Select only pieces or only connections to edit details.",
     "editorTitle": "Design Editor",
     "snappiness": "Snappiness",
@@ -317,8 +320,11 @@
   },
   "kitEditor": {
     "designs": "Designs",
+    "designs.multipleTitle": "Multiple Designs",
     "types": "Types",
+    "types.multipleTitle": "Multiple Types",
     "qualities": "Qualities",
+    "artifacts.multiple": "Multiple Artifacts",
     "files": "Files",
     "authors": "Authors",
     "showDesigns": "Show designs",
@@ -423,12 +429,16 @@
     "representationTags": "Tags",
     "representationTagsPlaceholder": "Enter tags...",
     "ports": "Ports",
+    "ports.multipleTitle": "Multiple Ports ({{count}})",
     "port": "Port",
+    "portsNotFound": "Ports not found",
+    "multiplePortsSelected": "Editing {{count}} ports simultaneously",
     "portFamily": "Family",
     "portFamilyPlaceholder": "Enter port family...",
     "portDescription": "Description",
     "portDescriptionPlaceholder": "Enter port description...",
     "portPoint": "Point",
+    "portT": "T",
     "portDirection": "Direction",
     "portCompatibleFamilies": "Compatible Families",
     "portCompatibleFamiliesPlaceholder": "Enter compatible families...",
@@ -499,6 +509,30 @@
   "sort": {
     "ascending": "Sort ascending",
     "descending": "Sort descending"
+  },
+  "kits": {
+    "multiple": "Multiple Kits ({{count}})",
+    "multipleSelected": "Editing {{count}} kits simultaneously"
+  },
+  "types": {
+    "title": "Types",
+    "multipleSelected": "Editing {{count}} types simultaneously"
+  },
+  "designs": {
+    "title": "Designs",
+    "multipleSelected": "Editing {{count}} designs simultaneously"
+  },
+  "qualities": {
+    "title": "Qualities"
+  },
+  "files": {
+    "title": "Files"
+  },
+  "authors": {
+    "title": "Authors"
+  },
+  "pieces": {
+    "title": "Pieces"
   },
   "docs": {
     "navigation": "Navigation",

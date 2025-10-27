@@ -34,7 +34,7 @@ import { Author, Design, generateUniqueName, guid, Kit, Quality, File as SemioFi
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
 import { useEditorType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
-import { KitDetails } from "./panels/Details";
+import { DesignSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
 import { KitEditorState, useKitEditor, useKitEditorCommands } from "./store";
 
 type ArtifactKind = "designs" | "types" | "qualities" | "files" | "authors";
@@ -178,18 +178,64 @@ const EditorContent: FC = () => {
       return;
     }
 
+    const selection = kitEditor?.selection;
+    const typesCount = selection?.types?.length || 0;
+    const designsCount = selection?.designs?.length || 0;
+    const qualitiesCount = selection?.qualities?.length || 0;
+    const filesCount = selection?.files?.length || 0;
+    const authorsCount = selection?.authors?.length || 0;
+    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, filesCount > 0, authorsCount > 0].filter(Boolean).length;
+
+    removeSection("details", "kit-multiple-artifacts");
+    removeSection("details", "kit-design");
+    removeSection("details", "kit-type");
+    removeSection("details", "kit-details");
+
+    if (totalSelectedKinds > 1) {
+      addSection("details", {
+        id: "kit-multiple-artifacts",
+        label: t("artifacts.multiple"),
+        order: 0,
+        defaultOpen: true,
+        content: () => <MultipleArtifactsSection />,
+      });
+    }
+
+    if (designsCount > 0 && totalSelectedKinds === 1) {
+      addSection("details", {
+        id: "kit-design",
+        label: designsCount === 1 ? t("design.title") : t("designs.multipleTitle"),
+        order: 10,
+        defaultOpen: true,
+        content: () => <DesignSection />,
+      });
+    }
+
+    if (typesCount > 0 && totalSelectedKinds === 1) {
+      addSection("details", {
+        id: "kit-type",
+        label: typesCount === 1 ? t("type.title") : t("types.multipleTitle"),
+        order: 20,
+        defaultOpen: true,
+        content: () => <TypeSection />,
+      });
+    }
+
     addSection("details", {
       id: "kit-details",
-      label: "Kit",
-      order: 0,
+      label: t("kit.title"),
+      order: 100,
       defaultOpen: true,
-      content: () => <KitDetails />,
+      content: () => <KitSection />,
     });
 
     return () => {
+      removeSection("details", "kit-multiple-artifacts");
+      removeSection("details", "kit-design");
+      removeSection("details", "kit-type");
       removeSection("details", "kit-details");
     };
-  }, [addSection, removeSection, editorType]);
+  }, [addSection, removeSection, editorType, t, kitEditor?.selection]);
 
   // Auto-select design/type when select parameter is present
   useEffect(() => {

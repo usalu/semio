@@ -194,7 +194,10 @@
     "created": "Erstellt",
     "updated": "Aktualisiert",
     "pieces": "Teile",
+    "pieces.multipleTitle": "Mehrere Teile",
     "connections": "Verbindungen",
+    "connections.multipleTitle": "Mehrere Verbindungen",
+    "selection.multipleTitle": "Mehrfachauswahl",
     "selectOnlyPiecesOrConnections": "Wählen Sie nur Teile oder nur Verbindungen aus, um Details zu bearbeiten.",
     "editorTitle": "Design-Editor",
     "snappiness": "Einrastfaktor",
@@ -317,8 +320,11 @@
   },
   "kitEditor": {
     "designs": "Designs",
+    "designs.multipleTitle": "Mehrere Designs",
     "types": "Typen",
+    "types.multipleTitle": "Mehrere Typen",
     "qualities": "Qualitäten",
+    "artifacts.multiple": "Mehrere Artefakte",
     "files": "Dateien",
     "authors": "Autoren",
     "showDesigns": "Designs anzeigen",
@@ -423,12 +429,16 @@
     "representationTags": "Tags",
     "representationTagsPlaceholder": "Tags eingeben...",
     "ports": "Ports",
+    "ports.multipleTitle": "Mehrere Ports ({{count}})",
     "port": "Port",
+    "portsNotFound": "Ports nicht gefunden",
+    "multiplePortsSelected": "{{count}} Ports werden gleichzeitig bearbeitet",
     "portFamily": "Familie",
     "portFamilyPlaceholder": "Port-Familie eingeben...",
     "portDescription": "Beschreibung",
     "portDescriptionPlaceholder": "Port-Beschreibung eingeben...",
     "portPoint": "Punkt",
+    "portT": "T",
     "portDirection": "Richtung",
     "portCompatibleFamilies": "Kompatible Familien",
     "portCompatibleFamiliesPlaceholder": "Kompatible Familien eingeben...",
@@ -499,6 +509,30 @@
   "sort": {
     "ascending": "Aufsteigend sortieren",
     "descending": "Absteigend sortieren"
+  },
+  "kits": {
+    "multiple": "Mehrere Kits ({{count}})",
+    "multipleSelected": "{{count}} Kits werden gleichzeitig bearbeitet"
+  },
+  "types": {
+    "title": "Typen",
+    "multipleSelected": "{{count}} Typen werden gleichzeitig bearbeitet"
+  },
+  "designs": {
+    "title": "Designs",
+    "multipleSelected": "{{count}} Designs werden gleichzeitig bearbeitet"
+  },
+  "qualities": {
+    "title": "Qualitäten"
+  },
+  "files": {
+    "title": "Dateien"
+  },
+  "authors": {
+    "title": "Autoren"
+  },
+  "pieces": {
+    "title": "Teile"
   },
   "docs": {
     "navigation": "Navigation",

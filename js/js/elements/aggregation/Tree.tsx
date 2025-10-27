@@ -29,10 +29,21 @@ import { closestCenter, DndContext, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
-import { createContext, FC, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { Children, createContext, FC, isValidElement, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 import { useTreeState } from "./TreeStateProvider";
+
+const hasNonEmptyChildren = (children: ReactNode): boolean => {
+  if (!children) return false;
+  const childArray = Children.toArray(children);
+  return childArray.length > 0 && childArray.some((child) => {
+    if (isValidElement(child)) return true;
+    if (typeof child === 'string' && child.trim().length > 0) return true;
+    if (typeof child === 'number') return true;
+    return false;
+  });
+};
 
 const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
 
@@ -125,7 +136,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   const open = treeState.getOpenState(sectionId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(sectionId, value);
   const [isHovered, setIsHovered] = useState(false);
-  const hasChildren = Boolean(children);
+  const hasChildren = hasNonEmptyChildren(children);
 
   if (!hasChildren) {
     return (
@@ -233,7 +244,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
   const open = treeState.getOpenState(itemId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
-  const hasChildren = Boolean(children);
+  const hasChildren = hasNonEmptyChildren(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
@@ -418,7 +429,7 @@ export const TreeItem: FC<TreeItemProps> = ({
   const open = treeState.getOpenState(itemId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
-  const hasChildren = Boolean(children);
+  const hasChildren = hasNonEmptyChildren(children);
   const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group cursor-pointer";
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;

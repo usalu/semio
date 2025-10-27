@@ -753,29 +753,13 @@ const PiecesSectionForm: FC = () => {
   return (
     <>
       {hasMixedTypes ? (
-        <TreeItem label={t("piece.mixedSelection", { count: pieces.length })} defaultOpen={true}>
-          <TreeItem>
-            <TreeContent>
-              <p className="text-sm text-muted-foreground">{t("piece.mixedSelectionMessage")}</p>
-            </TreeContent>
-          </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <p className="text-sm text-muted-foreground">{t("piece.mixedSelectionMessage")}</p>
+          </TreeContent>
         </TreeItem>
       ) : (
-        <TreeItem
-          label={isDesignPiece ? (isSingle ? t("piece.designPiece") : t("piece.multipleDesignPieces", { count: pieces.length })) : isSingle ? t("piece.piece") : t("piece.multiplePieces", { count: pieces.length })}
-          defaultOpen={true}
-          actions={
-            hasUnfixedPieces
-              ? [
-                  {
-                    icon: <Pin size={12} />,
-                    onClick: fixPieces,
-                    title: isSingle ? t("piece.fixPiece") : t("piece.fixPieces"),
-                  },
-                ]
-              : undefined
-          }
-        >
+        <>
           {isSingle && piece && (
             <TreeItem>
               <TreeContent>
@@ -872,7 +856,7 @@ const PiecesSectionForm: FC = () => {
               )}
             </>
           )}
-        </TreeItem>
+        </>
       )}
       {hasCenter && (
         <TreeItem label={t("piece.center")}>
@@ -1112,7 +1096,7 @@ const ConnectionsSectionForm: FC<{
   const commonTilt = getCommonValue((c) => c.tilt);
 
   return (
-    <TreeItem label={sectionLabel || (isSingle ? "Connection" : `Multiple Connections (${connections.length})`)} defaultOpen={true}>
+    <>
       {isSingle && (
         <>
           <TreeItem>
@@ -1274,7 +1258,7 @@ const ConnectionsSectionForm: FC<{
           />
         </TreeContent>
       </TreeItem>
-    </TreeItem>
+    </>
   );
 };
 

@@ -98,6 +98,7 @@ export const commands = {
             added: [Guid],
           },
           connections: { removed: currentSelection?.connections ?? [] },
+          port: undefined,
         },
       },
     };
@@ -112,6 +113,7 @@ export const commands = {
             added: pieceIds,
           },
           connections: { removed: currentSelection?.connections ?? [] },
+          port: undefined,
         },
       },
     };
@@ -419,6 +421,7 @@ export const commands = {
             removed: currentSelection?.connections ?? [],
             added: [connectionGuid],
           },
+          port: undefined,
         },
       },
     };

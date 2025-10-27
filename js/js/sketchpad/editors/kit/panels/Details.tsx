@@ -24,39 +24,33 @@ import { useTranslation } from "react-i18next";
 import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
 import { Input } from "../../../../elements/input/Input";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Kit } from "../../../../semio";
+import { Design, Kit, Type } from "../../../../semio";
 import { useIsInKitScope, useKit, useKitStore } from "../../../store";
-import { useKitEditorCommands } from "../store";
+import { useKitEditor, useKitEditorCommands, KitEditorState } from "../store";
 
-export const KitDetails: FC = () => {
+export const KitSection: FC = () => {
   const isInKitScope = useIsInKitScope();
   if (!isInKitScope) return null;
-  return <KitDetailsForm />;
+  return <KitSectionForm />;
 };
 
-const KitDetailsForm: FC = () => {
+const KitSectionForm: FC = () => {
   const { t } = useTranslation();
-
   try {
     const kit = useKit() as Kit;
-
     if (!kit) {
       return (
-        <TreeSection label={t("kit.title")} defaultOpen={true}>
-          <TreeItem>
-            <TreeContent>
-              <p className="text-sm text-muted-foreground">{t("kit.notAvailable")}</p>
-            </TreeContent>
-          </TreeItem>
-        </TreeSection>
+        <TreeItem>
+          <TreeContent>
+            <p className="text-sm text-muted-foreground">{t("kit.notAvailable")}</p>
+          </TreeContent>
+        </TreeItem>
       );
     }
-
     const kitStore = useKitStore() as any;
     const { startTransaction, finalizeTransaction, abortTransaction } = useKitEditorCommands();
-
     return (
-      <TreeSection label={t("kit.title")} defaultOpen={true}>
+      <>
         <TreeItem>
           <TreeContent>
             <Input lazy label={t("kit.name")} value={kit.name} onLazyChange={(value) => kitStore.change({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
@@ -146,17 +140,159 @@ const KitDetailsForm: FC = () => {
             />
           </TreeContent>
         </TreeItem>
-      </TreeSection>
+      </>
     );
   } catch (error) {
     return (
-      <TreeSection label={t("kit.title")} defaultOpen={true}>
-        <TreeItem>
-          <TreeContent>
-            <p className="text-sm text-muted-foreground">{t("kit.notFound")}</p>
-          </TreeContent>
-        </TreeItem>
-      </TreeSection>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("kit.notFound")}</p>
+        </TreeContent>
+      </TreeItem>
     );
   }
+};
+
+export const TypeSection: FC = () => {
+  const { t } = useTranslation();
+  const kitEditor = useKitEditor() as KitEditorState;
+  const selection = kitEditor?.selection;
+  const selectedTypes = selection?.types || [];
+  if (selectedTypes.length === 0) return null;
+  if (selectedTypes.length === 1) return <SingleTypeSection typeGuid={selectedTypes[0]} />;
+  return <MultipleTypesSection typeGuids={selectedTypes} />;
+};
+
+const SingleTypeSection: FC<{ typeGuid: string }> = ({ typeGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const type = kit?.types?.find((t) => t.guid === typeGuid);
+  if (!type) return null;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input label={t("type.name")} value={type.name} readOnly />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input label={t("type.variant")} value={type.variant || ""} placeholder={t("type.variantPlaceholder")} readOnly />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea label={t("type.description")} value={type.description || ""} placeholder={t("type.descriptionPlaceholder")} readOnly />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const types = typeGuids.map((guid) => kit?.types?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Type[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("types.multipleSelected", { count: types.length })}</p>
+        </TreeContent>
+      </TreeItem>
+      {types.map((type) => (
+        <TreeItem key={type.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{type.name}</p>
+            {type.variant && <p className="text-xs text-muted-foreground">{type.variant}</p>}
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const DesignSection: FC = () => {
+  const { t } = useTranslation();
+  const kitEditor = useKitEditor() as KitEditorState;
+  const selection = kitEditor?.selection;
+  const selectedDesigns = selection?.designs || [];
+  if (selectedDesigns.length === 0) return null;
+  if (selectedDesigns.length === 1) return <SingleDesignSection designGuid={selectedDesigns[0]} />;
+  return <MultipleDesignsSection designGuids={selectedDesigns} />;
+};
+
+const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const design = kit?.designs?.find((d) => d.guid === designGuid);
+  if (!design) return null;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input label={t("design.name")} value={design.name} readOnly />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input label={t("design.variant")} value={design.variant || ""} placeholder={t("design.variantPlaceholder")} readOnly />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea label={t("design.description")} value={design.description || ""} placeholder={t("design.descriptionPlaceholder")} readOnly />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const designs = designGuids.map((guid) => kit?.designs?.find((d) => d.guid === guid)).filter((d) => d !== undefined) as Design[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("designs.multipleSelected", { count: designs.length })}</p>
+        </TreeContent>
+      </TreeItem>
+      {designs.map((design) => (
+        <TreeItem key={design.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{design.name}</p>
+            {design.variant && <p className="text-xs text-muted-foreground">{design.variant}</p>}
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const MultipleArtifactsSection: FC = () => {
+  const { t } = useTranslation();
+  const kitEditor = useKitEditor() as KitEditorState;
+  const selection = kitEditor?.selection;
+  const typesCount = selection?.types?.length || 0;
+  const designsCount = selection?.designs?.length || 0;
+  const qualitiesCount = selection?.qualities?.length || 0;
+  const filesCount = selection?.files?.length || 0;
+  const authorsCount = selection?.authors?.length || 0;
+  const totalCount = typesCount + designsCount + qualitiesCount + filesCount + authorsCount;
+  const kinds: string[] = [];
+  if (typesCount > 0) kinds.push(`${typesCount} ${t("types.title")}`);
+  if (designsCount > 0) kinds.push(`${designsCount} ${t("designs.title")}`);
+  if (qualitiesCount > 0) kinds.push(`${qualitiesCount} ${t("qualities.title")}`);
+  if (filesCount > 0) kinds.push(`${filesCount} ${t("files.title")}`);
+  if (authorsCount > 0) kinds.push(`${authorsCount} ${t("authors.title")}`);
+  if (kinds.length <= 1) return null;
+  return (
+    <TreeItem>
+      <TreeContent>
+        <p className="text-sm text-muted-foreground">{kinds.join(", ")}</p>
+      </TreeContent>
+    </TreeItem>
+  );
 };

@@ -171,12 +171,14 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### General
 
-- NEVER remove functionality! Not even to get the code to work quickly.
+- ALWAYS finish everything without asking in between.
+- NEVER interrupt between TODOs or tickets.
+- NEVER remove functionality. Not even to get the code to work quickly.
 - ALWAYS be thorough.
 - NEVER create scripts to automate manual tasks.
 - NEVER leave a placeholder.
 - NEVER stop halfways and ask if you should continue.
-- If a task is to big, ALWAYS start with one small part and ALWAYS finish it and keep on as much as you can.
+- If a task is too big, ALWAYS start with one small part and ALWAYS finish it and keep on as much as you can.
 - ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.

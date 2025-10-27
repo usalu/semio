@@ -32,8 +32,9 @@ import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
-import { useFocus } from "../../Navbar";
-import { useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
+import { useEditorType, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { KitSection } from "./panels/Details";
 import { useHome, useHomeCommands } from "./store";
 
 type KitStoreKind = "temporary" | "local" | "remote";
@@ -75,6 +76,38 @@ const Home: FC = ({}) => {
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
   const isMobile = useIsMobile();
+  const editorType = useEditorType();
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+
+  const selection = homeState?.selection?.kits || [];
+
+  // Dynamic details panel based on selection
+  useEffect(() => {
+    if (editorType !== "home") return;
+
+    const hasKits = selection.length > 0;
+    const hasSingleKit = selection.length === 1;
+    const hasMultipleKits = selection.length > 1;
+
+    // Remove previous section
+    removeSection("details", "home-kit");
+
+    // Only show section if something is selected
+    if (hasKits) {
+      addSection("details", {
+        id: "home-kit",
+        label: hasSingleKit ? t("kit.title") : t("kits.multiple", { count: selection.length }),
+        order: 0,
+        defaultOpen: true,
+        content: () => <KitSection />,
+      });
+    }
+
+    return () => {
+      removeSection("details", "home-kit");
+    };
+  }, [editorType, addSection, removeSection, t, selection.length]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitStoreKind | null;
@@ -88,7 +121,6 @@ const Home: FC = ({}) => {
   const expandedRowsParam = searchParams.getAll("e");
   const expandedRows = new Set(expandedRowsParam);
 
-  const selection = homeState?.selection?.kits || [];
   const sortColumn = homeState?.sortColumn;
   const sortDirection = homeState?.sortDirection || "asc";
 

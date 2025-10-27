@@ -6,7 +6,7 @@
 
 // #endregion
 
-import { MessageCircle, Settings } from "lucide-react";
+import { Info, MessageCircle, Settings } from "lucide-react";
 import { editorRegistry } from "../registry";
 import Home from "./Editor";
 
@@ -16,6 +16,7 @@ editorRegistry.register({
   routeSegments: [],
   additionalPaths: ["kits"],
   getPanels: (t) => [
+    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
     { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
     { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
   ],

@@ -6,10 +6,13 @@
 
 // #endregion
 
-export { Aside } from "./Aside";
-export type { AsideProps } from "./Aside";
-export { Card, CardGrid } from "./Card";
-export type { CardGridProps, CardProps } from "./Card";
+// Re-export components from display folder
+export { Aside } from "../display/Aside";
+export type { AsideProps } from "../display/Aside";
+export { Card, CardGrid } from "../display/Card";
+export type { CardGridProps, CardProps } from "../display/Card";
+
+// Re-export components from docs folder
 export { FileTree, FileTreeItem } from "./FileTree";
 export type { FileTreeItemProps, FileTreeProps } from "./FileTree";
 export { default as Page } from "./Page";
