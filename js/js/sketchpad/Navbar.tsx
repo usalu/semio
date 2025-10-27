@@ -50,6 +50,7 @@ import {
   useKits,
   useNavigation,
   useNavigationHistory,
+  useSketchpad,
   useSketchpadCommands,
   useSketchpadScope,
   useSketchpadStore,
@@ -233,6 +234,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const docsSection = isDocsPath && pathParts[1] ? pathParts[1] : null;
   const docsPagePath = isDocsPath && pathParts.length > 1 ? pathParts.slice(1).join("/") : null;
+  const docsSectionsList = docsRegistry.getAllSections();
 
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
 
@@ -980,7 +982,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             {docsSection && (
               <>
                 <BreadcrumbSeparator
-                  items={docsRegistry.getAllSections().map((s) => ({
+                  items={docsSectionsList.map((s) => ({
                     label: `${s.emoji} ${s.label}`,
                     href: `/docs/${s.id}`,
                   }))}
@@ -989,7 +991,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 />
                 <BreadcrumbItem>
                   <BreadcrumbLink onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }}>
-                    {docsRegistry.getAllSections().find((s) => s.id === docsSection)?.label || docsSection}
+                    {docsSectionsList.find((s) => s.id === docsSection)?.label || docsSection}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </>
@@ -997,28 +999,53 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             {docsPagePath &&
               docsSection &&
               (() => {
-                // Parse the path to get all folders after the section
-                // E.g., "getting-started/intro/why-semio" -> ["intro", "why-semio"]
-                const pathAfterSection = docsPagePath.split("/").slice(1); // Remove section part
+                const pathAfterSection = docsPagePath.split("/").slice(1);
+                const sectionPages = docsRegistry.getAllPages().filter((page) => page.section === docsSection);
                 const breadcrumbItems: React.ReactElement[] = [];
 
-                // Add breadcrumb items for each folder level
                 pathAfterSection.forEach((part, index) => {
                   const isLast = index === pathAfterSection.length - 1;
-                  const partialPath = `docs/${docsSection}/${pathAfterSection.slice(0, index + 1).join("/")}`;
-
-                  // Convert folder name to readable label
-                  const label = part
-                    .split("-")
-                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(" ");
+                  const partialParts = pathAfterSection.slice(0, index + 1);
+                  const partialPath = `docs/${docsSection}/${partialParts.join("/")}`;
+                  const parentParts = pathAfterSection.slice(0, index);
+                  const siblings = sectionPages
+                    .filter((page) => {
+                      const segments = page.path.replace(/^docs\//, "").split("/");
+                      const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
+                      if (trimmedSegments[0] !== docsSection) return false;
+                      const relative = trimmedSegments.slice(1);
+                      if (relative.length !== parentParts.length + 1) return false;
+                      for (let i = 0; i < parentParts.length; i++) {
+                        if (relative[i] !== parentParts[i]) return false;
+                      }
+                      return true;
+                    })
+                    .sort((a, b) => {
+                      const orderDiff = (a.order ?? 999) - (b.order ?? 999);
+                      if (orderDiff !== 0) return orderDiff;
+                      return a.title.localeCompare(b.title);
+                    });
+                  const separatorItems = siblings.map((page) => ({
+                    label: page.title,
+                    href: `/${page.path.replace(/\/index$/, "")}`,
+                  }));
+                  const normalizedPartial = `${docsSection}/${partialParts.join("/")}`;
+                  const match =
+                    siblings.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial) ||
+                    sectionPages.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial);
+                  const label = match?.title
+                    ? match.title
+                    : part
+                        .split("-")
+                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                        .join(" ");
 
                   breadcrumbItems.push(
                     <Fragment key={partialPath}>
-                      <BreadcrumbSeparator />
+                      <BreadcrumbSeparator items={separatorItems} onNavigate={(href) => navigate(href)} />
                       <BreadcrumbItem>
                         <BreadcrumbLink onClick={() => !isLast && navigate(`/${partialPath}`)} style={{ cursor: isLast ? "default" : "pointer" }}>
-                          {docsRegistry.getAllPages().find((p) => p.path === partialPath)?.title || label}
+                          {label}
                         </BreadcrumbLink>
                       </BreadcrumbItem>
                     </Fragment>,
@@ -1040,10 +1067,21 @@ type SearchResult = {
   kitGuid?: string;
 };
 
+const buildSearchResultPath = (result: SearchResult): string => {
+  if (result.type === "kit") return `/kits/${(result.item as KitShallow).guid}`;
+  if (result.type === "design") return `/kits/${result.kitGuid}/designs/${(result.item as DesignShallow).guid}`;
+  if (result.type === "type") return `/kits/${result.kitGuid}/types/${(result.item as TypeShallow).guid}`;
+  if (result.type === "quality") return `/kits/${result.kitGuid}?kind=qualities&select=${(result.item as Quality).guid}`;
+  if (result.type === "docs") return `/${(result.item as { path: string }).path}`;
+  return "";
+};
+
 const Search: FC = ({}) => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
   const navigate = useNavigate();
+  const store = useSketchpadStore();
+  const recentSearches = (useSketchpad((s) => s.recentSearches) as string[]) || [];
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const kits = useKits();
@@ -1069,6 +1107,15 @@ const Search: FC = ({}) => {
     return results;
   }, [kits]);
 
+  const searchIndex = useMemo(() => {
+    const map = new Map<string, SearchResult>();
+    searchData.forEach((result) => {
+      const path = buildSearchResultPath(result);
+      if (path) map.set(path, result);
+    });
+    return map;
+  }, [searchData]);
+
   const fuse = useMemo(
     () =>
       new Fuse(searchData, {
@@ -1087,21 +1134,39 @@ const Search: FC = ({}) => {
     [searchData],
   );
 
-  const searchResults = useMemo(() => (query.trim() ? fuse.search(query).slice(0, 20) : ([] as FuseResult<SearchResult>[])), [fuse, query]);
+  const recentResults = useMemo(() => {
+    return recentSearches
+      .map((path) => searchIndex.get(path))
+      .filter((result): result is SearchResult => !!result);
+  }, [recentSearches, searchIndex]);
+
+  const searchResults = useMemo(() => {
+    if (query.trim()) return fuse.search(query).slice(0, 20);
+    const base = recentResults.length > 0 ? recentResults : searchData.slice(0, 20);
+    return base.map((item, idx) => ({ item, refIndex: idx } as FuseResult<SearchResult>));
+  }, [fuse, query, recentResults, searchData]);
 
   const handleSelect = useCallback(
     (result: SearchResult) => {
-      const { type, item, kitGuid } = result;
+      const path = buildSearchResultPath(result);
+      if (path) {
+        const next = [path, ...recentSearches.filter((entry) => entry !== path)].slice(0, 20);
+        const changed = next.length !== recentSearches.length || next.some((entry, index) => entry !== recentSearches[index]);
+        if (changed) store.change({ recentSearches: next });
+      }
       setOpen(false);
       setQuery("");
-
-      if (type === "kit") navigate(`/kits/${(item as KitShallow).guid}`);
-      else if (type === "design") navigate(`/kits/${kitGuid}/designs/${(item as DesignShallow).guid}`);
-      else if (type === "type") navigate(`/kits/${kitGuid}/types/${(item as TypeShallow).guid}`);
-      else if (type === "quality") navigate(`/kits/${kitGuid}?kind=qualities&select=${(item as Quality).guid}`);
-      else if (type === "docs") navigate(`/${(item as { path: string }).path}`);
+      if (path) navigate(path);
+      else {
+        const { type, item, kitGuid } = result;
+        if (type === "kit") navigate(`/kits/${(item as KitShallow).guid}`);
+        else if (type === "design") navigate(`/kits/${kitGuid}/designs/${(item as DesignShallow).guid}`);
+        else if (type === "type") navigate(`/kits/${kitGuid}/types/${(item as TypeShallow).guid}`);
+        else if (type === "quality") navigate(`/kits/${kitGuid}?kind=qualities&select=${(item as Quality).guid}`);
+        else if (type === "docs") navigate(`/${(item as { path: string }).path}`);
+      }
     },
-    [navigate],
+    [navigate, recentSearches, store],
   );
 
   const getIcon = (type: SearchResult["type"]) => {
@@ -1208,9 +1273,23 @@ const Focus: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const focusContext = useFocusSafe();
+  const store = useSketchpadStore();
+  const appType = useAppType();
+  const recentFocusMap = (useSketchpad((s) => s.recentFocusItems) as Record<string, string[]>) || {};
+  const recentFocusIds = recentFocusMap[appType] || [];
 
   const focusItems = focusContext?.focusItems || [];
   const triggerFocusItem = focusContext?.triggerFocusItem;
+  const focusItemIndex = useMemo(() => {
+    const map = new Map<string, FocusItem>();
+    focusItems.forEach((item) => map.set(item.id, item));
+    return map;
+  }, [focusItems]);
+  const recentFocusItems = useMemo(() => {
+    return recentFocusIds
+      .map((id) => focusItemIndex.get(id))
+      .filter((item): item is FocusItem => !!item);
+  }, [recentFocusIds, focusItemIndex]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1237,15 +1316,22 @@ const Focus: FC = ({}) => {
     [focusItems],
   );
 
-  const focusResults = useMemo(() => (query.trim() ? fuse.search(query).slice(0, 20) : focusItems.slice(0, 20).map((item, idx) => ({ item, refIndex: idx }))), [fuse, query, focusItems]);
+  const focusResults = useMemo(() => {
+    if (query.trim()) return fuse.search(query).slice(0, 20);
+    const base = recentFocusItems.length > 0 ? recentFocusItems : focusItems.slice(0, 20);
+    return base.map((item, idx) => ({ item, refIndex: idx }));
+  }, [fuse, query, recentFocusItems, focusItems]);
 
   const handleSelect = useCallback(
     (item: FocusItem) => {
+      const next = [item.id, ...recentFocusIds.filter((id) => id !== item.id)].slice(0, 20);
+      const changed = next.length !== recentFocusIds.length || next.some((id, index) => id !== recentFocusIds[index]);
+      if (changed) store.change({ recentFocusItems: { [appType]: next } });
       setOpen(false);
       setQuery("");
       if (triggerFocusItem) triggerFocusItem(item.id);
     },
-    [triggerFocusItem],
+    [appType, recentFocusIds, store, triggerFocusItem],
   );
 
   const groupedResults = useMemo(() => {

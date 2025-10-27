@@ -53,6 +53,7 @@ export default defineConfig(async () => {
       mdx({
         remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
         rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+        providerImportSource: "@mdx-js/react",
       }),
       react(),
       wasm(),

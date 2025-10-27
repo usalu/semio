@@ -7,9 +7,9 @@
 // #endregion
 
 import { FC, Suspense, useEffect, useRef, useState } from "react";
-import Page from "../../../../elements/docs/Page";
+import Page from "../../../../elements/windows/Page";
 import { useFocus } from "../../../Navbar";
-import { MDXProvider } from "../mdx-provider";
+import { MDXProvider, useHeadings } from "../mdx-provider";
 
 interface PageCanvasProps {
   MDXContent?: React.ComponentType;
@@ -18,27 +18,54 @@ interface PageCanvasProps {
 
 const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
   const { setFocusItems, setOnFocusItem } = useFocus();
+  const { clearHeadings, registerHeading } = useHeadings();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
   const containerRef = useRef<HTMLDivElement>(null);
   const prevItemsRef = useRef<string>("");
 
+  // Clear headings when MDXContent changes
   useEffect(() => {
-    if (containerRef.current) {
-      const headings = containerRef.current.querySelectorAll("h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]");
-      const items = Array.from(headings).map((heading) => ({
-        id: heading.id,
-        label: heading.textContent || heading.id,
-        category: heading.tagName,
-      }));
-      // Only update if the items have actually changed
-      const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
-      if (prevItemsRef.current !== itemsKey) {
-        prevItemsRef.current = itemsKey;
-        setFocusItems(items);
+    clearHeadings();
+  }, [MDXContent, clearHeadings]);
+
+  useEffect(() => {
+    const extractHeadings = () => {
+      if (containerRef.current) {
+        const headings = containerRef.current.querySelectorAll("h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]");
+
+        if (headings.length > 0) {
+          const items = Array.from(headings).map((heading) => ({
+            id: heading.id,
+            label: heading.textContent || heading.id,
+            category: heading.tagName,
+          }));
+
+          // Update focus items
+          const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
+          if (prevItemsRef.current !== itemsKey) {
+            prevItemsRef.current = itemsKey;
+            setFocusItems(items);
+          }
+
+          // Register all headings with HeadingsProvider
+          const headingNodes = items.map((item) => ({
+            id: item.id,
+            text: item.label,
+            level: parseInt(item.category.substring(1)),
+          }));
+
+          headingNodes.forEach((node) => {
+            registerHeading(node);
+          });
+        }
       }
-    }
+    };
+
+    // Use setTimeout to wait for MDX to render
+    const timer = setTimeout(extractHeadings, 100);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [MDXContent]);
+  }, [MDXContent, registerHeading]);
 
   useEffect(() => {
     const handleFocus = (itemId: string) => {

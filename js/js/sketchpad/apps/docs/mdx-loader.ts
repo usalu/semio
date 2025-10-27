@@ -1,4 +1,4 @@
-import { PageFrontmatter } from "../../../elements/docs/Page";
+import { PageFrontmatter } from "../../../elements/windows/Page";
 
 export interface MDXModule {
   default: React.ComponentType;
@@ -34,12 +34,12 @@ export interface SectionInfo {
   order: number;
 }
 
-const mdxModules = import.meta.glob<MDXModule>("../../docs/**/*.mdx", { eager: true });
+const mdxModules = import.meta.glob<MDXModule>("./pages/**/*.mdx", { eager: true });
 
 export async function loadMDXFile(path: string): Promise<MDXModule | null> {
   const cleanPath = path.replace(/^docs\//, "");
   const possibleKeys = Object.keys(mdxModules).filter((key) => {
-    const keyPath = key.replace("../../docs/", "").replace(".mdx", "");
+    const keyPath = key.replace("./pages/", "").replace(".mdx", "");
     return keyPath === cleanPath || keyPath === `${cleanPath}/index`;
   });
 
@@ -56,14 +56,14 @@ export async function loadMDXFile(path: string): Promise<MDXModule | null> {
 }
 
 function pathToSection(filePath: string): string {
-  const parts = filePath.replace("../../docs/", "").split("/");
+  const parts = filePath.replace("./pages/", "").split("/");
   return parts[0] || "root";
 }
 
 function pathToTitle(filePath: string, frontmatter?: PageFrontmatter): string {
   if (frontmatter?.title) return frontmatter.title;
   if (frontmatter?.sidebar?.label) return frontmatter.sidebar.label;
-  const parts = filePath.replace("../../docs/", "").replace(".mdx", "").split("/");
+  const parts = filePath.replace("./pages/", "").replace(".mdx", "").split("/");
   const fileName = parts[parts.length - 1];
   if (fileName === "index") return parts[parts.length - 2] || "Home";
   return fileName
@@ -75,14 +75,14 @@ function pathToTitle(filePath: string, frontmatter?: PageFrontmatter): string {
 export function getAllMDXFiles(): MDXFileInfo[] {
   return Object.keys(mdxModules)
     .filter((filePath) => {
-      const parts = filePath.replace("../../docs/", "").split("/");
-      if (filePath === "../../docs/index.mdx") return true;
+      const parts = filePath.replace("./pages/", "").split("/");
+      if (filePath === "./pages/index.mdx") return true;
       if (parts.length === 2 && parts[1] === "index.mdx") return false;
       return true;
     })
     .map((filePath) => {
       const module = mdxModules[filePath];
-      const cleanPath = filePath.replace("../../docs/", "").replace(".mdx", "");
+      const cleanPath = filePath.replace("./pages/", "").replace(".mdx", "");
       const fullPath = `docs/${cleanPath}`;
       const frontmatter = module.frontmatter;
       return {
@@ -105,11 +105,11 @@ export function getMDXFilesBySection(section: string): MDXFileInfo[] {
 export function getAllSections(): SectionInfo[] {
   const sectionsMap = new Map<string, SectionInfo>();
   Object.keys(mdxModules).forEach((filePath) => {
-    const parts = filePath.replace("../../docs/", "").split("/");
+    const parts = filePath.replace("./pages/", "").split("/");
     if (parts.length > 1) {
       const sectionId = parts[0];
       if (!sectionsMap.has(sectionId)) {
-        const indexPath = `../../docs/${sectionId}/index.mdx`;
+        const indexPath = `./pages/${sectionId}/index.mdx`;
         const indexModule = mdxModules[indexPath];
         const frontmatter = indexModule?.frontmatter as SectionFrontmatter | undefined;
         sectionsMap.set(sectionId, {

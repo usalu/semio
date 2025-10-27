@@ -133,11 +133,14 @@ const Panel: FC<PanelProps> = ({
           <TreeStateProvider>
             <Tree className="min-w-0 overflow-hidden">
               {additionalContent}
-              {sortedSections.map((section) => (
-                <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
-                  {typeof section.content === "function" ? section.content() : section.content}
-                </TreeSection>
-              ))}
+              {sortedSections.map((section) => {
+                const Content = typeof section.content === "function" ? section.content : null;
+                return (
+                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
+                    {Content ? <Content /> : section.content}
+                  </TreeSection>
+                );
+              })}
               {!hasContent && emptyMessage && <div className="p-4 text-center text-muted-foreground">{emptyMessage}</div>}
             </Tree>
           </TreeStateProvider>

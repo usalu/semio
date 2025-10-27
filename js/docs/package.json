@@ -2,24 +2,15 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "name": "@semio/docs",
-  "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "semio ⋅ docs",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "dev": "vite",
+    "build": "vite build",
+    "publish": "vite build && npm publish"
   },
   "dependencies": {
-    "@astrojs/markdoc": "^0.15.6",
-    "@astrojs/mdx": "^4.3.5",
-    "@astrojs/react": "^4.3.1",
-    "@astrojs/sitemap": "^3.6.0",
-    "@astrojs/starlight": "^0.35.3",
-    "@astrojs/ts-plugin": "^1.10.4",
-    "@semio/js": "^0.1.0",
-    "astro": "^5.13.8",
-    "sharp": "^0.34.4"
+    "@semio/js": "*"
   },
   "author": {
     "name": "Ueli Saluz",

@@ -14,7 +14,6 @@ import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useAppType } from "../../store";
 import PageCanvas from "./canvas/Page";
 import { loadMDXFile, MDXModule } from "./mdx-loader";
-import { HeadingsProvider } from "./mdx-provider";
 import DocsDetails from "./panels/Details";
 import DocsSettings from "./panels/Settings";
 import DocsWorkbench from "./panels/Workbench";
@@ -35,20 +34,24 @@ const DocsApp: FC = () => {
   useEffect(() => {
     if (appType !== "docs") return;
 
+    const WorkbenchWrapper = () => <DocsWorkbench currentPath={fullPath} />;
+    const DetailsWrapper = () => <DocsDetails />;
+    const SettingsWrapper = () => <DocsSettings />;
+
     addSection("workbench", {
       id: "docs-navigation",
       label: t("docs.docs", "Docs"),
       order: 1,
       defaultOpen: true,
-      content: () => <DocsWorkbench currentPath={fullPath} />,
+      content: WorkbenchWrapper,
     });
 
     addSection("details", {
       id: "docs-toc",
-      label: t("docs.tableOfContents", "On This Page"),
+      label: t("docs.page", "Page"),
       order: 1,
       defaultOpen: true,
-      content: () => <DocsDetails />,
+      content: DetailsWrapper,
     });
 
     addSection("settings", {
@@ -56,7 +59,7 @@ const DocsApp: FC = () => {
       label: t("docs.settings", "Settings"),
       order: 1,
       defaultOpen: true,
-      content: () => <DocsSettings />,
+      content: SettingsWrapper,
     });
 
     return () => {
@@ -116,12 +119,4 @@ const DocsApp: FC = () => {
   );
 };
 
-const DocsAppWithProvider: FC = () => {
-  return (
-    <HeadingsProvider>
-      <DocsApp />
-    </HeadingsProvider>
-  );
-};
-
-export default DocsAppWithProvider;
+export default DocsApp;

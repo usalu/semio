@@ -395,22 +395,25 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── sketchpad
 │ │ │ ├── apps
 │ │ │ │ ├── index.tsx
+│ │ │ │ ├── panels.ts
 │ │ │ │ ├── registry.tsx
 │ │ │ │ ├── design
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ └── Scene.tsx
+│ │ │ │ │ │ ├── Scene.tsx
+│ │ │ │ │ │ ├── SharedTransformControls.tsx
+│ │ │ │ │ │ └── TransformableModel.ts
 │ │ │ │ │ ├── panels
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── tools
+│ │ │ │ │ ├── tools_registry
 │ │ │ │ │ │ ├── index.tsx
 │ │ │ │ │ │ ├── LassoTool.tsx
 │ │ │ │ │ │ └── SelectionTool.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered app config
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
 │ │ │ │ ├── docs
@@ -421,7 +424,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── App.tsx
 │ │ │ │ │ ├── mdx-loader.ts
 │ │ │ │ │ ├── mdx-provider.tsx
@@ -430,8 +433,10 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── home
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Table.tsx
+│ │ │ │ │ ├── panels
+│ │ │ │ │ │ └── Details.tsx
 │ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered app config
+│ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── App.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
@@ -440,9 +445,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── panels
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ └── Settings.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered app config
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── quality
 │ │ │ │ │ ├── canvas
@@ -452,11 +457,11 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── tools
+│ │ │ │ │ ├── tools_registry
 │ │ │ │ │ │ └── index.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered app config
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── functions.ts
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
@@ -467,13 +472,13 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ ├── tools
+│ │ │ │ ├── tools_registry
 │ │ │ │ │ ├── index.tsx
 │ │ │ │ │ ├── PortTool.tsx
 │ │ │ │ │ └── SelectionTool.tsx
-│ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts # Auto-discovered app config
 │ │ │ │ ├── App.tsx
+│ │ │ │ ├── commands.ts
+│ │ │ │ ├── config.ts
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
 │ │ │ ├── docs

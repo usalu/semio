@@ -1,14 +1,13 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { File, Folder } from "lucide-react";
 import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Tabs as BaseTabs, TabsContent, TabsList, TabsTrigger } from "../../../elements/aggregation/Tabs";
-import { TreeContent, TreeItem, TreeSection } from "../../../elements/aggregation/Tree";
 import { Aside } from "../../../elements/display/Aside";
 import { HeadingNode } from "./panels/Details";
 
 interface HeadingsContextValue {
   headings: HeadingNode[];
   registerHeading: (heading: HeadingNode) => void;
+  clearHeadings: () => void;
 }
 
 const HeadingsContext = createContext<HeadingsContextValue | null>(null);
@@ -16,7 +15,7 @@ const HeadingsContext = createContext<HeadingsContextValue | null>(null);
 export const useHeadings = () => {
   const context = useContext(HeadingsContext);
   if (!context) {
-    return { headings: [] };
+    return { headings: [], clearHeadings: () => {} };
   }
   return context;
 };
@@ -45,34 +44,10 @@ const Tabs: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-const FileTree: FC<{ children: ReactNode }> = ({ children }) => (
-  <div className="my-4 p-4 bg-panel border rounded">
-    <TreeSection label="" defaultOpen={true}>
-      {children}
-    </TreeSection>
-  </div>
-);
-
-const FileTreeItem: FC<{ name: string; type?: "file" | "folder" }> = ({ name, type = "file" }) => {
-  const Icon = type === "folder" ? Folder : File;
-  return (
-    <TreeItem>
-      <TreeContent>
-        <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4" />
-          <span className="font-mono text-sm">{name}</span>
-        </div>
-      </TreeContent>
-    </TreeItem>
-  );
-};
-
 const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   Aside,
   Tabs,
   TabItem,
-  FileTree,
-  FileTreeItem,
   h1: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
@@ -282,12 +257,12 @@ export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
     setHeadings(Array.from(headingsRef.current.values()));
   }, []);
 
-  useEffect(() => {
+  const clearHeadings = useCallback(() => {
     headingsRef.current.clear();
     setHeadings([]);
   }, []);
 
-  return <HeadingsContext.Provider value={{ headings, registerHeading }}>{children}</HeadingsContext.Provider>;
+  return <HeadingsContext.Provider value={{ headings, registerHeading, clearHeadings }}>{children}</HeadingsContext.Provider>;
 };
 
 interface MDXProviderProps {

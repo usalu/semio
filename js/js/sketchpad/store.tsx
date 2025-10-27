@@ -301,6 +301,48 @@ export interface PanelVisibility {
   settings?: boolean;
 }
 
+const defaultPanelVisibility: PanelVisibility = {
+  toolbar: true,
+  workbench: true,
+  details: true,
+  chat: true,
+  settings: true,
+};
+
+const initialDocsPanelVisibility: PanelVisibility = {
+  toolbar: false,
+  workbench: true,
+  details: false,
+  chat: false,
+  settings: false,
+  tools: false,
+  hud: false,
+  stats: false,
+};
+
+let docsPanelVisibilityState: PanelVisibility = initialDocsPanelVisibility;
+const docsPanelVisibilityListeners = new Set<() => void>();
+
+type DocsPanelVisibilityUpdate = PanelVisibility | ((prev: PanelVisibility) => PanelVisibility);
+
+function getDocsPanelVisibilitySnapshot(): PanelVisibility {
+  return docsPanelVisibilityState;
+}
+
+function subscribeDocsPanelVisibility(listener: () => void) {
+  docsPanelVisibilityListeners.add(listener);
+  return () => {
+    docsPanelVisibilityListeners.delete(listener);
+  };
+}
+
+function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
+  const next = typeof update === "function" ? (update as (prev: PanelVisibility) => PanelVisibility)(docsPanelVisibilityState) : update;
+  const merged = { ...docsPanelVisibilityState, ...next };
+  docsPanelVisibilityState = merged;
+  docsPanelVisibilityListeners.forEach((listener) => listener());
+}
+
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
   private lastDeletedTransactionEdit?: TEdit;
@@ -839,6 +881,8 @@ export interface SketchpadChangableState {
   navigation: string;
   navigationHistory: string[];
   navigationHistoryIndex: number;
+  recentSearches: string[];
+  recentFocusItems: Record<string, string[]>;
   access: Access;
   theme: Theme;
   layout: Layout;
@@ -858,6 +902,8 @@ export interface SketchpadState extends SketchpadChangableState {
 export interface SketchpadDiff {
   navigation?: string;
   navigationHistoryIndex?: number;
+  recentSearches?: string[];
+  recentFocusItems?: Record<string, string[]>;
   access?: Access;
   theme?: Theme;
   layout?: Layout;
@@ -963,6 +1009,12 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("navigationHistoryIndex")) {
         this.ySketchpad.set("navigationHistoryIndex", 0);
       }
+      if (!this.ySketchpad.has("recentSearches")) {
+        this.ySketchpad.set("recentSearches", JSON.stringify([]));
+      }
+      if (!this.ySketchpad.has("recentFocusItems")) {
+        this.ySketchpad.set("recentFocusItems", JSON.stringify({}));
+      }
       if (!this.ySketchpad.has("access")) {
         this.ySketchpad.set("access", Access.GUEST);
       }
@@ -1049,10 +1101,16 @@ export class SketchpadStore {
         };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
+    const recentSearchesStr = this.ySketchpad.get("recentSearches") as string;
+    const recentSearches = recentSearchesStr ? JSON.parse(recentSearchesStr) : [];
+    const recentFocusItemsStr = this.ySketchpad.get("recentFocusItems") as string;
+    const recentFocusItems = recentFocusItemsStr ? JSON.parse(recentFocusItemsStr) : {};
     const currentValues = {
       navigation: migratePath((this.ySketchpad.get("navigation") as string) || "/"),
       navigationHistory: navigationHistory,
       navigationHistoryIndex: (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0,
+      recentSearches: recentSearches,
+      recentFocusItems: recentFocusItems,
       access: this.ySketchpad.get("access") as Access,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
@@ -1156,6 +1214,13 @@ export class SketchpadStore {
         }
 
         this.ySketchpad.set("navigation", diff.navigation);
+      }
+      if ("recentSearches" in diff) {
+        this.ySketchpad.set("recentSearches", JSON.stringify(diff.recentSearches || []));
+      }
+      if ("recentFocusItems" in diff) {
+        const current = JSON.parse((this.ySketchpad.get("recentFocusItems") as string) || "{}");
+        this.ySketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
       }
       if (diff.access) this.ySketchpad.set("access", diff.access);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
@@ -1752,36 +1817,14 @@ export function useAppPanelVisibility(): PanelVisibility {
   const appKind = pathMatch?.[2];
   const itemGuid = pathMatch?.[3];
 
-  const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>({
-    toolbar: true,
-    workbench: true,
-    details: true,
-    chat: true,
-    settings: true,
-  });
+  const docsPanelVisibility = useSyncExternalStore(subscribeDocsPanelVisibility, getDocsPanelVisibilitySnapshot, getDocsPanelVisibilitySnapshot);
 
-  const [docsPanelVisibility, setDocsPanelVisibility] = useState<PanelVisibility>({
-    toolbar: false,
-    workbench: true,
-    details: false,
-    chat: false,
-    settings: false,
-    tools: false,
-    hud: false,
-    stats: false,
-  });
+  const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>(() => (appType === "docs" ? docsPanelVisibility : { ...defaultPanelVisibility }));
 
   useEffect(() => {
     if (appType === "docs") {
-      // For docs, use local state
       setPanelVisibility(docsPanelVisibility);
-
-      // Store the setter in a way that useAppCommands can access it
-      (window as any).__docsSetPanelVisibility = setDocsPanelVisibility;
-
-      return () => {
-        delete (window as any).__docsSetPanelVisibility;
-      };
+      return;
     }
 
     try {
@@ -1810,23 +1853,11 @@ export function useAppPanelVisibility(): PanelVisibility {
 
       if (app) {
         const unsubscribe = app.onChangedDeep(() => {
-          const newPanelVisibility = app.snapshot().panelVisibility || {
-            toolbar: true,
-            workbench: true,
-            details: true,
-            chat: true,
-            settings: true,
-          };
+          const newPanelVisibility = app.snapshot().panelVisibility || { ...defaultPanelVisibility };
           setPanelVisibility(newPanelVisibility);
         });
 
-        const initialPanelVisibility = app.snapshot().panelVisibility || {
-          toolbar: true,
-          workbench: true,
-          details: true,
-          chat: true,
-          settings: true,
-        };
+        const initialPanelVisibility = app.snapshot().panelVisibility || { ...defaultPanelVisibility };
         setPanelVisibility(initialPanelVisibility);
 
         return unsubscribe;
@@ -1867,16 +1898,12 @@ export function useAppCommands() {
           if (kitGuid && itemGuid) app = store.qualityApp(kitGuid, itemGuid);
           break;
         case "docs":
-          // Handle docs app with local state
           return {
             togglePanel: (panelKey: keyof PanelVisibility) => {
-              const setDocsPanelVisibility = (window as any).__docsSetPanelVisibility;
-              if (setDocsPanelVisibility) {
-                setDocsPanelVisibility((prev: PanelVisibility) => ({
-                  ...prev,
-                  [panelKey]: !prev[panelKey],
-                }));
-              }
+              updateDocsPanelVisibilityState((prev) => ({
+                ...prev,
+                [panelKey]: !prev[panelKey],
+              }));
             },
             execute: (command: string, ...args: any[]) => {},
           };

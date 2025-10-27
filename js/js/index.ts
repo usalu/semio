@@ -27,8 +27,18 @@ export type { YProviderFactory } from "./sketchpad/store";
 export { i18n };
 
 // Export docs elements for MDX
-export { Aside, Card, CardGrid, FileTree, FileTreeItem, Steps, TabItem, Tabs } from "./elements/docs";
-export type { AsideProps, CardGridProps, CardProps, FileTreeItemProps, FileTreeProps, StepsProps, TabItemProps, TabsProps } from "./elements/docs";
+export { FileTree } from "./elements/aggregation/FileTree";
+export type { FileTreeNode, FileTreeProps } from "./elements/aggregation/FileTree";
+
+export { Tabs, TabsContent, TabsList, TabsTrigger } from "./elements/aggregation/Tabs";
+export { Aside } from "./elements/display/Aside";
+export type { AsideProps } from "./elements/display/Aside";
+export { Card, CardGrid } from "./elements/display/Card";
+export type { CardGridProps, CardProps } from "./elements/display/Card";
+export { default as Section } from "./elements/display/Section";
+export type { SectionProps } from "./elements/display/Section";
+export { Steps } from "./elements/display/Steps";
+export type { StepsProps } from "./elements/display/Steps";
 
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";

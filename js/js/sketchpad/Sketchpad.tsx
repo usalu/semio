@@ -29,6 +29,7 @@ import { Design, Type } from "../semio";
 import "./apps";
 import { appRegistry } from "./apps";
 import { DesignAvatar, TypeAvatar } from "./apps/design/panels/Workbench";
+import { HeadingsProvider } from "./apps/docs/mdx-provider";
 import { QualityAvatar } from "./apps/quality/panels/Workbench";
 import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { FocusProvider, PanelSectionProvider } from "./Navbar";
@@ -321,9 +322,10 @@ const SketchpadBase: FC = () => {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <FocusProvider>
-        <PanelSectionProvider>
-          <FooterItemProvider>
+      <HeadingsProvider>
+        <FocusProvider>
+          <PanelSectionProvider>
+            <FooterItemProvider>
             <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
               <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
                 <Navbar />
@@ -418,6 +420,7 @@ const SketchpadBase: FC = () => {
           </FooterItemProvider>
         </PanelSectionProvider>
       </FocusProvider>
+      </HeadingsProvider>
       {createPortal(
         design && kit ? (
           <KitScopeProvider guid={kit}>
