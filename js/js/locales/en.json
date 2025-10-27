@@ -113,19 +113,19 @@
   },
   "panels": {
     "toolbar": "Toolbar panel",
-    "toolbar.extensive": "Toggle toolbar panel",
+    "toolbar.extensive": "Toggle the toolbar panel to access common tools and actions for the current workspace",
     "toolbar.noTools": "No tools",
     "details": "Details panel",
-    "details.extensive": "Toggle details panel",
+    "details.extensive": "Toggle the details panel to view and edit properties of the selected item in depth",
     "workbench": "Workbench panel",
-    "workbench.extensive": "Toggle workbench panel",
+    "workbench.extensive": "Toggle the workbench panel to access your main workspace with available tools and options",
     "workbench.noSections": "No workbench sections available",
     "console": "Console panel",
-    "console.extensive": "Toggle console panel",
+    "console.extensive": "Toggle the console panel to view logs and debug information",
     "chat": "Chat panel",
-    "chat.extensive": "Toggle chat panel",
+    "chat.extensive": "Toggle the chat panel to get AI assistance and context-aware help",
     "settings": "Settings panel",
-    "settings.extensive": "Toggle settings panel",
+    "settings.extensive": "Toggle the settings panel to configure application preferences and workspace options",
     "tools.noSections": "No tools sections available",
     "hud.noSections": "No hud sections available"
   },
@@ -363,17 +363,17 @@
     "local.extensive": "Click to see all local kits",
     "remote": "Remote kits",
     "remote.extensive": "Click to see all remote kits",
-    "types": "All types",
+    "types": "Types",
     "types.extensive": "Click to see all types",
-    "representations": "All representations",
+    "representations": "Representations",
     "representations.extensive": "Click to see all representations",
-    "designs": "All designs",
+    "designs": "Designs",
     "designs.extensive": "Click to see all designs",
-    "qualities": "All qualities",
+    "qualities": "Qualities",
     "qualities.extensive": "Click to see all qualities",
-    "files": "All files",
+    "files": "Files",
     "files.extensive": "Click to see all files",
-    "authors": "All authors",
+    "authors": "Authors",
     "authors.extensive": "Click to see all authors"
   },
   "settings": {
@@ -533,6 +533,10 @@
   },
   "pieces": {
     "title": "Pieces"
+  },
+  "tooltip": {
+    "manual": "Manual",
+    "tutorial": "Tutorial"
   },
   "docs": {
     "navigation": "Navigation",

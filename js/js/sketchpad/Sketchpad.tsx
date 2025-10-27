@@ -22,7 +22,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, T
 import React, { createContext, FC, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MemoryRouter, Outlet, Route, Routes, useParams } from "react-router";
-import { TooltipProvider } from "../elements/display/Tooltip";
+import { setTooltipModeProvider, TooltipProvider } from "../elements/display/Tooltip";
 
 import { DraggableAvatar } from "../elements/display/Avatar";
 import { Design, Type } from "../semio";
@@ -45,6 +45,7 @@ import {
   DesignScopeProvider,
   KitScopeProvider,
   Layout,
+  Mode,
   SketchpadScopeProvider,
   SketchpadState,
   Theme,
@@ -54,6 +55,7 @@ import {
   useIsMobile,
   useIsNavbarExpanded,
   useLayout,
+  useMode,
   useNavigation,
   useSketchpad,
   useSketchpadCommands,
@@ -477,16 +479,26 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
   return (
     <TooltipProvider>
       <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>
-        <DragDropProvider>
-          <MemoryRouter>
-            <Routes>
-              <Route element={<SketchpadBase />}>{generateRoutes()}</Route>
-            </Routes>
-          </MemoryRouter>
-        </DragDropProvider>
+        <TooltipModeProvider>
+          <DragDropProvider>
+            <MemoryRouter>
+              <Routes>
+                <Route element={<SketchpadBase />}>{generateRoutes()}</Route>
+              </Routes>
+            </MemoryRouter>
+          </DragDropProvider>
+        </TooltipModeProvider>
       </SketchpadScopeProvider>
     </TooltipProvider>
   );
+};
+
+const TooltipModeProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const mode = useMode();
+  useEffect(() => {
+    setTooltipModeProvider(() => mode);
+  }, [mode]);
+  return <>{children}</>;
 };
 
 export default Sketchpad;

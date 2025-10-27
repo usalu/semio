@@ -27,7 +27,7 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 import { Popover, PopoverAnchor, PopoverContent } from "../Popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Action } from "./Action";
 
 const toggleVariants = cva(
@@ -53,15 +53,13 @@ const toggleVariants = cva(
 export interface ToggleItem<T extends string> {
   value: T;
   label: React.ReactNode;
-  tooltip?: string;
-  hotkey?: string;
+  tooltip?: TooltipConfig;
 }
 
 interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type?: "default";
-  tooltip?: string;
-  tooltipPressed?: string;
-  hotkey?: string;
+  tooltip?: TooltipConfig;
+  tooltipPressed?: TooltipConfig;
   label?: string;
   level?: "base" | "panel" | "temporary";
 }
@@ -71,8 +69,7 @@ interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<t
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
-  tooltip?: string;
-  hotkey?: string;
+  tooltip?: TooltipConfig;
   label?: string;
   level?: "base" | "panel" | "temporary";
 }
@@ -82,11 +79,10 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
-  tooltip?: string;
-  hotkey?: string;
+  tooltip?: TooltipConfig;
   label?: string;
   placeholder?: string;
-  dropdownTooltip?: string;
+  dropdownTooltip?: TooltipConfig;
   level?: "base" | "panel" | "temporary";
 }
 
@@ -94,19 +90,20 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   type: "withAction";
   actionIcon: React.ReactNode;
   onActionClick: () => void;
-  tooltip?: string;
-  hotkey?: string;
+  tooltip?: TooltipConfig;
   label?: string;
-  actionTooltip?: string;
+  actionTooltip?: TooltipConfig;
   level?: "base" | "panel" | "temporary";
 }
 
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleProps<T> | ToggleDropdownProps<T> | ToggleWithActionProps;
 
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
+  const mode = useTooltipMode();
+
   // Cycle type
   if ("type" in props && props.type === "cycle") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, label, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -141,14 +138,12 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const activeTooltip = currentItem.tooltip || tooltip;
-    const activeHotkey = currentItem.hotkey || hotkey;
 
     const wrappedToggle = activeTooltip ? (
       <Tooltip>
         <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
         <TooltipContent>
-          {activeTooltip}
-          {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
+          <EnhancedTooltipContent config={activeTooltip} mode={mode} />
         </TooltipContent>
       </Tooltip>
     ) : (
@@ -171,7 +166,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // WithAction type
   if ("type" in props && props.type === "withAction") {
-    const { className, actionIcon, onActionClick, tooltip, hotkey, label, actionTooltip, level = "base", type, pressed, ...restProps } = props;
+    const { className, actionIcon, onActionClick, tooltip, label, actionTooltip, level = "base", type, pressed, ...restProps } = props;
 
     const mainContent = tooltip ? (
       <Tooltip>
@@ -179,8 +174,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           <span className="flex items-center gap-2 flex-1 min-w-0">{restProps.children}</span>
         </TooltipTrigger>
         <TooltipContent>
-          {tooltip}
-          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+          <EnhancedTooltipContent config={tooltip} mode={mode} />
         </TooltipContent>
       </Tooltip>
     ) : (
@@ -223,7 +217,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, tooltip, hotkey, label, dropdownTooltip, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, tooltip, label, dropdownTooltip, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -247,7 +241,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     };
 
     const activeTooltip = currentItem?.tooltip || tooltip;
-    const activeHotkey = currentItem?.hotkey || hotkey;
+
+    const ariaLabel = activeTooltip?.labelKey;
 
     const toggleRoot = (
       <TogglePrimitive.Root
@@ -255,7 +250,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         data-state={pressed ? "on" : "off"}
         className={cn(toggleVariants({ level }), "border gap-1 pr-1", className)}
         pressed={pressed}
-        aria-label={activeTooltip || undefined}
+        aria-label={ariaLabel || undefined}
         onPressedChange={(newPressed) => {
           if (!open) {
             onPressedChange?.(newPressed);
@@ -289,14 +284,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           setOpen(nextOpen);
         }}
       >
-        {activeTooltip || activeHotkey ? (
+        {activeTooltip ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <PopoverAnchor asChild>{toggleRoot}</PopoverAnchor>
             </TooltipTrigger>
             <TooltipContent>
-              {activeTooltip}
-              {activeHotkey && <span className="text-xs ml-1 opacity-60">({activeHotkey})</span>}
+              <EnhancedTooltipContent config={activeTooltip} mode={mode} />
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -322,8 +316,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
                   <Tooltip key={item.value}>
                     <TooltipTrigger asChild>{itemButton}</TooltipTrigger>
                     <TooltipContent side="right">
-                      {item.tooltip}
-                      {item.hotkey && <span className="text-xs ml-1 opacity-60">({item.hotkey})</span>}
+                      <EnhancedTooltipContent config={item.tooltip} mode={mode} />
                     </TooltipContent>
                   </Tooltip>
                 );
@@ -351,7 +344,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   // Standard toggle
-  const { className, tooltip, tooltipPressed, hotkey, label, level = "base", type, pressed, ...restProps } = props as ToggleStandardProps;
+  const { className, tooltip, tooltipPressed, label, level = "base", type, pressed, ...restProps } = props as ToggleStandardProps;
 
   const activeTooltip = pressed && tooltipPressed ? tooltipPressed : tooltip;
 
@@ -361,8 +354,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     <Tooltip>
       <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
       <TooltipContent>
-        {activeTooltip}
-        {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+        <EnhancedTooltipContent config={activeTooltip} mode={mode} />
       </TooltipContent>
     </Tooltip>
   ) : (

@@ -24,6 +24,7 @@ import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/stor
 import { Input } from "./Input";
 
 import { cn } from "../../semio";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 function Slider({
   className,
@@ -40,6 +41,7 @@ function Slider({
   finalizeTransaction,
   abortTransaction,
   interactionId,
+  tooltip,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
   label?: string;
@@ -50,12 +52,14 @@ function Slider({
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
+  tooltip?: TooltipConfig;
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
+  const mode = useTooltipMode();
 
   const _values = React.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
@@ -139,6 +143,51 @@ function Slider({
     }
   };
 
+  const sliderElement = (
+    <SliderPrimitive.Root
+      data-slot="slider"
+      defaultValue={defaultValue}
+      value={value}
+      min={min}
+      max={max}
+      onValueChange={onValueChange}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      className={cn(
+        "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
+      )}
+      {...props}
+    >
+      <SliderPrimitive.Track
+        data-slot="slider-track"
+        className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1")}
+      >
+        <SliderPrimitive.Range data-slot="slider-range" className={cn("bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full")} />
+      </SliderPrimitive.Track>
+      {Array.from({ length: _values.length }, (_, index) => (
+        <SliderPrimitive.Thumb
+          data-slot="slider-thumb"
+          key={index}
+          className="border-foreground bg-foreground ring-ring/50 block size-4 shrink-0 rounded-full border transition-colors focus-visible:bg-accent focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-accent"
+        />
+      ))}
+    </SliderPrimitive.Root>
+  );
+
+  const wrappedSlider = tooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{sliderElement}</TooltipTrigger>
+      <TooltipContent>
+        <EnhancedTooltipContent config={tooltip} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    sliderElement
+  );
+
   return (
     <div className={cn("flex items-center gap-2 min-w-0 h-9", className)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {label && (
@@ -147,37 +196,7 @@ function Slider({
         </span>
       )}
       <div className="flex items-center gap-2 flex-1 min-w-0 h-9">
-        <SliderPrimitive.Root
-          data-slot="slider"
-          defaultValue={defaultValue}
-          value={value}
-          min={min}
-          max={max}
-          onValueChange={onValueChange}
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
-          className={cn(
-            "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-          )}
-          {...props}
-        >
-          <SliderPrimitive.Track
-            data-slot="slider-track"
-            className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1")}
-          >
-            <SliderPrimitive.Range data-slot="slider-range" className={cn("bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full")} />
-          </SliderPrimitive.Track>
-          {Array.from({ length: _values.length }, (_, index) => (
-            <SliderPrimitive.Thumb
-              data-slot="slider-thumb"
-              key={index}
-              className="border-foreground bg-foreground ring-ring/50 block size-4 shrink-0 rounded-full border transition-colors focus-visible:bg-accent focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-accent"
-            />
-          ))}
-        </SliderPrimitive.Root>
+        {wrappedSlider}
         {isEditing ? (
           <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus />
         ) : (

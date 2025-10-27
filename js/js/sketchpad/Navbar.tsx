@@ -48,6 +48,7 @@ import {
   useIsMobile,
   useIsNavbarExpanded,
   useKits,
+  useMode,
   useNavigation,
   useNavigationHistory,
   useSketchpad,
@@ -203,7 +204,7 @@ export const useRemovePanelSection = () => {
 export interface PanelDefinition {
   key: string;
   icon: React.ComponentType<{ size?: number }>;
-  tooltip: string;
+  tooltip: import("../elements/display/Tooltip").TooltipConfig;
   hotkey: string;
 }
 
@@ -220,6 +221,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const [searchParams] = useSearchParams();
   const kits = useKits();
   const tooltip = useTooltip();
+  const mode = useMode();
   const isMobile = useIsMobile();
   const isNavbarExpanded = useIsNavbarExpanded();
 
@@ -658,19 +660,19 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     <Breadcrumb className="flex-1 min-w-0">
       <BreadcrumbList>
         {/* Always show Home icon with dropdown to select kinds */}
-        <BreadcrumbItem tooltip={tooltip("navbar.home")}>
+        <BreadcrumbItem tooltip={tooltip("navbar.home", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })}>
           <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
 
         {/* Show separator with kind selector dropdown */}
-        <BreadcrumbSeparator items={kitKindItems} tooltip={tooltip("navbar.kitKinds")} onNavigate={(href) => navigate(href)} />
+        <BreadcrumbSeparator items={kitKindItems} tooltip={tooltip("navbar.kitKinds", { manualPath: "kit#kinds", tutorialPath: "hello-semio/save-kit" })} onNavigate={(href) => navigate(href)} />
 
         {/* If viewing a kit (or we have a selected home kind), show the kind breadcrumb */}
         {(kitGuid && kitKind) || homeKind ? (
           <>
-            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind || homeKind}`)}>
+            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind || homeKind}`, { manualPath: "kit#kinds", tutorialPath: "hello-semio/save-kit" })}>
               <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
                 {(kitKind === "temporary" || homeKind === "temporary") && <Clock size={16} />}
                 {(kitKind === "local" || homeKind === "local") && <HardDrive size={16} />}
@@ -679,18 +681,18 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
 
             {/* Show kits dropdown when on home page with kind selected */}
-            {!kitGuid && <BreadcrumbSeparator items={homeKitsForKind} tooltip={tooltip("navbar.kits")} onNavigate={(href) => navigate(href)} />}
+            {!kitGuid && <BreadcrumbSeparator items={homeKitsForKind} tooltip={tooltip("navbar.kits", { manualPath: "kit#overview", tutorialPath: "hello-semio/save-kit" })} onNavigate={(href) => navigate(href)} />}
 
             {homeName && (
               <>
-                <BreadcrumbItem tooltip={tooltip("navbar.kitName")}>
+                <BreadcrumbItem tooltip={tooltip("navbar.kitName", { manualPath: "kit#metadata", tutorialPath: "hello-semio/save-kit" })}>
                   <BreadcrumbLink onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
                     {homeName}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator items={homeVersionsForName} tooltip={tooltip("navbar.versions")} onNavigate={(href) => navigate(href)} />
+                <BreadcrumbSeparator items={homeVersionsForName} tooltip={tooltip("navbar.versions", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })} onNavigate={(href) => navigate(href)} />
                 {homeVersion !== null && (
-                  <BreadcrumbItem tooltip={tooltip("navbar.kitVersion")}>
+                  <BreadcrumbItem tooltip={tooltip("navbar.kitVersion", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })}>
                     <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
                   </BreadcrumbItem>
                 )}
@@ -700,7 +702,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               <>
                 <BreadcrumbSeparator
                   items={kitItemsWithCreate}
-                  tooltip={tooltip("navbar.kits")}
+                  tooltip={tooltip("navbar.kits", { manualPath: "kit#overview", tutorialPath: "hello-semio/save-kit" })}
                   onNavigate={(href) => {
                     if (href === "#create-kit") handleCreateKit();
                     else navigate(href);
@@ -748,10 +750,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isKitApp && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
             {filteredKind && (
               <>
-                <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`)}>
+                <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`, { manualPath: `${filteredKind === "designs" ? "design" : filteredKind === "types" ? "type" : filteredKind === "qualities" ? "quality" : "kit"}#overview`, tutorialPath: `hello-semio/${filteredKind === "designs" ? "model-design" : filteredKind === "types" ? "model-brick-set" : "save-kit"}` })}>
                   <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }}>
                     {filteredKind === "designs" && <Layout size={16} />}
                     {filteredKind === "types" && <Box size={16} />}
@@ -761,7 +763,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbBreak />
-                <BreadcrumbSeparator items={filteredNameItems} tooltip={tooltip("navbar.selectName")} onNavigate={(href) => navigate(href)} />
+                <BreadcrumbSeparator items={filteredNameItems} tooltip={tooltip("navbar.selectName", { manualPath: "kit#artifacts" })} onNavigate={(href) => navigate(href)} />
                 {filteredName !== null && (
                   <>
                     <BreadcrumbItem>
@@ -778,7 +780,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredVariantItems} tooltip={tooltip("navbar.selectVariant")} onNavigate={(href) => navigate(href)} />
+                    <BreadcrumbSeparator items={filteredVariantItems} tooltip={tooltip("navbar.selectVariant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })} onNavigate={(href) => navigate(href)} />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && (
@@ -797,7 +799,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         {filteredVariant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredViewItems} tooltip={tooltip("navbar.selectView")} onNavigate={(href) => navigate(href)} />
+                    <BreadcrumbSeparator items={filteredViewItems} tooltip={tooltip("navbar.selectView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })} onNavigate={(href) => navigate(href)} />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && filteredView !== null && (
@@ -827,8 +829,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isDesignApp && design && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.designs")}>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.designs", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}>
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }}>
                 <Layout size={16} />
               </BreadcrumbLink>
@@ -836,13 +838,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={designNameItems}
-              tooltip={tooltip("navbar.selectDesign")}
+              tooltip={tooltip("navbar.selectDesign", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}
               onNavigate={(href) => {
                 if (href === "#create-design") handleCreateDesign();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.design")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.design", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}>
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -856,13 +858,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
-              tooltip={tooltip("navbar.selectVariant")}
+              tooltip={tooltip("navbar.selectVariant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })}
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(design, false);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.variant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })}>
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -876,13 +878,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
-              tooltip={tooltip("navbar.selectView")}
+              tooltip={tooltip("navbar.selectView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}
               onNavigate={(href) => {
                 if (href === "#create-view") handleCreateView(design);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.view")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.view", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}>
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -899,8 +901,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isTypeApp && type && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.types")}>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.types", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}>
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }}>
                 <Box size={16} />
               </BreadcrumbLink>
@@ -908,13 +910,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={typeNameItems}
-              tooltip={tooltip("navbar.selectType")}
+              tooltip={tooltip("navbar.selectType", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}
               onNavigate={(href) => {
                 if (href === "#create-type") handleCreateType();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.type")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.type", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}>
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -928,13 +930,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
-              tooltip={tooltip("navbar.selectVariant")}
+              tooltip={tooltip("navbar.selectVariant", { manualPath: "type#variants", tutorialPath: "hello-semio/model-brick-set" })}
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(type, true);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.variant")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.variant", { manualPath: "type#variants", tutorialPath: "hello-semio/model-brick-set" })}>
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -951,14 +953,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isQualityApp && quality && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts")} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.qualities")}>
+            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem tooltip={tooltip("breadcrumb.qualities", { manualPath: "quality#overview", tutorialPath: "hello-semio/model-brick-set" })}>
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }}>
                 <Award size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbBreak />
-            <BreadcrumbItem tooltip={tooltip("navbar.quality")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.quality", { manualPath: "quality#overview", tutorialPath: "hello-semio/model-brick-set" })}>
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -974,7 +976,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         )}
         {isDocsPath && (
           <>
-            <BreadcrumbItem tooltip={tooltip("navbar.docs")}>
+            <BreadcrumbItem tooltip={tooltip("navbar.docs", { manualPath: "interface#documentation" })}>
               <BreadcrumbLink onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>
                 <FileText size={16} />
               </BreadcrumbLink>
@@ -986,7 +988,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     label: `${s.emoji} ${s.label}`,
                     href: `/docs/${s.id}`,
                   }))}
-                  tooltip={tooltip("navbar.sections")}
+                  tooltip={tooltip("navbar.sections", { manualPath: "interface#documentation" })}
                   onNavigate={(href) => navigate(href)}
                 />
                 <BreadcrumbItem>
@@ -1142,9 +1144,20 @@ const Search: FC = ({}) => {
 
   const searchResults = useMemo(() => {
     if (query.trim()) return fuse.search(query).slice(0, 20);
+    // Show all recent results without limit, or fallback to first 20 if no recent results
     const base = recentResults.length > 0 ? recentResults : searchData.slice(0, 20);
     return base.map((item, idx) => ({ item, refIndex: idx } as FuseResult<SearchResult>));
   }, [fuse, query, recentResults, searchData]);
+
+  const groupedSearchResults = useMemo(() => {
+    return {
+      kits: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "kit"),
+      designs: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "design"),
+      types: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "type"),
+      qualities: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "quality"),
+      docs: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "docs"),
+    };
+  }, [searchResults]);
 
   const handleSelect = useCallback(
     (result: SearchResult) => {
@@ -1190,7 +1203,7 @@ const Search: FC = ({}) => {
 
   return (
     <>
-      <Toggle tooltip={tooltip("navbar.search.open")} tooltipPressed={tooltip("navbar.search.close")} pressed={open} onPressedChange={setOpen}>
+      <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search" })} pressed={open} onPressedChange={setOpen}>
         <SearchIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={open} onOpenChange={setOpen}>
@@ -1199,10 +1212,9 @@ const Search: FC = ({}) => {
           <CommandEmpty>{t("navbar.noResults")}</CommandEmpty>
           {searchResults.length > 0 && (
             <>
-              <CommandGroup heading={t("navbar.kits")}>
-                {searchResults
-                  .filter((r: FuseResult<SearchResult>) => r.item.type === "kit")
-                  .map((r: FuseResult<SearchResult>, idx: number) => (
+              {groupedSearchResults.kits.length > 0 && (
+                <CommandGroup heading={t("navbar.kits")}>
+                  {groupedSearchResults.kits.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`kit-${(r.item.item as KitShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
@@ -1210,11 +1222,11 @@ const Search: FC = ({}) => {
                       </div>
                     </CommandItem>
                   ))}
-              </CommandGroup>
-              <CommandGroup heading={t("breadcrumb.designs")}>
-                {searchResults
-                  .filter((r: FuseResult<SearchResult>) => r.item.type === "design")
-                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                </CommandGroup>
+              )}
+              {groupedSearchResults.designs.length > 0 && (
+                <CommandGroup heading={t("breadcrumb.designs")}>
+                  {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`design-${(r.item.item as DesignShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
@@ -1222,11 +1234,11 @@ const Search: FC = ({}) => {
                       </div>
                     </CommandItem>
                   ))}
-              </CommandGroup>
-              <CommandGroup heading={t("breadcrumb.types")}>
-                {searchResults
-                  .filter((r: FuseResult<SearchResult>) => r.item.type === "type")
-                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                </CommandGroup>
+              )}
+              {groupedSearchResults.types.length > 0 && (
+                <CommandGroup heading={t("breadcrumb.types")}>
+                  {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`type-${(r.item.item as TypeShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
@@ -1234,11 +1246,11 @@ const Search: FC = ({}) => {
                       </div>
                     </CommandItem>
                   ))}
-              </CommandGroup>
-              <CommandGroup heading={t("breadcrumb.qualities")}>
-                {searchResults
-                  .filter((r: FuseResult<SearchResult>) => r.item.type === "quality")
-                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                </CommandGroup>
+              )}
+              {groupedSearchResults.qualities.length > 0 && (
+                <CommandGroup heading={t("breadcrumb.qualities")}>
+                  {groupedSearchResults.qualities.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
@@ -1246,11 +1258,11 @@ const Search: FC = ({}) => {
                       </div>
                     </CommandItem>
                   ))}
-              </CommandGroup>
-              <CommandGroup heading={t("navbar.docs", "Documentation")}>
-                {searchResults
-                  .filter((r: FuseResult<SearchResult>) => r.item.type === "docs")
-                  .map((r: FuseResult<SearchResult>, idx: number) => (
+                </CommandGroup>
+              )}
+              {groupedSearchResults.docs.length > 0 && (
+                <CommandGroup heading={t("navbar.docs", "Documentation")}>
+                  {groupedSearchResults.docs.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`docs-${(r.item.item as { path: string }).path}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
                         {getIcon(r.item.type)}
@@ -1258,7 +1270,8 @@ const Search: FC = ({}) => {
                       </div>
                     </CommandItem>
                   ))}
-              </CommandGroup>
+                </CommandGroup>
+              )}
             </>
           )}
         </CommandList>
@@ -1318,6 +1331,7 @@ const Focus: FC = ({}) => {
 
   const focusResults = useMemo(() => {
     if (query.trim()) return fuse.search(query).slice(0, 20);
+    // Show all recent focus items without limit, or fallback to first 20 if no recent items
     const base = recentFocusItems.length > 0 ? recentFocusItems : focusItems.slice(0, 20);
     return base.map((item, idx) => ({ item, refIndex: idx }));
   }, [fuse, query, recentFocusItems, focusItems]);
@@ -1348,7 +1362,7 @@ const Focus: FC = ({}) => {
 
   return (
     <>
-      <Toggle tooltip={tooltip("navbar.focus.open")} tooltipPressed={tooltip("navbar.focus.close")} pressed={open} onPressedChange={setOpen} hotkey="Ctrl+F">
+      <Toggle tooltip={tooltip("navbar.focus.open", { manualPath: "interface#focus", tutorialPath: "hello-semio/sketch-setup", hotkey: "Ctrl+F" })} tooltipPressed={tooltip("navbar.focus.close", { manualPath: "interface#focus", hotkey: "Ctrl+F" })} pressed={open} onPressedChange={setOpen}>
         <FocusIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.focus.title", "Focus")} description={t("navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
@@ -1897,15 +1911,15 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
       {/* Unexpanded navbar */}
       <div className="h-12 flex items-center justify-between px-1 gap-1">
         <ButtonGroup>
-          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
+          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateBack} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
-          <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
+          <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateForward} disabled={!canGoForward}>
             <ArrowRight size={16} />
           </ButtonGroupItem>
           <ButtonGroupItem
             value="up"
-            tooltip={tooltip("navbar.up")}
+            tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })}
             onClick={() => {
               if (upTarget) navigate(upTarget);
             }}
@@ -1939,9 +1953,8 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
         <div className="flex gap-1">
           {toolbarConfig && (
             <Toggle
-              tooltip={tooltip("navbar.panelToggle.toolbar.show")}
-              tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide")}
-              hotkey={toolbarConfig.hotkey}
+              tooltip={tooltip("navbar.panelToggle.toolbar.show", { manualPath: "interface#panels", tutorialPath: "hello-semio/sketch-setup", hotkey: toolbarConfig.hotkey })}
+              tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide", { manualPath: "interface#panels", hotkey: toolbarConfig.hotkey })}
               pressed={!!visiblePanels.toolbar}
               onPressedChange={() => {
                 commands[appType]?.togglePanel("toolbar");
@@ -1950,14 +1963,14 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
               <toolbarConfig.icon size={16} />
             </Toggle>
           )}
-          <Toggle tooltip={tooltip("navbar.search.open")} tooltipPressed={tooltip("navbar.search.close")} pressed={searchOpen} onPressedChange={setSearchOpen}>
+          <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search" })} pressed={searchOpen} onPressedChange={setSearchOpen}>
             <SearchIcon size={16} />
           </Toggle>
           <Focus />
-          <Toggle tooltip={tooltip("navbar.fullscreen")} tooltipPressed={tooltip("navbar.exitFullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
             <Fullscreen size={16} />
           </Toggle>
-          <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+          <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand", { manualPath: "interface#navbar", tutorialPath: "hello-semio/sketch-setup" })} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
             {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
           </Toggle>
         </div>
@@ -1970,13 +1983,13 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
 
           {onWindowEvents && (
             <ButtonGroup>
-              <ButtonGroupItem value="minimize" tooltip={tooltip("navbar.minimize")} onClick={onWindowEvents.minimize}>
+              <ButtonGroupItem value="minimize" tooltip={tooltip("navbar.minimize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.minimize}>
                 <Minus size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="maximize" tooltip={tooltip("navbar.maximize")} onClick={onWindowEvents.maximize}>
+              <ButtonGroupItem value="maximize" tooltip={tooltip("navbar.maximize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.maximize}>
                 <Square size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="close" tooltip={tooltip("navbar.close")} onClick={onWindowEvents.close}>
+              <ButtonGroupItem value="close" tooltip={tooltip("navbar.close", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.close}>
                 <X size={16} />
               </ButtonGroupItem>
             </ButtonGroup>
@@ -2067,15 +2080,15 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
       style={{ WebkitAppRegion: "drag" } as any}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" tooltip={tooltip("navbar.back")} onClick={navigateBack} disabled={!canGoBack}>
+        <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateBack} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward")} onClick={navigateForward} disabled={!canGoForward}>
+        <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
         <ButtonGroupItem
           value="up"
-          tooltip={tooltip("navbar.up")}
+          tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })}
           onClick={() => {
             if (upTarget) navigate(upTarget);
           }}
@@ -2093,9 +2106,8 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
         <PanelToggles />
         {toolbarConfig && (
           <Toggle
-            tooltip={tooltip("navbar.panelToggle.toolbar.show")}
-            tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide")}
-            hotkey={toolbarConfig.hotkey}
+            tooltip={tooltip("navbar.panelToggle.toolbar.show", { manualPath: "interface#panels", tutorialPath: "hello-semio/sketch-setup", hotkey: toolbarConfig.hotkey })}
+            tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide", { manualPath: "interface#panels", hotkey: toolbarConfig.hotkey })}
             pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
               commands[appType]?.togglePanel("toolbar");
@@ -2104,7 +2116,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
             <toolbarConfig.icon />
           </Toggle>
         )}
-        <Toggle tooltip={tooltip("navbar.fullscreen")} tooltipPressed={tooltip("navbar.exitFullscreen")} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           <Fullscreen />
         </Toggle>
         {onWindowEvents && (

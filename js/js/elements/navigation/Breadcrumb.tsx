@@ -24,7 +24,8 @@ import { ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "../../semio";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
+import { Mode } from "../../sketchpad/store";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger } from "../display/Tooltip";
 
 function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
   return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
@@ -34,7 +35,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words border overflow-hidden h-auto min-h-9", className)} {...props} />;
 }
 
-function BreadcrumbItem({ className, tooltip, children, ...props }: React.ComponentProps<"li"> & { tooltip?: string }) {
+function BreadcrumbItem({ className, tooltip, mode = Mode.BEGINNER, children, ...props }: React.ComponentProps<"li"> & { tooltip?: TooltipConfig; mode?: Mode }) {
   const itemElement = (
     <li data-slot="breadcrumb-item" className={cn("flex items-stretch", className)} {...props}>
       {children}
@@ -45,7 +46,9 @@ function BreadcrumbItem({ className, tooltip, children, ...props }: React.Compon
     return (
       <Tooltip>
         <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
-        <TooltipContent>{tooltip}</TooltipContent>
+        <TooltipContent>
+          <EnhancedTooltipContent config={tooltip} mode={mode} />
+        </TooltipContent>
       </Tooltip>
     );
   }
@@ -73,13 +76,14 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
 }
 
 interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
-  items?: { label: React.ReactNode; href: string; tooltip?: string }[];
+  items?: { label: React.ReactNode; href: string; tooltip?: TooltipConfig }[];
   onNavigate?: (href: string) => void;
-  tooltip?: string;
+  tooltip?: TooltipConfig;
+  mode?: Mode;
   level?: "base" | "panel" | "temporary";
 }
 
-function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, level = "base", ...props }: BreadcrumbSeparatorProps) {
+function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, mode = Mode.BEGINNER, level = "base", ...props }: BreadcrumbSeparatorProps) {
   const [open, setOpen] = React.useState(false);
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
@@ -99,7 +103,9 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
       return (
         <Tooltip>
           <TooltipTrigger asChild>{separatorElement}</TooltipTrigger>
-          <TooltipContent>{tooltip}</TooltipContent>
+          <TooltipContent>
+            <EnhancedTooltipContent config={tooltip} mode={mode} />
+          </TooltipContent>
         </Tooltip>
       );
     }
@@ -118,7 +124,9 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
               </li>
             </DropdownMenuPrimitive.Trigger>
           </TooltipTrigger>
-          <TooltipContent>{tooltip}</TooltipContent>
+          <TooltipContent>
+            <EnhancedTooltipContent config={tooltip} mode={mode} />
+          </TooltipContent>
         </Tooltip>
       ) : (
         <DropdownMenuPrimitive.Trigger asChild>
@@ -144,7 +152,9 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, tooltip, 
             const wrappedItem = item.tooltip ? (
               <Tooltip key={index}>
                 <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
-                <TooltipContent>{item.tooltip}</TooltipContent>
+                <TooltipContent>
+                  <EnhancedTooltipContent config={item.tooltip} mode={mode} />
+                </TooltipContent>
               </Tooltip>
             ) : (
               menuItem

@@ -22,6 +22,7 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
   label?: string;
@@ -33,13 +34,15 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
+  tooltip?: TooltipConfig;
 }
 
-function Input({ className, type, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, ...props }: InputProps) {
+function Input({ className, type, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, tooltip, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
+  const mode = useTooltipMode();
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -96,40 +99,14 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
 
   const inputValue = lazy ? localValue : externalValue;
 
-  if (label) {
-    return (
-      <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
-        <input
-          type={type}
-          data-slot="input"
-          className={cn(
-            "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-accent",
-            "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
-            type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
-            className,
-          )}
-          value={inputValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          {...props}
-        />
-      </div>
-    );
-  }
-
-  return (
+  const inputElement = (
     <input
       type={type}
       data-slot="input"
-      style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-9 w-full min-w-0 border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-accent",
-        "aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+        "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
         type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
         className,
       )}
@@ -141,6 +118,28 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
       {...props}
     />
   );
+
+  const wrappedInput = tooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{inputElement}</TooltipTrigger>
+      <TooltipContent>
+        <EnhancedTooltipContent config={tooltip} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    inputElement
+  );
+
+  if (label) {
+    return (
+      <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
+        {wrappedInput}
+      </div>
+    );
+  }
+
+  return <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>{wrappedInput}</div>;
 }
 
 export { Input };

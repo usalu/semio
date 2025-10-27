@@ -23,7 +23,7 @@ import { type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "../../semio";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { toggleVariants } from "./Toggle";
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
@@ -61,13 +61,12 @@ function ToggleGroupItem({
   className,
   children,
   tooltip,
-  hotkey,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
-  tooltip?: string;
-  hotkey?: string;
+  tooltip?: TooltipConfig;
 }) {
   const context = React.useContext(ToggleGroupContext);
+  const mode = useTooltipMode();
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
@@ -91,12 +90,10 @@ function ToggleGroupItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          {/* Wrapping in span to avoid styling issue with data-[state=on]: https://github.com/radix-ui/primitives/discussions/560 */}
           <span>{toggleGroupItemElement}</span>
         </TooltipTrigger>
         <TooltipContent>
-          {tooltip}
-          {hotkey && <span className="text-xs ml-1 opacity-60">({hotkey})</span>}
+          <EnhancedTooltipContent config={tooltip} mode={mode} />
         </TooltipContent>
       </Tooltip>
     );

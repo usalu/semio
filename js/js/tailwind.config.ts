@@ -18,10 +18,57 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
+import typography from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
 
 export default {
   content: ["./**/*.{ts,tsx,mdx}"],
   darkMode: "media",
-  plugins: [],
+  theme: {
+    extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            "--tw-prose-body": "var(--color-foreground)",
+            "--tw-prose-headings": "var(--color-foreground)",
+            "--tw-prose-lead": "var(--color-foreground)",
+            "--tw-prose-links": "var(--color-active-base)",
+            "--tw-prose-bold": "var(--color-foreground)",
+            "--tw-prose-counters": "var(--color-foreground)",
+            "--tw-prose-bullets": "var(--color-foreground)",
+            "--tw-prose-hr": "var(--color-border)",
+            "--tw-prose-quotes": "var(--color-foreground)",
+            "--tw-prose-quote-borders": "var(--color-border)",
+            "--tw-prose-captions": "var(--color-muted-foreground)",
+            "--tw-prose-code": "var(--color-foreground)",
+            "--tw-prose-pre-code": "var(--color-foreground)",
+            "--tw-prose-pre-bg": "var(--color-temporary)",
+            "--tw-prose-th-borders": "var(--color-border)",
+            "--tw-prose-td-borders": "var(--color-border)",
+          },
+        },
+        invert: {
+          css: {
+            "--tw-prose-body": "var(--color-foreground)",
+            "--tw-prose-headings": "var(--color-foreground)",
+            "--tw-prose-lead": "var(--color-foreground)",
+            "--tw-prose-links": "var(--color-active-foreground)",
+            "--tw-prose-bold": "var(--color-foreground)",
+            "--tw-prose-counters": "var(--color-foreground)",
+            "--tw-prose-bullets": "var(--color-foreground)",
+            "--tw-prose-hr": "var(--color-border)",
+            "--tw-prose-quotes": "var(--color-foreground)",
+            "--tw-prose-quote-borders": "var(--color-border)",
+            "--tw-prose-captions": "var(--color-muted-foreground)",
+            "--tw-prose-code": "var(--color-foreground)",
+            "--tw-prose-pre-code": "var(--color-foreground)",
+            "--tw-prose-pre-bg": "var(--color-temporary)",
+            "--tw-prose-th-borders": "var(--color-border)",
+            "--tw-prose-td-borders": "var(--color-border)",
+          },
+        },
+      },
+    },
+  },
+  plugins: [typography],
 } satisfies Config;

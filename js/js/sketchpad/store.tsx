@@ -1025,7 +1025,7 @@ export class SketchpadStore {
         this.ySketchpad.set("layout", Layout.NORMAL);
       }
       if (!this.ySketchpad.has("mode")) {
-        this.ySketchpad.set("mode", Mode.NORMAL);
+        this.ySketchpad.set("mode", Mode.BEGINNER);
       }
       if (!this.ySketchpad.has("isFullscreen")) {
         this.ySketchpad.set("isFullscreen", false);
@@ -1114,7 +1114,7 @@ export class SketchpadStore {
       access: this.ySketchpad.get("access") as Access,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
-      mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.NORMAL,
+      mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.BEGINNER,
       appSettings: appSettings,
       panelSizes: panelSizes,
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
@@ -1761,17 +1761,22 @@ export function useMode(): Mode {
   return useSketchpad((s) => s.mode) as Mode;
 }
 
-export function useTooltip(): (key: string) => string | undefined {
-  const { t } = useTranslation();
+export function useTooltip(): (key: string, options?: { manualPath?: string; tutorialPath?: string; hotkey?: string }) => import("../elements/display/Tooltip").TooltipConfig | undefined {
   const mode = useMode();
-  return (key: string) => {
+  return (key: string, options?: { manualPath?: string; tutorialPath?: string; hotkey?: string }) => {
     if (mode === Mode.EXPERT) return undefined;
-    if (mode === Mode.BEGINNER) {
-      const extensiveKey = `${key}.extensive`;
-      return t(extensiveKey) !== extensiveKey ? t(extensiveKey) : t(key);
-    }
-    return t(key);
+    return {
+      labelKey: key,
+      manualPath: options?.manualPath,
+      tutorialPath: options?.tutorialPath,
+      hotkey: options?.hotkey,
+    };
   };
+}
+
+export function useSemioTooltip() {
+  const mode = useMode();
+  return { mode };
 }
 
 export function useIsFullscreen(): boolean {

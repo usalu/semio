@@ -942,8 +942,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind(selectedKind)}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact(selectedKind)}
-              tooltip={tooltip("kitApp.hideKind")}
-              actionTooltip={tooltip("kitApp.createArtifact")}
+              tooltip={tooltip("kitApp.hideKind", { manualPath: "kit#artifacts" })}
+              actionTooltip={tooltip("kitApp.createArtifact", { manualPath: "kit#artifacts", tutorialPath: `hello-semio/${selectedKind === "designs" ? "model-design" : "model-brick-set"}` })}
             >
               {selectedKind === "designs" && <Layout className="size-4" />}
               {selectedKind === "types" && <Box className="size-4" />}
@@ -981,8 +981,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("designs")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("designs")}
-                tooltip={tooltip("kitApp.showDesigns")}
-                actionTooltip={tooltip("kitApp.createDesign")}
+                tooltip={tooltip("kitApp.showDesigns", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}
+                actionTooltip={tooltip("kitApp.createDesign", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}
               >
                 <Layout className="size-4" />
               </Toggle>
@@ -992,8 +992,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("types")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("types")}
-                tooltip={tooltip("kitApp.showTypes")}
-                actionTooltip={tooltip("kitApp.createType")}
+                tooltip={tooltip("kitApp.showTypes", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}
+                actionTooltip={tooltip("kitApp.createType", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}
               >
                 <Box className="size-4" />
               </Toggle>
@@ -1003,8 +1003,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("qualities")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("qualities")}
-                tooltip={tooltip("kitApp.showQualities")}
-                actionTooltip={tooltip("kitApp.createQuality")}
+                tooltip={tooltip("kitApp.showQualities", { manualPath: "quality#overview", tutorialPath: "hello-semio/model-brick-set" })}
+                actionTooltip={tooltip("kitApp.createQuality", { manualPath: "quality#overview", tutorialPath: "hello-semio/model-brick-set" })}
               >
                 <Award className="size-4" />
               </Toggle>
@@ -1014,8 +1014,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("files")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("files")}
-                tooltip={tooltip("kitApp.showFiles")}
-                actionTooltip={tooltip("kitApp.createFile")}
+                tooltip={tooltip("kitApp.showFiles", { manualPath: "kit#files", tutorialPath: "hello-semio/save-kit" })}
+                actionTooltip={tooltip("kitApp.createFile", { manualPath: "kit#files", tutorialPath: "hello-semio/save-kit" })}
               >
                 <FileText className="size-4" />
               </Toggle>
@@ -1025,8 +1025,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("authors")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("authors")}
-                tooltip={tooltip("kitApp.showAuthors")}
-                actionTooltip={tooltip("kitApp.createAuthor")}
+                tooltip={tooltip("kitApp.showAuthors", { manualPath: "kit#authors", tutorialPath: "hello-semio/save-kit" })}
+                actionTooltip={tooltip("kitApp.createAuthor", { manualPath: "kit#authors", tutorialPath: "hello-semio/save-kit" })}
               >
                 <User className="size-4" />
               </Toggle>

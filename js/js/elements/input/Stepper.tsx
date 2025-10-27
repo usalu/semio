@@ -26,6 +26,7 @@ import { Minus, Plus } from "lucide-react";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 import { Input } from "./Input";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 interface StepperProps {
   value?: number;
@@ -42,15 +43,17 @@ interface StepperProps {
   abortTransaction?: () => void;
   label?: string;
   interactionId?: string;
+  tooltip?: TooltipConfig;
 }
 
-const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, label, interactionId }) => {
+const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, label, interactionId, tooltip }) => {
   const [internalValue, setInternalValue] = useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
+  const mode = useTooltipMode();
 
   useEffect(() => {
     if (value !== undefined) {
@@ -172,6 +175,96 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
   const isInteracting = interactionId && activeInteraction === interactionId;
   const shouldFade = activeInteraction && !isInteracting;
 
+  const stepperElement = (
+    <div className="flex items-center flex-1 min-w-0 h-9">
+      <button
+        type="button"
+        onMouseDown={handleMouseDown(-step)}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseDown(-step)}
+        onTouchEnd={handleMouseUp}
+        disabled={!canStepDown}
+        className="h-9 w-9 border border-r-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <Input
+        type="number"
+        value={internalValue.toString()}
+        onChange={handleInputChange}
+        onFocus={() => {
+          if (!isEditing) {
+            setIsEditing(true);
+            startTransaction?.();
+          }
+          onPointerDown?.();
+        }}
+        onBlur={() => {
+          if (isEditing) {
+            setIsEditing(false);
+            finalizeTransaction?.();
+          }
+          onPointerUp?.();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            e.preventDefault();
+            if (!isEditing) {
+              setIsEditing(true);
+              startTransaction?.();
+            }
+            if (e.key === "ArrowUp") {
+              handleStepUp();
+            } else {
+              handleStepDown();
+            }
+          } else if (e.key === "Escape") {
+            if (isEditing) {
+              setIsEditing(false);
+              setInternalValue(value ?? defaultValue);
+              abortTransaction?.();
+              (e.target as HTMLInputElement).blur();
+            }
+          } else if (e.key === "Enter") {
+            if (isEditing) {
+              setIsEditing(false);
+              finalizeTransaction?.();
+              (e.target as HTMLInputElement).blur();
+            }
+          }
+        }}
+        className="border-l-0 border-r-0 text-center"
+        step={step}
+        min={min}
+        max={max}
+      />
+      <button
+        type="button"
+        onMouseDown={handleMouseDown(step)}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseDown(step)}
+        onTouchEnd={handleMouseUp}
+        disabled={!canStepUp}
+        className="h-9 w-9 border border-l-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  const wrappedStepper = tooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{stepperElement}</TooltipTrigger>
+      <TooltipContent>
+        <EnhancedTooltipContent config={tooltip} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    stepperElement
+  );
+
   return (
     <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {label && (
@@ -179,82 +272,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
           {label}
         </span>
       )}
-      <div className="flex items-center flex-1 min-w-0 h-9">
-        <button
-          type="button"
-          onMouseDown={handleMouseDown(-step)}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleMouseDown(-step)}
-          onTouchEnd={handleMouseUp}
-          disabled={!canStepDown}
-          className="h-9 w-9 border border-r-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <Input
-          type="number"
-          value={internalValue.toString()}
-          onChange={handleInputChange}
-          onFocus={() => {
-            if (!isEditing) {
-              setIsEditing(true);
-              startTransaction?.();
-            }
-            onPointerDown?.();
-          }}
-          onBlur={() => {
-            if (isEditing) {
-              setIsEditing(false);
-              finalizeTransaction?.();
-            }
-            onPointerUp?.();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-              e.preventDefault();
-              if (!isEditing) {
-                setIsEditing(true);
-                startTransaction?.();
-              }
-              if (e.key === "ArrowUp") {
-                handleStepUp();
-              } else {
-                handleStepDown();
-              }
-            } else if (e.key === "Escape") {
-              if (isEditing) {
-                setIsEditing(false);
-                setInternalValue(value ?? defaultValue);
-                abortTransaction?.();
-                (e.target as HTMLInputElement).blur();
-              }
-            } else if (e.key === "Enter") {
-              if (isEditing) {
-                setIsEditing(false);
-                finalizeTransaction?.();
-                (e.target as HTMLInputElement).blur();
-              }
-            }
-          }}
-          className="border-l-0 border-r-0 text-center"
-          step={step}
-          min={min}
-          max={max}
-        />
-        <button
-          type="button"
-          onMouseDown={handleMouseDown(step)}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleMouseDown(step)}
-          onTouchEnd={handleMouseUp}
-          disabled={!canStepUp}
-          className="h-9 w-9 border border-l-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+      {wrappedStepper}
     </div>
   );
 };

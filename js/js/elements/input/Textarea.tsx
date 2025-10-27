@@ -21,6 +21,7 @@
 import * as React from "react";
 
 import { cn } from "../../semio";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange"> {
   label?: string;
@@ -31,11 +32,13 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
+  tooltip?: TooltipConfig;
 }
 
-function Textarea({ className, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, ...props }: TextareaProps) {
+function Textarea({ className, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, tooltip, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
+  const mode = useTooltipMode();
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -80,38 +83,13 @@ function Textarea({ className, label, lazy, value: externalValue, onChange, onLa
 
   const textareaValue = lazy ? localValue : externalValue;
 
-  if (label) {
-    return (
-      <div className="flex items-start gap-2 min-w-0">
-        <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate" title={label}>
-          {label}
-        </span>
-        <textarea
-          data-slot="textarea"
-          className={cn(
-            "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-16 w-full border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-accent",
-            "aria-invalid:border-destructive flex-1",
-            className,
-          )}
-          value={textareaValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          {...props}
-        />
-      </div>
-    );
-  }
-
-  return (
+  const textareaElement = (
     <textarea
       data-slot="textarea"
       className={cn(
         "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-16 w-full border bg-transparent px-3 py-2 text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-accent",
-        "aria-invalid:border-destructive",
+        "aria-invalid:border-destructive flex-1",
         className,
       )}
       value={textareaValue}
@@ -122,6 +100,30 @@ function Textarea({ className, label, lazy, value: externalValue, onChange, onLa
       {...props}
     />
   );
+
+  const wrappedTextarea = tooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{textareaElement}</TooltipTrigger>
+      <TooltipContent>
+        <EnhancedTooltipContent config={tooltip} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    textareaElement
+  );
+
+  if (label) {
+    return (
+      <div className="flex items-start gap-2 min-w-0">
+        <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate" title={label}>
+          {label}
+        </span>
+        {wrappedTextarea}
+      </div>
+    );
+  }
+
+  return wrappedTextarea;
 }
 
 export { Textarea };

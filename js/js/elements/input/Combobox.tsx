@@ -3,6 +3,7 @@ import { FC, useState } from "react";
 import { cn } from "../../semio";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../Command";
 import { Popover, PopoverContent, PopoverTrigger } from "../Popover";
+import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Button } from "./Button";
 
 interface ComboboxOption {
@@ -21,10 +22,12 @@ interface ComboboxProps {
   className?: string;
   allowClear?: boolean;
   label?: string;
+  tooltip?: TooltipConfig;
 }
 
-const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, label }) => {
+const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, label, tooltip }) => {
   const [open, setOpen] = useState(false);
+  const mode = useTooltipMode();
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -47,16 +50,31 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
     finalizeTransaction?.();
   };
 
+  const popoverTrigger = (
+    <PopoverTrigger asChild>
+      <Button variant="default" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
+        {selectedOption ? selectedOption.label : placeholder}
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    </PopoverTrigger>
+  );
+
+  const wrappedTrigger = tooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{popoverTrigger}</TooltipTrigger>
+      <TooltipContent>
+        <EnhancedTooltipContent config={tooltip} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    popoverTrigger
+  );
+
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
       {label && <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>}
       <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <Button variant="default" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
-            {selectedOption ? selectedOption.label : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
+        {wrappedTrigger}
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput placeholder="Search..." />

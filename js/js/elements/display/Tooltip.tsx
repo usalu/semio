@@ -19,9 +19,30 @@
 
 // #endregion
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { BookOpen, GraduationCap } from "lucide-react";
 import * as React from "react";
-
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { cn } from "../../semio";
+import { Mode } from "../../sketchpad/store";
+
+export interface TooltipConfig {
+  labelKey: string;
+  manualPath?: string;
+  tutorialPath?: string;
+  hotkey?: string;
+}
+
+let getModeFunction: (() => Mode) | undefined;
+
+export function setTooltipModeProvider(fn: () => Mode) {
+  getModeFunction = fn;
+}
+
+export function useTooltipMode(): Mode {
+  if (!getModeFunction) return Mode.BEGINNER;
+  return getModeFunction();
+}
 
 function TooltipProvider({ delayDuration = 0, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return <TooltipPrimitive.Provider data-slot="tooltip-provider" delayDuration={delayDuration} {...props} />;
@@ -51,13 +72,76 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
         )}
         {...props}
       >
-        {/* <TooltipPrimitive.Arrow className="border-2 border-accent-foreground fill-accent z-40 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45" /> */}
         {children}
-        {/* <TooltipPrimitive.Arrow className="bg-transparent fill-none z-40 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45" /> */}
-        {/* <TooltipPrimitive.Arrow className="bg-accent fill-accent z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45" /> */}
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );
 }
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+interface EnhancedTooltipContentProps {
+  config: TooltipConfig;
+  mode: Mode;
+}
+
+function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
+  const { t } = useTranslation();
+
+  if (mode === Mode.EXPERT) return null;
+
+  const { labelKey, manualPath, tutorialPath, hotkey } = config;
+  const showManual = mode === Mode.BEGINNER || mode === Mode.NORMAL;
+  const showTutorial = mode === Mode.BEGINNER;
+  
+  const labelKeyToUse = mode === Mode.BEGINNER ? `${labelKey}.extensive` : labelKey;
+  const label = t(labelKeyToUse, { defaultValue: t(labelKey) });
+  
+  const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
+  const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
+  
+  const hasLinks = (showManual && fullManualPath) || (showTutorial && fullTutorialPath);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span>{label}</span>
+        {hotkey && <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono">{hotkey}</kbd>}
+      </div>
+      {hasLinks && (
+        <div className="flex items-center gap-2 border-t border-accent-foreground pt-2">
+          {showManual && fullManualPath && (
+            <Link to={fullManualPath} className="text-link hover:text-link-hover flex items-center gap-1">
+              <BookOpen className="size-3" />
+              <span>{t("tooltip.manual")}</span>
+            </Link>
+          )}
+          {showTutorial && fullTutorialPath && (
+            <Link to={fullTutorialPath} className="text-link hover:text-link-hover flex items-center gap-1">
+              <GraduationCap className="size-3" />
+              <span>{t("tooltip.tutorial")}</span>
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SemioTooltipProps {
+  children: React.ReactElement;
+  config: TooltipConfig;
+  mode: Mode;
+}
+
+function SemioTooltip({ children, config, mode }: SemioTooltipProps) {
+  if (mode === Mode.EXPERT) return children;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent>
+        <EnhancedTooltipContent config={config} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+export { EnhancedTooltipContent, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };

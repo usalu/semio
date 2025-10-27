@@ -113,19 +113,19 @@
   },
   "panels": {
     "toolbar": "Werkzeugleiste-Panel",
-    "toolbar.extensive": "Werkzeugleiste-Panel umschalten",
+    "toolbar.extensive": "Werkzeugleiste-Panel umschalten, um auf häufig verwendete Werkzeuge und Aktionen für den aktuellen Arbeitsbereich zuzugreifen",
     "toolbar.noTools": "Keine Werkzeuge",
     "details": "Details-Panel",
-    "details.extensive": "Details-Panel umschalten",
+    "details.extensive": "Details-Panel umschalten, um Eigenschaften des ausgewählten Elements detailliert anzuzeigen und zu bearbeiten",
     "workbench": "Werkbank-Panel",
-    "workbench.extensive": "Werkbank-Panel umschalten",
+    "workbench.extensive": "Werkbank-Panel umschalten, um auf Ihren Hauptarbeitsbereich mit verfügbaren Werkzeugen und Optionen zuzugreifen",
     "workbench.noSections": "Keine Werkbank-Abschnitte verfügbar",
     "console": "Konsole-Panel",
-    "console.extensive": "Konsole-Panel umschalten",
+    "console.extensive": "Konsole-Panel umschalten, um Protokolle und Debug-Informationen anzuzeigen",
     "chat": "Chat-Panel",
-    "chat.extensive": "Chat-Panel umschalten",
+    "chat.extensive": "Chat-Panel umschalten, um KI-Unterstützung und kontextbezogene Hilfe zu erhalten",
     "settings": "Einstellungen-Panel",
-    "settings.extensive": "Einstellungen-Panel umschalten",
+    "settings.extensive": "Einstellungen-Panel umschalten, um Anwendungseinstellungen und Arbeitsbereichsoptionen zu konfigurieren",
     "tools.noSections": "Keine Werkzeug-Abschnitte verfügbar",
     "hud.noSections": "Keine HUD-Abschnitte verfügbar"
   },
@@ -363,17 +363,17 @@
     "local.extensive": "Klicken um alle lokalen Kits anzuzeigen",
     "remote": "Remote-Kits",
     "remote.extensive": "Klicken um alle Remote-Kits anzuzeigen",
-    "types": "Alle Typen",
+    "types": "Typen",
     "types.extensive": "Klicken um alle Typen anzuzeigen",
-    "representations": "Alle Darstellungen",
+    "representations": "Darstellungen",
     "representations.extensive": "Klicken um alle Darstellungen anzuzeigen",
-    "designs": "Alle Designs",
+    "designs": "Designs",
     "designs.extensive": "Klicken um alle Designs anzuzeigen",
-    "qualities": "Alle Qualitäten",
+    "qualities": "Qualitäten",
     "qualities.extensive": "Klicken um alle Qualitäten anzuzeigen",
-    "files": "Alle Dateien",
+    "files": "Dateien",
     "files.extensive": "Klicken um alle Dateien anzuzeigen",
-    "authors": "Alle Autoren",
+    "authors": "Autoren",
     "authors.extensive": "Klicken um alle Autoren anzuzeigen"
   },
   "settings": {
@@ -533,6 +533,10 @@
   },
   "pieces": {
     "title": "Teile"
+  },
+  "tooltip": {
+    "manual": "Handbuch",
+    "tutorial": "Tutorial"
   },
   "docs": {
     "navigation": "Navigation",

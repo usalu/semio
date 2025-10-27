@@ -20,11 +20,12 @@
 // #endregion
 
 import { ComponentType, ReactNode } from "react";
+import { TooltipConfig } from "../../elements/display/Tooltip";
 
 export interface PanelDefinition {
   key: string;
   icon: ComponentType<{ size?: number }>;
-  tooltip: string;
+  tooltip: TooltipConfig;
   hotkey: string;
 }
 

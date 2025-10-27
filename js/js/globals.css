@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "@semio/js/theme.css";
 
 /* https://tailwindcss.com/docs/theme */
