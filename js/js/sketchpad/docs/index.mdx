@@ -3,21 +3,21 @@ title: Welcome to Semio
 description: Design Information Modeling for Architecture
 ---
 
-import { Card, CardGrid } from "@semio/js";
-
-{/* prettier-ignore */}
-<CardGrid stagger>
-  <Card title="Just want to toy around?" icon="pencil">
-    You can try out sketchpad free and without login [online](https://play.semio-tech.com) 🎛️
-  </Card>
-  <Card title="More into research?" icon="open-book">
-    Here is the [presentation](https://eg-ice-25.semio-tech.com) of our [latest paper](https://doi.org/10.17868/strath.00093288) on LLMs 🤖
-    Or [another one](https://eg-ice-23.semio-tech.com) about formalizing architecture 🏛️
-  </Card>
-  <Card title="Are you a web-dev?" icon="storybook">
-    All components for sketchpad can be found in our [storybook](https://js.semio-tech.com).
-  </Card>
-  <Card title="Ever wanted to combine Wasp, Monoceros, Ladybug and Rhino?" icon="laptop">
-    See how semio enables the [integration](https://docs.semio.tech/integrations) of all of these platforms through a Grasshopper plugin 🦗
-  </Card>
-</CardGrid>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  <div className="border rounded p-4 bg-panel">
+    <h3 className="font-semibold text-base mb-2">✏️ Just want to toy around?</h3>
+    <p className="text-sm text-muted-foreground">You can try out sketchpad free and without login [online](https://play.semio-tech.com) 🎛️</p>
+  </div>
+  <div className="border rounded p-4 bg-panel">
+    <h3 className="font-semibold text-base mb-2">📖 More into research?</h3>
+    <p className="text-sm text-muted-foreground">Here is the [presentation](https://eg-ice-25.semio-tech.com) of our [latest paper](https://doi.org/10.17868/strath.00093288) on LLMs 🤖 Or [another one](https://eg-ice-23.semio-tech.com) about formalizing architecture 🏛️</p>
+  </div>
+  <div className="border rounded p-4 bg-panel">
+    <h3 className="font-semibold text-base mb-2">📚 Are you a web-dev?</h3>
+    <p className="text-sm text-muted-foreground">All components for sketchpad can be found in our [storybook](https://js.semio-tech.com).</p>
+  </div>
+  <div className="border rounded p-4 bg-panel">
+    <h3 className="font-semibold text-base mb-2">💻 Ever wanted to combine Wasp, Monoceros, Ladybug and Rhino?</h3>
+    <p className="text-sm text-muted-foreground">See how semio enables the [integration](https://docs.semio.tech/integrations) of all of these platforms through a Grasshopper plugin 🦗</p>
+  </div>
+</div>

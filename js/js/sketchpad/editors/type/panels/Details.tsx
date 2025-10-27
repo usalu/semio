@@ -25,9 +25,10 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { SortableTreeItems, TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import { Input } from "../../../../elements/input/Input";
+import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Author, guid, Kit, Type } from "../../../../semio";
+import { Author, guid, Guid, Kit, Type } from "../../../../semio";
 import { useIsInTypeScope, useKit, useKitCommands, useType } from "../../../kits/store";
 import { useTypeEditorCommands, useTypeEditorHover, useTypeEditorSelection } from "../store";
 
@@ -269,13 +270,13 @@ const RepresentationsSectionForm: FC = () => {
   );
 };
 
-export const PortsSection: FC = () => {
+export const PortsListSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <PortsSectionForm />;
+  return <PortsListSectionForm />;
 };
 
-const PortsSectionForm: FC = () => {
+const PortsListSectionForm: FC = () => {
   const { t } = useTranslation();
   const { startTransaction, finalizeTransaction, abortTransaction, selectPort, deselectPort, hoverPort, clearHover } = useTypeEditorCommands();
   const kitCommands = useKitCommands();
@@ -427,6 +428,25 @@ const PortsSectionForm: FC = () => {
                         onFocus={startTransaction}
                         onBlur={finalizeTransaction}
                       />
+                    </TreeContent>
+                  </TreeItem>
+                  <TreeItem>
+                    <TreeContent>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs">{t("type.portT")}</label>
+                        <Slider
+                          value={[port.t ?? 0]}
+                          onValueChange={([value]) => {
+                            updatePort(port.guid, { t: value });
+                          }}
+                          startTransaction={startTransaction}
+                          finalizeTransaction={finalizeTransaction}
+                          abortTransaction={abortTransaction}
+                          min={0}
+                          max={1}
+                          step={0.01}
+                        />
+                      </div>
                     </TreeContent>
                   </TreeItem>
                   <TreeItem label={t("type.portPoint")}>
@@ -790,6 +810,425 @@ const AttributesSectionForm: FC = () => {
             </TreeItem>
           )}
         </SortableTreeItems>
+      </TreeItem>
+    </>
+  );
+};
+
+export const PortSection: FC<{ portGuid: Guid }> = ({ portGuid }) => {
+  const isInTypeScope = useIsInTypeScope();
+  if (!isInTypeScope) return null;
+  return <PortSectionForm portGuid={portGuid} />;
+};
+
+const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
+  const { t } = useTranslation();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useTypeEditorCommands();
+  const kitCommands = useKitCommands();
+  const type = useType(undefined, undefined, true) as Type;
+
+  const port = type.ports?.find((p) => p.guid === portGuid);
+
+  if (!port) {
+    return (
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("type.portNotFound")}</p>
+        </TreeContent>
+      </TreeItem>
+    );
+  }
+
+  const updatePort = (id: string, portDiff: any) => {
+    const port = type.ports?.find((existingPort) => existingPort.guid === id);
+    const diff: any = { ...portDiff };
+    if (port) {
+      if (portDiff.point) {
+        diff.point = {};
+        if (portDiff.point.x !== undefined) diff.point.x = portDiff.point.x - port.point.x;
+        if (portDiff.point.y !== undefined) diff.point.y = portDiff.point.y - port.point.y;
+        if (portDiff.point.z !== undefined) diff.point.z = portDiff.point.z - port.point.z;
+      }
+      if (portDiff.direction) {
+        diff.direction = {};
+        if (portDiff.direction.x !== undefined) diff.direction.x = portDiff.direction.x - port.direction.x;
+        if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
+        if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
+      }
+    }
+    kitCommands.updateType(type.guid, {
+      ports: {
+        updated: [{ id, diff }],
+      },
+    });
+  };
+
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            label={t("type.portFamily")}
+            value={port.family || ""}
+            placeholder={t("type.portFamilyPlaceholder")}
+            onChange={(e) => {
+              updatePort(port.guid, { family: e.target.value });
+            }}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea
+            label={t("type.portDescription")}
+            value={port.description || ""}
+            placeholder={t("type.portDescriptionPlaceholder")}
+            onChange={(e) => {
+              updatePort(port.guid, { description: e.target.value });
+            }}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs">{t("type.portT")}</label>
+            <Slider
+              value={[port.t ?? 0]}
+              onValueChange={([value]) => {
+                updatePort(port.guid, { t: value });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              min={0}
+              max={1}
+              step={0.01}
+            />
+          </div>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("type.portPoint")}>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.x")}
+              value={port.point.x}
+              onChange={(value) => {
+                updatePort(port.guid, { point: { x: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.y")}
+              value={port.point.y}
+              onChange={(value) => {
+                updatePort(port.guid, { point: { y: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.z")}
+              value={port.point.z}
+              onChange={(value) => {
+                updatePort(port.guid, { point: { z: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+      </TreeItem>
+      <TreeItem label={t("type.portDirection")}>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.x")}
+              value={port.direction.x}
+              onChange={(value) => {
+                updatePort(port.guid, { direction: { x: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.y")}
+              value={port.direction.y}
+              onChange={(value) => {
+                updatePort(port.guid, { direction: { y: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.z")}
+              value={port.direction.z}
+              onChange={(value) => {
+                updatePort(port.guid, { direction: { z: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            label={t("type.portCompatibleFamilies")}
+            value={(port.compatibleFamilies || []).join(", ")}
+            placeholder={t("type.portCompatibleFamiliesPlaceholder")}
+            onChange={(e) => {
+              updatePort(port.guid, {
+                compatibleFamilies: e.target.value
+                  .split(",")
+                  .map((family) => family.trim())
+                  .filter((family) => family),
+              });
+            }}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+export const PortsMultipleSection: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
+  const isInTypeScope = useIsInTypeScope();
+  if (!isInTypeScope) return null;
+  return <PortsMultipleSectionForm portGuids={portGuids} />;
+};
+
+const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
+  const { t } = useTranslation();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useTypeEditorCommands();
+  const kitCommands = useKitCommands();
+  const type = useType(undefined, undefined, true) as Type;
+
+  const ports = type.ports?.filter((p) => portGuids.includes(p.guid)) || [];
+
+  if (ports.length === 0) {
+    return (
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("type.portsNotFound")}</p>
+        </TreeContent>
+      </TreeItem>
+    );
+  }
+
+  const getCommonValue = <T,>(getter: (port: any) => T | undefined): T | undefined => {
+    const values = ports.map(getter).filter((v) => v !== undefined);
+    if (values.length === 0) return undefined;
+    const firstValue = values[0];
+    return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
+  };
+
+  const updatePorts = (portDiff: any) => {
+    startTransaction();
+    ports.forEach((port) => {
+      const diff: any = { ...portDiff };
+      if (portDiff.point) {
+        diff.point = {};
+        if (portDiff.point.x !== undefined) diff.point.x = portDiff.point.x - port.point.x;
+        if (portDiff.point.y !== undefined) diff.point.y = portDiff.point.y - port.point.y;
+        if (portDiff.point.z !== undefined) diff.point.z = portDiff.point.z - port.point.z;
+      }
+      if (portDiff.direction) {
+        diff.direction = {};
+        if (portDiff.direction.x !== undefined) diff.direction.x = portDiff.direction.x - port.direction.x;
+        if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
+        if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
+      }
+      kitCommands.updateType(type.guid, {
+        ports: {
+          updated: [{ id: port.guid, diff }],
+        },
+      });
+    });
+    finalizeTransaction();
+  };
+
+  const commonFamily = getCommonValue((p) => p.family);
+  const commonT = getCommonValue((p) => p.t);
+  const commonPointX = getCommonValue((p) => p.point?.x);
+  const commonPointY = getCommonValue((p) => p.point?.y);
+  const commonPointZ = getCommonValue((p) => p.point?.z);
+  const commonDirectionX = getCommonValue((p) => p.direction?.x);
+  const commonDirectionY = getCommonValue((p) => p.direction?.y);
+  const commonDirectionZ = getCommonValue((p) => p.direction?.z);
+
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">
+            {t("type.multiplePortsSelected", { count: ports.length })}
+          </p>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            label={t("type.portFamily")}
+            value={commonFamily || ""}
+            placeholder={commonFamily === undefined ? t("common.mixedValues") : t("type.portFamilyPlaceholder")}
+            onChange={(e) => {
+              updatePorts({ family: e.target.value });
+            }}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs">{t("type.portT")}</label>
+            <Slider
+              value={[commonT ?? 0]}
+              onValueChange={([value]) => {
+                updatePorts({ t: value });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              min={0}
+              max={1}
+              step={0.01}
+            />
+          </div>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label={t("type.portPoint")}>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.x")}
+              value={commonPointX}
+              onChange={(value) => {
+                updatePorts({ point: { x: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.y")}
+              value={commonPointY}
+              onChange={(value) => {
+                updatePorts({ point: { y: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.z")}
+              value={commonPointZ}
+              onChange={(value) => {
+                updatePorts({ point: { z: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+      </TreeItem>
+      <TreeItem label={t("type.portDirection")}>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.x")}
+              value={commonDirectionX}
+              onChange={(value) => {
+                updatePorts({ direction: { x: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.y")}
+              value={commonDirectionY}
+              onChange={(value) => {
+                updatePorts({ direction: { y: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Stepper
+              label={t("common.z")}
+              value={commonDirectionZ}
+              onChange={(value) => {
+                updatePorts({ direction: { z: value } });
+              }}
+              startTransaction={startTransaction}
+              finalizeTransaction={finalizeTransaction}
+              abortTransaction={abortTransaction}
+              step={0.1}
+            />
+          </TreeContent>
+        </TreeItem>
       </TreeItem>
     </>
   );

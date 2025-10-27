@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
-import { useTypeEditorCommands, useTypeEditorSafe } from "./store";
+import { useTypeEditor, useTypeEditorCommands } from "./store";
 import { TypeEditorTools } from "./tools_registry";
 
 const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
@@ -55,10 +55,11 @@ const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const { t } = useTranslation();
   const { kit, type } = useParams();
-  if (!kit || !type) return null;
   const editor = useTypeEditor((s) => s, { kit, type });
   const { setActiveTool } = useTypeEditorCommands({ kit, type });
+
+  if (!kit || !type || !editor) return null;
+
   const activeTool = editor?.activeTool ?? ToolType.SELECTION_NORMAL;
-  if (!editor) return null;
   return <ToolGroup tools={getTypeTools(t)} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
 };

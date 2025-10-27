@@ -34,7 +34,7 @@ export const Aside: FC<AsideProps> = ({ type = "note", title, children }) => {
   const colorClass = colorMap[type];
 
   return (
-    <aside className={`my-4 p-4 border-l-4 rounded-r border ${colorClass}`}>
+    <aside className={`my-4 p-4 border ${colorClass}`}>
       <div className="flex items-start gap-2">
         <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
         <div className="flex-1">

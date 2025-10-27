@@ -20,15 +20,17 @@
 
 // #endregion
 
-import { Edges, Line, Select, TransformControls } from "@react-three/drei";
-import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Edges, Line, Select } from "@react-three/drei";
+import React, { FC, useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { useThree } from "@react-three/fiber";
+import { ThreeEvent } from "@react-three/fiber";
 import Scene, { Model } from "../../../../elements/windows/Scene";
-import { Camera, Design, DiffStatus, matrixToPlane, Piece, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
-import { PieceScopeProvider, useDesign, useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePiecePlane, usePieceStatus } from "../../../kits/store";
+import { Camera, Design, DiffStatus, Piece, Plane, planeToMatrix, toThreeRotation } from "../../../../semio";
+import { PieceScopeProvider, useDesign, useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePiece, usePieceStatus } from "../../../kits/store";
 import { useEditorPanelVisibility } from "../../../store";
 import { DesignEditorFullscreenWindow, DesignEditorPresenceOther, useDesignEditorCamera, useDesignEditorCommands, useDesignEditorFullscreen, useDesignEditorOthers, useDesignEditorPieceColor, useDesignEditorSelection } from "../store";
+import { SharedTransformControls } from "./SharedTransformControls";
+import { TransformableModel } from "./TransformableModel";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -66,32 +68,13 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const piece = usePiece() as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
   const isSelected = useIsPieceSelected();
-  const selection = useDesignEditorSelection();
   const isHovered = useIsPieceTransitiveHovered();
-  const piecePlane = usePiecePlane();
   const status = usePieceStatus();
 
-  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover, updatePiece, startTransaction, finalizeTransaction } = useDesignEditorCommands();
+  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignEditorCommands();
 
   // Use the same color logic as diagram nodes
   const { fill } = useDesignEditorPieceColor(undefined, piece.guid);
-
-  const transformControlsRef = useRef<any>(null);
-  const groupRef = useRef<THREE.Group>(null);
-  const isDraggingRef = useRef(false);
-  const isUpdatingPlaneRef = useRef(false);
-
-  // Use refs to store callbacks to avoid re-running the effect
-  const updatePieceRef = useRef(updatePiece);
-  const startTransactionRef = useRef(startTransaction);
-  const finalizeTransactionRef = useRef(finalizeTransaction);
-
-  // Keep refs up to date
-  useEffect(() => {
-    updatePieceRef.current = updatePiece;
-    startTransactionRef.current = startTransaction;
-    finalizeTransactionRef.current = finalizeTransaction;
-  }, [updatePiece, startTransaction, finalizeTransaction]);
 
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
@@ -117,72 +100,8 @@ const ModelPiece: FC<ModelPieceProps> = () => {
     );
   }, [status, piece.plane, diffedPiece.plane]);
 
-  // const piece = flatDesign.pieces?.[pieceIndex];
-  // const plane = piecePlanes[pieceIndex];
-  // const fileUrl = fileUrls.get(pieceRepresentationUrls.get(piece?.id_!)!)!;
-  // const selected = selection.pieces?.some((id) => id.id_ === piece?.id_) ?? false;
-  // const diffStatus = pieceDiffStatuses[pieceIndex] || DiffStatus.Unchanged;
-
-  // if (!piece) return null;
-  // const fixed = piece.plane !== undefined;
-  // const matrix = useMemo(() => {
-  //   const planeRotationMatrix = planeToMatrix(plane);
-  //   planeRotationMatrix.multiply(toSemioRotation());
-  //   return planeRotationMatrix;
-  // }, [plane]);
-  // const styledScene = useMemo(() => {
-  //   const scene = useGLTF(fileUrl).scene.clone();
-  //   let meshColor: THREE.Color;
-  //   let meshOpacity = 1;
-  //   let lineOpacity = 1;
-
-  //   if (diffStatus === DiffStatus.Added) {
-  //     meshColor = new THREE.Color(getComputedColor("--color-success"));
-  //     if (selected) {
-  //       const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
-  //       meshColor.lerp(selectedColor, 0.5);
-  //     }
-  //   } else if (diffStatus === DiffStatus.Modified) {
-  //     meshColor = new THREE.Color(getComputedColor("--color-warning"));
-  //     if (selected) {
-  //       const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
-  //       meshColor.lerp(selectedColor, 0.5);
-  //     }
-  //   } else if (diffStatus === DiffStatus.Removed) {
-  //     meshColor = new THREE.Color(getComputedColor("--color-error"));
-  //     meshOpacity = 0.2;
-  //     lineOpacity = 0.25;
-  //     if (selected) {
-  //       const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
-  //       meshColor.lerp(selectedColor, 0.5);
-  //     }
-  //   } else if (selected) {
-  //     meshColor = new THREE.Color(getComputedColor("--color-primary"));
-  //   } else {
-  //     meshColor = new THREE.Color(getComputedColor("--color-light"));
-  //   }
-
-  //   const lineColor = new THREE.Color(getComputedColor("--color-dark"));
-  //   scene.traverse((object) => {
-  //     if (object instanceof THREE.Mesh) {
-  //       object.material = new THREE.MeshBasicMaterial({
-  //         color: meshColor,
-  //         transparent: meshOpacity < 1,
-  //         opacity: meshOpacity,
-  //       });
-  //     }
-  //     if (object instanceof THREE.Line) {
-  //       object.material = new THREE.LineBasicMaterial({
-  //         color: lineColor,
-  //         transparent: lineOpacity < 1,
-  //         opacity: lineOpacity,
-  //       });
-  //     }
-  //   });
-  //   return scene;
-  // }, [fileUrl, diffStatus, selected]);
   const onSelect = useCallback(
-    (e?: MouseEvent) => {
+    (e?: ThreeEvent<MouseEvent>) => {
       if (e?.ctrlKey || e?.metaKey) {
         removePieceFromSelection(piece.guid);
       } else if (e?.shiftKey) {
@@ -191,7 +110,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
         selectPiece(piece.guid);
       }
     },
-    [selectPiece, removePieceFromSelection, addPieceToSelection],
+    [selectPiece, removePieceFromSelection, addPieceToSelection, piece.guid],
   );
   // Get computed color including color-mix() resolution
   const materialColor = useMemo(() => {
@@ -257,109 +176,6 @@ const ModelPiece: FC<ModelPieceProps> = () => {
     return { position, quaternion, scale };
   }, [diffedMatrix, originalMatrix, piece.plane]);
 
-  // Get access to the Three.js controls (OrbitControls)
-  const { controls: orbitControls } = useThree();
-
-  // Listen to dragging-changed and object-change events from TransformControls
-  useEffect(() => {
-    const controls = transformControlsRef.current;
-    console.log("Setting up event listeners for", piece.guid, "controls:", controls);
-
-    if (!controls) {
-      console.warn("No TransformControls ref available");
-      return;
-    }
-
-    const updatePlaneFromTransform = () => {
-      const transformedObject = controls.object;
-      if (!transformedObject) {
-        console.error("No object attached to TransformControls!");
-        return;
-      }
-
-      // Get the transform from position/rotation/scale that TransformControls modified
-      const position = transformedObject.position.clone();
-      const quaternion = transformedObject.quaternion.clone();
-      const scale = transformedObject.scale.clone();
-
-      // Compose the matrix from position, rotation, scale
-      const threeMatrix = new THREE.Matrix4().compose(position, quaternion, scale);
-
-      // Apply inverse coordinate transformation: inverseRotation * threeMatrix
-      const semioMatrix = new THREE.Matrix4().multiplyMatrices(toSemioRotation(), threeMatrix);
-
-      const newPlane = matrixToPlane(semioMatrix);
-      console.log("Updating plane during drag:", JSON.stringify(newPlane, null, 2));
-
-      updatePieceRef.current(piece.guid, { plane: newPlane });
-    };
-
-    const handleDraggingChanged = (event: any) => {
-      console.log("=== DRAGGING CHANGED ===", event.value, piece.guid);
-
-      if (event.value) {
-        // Started dragging
-        console.log("Started dragging piece", piece.guid);
-        isDraggingRef.current = true;
-        isUpdatingPlaneRef.current = true; // Disable useLayoutEffect during entire drag
-
-        // Disable OrbitControls to prevent camera movement during drag
-        if (orbitControls) {
-          (orbitControls as any).enabled = false;
-          console.log("Disabled OrbitControls");
-        }
-
-        startTransactionRef.current();
-      } else {
-        // Stopped dragging
-        console.log("Stopped dragging piece", piece.guid);
-        isDraggingRef.current = false;
-
-        // Re-enable OrbitControls
-        if (orbitControls) {
-          (orbitControls as any).enabled = true;
-          console.log("Re-enabled OrbitControls");
-        }
-
-        // Final update
-        updatePlaneFromTransform();
-
-        console.log("Calling finalizeTransaction...");
-        finalizeTransactionRef.current();
-        console.log("=== DONE ===");
-
-        // Re-enable useLayoutEffect after transaction completes
-        setTimeout(() => {
-          isUpdatingPlaneRef.current = false;
-        }, 50);
-      }
-    };
-
-    const handleObjectChange = () => {
-      // Only update while actively dragging
-      if (isDraggingRef.current) {
-        console.log("Object changed, updating plane...");
-        updatePlaneFromTransform();
-      } else {
-        console.log("Object changed but not dragging, ignoring");
-      }
-    };
-
-    console.log("Adding event listeners to controls");
-    controls.addEventListener("dragging-changed", handleDraggingChanged);
-    controls.addEventListener("objectChange", handleObjectChange);
-
-    return () => {
-      console.log("Removing event listeners from controls");
-      controls.removeEventListener("dragging-changed", handleDraggingChanged);
-      controls.removeEventListener("objectChange", handleObjectChange);
-
-      // Make sure OrbitControls is re-enabled on cleanup
-      if (orbitControls) {
-        (orbitControls as any).enabled = true;
-      }
-    };
-  }, [piece.guid, orbitControls]); // Re-run when piece.guid or orbitControls changes
 
   // Original piece mesh (edges only when there's a diff)
   const originalMeshContent =
@@ -389,22 +205,17 @@ const ModelPiece: FC<ModelPieceProps> = () => {
     />
   );
 
-  const hasValidPlane = !!(piece.plane && transformProps);
-
-  useLayoutEffect(() => {
-    if (groupRef.current && transformProps && !isDraggingRef.current && !isUpdatingPlaneRef.current) {
-      groupRef.current.position.copy(transformProps.position);
-      groupRef.current.quaternion.copy(transformProps.quaternion);
-      groupRef.current.scale.copy(transformProps.scale);
-    }
-  }, [transformProps]);
+  // Render the piece at its current position (diffed or original)
+  const pieceMatrix = diffedMatrix || originalMatrix;
 
   return (
     <>
       {originalMeshContent}
-      <TransformControls key={piece.guid} ref={transformControlsRef} enabled={hasValidPlane && isSelected} visible={hasValidPlane} mode="translate">
-        <group ref={groupRef}>{diffedMeshContent}</group>
-      </TransformControls>
+      {pieceMatrix && (
+        <group matrix={pieceMatrix} matrixAutoUpdate={false}>
+          {diffedMeshContent}
+        </group>
+      )}
     </>
   );
 
@@ -457,37 +268,11 @@ const ModelPiece: FC<ModelPieceProps> = () => {
 const ModelDesign: FC = () => {
   const commands = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
-  // const fileUrls = useFileUrls();
   const others = useDesignEditorOthers();
   const design = useDesign();
-  // const flatDesign = useFlatDesign();
   const flatDesign = design as Design;
-  // const pieceRepresentationUrls = usePieceRepresentationUrls();
 
-  const { selectPieces, startTransaction, finalizeTransaction, abortTransaction } = commands;
-
-  // useEffect(() => {
-  //   fileUrls.forEach((url, id) => {
-  //     useGLTF.preload(id);
-  //   });
-  // }, [fileUrls]);
-
-  // useEffect(() => {
-  //   flatDesign.pieces?.forEach((p: Piece) => {
-  //     if (!p.type) {
-  //       console.warn(`No type defined for piece ${p.id_}`);
-  //       return;
-  //     }
-  //     const type = types.find((t) => t.name === p.type?.name && (t.variant || "") === (p.type?.variant || ""));
-  //     if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
-  //   });
-  // }, [flatDesign.pieces, types]);
-
-  // useEffect(() => {
-  //   pieceRepresentationUrls.forEach((url, id) => {
-  //     if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
-  //   });
-  // }, [pieceRepresentationUrls, fileUrls]);
+  const { selectPieces, startTransaction, finalizeTransaction, updatePiece } = commands;
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
@@ -496,23 +281,57 @@ const ModelDesign: FC = () => {
         selectPieces(newSelectedPieceIds);
       }
     },
-    [selectPieces],
+    [selectPieces, selection.pieces],
+  );
+
+  // Convert pieces to TransformableModel format for SharedTransformControls
+  const selectedModels = useMemo((): TransformableModel[] => {
+    if (!selection.pieces || !flatDesign.pieces) return [];
+
+    return flatDesign.pieces
+      .filter((piece) => selection.pieces?.includes(piece.guid))
+      .map((piece) => ({
+        guid: piece.guid,
+        plane: piece.plane,
+        isTransformable: !piece.isLocked && piece.plane !== undefined,
+        isSelected: true,
+      }));
+  }, [selection.pieces, flatDesign.pieces]);
+
+  // Handle multi-model transform updates
+  const handleMultiPlaneUpdate = useCallback(
+    (updates: Array<{ modelGuid: string; newPlane: Plane }>) => {
+      updates.forEach(({ modelGuid, newPlane }) => {
+        updatePiece(modelGuid, { plane: newPlane });
+      });
+    },
+    [updatePiece]
   );
 
   return (
-    <Select box multiple onChange={onChange}>
-      <group>
-        {/* <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}> */}
-        {flatDesign.pieces?.map((piece: Piece) => (
-          <PieceScopeProvider key={piece.guid} guid={piece.guid}>
-            <ModelPiece />
-          </PieceScopeProvider>
-        ))}
-        {others.map((presence, id) => (
-          <PresenceThree key={id} {...presence} />
-        ))}
-      </group>
-    </Select>
+    <>
+      <Select box multiple onChange={onChange}>
+        <group>
+          {flatDesign.pieces?.map((piece: Piece) => (
+            <PieceScopeProvider key={piece.guid} guid={piece.guid}>
+              <ModelPiece />
+            </PieceScopeProvider>
+          ))}
+          {others.map((presence, id) => (
+            <PresenceThree key={id} {...presence} />
+          ))}
+        </group>
+      </Select>
+
+      {/* Single shared transform control for all selected models */}
+      <SharedTransformControls
+        selectedModels={selectedModels}
+        onUpdate={handleMultiPlaneUpdate}
+        onTransformStart={startTransaction}
+        onTransformEnd={finalizeTransaction}
+        mode="translate"
+      />
+    </>
   );
 };
 

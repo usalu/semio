@@ -100,9 +100,9 @@ const Table = <T,>({
   }, [focusedItemId, data, getRowId, rowKey, onFocusComplete]);
 
   const rowHeightClass = {
-    compact: "h-8",
-    normal: "h-9",
-    comfortable: "h-10",
+    compact: "py-1",
+    normal: "py-1.5",
+    comfortable: "py-2",
   }[rowHeight];
 
   const visibleColumns = columns.filter((col) => {
@@ -114,10 +114,10 @@ const Table = <T,>({
   return (
     <ScrollArea ref={scrollAreaRef} className={`h-full w-full ${className}`}>
       <table className="w-full border-collapse">
-        <thead className={`border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
-          <tr className={rowHeightClass}>
+        <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
+          <tr>
             {visibleColumns.map((column) => (
-              <th key={column.id} className={`text-left p-1 font-medium ${column.className || ""}`} style={{ width: column.width }}>
+              <th key={column.id} className={`text-left p-1 font-medium ${rowHeightClass} ${column.className || ""}`} style={{ width: column.width }}>
                 {column.header}
               </th>
             ))}
@@ -135,7 +135,7 @@ const Table = <T,>({
               const key = rowKey ? rowKey(row, index) : index.toString();
               const rowId = getRowId ? getRowId(row) : key;
               const isSelected = selectedSet.has(rowId);
-              const baseRowClassName = `border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+              const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
               const customRowClassName = rowClassName ? rowClassName(row, index) : "";
 
               return (

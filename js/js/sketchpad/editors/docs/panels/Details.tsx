@@ -10,6 +10,7 @@ import { Hash } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
+import { useFocusSafe } from "../../../Navbar";
 import { useHeadings } from "../mdx-provider";
 
 export interface HeadingNode {
@@ -24,7 +25,7 @@ interface DetailsProps {
   onNavigate?: (id: string) => void;
 }
 
-const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => void }> = ({ headings, onNavigate }) => {
+const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => void; triggerFocus?: (id: string) => void }> = ({ headings, onNavigate, triggerFocus }) => {
   return (
     <>
       {headings.map((heading) => (
@@ -35,6 +36,8 @@ const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => vo
               onClick={() => {
                 if (onNavigate) {
                   onNavigate(heading.id);
+                } else if (triggerFocus) {
+                  triggerFocus(heading.id);
                 } else {
                   const element = document.getElementById(heading.id);
                   element?.scrollIntoView({ behavior: "smooth" });
@@ -47,7 +50,7 @@ const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => vo
               </span>
             </div>
           </TreeContent>
-          {heading.children && heading.children.length > 0 && <HeadingTree headings={heading.children} onNavigate={onNavigate} />}
+          {heading.children && heading.children.length > 0 && <HeadingTree headings={heading.children} onNavigate={onNavigate} triggerFocus={triggerFocus} />}
         </TreeItem>
       ))}
     </>
@@ -57,6 +60,7 @@ const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => vo
 const Details: FC<DetailsProps> = ({ headings: propsHeadings, onNavigate }) => {
   const { t } = useTranslation();
   const { headings: contextHeadings } = useHeadings();
+  const focusContext = useFocusSafe();
   const headings = propsHeadings || contextHeadings;
 
   if (headings.length === 0) {
@@ -73,7 +77,7 @@ const Details: FC<DetailsProps> = ({ headings: propsHeadings, onNavigate }) => {
 
   return (
     <TreeSection label={t("docs.onThisPage")} defaultOpen={true}>
-      <HeadingTree headings={headings} onNavigate={onNavigate} />
+      <HeadingTree headings={headings} onNavigate={onNavigate} triggerFocus={focusContext?.triggerFocusItem} />
     </TreeSection>
   );
 };

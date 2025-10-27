@@ -4547,36 +4547,4 @@ export function useKitCommands() {
   };
 }
 
-export function useKitCommands() {
-  const store = useKitStore() as KitStore;
-  return {
-    importKit: (url: string) => store.execute("semio.kit.import", url),
-    exportKit: () => store.execute("semio.kit.export"),
-    createAuthor: (author: Author) => store.execute("semio.kit.createAuthor", author),
-    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => store.execute("semio.kit.updateAuthor", Guid, authorDiff),
-    deleteAuthor: (Guid: Guid) => store.execute("semio.kit.deleteAuthor", Guid),
-    createType: (type: Type) => store.execute("semio.kit.createType", type),
-    updateType: (guid: Guid, diff: TypeDiff) => store.execute("semio.kit.updateType", guid, diff),
-    deleteType: (guid: Guid) => store.execute("semio.kit.deleteType", guid),
-    createDesign: (design: Design) => store.execute("semio.kit.createDesign", design),
-    updateDesign: (guid: Guid, diff: DesignDiff) => store.execute("semio.kit.updateDesign", guid, diff),
-    deleteDesign: (guid: Guid) => store.execute("semio.kit.deleteDesign", guid),
-    createQuality: (quality: Quality) => store.execute("semio.kit.createQuality", quality),
-    updateQuality: (guid: Guid, diff: QualityDiff) => store.execute("semio.kit.updateQuality", guid, diff),
-    deleteQuality: (guid: Guid) => store.execute("semio.kit.deleteQuality", guid),
-    addFile: (file: SemioFile, blob?: Blob) => store.execute("semio.kit.addFile", file, blob),
-    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => store.execute("semio.kit.updateFile", url, fileDiff, blob),
-    removeFile: (url: Url) => store.execute("semio.kit.removeFile", url),
-    addPiece: (design: Guid, piece: Piece) => store.execute("semio.kit.addPiece", design, piece),
-    addPieces: (design: Guid, pieces: Piece[]) => store.execute("semio.kit.addPieces", design, pieces),
-    removePiece: (design: Guid, piece: Guid) => store.execute("semio.kit.removePiece", design, piece),
-    removePieces: (design: Guid, pieces: Guid[]) => store.execute("semio.kit.removePieces", design, pieces),
-    addConnection: (design: Guid, connection: Connection) => store.execute("semio.kit.addConnection", design, connection),
-    addConnections: (design: Guid, connections: Connection[]) => store.execute("semio.kit.addConnections", design, connections),
-    removeConnection: (design: Guid, connection: Guid) => store.execute("semio.kit.removeConnection", design, connection),
-    removeConnections: (design: Guid, connections: Guid[]) => store.execute("semio.kit.removeConnections", design, connections),
-    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => store.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
-  };
-}
-
 // #endregion Kit

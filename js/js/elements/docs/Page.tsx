@@ -46,7 +46,6 @@ const Page: FC<PageProps> = ({ frontmatter, children, className = "", focusedIte
   return (
     <ScrollArea ref={scrollAreaRef} className={`h-full ${className}`}>
       <article className="prose prose-sm max-w-4xl mx-auto p-6 md:p-8">
-        {frontmatter?.title && <h1 className="text-4xl font-bold mb-2">{frontmatter.title}</h1>}
         {frontmatter?.description && <p className="text-lg text-muted-foreground mb-8">{frontmatter.description}</p>}
         <div className="docs-content">{children}</div>
       </article>

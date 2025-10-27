@@ -24,8 +24,8 @@ import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { EditorType, ToolType, useEditorType } from "../../store";
 import TypeScene from "./canvas/Scene";
-import { AttributesSection, AuthorsSection, PortsSection, RepresentationsSection, TypeDetails } from "./panels/Details";
-import { useTypeEditor, useTypeEditorCommands } from "./store";
+import { AttributesSection, AuthorsSection, PortSection, PortsListSection, PortsMultipleSection, RepresentationsSection, TypeDetails } from "./panels/Details";
+import { useTypeEditor, useTypeEditorCommands, useTypeEditorSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
 const Editor: FC = () => {
@@ -35,6 +35,7 @@ const Editor: FC = () => {
   const { setActiveTool } = useTypeEditorCommands();
   const editor = useTypeEditor((s) => s);
   const activeTool = editor?.activeTool ?? ToolType.SELECTION_NORMAL;
+  const selection = useTypeEditorSelection();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,55 +73,99 @@ const Editor: FC = () => {
       content: () => <ToolsToggleGroup />,
     });
 
-    addSection("details", {
-      id: "type-details",
-      label: "Type",
-      order: 0,
-      defaultOpen: true,
-      content: () => <TypeDetails />,
-    });
-
-    addSection("details", {
-      id: "type-representations",
-      label: "Representations",
-      order: 1,
-      defaultOpen: true,
-      content: () => <RepresentationsSection />,
-    });
-
-    addSection("details", {
-      id: "type-ports",
-      label: "Ports",
-      order: 2,
-      defaultOpen: true,
-      content: () => <PortsSection />,
-    });
-
-    addSection("details", {
-      id: "type-authors",
-      label: "Authors",
-      order: 3,
-      defaultOpen: true,
-      content: () => <AuthorsSection />,
-    });
-
-    addSection("details", {
-      id: "type-attributes",
-      label: "Attributes",
-      order: 4,
-      defaultOpen: true,
-      content: () => <AttributesSection />,
-    });
-
     return () => {
       removeSection("toolbar", "type-tools");
-      removeSection("details", "type-details");
-      removeSection("details", "type-representations");
-      removeSection("details", "type-ports");
-      removeSection("details", "type-authors");
-      removeSection("details", "type-attributes");
     };
   }, [addSection, removeSection, editorType]);
+
+  // Dynamic details panel based on selection
+  useEffect(() => {
+    if (editorType !== "type") return;
+
+    const hasPorts = selection?.ports && selection.ports.length > 0;
+    const hasMultiplePorts = selection?.ports && selection.ports.length > 1;
+    const hasSinglePort = selection?.ports && selection.ports.length === 1;
+
+    // Remove all previous sections
+    removeSection("details", "type-details");
+    removeSection("details", "type-representations");
+    removeSection("details", "type-ports-list");
+    removeSection("details", "type-authors");
+    removeSection("details", "type-attributes");
+    removeSection("details", "type-port");
+    removeSection("details", "type-ports-multiple");
+
+    if (!hasPorts) {
+      // No selection: show Type section
+      addSection("details", {
+        id: "type-details",
+        label: "Type",
+        order: 0,
+        defaultOpen: true,
+        content: () => <TypeDetails />,
+      });
+
+      addSection("details", {
+        id: "type-representations",
+        label: "Representations",
+        order: 1,
+        defaultOpen: true,
+        content: () => <RepresentationsSection />,
+      });
+
+      addSection("details", {
+        id: "type-ports-list",
+        label: "Ports",
+        order: 2,
+        defaultOpen: true,
+        content: () => <PortsListSection />,
+      });
+
+      addSection("details", {
+        id: "type-authors",
+        label: "Authors",
+        order: 3,
+        defaultOpen: true,
+        content: () => <AuthorsSection />,
+      });
+
+      addSection("details", {
+        id: "type-attributes",
+        label: "Attributes",
+        order: 4,
+        defaultOpen: true,
+        content: () => <AttributesSection />,
+      });
+    } else if (hasSinglePort) {
+      // Single port selected: show Port section
+      addSection("details", {
+        id: "type-port",
+        label: "Port",
+        order: 0,
+        defaultOpen: true,
+        content: () => <PortSection portGuid={selection.ports![0]} />,
+      });
+    } else if (hasMultiplePorts) {
+      // Multiple ports selected: show Ports section
+      addSection("details", {
+        id: "type-ports-multiple",
+        label: "Ports",
+        order: 0,
+        defaultOpen: true,
+        content: () => <PortsMultipleSection portGuids={selection.ports!} />,
+      });
+    }
+
+    return () => {
+      removeSection("details", "type-details");
+      removeSection("details", "type-representations");
+      removeSection("details", "type-ports-list");
+      removeSection("details", "type-authors");
+      removeSection("details", "type-attributes");
+      removeSection("details", "type-port");
+      removeSection("details", "type-ports-multiple");
+    };
+  }, [addSection, removeSection, editorType, selection]);
 
   return (
     <Canvas>

@@ -475,6 +475,36 @@ export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
     yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
   };
 };
+
+/**
+ * Calculate the average plane from multiple planes.
+ * This is useful for multi-selection transforms where we need a single reference plane.
+ */
+export const averagePlane = (planes: Plane[]): Plane | null => {
+  if (planes.length === 0) return null;
+  if (planes.length === 1) return planes[0];
+
+  // Average the origins
+  const avgOrigin = planes.reduce(
+    (acc, plane) => ({
+      x: acc.x + plane.origin.x / planes.length,
+      y: acc.y + plane.origin.y / planes.length,
+      z: acc.z + plane.origin.z / planes.length,
+    }),
+    { x: 0, y: 0, z: 0 }
+  );
+
+  // For orientation, use the first plane's axes as the base
+  // This is a simplification - a proper implementation might use quaternion averaging
+  const baseXAxis = planes[0].xAxis;
+  const baseYAxis = planes[0].yAxis;
+
+  return {
+    origin: avgOrigin,
+    xAxis: baseXAxis,
+    yAxis: baseYAxis,
+  };
+};
 const roundPlane = (plane: Plane): Plane => ({
   origin: {
     x: round(plane.origin.x),

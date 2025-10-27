@@ -69,7 +69,6 @@ export {
   useIsPieceTransitiveHovered,
   useKit,
   useKitCommands,
-  useKitCommandsSafe,
   useKitScope,
   useKitStore,
   usePiece,

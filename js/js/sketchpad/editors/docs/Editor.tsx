@@ -14,6 +14,7 @@ import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useEditorType } from "../../store";
 import PageCanvas from "./canvas/Page";
 import { loadMDXFile, MDXModule } from "./mdx-loader";
+import { HeadingsProvider } from "./mdx-provider";
 import DocsDetails from "./panels/Details";
 import DocsSettings from "./panels/Settings";
 import DocsWorkbench from "./panels/Workbench";
@@ -116,7 +117,11 @@ const DocsEditor: FC = () => {
 };
 
 const DocsEditorWithProvider: FC = () => {
-  return <DocsEditor />;
+  return (
+    <HeadingsProvider>
+      <DocsEditor />
+    </HeadingsProvider>
+  );
 };
 
 export default DocsEditorWithProvider;

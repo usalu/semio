@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
-import { useDesignEditorCommands, useDesignEditorSafe } from "./store";
+import { useDesignEditor, useDesignEditorCommands } from "./store";
 import { DesignEditorTools } from "./tools_registry";
 
 const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
@@ -55,10 +55,11 @@ const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const { t } = useTranslation();
   const { kit, design } = useParams();
-  if (!kit || !design) return null;
   const editor = useDesignEditor((s) => s, { kit, design });
   const { setActiveTool } = useDesignEditorCommands({ kit, design });
+
+  if (!kit || !design || !editor) return null;
+
   const activeTool = editor?.activeTool || ToolType.SELECTION_NORMAL;
-  if (!editor) return null;
   return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
 };

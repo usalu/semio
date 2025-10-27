@@ -1,11 +1,9 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
+import { File, Folder } from "lucide-react";
 import { FC, ReactNode, createContext, useContext, useCallback, useRef, useEffect, useState } from "react";
+import { Tabs as BaseTabs, TabsContent, TabsList, TabsTrigger } from "../../../elements/aggregation/Tabs";
+import { TreeContent, TreeItem, TreeSection } from "../../../elements/aggregation/Tree";
 import { Aside } from "../../../elements/docs/Aside";
-import { Card, CardGrid } from "../../../elements/docs/Card";
-import { FileTree, FileTreeItem } from "../../../elements/docs/FileTree";
-import Section from "../../../elements/docs/Section";
-import { Steps } from "../../../elements/docs/Steps";
-import { TabItem, Tabs } from "../../../elements/docs/Tabs";
 import { HeadingNode } from "./panels/Details";
 
 interface HeadingsContextValue {
@@ -23,16 +21,58 @@ export const useHeadings = () => {
   return context;
 };
 
+const TabItem: FC<{ label: string; children: ReactNode }> = ({ children }) => <>{children}</>;
+
+const Tabs: FC<{ children: ReactNode }> = ({ children }) => {
+  const items = Array.isArray(children) ? children : [children];
+  const tabItems = items.filter((child: any) => child?.type === TabItem);
+  if (tabItems.length === 0) return <div className="my-4">{children}</div>;
+  return (
+    <BaseTabs defaultValue={tabItems[0]?.props?.label || "0"} className="my-4">
+      <TabsList>
+        {tabItems.map((item: any, idx: number) => (
+          <TabsTrigger key={idx} value={item.props.label || idx.toString()}>
+            {item.props.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {tabItems.map((item: any, idx: number) => (
+        <TabsContent key={idx} value={item.props.label || idx.toString()}>
+          {item.props.children}
+        </TabsContent>
+      ))}
+    </BaseTabs>
+  );
+};
+
+const FileTree: FC<{ children: ReactNode }> = ({ children }) => (
+  <div className="my-4 p-4 bg-panel border rounded">
+    <TreeSection label="" defaultOpen={true}>
+      {children}
+    </TreeSection>
+  </div>
+);
+
+const FileTreeItem: FC<{ name: string; type?: "file" | "folder" }> = ({ name, type = "file" }) => {
+  const Icon = type === "folder" ? Folder : File;
+  return (
+    <TreeItem>
+      <TreeContent>
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4" />
+          <span className="font-mono text-sm">{name}</span>
+        </div>
+      </TreeContent>
+    </TreeItem>
+  );
+};
+
 const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
-  Card,
-  CardGrid,
-  Steps,
+  Aside,
   Tabs,
   TabItem,
-  Aside,
   FileTree,
   FileTreeItem,
-  Section,
   h1: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
@@ -229,11 +269,11 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   ),
 });
 
-interface MDXProviderProps {
+interface HeadingsProviderProps {
   children: ReactNode;
 }
 
-export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
+export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
   const [headings, setHeadings] = useState<HeadingNode[]>([]);
   const headingsRef = useRef<Map<string, HeadingNode>>(new Map());
 
@@ -243,16 +283,20 @@ export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Clear headings when component unmounts or children change
     headingsRef.current.clear();
     setHeadings([]);
-  }, [children]);
+  }, []);
 
+  return <HeadingsContext.Provider value={{ headings, registerHeading }}>{children}</HeadingsContext.Provider>;
+};
+
+interface MDXProviderProps {
+  children: ReactNode;
+}
+
+export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
+  const context = useHeadings();
+  const registerHeading = "registerHeading" in context ? context.registerHeading : () => {};
   const components = createComponents(registerHeading);
-
-  return (
-    <HeadingsContext.Provider value={{ headings, registerHeading }}>
-      <BaseMDXProvider components={components}>{children}</BaseMDXProvider>
-    </HeadingsContext.Provider>
-  );
+  return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
 };

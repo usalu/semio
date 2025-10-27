@@ -28,7 +28,7 @@ import { Design, Guid, Piece, Type } from "../../../../semio";
 import { useDesign, useDesignScope, useIsInDesignScope, useKitScope, useType } from "../../../kits/store";
 import { useActiveInteraction, useSketchpadCommands } from "../../../store";
 import type { DesignEditorSelection } from "../store";
-import { useDesignEditorCommandsSafe, useDesignEditorCommands, useDesignEditorHover, useDesignEditorHoverSafe, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection, useDesignEditorSelectionSafe } from "../store";
+import { useDesignEditorCommands, useDesignEditorHover, useDesignEditorIsTypeTransitiveHovered, useDesignEditorSelection } from "../store";
 
 interface TypeAvatarProps {
   typeId?: Guid;
