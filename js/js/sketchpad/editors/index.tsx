@@ -3,16 +3,13 @@
 // index.tsx
 
 // Auto-registration of all editors
-// Import this file to register all editors with the registry
+// Editors are automatically discovered from the file system
 
 // #endregion
 
-import "./design/registration";
-import "./docs/registration";
-import "./home/registration";
-import "./kit/registration";
-import "./quality/registration";
-import "./type/registration";
+import { editorRegistry } from "./registry";
+
+editorRegistry.initialize();
 
 export { editorRegistry } from "./registry";
-export type { EditorRegistration, PanelDefinition, RouteSegment } from "./registry";
+export type { EditorConfig, EditorRegistration, PanelDefinition, RouteSegment } from "./registry";

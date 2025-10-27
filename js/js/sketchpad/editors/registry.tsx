@@ -34,7 +34,7 @@ export interface RouteSegment {
   scopeProvider?: ComponentType<{ guid: string; children: ReactNode }>;
 }
 
-export interface EditorRegistration {
+export interface EditorConfig {
   id: string;
   component: ComponentType;
   routeSegments: RouteSegment[];
@@ -44,8 +44,24 @@ export interface EditorRegistration {
   order?: number;
 }
 
+export interface EditorRegistration extends EditorConfig {}
+
 class EditorRegistry {
   private editors: Map<string, EditorRegistration> = new Map();
+  private autoDiscovered = false;
+
+  private autoDiscover(): void {
+    if (this.autoDiscovered) return;
+    this.autoDiscovered = true;
+
+    const editorModules = import.meta.glob<{ config: EditorConfig }>('./*/config.ts', { eager: true });
+    
+    for (const [path, module] of Object.entries(editorModules)) {
+      if (module.config) {
+        this.register(module.config);
+      }
+    }
+  }
 
   register(registration: EditorRegistration): void {
     if (this.editors.has(registration.id)) return;
@@ -79,6 +95,10 @@ class EditorRegistry {
       configs[id] = editor.getPanels(t);
     }
     return configs;
+  }
+
+  initialize(): void {
+    this.autoDiscover();
   }
 }
 

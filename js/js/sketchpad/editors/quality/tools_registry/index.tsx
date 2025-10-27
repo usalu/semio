@@ -20,5 +20,10 @@
 // #endregion
 
 import { Tool } from "../../../Tool";
+import { QualityEditorState } from "../store";
 
-export const tools: Tool[] = [];
+const toolModules = import.meta.glob<Record<string, Tool<QualityEditorState>>>('./*Tool.tsx', { eager: true });
+
+export const QualityEditorTools: Tool<QualityEditorState>[] = Object.values(toolModules)
+  .flatMap(module => Object.values(module))
+  .filter((exp): exp is Tool<QualityEditorState> => exp != null && typeof exp === 'object' && 'id' in exp && 'render' in exp);

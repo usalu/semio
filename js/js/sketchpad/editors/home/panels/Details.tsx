@@ -24,9 +24,9 @@ import { useTranslation } from "react-i18next";
 import { TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import { Input } from "../../../../elements/input/Input";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Kit, KitShallow } from "../../../../semio";
-import { useKit, useKitStore, useSketchpadStore } from "../../../store";
-import { useHome, HomeState } from "../store";
+import { KitShallow } from "../../../../semio";
+import { useSketchpadStore } from "../../../store";
+import { HomeState, useHome } from "../store";
 
 export const KitSection: FC = () => {
   const { t } = useTranslation();
@@ -86,7 +86,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   const { t } = useTranslation();
   const sketchpadStore = useSketchpadStore();
   const kits = kitIds.map((id) => sketchpadStore.kitShallows().find((k) => k.guid === id)).filter((k) => k !== undefined) as KitShallow[];
-  
+
   // Helper function to get common value or undefined if different
   const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
     if (kits.length === 0) return undefined;
@@ -105,52 +105,27 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input 
-            label={t("kit.name")} 
-            value={commonName || ""} 
-            placeholder={commonName === undefined ? t("common.mixedValues") : undefined}
-            readOnly 
-          />
+          <Input label={t("kit.name")} value={commonName || ""} placeholder={commonName === undefined ? t("common.mixedValues") : undefined} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input 
-            label={t("kit.version")} 
-            value={commonVersion || ""} 
-            placeholder={commonVersion === undefined ? t("common.mixedValues") : t("kit.versionPlaceholder")}
-            readOnly 
-          />
+          <Input label={t("kit.version")} value={commonVersion || ""} placeholder={commonVersion === undefined ? t("common.mixedValues") : t("kit.versionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea 
-            label={t("kit.description")} 
-            value={commonDescription || ""} 
-            placeholder={commonDescription === undefined ? t("common.mixedValues") : t("kit.descriptionPlaceholder")}
-            readOnly 
-          />
+          <Textarea label={t("kit.description")} value={commonDescription || ""} placeholder={commonDescription === undefined ? t("common.mixedValues") : t("kit.descriptionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input 
-            label={t("kit.icon")} 
-            value={commonIcon || ""} 
-            placeholder={commonIcon === undefined ? t("common.mixedValues") : t("kit.iconPlaceholder")}
-            readOnly 
-          />
+          <Input label={t("kit.icon")} value={commonIcon || ""} placeholder={commonIcon === undefined ? t("common.mixedValues") : t("kit.iconPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input 
-            label={t("kit.image")} 
-            value={commonImage || ""} 
-            placeholder={commonImage === undefined ? t("common.mixedValues") : t("kit.imagePlaceholder")}
-            readOnly 
-          />
+          <Input label={t("kit.image")} value={commonImage || ""} placeholder={commonImage === undefined ? t("common.mixedValues") : t("kit.imagePlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
     </>

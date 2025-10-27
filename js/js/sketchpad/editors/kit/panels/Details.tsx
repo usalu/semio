@@ -21,12 +21,12 @@
 
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
+import { TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import { Input } from "../../../../elements/input/Input";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Design, Kit, Type } from "../../../../semio";
 import { useIsInKitScope, useKit, useKitStore } from "../../../store";
-import { useKitEditor, useKitEditorCommands, KitEditorState } from "../store";
+import { KitEditorState, useKitEditor, useKitEditorCommands } from "../store";
 
 export const KitSection: FC = () => {
   const isInKitScope = useIsInKitScope();

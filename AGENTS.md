@@ -409,8 +409,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── LassoTool.tsx
 │ │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts # Auto-discovered editor config
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
 │ │ │ │ ├── docs
@@ -421,18 +421,18 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Settings.tsx
 │ │ │ │ │ │ └── Workbench.tsx
 │ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts # Auto-discovered editor config
 │ │ │ │ │ ├── Editor.tsx
 │ │ │ │ │ ├── mdx-loader.ts
 │ │ │ │ │ ├── mdx-provider.tsx
-│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── registry.ts
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── home
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Table.tsx
 │ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts # Auto-discovered editor config
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
 │ │ │ │ │ ├── canvas
@@ -441,8 +441,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ └── Settings.tsx
 │ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts # Auto-discovered editor config
 │ │ │ │ │ ├── Editor.tsx
-│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── quality
 │ │ │ │ │ ├── canvas
@@ -455,9 +455,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── tools_registry
 │ │ │ │ │ │ └── index.tsx
 │ │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts # Auto-discovered editor config
 │ │ │ │ │ ├── Editor.tsx
 │ │ │ │ │ ├── functions.ts
-│ │ │ │ │ ├── registration.tsx
 │ │ │ │ │ ├── store.tsx
 │ │ │ │ │ └── Tools.tsx
 │ │ │ │ └── type
@@ -472,8 +472,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── PortTool.tsx
 │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ ├── commands.ts
+│ │ │ │ │ ├── config.ts # Auto-discovered editor config
 │ │ │ │ ├── Editor.tsx
-│ │ │ │ ├── registration.tsx
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
 │ │ │ ├── docs
@@ -605,6 +605,72 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - State managment ALWAYS is in the corresponding store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
 - There is a transaction mechanism for kits. Every editor transaction is an extended kit transaction. The undo redo manager is on editor level and stores the diff of the transaction along with the editor state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
+
+#### Architecture - Open-Closed Principle
+
+The codebase follows the Open-Closed Principle (OCP): closed for modification, open for extension. Adding new features ONLY requires adding new files/folders, NEVER modifying existing ones.
+
+##### Adding a New Editor
+
+To add a new editor:
+1. Create a folder under `js/js/sketchpad/editors/{editorname}/`
+2. Add `config.ts` exporting `EditorConfig`
+3. Add `Editor.tsx` with default export FC
+4. Add `store.tsx` with editor state
+5. Optionally add `canvas/`, `panels/`, `tools_registry/`, `commands.ts`
+
+The editor is automatically discovered via `import.meta.glob('./*/config.ts')`.
+
+Example `config.ts`:
+```typescript
+import { EditorConfig } from "../registry";
+import MyEditor from "./Editor";
+
+export const config: EditorConfig = {
+  id: "myeditor",
+  component: MyEditor,
+  routeSegments: [{ path: "my/:id", paramName: "id" }],
+  getPanels: (t) => [
+    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }
+  ],
+  matchesPath: (pathParts) => pathParts[0] === "my",
+  order: 50,
+};
+```
+
+##### Adding a New Tool
+
+To add a new tool to an editor:
+1. Create a file `editors/{editor}/tools_registry/*Tool.tsx`
+2. Export tool objects with `id` and `render` properties
+
+Tools are automatically discovered via `import.meta.glob('./*Tool.tsx')`.
+
+Example:
+```typescript
+export const MyTool: Tool<MyEditorState> = {
+  id: ToolType.MY_TOOL,
+  label: "My Tool",
+  icon: <Icon />,
+  render: (context) => ({ scene: <></>, diagram: null, table: null }),
+};
+```
+
+##### Adding Panel Sections
+
+Panel sections are dynamically added in the editor's `useEffect`:
+
+```typescript
+useEffect(() => {
+  addSection("details", {
+    id: "my-section",
+    label: t("mySection"),
+    content: () => <MyComponent />,
+    order: 1,
+  });
+  return () => removeSection("details", "my-section");
+}, [editorType, addSection, removeSection]);
+```
 
 #### Styling
 

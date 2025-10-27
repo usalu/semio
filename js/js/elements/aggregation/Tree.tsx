@@ -37,12 +37,15 @@ import { useTreeState } from "./TreeStateProvider";
 const hasNonEmptyChildren = (children: ReactNode): boolean => {
   if (!children) return false;
   const childArray = Children.toArray(children);
-  return childArray.length > 0 && childArray.some((child) => {
-    if (isValidElement(child)) return true;
-    if (typeof child === 'string' && child.trim().length > 0) return true;
-    if (typeof child === 'number') return true;
-    return false;
-  });
+  return (
+    childArray.length > 0 &&
+    childArray.some((child) => {
+      if (isValidElement(child)) return true;
+      if (typeof child === "string" && child.trim().length > 0) return true;
+      if (typeof child === "number") return true;
+      return false;
+    })
+  );
 };
 
 const TreeContext = createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });

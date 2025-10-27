@@ -20,8 +20,7 @@
 // #endregion
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { Connection as RFConnection } from "@xyflow/react";
-import { Minus, Pin, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { SortableTreeItems, TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
@@ -30,8 +29,8 @@ import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Connection, Design, Guid, Kit, Piece, findConnectionInDesign, findDesignInKit, findPieceInDesign, findTypeInKit, guid, parseDesignIdFromVariant } from "../../../../semio";
-import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePieces, usePiecesFromIds, useReplacableDesigns, useReplacableTypes } from "../../../store";
+import { Connection, Design, Guid, Kit, Piece, findDesignInKit, findPieceInDesign, findTypeInKit, guid } from "../../../../semio";
+import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePiecesFromIds, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import { useDesignEditorCommands, useDesignEditorSelection } from "../store";
 
 export const DesignSection: FC = () => {
@@ -226,82 +225,84 @@ const DesignSectionForm: FC = () => {
           },
         ]}
       >
-        <SortableTreeItems
-          items={(design.authors || []).map((author: any, index: number) => ({
-            ...author,
-            id: `author-${index}`,
-            index,
-          }))}
-          onReorder={(oldIndex, newIndex) => {
-            startTransaction();
-            handleChange({
-              ...design,
-              authors: arrayMove(design.authors!, oldIndex, newIndex),
-            });
-            finalizeTransaction();
-          }}
-        >
-          {(author, index) => (
-            <TreeItem
-              key={`author-${index}`}
-              label={author.name || `${t("design.author")} ${index + 1}`}
-              sortable={true}
-              sortableId={`author-${index}`}
-              isDragHandle={true}
-              actions={[
-                {
-                  icon: <Minus />,
-                  onClick: () => {
-                    startTransaction();
-                    handleChange({
-                      ...design,
-                      authors: design.authors?.filter((_: any, i: number) => i !== index),
-                    });
-                    finalizeTransaction();
+        {design.authors && design.authors.length > 0 && (
+          <SortableTreeItems
+            items={(design.authors || []).map((author: any, index: number) => ({
+              ...author,
+              id: `author-${index}`,
+              index,
+            }))}
+            onReorder={(oldIndex, newIndex) => {
+              startTransaction();
+              handleChange({
+                ...design,
+                authors: arrayMove(design.authors!, oldIndex, newIndex),
+              });
+              finalizeTransaction();
+            }}
+          >
+            {(author, index) => (
+              <TreeItem
+                key={`author-${index}`}
+                label={author.name || `${t("design.author")} ${index + 1}`}
+                sortable={true}
+                sortableId={`author-${index}`}
+                isDragHandle={true}
+                actions={[
+                  {
+                    icon: <Minus />,
+                    onClick: () => {
+                      startTransaction();
+                      handleChange({
+                        ...design,
+                        authors: design.authors?.filter((_: any, i: number) => i !== index),
+                      });
+                      finalizeTransaction();
+                    },
+                    title: t("common.remove"),
                   },
-                  title: t("common.remove"),
-                },
-              ]}
-            >
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("design.authorName")}
-                    value={author.name}
-                    onChange={(e) => {
-                      const updatedAuthors = [...(design.authors || [])];
-                      updatedAuthors[index] = {
-                        ...author,
-                        name: e.target.value,
-                      };
-                      handleChange({ ...design, authors: updatedAuthors });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
+                ]}
+              >
+                <TreeItem>
+                  <TreeContent>
+                    <Input
+                      label={t("design.authorName")}
+                      value={author.name}
+                      onChange={(e) => {
+                        const updatedAuthors = [...(design.authors || [])];
+                        updatedAuthors[index] = {
+                          ...author,
+                          name: e.target.value,
+                        };
+                        handleChange({ ...design, authors: updatedAuthors });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
+                </TreeItem>
+                <TreeItem>
+                  <TreeContent>
+                    <Input
+                      label={t("design.authorEmail")}
+                      value={author.email}
+                      onChange={(e) => {
+                        const updatedAuthors = [...(design.authors || [])];
+                        updatedAuthors[index] = {
+                          ...author,
+                          email: e.target.value,
+                        };
+                        handleChange({ ...design, authors: updatedAuthors });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
+                </TreeItem>
               </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("design.authorEmail")}
-                    value={author.email}
-                    onChange={(e) => {
-                      const updatedAuthors = [...(design.authors || [])];
-                      updatedAuthors[index] = {
-                        ...author,
-                        email: e.target.value,
-                      };
-                      handleChange({ ...design, authors: updatedAuthors });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-            </TreeItem>
-          )}
-        </SortableTreeItems>
+            )}
+          </SortableTreeItems>
+        )}
       </TreeItem>
       <TreeItem
         label={t("design.attributes")}
@@ -319,119 +320,121 @@ const DesignSectionForm: FC = () => {
           },
         ]}
       >
-        <SortableTreeItems
-          items={(design.attributes || []).map((attribute: any, index: number) => ({
-            ...attribute,
-            id: `attribute-${index}`,
-            index,
-          }))}
-          onReorder={(oldIndex, newIndex) => {
-            startTransaction();
-            updateDesignField({
-              attributes: arrayMove(design.attributes!, oldIndex, newIndex),
-            });
-            finalizeTransaction();
-          }}
-        >
-          {(attribute, index) => (
-            <TreeItem
-              key={`attribute-${index}`}
-              label={attribute.key || `${t("design.attribute")} ${index + 1}`}
-              sortable={true}
-              sortableId={`attribute-${index}`}
-              isDragHandle={true}
-              actions={[
-                {
-                  icon: <Minus />,
-                  onClick: () => {
-                    startTransaction();
-                    updateDesignField({
-                      attributes: design.attributes?.filter((_: any, i: number) => i !== index),
-                    });
-                    finalizeTransaction();
+        {design.attributes && design.attributes.length > 0 && (
+          <SortableTreeItems
+            items={(design.attributes || []).map((attribute: any, index: number) => ({
+              ...attribute,
+              id: `attribute-${index}`,
+              index,
+            }))}
+            onReorder={(oldIndex, newIndex) => {
+              startTransaction();
+              updateDesignField({
+                attributes: arrayMove(design.attributes!, oldIndex, newIndex),
+              });
+              finalizeTransaction();
+            }}
+          >
+            {(attribute, index) => (
+              <TreeItem
+                key={`attribute-${index}`}
+                label={attribute.key || `${t("design.attribute")} ${index + 1}`}
+                sortable={true}
+                sortableId={`attribute-${index}`}
+                isDragHandle={true}
+                actions={[
+                  {
+                    icon: <Minus />,
+                    onClick: () => {
+                      startTransaction();
+                      updateDesignField({
+                        attributes: design.attributes?.filter((_: any, i: number) => i !== index),
+                      });
+                      finalizeTransaction();
+                    },
+                    title: t("common.remove"),
                   },
-                  title: t("common.remove"),
-                },
-              ]}
-            >
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("design.attributeName")}
-                    value={attribute.key}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        key: e.target.value,
-                      };
-                      updateDesignField({ attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
+                ]}
+              >
+                <TreeItem>
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeName")}
+                      value={attribute.key}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          key: e.target.value,
+                        };
+                        updateDesignField({ attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
+                </TreeItem>
+                <TreeItem>
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeValue")}
+                      value={attribute.value || ""}
+                      placeholder={t("design.attributeValuePlaceholder")}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          value: e.target.value,
+                        };
+                        updateDesignField({ attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
+                </TreeItem>
+                <TreeItem>
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeUnit")}
+                      value={attribute.unit || ""}
+                      placeholder={t("design.attributeUnitPlaceholder")}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          unit: e.target.value,
+                        };
+                        updateDesignField({ attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
+                </TreeItem>
+                <TreeItem>
+                  <TreeContent>
+                    <Input
+                      label={t("design.attributeDefinition")}
+                      value={attribute.definition || ""}
+                      placeholder={t("design.attributeDefinitionPlaceholder")}
+                      onChange={(e) => {
+                        const updatedAttributes = [...(design.attributes || [])];
+                        updatedAttributes[index] = {
+                          ...attribute,
+                          definition: e.target.value,
+                        };
+                        updateDesignField({ attributes: updatedAttributes });
+                      }}
+                      onFocus={startTransaction}
+                      onBlur={finalizeTransaction}
+                    />
+                  </TreeContent>
+                </TreeItem>
               </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("design.attributeValue")}
-                    value={attribute.value || ""}
-                    placeholder={t("design.attributeValuePlaceholder")}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        value: e.target.value,
-                      };
-                      updateDesignField({ attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("design.attributeUnit")}
-                    value={attribute.unit || ""}
-                    placeholder={t("design.attributeUnitPlaceholder")}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        unit: e.target.value,
-                      };
-                      updateDesignField({ attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
-                  <Input
-                    label={t("design.attributeDefinition")}
-                    value={attribute.definition || ""}
-                    placeholder={t("design.attributeDefinitionPlaceholder")}
-                    onChange={(e) => {
-                      const updatedAttributes = [...(design.attributes || [])];
-                      updatedAttributes[index] = {
-                        ...attribute,
-                        definition: e.target.value,
-                      };
-                      updateDesignField({ attributes: updatedAttributes });
-                    }}
-                    onFocus={startTransaction}
-                    onBlur={finalizeTransaction}
-                  />
-                </TreeContent>
-              </TreeItem>
-            </TreeItem>
-          )}
-        </SortableTreeItems>
+            )}
+          </SortableTreeItems>
+        )}
       </TreeItem>
       {design.createdAt && (
         <TreeItem>

@@ -25,7 +25,10 @@
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
-      "Read(./secrets/**)"
+      "Read(./secrets/**)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run test)"
     ],
     "ask": []
   }

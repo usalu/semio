@@ -21,9 +21,9 @@
 
 import { Tool } from "../../../Tool";
 import { TypeEditorState } from "../store";
-import { SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool } from "./SelectionTool";
-import { PortTool } from "./PortTool";
 
-export const TypeEditorTools: Tool<TypeEditorState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, PortTool];
+const toolModules = import.meta.glob<Record<string, Tool<TypeEditorState>>>('./*Tool.tsx', { eager: true });
 
-export { SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, PortTool };
+export const TypeEditorTools: Tool<TypeEditorState>[] = Object.values(toolModules)
+  .flatMap(module => Object.values(module))
+  .filter((exp): exp is Tool<TypeEditorState> => exp != null && typeof exp === 'object' && 'id' in exp && 'render' in exp);

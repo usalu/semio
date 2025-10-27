@@ -10,7 +10,7 @@
     "js/js",
     "js/docs",
     "js/play",
-    "js/sketchpad",
+    "js/desktop",
     "net/Semio",
     "net/Semio.Grasshopper",
     "yak"
@@ -20,12 +20,14 @@
   },
   "packageManager": "npm@10.8.2",
   "scripts": {
-    "build": "npx nx run-many -t dev",
+    "dev": "npx nx run-many -t dev",
+    "build": "npx nx run-many -t build",
     "update": "npx nx run-many -t update",
+    "test": "npx nx run-many -t test",
     "engine": "npx nx dev @semio/engine",
     "js": "npx nx dev @semio/js",
     "play": "npx nx dev @semio/play",
-    "sketchpad": "npx nx dev @semio/desktop",
+    "desktop": "npx nx dev @semio/desktop",
     "docs": "npx nx dev @semio/docs"
   },
   "devDependencies": {
