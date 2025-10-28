@@ -25,13 +25,32 @@ import { useLocation, useNavigate } from "react-router";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
-import type { DesignAppId, DesignAppState } from "./apps/design/store";
-import type { KitAppId, KitAppState } from "./apps/kit/store";
-import type { QualityAppId, QualityAppState } from "./apps/quality/store";
-import { appRegistry } from "./apps/registry";
-import type { TypeAppId, TypeAppState } from "./apps/type/store";
 import { commands as sketchpadCommands } from "./commands";
 import { KitStore } from "./kits/store";
+import { getAppTypeFromPath, useAppType } from "./appType";
+
+// Forward type declarations to avoid circular dependencies with app stores
+export interface DesignAppId {
+  kit: Guid;
+  design: Guid;
+}
+export interface KitAppId {
+  kit: Guid;
+}
+export interface TypeAppId {
+  kit: Guid;
+  type: Guid;
+}
+export interface QualityAppId {
+  kit: Guid;
+  quality: Guid;
+}
+
+// Placeholder types - these will be augmented by actual app store modules
+type DesignAppState = any;
+type KitAppState = any;
+type TypeAppState = any;
+type QualityAppState = any;
 export {
   AuthorScopeProvider,
   ConnectionScopeProvider,
@@ -43,30 +62,22 @@ export {
   QualityScopeProvider,
   TypeScopeProvider,
   useAuthor,
-  useClusterableGroups,
   useConnection,
-  useConnectionStatus,
   useDesign,
   useDesignId,
   useDesigns,
   useDesignScope,
   useDiffedDesign,
-  useDiffedKit,
   useExplodeableDesignNodes,
   useFileUrls,
   useFlatDesign,
   useFlatPieces,
   useFlattenDiff,
   useIncludedDesigns,
-  useIsConnectionHovered,
-  useIsConnectionSelected,
   useIsInDesignScope,
   useIsInKitScope,
   useIsInQualityScope,
   useIsInTypeScope,
-  useIsPieceHovered,
-  useIsPieceSelected,
-  useIsPieceTransitiveHovered,
   useKit,
   useKitCommands,
   useKitScope,
@@ -79,7 +90,6 @@ export {
   usePieces,
   usePiecesFromIds,
   usePiecesMetadata,
-  usePieceStatus,
   usePortColoredTypes,
   useQuality,
   useQualityScope,
@@ -1734,16 +1744,8 @@ export function migratePath(path: string): string {
   return path;
 }
 
-export function getAppTypeFromPath(path: string): AppType {
-  const pathParts = path.split("/").filter((p) => p);
-  const app = appRegistry.getAppForPath(pathParts);
-  return app?.id || "home";
-}
-
-export function useAppType(): AppType {
-  const navigation = useNavigation();
-  return useMemo(() => getAppTypeFromPath(navigation), [navigation]);
-}
+// Moved to appType.ts to avoid circular dependency
+export { getAppTypeFromPath, useAppType } from "./appType";
 
 export function useAccess(): Access {
   return useSketchpad((s) => s.access) as Access;

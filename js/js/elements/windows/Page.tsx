@@ -12,8 +12,8 @@ import { ScrollArea } from "../aggregation/ScrollArea";
 export interface PageFrontmatter {
   title?: string;
   description?: string;
+  order?: number;
   sidebar?: {
-    order?: number;
     label?: string;
     badge?: string;
   };

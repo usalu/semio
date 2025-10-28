@@ -30,6 +30,7 @@ import {
   KitDiffAppStore,
   KitStore,
   PanelVisibility,
+  QualityAppId,
   registerQualityAppStoreFactory,
   SketchpadStore,
   ToolType,
@@ -49,10 +50,6 @@ type YQualityAppVal = string | number | boolean | YLeafMapString | YLeafMapNumbe
 type YQualityApp = Y.Map<YQualityAppVal>;
 type YQualityApps = Y.Map<YQualityApp>;
 
-export interface QualityAppId {
-  kit: Guid;
-  quality: Guid;
-}
 export interface FormulaNode {
   id: Guid;
   type: "function" | "quality" | "variable" | "unit" | "value";
@@ -403,7 +400,15 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
   }
 }
 
-registerQualityAppStoreFactory((parent, yMap, transact, id, state) => new QualityAppStore(parent, yMap, transact, id));
+// Register the factory - deferred to avoid circular dependency issues
+export function initializeQualityAppStore() {
+  registerQualityAppStoreFactory((parent, yMap, transact, id, state) => new QualityAppStore(parent, yMap, transact, id));
+}
+
+// Auto-initialize if this module is imported
+if (typeof window !== 'undefined') {
+  setTimeout(() => initializeQualityAppStore(), 0);
+}
 
 type QualityAppScope = { guid: string };
 const QualityAppScopeContext = createContext<QualityAppScope | null>(null);

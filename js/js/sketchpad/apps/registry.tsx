@@ -51,13 +51,15 @@ class AppRegistry {
   private apps: Map<string, AppRegistration> = new Map();
   private autoDiscovered = false;
 
-  private autoDiscover(): void {
+  private async autoDiscover(): Promise<void> {
     if (this.autoDiscovered) return;
     this.autoDiscovered = true;
 
-    const appModules = import.meta.glob<{ config: AppConfig }>("./*/config.ts", { eager: true });
+    // Use lazy loading to avoid circular dependencies
+    const appModules = import.meta.glob<{ config: AppConfig }>("./*/config.ts");
 
-    for (const [path, module] of Object.entries(appModules)) {
+    for (const [path, importFn] of Object.entries(appModules)) {
+      const module = await importFn();
       if (module.config) {
         this.register(module.config);
       }
@@ -98,8 +100,8 @@ class AppRegistry {
     return configs;
   }
 
-  initialize(): void {
-    this.autoDiscover();
+  async initialize(): Promise<void> {
+    await this.autoDiscover();
   }
 }
 

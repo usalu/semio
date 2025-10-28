@@ -44,8 +44,10 @@ import {
   Type,
 } from "../../../../semio";
 
+import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { Button } from "../../../../elements/input/Button";
-import { ConnectionScopeProvider, PieceScopeProvider, useClusterableGroups, useDesign, useDiffedPiece, useExplodeableDesignNodes, useIsConnectionHovered, useIsPieceHovered, useKit, useKitCommands } from "../../../kits/store";
+import { ConnectionScopeProvider, PieceScopeProvider, useDesign, useExplodeableDesignNodes, useKit, useKitCommands } from "../../../kits/store";
+import { useClusterableGroups, useDiffedPiece, useIsConnectionHovered, useIsPieceHovered } from "../../../kits/designAppIntegration";
 import { useFocusSafe } from "../../../Navbar";
 import { ToolType, useAppPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
@@ -314,8 +316,9 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const {
     piece,
     piece: { guid, attributes },
-    type: { ports },
+    type,
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
+  const ports = type.ports;
   const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignAppCommands();
   const selection = useDesignAppSelection();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
@@ -359,6 +362,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       <PieceNodeInner
         id={id}
         piece={piece}
+        type={type}
         ports={ports}
         isSelected={isSelected}
         diff={diff}
@@ -377,6 +381,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 type PieceNodeInnerProps = {
   id: string;
   piece: Piece;
+  type: Type;
   ports: Port[] | undefined;
   isSelected: boolean;
   diff: DiffStatus;
@@ -389,14 +394,26 @@ type PieceNodeInnerProps = {
   onMouseLeave: () => void;
 };
 
-const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
+const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const { fill, stroke, opacity: colorOpacity } = useDesignAppPieceColor(undefined, piece.guid);
+  const isHovered = useIsPieceHovered();
 
   // Always call the hook to maintain hook order (Rules of Hooks)
   const diffedPiece = useDiffedPiece() as Piece;
 
   // Check if piece has a center diff - only show ghost if there's an actual position change
   const hasCenterDiff = diff === DiffStatus.Modified && piece.center && diffedPiece.center && (piece.center.x !== diffedPiece.center.x || piece.center.y !== diffedPiece.center.y);
+
+  const typeName = type.name || "";
+  const typeVariant = type.variant || "";
+  const displayVariant = typeVariant || typeName || piece.guid || "??";
+  const initials = displayVariant.substring(0, 2).toUpperCase();
+  const backgroundColor = fill === "transparent" ? undefined : fill;
+  const showHoverBackground = fill === "var(--hover-base)";
+  const textColor = isSelected ? "var(--active-foreground)" : backgroundColor && !showHoverBackground ? "var(--background)" : "var(--foreground)";
+  const avatarTitle = typeVariant && typeVariant !== typeName ? (typeName ? `${typeName} (${typeVariant})` : typeVariant) : typeName || typeVariant || piece.guid;
+  const ringClass = isSelected ? "ring-1 ring-inset ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-inset ring-[color:var(--hover-base)]" : "";
+  const fallbackStyle = backgroundColor ? { backgroundColor, color: textColor } : { color: textColor };
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
@@ -459,13 +476,11 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, ports, isSel
       )}
 
       {/* Current/diffed node */}
-      <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button" style={{ pointerEvents: "all" }}>
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} style={{ fill, stroke, strokeWidth: 2 }} />
-        {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} style={{ fill: "transparent", stroke, strokeWidth: 2 }} />}
-        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
-          {piece.guid}
-        </text>
-      </svg>
+      <Avatar role="button" title={avatarTitle} className={`w-full h-full border-[color:var(--border-color)] ${ringClass}`} style={{ borderColor: stroke }}>
+        <AvatarFallback className="select-none text-xs font-bold" style={fallbackStyle}>
+          {initials}
+        </AvatarFallback>
+      </Avatar>
       {ports?.map((port: Port, portIndex: number) => (
         <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selection?.port?.piece === piece.guid && selection?.port?.port === port.guid} onPortClick={onPortClick} />
       ))}

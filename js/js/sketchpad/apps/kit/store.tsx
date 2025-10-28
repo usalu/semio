@@ -23,16 +23,13 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, Coord, Design, DesignDiff, DiffStatus, Guid, KitDiff, Type, TypeDiff } from "../../../semio";
 import { KitCommandContext, KitStore, useKitScope } from "../../kits/store";
-import { identitySelector, KitDiffAppEdit, KitDiffAppStore, PanelVisibility, registerKitAppStoreFactory, SketchpadStore, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
+import { identitySelector, KitAppId, KitDiffAppEdit, KitDiffAppStore, PanelVisibility, registerKitAppStoreFactory, SketchpadStore, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
 import { commands as kitAppCommands } from "./commands";
 
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitApp = Y.Map<YKitAppVal>;
 type YKitApps = Y.Map<YKitApp>;
 
-export interface KitAppId {
-  kit: Guid;
-}
 export interface KitAppSelection {
   types?: Guid[];
   designs?: Guid[];
@@ -585,7 +582,15 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
   }
 }
 
-registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
+// Register the factory - deferred to avoid circular dependency issues
+export function initializeKitAppStore() {
+  registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
+}
+
+// Auto-initialize if this module is imported
+if (typeof window !== 'undefined') {
+  setTimeout(() => initializeKitAppStore(), 0);
+}
 
 function useKitAppStore<T>(selector?: (store: KitAppStore) => T, id?: KitAppId): T | KitAppStore | null {
   const store = useSketchpadStore();

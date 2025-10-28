@@ -985,7 +985,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               <>
                 <BreadcrumbSeparator
                   items={docsSectionsList.map((s) => ({
-                    label: `${s.emoji} ${s.label}`,
+                    label: (
+                      <span className="flex items-center gap-1">
+                        {s.icon && <span aria-hidden="true">{s.icon}</span>}
+                        <span>{s.label}</span>
+                      </span>
+                    ),
                     href: `/docs/${s.id}`,
                   }))}
                   tooltip={tooltip("navbar.sections", { manualPath: "interface#documentation" })}
@@ -993,7 +998,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 />
                 <BreadcrumbItem>
                   <BreadcrumbLink onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }}>
-                    {docsSectionsList.find((s) => s.id === docsSection)?.label || docsSection}
+                    {(() => {
+                      const sectionInfo = docsSectionsList.find((s) => s.id === docsSection);
+                      if (!sectionInfo) return docsSection;
+                      return (
+                        <span className="flex items-center gap-1">
+                          {sectionInfo.icon && <span aria-hidden="true">{sectionInfo.icon}</span>}
+                          <span>{sectionInfo.label}</span>
+                        </span>
+                      );
+                    })()}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </>

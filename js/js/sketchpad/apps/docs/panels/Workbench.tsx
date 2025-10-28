@@ -90,10 +90,14 @@ const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
       {sections.map((section) => {
         const pages = docsRegistry.getPagesBySection(section.id);
         const tree = buildTree(pages, section.id);
-        const displayLabel = section.emoji ? `${section.emoji} ${section.label}` : section.label;
 
         return (
-          <TreeSection key={section.id} label={displayLabel} defaultOpen={true}>
+          <TreeSection
+            key={section.id}
+            label={section.label}
+            icon={section.icon ? <span aria-hidden="true">{section.icon}</span> : undefined}
+            defaultOpen={true}
+          >
             {renderTreeNode(tree, navigate, () => {}, section.id, currentPath)}
             {pages.length === 0 && (
               <TreeItem>

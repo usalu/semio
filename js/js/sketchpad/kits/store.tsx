@@ -88,10 +88,12 @@ import {
   getPieceRepresentationUrls,
   piecesMetadata,
 } from "../../semio";
-import { useDesignAppDiff, useDesignAppHover, useDesignAppIsPieceTransitiveHovered, useDesignAppSelection, useDesignAppStore } from "../apps/design/store";
 import type { SketchpadStore, Url } from "../store";
 import { Disposable, Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
+
+// Re-export utilities from parent store for use in designAppIntegration
+export { identitySelector };
 
 type YAttributeVal = string;
 type YAttribute = Y.Map<YAttributeVal>;
@@ -2303,7 +2305,7 @@ export const PieceScopeProvider = (props: { guid: string; children: React.ReactN
   const value = { guid: props.guid };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
-const usePieceScope = () => useContext(PieceScopeContext);
+export const usePieceScope = () => useContext(PieceScopeContext);
 
 function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T | PieceStore {
   const designStore = useDesignStore() as DesignStore;
@@ -2319,28 +2321,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
 
-export function useIsPieceSelected(): boolean {
-  const piece = usePieceScope();
-  const selection = useDesignAppSelection();
-  return selection.pieces?.includes(piece?.guid ?? "") ?? false;
-}
-
-export function useIsPieceHovered(): boolean {
-  const hover = useDesignAppHover();
-  const pieceScope = usePieceScope();
-  if (!pieceScope || !hover) return false;
-  return hover.pieces?.includes(pieceScope.guid) ?? false;
-}
-
-/**
- * Check if the current piece (from PieceScope) is transitively hovered
- * (piece itself, or its type/design is hovered in Kit App)
- */
-export function useIsPieceTransitiveHovered(): boolean {
-  const pieceScope = usePieceScope();
-  if (!pieceScope) return false;
-  return useDesignAppIsPieceTransitiveHovered(undefined, pieceScope.guid);
-}
+// useIsPieceSelected, useIsPieceHovered, useIsPieceTransitiveHovered - moved to designAppIntegration.ts
 
 export function usePiecePlane(): Plane {
   const plane = usePiece((p) => p.plane) as Plane | undefined;
@@ -2357,120 +2338,7 @@ export function usePiecePlane(): Plane {
   return plane;
 }
 
-export function usePieceStatus(): DiffStatus {
-  const piece = usePieceScope();
-  const designScope = useDesignScope();
-  const designAppStore = useDesignAppStore(identitySelector) as any;
-
-  if (!designAppStore || !piece || !designScope) {
-    return DiffStatus.Unchanged;
-  }
-
-  // Subscribe to store changes including transaction stack
-  // The selector must return a stable value for the same state to prevent infinite loops
-  return useSync<any, DiffStatus>(
-    designAppStore,
-    () => {
-      const currentStack = designAppStore.currentTransactionStack;
-      if (!currentStack || currentStack.length === 0) {
-        return DiffStatus.Unchanged;
-      }
-
-      // Check the transaction stack for this piece's status
-      for (const edit of currentStack) {
-        if (edit.do?.kitDiff?.designs) {
-          for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-            const designUpdateGuid = typeof designUpdate.id === "string" ? designUpdate.id : designUpdate.id.guid;
-            if (designUpdateGuid !== designScope.guid) continue;
-
-            if (!designUpdate.diff.pieces) continue;
-
-            const piecesDiff = designUpdate.diff.pieces;
-
-            // Check if piece is removed
-            if (piecesDiff.removed?.some((p: string) => p === piece.guid)) {
-              return DiffStatus.Removed;
-            }
-
-            // Check if piece is added
-            if (piecesDiff.added?.some((p: Piece) => p.guid === piece.guid)) {
-              return DiffStatus.Added;
-            }
-
-            // Check if piece is updated
-            if (piecesDiff.updated?.some((p: { id: string }) => p.id === piece.guid)) {
-              return DiffStatus.Modified;
-            }
-          }
-        }
-      }
-
-      return DiffStatus.Unchanged;
-    },
-    true,
-  ) as DiffStatus;
-}
-
-/**
- * Returns the diffed version of a piece if there's a diff in the current transaction,
- * otherwise returns the original piece. This is used to visualize the "after" state.
- */
-export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece {
-  const originalPiece = usePiece(identitySelector, id, deep) as Piece;
-  const pieceScope = usePieceScope();
-  const designScope = useDesignScope();
-  const designAppStore = useDesignAppStore(identitySelector) as any;
-
-  if (!designAppStore || !pieceScope || !designScope) {
-    return selector ? selector(originalPiece) : originalPiece;
-  }
-
-  // Subscribe to store changes including transaction stack
-  // The selector must return a stable value for the same state to prevent infinite loops
-  return useSync<any, T | Piece>(
-    designAppStore,
-    () => {
-      const currentStack = designAppStore.currentTransactionStack;
-      if (!currentStack || currentStack.length === 0) {
-        return selector ? selector(originalPiece) : originalPiece;
-      }
-
-      // Apply all diffs from the current transaction stack to get the final diffed piece
-      let diffedPiece = { ...originalPiece };
-
-      for (const edit of currentStack) {
-        if (edit.do?.kitDiff?.designs) {
-          for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-            // Check if this is the current design - designUpdate.id is a Guid which has a guid property
-            const designUpdateGuid = typeof designUpdate.id === "string" ? designUpdate.id : designUpdate.id.guid;
-            if (designUpdateGuid !== designScope.guid) continue;
-
-            // Check if piece is in updated pieces
-            if (designUpdate.diff.pieces?.updated) {
-              for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-                // Match by guid
-                if (pieceUpdate.id === pieceScope.guid) {
-                  // Apply the diff to the piece
-                  if (pieceUpdate.diff.center !== undefined) diffedPiece.center = pieceUpdate.diff.center;
-                  if (pieceUpdate.diff.plane !== undefined) diffedPiece.plane = pieceUpdate.diff.plane;
-                  if (pieceUpdate.diff.scale !== undefined) diffedPiece.scale = pieceUpdate.diff.scale;
-                  if (pieceUpdate.diff.color !== undefined) diffedPiece.color = pieceUpdate.diff.color;
-                  if (pieceUpdate.diff.description !== undefined) diffedPiece.description = pieceUpdate.diff.description;
-                  if (pieceUpdate.diff.isHidden !== undefined) diffedPiece.isHidden = pieceUpdate.diff.isHidden;
-                  if (pieceUpdate.diff.isLocked !== undefined) diffedPiece.isLocked = pieceUpdate.diff.isLocked;
-                  // Note: We don't apply 'added' status here as added pieces won't have an original
-                }
-              }
-            }
-          }
-        }
-      }
-
-      return selector ? selector(diffedPiece) : diffedPiece;
-    },
-    true,
-  ) as T | Piece;
-}
+// usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
 
 /**
  * Returns both the original piece and the diffed piece.
@@ -2933,7 +2801,7 @@ export const ConnectionScopeProvider = (props: { guid: string; children: React.R
   const value = { guid: props.guid };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
-const useConnectionScope = () => useContext(ConnectionScopeContext);
+export const useConnectionScope = () => useContext(ConnectionScopeContext);
 
 function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: string): T | ConnectionStore {
   const designStore = useDesignStore() as DesignStore;
@@ -2949,21 +2817,9 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
 }
 
-export function useIsConnectionSelected(): boolean {
-  const connectionScope = useConnectionScope();
-  const selection = useDesignAppSelection();
-  if (!connectionScope) return false;
-  return selection.connections?.some((guid) => guid === connectionScope.guid) ?? false;
-}
+// useIsConnectionSelected, useIsConnectionHovered, useConnectionStatus - moved to designAppIntegration.ts
 
-export function useIsConnectionHovered(): boolean {
-  const hover = useDesignAppHover();
-  const connectionScope = useConnectionScope();
-  if (!connectionScope || !hover) return false;
-  return hover.connections?.includes(connectionScope.guid) ?? false;
-}
-
-export function useConnectionStatus(): DiffStatus {
+export function useConnectionColor(): { stroke: string; fill: string } {
   const connection = useConnectionScope();
   const kitDiff = useDesignAppDiff();
   const designScope = useDesignScope();
@@ -3850,14 +3706,7 @@ export function useDesignId() {
   return useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
 }
 
-export function useClusterableGroups() {
-  const design = useDesign() as Design;
-  const selection = useDesignAppSelection();
-  return useMemo(() => {
-    if (!design) return [];
-    return getClusterableGroups(design, selection.pieces ?? []);
-  }, [design, selection.pieces]);
-}
+// useClusterableGroups - moved to designAppIntegration.ts
 
 export function usePiecePlanes(): Plane[] {
   const flatDesign = useFlatDesign();
@@ -4493,11 +4342,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
   return useSync<KitShallow, T>(useKitStore(identitySelector, guid) as any, selector ? selector : identitySelector, deep);
 }
 
-export function useDiffedKit(): Kit {
-  const kit = useKit() as Kit;
-  const diff = useDesignAppDiff();
-  return diff ? applyKitDiff(kit, diff) : kit;
-}
+// useDiffedKit - moved to designAppIntegration.ts
 
 export function useDesigns(): Design[] {
   return useKit((k) => k.designs ?? []) as Design[];

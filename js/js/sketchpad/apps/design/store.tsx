@@ -24,6 +24,7 @@ import * as Y from "yjs";
 import { areSameKit, Camera, Connection, ConnectionDiff, Coord, DiffStatus, Guid, KitDiff, Piece, PieceDiff } from "../../../semio";
 import { DesignStore, KitCommandContext, KitStore, useDesignScope, useKitScope } from "../../kits/store";
 import {
+  DesignAppId,
   identitySelector,
   KitDiffAppEdit,
   KitDiffAppStore,
@@ -45,10 +46,6 @@ type YDesignAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber
 type YDesignApp = Y.Map<YDesignAppVal>;
 type YDesignApps = Y.Map<Y.Map<YDesignApp>>;
 
-export interface DesignAppId {
-  kit: Guid;
-  design: Guid;
-}
 export interface DesignAppSelection {
   pieces?: Guid[];
   connections?: Guid[];
@@ -627,7 +624,16 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
   }
 }
 
-registerDesignAppStoreFactory((parent, yMap, transact, id, state) => new DesignAppStore(parent, yMap as any, transact, id, state));
+// Register the factory - deferred to avoid circular dependency issues
+export function initializeDesignAppStore() {
+  registerDesignAppStoreFactory((parent, yMap, transact, id, state) => new DesignAppStore(parent, yMap as any, transact, id, state));
+}
+
+// Auto-initialize if this module is imported
+if (typeof window !== 'undefined') {
+  // Use setTimeout to defer execution until after module initialization
+  setTimeout(() => initializeDesignAppStore(), 0);
+}
 
 type DesignAppScope = { id: string };
 const DesignAppScopeContext = createContext<DesignAppScope | null>(null);

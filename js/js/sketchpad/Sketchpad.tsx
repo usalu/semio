@@ -476,6 +476,21 @@ interface SketchpadProps {
 }
 
 const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents }) => {
+  const [registryReady, setRegistryReady] = useState(false);
+
+  useEffect(() => {
+    // Wait for appRegistry to initialize
+    const checkRegistry = async () => {
+      await appRegistry.initialize();
+      setRegistryReady(true);
+    };
+    checkRegistry();
+  }, []);
+
+  if (!registryReady) {
+    return null; // Or a loading spinner
+  }
+
   return (
     <TooltipProvider>
       <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>

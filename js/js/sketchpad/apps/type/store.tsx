@@ -34,6 +34,7 @@ import {
   SketchpadStore,
   ToolType,
   Transact,
+  TypeAppId,
   useKitScope,
   useSketchpadStore,
   useSyncDeep,
@@ -49,10 +50,6 @@ type YTypeAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber |
 type YTypeApp = Y.Map<YTypeAppVal>;
 type YTypeApps = Y.Map<YTypeApp>;
 
-export interface TypeAppId {
-  kit: Guid;
-  type: Guid;
-}
 export interface TypeAppSelection {
   ports?: Guid[];
   representations?: Guid[];
@@ -460,7 +457,15 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
   }
 }
 
-registerTypeAppStoreFactory((parent, yMap, transact, id) => new TypeAppStore(parent, yMap, transact, id));
+// Register the factory - deferred to avoid circular dependency issues
+export function initializeTypeAppStore() {
+  registerTypeAppStoreFactory((parent, yMap, transact, id) => new TypeAppStore(parent, yMap, transact, id));
+}
+
+// Auto-initialize if this module is imported
+if (typeof window !== 'undefined') {
+  setTimeout(() => initializeTypeAppStore(), 0);
+}
 
 export function useTypeAppStore<T>(selector?: (store: TypeAppStore) => T, id?: TypeAppId): T | TypeAppStore | null {
   const store = useSketchpadStore();

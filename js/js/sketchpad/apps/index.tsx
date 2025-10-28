@@ -7,9 +7,8 @@
 
 // #endregion
 
-import { appRegistry } from "./registry";
-
-appRegistry.initialize();
+// Note: appRegistry.initialize() is called by Sketchpad.tsx to ensure
+// initialization happens before routes are generated
 
 export { appRegistry } from "./registry";
 export type { AppConfig, AppRegistration, PanelDefinition, RouteSegment } from "./registry";

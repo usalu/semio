@@ -201,7 +201,34 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
   const hoverFromScope = designScope ? useDesignAppHover() : undefined;
   const commandsFromScope = designScope ? useDesignAppCommands() : undefined;
 
-  const isHovered = hoverFromScope?.designs?.includes(design?.guid || "") ?? false;
+  const isHovered = useMemo(() => {
+    if (!design) return false;
+    if (hoverFromScope?.designs?.includes(design.guid)) return true;
+    if (hoverFromScope?.pieces && hoverFromScope.pieces.length > 0 && currentDesignFromScope?.pieces?.length) {
+      if (hoverFromScope.pieces.some((pieceId: string) => currentDesignFromScope.pieces?.some((piece: Piece) => piece.guid === pieceId && piece.design === design.guid))) return true;
+    }
+    if (hoverFromScope?.ports && hoverFromScope.ports.length > 0 && currentDesignFromScope?.pieces?.length) {
+      if (hoverFromScope.ports.some((port) => {
+        const targetId = port.designPiece || port.piece;
+        if (!targetId) return false;
+        return currentDesignFromScope.pieces?.some((piece: Piece) => piece.guid === targetId && piece.design === design.guid);
+      })) return true;
+    }
+    if (hoverFromScope?.types && hoverFromScope.types.length > 0 && design.pieces?.length) {
+      if (
+        hoverFromScope.types.some((typeId: string) =>
+          design.pieces?.some((piece: Piece) => {
+            const pieceType = piece.type as Type | string | undefined;
+            if (!pieceType) return false;
+            if (typeof pieceType === "string") return pieceType === typeId;
+            return pieceType.guid === typeId;
+          }),
+        )
+      )
+        return true;
+    }
+    return false;
+  }, [design, hoverFromScope, currentDesignFromScope]);
 
   const interactionId = design ? `design-${design.name}-${design.variant || ""}-${design.view || ""}` : "design-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({

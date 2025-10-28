@@ -9,9 +9,8 @@ export interface SectionFrontmatter {
   title?: string;
   description?: string;
   icon?: string;
-  emoji?: string;
+  order?: number;
   sidebar?: {
-    order?: number;
     label?: string;
   };
 }
@@ -30,7 +29,6 @@ export interface SectionInfo {
   label: string;
   description?: string;
   icon?: string;
-  emoji?: string;
   order: number;
 }
 
@@ -90,7 +88,7 @@ export function getAllMDXFiles(): MDXFileInfo[] {
         section: pathToSection(filePath),
         title: pathToTitle(filePath, frontmatter),
         description: frontmatter?.description,
-        order: frontmatter?.sidebar?.order ?? 999,
+        order: frontmatter?.order ?? 999,
         module,
       };
     });
@@ -123,8 +121,7 @@ export function getAllSections(): SectionInfo[] {
               .join(" "),
           description: frontmatter?.description,
           icon: frontmatter?.icon,
-          emoji: frontmatter?.emoji,
-          order: frontmatter?.sidebar?.order ?? 999,
+          order: frontmatter?.order ?? 999,
         });
       }
     }
