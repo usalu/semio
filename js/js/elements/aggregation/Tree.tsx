@@ -1,6 +1,23 @@
 // #region Header
 
 // Tree.tsx
+//
+// Hierarchical tree component with multiple variants:
+//
+// - Tree (default): Flexible tree with TreeSection and TreeItem children
+// - Tree.Files: File/folder tree with automatic icons and navigation
+//
+// Architecture:
+// - Tree.tsx: Generic UI components (no app dependencies)
+// - App-specific wrappers: Use Tree.Files with app logic (routing, data fetching)
+//
+// Example app-specific wrapper:
+// ```tsx
+// const SectionTree = () => {
+//   const tree = docsRegistry.getSectionTree(section);
+//   return <Tree.Files nodes={tree} onNavigate={navigate} />;
+// };
+// ```
 
 // 2025 Ueli Saluz
 
@@ -28,7 +45,7 @@
 import { closestCenter, DndContext, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Folder, GripVertical } from "lucide-react";
 import { Children, createContext, FC, isValidElement, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
@@ -522,6 +539,14 @@ export const TreeItems: FC<{ children: ReactNode[]; renderItem: (child: ReactNod
   return <>{children.map((child, index) => renderItem(child, index, index === children.length - 1))}</>;
 };
 
+// File tree data structure for displaying files and folders
+export interface FileTreeNode {
+  title: string;
+  path: string;
+  isFolder: boolean;
+  children?: FileTreeNode[];
+}
+
 export const Tree: FC<{ children: ReactNode; className?: string; showLines?: boolean }> = ({ children, className = "", showLines = true }) => {
   return (
     <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines }}>
@@ -529,3 +554,133 @@ export const Tree: FC<{ children: ReactNode; className?: string; showLines?: boo
     </TreeContext.Provider>
   );
 };
+
+interface FileTreeItemProps {
+  node: FileTreeNode;
+  currentPath?: string;
+  onNavigate?: (path: string) => void;
+  as?: "a" | "div";
+}
+
+const FileTreeItem: FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
+  const { level } = useContext(TreeContext);
+  const [isHovered, setIsHovered] = useState(false);
+  const treeState = useTreeState();
+  const itemId = `file-${node.path}`;
+  const open = treeState.getOpenState(itemId, true);
+  const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
+
+  const isActive = currentPath === node.path;
+  const hasChildren = node.children && node.children.length > 0;
+  const Icon = node.isFolder ? Folder : FileText;
+
+  const baseClasses = "relative flex items-center gap-2 py-1.5 px-3 rounded-md hover:bg-accent transition-colors cursor-pointer select-none";
+  const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
+  const itemClasses = `${baseClasses} ${stateClasses}`;
+
+  const handleClick = (e: ReactMouseEvent) => {
+    if (hasChildren) {
+      e.preventDefault();
+      setOpen(!open);
+    }
+    if (onNavigate) {
+      onNavigate(node.path);
+    }
+  };
+
+  const content = (
+    <>
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className="text-sm">{node.title}</span>
+    </>
+  );
+
+  const sharedProps = {
+    className: itemClasses,
+    style: { paddingLeft: `${level * 1 + 0.75}rem` },
+    onClick: handleClick,
+    onMouseEnter: () => setIsHovered(true),
+    onMouseLeave: () => setIsHovered(false),
+  };
+
+  const itemElement =
+    as === "a" ? (
+      <a href={`/${node.path}`} {...sharedProps}>
+        {content}
+      </a>
+    ) : (
+      <div {...sharedProps}>{content}</div>
+    );
+
+  if (hasChildren && node.isFolder) {
+    return (
+      <>
+        {itemElement}
+        {open && (
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [], showLines: false }}>
+            {node.children!.map((child, idx) => (
+              <FileTreeItem key={idx} node={child} currentPath={currentPath} onNavigate={onNavigate} as={as} />
+            ))}
+          </TreeContext.Provider>
+        )}
+      </>
+    );
+  }
+
+  return itemElement;
+};
+
+interface TreeFilesProps {
+  title?: string;
+  nodes: FileTreeNode[];
+  currentPath?: string;
+  onNavigate?: (path: string) => void;
+  as?: "a" | "div";
+  className?: string;
+}
+
+/**
+ * Tree.Files - A variant of Tree for displaying file/folder structures
+ * with automatic icons and navigation support.
+ *
+ * @example
+ * <Tree.Files
+ *   nodes={fileNodes}
+ *   currentPath="docs/getting-started"
+ *   onNavigate={(path) => navigate(path)}
+ * />
+ */
+Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = "a", className = "" }: TreeFilesProps) => {
+  if (nodes.length === 0) return null;
+
+  return (
+    <div className={`not-prose my-8 p-6 rounded-lg border border-border bg-card ${className}`}>
+      {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
+      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
+        <div className="flex flex-col gap-0.5">
+          {nodes.map((node, idx) => (
+            <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
+          ))}
+        </div>
+      </TreeContext.Provider>
+    </div>
+  );
+};
+
+/**
+ * Tree.Section - Same as Tree.Files but with a semantic name for section navigation
+ *
+ * This is used by apps to show a section's file tree. The name makes it clear
+ * that this is for section/folder navigation rather than generic file display.
+ *
+ * @example
+ * <Tree.Section
+ *   nodes={sectionNodes}
+ *   currentPath="docs/getting-started"
+ *   onNavigate={(path) => navigate(path)}
+ * />
+ */
+Tree.Section = Tree.Files;
+
+// Backward compatibility: Export FileTree as an alias for Tree.Files
+export const FileTree = Tree.Files;

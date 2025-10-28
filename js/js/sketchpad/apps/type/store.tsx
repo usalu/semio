@@ -90,6 +90,7 @@ export interface TypeAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   activeTool?: ToolType;
   camera?: Camera;
+  focusedPortGuid?: Guid | null; // null to clear focus
 }
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
 export interface TypeAppState {
@@ -101,6 +102,7 @@ export interface TypeAppState {
   presence?: TypeAppPresence;
   others: TypeAppPresenceOther[];
   camera?: Camera;
+  focusedPortGuid?: Guid; // Currently focused port for camera zoom
 }
 
 export interface TypeAppCommandContext extends KitCommandContext {
@@ -248,6 +250,10 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     return cameraStr ? JSON.parse(cameraStr) : undefined;
   }
 
+  get focusedPortGuid(): Guid | undefined {
+    return this.yMap.get("focusedPortGuid") as Guid | undefined;
+  }
+
   protected hash(state: TypeAppState): string {
     return JSON.stringify(state);
   }
@@ -268,6 +274,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
       camera: this.camera,
+      focusedPortGuid: this.focusedPortGuid,
     } as any;
   }
 
@@ -390,6 +397,13 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       if (diff.camera) {
         this.yMap.set("camera", JSON.stringify(diff.camera));
       }
+      if (diff.focusedPortGuid !== undefined) {
+        if (diff.focusedPortGuid === null) {
+          this.yMap.delete("focusedPortGuid");
+        } else {
+          this.yMap.set("focusedPortGuid", diff.focusedPortGuid);
+        }
+      }
     });
   };
 
@@ -499,6 +513,10 @@ export function useTypeAppCamera(): Camera | undefined {
   return useTypeApp((s) => s.camera) as Camera | undefined;
 }
 
+export function useTypeAppFocusedPortGuid(): Guid | undefined {
+  return useTypeApp((s) => s.focusedPortGuid) as Guid | undefined;
+}
+
 export function useTypeAppCommands(id?: TypeAppId) {
   const store = useTypeAppStore(undefined, id) as TypeAppStore | null;
   const noOp = () => {};
@@ -513,6 +531,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
       deselectAll: noOp,
       togglePanel: noOp,
       setCamera: noOp,
+      focusPort: noOp,
+      clearFocus: noOp,
       setActiveTool: noOp,
       selectPort: noOp,
       deselectPort: noOp,
@@ -543,6 +563,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
     setCamera: (camera: Camera) => {
       store.change({ camera });
     },
+    focusPort: (portGuid: Guid) => store.execute("semio.typeApp.focusPort", portGuid),
+    clearFocus: () => store.execute("semio.typeApp.clearFocus"),
     setActiveTool: (tool: ToolType) => {
       store.change({ activeTool: tool });
     },

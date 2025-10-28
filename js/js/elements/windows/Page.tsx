@@ -26,9 +26,10 @@ export interface PageProps {
   className?: string;
   focusedItemId?: string;
   onFocusComplete?: () => void;
+  footer?: ReactNode;
 }
 
-const Page: FC<PageProps> = ({ frontmatter, children, className = "", focusedItemId, onFocusComplete }) => {
+const Page: FC<PageProps> = ({ frontmatter, children, className = "", focusedItemId, onFocusComplete, footer }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,9 +46,10 @@ const Page: FC<PageProps> = ({ frontmatter, children, className = "", focusedIte
 
   return (
     <ScrollArea ref={scrollAreaRef} className={`h-full ${className}`}>
-      <article className="prose prose-sm dark:prose-invert max-w-4xl mx-auto p-6 md:p-8">
+      <article className="prose prose-sm max-w-4xl mx-auto p-6 md:p-8">
         {frontmatter?.description && <p className="text-lg text-muted-foreground mb-8">{frontmatter.description}</p>}
         <div className="docs-content">{children}</div>
+        {footer && <div className="not-prose mt-8">{footer}</div>}
       </article>
     </ScrollArea>
   );

@@ -1101,6 +1101,20 @@ const Search: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const kits = useKits();
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p") {
+        const activeElement = document.activeElement as HTMLElement | null;
+        if (!open && activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || activeElement.isContentEditable)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        setOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+  }, [open, setOpen]);
 
   const searchData = useMemo(() => {
     const results: SearchResult[] = [];
@@ -1217,7 +1231,7 @@ const Search: FC = ({}) => {
 
   return (
     <>
-      <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search" })} pressed={open} onPressedChange={setOpen}>
+      <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup", hotkey: "Ctrl+P" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search", hotkey: "Ctrl+P" })} pressed={open} onPressedChange={setOpen}>
         <SearchIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={open} onOpenChange={setOpen}>
@@ -1864,6 +1878,162 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
     quality: qualityAppCommands,
   };
 
+  const workbenchPanels = useMemo(
+    () => ["workbench", "tools"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
+    [panelConfig],
+  );
+  const hudPanels = useMemo(
+    () => ["hud", "stats"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
+    [panelConfig],
+  );
+  const rightPanels = useMemo(
+    () => ["details", "chat", "settings"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
+    [panelConfig],
+  );
+
+  const activeWorkbenchPanel = useMemo(
+    () => workbenchPanels.find((key) => visiblePanels[key as keyof PanelVisibility]) ?? workbenchPanels[0],
+    [visiblePanels, workbenchPanels],
+  );
+  const activeHudPanel = useMemo(
+    () => hudPanels.find((key) => visiblePanels[key as keyof PanelVisibility]) ?? hudPanels[0],
+    [visiblePanels, hudPanels],
+  );
+  const activeRightPanel = useMemo(
+    () => rightPanels.find((key) => visiblePanels[key as keyof PanelVisibility]) ?? rightPanels[0],
+    [visiblePanels, rightPanels],
+  );
+
+  const toggleGroupPanel = useCallback(
+    (targetKey: PanelKey | undefined, groupKeys: PanelKey[]) => {
+      const togglePanelFn = commands[appType]?.togglePanel;
+      if (!targetKey || !togglePanelFn) return;
+      const typedTarget = targetKey as keyof PanelVisibility;
+      const isOpen = visiblePanels[typedTarget];
+      if (isOpen) {
+        togglePanelFn(typedTarget);
+        return;
+      }
+      groupKeys.forEach((key) => {
+        if (key !== targetKey && visiblePanels[key as keyof PanelVisibility]) {
+          togglePanelFn(key as keyof PanelVisibility);
+        }
+      });
+      togglePanelFn(typedTarget);
+    },
+    [appType, commands, visiblePanels],
+  );
+
+  useEffect(() => {
+    const resolvePanelKey = (preferred: PanelKey | undefined, groupKeys: PanelKey[]) => {
+      if (groupKeys.length === 0) return undefined;
+      if (preferred && groupKeys.includes(preferred)) return preferred;
+      return groupKeys[0];
+    };
+
+    const handler = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        const key = event.key.toLowerCase();
+        if (key === "j") {
+          const targetKey = resolvePanelKey("workbench", workbenchPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, workbenchPanels);
+          return;
+        }
+        if (key === "k") {
+          const targetKey = resolvePanelKey("hud", hudPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, hudPanels);
+          return;
+        }
+        if (key === "l") {
+          const targetKey = resolvePanelKey("details", rightPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, rightPanels);
+          return;
+        }
+        if (key === "ö" || key === "ø") {
+          const targetKey = resolvePanelKey("tools", workbenchPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, workbenchPanels);
+          return;
+        }
+        if (key === "p") {
+          const activeElement = document.activeElement as HTMLElement | null;
+          if (!searchOpen && activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || activeElement.isContentEditable)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          setSearchOpen((prev) => !prev);
+          return;
+        }
+      }
+      if (event.key === "F11") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        toggleFullscreen();
+        return;
+      }
+      if (!event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "ArrowUp") return;
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || activeElement.isContentEditable)) return;
+      if (event.key === "ArrowLeft") {
+        if (!canGoBack) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        navigateBack();
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        if (!canGoForward) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        navigateForward();
+        return;
+      }
+      if (!upTarget) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      navigate(upTarget);
+    };
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+  }, [
+    activeHudPanel,
+    activeRightPanel,
+    activeWorkbenchPanel,
+    canGoBack,
+    canGoForward,
+    hudPanels,
+    navigate,
+    navigateBack,
+    navigateForward,
+    rightPanels,
+    searchOpen,
+    setSearchOpen,
+    toggleFullscreen,
+    toggleGroupPanel,
+    upTarget,
+    workbenchPanels,
+  ]);
+
   // Find the currently active panel (used by mobile)
   // Default to first panel if none is open
   const activePanel = panelConfig.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || panelConfig[0]?.key || "";
@@ -1925,15 +2095,15 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
       {/* Unexpanded navbar */}
       <div className="h-12 flex items-center justify-between px-1 gap-1">
         <ButtonGroup>
-          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateBack} disabled={!canGoBack}>
+          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Left" })} onClick={navigateBack} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
-          <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateForward} disabled={!canGoForward}>
+          <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Right" })} onClick={navigateForward} disabled={!canGoForward}>
             <ArrowRight size={16} />
           </ButtonGroupItem>
           <ButtonGroupItem
             value="up"
-            tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })}
+            tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Up" })}
             onClick={() => {
               if (upTarget) navigate(upTarget);
             }}
@@ -1977,11 +2147,11 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
               <toolbarConfig.icon size={16} />
             </Toggle>
           )}
-          <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search" })} pressed={searchOpen} onPressedChange={setSearchOpen}>
+          <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup", hotkey: "Ctrl+P" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search", hotkey: "Ctrl+P" })} pressed={searchOpen} onPressedChange={setSearchOpen}>
             <SearchIcon size={16} />
           </Toggle>
           <Focus />
-          <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup", hotkey: "F11" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls", hotkey: "F11" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
             <Fullscreen size={16} />
           </Toggle>
           <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand", { manualPath: "interface#navbar", tutorialPath: "hello-semio/sketch-setup" })} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
@@ -2045,6 +2215,44 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
 
   const upTarget = currentPath === "/" ? undefined : currentPath === "/kits" ? "/" : currentPath.split("/").slice(0, -1).join("/") || "/";
   const isAtRoot = currentPath === "/" || currentPath === "/kits";
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "F11") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        toggleFullscreen();
+        return;
+      }
+      if (!event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "ArrowUp") return;
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || activeElement.isContentEditable)) return;
+      if (event.key === "ArrowLeft") {
+        if (!canGoBack) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        navigateBack();
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        if (!canGoForward) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        navigateForward();
+        return;
+      }
+      if (!upTarget) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      navigate(upTarget);
+    };
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+  }, [canGoBack, canGoForward, navigate, navigateBack, navigateForward, toggleFullscreen, upTarget]);
 
   const secondPart = pathParts[2];
   const thirdPart = pathParts[3];
@@ -2094,15 +2302,15 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
       style={{ WebkitAppRegion: "drag" } as any}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateBack} disabled={!canGoBack}>
+        <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Left" })} onClick={navigateBack} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })} onClick={navigateForward} disabled={!canGoForward}>
+        <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Right" })} onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
         <ButtonGroupItem
           value="up"
-          tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })}
+          tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Up" })}
           onClick={() => {
             if (upTarget) navigate(upTarget);
           }}
@@ -2130,7 +2338,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
             <toolbarConfig.icon />
           </Toggle>
         )}
-        <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup", hotkey: "F11" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls", hotkey: "F11" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           <Fullscreen />
         </Toggle>
         {onWindowEvents && (

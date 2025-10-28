@@ -319,6 +319,18 @@
   --cursor-move: url("../../assets/cursors/cursor_move_dark.svg") 16 16, move;
   --cursor-crosshair: url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0, crosshair;
   --cursor-crosshair-centered: url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16, crosshair;
+  --info-bg: var(--color-dark-8-9);
+  --info-foreground: var(--color-light);
+  --info-border: var(--color-info);
+  --success-bg: var(--color-dark-7-9);
+  --success-foreground: var(--color-light);
+  --success-border: var(--color-success);
+  --warning-bg: var(--color-dark-6-7);
+  --warning-foreground: var(--color-light);
+  --warning-border: var(--color-warning);
+  --destructive-bg: var(--color-dark-8-9);
+  --destructive-foreground: var(--color-danger);
+  --destructive-border: var(--color-danger);
 }
 
 .touch {
@@ -350,6 +362,37 @@
   --text-9xl: 8rem;
   --text-9xl--line-height: 1;
 }
+
+@layer base {
+  .prose {
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-lead: var(--muted-foreground);
+    --tw-prose-links: var(--accent);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-counters: var(--muted-foreground);
+    --tw-prose-bullets: var(--muted-foreground);
+    --tw-prose-hr: var(--border-color);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: var(--border-color);
+    --tw-prose-code: var(--foreground);
+    --tw-prose-pre-bg: var(--muted);
+    --tw-prose-th-borders: var(--border-color);
+    --tw-prose-td-borders: var(--border-color);
+  }
+  .prose a {
+    color: var(--accent);
+  }
+  .prose a:hover {
+    color: var(--active-base);
+  }
+  .prose code {
+    background-color: var(--muted);
+  }
+  .prose pre code {
+    background-color: transparent;
+  }
+}
 /* https://reactflow.dev/learn/customization/theming */
 
 @theme inline {
@@ -377,17 +420,34 @@
 }
 
 .docs-content {
+  color: var(--foreground);
   .aside-note {
-    @apply my-4 p-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950;
+    @apply my-4 p-4 border;
+    background-color: var(--info-bg);
+    color: var(--info-foreground);
+    border-color: var(--info-border);
+    border-inline-start-width: var(--spacing);
   }
   .aside-tip {
-    @apply my-4 p-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-950;
+    @apply my-4 p-4 border;
+    background-color: var(--success-bg);
+    color: var(--success-foreground);
+    border-color: var(--success-border);
+    border-inline-start-width: var(--spacing);
   }
   .aside-caution {
-    @apply my-4 p-4 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950;
+    @apply my-4 p-4 border;
+    background-color: var(--warning-bg);
+    color: var(--warning-foreground);
+    border-color: var(--warning-border);
+    border-inline-start-width: var(--spacing);
   }
   .aside-danger {
-    @apply my-4 p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950;
+    @apply my-4 p-4 border;
+    background-color: var(--destructive-bg);
+    color: var(--destructive-foreground);
+    border-color: var(--destructive-border);
+    border-inline-start-width: var(--spacing);
   }
 }
 

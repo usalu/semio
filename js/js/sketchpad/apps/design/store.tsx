@@ -100,6 +100,7 @@ export interface DesignAppDiff {
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
+  focusedPieceGuid?: Guid | null; // null to clear focus
 }
 export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
 export interface DesignAppState {
@@ -113,6 +114,7 @@ export interface DesignAppState {
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
+  focusedPieceGuid?: Guid; // Currently focused piece for camera zoom
   currentTransactionStackLength?: number; // Added to trigger re-renders when stack changes
 }
 
@@ -358,6 +360,10 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
     return this.yMap.get("diagramScale") as number | undefined;
   }
 
+  get focusedPieceGuid(): Guid | undefined {
+    return this.yMap.get("focusedPieceGuid") as Guid | undefined;
+  }
+
   kit(): KitStore {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
@@ -386,6 +392,7 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
       camera: this.camera,
       diagramCenter: this.diagramCenter,
       diagramScale: this.diagramScale,
+      focusedPieceGuid: this.focusedPieceGuid,
       currentTransactionStackLength: this.currentTransactionStack.length, // Include stack length in snapshot
     };
   }
@@ -563,6 +570,13 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
       if (diff.diagramScale !== undefined) {
         this.yMap.set("diagramScale", diff.diagramScale);
       }
+      if (diff.focusedPieceGuid !== undefined) {
+        if (diff.focusedPieceGuid === null) {
+          this.yMap.delete("focusedPieceGuid");
+        } else {
+          this.yMap.set("focusedPieceGuid", diff.focusedPieceGuid);
+        }
+      }
     });
   };
 
@@ -691,6 +705,10 @@ export function useDesignAppDiagramScale(): number | undefined {
   return useDesignApp((s) => s.diagramScale) as number | undefined;
 }
 
+export function useDesignAppFocusedPieceGuid(): Guid | undefined {
+  return useDesignApp((s) => s.focusedPieceGuid) as Guid | undefined;
+}
+
 export function useDesignAppHover(): DesignAppHover | undefined {
   return useDesignApp((s) => s.hover) as DesignAppHover | undefined;
 }
@@ -741,6 +759,8 @@ export function useDesignAppCommands(id?: DesignAppId) {
     updateConnection: (connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", connection, connectionDiff),
     updateConnections: (updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designApp.updateConnections", updates),
     setCamera: (camera: Camera) => store.execute("semio.designApp.setCamera", camera),
+    focusPiece: (pieceGuid: Guid) => store.execute("semio.designApp.focusPiece", pieceGuid),
+    clearFocus: () => store.execute("semio.designApp.clearFocus"),
     setDiagramCenter: (center: Coord) => store.execute("semio.designApp.setDiagramCenter", center),
     setDiagramScale: (scale: number) => store.execute("semio.designApp.setDiagramScale", scale),
     hoverPiece: (guid: Guid) => store.execute("semio.designApp.hoverPiece", guid),

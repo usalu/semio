@@ -451,6 +451,20 @@ export const commands = {
       },
     };
   },
+  "semio.designApp.focusPiece": (context: DesignAppCommandContext, pieceGuid: Guid): DesignAppCommandResult => {
+    return {
+      diff: {
+        focusedPieceGuid: pieceGuid,
+      },
+    };
+  },
+  "semio.designApp.clearFocus": (context: DesignAppCommandContext): DesignAppCommandResult => {
+    return {
+      diff: {
+        focusedPieceGuid: null,
+      },
+    };
+  },
   "semio.designApp.setDiagramCenter": (context: DesignAppCommandContext, center: Coord): DesignAppCommandResult => {
     return {
       diff: {

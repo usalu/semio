@@ -3,7 +3,7 @@ import { useThree } from "@react-three/fiber";
 import { FC, useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { averagePlane, matrixToPlane, Plane, planeToMatrix, toSemioRotation, toThreeRotation } from "../../../../semio";
-import { TransformableModel, OnMultiPlaneUpdate } from "./TransformableModel";
+import { TransformableModel, OnMultiPlaneUpdate } from "../../../../elements/windows/Scene";
 
 interface SharedTransformControlsProps {
   /** The models currently selected for transformation */

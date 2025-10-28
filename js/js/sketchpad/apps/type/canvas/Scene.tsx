@@ -27,9 +27,22 @@ import SceneComponent from "../../../../elements/windows/Scene";
 import { guid, Point, Port, Type, Vector } from "../../../../semio";
 import { useKit, useKitCommands, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
-import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppHover, useTypeAppSelection } from "../store";
+import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppFocusedPortGuid, useTypeAppHover, useTypeAppSelection } from "../store";
 import { TypeAppTools } from "../tools_registry";
 
+/**
+ * PortVisual component - renders a Port as a SceneModel.
+ *
+ * Implements the unified SceneModel abstraction:
+ * - Hoverable: changes color on pointer enter/leave
+ * - Clickable: handles selection with tool-specific behavior
+ * - Focusable: sets userData.id to port.guid for camera zoom
+ * - Has a semio plane: derived from Port.point and Port.direction
+ *
+ * Unlike Pieces which have an explicit Plane property, Ports are defined by
+ * a point and direction vector. The SceneModel abstraction allows both to be
+ * focusable through the unified focus behavior in Scene.tsx.
+ */
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick }) => {
   const position = useMemo(() => [port.point.x, port.point.y, port.point.z] as [number, number, number], [port.point]);
   const direction = useMemo(() => {
@@ -49,6 +62,9 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   const endPoint = useMemo(() => [position[0] + direction[0] * arrowLength, position[1] + direction[1] * arrowLength, position[2] + direction[2] * arrowLength] as [number, number, number], [position, direction]);
   const points = useMemo(() => [position, endPoint], [position, endPoint]);
 
+  // userData for making the port focusable by guid
+  const userData = useMemo(() => ({ id: port.guid }), [port.guid]);
+
   const handlePointerEvent = useCallback(
     (callback: () => void) => (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
@@ -58,7 +74,7 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   );
 
   return (
-    <group onPointerEnter={handlePointerEvent(onHover)} onPointerLeave={handlePointerEvent(onLeave)} onClick={handlePointerEvent(onClick)}>
+    <group userData={userData} onPointerEnter={handlePointerEvent(onHover)} onPointerLeave={handlePointerEvent(onLeave)} onClick={handlePointerEvent(onClick)}>
       {/* Base point sphere */}
       <Sphere args={[0.03]} position={position}>
         <meshBasicMaterial color={color} />
@@ -315,8 +331,9 @@ const SceneContent: FC = () => {
 };
 
 const Scene: FC = () => {
-  const { setCamera, deselectAll } = useTypeAppCommands();
+  const { setCamera, deselectAll, clearFocus } = useTypeAppCommands();
   const camera = useTypeAppCamera();
+  const focusedPortGuid = useTypeAppFocusedPortGuid();
 
   const onCameraChange = useCallback(
     (newCamera: { position: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number }; up: { x: number; y: number; z: number } }) => {
@@ -332,8 +349,12 @@ const Scene: FC = () => {
     [deselectAll],
   );
 
+  const onFocusComplete = useCallback(() => {
+    clearFocus();
+  }, [clearFocus]);
+
   return (
-    <SceneComponent camera={camera} onCameraChange={onCameraChange} onPointerMissed={onPointerMissed}>
+    <SceneComponent camera={camera} onCameraChange={onCameraChange} onPointerMissed={onPointerMissed} focusedItemId={focusedPortGuid} onFocusComplete={onFocusComplete}>
       <SceneContent />
     </SceneComponent>
   );

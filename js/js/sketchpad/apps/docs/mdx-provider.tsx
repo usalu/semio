@@ -1,8 +1,11 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, createContext, lazy, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Tabs as BaseTabs, TabsContent, TabsList, TabsTrigger } from "../../../elements/aggregation/Tabs";
 import { Aside } from "../../../elements/display/Aside";
 import { HeadingNode } from "./panels/Details";
+
+// Lazy load SectionTree to avoid loading React Router in Storybook
+const SectionTree = lazy(() => import("./components/SectionTree"));
 
 interface HeadingsContextValue {
   headings: HeadingNode[];
@@ -48,6 +51,7 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   Aside,
   Tabs,
   TabItem,
+  SectionTree,
   h1: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||

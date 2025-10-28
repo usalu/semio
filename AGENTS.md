@@ -419,6 +419,53 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── docs
 │ │ │ │ │ ├── canvas
 │ │ │ │ │ │ └── Page.tsx
+│ │ │ │ │ ├── pages
+│ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ ├── getting-started
+│ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ ├── installation.mdx
+│ │ │ │ │ │ │ ├── intro
+│ │ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ │ ├── think-in-semio.mdx
+│ │ │ │ │ │ │ │ └── why-semio.mdx
+│ │ │ │ │ │ │ └── starter.mdx
+│ │ │ │ │ │ ├── integrations
+│ │ │ │ │ │ │ ├── cloud.mdx
+│ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ ├── ladybug.mdx
+│ │ │ │ │ │ │ ├── rhino.mdx
+│ │ │ │ │ │ │ ├── speckle.mdx
+│ │ │ │ │ │ │ └── wasp.mdx
+│ │ │ │ │ │ ├── manuals
+│ │ │ │ │ │ │ ├── grasshopper.mdx
+│ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ ├── semio
+│ │ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ │ └── kit.mdx
+│ │ │ │ │ │ │ └── sketchpad.mdx
+│ │ │ │ │ │ ├── showcases
+│ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ └── metabolism.mdx
+│ │ │ │ │ │ ├── theory
+│ │ │ │ │ │ │ ├── design-information-modeling.mdx
+│ │ │ │ │ │ │ ├── graphs.mdx
+│ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ └── kit-of-parts-architecture.mdx
+│ │ │ │ │ │ └── tutorials
+│ │ │ │ │ │ │ ├── hello-semio
+│ │ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ │ ├── model-brick-set.mdx
+│ │ │ │ │ │ │ │ ├── model-design.mdx
+│ │ │ │ │ │ │ │ ├── save-kit.mdx
+│ │ │ │ │ │ │ │ ├── show-design.mdx
+│ │ │ │ │ │ │ │ └── sketch-setup.mdx
+│ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ ├── metabolism
+│ │ │ │ │ │ │ │ └── index.mdx
+│ │ │ │ │ │ │ └── serial-conversion
+│ │ │ │ │ │ │ │ ├── index.mdx
+│ │ │ │ │ │ │ │ └── sketchpad
+│ │ │ │ │ │ │ │   └── index.mdx
 │ │ │ │ │ ├── panels
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx

@@ -82,6 +82,20 @@ export const commands = {
       },
     };
   },
+  "semio.typeApp.focusPort": (context: TypeAppCommandContext, portGuid: Guid): TypeAppCommandResult => {
+    return {
+      diff: {
+        focusedPortGuid: portGuid,
+      },
+    };
+  },
+  "semio.typeApp.clearFocus": (context: TypeAppCommandContext): TypeAppCommandResult => {
+    return {
+      diff: {
+        focusedPortGuid: null,
+      },
+    };
+  },
   "semio.typeApp.togglePortsFullscreen": (context: TypeAppCommandContext): TypeAppCommandResult => {
     const currentPanel = context.typeApp.fullscreenWindow;
     const newPanel = currentPanel === TypeAppFullscreenWindow.Ports ? TypeAppFullscreenWindow.None : TypeAppFullscreenWindow.Ports;

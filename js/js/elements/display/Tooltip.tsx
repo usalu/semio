@@ -98,30 +98,30 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
   
-  const hasLinks = (showManual && fullManualPath) || (showTutorial && fullTutorialPath);
-
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-3">
-        <span>{label}</span>
-        {hotkey && <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono">{hotkey}</kbd>}
-      </div>
-      {hasLinks && (
-        <div className="flex items-center gap-2 border-t border-accent-foreground pt-2">
-          {showManual && fullManualPath && (
-            <Link to={fullManualPath} className="text-link hover:text-link-hover flex items-center gap-1">
+      <span>{label}</span>
+      {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
+        <div className="grid grid-flow-col auto-cols-max items-center border-t border-accent-foreground pt-2 justify-between gap-2">
+          {showManual && fullManualPath ? (
+            <Link to={fullManualPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
               <BookOpen className="size-3" />
               <span>{t("tooltip.manual")}</span>
             </Link>
+          ) : (
+            <span />
           )}
-          {showTutorial && fullTutorialPath && (
-            <Link to={fullTutorialPath} className="text-link hover:text-link-hover flex items-center gap-1">
+          {showTutorial && fullTutorialPath ? (
+            <Link to={fullTutorialPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
               <GraduationCap className="size-3" />
               <span>{t("tooltip.tutorial")}</span>
             </Link>
+          ) : (
+            <span />
           )}
+          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono">{hotkey}</kbd> : <span />}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

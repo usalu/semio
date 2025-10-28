@@ -22,7 +22,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { Canvas, HorizontalWindows } from "./Canvas";
+import Canvas, { HorizontalWindows } from "./Canvas";
 import Footer from "./Footer";
 import Layout from "./Layout";
 import Navbar from "./Navbar";

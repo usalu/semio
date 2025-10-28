@@ -24,14 +24,13 @@ import { Edges, Line, Select } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import React, { FC, useCallback, useMemo } from "react";
 import * as THREE from "three";
-import Scene, { Model } from "../../../../elements/windows/Scene";
+import Scene, { Model, TransformableModel } from "../../../../elements/windows/Scene";
 import { Camera, Design, DiffStatus, Piece, Plane, planeToMatrix, toThreeRotation } from "../../../../semio";
 import { PieceScopeProvider, useDesign, usePiece } from "../../../kits/store";
 import { useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePieceStatus } from "../../../kits/designAppIntegration";
 import { useAppPanelVisibility } from "../../../store";
-import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelection } from "../store";
+import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFocusedPieceGuid, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelection } from "../store";
 import { SharedTransformControls } from "./SharedTransformControls";
-import { TransformableModel } from "./TransformableModel";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -65,6 +64,18 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 interface ModelPieceProps {}
 
+/**
+ * ModelPiece component - renders a Piece as a SceneModel.
+ *
+ * Implements the unified SceneModel abstraction:
+ * - Hoverable: changes color on pointer enter/leave
+ * - Clickable: handles selection with modifier keys (Ctrl/Cmd, Shift)
+ * - Focusable: sets userData.id to piece.guid for camera zoom
+ * - Has a semio plane: uses Piece.plane in semio coordinate system
+ *
+ * The piece's plane is converted to a Three.js matrix for rendering, and
+ * userData.id is set to enable the focus behavior defined in Scene.tsx.
+ */
 const ModelPiece: FC<ModelPieceProps> = () => {
   const piece = usePiece() as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
@@ -189,6 +200,9 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       </group>
     ) : null;
 
+  // userData for making the model focusable by guid
+  const userData = useMemo(() => ({ id: piece.guid }), [piece.guid]);
+
   // Diffed/current piece mesh using Model component
   const diffedMeshContent = (
     <Model
@@ -202,6 +216,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       emissiveIntensity={0.45}
       showEdges
       edgeColor={foregroundColor}
+      userData={userData}
     />
   );
 
@@ -330,9 +345,10 @@ const ModelDesign: FC = () => {
 };
 
 const DesignAppScene: FC = () => {
-  const { deselectAll, toggleAccesslFullscreen, setCamera } = useDesignAppCommands();
+  const { deselectAll, toggleAccesslFullscreen, setCamera, clearFocus } = useDesignAppCommands();
   const fullscreen = useDesignAppFullscreen() === DesignAppFullscreenWindow.Accessl;
   const camera = useDesignAppCamera();
+  const focusedPieceGuid = useDesignAppFocusedPieceGuid();
   const panelVisibility = useAppPanelVisibility();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
@@ -352,9 +368,12 @@ const DesignAppScene: FC = () => {
     },
     [setCamera],
   );
+  const onFocusComplete = useCallback(() => {
+    clearFocus();
+  }, [clearFocus]);
 
   return (
-    <Scene showGizmo={fullscreen && !!panelVisibility.toolbar} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+    <Scene showGizmo={fullscreen && !!panelVisibility.toolbar} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed} focusedItemId={focusedPieceGuid} onFocusComplete={onFocusComplete}>
       <ModelDesign />
     </Scene>
   );

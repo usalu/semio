@@ -24,22 +24,193 @@ import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from 
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber";
 import React, { FC, ReactNode, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Camera } from "../../semio";
+import { Camera, Plane, Point, Vector } from "../../semio";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
+// #region SceneModel - Unified abstraction for all interactive 3D models
+
+/**
+ * Unified interface for all models in a 3D scene.
+ *
+ * Models in a scene are:
+ * - Hoverable: can be highlighted when the pointer enters their bounds
+ * - Clickable: can be selected when clicked
+ * - Focusable: camera can zoom towards them
+ * - Have a semio plane: positioned in the semio coordinate system
+ *
+ * Examples:
+ * - Pieces in the design editor are SceneModels
+ * - Ports in the type editor are SceneModels
+ */
+export interface SceneModel {
+  /** Unique identifier for the model */
+  guid: string;
+
+  /**
+   * The plane defining the model's position and orientation in 3D space.
+   * Uses Semio coordinate system (X-right, Y-forward, Z-up).
+   *
+   * For point-based models (like Ports), this can be derived from point + direction.
+   */
+  plane?: Plane;
+
+  /**
+   * Whether the model is currently selected.
+   * Selected models have visual feedback and may be transformable.
+   */
+  isSelected?: boolean;
+
+  /**
+   * Whether the model is currently hovered.
+   * Hovered models show visual feedback to indicate interactivity.
+   */
+  isHovered?: boolean;
+
+  /**
+   * Whether the model is focusable (camera can zoom to it).
+   * Defaults to true if plane exists.
+   */
+  isFocusable?: boolean;
+
+  /**
+   * Optional callback when the model is clicked.
+   */
+  onClick?: () => void;
+
+  /**
+   * Optional callback when the pointer enters the model's bounds.
+   */
+  onPointerEnter?: () => void;
+
+  /**
+   * Optional callback when the pointer leaves the model's bounds.
+   */
+  onPointerLeave?: () => void;
+}
+
+/**
+ * Interface for any entity that can be transformed in the 3D scene.
+ * Extends SceneModel to inherit hoverable, clickable, focusable behavior.
+ *
+ * Every transformable model:
+ * - Has a plane in the semio coordinate system (from SceneModel)
+ * - Is hoverable, clickable, focusable (from SceneModel)
+ * - Can optionally show transform controls (gumball) when selected
+ */
+export interface TransformableModel extends SceneModel {
+  /**
+   * Whether the model can be transformed.
+   * If false, transform controls will not be shown even if plane exists.
+   */
+  isTransformable?: boolean;
+}
+
+/**
+ * Delta representing how a plane has been transformed.
+ */
+export interface PlaneTransformDelta {
+  /** Translation in x, y, z */
+  translation?: { x: number; y: number; z: number };
+
+  /** Rotation as quaternion or euler angles */
+  rotation?: { x: number; y: number; z: number; w: number };
+
+  /** Scale factor */
+  scale?: number;
+}
+
+/**
+ * Callback for when a model's plane is updated via transform controls.
+ */
+export type OnPlaneUpdate = (modelGuid: string, newPlane: Plane) => void;
+
+/**
+ * Callback for when multiple models' planes are updated simultaneously.
+ */
+export type OnMultiPlaneUpdate = (updates: Array<{ modelGuid: string; newPlane: Plane }>) => void;
+
+/**
+ * Utility to create a plane from a point and direction vector.
+ * This allows point-based models (like Ports) to be treated as SceneModels.
+ *
+ * @param point - The origin point of the plane
+ * @param direction - The normal/direction vector (becomes Z-axis)
+ * @returns A Plane in Semio coordinate system
+ */
+export const planeFromPointAndDirection = (point: Point, direction: Vector): Plane => {
+  const dir = new THREE.Vector3(direction.x, direction.y, direction.z).normalize();
+
+  // Create an arbitrary perpendicular vector for X-axis
+  const tempVec = Math.abs(dir.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0);
+
+  const xAxis = new THREE.Vector3().crossVectors(tempVec, dir).normalize();
+  const yAxis = new THREE.Vector3().crossVectors(dir, xAxis).normalize();
+
+  return {
+    origin: { x: point.x, y: point.y, z: point.z },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+  };
+};
+
+/**
+ * Get the position from a plane for focus/camera operations.
+ */
+export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
+  return new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+};
+
+/**
+ * Check if a model has a valid plane for positioning.
+ */
+export const hasValidPlane = (model: SceneModel): boolean => {
+  return model.plane !== undefined && model.plane !== null;
+};
+
+/**
+ * Check if a model is focusable (has a plane and isFocusable is not explicitly false).
+ */
+export const isModelFocusable = (model: SceneModel): boolean => {
+  return hasValidPlane(model) && (model.isFocusable === undefined || model.isFocusable === true);
+};
+
+// #endregion
+
+/**
+ * Base Model component for all interactive 3D objects in the scene.
+ *
+ * This component provides the foundation for the unified SceneModel abstraction:
+ * - Hoverable: responds to pointer enter/leave events with visual feedback
+ * - Clickable: handles onClick events for selection
+ * - Focusable: can be targeted by camera zoom via userData.id
+ *
+ * Used by:
+ * - Pieces in the design editor (with plane from Piece.plane)
+ * - Ports in the type editor (with plane derived from Port.point + Port.direction)
+ * - Any other scene object that needs interactive behavior
+ *
+ * The userData.id property is critical for focus behavior - it allows the Scene
+ * to find and zoom to this object by guid.
+ */
 interface ModelProps {
   children?: ReactNode;
+  /** Visual state: model is selected */
   selected?: boolean;
+  /** Visual state: model is hovered */
   hovered?: boolean;
+  /** Click handler for selection */
   onClick?: (event: ThreeEvent<MouseEvent>) => void;
+  /** Hover enter handler */
   onPointerEnter?: (event: ThreeEvent<PointerEvent>) => void;
+  /** Hover leave handler */
   onPointerLeave?: (event: ThreeEvent<PointerEvent>) => void;
   color?: string;
   emissiveColor?: string;
   emissiveIntensity?: number;
   showEdges?: boolean;
   edgeColor?: string;
+  /** userData.id should be set to the model's guid for focusable behavior */
   userData?: any;
 }
 
@@ -279,11 +450,15 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
     }
   }, [onCameraChange]);
 
+  // Focus behavior: zoom camera to a model by guid
+  // This implements the "focusable" part of the SceneModel abstraction.
+  // Models (Pieces, Ports, etc.) set userData.id = model.guid to enable this behavior.
   useEffect(() => {
     if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
 
     let targetObject: THREE.Object3D | null = null;
 
+    // Find the model by searching for userData.id matching the focusedItemId (guid)
     threeScene.traverse((obj: THREE.Object3D) => {
       if (obj.userData?.id === focusedItemId || obj.name === focusedItemId) {
         targetObject = obj;
@@ -291,6 +466,7 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
     });
 
     if (targetObject) {
+      // Calculate the bounding box to determine zoom distance
       const box = new THREE.Box3().setFromObject(targetObject);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
@@ -304,6 +480,7 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
 
       isUpdatingCameraRef.current = true;
 
+      // Smoothly animate camera to the focused model
       const animate = () => {
         const t = 0.1;
         camera.position.lerp(newPosition, t);
