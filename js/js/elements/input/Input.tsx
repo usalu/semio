@@ -35,15 +35,17 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   abortTransaction?: () => void;
   interactionId?: string;
   i18n?: string;
+  placeholderI18n?: string;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, i18n, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, i18n, placeholderI18n, placeholder, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
   const mode = useTooltipMode();
   const { t } = useTranslation();
+  const computedPlaceholder = placeholderI18n ? t(placeholderI18n) : placeholder;
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -116,6 +118,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
+      placeholder={computedPlaceholder}
       {...props}
     />
   );
@@ -127,10 +130,10 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const label = t(`${i18n}.label`);
 
   return (
-    <div className="flex items-center gap-2 min-w-0 h-9 w-full transition-colors hover:bg-hover-panel" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+    <div className="group flex items-center gap-2 min-w-0 h-9 w-full" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors">{label}</span>
+          <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
           <I18nTooltipContent i18nKey={i18n} mode={mode} />

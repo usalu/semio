@@ -19,16 +19,17 @@
 
 // #endregion
 
-import { Line, Sphere, useGLTF } from "@react-three/drei";
-import { ThreeEvent } from "@react-three/fiber";
+import { Line, Sphere, useGLTF, useFBX } from "@react-three/drei";
+import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { Crosshair } from "lucide-react";
-import { FC, useCallback, useMemo, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import * as THREE from "three";
-import { guid, Point, Port, Type, Vector } from "../../../../semio";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+import { guid, Kit, Point, Port, Type, Vector } from "../../../../semio";
 import { Tool, ToolRenderContext } from "../../../Tool";
-import { useKitCommands, useType } from "../../../kits/store";
+import { useKit, useKitCommands, useKitStore, useType, KitStore } from "../../../kits/store";
 import { ToolType } from "../../../store";
-import { TypeAppState } from "../store";
+import { TypeAppState, useTypeAppSelectedRepresentationGuid } from "../store";
 
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick }) => {
   const position = useMemo(() => [port.point.x, port.point.y, port.point.z] as [number, number, number], [port.point]);
@@ -91,15 +92,23 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
   );
 };
 
-const LoadedTypeMesh: FC<{
-  url: string;
-  onPointerDown: (e: ThreeEvent<PointerEvent>) => void;
-  onPointerUp: (e: ThreeEvent<PointerEvent>) => void;
-  onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
-  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
-}> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
-  const { scene } = useGLTF(url);
+// Separate components for each loader type to avoid conditional hook calls
+const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
+  const gltf = useGLTF(url);
+  const clonedScene = useMemo(() => {
+    const cloned = gltf.scene.clone();
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.raycast = THREE.Mesh.prototype.raycast;
+      }
+    });
+    return cloned;
+  }, [gltf.scene]);
+  return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+};
 
+const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
+  const scene = useFBX(url);
   const clonedScene = useMemo(() => {
     const cloned = scene.clone();
     cloned.traverse((child) => {
@@ -109,8 +118,44 @@ const LoadedTypeMesh: FC<{
     });
     return cloned;
   }, [scene]);
-
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+};
+
+const OBJMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
+  const obj = useLoader(OBJLoader, url);
+  const clonedScene = useMemo(() => {
+    const cloned = obj.clone();
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.raycast = THREE.Mesh.prototype.raycast;
+      }
+    });
+    return cloned;
+  }, [obj]);
+  return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+};
+
+const LoadedTypeMesh: FC<{
+  url: string;
+  fileExtension: string;
+  onPointerDown: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerUp: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+}> = ({ url, fileExtension, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
+  const ext = fileExtension.toLowerCase();
+
+  // Use separate components to avoid conditional hook calls
+  if (ext === 'glb' || ext === 'gltf') {
+    return <GLTFMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+  } else if (ext === 'fbx') {
+    return <FBXMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+  } else if (ext === 'obj') {
+    return <OBJMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+  } else {
+    // Default to GLTF for unknown types
+    return <GLTFMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
+  }
 };
 
 const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
@@ -118,17 +163,79 @@ const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vect
   onPortCreate,
   onClearPreview,
 }) => {
-  const type = useType() as Type | undefined;
+  const type = useType(undefined, undefined, true) as Type | undefined; // Use deep observation for representations
+  const kit = useKit(undefined, undefined, true) as Kit | undefined; // Use deep observation for files
+  const kitStore = useKitStore() as KitStore;
+  const selectedRepresentationGuid = useTypeAppSelectedRepresentationGuid();
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const representationUrl = useMemo(() => {
-    if (!type?.representations?.[0]) return null;
-    const url = type.representations[0].url;
-    if (url.startsWith("http")) return url;
-    return null;
-  }, [type]);
+  // State to hold blob URL that needs cleanup
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+  const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
+    if (!type?.representations || type.representations.length === 0) {
+      return { representationUrl: null, fileExtension: '', fileGuid: null };
+    }
+
+    // Find the selected representation or use the first one
+    const representation = selectedRepresentationGuid
+      ? type.representations.find(r => r.guid === selectedRepresentationGuid)
+      : type.representations[0];
+
+    if (!representation) {
+      return { representationUrl: null, fileExtension: '', fileGuid: null };
+    }
+
+    // Get the file and resolve its URL
+    const file = kit?.files?.find((f) => f.guid === representation.file);
+    if (!file) {
+      return { representationUrl: null, fileExtension: '', fileGuid: null };
+    }
+
+    // Extract file extension
+    const ext = file.path.split('.').pop() || '';
+
+    // Use kitStore to get the file URL through the file provider
+    const url = kitStore.getFileUrl(file.guid);
+    if (!url) {
+      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
+    }
+
+    return { representationUrl: url, fileExtension: ext, fileGuid: file.guid };
+  }, [type, kit, kitStore, selectedRepresentationGuid]);
+
+  // Convert file provider URLs to blob URLs that Three.js can load
+  useEffect(() => {
+    if (!fileGuid) {
+      setBlobUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    let currentBlobUrl: string | null = null;
+
+    (async () => {
+      try {
+        const url = await kitStore.getFileBlobUrl(fileGuid);
+        if (!cancelled && url) {
+          currentBlobUrl = url;
+          setBlobUrl(url);
+        }
+      } catch (error) {
+        console.error('[TypeMesh] Failed to get blob URL:', error);
+      }
+    })();
+
+    // Cleanup on unmount or when fileGuid changes
+    return () => {
+      cancelled = true;
+      if (currentBlobUrl && currentBlobUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+    };
+  }, [fileGuid, kitStore]);
 
   const handlePointerDown = useCallback((event: ThreeEvent<PointerEvent>) => {
     setIsPointerDown(true);
@@ -175,16 +282,15 @@ const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vect
     setIsPointerDown(false);
   }, [onClearPreview]);
 
-  if (!representationUrl) {
-    return (
-      <mesh onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove} onPointerOut={handlePointerOut}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="gray" />
-      </mesh>
-    );
+  if (!blobUrl) {
+    return null; // No placeholder - just render nothing if no valid blob URL yet
   }
 
-  return <LoadedTypeMesh url={representationUrl} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} />;
+  return (
+    <Suspense fallback={null}>
+      <LoadedTypeMesh url={blobUrl} fileExtension={fileExtension} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} />
+    </Suspense>
+  );
 };
 
 const PortToolContent: FC<ToolRenderContext<TypeAppState>> = ({ state, selection, kit }) => {

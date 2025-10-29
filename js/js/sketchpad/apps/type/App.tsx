@@ -19,13 +19,13 @@
 
 // #endregion
 
-import { FC, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { guid, Representation, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddFooterItem, useRemoveFooterItem } from "../../Footer";
-import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useKitCommands, useType } from "../../kits/store";
+import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { ToolType, useAppType } from "../../store";
 import { KitSection } from "../kit/panels/Details";
 import TypeScene from "./canvas/Scene";
@@ -45,6 +45,7 @@ const App: FC = () => {
   const app = useTypeApp((s) => s);
   const activeTool = app?.activeTool ?? ToolType.SELECTION_NORMAL;
   const selection = useTypeAppSelection();
+  const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -76,7 +77,7 @@ const App: FC = () => {
 
     addSection("toolbar", {
       id: "type-tools",
-      label: "Tools",
+      label: t("semio.sketchpad.app.type.tools"),
       order: 0,
       defaultOpen: true,
       content: () => <ToolsToggleGroup />,
@@ -173,13 +174,14 @@ const App: FC = () => {
     const handleDrop = async (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      setIsDragOver(false);
 
       const files = event.dataTransfer?.files;
       if (!files || files.length === 0 || !type || !kitCommands || !typeAppCommands) return;
-      
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+
         // Create File object
         const newFileGuid = guid();
         const newFile = {
@@ -216,21 +218,35 @@ const App: FC = () => {
     const handleDragOver = (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      if (event.dataTransfer?.types.includes("Files")) {
+        setIsDragOver(true);
+      }
+    };
+
+    const handleDragLeave = (event: DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      // Only set to false if we're leaving the document entirely
+      if (event.relatedTarget === null) {
+        setIsDragOver(false);
+      }
     };
 
     document.addEventListener("drop", handleDrop);
     document.addEventListener("dragover", handleDragOver);
+    document.addEventListener("dragleave", handleDragLeave);
 
     return () => {
       document.removeEventListener("drop", handleDrop);
       document.removeEventListener("dragover", handleDragOver);
+      document.removeEventListener("dragleave", handleDragLeave);
     };
   }, [appType, type, kitCommands, typeAppCommands]);
 
   return (
     <Canvas>
       <Window id="type-scene">
-        <TypeScene />
+        <TypeScene isDragOver={isDragOver} />
       </Window>
     </Canvas>
   );

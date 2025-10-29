@@ -117,6 +117,7 @@ interface TreeSectionProps {
 interface SortableTreeItemProps {
   id: string;
   label?: ReactNode;
+  i18n?: string;
   icon?: ReactNode;
   children?: ReactNode;
   onClick?: (event: ReactMouseEvent) => void;
@@ -132,6 +133,7 @@ interface SortableTreeItemProps {
 
 interface TreeItemProps {
   label?: ReactNode;
+  i18n?: string;
   icon?: ReactNode;
   children?: ReactNode;
   onClick?: (event: ReactMouseEvent) => void;
@@ -286,10 +288,13 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children,
   );
 };
 
-const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
+const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, i18n, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
-  const itemId = `item-${id}-${label}`;
+  const { t } = useTranslation();
+  const displayLabel = i18n ? t(`${i18n}.label`, { defaultValue: t(i18n) }) : label;
+  const itemKey = i18n ?? displayLabel ?? id;
+  const itemId = `item-${id}-${itemKey}`;
   const open = treeState.getOpenState(itemId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
@@ -307,7 +312,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
-  if (hasChildren && label) {
+  if (hasChildren && displayLabel) {
     return (
       <>
         <div
@@ -338,7 +343,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
             </Action>
           )}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
+          <span className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as ReactNode}</span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
@@ -363,7 +368,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
     );
   }
 
-  if (!label) {
+  if (!displayLabel) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>;
   }
 
@@ -392,7 +397,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
         </Action>
       )}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
+      <span className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as ReactNode}</span>
       {actions.length > 0 && (
         <div className="flex items-center gap-0.5">
           {actions.map((action, index) => (
@@ -438,6 +443,7 @@ export const SortableTreeItems: FC<SortableTreeItemsProps> = ({ items, onReorder
 
 export const TreeItem: FC<TreeItemProps> = ({
   label,
+  i18n,
   icon,
   children,
   onClick,
@@ -452,11 +458,14 @@ export const TreeItem: FC<TreeItemProps> = ({
   actions = [],
   onDoubleClick,
 }) => {
+  const { t } = useTranslation();
+  const resolvedLabel = i18n ? t(`${i18n}.label`, { defaultValue: t(i18n) }) : label;
   if (sortable && sortableId) {
     return (
       <SortableTreeItem
         id={sortableId}
-        label={label}
+        label={resolvedLabel}
+        i18n={i18n}
         icon={icon}
         children={children}
         onClick={onClick}
@@ -474,7 +483,8 @@ export const TreeItem: FC<TreeItemProps> = ({
 
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
-  const itemId = `item-${sortableId || label}`;
+  const itemKey = i18n ?? resolvedLabel ?? sortableId ?? "tree-item";
+  const itemId = `item-${itemKey}`;
   const open = treeState.getOpenState(itemId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
@@ -483,7 +493,7 @@ export const TreeItem: FC<TreeItemProps> = ({
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
-  if (hasChildren && label) {
+  if (hasChildren && resolvedLabel) {
     return (
       <>
         <div
@@ -508,7 +518,7 @@ export const TreeItem: FC<TreeItemProps> = ({
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
+          <span className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as ReactNode}</span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
@@ -533,7 +543,7 @@ export const TreeItem: FC<TreeItemProps> = ({
     );
   }
 
-  if (!label) {
+  if (!resolvedLabel) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>;
   }
 
@@ -541,7 +551,7 @@ export const TreeItem: FC<TreeItemProps> = ({
     <div className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-xs font-normal truncate text-foreground">{label}</span>
+      <span className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as ReactNode}</span>
       {actions.length > 0 && (
         <div className="flex items-center gap-0.5">
           {actions.map((action, index) => (

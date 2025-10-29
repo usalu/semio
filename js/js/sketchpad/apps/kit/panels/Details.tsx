@@ -185,12 +185,12 @@ const SingleTypeSection: FC<{ typeGuid: string }> = ({ typeGuid }) => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input i18n="semio.sketchpad.app.type.panel.details.section.type.variant" value={type.variant || ""} placeholder={t("semio.sketchpad.app.type.variantPlaceholder")} readOnly />
+          <Input i18n="semio.sketchpad.app.type.panel.details.section.type.variant" value={type.variant || ""} placeholder={t("semio.sketchpad.app.type.variantPlaceholder.label")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea i18n="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholder={t("semio.sketchpad.app.type.descriptionPlaceholder")} readOnly />
+          <Textarea i18n="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholder={t("semio.sketchpad.app.type.descriptionPlaceholder.label")} readOnly />
         </TreeContent>
       </TreeItem>
     </>
@@ -272,6 +272,69 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
           <TreeContent>
             <p className="text-sm font-medium">{design.name}</p>
             {design.variant && <p className="text-xs text-muted-foreground">{design.variant}</p>}
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const FileSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const kit = useKit() as Kit;
+  const selection = kitApp?.selection;
+  const selectedFiles = selection?.files || [];
+
+  if (selectedFiles.length === 0) return null;
+
+  const files = selectedFiles
+    .map((filePath) => {
+      return kit.files?.find((f) => f.path === filePath);
+    })
+    .filter(Boolean);
+
+  if (files.length === 0) return null;
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return "0 KB";
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  };
+
+  const formatDate = (date?: Date) => {
+    if (!date) return "";
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (isNaN(parsedDate.getTime())) return "";
+    return parsedDate.toLocaleDateString();
+  };
+
+  return (
+    <>
+      {files.map((file) => (
+        <TreeItem key={file!.guid}>
+          <TreeContent>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs text-muted-foreground">{t("semio.file.path")}</label>
+                <p className="text-sm">{file!.path}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">{t("semio.file.size")}</label>
+                <p className="text-sm">{formatFileSize(file!.size)}</p>
+              </div>
+              {file!.createdAt && (
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("semio.file.created")}</label>
+                  <p className="text-sm">{formatDate(file!.createdAt)}</p>
+                </div>
+              )}
+              {file!.updatedAt && (
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("semio.file.updated")}</label>
+                  <p className="text-sm">{formatDate(file!.updatedAt)}</p>
+                </div>
+              )}
+            </div>
           </TreeContent>
         </TreeItem>
       ))}

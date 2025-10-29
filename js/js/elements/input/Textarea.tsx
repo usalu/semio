@@ -33,13 +33,15 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   i18n: string;
+  placeholderI18n?: string;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, i18n, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, i18n, placeholderI18n, placeholder, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const mode = useTooltipMode();
   const { t } = useTranslation();
+  const computedPlaceholder = placeholderI18n ? t(placeholderI18n) : placeholder;
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -98,6 +100,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
+      placeholder={computedPlaceholder}
       {...props}
     />
   );
@@ -105,10 +108,10 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const label = t(`${i18n}.label`);
 
   return (
-    <div className="flex items-start gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
+    <div className="group flex items-start gap-2 min-w-0 w-full">
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate cursor-pointer transition-colors">{label}</span>
+          <span className="inline-flex items-start h-9 px-3 py-2 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
           <I18nTooltipContent i18nKey={i18n} mode={mode} />

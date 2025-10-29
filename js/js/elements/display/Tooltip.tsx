@@ -111,24 +111,24 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
     <div className="flex flex-col gap-2">
       <span>{label}</span>
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
-        <div className="grid grid-flow-col auto-cols-max items-center border-t border-accent-foreground pt-2 justify-between gap-2">
+        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-2 gap-2">
           {showManual && fullManualPath ? (
             <Link to={fullManualPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
               <BookOpen className="size-3" />
               <span>{t("tooltip.manual")}</span>
             </Link>
           ) : (
-            <span />
+            <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
             <Link to={fullTutorialPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
               <GraduationCap className="size-3" />
-              <span>{t("tooltip.tutorial")}</span>
+              <span className="block text-center">{t("tooltip.tutorial")}</span>
             </Link>
           ) : (
-            <span />
+            <span className="block" />
           )}
-          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono">{hotkey}</kbd> : <span />}
+          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono justify-self-end">{hotkey}</kbd> : <span className="block" />}
         </div>
       ) : null}
     </div>
@@ -164,24 +164,24 @@ function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
     <div className="flex flex-col gap-2">
       <span>{displayText}</span>
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
-        <div className="grid grid-flow-col auto-cols-max items-center border-t border-accent-foreground pt-2 justify-between gap-2">
+        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-2 gap-2">
           {showManual && fullManualPath ? (
             <Link to={fullManualPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
               <BookOpen className="size-3" />
               <span>{t("tooltip.manual")}</span>
             </Link>
           ) : (
-            <span />
+            <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
             <Link to={fullTutorialPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
               <GraduationCap className="size-3" />
-              <span>{t("tooltip.tutorial")}</span>
+              <span className="block text-center">{t("tooltip.tutorial")}</span>
             </Link>
           ) : (
-            <span />
+            <span className="block" />
           )}
-          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono">{hotkey}</kbd> : <span />}
+          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono justify-self-end">{hotkey}</kbd> : <span className="block" />}
         </div>
       ) : null}
     </div>

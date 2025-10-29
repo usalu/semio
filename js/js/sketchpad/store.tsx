@@ -167,6 +167,11 @@ export interface FileProvider {
 
 export type FileProviderFactory = (kitId: string) => Promise<FileProvider>;
 
+export interface RemoteProviders {
+  yProvider: YProviderFactory;
+  fileProvider: FileProviderFactory;
+}
+
 export type YUuid = string;
 export type YUuidArray = Y.Array<YUuid>;
 
@@ -956,8 +961,7 @@ export interface SketchpadCommandResult {
 
 export class SketchpadStore {
   private readonly id: string | undefined;
-  private readonly yProviderFactory: YProviderFactory | undefined;
-  private readonly fileProviderFactory: FileProviderFactory | undefined;
+  private readonly remote: RemoteProviders | undefined;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Map<string, KitStore>;
@@ -990,10 +994,9 @@ export class SketchpadStore {
   private readonly designAppDeletedSubscribers: Set<Subscribe>;
   // private readonly broadcastChannel: BroadcastChannel;
 
-  constructor(id?: string, yProviderFactory?: YProviderFactory, fileProviderFactory?: FileProviderFactory) {
+  constructor(id?: string, remote?: RemoteProviders) {
     this.id = id;
-    this.yProviderFactory = yProviderFactory;
-    this.fileProviderFactory = fileProviderFactory;
+    this.remote = remote;
     // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Map();
@@ -1015,8 +1018,8 @@ export class SketchpadStore {
 
     if (id) {
       this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
-      if (yProviderFactory) {
-        yProviderFactory(this.yDoc, id);
+      if (this.remote) {
+        this.remote.yProvider(this.yDoc, id);
       }
     }
 
@@ -1164,7 +1167,7 @@ export class SketchpadStore {
   };
 
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
-    const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory, this.fileProviderFactory);
+    const kitStore = new KitStore(this, kit, local, remote, this.remote);
     this.kits.set(kit.guid, kitStore);
 
     // Store kit metadata in Y.Doc for persistence
@@ -1686,7 +1689,7 @@ export class SketchpadStore {
 
           // Create the kit store (this will set up its own persistence)
           // Don't add to yKits again since it's already there
-          const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory, this.fileProviderFactory);
+          const kitStore = new KitStore(this, kit, local, remote, this.remote);
           this.kits.set(kit.guid, kitStore);
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
         } catch (error) {}
@@ -1719,17 +1722,17 @@ export type WindowEvents = {
   maximize: () => void;
   close: () => void;
 };
-export type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory; fileProviderFactory?: FileProviderFactory; onWindowEvents?: WindowEvents };
+export type SketchpadScope = { id: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; fileProviderFactory?: FileProviderFactory; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
   // Use useMemo to ensure the ID is stable across re-renders when props.id is undefined
   const id = useMemo(() => props.id || guid(), [props.id]);
 
   if (!stores.has(id)) {
-    const store = new SketchpadStore(id, props?.yProviderFactory, props?.fileProviderFactory);
+    const store = new SketchpadStore(id, props?.remote);
     stores.set(id, store);
   }
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id, fileProviderFactory: props.fileProviderFactory, onWindowEvents: props.onWindowEvents } }, props.children as any);
+  return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, props.children as any);
 };
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 

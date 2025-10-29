@@ -491,7 +491,7 @@ export function initializeTypeAppStore() {
 }
 
 // Auto-initialize if this module is imported
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setTimeout(() => initializeTypeAppStore(), 0);
 }
 

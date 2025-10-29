@@ -465,7 +465,7 @@ const Home: FC = ({}) => {
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateKit(selectedKind)}
               i18n="semio.sketchpad.app.home.filter.kind.show"
-              actioni18n="semio.sketchpad.app.home.filter.kind.create"
+              actionI18n="semio.sketchpad.app.home.filter.kind.create"
             >
               {selectedKind === "temporary" && <Clock className="size-4" />}
               {selectedKind === "local" && <HardDrive className="size-4" />}
@@ -491,7 +491,7 @@ const Home: FC = ({}) => {
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("temporary")}
                 i18n="semio.sketchpad.app.home.filter.kind.temporary"
-                actioni18n="semio.sketchpad.app.home.filter.kind.createTemporary"
+                actionI18n="semio.sketchpad.app.home.filter.kind.createTemporary"
               >
                 <Clock className="size-4" />
               </Toggle>
@@ -502,7 +502,7 @@ const Home: FC = ({}) => {
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("local")}
                 i18n="semio.sketchpad.app.home.filter.kind.local"
-                actioni18n="semio.sketchpad.app.home.filter.kind.createLocal"
+                actionI18n="semio.sketchpad.app.home.filter.kind.createLocal"
               >
                 <HardDrive className="size-4" />
               </Toggle>
@@ -513,7 +513,7 @@ const Home: FC = ({}) => {
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("remote")}
                 i18n="semio.sketchpad.app.home.filter.kind.remote"
-                actioni18n="semio.sketchpad.app.home.filter.kind.createRemote"
+                actionI18n="semio.sketchpad.app.home.filter.kind.createRemote"
               >
                 <Cloud className="size-4" />
               </Toggle>

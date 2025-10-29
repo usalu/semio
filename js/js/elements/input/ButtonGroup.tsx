@@ -65,8 +65,8 @@ function ButtonGroup({ className, variant, size, level = "base", label, children
 
   if (label) {
     return (
-      <div className="flex items-center gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
-        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors">{label}</span>
+      <div className="group flex items-center gap-2 min-w-0 w-full">
+        <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer">{label}</span>
         {buttonGroupElement}
       </div>
     );

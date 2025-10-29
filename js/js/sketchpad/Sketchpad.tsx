@@ -42,9 +42,9 @@ import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
 import {
   DesignScopeProvider,
-  FileProviderFactory,
   KitScopeProvider,
   Layout,
+  RemoteProviders,
   SketchpadScopeProvider,
   SketchpadState,
   Theme,
@@ -60,7 +60,6 @@ import {
   useSketchpadCommands,
   useTheme,
   WindowEvents,
-  YProviderFactory,
 } from "./store";
 
 // Lazy load HeadingsProvider to avoid issues in Storybook
@@ -482,12 +481,11 @@ const SketchpadBase: FC = () => {
 
 interface SketchpadProps {
   id?: string;
-  yProviderFactory?: YProviderFactory;
-  fileProviderFactory?: FileProviderFactory;
+  remote?: RemoteProviders;
   onWindowEvents?: WindowEvents;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, fileProviderFactory, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents }) => {
   const [registryReady, setRegistryReady] = useState(false);
 
   useEffect(() => {
@@ -505,7 +503,7 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, fileProviderFacto
 
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} fileProviderFactory={fileProviderFactory} onWindowEvents={onWindowEvents}>
+      <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents}>
         <TooltipModeProvider>
           <DragDropProvider>
             <MemoryRouter>

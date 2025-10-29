@@ -33,7 +33,7 @@ import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadComma
 const LanguageSwitcher: FC = () => {
   const { i18n } = useTranslation();
   return (
-    <Select label={t("semio.sketchpad.panel.settings.language")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
+    <Select label={t("semio.sketchpad.panel.settings.language.label")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
       <SelectTrigger className="w-32" level="panel">
         <SelectValue />
       </SelectTrigger>
@@ -64,10 +64,10 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
       width={width}
       resizeSide="left"
       additionalSections={
-        <TreeSection label={t("semio.sketchpad.panel.settings.general")} defaultOpen={true}>
+        <TreeSection label={t("semio.sketchpad.panel.settings.general.label")} defaultOpen={true}>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("semio.sketchpad.panel.settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
+              <ToggleGroup label={t("semio.sketchpad.panel.settings.theme.label")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
                 <ToggleGroupItem value={Theme.SYSTEM} tooltip={tooltip("settings.theme.system")}>
                   <Laptop />
                 </ToggleGroupItem>
@@ -83,7 +83,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           {!isMobile && (
             <TreeItem>
               <TreeContent>
-                <ToggleGroup label={t("semio.sketchpad.panel.settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
+                <ToggleGroup label={t("semio.sketchpad.panel.settings.layout.label")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
                   <ToggleGroupItem value={Layout.NORMAL} tooltip={tooltip("settings.layout.normal")}>
                     <MonitorIcon />
                   </ToggleGroupItem>
@@ -96,7 +96,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           )}
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("semio.sketchpad.panel.settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
+              <ToggleGroup label={t("semio.sketchpad.panel.settings.mode.label")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
                 <ToggleGroupItem value={Mode.BEGINNER} tooltip={tooltip("settings.mode.beginner")}>
                   <GraduationCap />
                 </ToggleGroupItem>

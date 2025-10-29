@@ -75,8 +75,6 @@ import {
   Vector,
   VectorDiff,
   applyDesignDiff,
-  colorPortsForTypes,
-  findDesignInKit,
   findPieceInDesign,
   findReplacableDesignsForDesignPiece,
   findReplacableTypesForPieceInDesign,
@@ -86,8 +84,8 @@ import {
   getPieceRepresentationUrls,
   piecesMetadata,
 } from "../../semio";
-import type { FileProvider, FileProviderFactory, SketchpadStore, Url } from "../store";
-import { Disposable, Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
+import type { FileProvider, RemoteProviders, SketchpadStore, Url } from "../store";
+import { Disposable, Subscribe, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
 
 // Re-export utilities from parent store for use in designAppIntegration
@@ -1900,7 +1898,6 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
   return useSync<Quality, T>(useQualityStore(identitySelector, id) as QualityStore | null, selector ? selector : identitySelector, deep);
 }
 
-
 // #endregion Type
 
 // #region Layer
@@ -2326,7 +2323,6 @@ export function usePiecePlane(): Plane {
 }
 
 // usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
-
 
 // #endregion Piece
 
@@ -2787,7 +2783,6 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 }
 
 // useIsConnectionSelected, useIsConnectionHovered, useConnectionStatus - moved to designAppIntegration.ts
-
 
 // #endregion Connection
 
@@ -3589,7 +3584,6 @@ export function usePieces(): Piece[] {
   return design.pieces ?? [];
 }
 
-
 export function useFlattenDiff(): DesignDiff {
   const designScope = useDesignScope();
   const kit = useKit() as Kit;
@@ -3649,9 +3643,12 @@ export function usePieceRepresentationUrls(): Map<string, string> {
   const kit = useKit((k) => k as Kit) as Kit | null;
   const kitStore = useKitStore((s) => s) as KitStore;
   const files = kit?.files ?? [];
-  const getFileUrl = React.useCallback((fileGuid: string) => {
-    return kitStore.getFileUrl(fileGuid);
-  }, [kitStore]);
+  const getFileUrl = React.useCallback(
+    (fileGuid: string) => {
+      return kitStore.getFileUrl(fileGuid);
+    },
+    [kitStore],
+  );
   return useMemo(() => getPieceRepresentationUrls(flatDesign, types, files, getFileUrl), [flatDesign, types, files, getFileUrl]);
 }
 
@@ -3768,8 +3765,7 @@ export interface KitCommandResult {
 
 export class KitStore {
   public readonly parent: SketchpadStore;
-  private readonly yProviderFactory: YProviderFactory | undefined;
-  private readonly fileProviderFactory: FileProviderFactory | undefined;
+  private readonly remoteProviders: RemoteProviders | undefined;
   private fileProvider?: FileProvider;
   public readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
@@ -3793,10 +3789,9 @@ export class KitStore {
   private cache?: Kit;
   private cacheHash?: string;
 
-  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, yProviderFactory?: YProviderFactory, fileProviderFactory?: FileProviderFactory) {
+  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders) {
     this.parent = parent;
-    this.yProviderFactory = remote ? yProviderFactory : undefined;
-    this.fileProviderFactory = fileProviderFactory;
+    this.remoteProviders = remote ? remoteProviders : undefined;
     this.yDoc = new Y.Doc();
 
     this.commandRegistry = new Map();
@@ -3846,12 +3841,9 @@ export class KitStore {
       this.persistence = new IndexeddbPersistence(`semio-kit-${kit.guid}`, this.yDoc);
     }
 
-    if (remote && yProviderFactory) {
-      yProviderFactory(this.yDoc, this.name + "@" + this.version);
-    }
-
-    // Initialize file provider if fileProviderFactory is available
-    if (this.fileProviderFactory) {
+    if (remote && this.remoteProviders) {
+      this.remoteProviders.yProvider(this.yDoc, this.name + "@" + this.version);
+      // Initialize file provider if remoteProviders are available
       this.initializeFileProvider();
     }
 
@@ -3861,9 +3853,9 @@ export class KitStore {
   }
 
   private async initializeFileProvider() {
-    if (!this.fileProviderFactory) return;
+    if (!this.remoteProviders) return;
     try {
-      this.fileProvider = await this.fileProviderFactory(this.guid);
+      this.fileProvider = await this.remoteProviders.fileProvider(this.guid);
       // Sync existing files
       await this.syncFiles();
     } catch (error) {
@@ -3976,7 +3968,7 @@ export class KitStore {
   }
 
   get isRemotelySynced(): boolean {
-    return !!this.yProviderFactory;
+    return !!this.remoteProviders;
   }
 
   get isTemporary(): boolean {
@@ -4043,6 +4035,40 @@ export class KitStore {
       return this.fileProvider.getUrl(this.guid, fileGuid, file.path);
     }
     return file.remote ?? "";
+  }
+
+  async getFileBlobUrl(fileGuid: string): Promise<string> {
+    const fileStore = this.files.get(fileGuid);
+    if (!fileStore) return "";
+    const file = fileStore.snapshot();
+
+    // First, check if we have it in memory (regularFiles)
+    const memoryUrl = this.regularFiles.get(file.path);
+    if (memoryUrl) {
+      return memoryUrl;
+    }
+
+    // If there's a remote URL (http/https), use it directly
+    if (file.remote && (file.remote.startsWith("http://") || file.remote.startsWith("https://"))) {
+      return file.remote;
+    }
+
+    // If we have a file provider, download the blob and create a blob URL
+    if (this.fileProvider) {
+      try {
+        const blob = await this.fileProvider.download(this.guid, fileGuid, file.path);
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          // Cache it in memory for future use
+          this.regularFiles.set(file.path, blobUrl);
+          return blobUrl;
+        }
+      } catch (error) {
+        console.error("[KitStore] Failed to get blob for file:", fileGuid, error);
+      }
+    }
+
+    return "";
   }
 
   hasQuality(guid: string): boolean {
@@ -4237,6 +4263,62 @@ export class KitStore {
           });
         }
       }
+      if (diff.files) {
+        if (diff.files.added) {
+          diff.files.added.forEach((file) => this.createFile(file));
+        }
+        if (diff.files.updated) {
+          diff.files.updated.forEach(({ id, diff: fileDiff }) => {
+            const fileStore = this.files.get(id);
+            if (fileStore) {
+              fileStore.change(fileDiff);
+            }
+          });
+        }
+        if (diff.files.removed) {
+          diff.files.removed.forEach((fileId) => {
+            if (this.files.has(fileId)) {
+              this.files.delete(fileId);
+              // Find and delete from Y.Array
+              const index = Array.from(this.yFiles).findIndex((yFile: any) => {
+                const yMap = yFile[0] as Y.Map<any>;
+                return yMap.get("guid") === fileId;
+              });
+              if (index !== -1) {
+                this.yFiles.delete(index, 1);
+              }
+            }
+          });
+        }
+      }
+      if (diff.qualities) {
+        if (diff.qualities.added) {
+          diff.qualities.added.forEach((quality) => this.createQuality(quality));
+        }
+        if (diff.qualities.updated) {
+          diff.qualities.updated.forEach(({ id, diff: qualityDiff }) => {
+            const qualityStore = this.qualities.get(id);
+            if (qualityStore) {
+              qualityStore.change(qualityDiff);
+            }
+          });
+        }
+        if (diff.qualities.removed) {
+          diff.qualities.removed.forEach((qualityGuid) => {
+            if (this.qualities.has(qualityGuid)) {
+              this.qualities.delete(qualityGuid);
+              // Find and delete from Y.Array
+              const index = Array.from(this.yQualities).findIndex((yQuality: any) => {
+                const yMap = yQuality[0] as Y.Map<any>;
+                return yMap.get("guid") === qualityGuid;
+              });
+              if (index !== -1) {
+                this.yQualities.delete(index, 1);
+              }
+            }
+          });
+        }
+      }
       this.yKit.set("updatedAt", new Date().toISOString());
       this.cache = undefined;
       this.cacheHash = undefined;
@@ -4263,21 +4345,28 @@ export class KitStore {
     if (result.diff) {
       this.change(result.diff);
 
-      // Handle file operations with file provider
-      if (this.fileProvider && result.diff.files) {
-        // Upload new files
+      // Handle file operations
+      if (result.diff.files) {
+        // Add new files
         if (result.diff.files.added && result.files) {
           for (let i = 0; i < result.diff.files.added.length; i++) {
             const file = result.diff.files.added[i];
             const blob = result.files[i];
             if (blob) {
-              try {
-                const remoteUrl = await this.fileProvider.upload(this.guid, file.guid, file.path, blob);
-                console.log(`[KIT ${this.name}] Uploaded file ${file.path} to ${remoteUrl}`);
-                // Update file with remote URL
-                this.file(file.guid).change({ remote: remoteUrl });
-              } catch (error) {
-                console.error(`[KIT ${this.name}] Failed to upload file ${file.path}:`, error);
+              // Always store in memory
+              const objectUrl = URL.createObjectURL(blob);
+              this.regularFiles.set(file.path, objectUrl);
+
+              // Also upload to remote if file provider is available
+              if (this.fileProvider) {
+                try {
+                  const remoteUrl = await this.fileProvider.upload(this.guid, file.guid, file.path, blob);
+                  console.log(`[KIT ${this.name}] Uploaded file ${file.path} to ${remoteUrl}`);
+                  // Update file with remote URL
+                  this.file(file.guid).change({ remote: remoteUrl });
+                } catch (error) {
+                  console.error(`[KIT ${this.name}] Failed to upload file ${file.path}:`, error);
+                }
               }
             }
           }
@@ -4289,17 +4378,22 @@ export class KitStore {
             const fileStore = this.files.get(fileId);
             if (fileStore) {
               const file = fileStore.snapshot();
-              try {
-                await this.fileProvider.delete(this.guid, fileId, file.path);
-                console.log(`[KIT ${this.name}] Deleted file ${file.path}`);
-                // Clean up object URL
-                const objectUrl = this.regularFiles.get(file.path);
-                if (objectUrl) {
-                  URL.revokeObjectURL(objectUrl);
-                  this.regularFiles.delete(file.path);
+
+              // Clean up in-memory object URL
+              const objectUrl = this.regularFiles.get(file.path);
+              if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                this.regularFiles.delete(file.path);
+              }
+
+              // Also delete from remote if file provider is available
+              if (this.fileProvider) {
+                try {
+                  await this.fileProvider.delete(this.guid, fileId, file.path);
+                  console.log(`[KIT ${this.name}] Deleted file ${file.path}`);
+                } catch (error) {
+                  console.error(`[KIT ${this.name}] Failed to delete file ${file.path}:`, error);
                 }
-              } catch (error) {
-                console.error(`[KIT ${this.name}] Failed to delete file ${file.path}:`, error);
               }
             }
           }

@@ -410,11 +410,27 @@
           "tutorial": "hello-semio/model-design"
         },
         "sort": {
-          "ascending": "Sort ascending",
-          "descending": "Sort descending"
+          "ascending": {
+            "label": "Sort ascending",
+            "beginner": "Sort items from A to Z or smallest to largest."
+          },
+          "descending": {
+            "label": "Sort descending",
+            "beginner": "Sort items from Z to A or largest to smallest."
+          }
         }
       },
       "app": {
+        "sort": {
+          "ascending": {
+            "label": "Sort ascending",
+            "beginner": "Sort artifacts from A to Z."
+          },
+          "descending": {
+            "label": "Sort descending",
+            "beginner": "Sort artifacts from Z to A."
+          }
+        },
         "home": {
           "title": "Home",
           "description": "Browse and manage your kits",
@@ -487,6 +503,7 @@
           "noKitLoaded": "No kit loaded",
           "notAvailable": "Kit not available",
           "name": "Name",
+          "kind": "Kind",
           "version": "Version",
           "versionPlaceholder": {
             "label": "e.g., 1.0.0"
@@ -1056,6 +1073,9 @@
         "type": {
           "title": "Type",
           "description": "Edit type definitions",
+          "tools": "Tools",
+          "noRepresentations": "No representations available",
+          "selectRepresentation": "Select representation",
           "defaultName": "New Type",
           "newVariant": "New Variant",
           "defaultVariant": "Default",
@@ -1343,10 +1363,109 @@
           "noHeadings": "No headings found"
         }
       }
+    }
+  },
+  "tooltip": {
+    "manual": "Manual",
+    "tutorial": "Tutorial"
+  },
+  "sort": {
+    "ascending": {
+      "label": "Sort ascending",
+      "beginner": "Order items from lowest to highest."
     },
-    "tooltip": {
-      "manual": "Manual",
-      "tutorial": "Tutorial"
+    "descending": {
+      "label": "Sort descending",
+      "beginner": "Order items from highest to lowest."
+    }
+  },
+  "home": {
+    "sortByName": {
+      "label": "Sort by name",
+      "beginner": "Sort kits alphabetically by their name."
+    },
+    "createVersion": {
+      "label": "Create version",
+      "beginner": "Create a new version for this kit."
+    },
+    "hideKind": {
+      "label": "Hide kind filter",
+      "beginner": "Show all kits regardless of storage type."
+    },
+    "createKit": {
+      "label": "Create kit",
+      "beginner": "Create a new kit for the selected storage type.",
+      "hotkey": "Ctrl+Shift+K"
+    },
+    "showTemporary": {
+      "label": "Show temporary kits",
+      "beginner": "Show kits stored in browser memory (lost on refresh).",
+      "hotkey": "Ctrl+1"
+    },
+    "createTemporary": {
+      "label": "Create temporary kit",
+      "beginner": "Create a new temporary kit stored in browser memory.",
+      "hotkey": "Ctrl+Shift+1"
+    },
+    "showLocal": {
+      "label": "Show local kits",
+      "beginner": "Show kits stored locally on your device.",
+      "hotkey": "Ctrl+2"
+    },
+    "createLocal": {
+      "label": "Create local kit",
+      "beginner": "Create a new kit stored locally on your device.",
+      "hotkey": "Ctrl+Shift+2"
+    },
+    "showRemote": {
+      "label": "Show remote kits",
+      "beginner": "Show kits synced with remote storage.",
+      "hotkey": "Ctrl+3"
+    },
+    "createRemote": {
+      "label": "Create remote kit",
+      "beginner": "Create a new kit synced with remote storage.",
+      "hotkey": "Ctrl+Shift+3"
+    }
+  },
+  "settings": {
+    "theme": {
+      "system": {
+        "label": "System theme",
+        "beginner": "Match the interface theme with your operating system."
+      },
+      "light": {
+        "label": "Light theme",
+        "beginner": "Use the light theme regardless of the system setting."
+      },
+      "dark": {
+        "label": "Dark theme",
+        "beginner": "Use the dark theme regardless of the system setting."
+      }
+    },
+    "layout": {
+      "normal": {
+        "label": "Normal layout",
+        "beginner": "Use the standard layout optimized for mouse and keyboard."
+      },
+      "touch": {
+        "label": "Touch layout",
+        "beginner": "Use the layout optimized for touch input."
+      }
+    },
+    "mode": {
+      "beginner": {
+        "label": "Beginner mode",
+        "beginner": "Show full guidance, tutorials, and detailed tooltips."
+      },
+      "normal": {
+        "label": "Normal mode",
+        "beginner": "Show contextual help without tutorials."
+      },
+      "expert": {
+        "label": "Expert mode",
+        "beginner": "Hide guidance and tutorials for a distraction-free workflow."
+      }
     }
   }
 }

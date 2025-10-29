@@ -291,32 +291,64 @@
     "temporary": "Temporary",
     "local": "Local",
     "remote": "Remote",
-    "showTemporary": "Show temporary kits",
-    "showTemporary.beginner": "Click to see all temporary kits",
+    "showTemporary": {
+      "label": "Temporäre Kits anzeigen",
+      "beginner": "Temporäre Kits anzeigen, die nur im Browser gespeichert sind.",
+      "hotkey": "Strg+1"
+    },
     "hideTemporary": "Hide temporary kits",
     "hideTemporary.beginner": "Click to hide temporary kits",
-    "showLocal": "Show local kits",
-    "showLocal.beginner": "Click to see all local kits",
+    "showLocal": {
+      "label": "Lokale Kits anzeigen",
+      "beginner": "Kits anzeigen, die lokal auf deinem Gerät gespeichert sind.",
+      "hotkey": "Strg+2"
+    },
     "hideLocal": "Hide local kits",
     "hideLocal.beginner": "Click to hide local kits",
-    "showRemote": "Show remote kits",
-    "showRemote.beginner": "Click to see all remote kits",
+    "showRemote": {
+      "label": "Remote-Kits anzeigen",
+      "beginner": "Kits anzeigen, die mit einem entfernten Speicher synchronisiert sind.",
+      "hotkey": "Strg+3"
+    },
     "hideRemote": "Hide remote kits",
     "hideRemote.beginner": "Click to hide remote kits",
-    "createTemporary": "Create temporary kit",
-    "createTemporary.beginner": "Click to create a new temporary kit",
-    "createLocal": "Create local kit",
-    "createLocal.beginner": "Click to create a new local kit",
-    "createRemote": "Create remote kit",
-    "createRemote.beginner": "Click to create a new remote kit",
-    "createVersion": "Create new version",
-    "createVersion.beginner": "Click to create a new version of this kit",
+    "createTemporary": {
+      "label": "Temporäres Kit erstellen",
+      "beginner": "Ein neues temporäres Kit im Browserspeicher erstellen.",
+      "hotkey": "Strg+Shift+1"
+    },
+    "createLocal": {
+      "label": "Lokales Kit erstellen",
+      "beginner": "Ein neues Kit erstellen, das lokal auf deinem Gerät gespeichert wird.",
+      "hotkey": "Strg+Shift+2"
+    },
+    "createRemote": {
+      "label": "Remote-Kit erstellen",
+      "beginner": "Ein neues Kit erstellen, das mit einem entfernten Speicher synchronisiert wird.",
+      "hotkey": "Strg+Shift+3"
+    },
+    "createVersion": {
+      "label": "Neue Version erstellen",
+      "beginner": "Eine neue Version für dieses Kit erstellen."
+    },
     "searchPlaceholder": "Search kits...",
     "name": "Name",
     "kind": "Kind",
     "lastUpdated": "Last updated",
     "created": "Created",
-    "sortByName": "Sort by name"
+    "sortByName": {
+      "label": "Nach Name sortieren",
+      "beginner": "Kits alphabetisch nach ihrem Namen sortieren."
+    },
+    "hideKind": {
+      "label": "Filter ausblenden",
+      "beginner": "Alle Kits unabhängig vom Speichertyp anzeigen."
+    },
+    "createKit": {
+      "label": "Kit erstellen",
+      "beginner": "Ein neues Kit für den ausgewählten Speichertyp erstellen.",
+      "hotkey": "Strg+Shift+K"
+    }
   },
   "kitApp": {
     "designs": "Designs",
@@ -377,27 +409,49 @@
     "authors.beginner": "Click to see all authors"
   },
   "settings": {
-    "general": "General",
-    "theme": "Theme",
-    "theme.system": "System theme",
-    "theme.system.beginner": "Click to automatically switch between light and dark theme based on your system settings",
-    "theme.light": "Light theme",
-    "theme.light.beginner": "Click to use light theme for better visibility in bright environments",
-    "theme.dark": "Dark theme",
-    "theme.dark.beginner": "Click to use dark theme to reduce eye strain in low-light conditions",
-    "layout": "Layout",
-    "layout.normal": "Normal layout",
-    "layout.normal.beginner": "Click to use standard layout optimized for desktop and laptop screens",
-    "layout.touch": "Touch layout",
-    "layout.touch.beginner": "Click to use larger touch targets and spacing optimized for touch screens and tablets",
-    "mode": "Mode",
-    "mode.beginner": "Beginner mode",
-    "mode.beginner.beginner": "Click to use simplified interface with guided workflows and helpful hints for new users",
-    "mode.normal": "Normal mode",
-    "mode.normal.beginner": "Click to use balanced interface with standard features for everyday use",
-    "mode.expert": "Expert mode",
-    "mode.expert.beginner": "Click to use advanced interface with full feature access and minimal guidance for power users",
-    "language": "Language"
+    "general": "Allgemein",
+    "theme": {
+      "label": "Thema",
+      "system": {
+        "label": "Systemthema",
+        "beginner": "Automatisch zwischen hellem und dunklem Modus gemäß Betriebssystem wechseln."
+      },
+      "light": {
+        "label": "Helles Thema",
+        "beginner": "Den hellen Modus unabhängig von der Systemeinstellung verwenden."
+      },
+      "dark": {
+        "label": "Dunkles Thema",
+        "beginner": "Den dunklen Modus unabhängig von der Systemeinstellung verwenden."
+      }
+    },
+    "layout": {
+      "label": "Layout",
+      "normal": {
+        "label": "Standardlayout",
+        "beginner": "Standardlayout für Desktop- und Laptop-Bedienung verwenden."
+      },
+      "touch": {
+        "label": "Touch-Layout",
+        "beginner": "Layout mit größeren Bedienelementen für Touch-Geräte verwenden."
+      }
+    },
+    "mode": {
+      "label": "Modus",
+      "beginner": {
+        "label": "Anfängermodus",
+        "beginner": "Geführte Hinweise und Tutorials anzeigen."
+      },
+      "normal": {
+        "label": "Normalmodus",
+        "beginner": "Kontextbezogene Hilfe ohne Tutorials anzeigen."
+      },
+      "expert": {
+        "label": "Expertenmodus",
+        "beginner": "Hinweise und Tutorials ausblenden."
+      }
+    },
+    "language": "Sprache"
   },
   "chat": {
     "placeholder": "Ask a question about the design..."
@@ -507,8 +561,14 @@
     "lasso.freeform.beginner": "Draw freeform shape to select multiple pieces"
   },
   "sort": {
-    "ascending": "Sort ascending",
-    "descending": "Sort descending"
+    "ascending": {
+      "label": "Aufsteigend sortieren",
+      "beginner": "Elemente von niedrig nach hoch anordnen."
+    },
+    "descending": {
+      "label": "Absteigend sortieren",
+      "beginner": "Elemente von hoch nach niedrig anordnen."
+    }
   },
   "kits": {
     "multiple": "Multiple Kits ({{count}})",
@@ -885,6 +945,64 @@
               }
             }
           }
+        }
+      }
+    },
+    "sketchpad": {
+      "panel": {
+        "settings": {
+          "general": {
+            "label": "Allgemein",
+            "beginner": "Allgemeine Anwendungseinstellungen konfigurieren."
+          },
+          "theme": {
+            "label": "Thema",
+            "beginner": "Farbschema für die Anwendung auswählen."
+          },
+          "layout": {
+            "label": "Layout",
+            "beginner": "Fensterlayout und Panel-Anordnung festlegen."
+          },
+          "mode": {
+            "label": "Modus",
+            "beginner": "Benutzermodus mit passenden Hinweisen auswählen."
+          },
+          "language": {
+            "label": "Sprache",
+            "beginner": "Sprache der Benutzeroberfläche auswählen."
+          }
+        }
+      },
+      "common": {
+        "sort": {
+          "ascending": {
+            "label": "Aufsteigend sortieren",
+            "beginner": "Elemente von niedrig nach hoch ordnen."
+          },
+          "descending": {
+            "label": "Absteigend sortieren",
+            "beginner": "Elemente von hoch nach niedrig ordnen."
+          }
+        }
+      },
+      "app": {
+        "sort": {
+          "ascending": {
+            "label": "Aufsteigend sortieren",
+            "beginner": "Einträge alphabetisch oder nach geringstem Wert ordnen."
+          },
+          "descending": {
+            "label": "Absteigend sortieren",
+            "beginner": "Einträge rückwärts alphabetisch oder nach größtem Wert ordnen."
+          }
+        },
+        "kit": {
+          "kind": "Kategorie"
+        },
+        "type": {
+          "tools": "Werkzeuge",
+          "noRepresentations": "Keine Darstellungen verfügbar",
+          "selectRepresentation": "Darstellung auswählen"
         }
       }
     }

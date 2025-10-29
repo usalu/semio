@@ -33,8 +33,8 @@ import i18n from "../../../i18n";
 import { Author, buildFileTree, Design, flattenFileTree, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
-import { DesignSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
+import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../store";
+import { DesignSection, FileSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
 import { KitAppState, useKitApp, useKitAppCommands } from "./store";
 
 type ArtifactKind = "designs" | "types" | "qualities" | "files" | "authors";
@@ -190,6 +190,7 @@ const AppContent: FC = () => {
     removeSection("details", "kit-multiple-artifacts");
     removeSection("details", "kit-design");
     removeSection("details", "kit-type");
+    removeSection("details", "kit-file");
     removeSection("details", "kit-details");
 
     if (totalSelectedKinds > 1) {
@@ -222,6 +223,16 @@ const AppContent: FC = () => {
       });
     }
 
+    if (filesCount > 0 && totalSelectedKinds === 1) {
+      addSection("details", {
+        id: "kit-file",
+        label: filesCount === 1 ? t("semio.sketchpad.app.kit.file.title") : t("semio.sketchpad.app.kit.files.multipleTitle"),
+        order: 30,
+        defaultOpen: true,
+        content: () => <FileSection />,
+      });
+    }
+
     addSection("details", {
       id: "kit-details",
       label: t("semio.sketchpad.app.kit.title"),
@@ -234,6 +245,7 @@ const AppContent: FC = () => {
       removeSection("details", "kit-multiple-artifacts");
       removeSection("details", "kit-design");
       removeSection("details", "kit-type");
+      removeSection("details", "kit-file");
       removeSection("details", "kit-details");
     };
   }, [addSection, removeSection, appType, t, kitApp?.selection]);
@@ -499,14 +511,14 @@ const AppContent: FC = () => {
           id: `file-${node.path}`,
           kind: "files",
           artifact: node.name,
-          authors: node.isDirectory ? `${node.children.length} items` : (node.file?.size ? `${(node.file.size / 1024).toFixed(1)} KB` : ""),
+          authors: node.isDirectory ? `${node.children.length} items` : node.file?.size ? `${(node.file.size / 1024).toFixed(1)} KB` : "",
           updatedAt: node.file ? formatDate(node.file.updatedAt) : "",
           createdAt: node.file ? formatDate(node.file.createdAt) : "",
           level: node.level,
           parentId: node.level > 0 ? `file-${node.path.split("/").slice(0, -1).join("/")}` : undefined,
           hasChildren: node.isDirectory && node.children.length > 0,
           isExpanded: node.isExpanded,
-          data: node.file || { guid: node.path, path: node.path } as SemioFile,
+          data: node.file || ({ guid: node.path, path: node.path } as SemioFile),
         });
       });
     }
@@ -1681,10 +1693,3 @@ const App: FC = () => {
 };
 
 export default App;
-
-
-
-
-
-
-

@@ -189,9 +189,9 @@ function Slider({
   );
 
   return (
-    <div className={cn("flex items-center gap-2 min-w-0 h-9 w-full transition-colors hover:bg-hover-panel", className)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+    <div className={cn("group flex items-center gap-2 min-w-0 h-9 w-full", className)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {label && (
-        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors" title={label}>
+        <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer" title={label}>
           {label}
         </span>
       )}
