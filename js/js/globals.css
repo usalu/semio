@@ -110,7 +110,7 @@
     --cursor-not-allowed: not-allowed;
     --cursor-text: text;
     * {
-      cursor: var(--cursor-default) !important;
+      cursor: var(--cursor-default);
     }
 
     ::selection {
@@ -119,6 +119,14 @@
 
     ::-moz-selection {
       background-color: var(--accent);
+    }
+
+    body.cursor-selectable {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    body.cursor-selectable * {
+      cursor: var(--cursor-selectable) !important;
     }
 
     .cursor-default,
@@ -240,11 +248,6 @@
       cursor: var(--cursor-not-allowed) !important;
     }
 
-    body.cursor-selectable,
-    body.cursor-selectable * {
-      cursor: var(--cursor-selectable) !important;
-    }
-
     .cursor-help,
     [style*="cursor: help"],
     [style*="cursor:help"],
@@ -258,12 +261,11 @@
     [style*="cursor: text"],
     [style*="cursor:text"],
     [class*="cursor-text"],
-    [class*="before:cursor-text"]::before,
-    [class*="after:cursor-text"]::after {
+    [class*="before:cursor-text"]::after {
       cursor: var(--cursor-text) !important;
     }
 
-    .react-flow__node {
+    .react-flow__node:not(.cursor-pointer):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text) {
       cursor: var(--cursor-selectable) !important;
     }
 
@@ -307,10 +309,10 @@
       cursor: var(--cursor-ns-resize) !important;
     }
 
-    [role="button"],
-    [role="link"],
-    a,
-    button {
+    [role="button"]:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
+    [role="link"]:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
+    a:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
+    button:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text) {
       cursor: var(--cursor-pointer) !important;
     }
 

@@ -33,7 +33,7 @@ import i18n from "../../../i18n";
 import { Author, Design, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../store";
 import { DesignSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
 import { KitAppState, useKitApp, useKitAppCommands } from "./store";
 
@@ -71,7 +71,6 @@ const AppContent: FC = () => {
   const navigation = useNavigation();
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tooltip = useTooltip();
 
   const kitScope = useKitScope();
   const sketchpadStore = useSketchpadStore();
@@ -83,6 +82,8 @@ const AppContent: FC = () => {
   const kitAppCommands = useKitAppCommands();
   const kitApp = useKitApp() as KitAppState;
   const isMobile = useIsMobile();
+  
+  const [isDragOver, setIsDragOver] = React.useState(false);
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -92,7 +93,7 @@ const AppContent: FC = () => {
   if (!hasKit) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{t("semio.kit.noKitLoaded")}</p>
+        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.noKitLoaded")}</p>
       </div>
     );
   }
@@ -204,7 +205,7 @@ const AppContent: FC = () => {
     if (designsCount > 0 && totalSelectedKinds === 1) {
       addSection("details", {
         id: "kit-design",
-        label: designsCount === 1 ? t("semio.design.title") : t("semio.designs.multipleTitle"),
+        label: designsCount === 1 ? t("semio.sketchpad.app.design.title") : t("semio.sketchpad.app.kit.designs.multipleTitle"),
         order: 10,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -214,7 +215,7 @@ const AppContent: FC = () => {
     if (typesCount > 0 && totalSelectedKinds === 1) {
       addSection("details", {
         id: "kit-type",
-        label: typesCount === 1 ? t("semio.type.title") : t("semio.types.multipleTitle"),
+        label: typesCount === 1 ? t("semio.sketchpad.app.type.title") : t("semio.sketchpad.app.kit.types.multipleTitle"),
         order: 20,
         defaultOpen: true,
         content: () => <TypeSection />,
@@ -223,7 +224,7 @@ const AppContent: FC = () => {
 
     addSection("details", {
       id: "kit-details",
-      label: t("semio.kit.title"),
+      label: t("semio.sketchpad.app.kit.title"),
       order: 100,
       defaultOpen: true,
       content: () => <KitSection />,
@@ -620,7 +621,7 @@ const AppContent: FC = () => {
     switch (kind) {
       case "designs": {
         const existingNames = (kit.designs || []).map((d: Design) => d.name);
-        const uniqueName = generateUniqueName(t("semio.design.defaultName"), existingNames);
+        const uniqueName = generateUniqueName(t("semio.sketchpad.app.design.defaultName"), existingNames);
         const newDesign: Design = {
           guid: guid(),
           name: uniqueName,
@@ -635,7 +636,7 @@ const AppContent: FC = () => {
       }
       case "types": {
         const existingNames = (kit.types || []).map((t: Type) => t.name);
-        const uniqueName = generateUniqueName(t("semio.type.defaultName"), existingNames);
+        const uniqueName = generateUniqueName(t("semio.sketchpad.app.type.defaultName"), existingNames);
         const newType: Type = {
           guid: guid(),
           name: uniqueName,
@@ -648,7 +649,7 @@ const AppContent: FC = () => {
       }
       case "qualities": {
         const existingNames = (kit.qualities || []).map((q: Quality) => q.name || "");
-        const uniqueName = generateUniqueName(t("semio.quality.defaultName"), existingNames);
+        const uniqueName = generateUniqueName(t("semio.sketchpad.app.quality.defaultName"), existingNames);
         const existingKeys = (kit.qualities || []).map((q: Quality) => q.key);
         const uniqueKey = generateUniqueName("new.quality", existingKeys, ".");
         const newQuality: Quality = {
@@ -673,7 +674,7 @@ const AppContent: FC = () => {
     if (row.kind === "designs") {
       const design = row.data as Design;
       const existingVariants = (kit.designs || []).filter((d: Design) => d.name === design.name).map((d: Design) => d.variant || "");
-      const uniqueVariant = generateUniqueName(t("semio.design.newVariant"), existingVariants);
+      const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.design.newVariant"), existingVariants);
       const newDesign: Design = {
         guid: guid(),
         name: design.name,
@@ -687,7 +688,7 @@ const AppContent: FC = () => {
     } else if (row.kind === "types") {
       const type = row.data as Type;
       const existingVariants = (kit.types || []).filter((t: Type) => t.name === type.name).map((t: Type) => t.variant || "");
-      const uniqueVariant = generateUniqueName(t("semio.type.newVariant"), existingVariants);
+      const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.type.newVariant"), existingVariants);
       const newType: Type = {
         guid: guid(),
         name: type.name,
@@ -703,7 +704,7 @@ const AppContent: FC = () => {
     if (row.kind !== "designs") return;
     const design = row.data as Design;
     const existingViews = (kit.designs || []).filter((d: Design) => d.name === design.name && d.variant === design.variant).map((d: Design) => d.view || "");
-    const uniqueView = generateUniqueName(t("semio.design.newView"), existingViews);
+    const uniqueView = generateUniqueName(t("semio.sketchpad.app.design.newView"), existingViews);
     const newDesign: Design = {
       guid: guid(),
       name: design.name,
@@ -926,13 +927,70 @@ const AppContent: FC = () => {
     }
   };
 
+  const handleRowDoubleClick = (row: TableRow) => {
+    if (row.kind === "designs") {
+      sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+    } else if (row.kind === "types") {
+      sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+    } else if (row.kind === "qualities") {
+      sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).key);
+    }
+  };
+
   const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
     kitAppCommands.toggleSort(column);
+  };
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragOver(true);
+    }
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+  
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    
+    for (const file of files) {
+      const newFile: SemioFile = {
+        guid: guid(),
+        path: file.name,
+        size: file.size,
+        hash: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      try {
+        await kitCommands?.addFile(newFile, file);
+      } catch (error) {
+        console.error(`Failed to add file ${file.name}:`, error);
+      }
+    }
   };
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full">
+      <div
+        className="flex flex-col h-full"
+        onClick={(e: React.MouseEvent) => {
+          if (e.target === e.currentTarget) {
+            kitAppCommands.deselectAll();
+          }
+        }}
+      >
         {/* Flexible filter layout with automatic wrapping for mobile */}
         <div className="flex flex-wrap items-center gap-1 p-1 border-b">
           {selectedKind && (
@@ -959,17 +1017,17 @@ const AppContent: FC = () => {
           )}
           {selectedVariant !== null && (
             <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
-              {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.design.defaultVariant") : t("semio.type.defaultVariant")}</span>}
+              {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
             </Toggle>
           )}
           {selectedView !== null && (
             <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
-              {selectedView || <span className="italic opacity-50">{t("semio.design.defaultView")}</span>}
+              {selectedView || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
             </Toggle>
           )}
           {selectedConcepts.length > 0 &&
             selectedConcepts.map((concept) => (
-              <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.hideConcept")}>
+              <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.hide">
                 {concept}
               </Toggle>
             ))}
@@ -1036,7 +1094,7 @@ const AppContent: FC = () => {
             allConcepts
               .filter((c) => !selectedConcepts.includes(c))
               .map((concept) => (
-                <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.showConcept")}>
+                <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.show">
                   {concept}
                 </Toggle>
               ))}
@@ -1044,7 +1102,7 @@ const AppContent: FC = () => {
             !selectedName &&
             uniqueNames.length > 0 &&
             uniqueNames.map((name) => (
-              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} tooltip={tooltip("kitApp.filterByName")}>
+              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} i18n="semio.sketchpad.app.kit.filter.name">
                 {name}
               </Toggle>
             ))}
@@ -1053,8 +1111,8 @@ const AppContent: FC = () => {
             selectedVariant === null &&
             uniqueVariants.length > 0 &&
             uniqueVariants.map((variant) => (
-              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)} tooltip={tooltip("kitApp.filterByVariant")}>
-                {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.design.defaultVariant") : t("semio.type.defaultVariant")}</span>}
+              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)} i18n="semio.sketchpad.app.kit.filter.variant">
+                {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
               </Toggle>
             ))}
           {selectedKind === "designs" &&
@@ -1064,12 +1122,12 @@ const AppContent: FC = () => {
             uniqueViews
               .filter((view) => view !== selectedView)
               .map((view) => (
-                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)} tooltip={tooltip("kitApp.filterByView")}>
-                  {view || <span className="italic opacity-50">{t("semio.design.defaultView")}</span>}
+                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)} i18n="semio.sketchpad.app.kit.filter.view">
+                  {view || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
                 </Toggle>
               ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("semio.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
+            <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
             <Toggle
               type="dropdown"
               pressed={sortColumn === "artifact"}
@@ -1098,7 +1156,14 @@ const AppContent: FC = () => {
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
               return (
-                <div key={row.id} className={`border-b p-2 ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)} role="button" tabIndex={0}>
+                <div
+                  key={row.id}
+                  className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  onClick={(e) => handleRowClick(row, e)}
+                  onDoubleClick={() => handleRowDoubleClick(row)}
+                  role="button"
+                  tabIndex={0}
+                >
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {row.hasChildren ? (
@@ -1121,19 +1186,7 @@ const AppContent: FC = () => {
                         {row.kind === "files" && <FileText className="size-4" />}
                         {row.kind === "authors" && <User className="size-4" />}
                       </div>
-                      <span
-                        className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-                          else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-                          else if (row.kind === "qualities") sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).guid);
-                        }}
-                        role="link"
-                        tabIndex={0}
-                      >
-                        {row.artifact}
-                      </span>
+                      <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
                       {row.kind === "designs" && row.level === 0 && (
@@ -1196,7 +1249,14 @@ const AppContent: FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full"
+      onClick={(e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+          kitAppCommands.deselectAll();
+        }
+      }}
+    >
       {/* Flexible filter layout with automatic wrapping */}
       <div className="flex flex-wrap items-center gap-1 p-1 border-b">
         {selectedKind && (
@@ -1223,17 +1283,17 @@ const AppContent: FC = () => {
         )}
         {selectedVariant !== null && (
           <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
-            {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.design.defaultVariant") : t("semio.type.defaultVariant")}</span>}
+            {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
           </Toggle>
         )}
         {selectedView !== null && (
           <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
-            {selectedView || <span className="italic opacity-50">{t("semio.design.defaultView")}</span>}
+            {selectedView || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
           </Toggle>
         )}
         {selectedConcepts.length > 0 &&
           selectedConcepts.map((concept) => (
-            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.hideConcept")}>
+            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.hide">
               {concept}
             </Toggle>
           ))}
@@ -1300,7 +1360,7 @@ const AppContent: FC = () => {
           allConcepts
             .filter((c) => !selectedConcepts.includes(c))
             .map((concept) => (
-              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.showConcept")}>
+              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.show">
                 {concept}
               </Toggle>
             ))}
@@ -1318,7 +1378,7 @@ const AppContent: FC = () => {
           uniqueVariants.length > 0 &&
           uniqueVariants.map((variant) => (
             <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)}>
-              {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.design.defaultVariant") : t("semio.type.defaultVariant")}</span>}
+              {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
             </Toggle>
           ))}
         {selectedKind === "designs" &&
@@ -1329,18 +1389,29 @@ const AppContent: FC = () => {
             .filter((view) => view !== selectedView)
             .map((view) => (
               <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
-                {view || <span className="italic opacity-50">{t("semio.design.defaultView")}</span>}
+                {view || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
               </Toggle>
             ))}
-        <Input className="flex-1 min-w-[200px]" placeholder={t("semio.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
+        <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
       </div>
-      <ScrollArea ref={scrollAreaRef} className="flex-1">
+      <ScrollArea 
+        ref={scrollAreaRef} 
+        className="flex-1"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {isDragOver && (
+          <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-10">
+            <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
+          </div>
+        )}
         <table className="w-full border-collapse">
           <thead className="sticky top-0 border-b">
             <tr className="h-9">
               <th className="text-left p-1 font-medium relative group">
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.kitApp.name")}</span>
+                  <span>{t("semio.sketchpad.app.kit.name")}</span>
                   <Toggle
                     type="dropdown"
                     pressed={sortColumn === "artifact"}
@@ -1350,8 +1421,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sort.descending") },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1361,7 +1432,7 @@ const AppContent: FC = () => {
               {!selectedKind && (
                 <th className="text-left p-1 font-medium relative group">
                   <div className="flex items-center justify-between w-full">
-                    <span>{t("semio.kitApp.kind")}</span>
+                    <span>{t("semio.sketchpad.app.kit.kind")}</span>
                     <Toggle
                       type="dropdown"
                       pressed={sortColumn === "kind"}
@@ -1371,8 +1442,8 @@ const AppContent: FC = () => {
                         kitAppCommands.setSortDirection(value as "asc" | "desc");
                       }}
                       items={[
-                        { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sort.ascending") },
-                        { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sort.descending") },
+                        { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
+                        { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
                       ]}
                       className="px-1 min-w-0"
                     />
@@ -1382,7 +1453,7 @@ const AppContent: FC = () => {
               )}
               <th className="text-left p-1 font-medium relative group">
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.kitApp.lastUpdated")}</span>
+                  <span>{t("semio.sketchpad.app.kit.lastUpdated")}</span>
                   <Toggle
                     type="dropdown"
                     pressed={sortColumn === "updatedAt"}
@@ -1392,8 +1463,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sort.descending") },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1402,7 +1473,7 @@ const AppContent: FC = () => {
               </th>
               <th className="text-left p-1 font-medium relative group">
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.kitApp.created")}</span>
+                  <span>{t("semio.sketchpad.app.kit.created")}</span>
                   <Toggle
                     type="dropdown"
                     pressed={sortColumn === "createdAt"}
@@ -1412,8 +1483,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sort.descending") },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1430,7 +1501,14 @@ const AppContent: FC = () => {
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
               return (
-                <tr key={row.id} className={`border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row, e)} role="button" tabIndex={0}>
+                <tr
+                  key={row.id}
+                  className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  onClick={(e) => handleRowClick(row, e)}
+                  onDoubleClick={() => handleRowDoubleClick(row)}
+                  role="button"
+                  tabIndex={0}
+                >
                   <td className="p-1" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
                       <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -1447,19 +1525,7 @@ const AppContent: FC = () => {
                         ) : (
                           <span className="w-4 h-4 shrink-0" />
                         )}
-                        <span
-                          className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-                            else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-                            else if (row.kind === "qualities") sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).guid);
-                          }}
-                          role="link"
-                          tabIndex={0}
-                        >
-                          {row.artifact}
-                        </span>
+                        <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
                         {row.kind === "designs" && row.level === 0 && (

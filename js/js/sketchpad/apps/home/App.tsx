@@ -33,7 +33,7 @@ import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { useAppType, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../store";
 import { KitSection } from "./panels/Details";
 import { useHome, useHomeCommands } from "./store";
 
@@ -72,7 +72,7 @@ const Home: FC = ({}) => {
   const kits = useKits();
   const store = useSketchpadStore();
   const { createKit, navigateToKit } = useSketchpadCommands();
-  const tooltip = useTooltip();
+
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
   const isMobile = useIsMobile();
@@ -97,7 +97,7 @@ const Home: FC = ({}) => {
     if (hasKits) {
       addSection("details", {
         id: "home-kit",
-        label: hasSingleKit ? t("semio.kit.title") : t("semio.kits.multiple", { count: selection.length }),
+        label: hasSingleKit ? t("semio.sketchpad.app.kit.title") : t("semio.sketchpad.app.home.kits.multiple", { count: selection.length }),
         order: 0,
         defaultOpen: true,
         content: () => <KitSection />,
@@ -322,7 +322,7 @@ const Home: FC = ({}) => {
 
   const handleCreateKit = (type: KitStoreKind) => {
     const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(t("semio.kit.defaultName"), existingNames);
+    const uniqueName = generateUniqueName(t("semio.sketchpad.app.kit.defaultName"), existingNames);
     const newKit: Kit = {
       guid: guid(),
       name: uniqueName,
@@ -338,7 +338,7 @@ const Home: FC = ({}) => {
 
   const handleCreateVersion = (kitName: string, type: KitStoreKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(t("semio.kit.newVersion"), existingVersions);
+    const uniqueVersion = generateUniqueName(t("semio.sketchpad.app.kit.newVersion"), existingVersions);
     const newKit: Kit = {
       guid: guid(),
       name: kitName,
@@ -446,7 +446,14 @@ const Home: FC = ({}) => {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full">
+      <div
+        className="flex flex-col h-full"
+        onClick={(e: React.MouseEvent) => {
+          if (e.target === e.currentTarget) {
+            homeCommands.deselectAll();
+          }
+        }}
+      >
         {/* Flexible filter layout with automatic wrapping for mobile */}
         <div className="flex flex-wrap items-center gap-1 p-1 border-b">
           {selectedKind && (
@@ -456,8 +463,8 @@ const Home: FC = ({}) => {
               onPressedChange={() => toggleKind(selectedKind)}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateKit(selectedKind)}
-              tooltip={tooltip("home.hideKind")}
-              actionTooltip={tooltip("home.createKit")}
+              i18n="semio.sketchpad.app.home.filter.kind.show"
+              actioni18n="semio.sketchpad.app.home.filter.kind.create"
             >
               {selectedKind === "temporary" && <Clock className="size-4" />}
               {selectedKind === "local" && <HardDrive className="size-4" />}
@@ -465,13 +472,13 @@ const Home: FC = ({}) => {
             </Toggle>
           )}
           {selectedName && (
-            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} i18n="semio.sketchpad.app.home.filter.name">
               {selectedName}
             </Toggle>
           )}
           {selectedVersion !== null && (
-            <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-              {selectedVersion || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
+            <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} i18n="semio.sketchpad.app.home.filter.version">
+              {selectedVersion || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
             </Toggle>
           )}
           {!selectedKind && (
@@ -482,8 +489,8 @@ const Home: FC = ({}) => {
                 onPressedChange={() => toggleKind("temporary")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("temporary")}
-                tooltip={tooltip("home.showTemporary")}
-                actionTooltip={tooltip("home.createTemporary")}
+                i18n="semio.sketchpad.app.home.filter.kind.temporary"
+                actioni18n="semio.sketchpad.app.home.filter.kind.createTemporary"
               >
                 <Clock className="size-4" />
               </Toggle>
@@ -493,8 +500,8 @@ const Home: FC = ({}) => {
                 onPressedChange={() => toggleKind("local")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("local")}
-                tooltip={tooltip("home.showLocal")}
-                actionTooltip={tooltip("home.createLocal")}
+                i18n="semio.sketchpad.app.home.filter.kind.local"
+                actioni18n="semio.sketchpad.app.home.filter.kind.createLocal"
               >
                 <HardDrive className="size-4" />
               </Toggle>
@@ -504,8 +511,8 @@ const Home: FC = ({}) => {
                 onPressedChange={() => toggleKind("remote")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit("remote")}
-                tooltip={tooltip("home.showRemote")}
-                actionTooltip={tooltip("home.createRemote")}
+                i18n="semio.sketchpad.app.home.filter.kind.remote"
+                actioni18n="semio.sketchpad.app.home.filter.kind.createRemote"
               >
                 <Cloud className="size-4" />
               </Toggle>
@@ -525,11 +532,11 @@ const Home: FC = ({}) => {
             uniqueVersions.length > 0 &&
             uniqueVersions.map((version) => (
               <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                {version || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
+                {version || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
               </Toggle>
             ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("semio.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+            <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
             <Toggle
               type="dropdown"
               value={sortColumn === "name" ? sortDirection : "asc"}
@@ -552,7 +559,14 @@ const Home: FC = ({}) => {
             {rows.map((row) => {
               const isSelected = selection.includes(row.kit.guid);
               return (
-                <div key={row.id} className={`border-b p-2 ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} role="button" tabIndex={0} onClick={(e) => handleRowClick(row.kit.guid, e)}>
+                <div
+                  key={row.id}
+                  className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => handleRowClick(row.kit.guid, e)}
+                  onDoubleClick={() => navigateToKit(row.kit.guid)}
+                >
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {row.hasChildren ? (
@@ -573,17 +587,7 @@ const Home: FC = ({}) => {
                         {row.type === "local" && <HardDrive className="size-4" />}
                         {row.type === "remote" && <Cloud className="size-4" />}
                       </div>
-                      <span
-                        className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigateToKit(row.kit.guid);
-                        }}
-                      >
-                        {row.name}
-                      </span>
+                      <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
                       {row.level === 0 && (
@@ -612,7 +616,14 @@ const Home: FC = ({}) => {
   return (
     <Canvas>
       <Window id="home-table">
-        <div className="flex flex-col h-full">
+        <div
+          className="flex flex-col h-full"
+          onClick={(e: React.MouseEvent) => {
+            if (e.target === e.currentTarget) {
+              homeCommands.deselectAll();
+            }
+          }}
+        >
           {/* Flexible filter layout with automatic wrapping */}
           <div className="flex flex-wrap items-center gap-1 p-1 border-b">
             {selectedKind && (
@@ -637,7 +648,7 @@ const Home: FC = ({}) => {
             )}
             {selectedVersion !== null && (
               <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-                {selectedVersion || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
+                {selectedVersion || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
               </Toggle>
             )}
             {!selectedKind && (
@@ -691,10 +702,10 @@ const Home: FC = ({}) => {
               uniqueVersions.length > 0 &&
               uniqueVersions.map((version) => (
                 <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                  {version || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
+                  {version || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
                 </Toggle>
               ))}
-            <Input className="flex-1 min-w-[200px]" placeholder={t("semio.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+            <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
           </div>
           <ScrollArea ref={scrollAreaRef} className="flex-1">
             <table className="w-full border-collapse">
@@ -702,7 +713,7 @@ const Home: FC = ({}) => {
                 <tr className="h-9">
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.home.name")}</span>
+                      <span>{t("semio.sketchpad.app.home.name")}</span>
                       <Toggle
                         type="dropdown"
                         pressed={sortColumn === "name"}
@@ -723,7 +734,7 @@ const Home: FC = ({}) => {
                   {!selectedKind && (
                     <th className="text-left p-1 font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.home.kind")}</span>
+                        <span>{t("semio.sketchpad.app.home.kind")}</span>
                         <Toggle
                           type="dropdown"
                           pressed={sortColumn === "type"}
@@ -744,7 +755,7 @@ const Home: FC = ({}) => {
                   )}
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.home.lastUpdated")}</span>
+                      <span>{t("semio.sketchpad.app.home.lastUpdated")}</span>
                       <Toggle
                         type="dropdown"
                         pressed={sortColumn === "updatedAt"}
@@ -764,7 +775,7 @@ const Home: FC = ({}) => {
                   </th>
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.home.created")}</span>
+                      <span>{t("semio.sketchpad.app.home.created")}</span>
                       <Toggle
                         type="dropdown"
                         pressed={sortColumn === "createdAt"}
@@ -787,7 +798,14 @@ const Home: FC = ({}) => {
                 {rows.map((row) => {
                   const isSelected = selection.includes(row.kit.guid);
                   return (
-                    <tr key={row.id} className={`border-b ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`} onClick={(e) => handleRowClick(row.kit.guid, e)} role="button" tabIndex={0}>
+                    <tr
+                      key={row.id}
+                      className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                      onClick={(e) => handleRowClick(row.kit.guid, e)}
+                      onDoubleClick={() => navigateToKit(row.kit.guid)}
+                      role="button"
+                      tabIndex={0}
+                    >
                       <td className="p-1" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
                           <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -804,17 +822,7 @@ const Home: FC = ({}) => {
                             ) : (
                               <span className="w-4 h-4 shrink-0" />
                             )}
-                            <span
-                              className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigateToKit(row.kit.guid);
-                              }}
-                              role="link"
-                              tabIndex={0}
-                            >
-                              {row.name}
-                            </span>
+                            <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                           </div>
                           <div className="flex items-center gap-0.5 shrink-0">
                             {row.level === 0 && (

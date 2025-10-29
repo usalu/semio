@@ -30,7 +30,7 @@ export const QualitySettings: FC = () => {
     <>
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("semio.quality.appSettings")}</p>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.quality.appSettings")}</p>
         </TreeContent>
       </TreeItem>
     </>

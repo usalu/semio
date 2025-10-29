@@ -100,13 +100,13 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   const { labelKey, manualPath, tutorialPath, hotkey } = config;
   const showManual = mode === Mode.BEGINNER || mode === Mode.NORMAL;
   const showTutorial = mode === Mode.BEGINNER;
-  
+
   const labelKeyToUse = mode === Mode.BEGINNER ? `${labelKey}.beginner` : labelKey;
   const label = t(labelKeyToUse, { defaultValue: t(labelKey) });
-  
+
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
-  
+
   return (
     <div className="flex flex-col gap-2">
       <span>{label}</span>
@@ -145,23 +145,21 @@ function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
 
   if (mode === Mode.EXPERT) return null;
 
-  const label = t(i18nKey, { defaultValue: "" });
-  const description = mode === Mode.BEGINNER 
-    ? t(`${i18nKey}.beginner`, { defaultValue: label })
-    : label;
-  
+  const label = t(`${i18nKey}.label`, { defaultValue: "" });
+  const description = mode === Mode.BEGINNER ? t(`${i18nKey}.beginner`, { defaultValue: label }) : label;
+
   const manualPath = t(`${i18nKey}.manual`, { defaultValue: "" });
   const tutorialPath = t(`${i18nKey}.tutorial`, { defaultValue: "" });
   const hotkey = t(`${i18nKey}.hotkey`, { defaultValue: "" });
 
   const showManual = (mode === Mode.BEGINNER || mode === Mode.NORMAL) && manualPath;
   const showTutorial = mode === Mode.BEGINNER && tutorialPath;
-  
+
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
-  
+
   const displayText = description || label;
-  
+
   return (
     <div className="flex flex-col gap-2">
       <span>{displayText}</span>

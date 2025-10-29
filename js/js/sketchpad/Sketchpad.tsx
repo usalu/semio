@@ -44,7 +44,6 @@ import {
   DesignScopeProvider,
   KitScopeProvider,
   Layout,
-  Mode,
   SketchpadScopeProvider,
   SketchpadState,
   Theme,
@@ -61,6 +60,7 @@ import {
   useTheme,
   WindowEvents,
   YProviderFactory,
+  FileProviderFactory,
 } from "./store";
 
 // Lazy load HeadingsProvider to avoid issues in Storybook
@@ -68,9 +68,7 @@ const HeadingsProviderWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   const [Provider, setProvider] = useState<FC<{ children: ReactNode }> | null>(null);
 
   useEffect(() => {
-    import("./apps/docs/mdx-provider")
-      .then((module) => setProvider(() => module.HeadingsProvider))
-      .catch(() => setProvider(() => ({ children }: { children: ReactNode }) => <>{children}</>));
+    import("./apps/docs/mdx-provider").then((module) => setProvider(() => module.HeadingsProvider)).catch(() => setProvider(() => ({ children }: { children: ReactNode }) => <>{children}</>));
   }, []);
 
   if (!Provider) return <>{children}</>;
@@ -341,100 +339,100 @@ const SketchpadBase: FC = () => {
         <FocusProvider>
           <PanelSectionProvider>
             <FooterItemProvider>
-            <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
-              <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
-                <Navbar />
-              </div>
-              <div className="flex-1 flex overflow-hidden relative" style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}>
-                {isMobile ? (
-                  <>
-                    {mobileVisiblePanel && mobileVisiblePanel !== "toolbar" ? (
-                      <div className="absolute inset-1 z-30">
-                        {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                        {mobileVisiblePanel === "tools" && <Tools visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                        {mobileVisiblePanel === "hud" && <Hud visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                        {mobileVisiblePanel === "stats" && <Stats visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                        {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                        {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                        {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex flex-col overflow-hidden">
-                        <Outlet />
-                        {visiblePanels.toolbar && (
-                          <div className="absolute left-0 right-0 z-20" style={{ bottom: "calc(1.25rem + var(--spacing))" }}>
-                            <Toolbar visible={true} leftOffset={0} rightOffset={0} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {(visiblePanels.workbench || visiblePanels.tools) && (
-                      <div
-                        className="absolute left-1 top-1 z-20 flex"
-                        style={{
-                          bottom: "calc(1.25rem + var(--spacing))",
-                        }}
-                      >
-                        {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
-                        {visiblePanels.tools && <Tools visible={true} width={panelSizes.toolsWidth} onWidthChange={(w) => setPanelSize("toolsWidth", w)} />}
-                      </div>
-                    )}
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                      <Outlet />
-                      {(visiblePanels.hud || visiblePanels.stats) && (
+              <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
+                <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+                  <Navbar />
+                </div>
+                <div className="flex-1 flex overflow-hidden relative" style={{ marginTop: isFullscreen ? 0 : `${navbarHeight}px` }}>
+                  {isMobile ? (
+                    <>
+                      {mobileVisiblePanel && mobileVisiblePanel !== "toolbar" ? (
+                        <div className="absolute inset-1 z-30">
+                          {mobileVisiblePanel === "workbench" && <Workbench visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                          {mobileVisiblePanel === "tools" && <Tools visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                          {mobileVisiblePanel === "hud" && <Hud visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                          {mobileVisiblePanel === "stats" && <Stats visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                          {mobileVisiblePanel === "details" && <Details visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                          {mobileVisiblePanel === "chat" && <Chat visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                          {mobileVisiblePanel === "settings" && <Settings visible={true} width={window.innerWidth - 8} onWidthChange={() => {}} />}
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                          <Outlet />
+                          {visiblePanels.toolbar && (
+                            <div className="absolute left-0 right-0 z-20" style={{ bottom: "calc(1.25rem + var(--spacing))" }}>
+                              <Toolbar visible={true} leftOffset={0} rightOffset={0} />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {(visiblePanels.workbench || visiblePanels.tools) && (
                         <div
-                          className="absolute z-30 flex"
+                          className="absolute left-1 top-1 z-20 flex"
                           style={{
-                            left: (visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + 4,
-                            right: (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + 4,
-                            top: 0,
                             bottom: "calc(1.25rem + var(--spacing))",
                           }}
                         >
-                          {visiblePanels.hud && <Hud visible={true} width={panelSizes.hudWidth} onWidthChange={(w) => setPanelSize("hudWidth", w)} />}
-                          {visiblePanels.stats && <Stats visible={true} width={panelSizes.statsWidth} onWidthChange={(w) => setPanelSize("statsWidth", w)} />}
+                          {visiblePanels.workbench && <Workbench visible={true} width={panelSizes.workbenchWidth} onWidthChange={(w) => setPanelSize("workbenchWidth", w)} />}
+                          {visiblePanels.tools && <Tools visible={true} width={panelSizes.toolsWidth} onWidthChange={(w) => setPanelSize("toolsWidth", w)} />}
                         </div>
                       )}
-                      {visiblePanels.toolbar && (
-                        <div className="absolute left-0 right-0 z-20" style={{ bottom: "calc(1.25rem + var(--spacing))" }}>
-                          <Toolbar
-                            visible={true}
-                            leftOffset={(visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + (visiblePanels.workbench || visiblePanels.tools ? 4 : 0)}
-                            rightOffset={
-                              (visiblePanels.details ? panelSizes.detailsWidth : 0) +
-                              (visiblePanels.chat ? panelSizes.chatWidth : 0) +
-                              (visiblePanels.settings ? panelSizes.settingsWidth : 0) +
-                              (visiblePanels.details || visiblePanels.chat || visiblePanels.settings ? 4 : 0)
-                            }
-                          />
-                        </div>
-                      )}
-                    </div>
-                    {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
-                      <div
-                        className="absolute right-1 top-1 z-20 flex"
-                        style={{
-                          bottom: "calc(1.25rem + var(--spacing))",
-                        }}
-                      >
-                        {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
-                        {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
-                        {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}
+                      <div className="flex-1 flex flex-col overflow-hidden">
+                        <Outlet />
+                        {(visiblePanels.hud || visiblePanels.stats) && (
+                          <div
+                            className="absolute z-30 flex"
+                            style={{
+                              left: (visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + 4,
+                              right: (visiblePanels.details ? panelSizes.detailsWidth : 0) + (visiblePanels.chat ? panelSizes.chatWidth : 0) + (visiblePanels.settings ? panelSizes.settingsWidth : 0) + 4,
+                              top: 0,
+                              bottom: "calc(1.25rem + var(--spacing))",
+                            }}
+                          >
+                            {visiblePanels.hud && <Hud visible={true} width={panelSizes.hudWidth} onWidthChange={(w) => setPanelSize("hudWidth", w)} />}
+                            {visiblePanels.stats && <Stats visible={true} width={panelSizes.statsWidth} onWidthChange={(w) => setPanelSize("statsWidth", w)} />}
+                          </div>
+                        )}
+                        {visiblePanels.toolbar && (
+                          <div className="absolute left-0 right-0 z-20" style={{ bottom: "calc(1.25rem + var(--spacing))" }}>
+                            <Toolbar
+                              visible={true}
+                              leftOffset={(visiblePanels.workbench ? panelSizes.workbenchWidth : 0) + (visiblePanels.tools ? panelSizes.toolsWidth : 0) + (visiblePanels.workbench || visiblePanels.tools ? 4 : 0)}
+                              rightOffset={
+                                (visiblePanels.details ? panelSizes.detailsWidth : 0) +
+                                (visiblePanels.chat ? panelSizes.chatWidth : 0) +
+                                (visiblePanels.settings ? panelSizes.settingsWidth : 0) +
+                                (visiblePanels.details || visiblePanels.chat || visiblePanels.settings ? 4 : 0)
+                              }
+                            />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </>
-                )}
+                      {(visiblePanels.details || visiblePanels.chat || visiblePanels.settings) && (
+                        <div
+                          className="absolute right-1 top-1 z-20 flex"
+                          style={{
+                            bottom: "calc(1.25rem + var(--spacing))",
+                          }}
+                        >
+                          {visiblePanels.details && <Details visible={true} width={panelSizes.detailsWidth} onWidthChange={(w) => setPanelSize("detailsWidth", w)} />}
+                          {visiblePanels.chat && <Chat visible={true} width={panelSizes.chatWidth} onWidthChange={(w) => setPanelSize("chatWidth", w)} />}
+                          {visiblePanels.settings && <Settings visible={true} width={panelSizes.settingsWidth} onWidthChange={(w) => setPanelSize("settingsWidth", w)} />}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                <div className={`absolute bottom-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
+                  <Footer />
+                </div>
               </div>
-              <div className={`absolute bottom-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
-                <Footer />
-              </div>
-            </div>
-          </FooterItemProvider>
-        </PanelSectionProvider>
-      </FocusProvider>
+            </FooterItemProvider>
+          </PanelSectionProvider>
+        </FocusProvider>
       </HeadingsProviderWrapper>
       {createPortal(
         design && kit ? (
@@ -485,10 +483,11 @@ const SketchpadBase: FC = () => {
 interface SketchpadProps {
   id?: string;
   yProviderFactory?: YProviderFactory;
+  fileProviderFactory?: FileProviderFactory;
   onWindowEvents?: WindowEvents;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, fileProviderFactory, onWindowEvents }) => {
   const [registryReady, setRegistryReady] = useState(false);
 
   useEffect(() => {
@@ -506,7 +505,7 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
 
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} onWindowEvents={onWindowEvents}>
+      <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory} fileProviderFactory={fileProviderFactory} onWindowEvents={onWindowEvents}>
         <TooltipModeProvider>
           <DragDropProvider>
             <MemoryRouter>

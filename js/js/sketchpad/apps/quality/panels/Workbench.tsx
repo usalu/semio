@@ -155,29 +155,29 @@ export const QualityWorkbench: FC = () => {
 
   return (
     <>
-      <TreeItem label={t("semio.quality.numericFunctions")}>
+      <TreeItem label={t("semio.sketchpad.app.quality.numericFunctions")}>
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
-            <FunctionNode name="Add" type="function" label={t("semio.quality.add")} />
-            <FunctionNode name="Subtract" type="function" label={t("semio.quality.subtract")} />
-            <FunctionNode name="Multiply" type="function" label={t("semio.quality.multiply")} />
-            <FunctionNode name="Divide" type="function" label={t("semio.quality.divide")} />
+            <FunctionNode name="Add" type="function" label={t("semio.sketchpad.app.quality.add")} />
+            <FunctionNode name="Subtract" type="function" label={t("semio.sketchpad.app.quality.subtract")} />
+            <FunctionNode name="Multiply" type="function" label={t("semio.sketchpad.app.quality.multiply")} />
+            <FunctionNode name="Divide" type="function" label={t("semio.sketchpad.app.quality.divide")} />
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("semio.quality.branchingFunctions")}>
+      <TreeItem label={t("semio.sketchpad.app.quality.branchingFunctions")}>
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
-            <FunctionNode name="If" type="function" label={t("semio.quality.if")} />
-            <FunctionNode name="Switch" type="function" label={t("semio.quality.switch")} />
+            <FunctionNode name="If" type="function" label={t("semio.sketchpad.app.quality.if")} />
+            <FunctionNode name="Switch" type="function" label={t("semio.sketchpad.app.quality.switch")} />
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("semio.quality.dataStructures")}>
+      <TreeItem label={t("semio.sketchpad.app.quality.dataStructures")}>
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
-            <FunctionNode name="List" type="function" label={t("semio.quality.list")} />
-            <FunctionNode name="Dictionary" type="function" label={t("semio.quality.dictionary")} />
+            <FunctionNode name="List" type="function" label={t("semio.sketchpad.app.quality.list")} />
+            <FunctionNode name="Dictionary" type="function" label={t("semio.sketchpad.app.quality.dictionary")} />
           </div>
         </TreeContent>
       </TreeItem>
@@ -193,7 +193,7 @@ const QualityWorkbenchQualities: FC = () => {
   if (qualities.length === 0) {
     return (
       <TreeContent>
-        <div className="text-sm text-muted-foreground p-2">{t("semio.quality.noQualities")}</div>
+        <div className="text-sm text-muted-foreground p-2">{t("semio.sketchpad.app.quality.noQualities")}</div>
       </TreeContent>
     );
   }

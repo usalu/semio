@@ -24,10 +24,10 @@
 // #endregion TODOs
 import { Minus, Plus } from "lucide-react";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
-import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
-import { Input } from "./Input";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { useTranslation } from "react-i18next";
+import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { Input } from "./Input";
 
 interface StepperProps {
   value?: number;

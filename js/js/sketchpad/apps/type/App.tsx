@@ -99,7 +99,7 @@ const App: FC = () => {
       // Single port selected: show Port section then Type section
       addSection("details", {
         id: "type-port",
-        label: t("semio.port.title"),
+        label: t("semio.sketchpad.app.type.port.title"),
         order: 0,
         defaultOpen: true,
         content: () => <PortSection portGuid={selection.ports![0]} />,
@@ -118,7 +118,7 @@ const App: FC = () => {
     // Always show Type section (with all subsections)
     addSection("details", {
       id: "type-details",
-      label: t("semio.type.title"),
+      label: t("semio.sketchpad.app.type.title"),
       order: 50,
       defaultOpen: true,
       content: () => (
@@ -135,7 +135,7 @@ const App: FC = () => {
     // Always add Kit section at the bottom
     addSection("details", {
       id: "type-kit",
-      label: t("semio.kit.title"),
+      label: t("semio.sketchpad.app.kit.title"),
       order: 100,
       defaultOpen: true,
       content: () => <KitSection />,

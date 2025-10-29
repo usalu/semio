@@ -88,7 +88,7 @@ import {
   getPieceRepresentationUrls,
   piecesMetadata,
 } from "../../semio";
-import type { SketchpadStore, Url } from "../store";
+import type { SketchpadStore, Url, FileProvider, FileProviderFactory } from "../store";
 import { Disposable, Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
 
@@ -3833,6 +3833,8 @@ export interface KitCommandResult {
 export class KitStore {
   public readonly parent: SketchpadStore;
   private readonly yProviderFactory: YProviderFactory | undefined;
+  private readonly fileProviderFactory: FileProviderFactory | undefined;
+  private fileProvider?: FileProvider;
   public readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
   private readonly yTypes: YTypes;
@@ -3855,9 +3857,10 @@ export class KitStore {
   private cache?: Kit;
   private cacheHash?: string;
 
-  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, yProviderFactory?: YProviderFactory) {
+  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, yProviderFactory?: YProviderFactory, fileProviderFactory?: FileProviderFactory) {
     this.parent = parent;
     this.yProviderFactory = remote ? yProviderFactory : undefined;
+    this.fileProviderFactory = fileProviderFactory;
     this.yDoc = new Y.Doc();
 
     this.commandRegistry = new Map();
@@ -3911,9 +3914,40 @@ export class KitStore {
       yProviderFactory(this.yDoc, this.name + "@" + this.version);
     }
 
+    // Initialize file provider if fileProviderFactory is available
+    if (this.fileProviderFactory) {
+      this.initializeFileProvider();
+    }
+
     Object.entries(kitCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
     });
+  }
+
+  private async initializeFileProvider() {
+    if (!this.fileProviderFactory) return;
+    try {
+      this.fileProvider = await this.fileProviderFactory(this.guid);
+      // Sync existing files
+      await this.syncFiles();
+    } catch (error) {
+      console.error(`[KIT ${this.name}] Failed to initialize file provider:`, error);
+    }
+  }
+
+  private async syncFiles() {
+    if (!this.fileProvider) return;
+    // Download all files from remote storage and create object URLs
+    for (const [guid, fileStore] of this.files) {
+      try {
+        const file = fileStore.snapshot();
+        const blob = await this.fileProvider.download(this.guid, guid, file.path);
+        const objectUrl = URL.createObjectURL(blob);
+        this.regularFiles.set(file.path, objectUrl);
+      } catch (error) {
+        console.error(`[KIT ${this.name}] Failed to sync file ${guid}:`, error);
+      }
+    }
   }
 
   get guid(): string {
@@ -4282,13 +4316,59 @@ export class KitStore {
     const result = callback(context, ...rest);
     if (result.diff) {
       this.change(result.diff);
+      
+      // Handle file operations with file provider
+      if (this.fileProvider && result.diff.files) {
+        // Upload new files
+        if (result.diff.files.added && result.files) {
+          for (let i = 0; i < result.diff.files.added.length; i++) {
+            const file = result.diff.files.added[i];
+            const blob = result.files[i];
+            if (blob) {
+              try {
+                const remoteUrl = await this.fileProvider.upload(this.guid, file.guid, file.path, blob);
+                console.log(`[KIT ${this.name}] Uploaded file ${file.path} to ${remoteUrl}`);
+                // Update file with remote URL
+                this.file(file.guid).change({ remote: remoteUrl });
+              } catch (error) {
+                console.error(`[KIT ${this.name}] Failed to upload file ${file.path}:`, error);
+              }
+            }
+          }
+        }
+        
+        // Delete removed files
+        if (result.diff.files.removed) {
+          for (const fileId of result.diff.files.removed) {
+            const fileStore = this.files.get(fileId);
+            if (fileStore) {
+              const file = fileStore.snapshot();
+              try {
+                await this.fileProvider.delete(this.guid, fileId, file.path);
+                console.log(`[KIT ${this.name}] Deleted file ${file.path}`);
+                // Clean up object URL
+                const objectUrl = this.regularFiles.get(file.path);
+                if (objectUrl) {
+                  URL.revokeObjectURL(objectUrl);
+                  this.regularFiles.delete(file.path);
+                }
+              } catch (error) {
+                console.error(`[KIT ${this.name}] Failed to delete file ${file.path}:`, error);
+              }
+            }
+          }
+        }
+      }
     }
+    
+    // Handle local files (in-memory or blob URLs)
     if (result.files) {
       result.files.forEach((file) => {
         const objectUrl = URL.createObjectURL(file);
         this.regularFiles.set(file.name, objectUrl);
       });
     }
+    
     console.groupEnd();
     return result as T;
   }

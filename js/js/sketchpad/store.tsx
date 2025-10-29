@@ -20,14 +20,13 @@
 // #endregion
 
 import React, { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
+import { useAppType } from "./appType";
 import { commands as sketchpadCommands } from "./commands";
 import { KitStore } from "./kits/store";
-import { getAppTypeFromPath, useAppType } from "./appType";
 
 // Forward type declarations to avoid circular dependencies with app stores
 export interface DesignAppId {
@@ -149,6 +148,23 @@ export type Transact = (fn: () => void) => void;
 export type Url = string;
 export type SketchpadId = string;
 export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
+
+export interface FileOperation {
+  type: "upload" | "download" | "delete";
+  kitId: string;
+  fileId: string;
+  path: string;
+  blob?: Blob;
+}
+
+export interface FileProvider {
+  upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
+  download: (kitId: string, fileId: string, path: string) => Promise<Blob>;
+  delete: (kitId: string, fileId: string, path: string) => Promise<void>;
+  getUrl: (kitId: string, fileId: string, path: string) => string;
+}
+
+export type FileProviderFactory = (kitId: string) => Promise<FileProvider>;
 
 export type YUuid = string;
 export type YUuidArray = Y.Array<YUuid>;
@@ -940,6 +956,7 @@ export interface SketchpadCommandResult {
 export class SketchpadStore {
   private readonly id: string | undefined;
   private readonly yProviderFactory: YProviderFactory | undefined;
+  private readonly fileProviderFactory: FileProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Map<string, KitStore>;
@@ -972,9 +989,10 @@ export class SketchpadStore {
   private readonly designAppDeletedSubscribers: Set<Subscribe>;
   // private readonly broadcastChannel: BroadcastChannel;
 
-  constructor(id?: string, yProviderFactory?: YProviderFactory) {
+  constructor(id?: string, yProviderFactory?: YProviderFactory, fileProviderFactory?: FileProviderFactory) {
     this.id = id;
     this.yProviderFactory = yProviderFactory;
+    this.fileProviderFactory = fileProviderFactory;
     // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Map();
@@ -1145,7 +1163,7 @@ export class SketchpadStore {
   };
 
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
-    const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory);
+    const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory, this.fileProviderFactory);
     this.kits.set(kit.guid, kitStore);
 
     // Store kit metadata in Y.Doc for persistence
@@ -1667,7 +1685,7 @@ export class SketchpadStore {
 
           // Create the kit store (this will set up its own persistence)
           // Don't add to yKits again since it's already there
-          const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory);
+          const kitStore = new KitStore(this, kit, local, remote, this.yProviderFactory, this.fileProviderFactory);
           this.kits.set(kit.guid, kitStore);
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
         } catch (error) {}
@@ -1700,17 +1718,17 @@ export type WindowEvents = {
   maximize: () => void;
   close: () => void;
 };
-export type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory; onWindowEvents?: WindowEvents };
+export type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory; fileProviderFactory?: FileProviderFactory; onWindowEvents?: WindowEvents };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; fileProviderFactory?: FileProviderFactory; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
   // Use useMemo to ensure the ID is stable across re-renders when props.id is undefined
   const id = useMemo(() => props.id || guid(), [props.id]);
 
   if (!stores.has(id)) {
-    const store = new SketchpadStore(id, props?.yProviderFactory);
+    const store = new SketchpadStore(id, props?.yProviderFactory, props?.fileProviderFactory);
     stores.set(id, store);
   }
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id, onWindowEvents: props.onWindowEvents } }, props.children as any);
+  return React.createElement(SketchpadScopeContext.Provider, { value: { id, fileProviderFactory: props.fileProviderFactory, onWindowEvents: props.onWindowEvents } }, props.children as any);
 };
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 

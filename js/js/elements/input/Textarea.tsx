@@ -20,9 +20,9 @@
 // #endregion
 import * as React from "react";
 
+import { useTranslation } from "react-i18next";
 import { cn } from "../../semio";
 import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
-import { useTranslation } from "react-i18next";
 
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange"> {
   lazy?: boolean;

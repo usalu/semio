@@ -22,10 +22,11 @@
 import "./i18n";
 import i18n from "./i18n";
 
-export { default as Sketchpad } from "./sketchpad/Sketchpad";
-export type { YProviderFactory } from "./sketchpad/store";
-export { SemioTooltipWrapper } from "./sketchpad/SemioTooltip";
 export type { TooltipConfig } from "./elements/display/Tooltip";
+export { default as Sketchpad } from "./sketchpad/Sketchpad";
+export type { YProviderFactory, FileProvider, FileProviderFactory } from "./sketchpad/store";
+export { createS3FileProviderFactory, createInMemoryFileProviderFactory } from "./sketchpad/fileProviders";
+export type { S3Config } from "./sketchpad/fileProviders";
 export { i18n };
 
 // Export docs elements for MDX

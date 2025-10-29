@@ -20,10 +20,10 @@
 // #endregion
 import * as React from "react";
 
+import { useTranslation } from "react-i18next";
 import { cn } from "../../semio";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
-import { useTranslation } from "react-i18next";
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
   lazy?: boolean;
