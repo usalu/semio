@@ -422,6 +422,10 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   }
 
   startTransaction(): void {
+    // If there's an ongoing transaction, finalize it first
+    if (this.isTransactionActive) {
+      this.finalizeTransaction();
+    }
     this.isTransactionActive = true;
   }
 
@@ -1763,16 +1767,11 @@ export function useMode(): Mode {
   return useSketchpad((s) => s.mode) as Mode;
 }
 
-export function useTooltip(): (key: string, options?: { manualPath?: string; tutorialPath?: string; hotkey?: string }) => import("../elements/display/Tooltip").TooltipConfig | undefined {
+export function useTooltip(): (key: string) => string | undefined {
   const mode = useMode();
-  return (key: string, options?: { manualPath?: string; tutorialPath?: string; hotkey?: string }) => {
+  return (key: string) => {
     if (mode === Mode.EXPERT) return undefined;
-    return {
-      labelKey: key,
-      manualPath: options?.manualPath,
-      tutorialPath: options?.tutorialPath,
-      hotkey: options?.hotkey,
-    };
+    return key;
   };
 }
 

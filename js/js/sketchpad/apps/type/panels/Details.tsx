@@ -30,6 +30,7 @@ import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Author, guid, Guid, Kit, Type } from "../../../../semio";
 import { useIsInTypeScope, useKit, useKitCommands, useType } from "../../../kits/store";
+import { useTooltip } from "../../../store";
 import { useTypeAppCommands, useTypeAppHover, useTypeAppSelection } from "../store";
 
 export const TypeDetails: FC = () => {
@@ -40,6 +41,7 @@ export const TypeDetails: FC = () => {
 
 const TypeDetailsForm: FC = () => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -52,16 +54,24 @@ const TypeDetailsForm: FC = () => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input lazy label={t("type.name")} value={type.name} onLazyChange={(value) => updateTypeField({ name: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+          <Input 
+            lazy 
+            i18n="semio.type.panel.details.name"
+            value={type.name} 
+            onLazyChange={(value) => updateTypeField({ name: value })} 
+            startTransaction={startTransaction} 
+            finalizeTransaction={finalizeTransaction} 
+            abortTransaction={abortTransaction}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
           <Textarea
             lazy
-            label={t("type.description")}
+            i18n="semio.type.panel.details.description"
             value={type.description || ""}
-            placeholder={t("type.descriptionPlaceholder")}
+            placeholder={t("semio.type.descriptionPlaceholder")}
             onLazyChange={(value) => updateTypeField({ description: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -73,9 +83,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            label={t("type.icon")}
+            i18n="semio.type.panel.details.icon"
             value={type.icon || ""}
-            placeholder={t("type.iconPlaceholder")}
+            placeholder={t("semio.type.iconPlaceholder")}
             onLazyChange={(value) => updateTypeField({ icon: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -87,9 +97,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            label={t("type.image")}
+            i18n="semio.type.panel.details.image"
             value={type.image || ""}
-            placeholder={t("type.imagePlaceholder")}
+            placeholder={t("semio.type.imagePlaceholder")}
             onLazyChange={(value) => updateTypeField({ image: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -101,9 +111,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            label={t("type.variant")}
+            i18n="semio.type.panel.details.variant"
             value={type.variant || ""}
-            placeholder={t("type.variantPlaceholder")}
+            placeholder={t("semio.type.variantPlaceholder")}
             onLazyChange={(value) => updateTypeField({ variant: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -114,7 +124,15 @@ const TypeDetailsForm: FC = () => {
       {type.unit !== undefined && (
         <TreeItem>
           <TreeContent>
-            <Input lazy label={t("type.unit")} value={type.unit} onLazyChange={(value) => updateTypeField({ unit: value })} startTransaction={startTransaction} finalizeTransaction={finalizeTransaction} abortTransaction={abortTransaction} />
+            <Input 
+              lazy 
+              i18n="semio.type.panel.details.unit"
+              value={type.unit} 
+              onLazyChange={(value) => updateTypeField({ unit: value })} 
+              startTransaction={startTransaction} 
+              finalizeTransaction={finalizeTransaction} 
+              abortTransaction={abortTransaction}
+            />
           </TreeContent>
         </TreeItem>
       )}
@@ -130,6 +148,7 @@ export const RepresentationsSection: FC = () => {
 
 const RepresentationsSectionForm: FC = () => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, selectRepresentation, deselectRepresentation, hoverRepresentation, clearHover } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -153,7 +172,7 @@ const RepresentationsSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        label={t("type.representations")}
+        label={t("semio.type.representations")}
         actions={[
           {
             icon: <Plus />,
@@ -166,7 +185,7 @@ const RepresentationsSectionForm: FC = () => {
               });
               finalizeTransaction();
             },
-            title: t("common.add"),
+            title: t("semio.common.add"),
           },
         ]}
       >
@@ -196,7 +215,7 @@ const RepresentationsSectionForm: FC = () => {
                 <div onPointerEnter={() => hoverRepresentation(representation.guid)} onPointerLeave={() => clearHover()} onClick={() => (isSelected ? deselectRepresentation(representation.guid) : selectRepresentation(representation.guid))}>
                   <TreeItem
                     key={`representation-${index}`}
-                    label={representation.url || `${t("type.representation")} ${index + 1}`}
+                    label={representation.url || `${t("semio.type.representation")} ${index + 1}`}
                     sortable={true}
                     sortableId={`representation-${index}`}
                     isDragHandle={true}
@@ -213,14 +232,14 @@ const RepresentationsSectionForm: FC = () => {
                           });
                           finalizeTransaction();
                         },
-                        title: t("common.remove"),
+                        title: t("semio.common.remove"),
                       },
                     ]}
                   >
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          label={t("type.representationUrl")}
+                          i18n="semio.type.panel.details.representation.url"
                           value={representation.url}
                           onChange={(e) => {
                             updateRepresentation(representation.guid, { url: e.target.value });
@@ -233,9 +252,9 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          label={t("type.representationDescription")}
+                          i18n="semio.type.panel.details.representation.description"
                           value={representation.description || ""}
-                          placeholder={t("type.representationDescriptionPlaceholder")}
+                          placeholder={t("semio.type.representationDescriptionPlaceholder")}
                           onChange={(e) => {
                             updateRepresentation(representation.guid, { description: e.target.value });
                           }}
@@ -247,9 +266,9 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          label={t("type.representationTags")}
+                          i18n="semio.type.panel.details.representation.tags"
                           value={(representation.tags || []).join(", ")}
-                          placeholder={t("type.representationTagsPlaceholder")}
+                          placeholder={t("semio.type.representationTagsPlaceholder")}
                           onChange={(e) => {
                             updateRepresentation(representation.guid, {
                               tags: e.target.value
@@ -282,6 +301,7 @@ export const PortsListSection: FC = () => {
 
 const PortsListSectionForm: FC = () => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction, selectPort, deselectPort, hoverPort, clearHover } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -321,7 +341,7 @@ const PortsListSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        label={t("type.ports")}
+        label={t("semio.type.ports")}
         actions={[
           {
             icon: <Plus />,
@@ -341,7 +361,7 @@ const PortsListSectionForm: FC = () => {
               });
               finalizeTransaction();
             },
-            title: t("common.add"),
+            title: t("semio.common.add"),
           },
         ]}
       >
@@ -388,7 +408,7 @@ const PortsListSectionForm: FC = () => {
                 <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
                   <TreeItem
                     key={`port-${index}`}
-                    label={port.family || `${t("type.port")} ${index + 1}`}
+                    label={port.family || `${t("semio.type.port")} ${index + 1}`}
                     sortable={true}
                     sortableId={`port-${index}`}
                     isDragHandle={true}
@@ -405,16 +425,16 @@ const PortsListSectionForm: FC = () => {
                           });
                           finalizeTransaction();
                         },
-                        title: t("common.remove"),
+                        title: t("semio.common.remove"),
                       },
                     ]}
                   >
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          label={t("type.portFamily")}
+                          i18n="semio.type.panel.details.port.family"
                           value={port.family || ""}
-                          placeholder={t("type.portFamilyPlaceholder")}
+                          placeholder={t("semio.type.portFamilyPlaceholder")}
                           onChange={(e) => {
                             updatePort(port.guid, { family: e.target.value });
                           }}
@@ -426,9 +446,9 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          label={t("type.portDescription")}
+                          i18n="semio.type.panel.details.port.description"
                           value={port.description || ""}
-                          placeholder={t("type.portDescriptionPlaceholder")}
+                          placeholder={t("semio.type.portDescriptionPlaceholder")}
                           onChange={(e) => {
                             updatePort(port.guid, { description: e.target.value });
                           }}
@@ -440,7 +460,7 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs">{t("type.portT")}</label>
+                          <label className="text-xs">{t("semio.type.portT")}</label>
                           <Slider
                             value={[port.t ?? 0]}
                             onValueChange={([value]) => {
@@ -456,11 +476,11 @@ const PortsListSectionForm: FC = () => {
                         </div>
                       </TreeContent>
                     </TreeItem>
-                    <TreeItem label={t("type.portPoint")}>
+                    <TreeItem label={t("semio.type.portPoint")}>
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            label={t("common.x")}
+                            i18n="semio.type.panel.details.port.point.x"
                             value={port.point.x}
                             onChange={(value) => {
                               updatePort(port.guid, { point: { x: value } });
@@ -475,7 +495,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            label={t("common.y")}
+                            i18n="semio.type.panel.details.port.point.y"
                             value={port.point.y}
                             onChange={(value) => {
                               updatePort(port.guid, { point: { y: value } });
@@ -490,7 +510,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            label={t("common.z")}
+                            i18n="semio.type.panel.details.port.point.z"
                             value={port.point.z}
                             onChange={(value) => {
                               updatePort(port.guid, { point: { z: value } });
@@ -503,11 +523,11 @@ const PortsListSectionForm: FC = () => {
                         </TreeContent>
                       </TreeItem>
                     </TreeItem>
-                    <TreeItem label={t("type.portDirection")}>
+                    <TreeItem label={t("semio.type.portDirection")}>
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            label={t("common.x")}
+                            i18n="semio.type.panel.details.port.direction.x"
                             value={port.direction.x}
                             onChange={(value) => {
                               updatePort(port.guid, { direction: { x: value } });
@@ -522,7 +542,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            label={t("common.y")}
+                            i18n="semio.type.panel.details.port.direction.y"
                             value={port.direction.y}
                             onChange={(value) => {
                               updatePort(port.guid, { direction: { y: value } });
@@ -537,7 +557,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            label={t("common.z")}
+                            i18n="semio.type.panel.details.port.direction.z"
                             value={port.direction.z}
                             onChange={(value) => {
                               updatePort(port.guid, { direction: { z: value } });
@@ -553,9 +573,9 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          label={t("type.portCompatibleFamilies")}
+                          i18n="semio.type.panel.details.port.compatibleFamilies"
                           value={(port.compatibleFamilies || []).join(", ")}
-                          placeholder={t("type.portCompatibleFamiliesPlaceholder")}
+                          placeholder={t("semio.type.portCompatibleFamiliesPlaceholder")}
                           onChange={(e) => {
                             updatePort(port.guid, {
                               compatibleFamilies: e.target.value
@@ -588,6 +608,7 @@ export const AuthorsSection: FC = () => {
 
 const AuthorsSectionForm: FC = () => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -602,7 +623,7 @@ const AuthorsSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        label={t("type.authors")}
+        label={t("semio.type.authors")}
         actions={[
           {
             icon: <Plus />,
@@ -617,7 +638,7 @@ const AuthorsSectionForm: FC = () => {
               updateAuthors([...(type.authors || []), newAuthorGuid]);
               finalizeTransaction();
             },
-            title: t("common.add"),
+            title: t("semio.common.add"),
           },
         ]}
       >
@@ -642,7 +663,7 @@ const AuthorsSectionForm: FC = () => {
             {(item, index) => (
               <TreeItem
                 key={`author-${index}`}
-                label={item.name || `${t("type.author")} ${index + 1}`}
+                label={item.name || `${t("semio.type.author")} ${index + 1}`}
                 sortable={true}
                 sortableId={`author-${index}`}
                 isDragHandle={true}
@@ -654,14 +675,14 @@ const AuthorsSectionForm: FC = () => {
                       updateAuthors((type.authors || []).filter((_, i: number) => i !== index));
                       finalizeTransaction();
                     },
-                    title: t("common.remove"),
+                    title: t("semio.common.remove"),
                   },
                 ]}
               >
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      label={t("type.authorName")}
+                      i18n="semio.type.panel.details.author.name"
                       value={item.name}
                       onChange={(e) => {
                         kitCommands.updateAuthor(item.guid, { name: e.target.value });
@@ -674,7 +695,7 @@ const AuthorsSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      label={t("type.authorEmail")}
+                      i18n="semio.type.panel.details.author.email"
                       value={item.email}
                       onChange={(e) => {
                         kitCommands.updateAuthor(item.guid, { email: e.target.value });
@@ -701,6 +722,7 @@ export const AttributesSection: FC = () => {
 
 const AttributesSectionForm: FC = () => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -722,7 +744,7 @@ const AttributesSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        label={t("type.attributes")}
+        label={t("semio.type.attributes")}
         actions={[
           {
             icon: <Plus />,
@@ -735,7 +757,7 @@ const AttributesSectionForm: FC = () => {
               });
               finalizeTransaction();
             },
-            title: t("common.add"),
+            title: t("semio.common.add"),
           },
         ]}
       >
@@ -761,7 +783,7 @@ const AttributesSectionForm: FC = () => {
             {(attribute, index) => (
               <TreeItem
                 key={`attribute-${index}`}
-                label={attribute.key || `${t("type.attribute")} ${index + 1}`}
+                label={attribute.key || `${t("semio.type.attribute")} ${index + 1}`}
                 sortable={true}
                 sortableId={`attribute-${index}`}
                 isDragHandle={true}
@@ -777,14 +799,14 @@ const AttributesSectionForm: FC = () => {
                       });
                       finalizeTransaction();
                     },
-                    title: t("common.remove"),
+                    title: t("semio.common.remove"),
                   },
                 ]}
               >
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      label={t("type.attributeName")}
+                      i18n="semio.type.panel.details.attribute.name"
                       value={attribute.key}
                       onChange={(e) => {
                         updateAttribute(attribute.guid, { key: e.target.value });
@@ -797,9 +819,9 @@ const AttributesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      label={t("type.attributeValue")}
+                      i18n="semio.type.panel.details.attribute.value"
                       value={attribute.value || ""}
-                      placeholder={t("type.attributeValuePlaceholder")}
+                      placeholder={t("semio.type.attributeValuePlaceholder")}
                       onChange={(e) => {
                         updateAttribute(attribute.guid, { value: e.target.value });
                       }}
@@ -811,9 +833,9 @@ const AttributesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      label={t("type.attributeDefinition")}
+                      i18n="semio.type.panel.details.attribute.definition"
                       value={attribute.definition || ""}
-                      placeholder={t("type.attributeDefinitionPlaceholder")}
+                      placeholder={t("semio.type.attributeDefinitionPlaceholder")}
                       onChange={(e) => {
                         updateAttribute(attribute.guid, { definition: e.target.value });
                       }}
@@ -839,6 +861,7 @@ export const PortSection: FC<{ portGuid: Guid }> = ({ portGuid }) => {
 
 const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -849,7 +872,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("type.portNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{t("semio.type.portNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -884,9 +907,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            label={t("type.portFamily")}
+            i18n="semio.type.panel.details.port.family"
             value={port.family || ""}
-            placeholder={t("type.portFamilyPlaceholder")}
+            placeholder={t("semio.type.portFamilyPlaceholder")}
             onChange={(e) => {
               updatePort(port.guid, { family: e.target.value });
             }}
@@ -898,9 +921,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Textarea
-            label={t("type.portDescription")}
+            i18n="semio.type.panel.details.port.description"
             value={port.description || ""}
-            placeholder={t("type.portDescriptionPlaceholder")}
+            placeholder={t("semio.type.portDescriptionPlaceholder")}
             onChange={(e) => {
               updatePort(port.guid, { description: e.target.value });
             }}
@@ -912,7 +935,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <div className="flex flex-col gap-1">
-            <label className="text-xs">{t("type.portT")}</label>
+            <label className="text-xs">{t("semio.type.portT")}</label>
             <Slider
               value={[port.t ?? 0]}
               onValueChange={([value]) => {
@@ -928,11 +951,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("type.portPoint")}>
+      <TreeItem label={t("semio.type.portPoint")}>
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.x")}
+              i18n="semio.type.panel.details.port.point.x"
               value={port.point.x}
               onChange={(value) => {
                 updatePort(port.guid, { point: { x: value } });
@@ -947,7 +970,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.y")}
+              i18n="semio.type.panel.details.port.point.y"
               value={port.point.y}
               onChange={(value) => {
                 updatePort(port.guid, { point: { y: value } });
@@ -962,7 +985,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.z")}
+              i18n="semio.type.panel.details.port.point.z"
               value={port.point.z}
               onChange={(value) => {
                 updatePort(port.guid, { point: { z: value } });
@@ -975,11 +998,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           </TreeContent>
         </TreeItem>
       </TreeItem>
-      <TreeItem label={t("type.portDirection")}>
+      <TreeItem label={t("semio.type.portDirection")}>
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.x")}
+              i18n="semio.type.panel.details.port.direction.x"
               value={port.direction.x}
               onChange={(value) => {
                 updatePort(port.guid, { direction: { x: value } });
@@ -994,7 +1017,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.y")}
+              i18n="semio.type.panel.details.port.direction.y"
               value={port.direction.y}
               onChange={(value) => {
                 updatePort(port.guid, { direction: { y: value } });
@@ -1009,7 +1032,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.z")}
+              i18n="semio.type.panel.details.port.direction.z"
               value={port.direction.z}
               onChange={(value) => {
                 updatePort(port.guid, { direction: { z: value } });
@@ -1025,9 +1048,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            label={t("type.portCompatibleFamilies")}
+            i18n="semio.type.panel.details.port.compatibleFamilies"
             value={(port.compatibleFamilies || []).join(", ")}
-            placeholder={t("type.portCompatibleFamiliesPlaceholder")}
+            placeholder={t("semio.type.portCompatibleFamiliesPlaceholder")}
             onChange={(e) => {
               updatePort(port.guid, {
                 compatibleFamilies: e.target.value
@@ -1053,6 +1076,7 @@ export const PortsMultipleSection: FC<{ portGuids: Guid[] }> = ({ portGuids }) =
 
 const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -1063,7 +1087,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("type.portsNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{t("semio.type.portsNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -1115,9 +1139,9 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            label={t("type.portFamily")}
+            i18n="semio.type.panel.details.port.family"
             value={commonFamily || ""}
-            placeholder={commonFamily === undefined ? t("common.mixedValues") : t("type.portFamilyPlaceholder")}
+            placeholder={commonFamily === undefined ? t("semio.common.mixedValues") : t("semio.type.portFamilyPlaceholder")}
             onChange={(e) => {
               updatePorts({ family: e.target.value });
             }}
@@ -1129,7 +1153,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
       <TreeItem>
         <TreeContent>
           <div className="flex flex-col gap-1">
-            <label className="text-xs">{t("type.portT")}</label>
+            <label className="text-xs">{t("semio.type.portT")}</label>
             <Slider
               value={[commonT ?? 0]}
               onValueChange={([value]) => {
@@ -1145,11 +1169,11 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("type.portPoint")}>
+      <TreeItem label={t("semio.type.portPoint")}>
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.x")}
+              i18n="semio.type.panel.details.port.point.x"
               value={commonPointX}
               onChange={(value) => {
                 updatePorts({ point: { x: value } });
@@ -1164,7 +1188,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.y")}
+              i18n="semio.type.panel.details.port.point.y"
               value={commonPointY}
               onChange={(value) => {
                 updatePorts({ point: { y: value } });
@@ -1179,7 +1203,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.z")}
+              i18n="semio.type.panel.details.port.point.z"
               value={commonPointZ}
               onChange={(value) => {
                 updatePorts({ point: { z: value } });
@@ -1192,11 +1216,11 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
           </TreeContent>
         </TreeItem>
       </TreeItem>
-      <TreeItem label={t("type.portDirection")}>
+      <TreeItem label={t("semio.type.portDirection")}>
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.x")}
+              i18n="semio.type.panel.details.port.direction.x"
               value={commonDirectionX}
               onChange={(value) => {
                 updatePorts({ direction: { x: value } });
@@ -1211,7 +1235,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.y")}
+              i18n="semio.type.panel.details.port.direction.y"
               value={commonDirectionY}
               onChange={(value) => {
                 updatePorts({ direction: { y: value } });
@@ -1226,7 +1250,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              label={t("common.z")}
+              i18n="semio.type.panel.details.port.direction.z"
               value={commonDirectionZ}
               onChange={(value) => {
                 updatePorts({ direction: { z: value } });
@@ -1242,3 +1266,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
     </>
   );
 };
+
+
+
+
+
+
+

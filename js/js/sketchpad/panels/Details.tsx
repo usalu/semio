@@ -79,10 +79,10 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
       scopeWrapper={ScopedContent}
       additionalSections={
         sections.length === 0 ? (
-          <TreeSection label={t("details.noSelection")} defaultOpen={true}>
+          <TreeSection label={t("semio.details.noSelection")} defaultOpen={true}>
             <TreeItem>
               <TreeContent>
-                <p className="text-sm text-muted-foreground">{t("details.noSelectionMessage")}</p>
+                <p className="text-sm text-muted-foreground">{t("semio.details.noSelectionMessage")}</p>
               </TreeContent>
             </TreeItem>
           </TreeSection>

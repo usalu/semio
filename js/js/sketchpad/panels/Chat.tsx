@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { FC } from "react";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Textarea } from "../../elements/input/Textarea";
 import Panel from "../Panel";
@@ -32,6 +32,15 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
   const isMobile = useIsMobile();
+  const [input, setInput] = useState("");
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      // TODO: Handle send message
+      setInput("");
+    }
+  };
 
   return (
     <Panel
@@ -42,7 +51,13 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       resizeSide="left"
       footer={
         <div className={`${isMobile ? "p-2" : "p-1"} border-t`}>
-          <Textarea placeholder={t("chat.placeholder")} tooltip={tooltip("chat.input", { manualPath: "interface#chat", tutorialPath: "hello-semio/sketch-setup" })} />
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={t("semio.chat.placeholder")}
+            i18n="semio.chat.panel.input"
+          />
         </div>
       }
     />

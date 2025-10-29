@@ -37,67 +37,67 @@ export const QualityDetails: FC = () => {
 
   return (
     <>
-      <TreeItem label={t("quality.key")}>
+      <TreeItem label={t("semio.quality.key")}>
         <TreeContent>
           <Input value={quality.key ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.name")}>
+      <TreeItem label={t("semio.quality.name")}>
         <TreeContent>
           <Input value={quality.name ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.description")}>
+      <TreeItem label={t("semio.quality.description")}>
         <TreeContent>
           <Textarea value={quality.description ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.formula")}>
+      <TreeItem label={t("semio.quality.formula")}>
         <TreeContent>
-          <Textarea value={quality.formula ?? ""} onChange={(e) => updateFormula(e.target.value)} className="w-full font-mono text-xs" rows={5} placeholder={t("quality.formulaPlaceholder")} />
+          <Textarea value={quality.formula ?? ""} onChange={(e) => updateFormula(e.target.value)} className="w-full font-mono text-xs" rows={5} placeholder={t("semio.quality.formulaPlaceholder")} />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.defaultSiUnit")}>
+      <TreeItem label={t("semio.quality.defaultSiUnit")}>
         <TreeContent>
           <Input value={quality.defaultSiUnit ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.defaultImperialUnit")}>
+      <TreeItem label={t("semio.quality.defaultImperialUnit")}>
         <TreeContent>
           <Input value={quality.defaultImperialUnit ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.kind")}>
+      <TreeItem label={t("semio.quality.kind")}>
         <TreeContent>
           <Input type="number" value={quality.kind?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.canScale")}>
+      <TreeItem label={t("semio.quality.canScale")}>
         <TreeContent>
           <Input type="checkbox" checked={quality.canScale ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.defaultValue")}>
+      <TreeItem label={t("semio.quality.defaultValue")}>
         <TreeContent>
           <Input type="number" value={quality.defaultValue?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.min")}>
+      <TreeItem label={t("semio.quality.min")}>
         <TreeContent>
           <Input type="number" value={quality.min?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.isMinExcluded")}>
+      <TreeItem label={t("semio.quality.isMinExcluded")}>
         <TreeContent>
           <Input type="checkbox" checked={quality.isMinExcluded ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.max")}>
+      <TreeItem label={t("semio.quality.max")}>
         <TreeContent>
           <Input type="number" value={quality.max?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("quality.isMaxExcluded")}>
+      <TreeItem label={t("semio.quality.isMaxExcluded")}>
         <TreeContent>
           <Input type="checkbox" checked={quality.isMaxExcluded ?? false} disabled className="h-4 w-4" />
         </TreeContent>

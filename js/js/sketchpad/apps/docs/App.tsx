@@ -40,7 +40,7 @@ const DocsApp: FC = () => {
 
     addSection("workbench", {
       id: "docs-navigation",
-      label: t("docs.docs", "Docs"),
+      label: t("semio.docs.docs", "Docs"),
       order: 1,
       defaultOpen: true,
       content: WorkbenchWrapper,
@@ -48,7 +48,7 @@ const DocsApp: FC = () => {
 
     addSection("details", {
       id: "docs-toc",
-      label: t("docs.page", "Page"),
+      label: t("semio.docs.page", "Page"),
       order: 1,
       defaultOpen: true,
       content: DetailsWrapper,
@@ -56,7 +56,7 @@ const DocsApp: FC = () => {
 
     addSection("settings", {
       id: "docs-settings",
-      label: t("docs.settings", "Settings"),
+      label: t("semio.docs.settings", "Settings"),
       order: 1,
       defaultOpen: true,
       content: SettingsWrapper,

@@ -23,7 +23,7 @@ import { type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "../../semio";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { toggleVariants } from "./Toggle";
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
@@ -60,10 +60,10 @@ function ToggleGroup({ className, label, level = "base", children, ...restProps 
 function ToggleGroupItem({
   className,
   children,
-  tooltip,
+  i18n,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
-  tooltip?: TooltipConfig;
+  i18n?: string;
 }) {
   const context = React.useContext(ToggleGroupContext);
   const mode = useTooltipMode();
@@ -86,14 +86,14 @@ function ToggleGroupItem({
     </ToggleGroupPrimitive.Item>
   );
 
-  if (tooltip) {
+  if (i18n) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
           <span>{toggleGroupItemElement}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <EnhancedTooltipContent config={tooltip} mode={mode} />
+          <I18nTooltipContent i18nKey={i18n} mode={mode} />
         </TooltipContent>
       </Tooltip>
     );

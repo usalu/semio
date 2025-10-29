@@ -21,10 +21,10 @@
 import * as React from "react";
 
 import { cn } from "../../semio";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { useTranslation } from "react-i18next";
 
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange"> {
-  label?: string;
   lazy?: boolean;
   value?: string | number | readonly string[];
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -32,13 +32,14 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
-  tooltip?: TooltipConfig;
+  i18n: string;
 }
 
-function Textarea({ className, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, tooltip, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, i18n, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const mode = useTooltipMode();
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -101,29 +102,21 @@ function Textarea({ className, label, lazy, value: externalValue, onChange, onLa
     />
   );
 
-  const wrappedTextarea = tooltip ? (
-    <Tooltip>
-      <TooltipTrigger asChild>{textareaElement}</TooltipTrigger>
-      <TooltipContent>
-        <EnhancedTooltipContent config={tooltip} mode={mode} />
-      </TooltipContent>
-    </Tooltip>
-  ) : (
-    textareaElement
+  const label = t(`${i18n}.label`);
+
+  return (
+    <div className="flex items-start gap-2 min-w-0">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:text-hover">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+        </TooltipContent>
+      </Tooltip>
+      {textareaElement}
+    </div>
   );
-
-  if (label) {
-    return (
-      <div className="flex items-start gap-2 min-w-0">
-        <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate" title={label}>
-          {label}
-        </span>
-        {wrappedTextarea}
-      </div>
-    );
-  }
-
-  return wrappedTextarea;
 }
 
 export { Textarea };

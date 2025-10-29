@@ -46,7 +46,7 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("kit.notFound")}</p>
+          <p className="text-sm text-muted-foreground">{t("semio.kit.notFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -55,27 +55,27 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.name")} value={kitShallow.name} readOnly />
+          <Input label={t("semio.kit.name")} value={kitShallow.name} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.version")} value={kitShallow.version || ""} placeholder={t("kit.versionPlaceholder")} readOnly />
+          <Input label={t("semio.kit.version")} value={kitShallow.version || ""} placeholder={t("semio.kit.versionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea label={t("kit.description")} value={kitShallow.description || ""} placeholder={t("kit.descriptionPlaceholder")} readOnly />
+          <Textarea label={t("semio.kit.description")} value={kitShallow.description || ""} placeholder={t("semio.kit.descriptionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.icon")} value={kitShallow.icon || ""} placeholder={t("kit.iconPlaceholder")} readOnly />
+          <Input label={t("semio.kit.icon")} value={kitShallow.icon || ""} placeholder={t("semio.kit.iconPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.image")} value={kitShallow.image || ""} placeholder={t("kit.imagePlaceholder")} readOnly />
+          <Input label={t("semio.kit.image")} value={kitShallow.image || ""} placeholder={t("semio.kit.imagePlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
     </>
@@ -105,27 +105,27 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.name")} value={commonName || ""} placeholder={commonName === undefined ? t("common.mixedValues") : undefined} readOnly />
+          <Input label={t("semio.kit.name")} value={commonName || ""} placeholder={commonName === undefined ? t("semio.common.mixedValues") : undefined} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.version")} value={commonVersion || ""} placeholder={commonVersion === undefined ? t("common.mixedValues") : t("kit.versionPlaceholder")} readOnly />
+          <Input label={t("semio.kit.version")} value={commonVersion || ""} placeholder={commonVersion === undefined ? t("semio.common.mixedValues") : t("semio.kit.versionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea label={t("kit.description")} value={commonDescription || ""} placeholder={commonDescription === undefined ? t("common.mixedValues") : t("kit.descriptionPlaceholder")} readOnly />
+          <Textarea label={t("semio.kit.description")} value={commonDescription || ""} placeholder={commonDescription === undefined ? t("semio.common.mixedValues") : t("semio.kit.descriptionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.icon")} value={commonIcon || ""} placeholder={commonIcon === undefined ? t("common.mixedValues") : t("kit.iconPlaceholder")} readOnly />
+          <Input label={t("semio.kit.icon")} value={commonIcon || ""} placeholder={commonIcon === undefined ? t("semio.common.mixedValues") : t("semio.kit.iconPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input label={t("kit.image")} value={commonImage || ""} placeholder={commonImage === undefined ? t("common.mixedValues") : t("kit.imagePlaceholder")} readOnly />
+          <Input label={t("semio.kit.image")} value={commonImage || ""} placeholder={commonImage === undefined ? t("semio.common.mixedValues") : t("semio.kit.imagePlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
     </>

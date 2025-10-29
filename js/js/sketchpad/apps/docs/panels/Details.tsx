@@ -89,7 +89,7 @@ const Details: FC<DetailsProps> = ({ headings: propsHeadings, onNavigate }) => {
   if (flatHeadings.length === 0) {
     return (
       <div className="p-2">
-        <p className="text-sm text-muted-foreground">{t("docs.noHeadings")}</p>
+        <p className="text-sm text-muted-foreground">{t("semio.docs.noHeadings")}</p>
       </div>
     );
   }

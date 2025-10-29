@@ -33,7 +33,7 @@ import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadComma
 const LanguageSwitcher: FC = () => {
   const { i18n } = useTranslation();
   return (
-    <Select label={t("settings.language")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
+    <Select label={t("semio.settings.language")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
       <SelectTrigger className="w-32" level="panel">
         <SelectValue />
       </SelectTrigger>
@@ -64,17 +64,17 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
       width={width}
       resizeSide="left"
       additionalSections={
-        <TreeSection label={t("settings.general")} defaultOpen={true}>
+        <TreeSection label={t("semio.settings.general")} defaultOpen={true}>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
-                <ToggleGroupItem value={Theme.SYSTEM} tooltip={tooltip("settings.theme.system", { manualPath: "interface#theme", tutorialPath: "hello-semio/sketch-setup" })}>
+              <ToggleGroup label={t("semio.settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
+                <ToggleGroupItem value={Theme.SYSTEM} tooltip={tooltip("settings.theme.system")}>
                   <Laptop />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Theme.LIGHT} tooltip={tooltip("settings.theme.light", { manualPath: "interface#theme", tutorialPath: "hello-semio/sketch-setup" })}>
+                <ToggleGroupItem value={Theme.LIGHT} tooltip={tooltip("settings.theme.light")}>
                   <SunIcon />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Theme.DARK} tooltip={tooltip("settings.theme.dark", { manualPath: "interface#theme", tutorialPath: "hello-semio/sketch-setup" })}>
+                <ToggleGroupItem value={Theme.DARK} tooltip={tooltip("settings.theme.dark")}>
                   <MoonIcon />
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -83,11 +83,11 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           {!isMobile && (
             <TreeItem>
               <TreeContent>
-                <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
-                  <ToggleGroupItem value={Layout.NORMAL} tooltip={tooltip("settings.layout.normal", { manualPath: "interface#layout", tutorialPath: "hello-semio/sketch-setup" })}>
+                <ToggleGroup label={t("semio.settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
+                  <ToggleGroupItem value={Layout.NORMAL} tooltip={tooltip("settings.layout.normal")}>
                     <MonitorIcon />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value={Layout.TOUCH} tooltip={tooltip("settings.layout.touch", { manualPath: "interface#layout", tutorialPath: "hello-semio/sketch-setup" })}>
+                  <ToggleGroupItem value={Layout.TOUCH} tooltip={tooltip("settings.layout.touch")}>
                     <FingerprintIcon />
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -96,14 +96,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           )}
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
-                <ToggleGroupItem value={Mode.BEGINNER} tooltip={tooltip("settings.mode.beginner", { manualPath: "interface#mode", tutorialPath: "hello-semio/sketch-setup" })}>
+              <ToggleGroup label={t("semio.settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
+                <ToggleGroupItem value={Mode.BEGINNER} tooltip={tooltip("settings.mode.beginner")}>
                   <GraduationCap />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Mode.NORMAL} tooltip={tooltip("settings.mode.normal", { manualPath: "interface#mode", tutorialPath: "hello-semio/sketch-setup" })}>
+                <ToggleGroupItem value={Mode.NORMAL} tooltip={tooltip("settings.mode.normal")}>
                   <Sparkles />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Mode.EXPERT} tooltip={tooltip("settings.mode.expert", { manualPath: "interface#mode", tutorialPath: "hello-semio/sketch-setup" })}>
+                <ToggleGroupItem value={Mode.EXPERT} tooltip={tooltip("settings.mode.expert")}>
                   <BrainCircuit />
                 </ToggleGroupItem>
               </ToggleGroup>

@@ -22,10 +22,10 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { useTranslation } from "react-i18next";
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
-  label?: string;
   lazy?: boolean;
   value?: string | number | readonly string[];
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -34,15 +34,16 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
-  tooltip?: TooltipConfig;
+  i18n?: string;
 }
 
-function Input({ className, type, label, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, tooltip, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, i18n, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
   const mode = useTooltipMode();
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -119,27 +120,25 @@ function Input({ className, type, label, lazy, value: externalValue, onChange, o
     />
   );
 
-  const wrappedInput = tooltip ? (
-    <Tooltip>
-      <TooltipTrigger asChild>{inputElement}</TooltipTrigger>
-      <TooltipContent>
-        <EnhancedTooltipContent config={tooltip} mode={mode} />
-      </TooltipContent>
-    </Tooltip>
-  ) : (
-    inputElement
-  );
-
-  if (label) {
-    return (
-      <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>
-        {wrappedInput}
-      </div>
-    );
+  if (!i18n) {
+    return <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>{inputElement}</div>;
   }
 
-  return <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>{wrappedInput}</div>;
+  const label = t(`${i18n}.label`);
+
+  return (
+    <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:text-hover">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+        </TooltipContent>
+      </Tooltip>
+      {inputElement}
+    </div>
+  );
 }
 
 export { Input };

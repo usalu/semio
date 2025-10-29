@@ -345,7 +345,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     const guid = crypto.randomUUID();
     const now = new Date();
     const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(t("kit.defaultName"), existingNames);
+    const uniqueName = generateUniqueName(t("semio.kit.defaultName"), existingNames);
     sketchpadCommands.createKit({
       guid,
       name: uniqueName,
@@ -361,7 +361,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     const newGuid = crypto.randomUUID();
     const now = new Date();
     const existingVersions = kits.filter((k) => k.name === kit.name).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(t("kit.newVersion"), existingVersions);
+    const uniqueVersion = generateUniqueName(t("semio.kit.newVersion"), existingVersions);
     sketchpadCommands.createKit({
       guid: newGuid,
       name: kit.name,
@@ -377,7 +377,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allDesigns.map((d) => d.name);
-      const uniqueName = name || generateUniqueName(t("design.defaultName"), existingNames);
+      const uniqueName = name || generateUniqueName(t("semio.design.defaultName"), existingNames);
       kitCommands.createDesign({ guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
       navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
@@ -389,7 +389,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allTypes.map((t) => t.name);
-      const uniqueName = name || generateUniqueName(t("type.defaultName"), existingNames);
+      const uniqueName = name || generateUniqueName(t("semio.type.defaultName"), existingNames);
       kitCommands.createType({ guid, name: uniqueName, variant: "", ports: [] });
       navigate(`/kits/${kitGuid}/types/${guid}`);
     },
@@ -403,7 +403,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       if (!isType) {
         const d = designOrType as Design;
         const existingVariants = allDesigns.filter((design) => design.name === d.name).map((design) => design.variant || "");
-        const uniqueVariant = generateUniqueName(t("design.newVariant"), existingVariants);
+        const uniqueVariant = generateUniqueName(t("semio.design.newVariant"), existingVariants);
         kitCommands.createDesign({
           guid,
           name: d.name,
@@ -416,7 +416,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       } else {
         const typeObj = designOrType as Type;
         const existingVariants = allTypes.filter((type) => type.name === typeObj.name).map((type) => type.variant || "");
-        const uniqueVariant = generateUniqueName(t("type.newVariant"), existingVariants);
+        const uniqueVariant = generateUniqueName(t("semio.type.newVariant"), existingVariants);
         kitCommands.createType({
           guid,
           name: typeObj.name,
@@ -434,7 +434,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingViews = allDesigns.filter((d) => d.name === design.name && (d.variant || "") === (design.variant || "")).map((d) => d.view || "");
-      const uniqueView = generateUniqueName(t("design.newView"), existingViews);
+      const uniqueView = generateUniqueName(t("semio.design.newView"), existingViews);
       kitCommands.createDesign({
         guid,
         name: design.name,
@@ -500,7 +500,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       }
     });
     const items = Array.from(variants.entries()).map(([variant, d]) => ({
-      label: variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>,
+      label: variant || <span className="italic opacity-70">{t("semio.design.defaultVariant")}</span>,
       href: `/kits/${kitGuid}/designs/${d.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
@@ -512,7 +512,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     const items = allDesigns
       .filter((d) => d.name === design.name && (d.variant || "") === (design.variant || ""))
       .map((d) => ({
-        label: d.view || <span className="italic opacity-70">{t("design.defaultView")}</span>,
+        label: d.view || <span className="italic opacity-70">{t("semio.design.defaultView")}</span>,
         href: `/kits/${kitGuid}/designs/${d.guid}`,
       }));
     items.push({ label: "+ " + t("navbar.createView"), href: "#create-view" });
@@ -543,7 +543,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       }
     });
     const items = Array.from(variants.entries()).map(([variant, typeObj]) => ({
-      label: variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>,
+      label: variant || <span className="italic opacity-70">{t("semio.type.defaultVariant")}</span>,
       href: `/kits/${kitGuid}/types/${typeObj.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVariant"), href: "#create-variant" });
@@ -555,7 +555,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     if (!kit?.name) return [];
     const sameNameKits = kits.filter((k) => k.name === kit.name);
     const items = sameNameKits.map((k) => ({
-      label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
+      label: k.version || <span className="italic opacity-70">{t("semio.kit.defaultVersion")}</span>,
       href: `/kits/${k.guid}`,
     }));
     items.push({ label: "+ " + t("navbar.createVersion"), href: "#create-version" });
@@ -588,7 +588,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         return kKind === homeKind;
       })
       .map((k) => ({
-        label: k.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>,
+        label: k.version || <span className="italic opacity-70">{t("semio.kit.defaultVersion")}</span>,
         href: `/kits/${k.guid}`,
       }));
   }, [homeName, homeKind, kits, store, t]);
@@ -630,7 +630,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }
 
     return Array.from(variantSet).map((variant) => ({
-      label: variant || <span className="italic opacity-70">{filteredKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>,
+      label: variant || <span className="italic opacity-70">{filteredKind === "designs" ? t("semio.design.defaultVariant") : t("semio.type.defaultVariant")}</span>,
       href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(variant)}`,
     }));
   }, [kit, filteredKind, filteredName, allDesigns, allTypes, kitGuid, t]);
@@ -647,7 +647,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     });
 
     return Array.from(viewSet).map((view) => ({
-      label: view || <span className="italic opacity-70">{t("design.defaultView")}</span>,
+      label: view || <span className="italic opacity-70">{t("semio.design.defaultView")}</span>,
       href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(view)}`,
     }));
   }, [kit, filteredKind, filteredName, filteredVariant, allDesigns, kitGuid, t]);
@@ -660,19 +660,19 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     <Breadcrumb className="flex-1 min-w-0">
       <BreadcrumbList>
         {/* Always show Home icon with dropdown to select kinds */}
-        <BreadcrumbItem tooltip={tooltip("navbar.home", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup" })}>
+        <BreadcrumbItem i18n="semio.navbar.home">
           <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
 
         {/* Show separator with kind selector dropdown */}
-        <BreadcrumbSeparator items={kitKindItems} tooltip={tooltip("navbar.kitKinds", { manualPath: "kit#kinds", tutorialPath: "hello-semio/save-kit" })} onNavigate={(href) => navigate(href)} />
+        <BreadcrumbSeparator items={kitKindItems} i18n="semio.navbar.kitKinds" onNavigate={(href) => navigate(href)} />
 
         {/* If viewing a kit (or we have a selected home kind), show the kind breadcrumb */}
         {(kitGuid && kitKind) || homeKind ? (
           <>
-            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind || homeKind}`, { manualPath: "kit#kinds", tutorialPath: "hello-semio/save-kit" })}>
+            <BreadcrumbItem tooltip={tooltip(`breadcrumb.${kitKind || homeKind}`)}>
               <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
                 {(kitKind === "temporary" || homeKind === "temporary") && <Clock size={16} />}
                 {(kitKind === "local" || homeKind === "local") && <HardDrive size={16} />}
@@ -681,19 +681,19 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
 
             {/* Show kits dropdown when on home page with kind selected */}
-            {!kitGuid && <BreadcrumbSeparator items={homeKitsForKind} tooltip={tooltip("navbar.kits", { manualPath: "kit#overview", tutorialPath: "hello-semio/save-kit" })} onNavigate={(href) => navigate(href)} />}
+            {!kitGuid && <BreadcrumbSeparator items={homeKitsForKind} i18n="semio.navbar.kits" onNavigate={(href) => navigate(href)} />}
 
             {homeName && (
               <>
-                <BreadcrumbItem tooltip={tooltip("navbar.kitName", { manualPath: "kit#metadata", tutorialPath: "hello-semio/save-kit" })}>
+                <BreadcrumbItem i18n="semio.navbar.kitName">
                   <BreadcrumbLink onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
                     {homeName}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator items={homeVersionsForName} tooltip={tooltip("navbar.versions", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })} onNavigate={(href) => navigate(href)} />
+                <BreadcrumbSeparator items={homeVersionsForName} i18n="semio.navbar.versions" onNavigate={(href) => navigate(href)} />
                 {homeVersion !== null && (
-                  <BreadcrumbItem tooltip={tooltip("navbar.kitVersion", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })}>
-                    <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}</BreadcrumbLink>
+                  <BreadcrumbItem i18n="semio.navbar.kitVersion">
+                    <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("semio.kit.defaultVersion")}</span>}</BreadcrumbLink>
                   </BreadcrumbItem>
                 )}
               </>
@@ -702,7 +702,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               <>
                 <BreadcrumbSeparator
                   items={kitItemsWithCreate}
-                  tooltip={tooltip("navbar.kits", { manualPath: "kit#overview", tutorialPath: "hello-semio/save-kit" })}
+                  i18n="semio.navbar.kits"
                   onNavigate={(href) => {
                     if (href === "#create-kit") handleCreateKit();
                     else navigate(href);
@@ -723,7 +723,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator
                   items={kitVersionItems}
-                  tooltip={tooltip("navbar.versions")}
+                  i18n="semio.navbar.versions"
                   onNavigate={(href) => {
                     if (href === "#create-version") handleCreateVersion();
                     else navigate(href);
@@ -740,7 +740,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     style={{ cursor: "pointer" }}
                     title={tooltip("navbar.kitVersion")}
                   >
-                    {kit?.version || <span className="italic opacity-70">{t("kit.defaultVersion")}</span>}
+                    {kit?.version || <span className="italic opacity-70">{t("semio.kit.defaultVersion")}</span>}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </>
@@ -750,10 +750,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isKitApp && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
+            <BreadcrumbSeparator items={artifactKinds} i18n="semio.navbar.artifacts" onNavigate={(href) => navigate(href)} />
             {filteredKind && (
               <>
-                <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`, { manualPath: `${filteredKind === "designs" ? "design" : filteredKind === "types" ? "type" : filteredKind === "qualities" ? "quality" : "kit"}#overview`, tutorialPath: `hello-semio/${filteredKind === "designs" ? "model-design" : filteredKind === "types" ? "model-brick-set" : "save-kit"}` })}>
+                <BreadcrumbItem tooltip={tooltip(`breadcrumb.${filteredKind}`)}>
                   <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }}>
                     {filteredKind === "designs" && <Layout size={16} />}
                     {filteredKind === "types" && <Box size={16} />}
@@ -763,7 +763,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbBreak />
-                <BreadcrumbSeparator items={filteredNameItems} tooltip={tooltip("navbar.selectName", { manualPath: "kit#artifacts" })} onNavigate={(href) => navigate(href)} />
+                <BreadcrumbSeparator items={filteredNameItems} i18n="semio.navbar.selectName" onNavigate={(href) => navigate(href)} />
                 {filteredName !== null && (
                   <>
                     <BreadcrumbItem>
@@ -780,7 +780,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredVariantItems} tooltip={tooltip("navbar.selectVariant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })} onNavigate={(href) => navigate(href)} />
+                    <BreadcrumbSeparator items={filteredVariantItems} i18n="semio.navbar.selectVariant" onNavigate={(href) => navigate(href)} />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && (
@@ -796,10 +796,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         style={{ cursor: "pointer" }}
                         title={tooltip("navbar.variant")}
                       >
-                        {filteredVariant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}
+                        {filteredVariant || <span className="italic opacity-70">{t("semio.design.defaultVariant")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredViewItems} tooltip={tooltip("navbar.selectView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })} onNavigate={(href) => navigate(href)} />
+                    <BreadcrumbSeparator items={filteredViewItems} i18n="semio.navbar.selectView" onNavigate={(href) => navigate(href)} />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && filteredView !== null && (
@@ -817,7 +817,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         style={{ cursor: "pointer" }}
                         title={tooltip("navbar.view")}
                       >
-                        {filteredView || <span className="italic opacity-70">{t("design.defaultView")}</span>}
+                        {filteredView || <span className="italic opacity-70">{t("semio.design.defaultView")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
                   </>
@@ -829,8 +829,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isDesignApp && design && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.designs", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}>
+            <BreadcrumbSeparator items={artifactKinds} i18n="semio.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem i18n="semio.breadcrumb.designs">
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }}>
                 <Layout size={16} />
               </BreadcrumbLink>
@@ -838,13 +838,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={designNameItems}
-              tooltip={tooltip("navbar.selectDesign", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}
+              i18n="semio.navbar.selectDesign"
               onNavigate={(href) => {
                 if (href === "#create-design") handleCreateDesign();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.design", { manualPath: "design#overview", tutorialPath: "hello-semio/model-design" })}>
+            <BreadcrumbItem i18n="semio.navbar.design">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -858,13 +858,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
-              tooltip={tooltip("navbar.selectVariant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })}
+              i18n="semio.navbar.selectVariant"
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(design, false);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.variant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })}>
+            <BreadcrumbItem i18n="semio.navbar.variant">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -873,18 +873,18 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&select=${design.guid}`);
                 }}
               >
-                <button type="button">{design.variant || <span className="italic opacity-70">{t("design.defaultVariant")}</span>}</button>
+                <button type="button">{design.variant || <span className="italic opacity-70">{t("semio.design.defaultVariant")}</span>}</button>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
-              tooltip={tooltip("navbar.selectView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}
+              i18n="semio.navbar.selectView"
               onNavigate={(href) => {
                 if (href === "#create-view") handleCreateView(design);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.view", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}>
+            <BreadcrumbItem i18n="semio.navbar.view">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -893,7 +893,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}&select=${design.guid}`);
                 }}
               >
-                <button type="button">{design.view || <span className="italic opacity-70">{t("design.defaultView")}</span>}</button>
+                <button type="button">{design.view || <span className="italic opacity-70">{t("semio.design.defaultView")}</span>}</button>
               </BreadcrumbLink>
             </BreadcrumbItem>
           </>
@@ -901,8 +901,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isTypeApp && type && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.types", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}>
+            <BreadcrumbSeparator items={artifactKinds} i18n="semio.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem i18n="semio.breadcrumb.types">
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }}>
                 <Box size={16} />
               </BreadcrumbLink>
@@ -910,13 +910,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={typeNameItems}
-              tooltip={tooltip("navbar.selectType", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}
+              i18n="semio.navbar.selectType"
               onNavigate={(href) => {
                 if (href === "#create-type") handleCreateType();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.type", { manualPath: "type#overview", tutorialPath: "hello-semio/model-brick-set" })}>
+            <BreadcrumbItem i18n="semio.navbar.type">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -930,13 +930,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
-              tooltip={tooltip("navbar.selectVariant", { manualPath: "type#variants", tutorialPath: "hello-semio/model-brick-set" })}
+              i18n="semio.navbar.selectVariant"
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(type, true);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem tooltip={tooltip("navbar.variant", { manualPath: "type#variants", tutorialPath: "hello-semio/model-brick-set" })}>
+            <BreadcrumbItem i18n="semio.navbar.variant">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -945,7 +945,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}&select=${type.guid}`);
                 }}
               >
-                <button type="button">{type.variant || <span className="italic opacity-70">{t("type.defaultVariant")}</span>}</button>
+                <button type="button">{type.variant || <span className="italic opacity-70">{t("semio.type.defaultVariant")}</span>}</button>
               </BreadcrumbLink>
             </BreadcrumbItem>
           </>
@@ -953,14 +953,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isQualityApp && quality && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} tooltip={tooltip("navbar.artifacts", { manualPath: "kit#artifacts", tutorialPath: "hello-semio/model-brick-set" })} onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem tooltip={tooltip("breadcrumb.qualities", { manualPath: "quality#overview", tutorialPath: "hello-semio/model-brick-set" })}>
+            <BreadcrumbSeparator items={artifactKinds} i18n="semio.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem i18n="semio.breadcrumb.qualities">
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }}>
                 <Award size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbBreak />
-            <BreadcrumbItem tooltip={tooltip("navbar.quality", { manualPath: "quality#overview", tutorialPath: "hello-semio/model-brick-set" })}>
+            <BreadcrumbItem i18n="semio.navbar.quality">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -976,7 +976,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         )}
         {isDocsPath && (
           <>
-            <BreadcrumbItem tooltip={tooltip("navbar.docs", { manualPath: "interface#documentation" })}>
+            <BreadcrumbItem i18n="semio.navbar.docs">
               <BreadcrumbLink onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>
                 <FileText size={16} />
               </BreadcrumbLink>
@@ -993,7 +993,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     ),
                     href: `/docs/${s.id}`,
                   }))}
-                  tooltip={tooltip("navbar.sections", { manualPath: "interface#documentation" })}
+                  i18n="semio.navbar.sections"
                   onNavigate={(href) => navigate(href)}
                 />
                 <BreadcrumbItem>
@@ -1231,7 +1231,7 @@ const Search: FC = ({}) => {
 
   return (
     <>
-      <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup", hotkey: "Ctrl+P" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search", hotkey: "Ctrl+P" })} pressed={open} onPressedChange={setOpen}>
+      <Toggle i18n="semio.navbar.search.open" i18nPressed="semio.navbar.search.close" pressed={open} onPressedChange={setOpen}>
         <SearchIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.searchTitle")} description={t("navbar.searchDescription")} open={open} onOpenChange={setOpen}>
@@ -1253,7 +1253,7 @@ const Search: FC = ({}) => {
                 </CommandGroup>
               )}
               {groupedSearchResults.designs.length > 0 && (
-                <CommandGroup heading={t("breadcrumb.designs")}>
+                <CommandGroup heading={t("semio.breadcrumb.designs")}>
                   {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`design-${(r.item.item as DesignShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
@@ -1265,7 +1265,7 @@ const Search: FC = ({}) => {
                 </CommandGroup>
               )}
               {groupedSearchResults.types.length > 0 && (
-                <CommandGroup heading={t("breadcrumb.types")}>
+                <CommandGroup heading={t("semio.breadcrumb.types")}>
                   {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`type-${(r.item.item as TypeShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
@@ -1277,7 +1277,7 @@ const Search: FC = ({}) => {
                 </CommandGroup>
               )}
               {groupedSearchResults.qualities.length > 0 && (
-                <CommandGroup heading={t("breadcrumb.qualities")}>
+                <CommandGroup heading={t("semio.breadcrumb.qualities")}>
                   {groupedSearchResults.qualities.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
                       <div className="flex items-center gap-2">
@@ -1390,7 +1390,7 @@ const Focus: FC = ({}) => {
 
   return (
     <>
-      <Toggle tooltip={tooltip("navbar.focus.open", { manualPath: "interface#focus", tutorialPath: "hello-semio/sketch-setup", hotkey: "Ctrl+F" })} tooltipPressed={tooltip("navbar.focus.close", { manualPath: "interface#focus", hotkey: "Ctrl+F" })} pressed={open} onPressedChange={setOpen}>
+      <Toggle i18n="semio.navbar.focus.open" i18nPressed="semio.navbar.focus.close" pressed={open} onPressedChange={setOpen}>
         <FocusIcon size={16} />
       </Toggle>
       <CommandDialog title={t("navbar.focus.title", "Focus")} description={t("navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
@@ -2098,15 +2098,15 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
       {/* Unexpanded navbar */}
       <div className="h-12 flex items-center justify-between px-1 gap-1">
         <ButtonGroup>
-          <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Left" })} onClick={navigateBack} disabled={!canGoBack}>
+          <ButtonGroupItem value="back" i18n="semio.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
-          <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Right" })} onClick={navigateForward} disabled={!canGoForward}>
+          <ButtonGroupItem value="forward" i18n="semio.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
             <ArrowRight size={16} />
           </ButtonGroupItem>
           <ButtonGroupItem
             value="up"
-            tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Up" })}
+            i18n="semio.navbar.up"
             onClick={() => {
               if (upTarget) navigate(upTarget);
             }}
@@ -2125,7 +2125,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
             value={activePanel}
             onValueChange={handleMobilePanelChange}
             tooltip={mobilePanelTooltip}
-            dropdownTooltip={tooltip("navbar.changePanelType")}
+            dropdowni18n="semio.navbar.changePanelType"
             items={panelConfig
               .filter((p) => p.key !== "toolbar")
               .map(({ key, icon: Icon, hotkey }) => ({
@@ -2140,8 +2140,8 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
         <div className="flex gap-1">
           {toolbarConfig && (
             <Toggle
-              tooltip={tooltip("navbar.panelToggle.toolbar.show", { manualPath: "interface#panels", tutorialPath: "hello-semio/sketch-setup", hotkey: toolbarConfig.hotkey })}
-              tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide", { manualPath: "interface#panels", hotkey: toolbarConfig.hotkey })}
+              i18n="semio.navbar.panelToggle.toolbar.show"
+              i18nPressed="semio.navbar.panelToggle.toolbar.hide"
               pressed={!!visiblePanels.toolbar}
               onPressedChange={() => {
                 commands[appType]?.togglePanel("toolbar");
@@ -2150,14 +2150,14 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
               <toolbarConfig.icon size={16} />
             </Toggle>
           )}
-          <Toggle tooltip={tooltip("navbar.search.open", { manualPath: "interface#search", tutorialPath: "hello-semio/sketch-setup", hotkey: "Ctrl+P" })} tooltipPressed={tooltip("navbar.search.close", { manualPath: "interface#search", hotkey: "Ctrl+P" })} pressed={searchOpen} onPressedChange={setSearchOpen}>
+          <Toggle i18n="semio.navbar.search.open" i18nPressed="semio.navbar.search.close" pressed={searchOpen} onPressedChange={setSearchOpen}>
             <SearchIcon size={16} />
           </Toggle>
           <Focus />
-          <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup", hotkey: "F11" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls", hotkey: "F11" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          <Toggle i18n="semio.navbar.fullscreen" i18nPressed="semio.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
             <Fullscreen size={16} />
           </Toggle>
-          <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand", { manualPath: "interface#navbar", tutorialPath: "hello-semio/sketch-setup" })} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+          <Toggle tooltip={tooltip(isNavbarExpanded ? "navbar.collapse" : "navbar.expand")} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
             {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
           </Toggle>
         </div>
@@ -2170,13 +2170,13 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
 
           {onWindowEvents && (
             <ButtonGroup>
-              <ButtonGroupItem value="minimize" tooltip={tooltip("navbar.minimize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.minimize}>
+              <ButtonGroupItem value="minimize" i18n="semio.navbar.minimize" onClick={onWindowEvents.minimize}>
                 <Minus size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="maximize" tooltip={tooltip("navbar.maximize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.maximize}>
+              <ButtonGroupItem value="maximize" i18n="semio.navbar.maximize" onClick={onWindowEvents.maximize}>
                 <Square size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="close" tooltip={tooltip("navbar.close", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.close}>
+              <ButtonGroupItem value="close" i18n="semio.navbar.close" onClick={onWindowEvents.close}>
                 <X size={16} />
               </ButtonGroupItem>
             </ButtonGroup>
@@ -2399,15 +2399,15 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
       style={{ WebkitAppRegion: "drag" } as any}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" tooltip={tooltip("navbar.back", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Left" })} onClick={navigateBack} disabled={!canGoBack}>
+        <ButtonGroupItem value="back" i18n="semio.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" tooltip={tooltip("navbar.forward", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Right" })} onClick={navigateForward} disabled={!canGoForward}>
+        <ButtonGroupItem value="forward" i18n="semio.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
         <ButtonGroupItem
           value="up"
-          tooltip={tooltip("navbar.up", { manualPath: "interface#navigation", tutorialPath: "hello-semio/sketch-setup", hotkey: "Alt+Up" })}
+          i18n="semio.navbar.up"
           onClick={() => {
             if (upTarget) navigate(upTarget);
           }}
@@ -2425,8 +2425,8 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
         <PanelToggles />
         {toolbarConfig && (
           <Toggle
-            tooltip={tooltip("navbar.panelToggle.toolbar.show", { manualPath: "interface#panels", tutorialPath: "hello-semio/sketch-setup", hotkey: toolbarConfig.hotkey })}
-            tooltipPressed={tooltip("navbar.panelToggle.toolbar.hide", { manualPath: "interface#panels", hotkey: toolbarConfig.hotkey })}
+            i18n="semio.navbar.panelToggle.toolbar.show"
+            i18nPressed="semio.navbar.panelToggle.toolbar.hide"
             pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
               commands[appType]?.togglePanel("toolbar");
@@ -2435,18 +2435,18 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
             <toolbarConfig.icon />
           </Toggle>
         )}
-        <Toggle tooltip={tooltip("navbar.fullscreen", { manualPath: "interface#view-controls", tutorialPath: "hello-semio/sketch-setup", hotkey: "F11" })} tooltipPressed={tooltip("navbar.exitFullscreen", { manualPath: "interface#view-controls", hotkey: "F11" })} pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle i18n="semio.navbar.fullscreen" i18nPressed="semio.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           <Fullscreen />
         </Toggle>
         {onWindowEvents && (
           <ToggleGroup type="single">
-            <ToggleGroupItem value="minimize" tooltip={tooltip("navbar.minimize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.minimize}>
+            <ToggleGroupItem value="minimize" i18n="semio.navbar.minimize" onClick={onWindowEvents.minimize}>
               <Minus size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="maximize" tooltip={tooltip("navbar.maximize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.maximize}>
+            <ToggleGroupItem value="maximize" i18n="semio.navbar.maximize" onClick={onWindowEvents.maximize}>
               <Square size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="close" tooltip={tooltip("navbar.close", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.close} className="hover:bg-danger">
+            <ToggleGroupItem value="close" i18n="semio.navbar.close" onClick={onWindowEvents.close} className="hover:bg-danger">
               <X size={16} />
             </ToggleGroupItem>
           </ToggleGroup>

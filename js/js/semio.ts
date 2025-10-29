@@ -32,7 +32,7 @@ import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
-import { v4 as uuidv4 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import CONSTANTS from "./constants.json";
 
@@ -47,7 +47,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const guid = () => uuidv4();
+export const guid = () => uuidv7();
 
 class SeededRandom {
   private seed: number;

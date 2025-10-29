@@ -25,7 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./display/Tooltip";
 export interface FooterItem {
   id: string;
   content: ReactNode;
-  tooltip?: string;
+  i18n?: string;
   order?: number;
   onClick?: () => void;
   className?: string;
@@ -45,14 +45,14 @@ const Footer: FC<FooterProps> = ({ items = [], className = "", height = 20, isVi
       {sortedItems.map((item, index) => (
         <div key={item.id} className="flex items-center h-full">
           {index > 0 && <div className="h-full w-px bg-border" />}
-          {item.tooltip ? (
+          {item.i18n ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className={`flex items-center h-full px-2 text-xs cursor-pointer ${item.className || ""}`} onClick={item.onClick}>
                   {item.content}
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{item.tooltip}</TooltipContent>
+              <TooltipContent>{item.i18n}</TooltipContent>
             </Tooltip>
           ) : (
             <div className={`flex items-center h-full px-2 text-xs ${item.onClick ? "cursor-pointer" : ""} ${item.className || ""}`} onClick={item.onClick}>

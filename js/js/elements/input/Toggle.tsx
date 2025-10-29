@@ -27,7 +27,7 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 import { Popover, PopoverAnchor, PopoverContent } from "../Popover";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Action } from "./Action";
 
 const toggleVariants = cva(
@@ -53,13 +53,13 @@ const toggleVariants = cva(
 export interface ToggleItem<T extends string> {
   value: T;
   label: React.ReactNode;
-  tooltip?: TooltipConfig;
+  i18n?: string;
 }
 
 interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type?: "default";
-  tooltip?: TooltipConfig;
-  tooltipPressed?: TooltipConfig;
+  i18n?: string;
+  i18nPressed?: string;
   label?: string;
   level?: "base" | "panel" | "temporary";
 }
@@ -69,7 +69,7 @@ interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<t
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
-  tooltip?: TooltipConfig;
+  i18n?: string;
   label?: string;
   level?: "base" | "panel" | "temporary";
 }
@@ -79,10 +79,10 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
-  tooltip?: TooltipConfig;
+  i18n?: string;
   label?: string;
   placeholder?: string;
-  dropdownTooltip?: TooltipConfig;
+  dropdownI18n?: string;
   level?: "base" | "panel" | "temporary";
 }
 
@@ -90,9 +90,9 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   type: "withAction";
   actionIcon: React.ReactNode;
   onActionClick: () => void;
-  tooltip?: TooltipConfig;
+  i18n?: string;
   label?: string;
-  actionTooltip?: TooltipConfig;
+  actionI18n?: string;
   level?: "base" | "panel" | "temporary";
 }
 
@@ -103,7 +103,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Cycle type
   if ("type" in props && props.type === "cycle") {
-    const { className, value, onValueChange, items, tooltip, label, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, i18n, label, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -137,13 +137,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       </TogglePrimitive.Root>
     );
 
-    const activeTooltip = currentItem.tooltip || tooltip;
+    const activeTooltip = currentItem.i18n || i18n;
 
     const wrappedToggle = activeTooltip ? (
       <Tooltip>
         <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
         <TooltipContent>
-          <EnhancedTooltipContent config={activeTooltip} mode={mode} />
+          <I18nTooltipContent i18nKey={activeTooltip} mode={mode} />
         </TooltipContent>
       </Tooltip>
     ) : (
@@ -166,15 +166,15 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // WithAction type
   if ("type" in props && props.type === "withAction") {
-    const { className, actionIcon, onActionClick, tooltip, label, actionTooltip, level = "base", type, pressed, ...restProps } = props;
+    const { className, actionIcon, onActionClick, i18n, label, actionI18n, level = "base", type, pressed, ...restProps } = props;
 
-    const mainContent = tooltip ? (
+    const mainContent = i18n ? (
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="flex items-center gap-2 flex-1 min-w-0">{restProps.children}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <EnhancedTooltipContent config={tooltip} mode={mode} />
+          <I18nTooltipContent i18nKey={i18n} mode={mode} />
         </TooltipContent>
       </Tooltip>
     ) : (
@@ -192,7 +192,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
             e.stopPropagation();
             onActionClick();
           }}
-          tooltip={actionTooltip}
+          i18n={actionI18n}
         >
           {actionIcon}
         </Action>
@@ -217,7 +217,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, tooltip, label, dropdownTooltip, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, i18n, label, dropdownI18n, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -240,9 +240,9 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       setOpen(false);
     };
 
-    const activeTooltip = currentItem?.tooltip || tooltip;
+    const activeTooltip = currentItem?.i18n || i18n;
 
-    const ariaLabel = activeTooltip?.labelKey;
+    const ariaLabel = activeTooltip;
 
     const toggleRoot = (
       <TogglePrimitive.Root
@@ -269,7 +269,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
             setOpen(!open);
           }}
           disabled={!hasDropdownOptions}
-          tooltip={dropdownTooltip}
+          i18n={dropdownI18n}
         >
           <ChevronDown className="size-3" />
         </Action>
@@ -290,7 +290,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
               <PopoverAnchor asChild>{toggleRoot}</PopoverAnchor>
             </TooltipTrigger>
             <TooltipContent>
-              <EnhancedTooltipContent config={activeTooltip} mode={mode} />
+              <I18nTooltipContent i18nKey={activeTooltip} mode={mode} />
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -311,12 +311,12 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
                 </button>
               );
 
-              if (item.tooltip) {
+              if (item.i18n) {
                 return (
                   <Tooltip key={item.value}>
                     <TooltipTrigger asChild>{itemButton}</TooltipTrigger>
                     <TooltipContent side="right">
-                      <EnhancedTooltipContent config={item.tooltip} mode={mode} />
+                      <I18nTooltipContent i18nKey={item.i18n} mode={mode} />
                     </TooltipContent>
                   </Tooltip>
                 );
@@ -344,9 +344,9 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   // Standard toggle
-  const { className, tooltip, tooltipPressed, label, level = "base", type, pressed, ...restProps } = props as ToggleStandardProps;
+  const { className, i18n, i18nPressed, label, level = "base", type, pressed, ...restProps } = props as ToggleStandardProps;
 
-  const activeTooltip = pressed && tooltipPressed ? tooltipPressed : tooltip;
+  const activeTooltip = pressed && i18nPressed ? i18nPressed : i18n;
 
   const toggleElement = <TogglePrimitive.Root data-slot="toggle" data-state={pressed ? "on" : "off"} className={cn(toggleVariants({ level }), "border", className)} pressed={pressed} {...restProps} />;
 
@@ -354,7 +354,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     <Tooltip>
       <TooltipTrigger asChild>{toggleElement}</TooltipTrigger>
       <TooltipContent>
-        <EnhancedTooltipContent config={activeTooltip} mode={mode} />
+        <I18nTooltipContent i18nKey={activeTooltip} mode={mode} />
       </TooltipContent>
     </Tooltip>
   ) : (

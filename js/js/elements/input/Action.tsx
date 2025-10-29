@@ -24,7 +24,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "../../semio";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 const actionVariants = cva(
   "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-3 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border size-5 p-0.5",
@@ -52,10 +52,10 @@ interface ActionProps extends VariantProps<typeof actionVariants>, Omit<React.Co
   as?: "button" | "div";
   loading?: boolean;
   children: React.ReactNode;
-  tooltip?: TooltipConfig;
+  i18n?: string;
 }
 
-function Action({ className, variant, level, tooltip, children, as: Component = "button", ...props }: ActionProps) {
+function Action({ className, variant, level, i18n, children, as: Component = "button", ...props }: ActionProps) {
   const mode = useTooltipMode();
   const buttonElement = (
     <Component
@@ -70,12 +70,12 @@ function Action({ className, variant, level, tooltip, children, as: Component = 
     </Component>
   );
 
-  if (tooltip) {
+  if (i18n) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
         <TooltipContent>
-          <EnhancedTooltipContent config={tooltip} mode={mode} />
+          <I18nTooltipContent i18nKey={i18n} mode={mode} />
         </TooltipContent>
       </Tooltip>
     );

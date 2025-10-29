@@ -159,7 +159,7 @@ const App: FC<AppProps> = () => {
     if (!hasSelection) {
       addSection("details", {
         id: "design-details",
-        label: t("design.title"),
+        label: t("semio.design.title"),
         order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -169,14 +169,14 @@ const App: FC<AppProps> = () => {
       const portId = selection.port!.port;
       addSection("details", {
         id: "design-port",
-        label: t("port.title"),
+        label: t("semio.port.title"),
         order: 0,
         defaultOpen: true,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
       });
       addSection("details", {
         id: "design-details",
-        label: t("design.title"),
+        label: t("semio.design.title"),
         order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -185,7 +185,7 @@ const App: FC<AppProps> = () => {
       if (hasPieces) {
         addSection("details", {
           id: "design-pieces",
-          label: selection.pieces!.length === 1 ? t("piece.piece") : t("pieces.multipleTitle"),
+          label: selection.pieces!.length === 1 ? t("semio.piece.piece") : t("semio.pieces.multipleTitle"),
           order: 0,
           defaultOpen: true,
           content: () => <PiecesSection />,
@@ -196,7 +196,7 @@ const App: FC<AppProps> = () => {
         const conns = findConnectionsInDesign(design!, connGuids);
         addSection("details", {
           id: "design-connections",
-          label: conns.length === 1 ? t("connection.title") : t("connections.multipleTitle"),
+          label: conns.length === 1 ? t("semio.connection.title") : t("connections.multipleTitle"),
           order: 10,
           defaultOpen: true,
           content: () => <ConnectionsSection connections={conns} />,
@@ -211,7 +211,7 @@ const App: FC<AppProps> = () => {
           content: () => (
             <TreeItem>
               <TreeContent>
-                <p className="text-sm text-muted-foreground">{t("design.selectOnlyPiecesOrConnections")}</p>
+                <p className="text-sm text-muted-foreground">{t("semio.design.selectOnlyPiecesOrConnections")}</p>
               </TreeContent>
             </TreeItem>
           ),
@@ -219,7 +219,7 @@ const App: FC<AppProps> = () => {
       }
       addSection("details", {
         id: "design-details",
-        label: t("design.title"),
+        label: t("semio.design.title"),
         order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -228,7 +228,7 @@ const App: FC<AppProps> = () => {
 
     addSection("details", {
       id: "design-kit",
-      label: t("kit.title"),
+      label: t("semio.kit.title"),
       order: 100,
       defaultOpen: true,
       content: () => <KitSection />,
@@ -287,7 +287,7 @@ const App: FC<AppProps> = () => {
                 {
                   icon: <Plus size={12} />,
                   onClick: () => handleCreateVariant(name),
-                  title: t("common.addVariant"),
+                  title: t("semio.common.addVariant"),
                 },
               ]}
             >
@@ -348,7 +348,7 @@ const App: FC<AppProps> = () => {
                 {
                   icon: <Plus size={12} />,
                   onClick: () => handleCreateVariant(name),
-                  title: t("common.addVariant"),
+                  title: t("semio.common.addVariant"),
                 },
               ]}
             >
@@ -412,7 +412,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "design-types",
-      label: t("kitApp.types"),
+      label: t("semio.kitApp.types"),
       order: 0,
       defaultOpen: true,
       content: () => <TypesWorkbenchContent />,
@@ -420,7 +420,7 @@ const App: FC<AppProps> = () => {
         {
           icon: <Plus size={12} />,
           onClick: handleCreateType,
-          title: t("common.addType"),
+          title: t("semio.common.addType"),
         },
       ],
       onPointerEnter: () => {
@@ -436,7 +436,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "design-designs",
-      label: t("kitApp.designs"),
+      label: t("semio.kitApp.designs"),
       order: 1,
       defaultOpen: true,
       content: () => <DesignsWorkbenchContent />,
@@ -444,7 +444,7 @@ const App: FC<AppProps> = () => {
         {
           icon: <Plus size={12} />,
           onClick: handleCreateDesign,
-          title: t("common.addDesign"),
+          title: t("semio.common.addDesign"),
         },
       ],
       onPointerEnter: () => {
@@ -467,7 +467,7 @@ const App: FC<AppProps> = () => {
   useEffect(() => {
     addSection("settings", {
       id: "design-app-settings",
-      label: t("design.appTitle"),
+      label: t("semio.design.appTitle"),
       order: 100,
       defaultOpen: true,
       content: () => (
@@ -476,7 +476,7 @@ const App: FC<AppProps> = () => {
             <TreeContent>
               <div className="flex flex-col gap-1">
                 <label>
-                  {t("design.snappiness")}: {appSettings.design?.snappiness}
+                  {t("semio.design.snappiness")}: {appSettings.design?.snappiness}
                 </label>
                 <input type="range" min="0" max="20" value={appSettings.design?.snappiness || 10} className="w-full" readOnly />
               </div>
@@ -484,7 +484,7 @@ const App: FC<AppProps> = () => {
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              {t("design.gridSize")}: {appSettings.design?.gridSize || 24}px
+              {t("semio.design.gridSize")}: {appSettings.design?.gridSize || 24}px
             </TreeContent>
           </TreeItem>
         </>

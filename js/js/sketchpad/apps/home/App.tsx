@@ -97,7 +97,7 @@ const Home: FC = ({}) => {
     if (hasKits) {
       addSection("details", {
         id: "home-kit",
-        label: hasSingleKit ? t("kit.title") : t("kits.multiple", { count: selection.length }),
+        label: hasSingleKit ? t("semio.kit.title") : t("semio.kits.multiple", { count: selection.length }),
         order: 0,
         defaultOpen: true,
         content: () => <KitSection />,
@@ -322,7 +322,7 @@ const Home: FC = ({}) => {
 
   const handleCreateKit = (type: KitStoreKind) => {
     const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(t("kit.defaultName"), existingNames);
+    const uniqueName = generateUniqueName(t("semio.kit.defaultName"), existingNames);
     const newKit: Kit = {
       guid: guid(),
       name: uniqueName,
@@ -338,7 +338,7 @@ const Home: FC = ({}) => {
 
   const handleCreateVersion = (kitName: string, type: KitStoreKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(t("kit.newVersion"), existingVersions);
+    const uniqueVersion = generateUniqueName(t("semio.kit.newVersion"), existingVersions);
     const newKit: Kit = {
       guid: guid(),
       name: kitName,
@@ -471,7 +471,7 @@ const Home: FC = ({}) => {
           )}
           {selectedVersion !== null && (
             <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-              {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+              {selectedVersion || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
             </Toggle>
           )}
           {!selectedKind && (
@@ -525,11 +525,11 @@ const Home: FC = ({}) => {
             uniqueVersions.length > 0 &&
             uniqueVersions.map((version) => (
               <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+                {version || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
               </Toggle>
             ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+            <Input className="flex-1 min-w-0" placeholder={t("semio.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
             <Toggle
               type="dropdown"
               value={sortColumn === "name" ? sortDirection : "asc"}
@@ -538,10 +538,10 @@ const Home: FC = ({}) => {
                 homeCommands.setSortDirection(value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
+                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
               ]}
-              tooltip={tooltip("home.sortByName", { manualPath: "interface#sorting" })}
+              tooltip={tooltip("home.sortByName")}
             />
           </div>
         </div>
@@ -593,7 +593,7 @@ const Home: FC = ({}) => {
                             e.stopPropagation();
                             handleCreateVersion(row.name, row.type);
                           }}
-                          tooltip={tooltip("home.createVersion", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })}
+                          tooltip={tooltip("home.createVersion")}
                         >
                           <Plus />
                         </Action>
@@ -637,7 +637,7 @@ const Home: FC = ({}) => {
             )}
             {selectedVersion !== null && (
               <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-                {selectedVersion || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+                {selectedVersion || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
               </Toggle>
             )}
             {!selectedKind && (
@@ -691,10 +691,10 @@ const Home: FC = ({}) => {
               uniqueVersions.length > 0 &&
               uniqueVersions.map((version) => (
                 <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                  {version || <span className="italic opacity-50">{t("kit.defaultVersion")}</span>}
+                  {version || <span className="italic opacity-50">{t("semio.kit.defaultVersion")}</span>}
                 </Toggle>
               ))}
-            <Input className="flex-1 min-w-[200px]" placeholder={t("home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+            <Input className="flex-1 min-w-[200px]" placeholder={t("semio.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
           </div>
           <ScrollArea ref={scrollAreaRef} className="flex-1">
             <table className="w-full border-collapse">
@@ -702,7 +702,7 @@ const Home: FC = ({}) => {
                 <tr className="h-9">
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("home.name")}</span>
+                      <span>{t("semio.home.name")}</span>
                       <Toggle
                         type="dropdown"
                         pressed={sortColumn === "name"}
@@ -712,8 +712,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -723,7 +723,7 @@ const Home: FC = ({}) => {
                   {!selectedKind && (
                     <th className="text-left p-1 font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("home.kind")}</span>
+                        <span>{t("semio.home.kind")}</span>
                         <Toggle
                           type="dropdown"
                           pressed={sortColumn === "type"}
@@ -733,8 +733,8 @@ const Home: FC = ({}) => {
                             homeCommands.setSortDirection(value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
                           ]}
                           className="px-1 min-w-0"
                         />
@@ -744,7 +744,7 @@ const Home: FC = ({}) => {
                   )}
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("home.lastUpdated")}</span>
+                      <span>{t("semio.home.lastUpdated")}</span>
                       <Toggle
                         type="dropdown"
                         pressed={sortColumn === "updatedAt"}
@@ -754,8 +754,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -764,7 +764,7 @@ const Home: FC = ({}) => {
                   </th>
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("home.created")}</span>
+                      <span>{t("semio.home.created")}</span>
                       <Toggle
                         type="dropdown"
                         pressed={sortColumn === "createdAt"}
@@ -774,8 +774,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -824,7 +824,7 @@ const Home: FC = ({}) => {
                                   e.stopPropagation();
                                   handleCreateVersion(row.name, row.type);
                                 }}
-                                tooltip={tooltip("home.createVersion", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })}
+                                tooltip={tooltip("home.createVersion")}
                               >
                                 <Plus />
                               </Action>

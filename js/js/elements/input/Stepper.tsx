@@ -26,7 +26,8 @@ import { Minus, Plus } from "lucide-react";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 import { Input } from "./Input";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { useTranslation } from "react-i18next";
 
 interface StepperProps {
   value?: number;
@@ -41,13 +42,13 @@ interface StepperProps {
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
-  label?: string;
   interactionId?: string;
-  tooltip?: TooltipConfig;
+  i18n: string;
 }
 
-const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, label, interactionId, tooltip }) => {
+const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, interactionId, i18n }) => {
   const [internalValue, setInternalValue] = useState(value ?? defaultValue);
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -238,6 +239,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
         step={step}
         min={min}
         max={max}
+        i18n={i18n}
       />
       <button
         type="button"
@@ -254,25 +256,19 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
     </div>
   );
 
-  const wrappedStepper = tooltip ? (
-    <Tooltip>
-      <TooltipTrigger asChild>{stepperElement}</TooltipTrigger>
-      <TooltipContent>
-        <EnhancedTooltipContent config={tooltip} mode={mode} />
-      </TooltipContent>
-    </Tooltip>
-  ) : (
-    stepperElement
-  );
+  const label = t(`${i18n}.label`);
 
   return (
     <div className="flex items-center gap-2 min-w-0 h-9" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-      {label && (
-        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
-          {label}
-        </span>
-      )}
-      {wrappedStepper}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:text-hover">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+        </TooltipContent>
+      </Tooltip>
+      {stepperElement}
     </div>
   );
 };

@@ -20,13 +20,13 @@
 // #endregion
 
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../elements/display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../elements/display/Tooltip";
 import { useIsFullscreen } from "./store";
 
 export interface FooterItem {
   id: string;
   content: ReactNode;
-  tooltip?: string;
+  i18n?: string;
   order?: number;
 }
 
@@ -94,12 +94,14 @@ const Footer: FC = ({}) => {
       {items.map((item, index) => (
         <div key={item.id} className="flex items-center h-full">
           {index > 0 && <div className="h-full w-px bg-border" />}
-          {item.tooltip ? (
+          {item.i18n ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center h-full px-2 text-xs">{item.content}</div>
               </TooltipTrigger>
-              <TooltipContent>{item.tooltip}</TooltipContent>
+              <TooltipContent>
+                <I18nTooltipContent i18nKey={item.i18n} mode={useTooltipMode()} />
+              </TooltipContent>
             </Tooltip>
           ) : (
             <div className="flex items-center h-full px-2 text-xs">{item.content}</div>

@@ -16,9 +16,9 @@ export const config: AppConfig = {
   routeSegments: [],
   additionalPaths: ["kits"],
   getPanels: (t) => [
-    { key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: t("panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("panels.settings"), hotkey: "⌘," },
+    { key: "details", icon: Info, tooltip: t("semio.panels.details"), hotkey: "⌘L" },
+    { key: "chat", icon: MessageCircle, tooltip: t("semio.panels.chat"), hotkey: "⌘[" },
+    { key: "settings", icon: Settings, tooltip: t("semio.panels.settings"), hotkey: "⌘," },
   ],
   matchesPath: (pathParts) => pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === "kits"),
   order: 0,

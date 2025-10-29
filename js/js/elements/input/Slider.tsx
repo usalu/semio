@@ -24,7 +24,7 @@ import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/stor
 import { Input } from "./Input";
 
 import { cn } from "../../semio";
-import { EnhancedTooltipContent, Tooltip, TooltipConfig, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 function Slider({
   className,
@@ -41,7 +41,7 @@ function Slider({
   finalizeTransaction,
   abortTransaction,
   interactionId,
-  tooltip,
+  i18n,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
   label?: string;
@@ -52,7 +52,7 @@ function Slider({
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
-  tooltip?: TooltipConfig;
+  i18n?: string;
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
@@ -177,11 +177,11 @@ function Slider({
     </SliderPrimitive.Root>
   );
 
-  const wrappedSlider = tooltip ? (
+  const wrappedSlider = i18n ? (
     <Tooltip>
       <TooltipTrigger asChild>{sliderElement}</TooltipTrigger>
       <TooltipContent>
-        <EnhancedTooltipContent config={tooltip} mode={mode} />
+        <I18nTooltipContent i18nKey={i18n} mode={mode} />
       </TooltipContent>
     </Tooltip>
   ) : (

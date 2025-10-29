@@ -33,6 +33,15 @@ export interface TooltipConfig {
   hotkey?: string;
 }
 
+export interface I18nTooltipData {
+  label?: string;
+  description?: string;
+  descriptionBeginner?: string;
+  manual?: string;
+  tutorial?: string;
+  hotkey?: string;
+}
+
 let getModeFunction: (() => Mode) | undefined;
 
 export function setTooltipModeProvider(fn: () => Mode) {
@@ -92,7 +101,7 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   const showManual = mode === Mode.BEGINNER || mode === Mode.NORMAL;
   const showTutorial = mode === Mode.BEGINNER;
   
-  const labelKeyToUse = mode === Mode.BEGINNER ? `${labelKey}.extensive` : labelKey;
+  const labelKeyToUse = mode === Mode.BEGINNER ? `${labelKey}.beginner` : labelKey;
   const label = t(labelKeyToUse, { defaultValue: t(labelKey) });
   
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
@@ -101,6 +110,61 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   return (
     <div className="flex flex-col gap-2">
       <span>{label}</span>
+      {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
+        <div className="grid grid-flow-col auto-cols-max items-center border-t border-accent-foreground pt-2 justify-between gap-2">
+          {showManual && fullManualPath ? (
+            <Link to={fullManualPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
+              <BookOpen className="size-3" />
+              <span>{t("tooltip.manual")}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {showTutorial && fullTutorialPath ? (
+            <Link to={fullTutorialPath} className="flex items-center gap-1 cursor-pointer text-foreground transition-colors px-1 py-0.5 hover:bg-hover-temporary">
+              <GraduationCap className="size-3" />
+              <span>{t("tooltip.tutorial")}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono">{hotkey}</kbd> : <span />}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+interface I18nTooltipContentProps {
+  i18nKey: string;
+  mode: Mode;
+}
+
+function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
+  const { t } = useTranslation();
+
+  if (mode === Mode.EXPERT) return null;
+
+  const label = t(i18nKey, { defaultValue: "" });
+  const description = mode === Mode.BEGINNER 
+    ? t(`${i18nKey}.beginner`, { defaultValue: label })
+    : label;
+  
+  const manualPath = t(`${i18nKey}.manual`, { defaultValue: "" });
+  const tutorialPath = t(`${i18nKey}.tutorial`, { defaultValue: "" });
+  const hotkey = t(`${i18nKey}.hotkey`, { defaultValue: "" });
+
+  const showManual = (mode === Mode.BEGINNER || mode === Mode.NORMAL) && manualPath;
+  const showTutorial = mode === Mode.BEGINNER && tutorialPath;
+  
+  const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
+  const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
+  
+  const displayText = description || label;
+  
+  return (
+    <div className="flex flex-col gap-2">
+      <span>{displayText}</span>
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
         <div className="grid grid-flow-col auto-cols-max items-center border-t border-accent-foreground pt-2 justify-between gap-2">
           {showManual && fullManualPath ? (
@@ -144,4 +208,22 @@ function SemioTooltip({ children, config, mode }: SemioTooltipProps) {
   );
 }
 
-export { EnhancedTooltipContent, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+interface I18nSemioTooltipProps {
+  children: React.ReactElement;
+  i18nKey: string;
+  mode: Mode;
+}
+
+function I18nSemioTooltip({ children, i18nKey, mode }: I18nSemioTooltipProps) {
+  if (mode === Mode.EXPERT) return children;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent>
+        <I18nTooltipContent i18nKey={i18nKey} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+export { EnhancedTooltipContent, I18nSemioTooltip, I18nTooltipContent, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };

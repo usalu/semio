@@ -85,7 +85,7 @@ const App: FC<AppProps> = () => {
 
     addSection("details", {
       id: "quality-details",
-      label: t("quality.title"),
+      label: t("semio.quality.title"),
       order: 0,
       defaultOpen: true,
       content: () => <QualityDetails />,
@@ -101,7 +101,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "quality-functions",
-      label: t("quality.functions"),
+      label: t("semio.quality.functions"),
       order: 0,
       defaultOpen: true,
       content: () => <QualityWorkbench />,
@@ -109,7 +109,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "quality-qualities",
-      label: t("quality.qualities"),
+      label: t("semio.quality.qualities"),
       order: 1,
       defaultOpen: true,
       content: () => <QualityWorkbenchQualities />,

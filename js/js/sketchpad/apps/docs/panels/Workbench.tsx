@@ -102,7 +102,7 @@ const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
             {pages.length === 0 && (
               <TreeItem>
                 <TreeContent>
-                  <p className="text-sm text-muted-foreground">{section.description || t("docs.noPages")}</p>
+                  <p className="text-sm text-muted-foreground">{section.description || t("semio.docs.noPages")}</p>
                 </TreeContent>
               </TreeItem>
             )}
