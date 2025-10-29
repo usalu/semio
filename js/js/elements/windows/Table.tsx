@@ -141,7 +141,7 @@ const Table = <T,>({
               return (
                 <tr
                   key={key}
-                  className={`${baseRowClassName} ${customRowClassName} ${onRowClick ? "cursor-pointer" : ""}`}
+                  className={`${baseRowClassName} ${customRowClassName} ${onRowClick ? "cursor-selectable" : ""}`}
                   onClick={(e) => onRowClick?.(row, index, e)}
                   onDoubleClick={() => onRowDoubleClick?.(row, index)}
                   role={onRowClick ? "button" : undefined}

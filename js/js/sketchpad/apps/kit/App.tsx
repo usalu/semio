@@ -969,7 +969,7 @@ const AppContent: FC = () => {
           )}
           {selectedConcepts.length > 0 &&
             selectedConcepts.map((concept) => (
-              <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitApp.hideConcept", { concept })}>
+              <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.hideConcept", { manualPath: "kit#concepts" })}>
                 {concept}
               </Toggle>
             ))}
@@ -1036,7 +1036,7 @@ const AppContent: FC = () => {
             allConcepts
               .filter((c) => !selectedConcepts.includes(c))
               .map((concept) => (
-                <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitApp.showConcept", { concept })}>
+                <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.showConcept", { manualPath: "kit#concepts" })}>
                   {concept}
                 </Toggle>
               ))}
@@ -1044,7 +1044,7 @@ const AppContent: FC = () => {
             !selectedName &&
             uniqueNames.length > 0 &&
             uniqueNames.map((name) => (
-              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} tooltip={tooltip("kitApp.filterByName", { manualPath: "kit#artifacts" })}>
                 {name}
               </Toggle>
             ))}
@@ -1053,7 +1053,7 @@ const AppContent: FC = () => {
             selectedVariant === null &&
             uniqueVariants.length > 0 &&
             uniqueVariants.map((variant) => (
-              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)}>
+              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)} tooltip={tooltip("kitApp.filterByVariant", { manualPath: selectedKind === "designs" ? "design#variants" : "type#variants" })}>
                 {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("design.defaultVariant") : t("type.defaultVariant")}</span>}
               </Toggle>
             ))}
@@ -1064,12 +1064,12 @@ const AppContent: FC = () => {
             uniqueViews
               .filter((view) => view !== selectedView)
               .map((view) => (
-                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
+                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)} tooltip={tooltip("kitApp.filterByView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}>
                   {view || <span className="italic opacity-50">{t("design.defaultView")}</span>}
                 </Toggle>
               ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
+            <Input className="flex-1 min-w-0" placeholder={t("common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} tooltip={tooltip("kitApp.search", { manualPath: "kit#search", tutorialPath: "hello-semio/save-kit" })} />
             <Toggle
               type="dropdown"
               pressed={sortColumn === "artifact"}
@@ -1079,10 +1079,10 @@ const AppContent: FC = () => {
                 kitAppCommands.setSortDirection(value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "kit#sorting" }) },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "kit#sorting" }) },
               ]}
-              tooltip={t("kitApp.sortByName")}
+              tooltip={tooltip("kitApp.sortByName", { manualPath: "kit#sorting" })}
             />
           </div>
         </div>
@@ -1122,7 +1122,7 @@ const AppContent: FC = () => {
                         {row.kind === "authors" && <User className="size-4" />}
                       </div>
                       <span
-                        className="hover:underline text-left flex-1 min-w-0 truncate"
+                        className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
@@ -1143,7 +1143,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateVariantForRow(row);
                             }}
-                            tooltip={t("kitApp.createVariant")}
+                            tooltip={tooltip("kitApp.createVariant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })}
                             level="base"
                           >
                             <Plus />
@@ -1153,7 +1153,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateViewForRow(row);
                             }}
-                            tooltip={t("kitApp.createView")}
+                            tooltip={tooltip("kitApp.createView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}
                             level="base"
                           >
                             <Plus />
@@ -1166,7 +1166,7 @@ const AppContent: FC = () => {
                             e.stopPropagation();
                             handleCreateVariantForRow(row);
                           }}
-                          tooltip={t("kitApp.createVariant")}
+                          tooltip={tooltip("kitApp.createVariant", { manualPath: "type#variants", tutorialPath: "hello-semio/model-brick-set" })}
                           level="base"
                         >
                           <Plus />
@@ -1178,7 +1178,7 @@ const AppContent: FC = () => {
                             e.stopPropagation();
                             handleCreateViewForRow(row);
                           }}
-                          tooltip={t("kitApp.createView")}
+                          tooltip={tooltip("kitApp.createView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}
                           level="base"
                         >
                           <Plus />
@@ -1233,7 +1233,7 @@ const AppContent: FC = () => {
         )}
         {selectedConcepts.length > 0 &&
           selectedConcepts.map((concept) => (
-            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitApp.hideConcept", { concept })}>
+            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.hideConcept", { manualPath: "kit#concepts" })}>
               {concept}
             </Toggle>
           ))}
@@ -1300,7 +1300,7 @@ const AppContent: FC = () => {
           allConcepts
             .filter((c) => !selectedConcepts.includes(c))
             .map((concept) => (
-              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={t("kitApp.showConcept", { concept })}>
+              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} tooltip={tooltip("kitApp.showConcept", { manualPath: "kit#concepts" })}>
                 {concept}
               </Toggle>
             ))}
@@ -1448,7 +1448,7 @@ const AppContent: FC = () => {
                           <span className="w-4 h-4 shrink-0" />
                         )}
                         <span
-                          className="hover:underline text-left flex-1 min-w-0 truncate"
+                          className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
@@ -1469,7 +1469,7 @@ const AppContent: FC = () => {
                                 e.stopPropagation();
                                 handleCreateVariantForRow(row);
                               }}
-                              tooltip={t("kitApp.createVariant")}
+                              tooltip={tooltip("kitApp.createVariant", { manualPath: "design#variants", tutorialPath: "hello-semio/model-design" })}
                               level="base"
                             >
                               <Plus />
@@ -1479,7 +1479,7 @@ const AppContent: FC = () => {
                                 e.stopPropagation();
                                 handleCreateViewForRow(row);
                               }}
-                              tooltip={t("kitApp.createView")}
+                              tooltip={tooltip("kitApp.createView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}
                               level="base"
                             >
                               <Plus />
@@ -1492,7 +1492,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateVariantForRow(row);
                             }}
-                            tooltip={t("kitApp.createVariant")}
+                            tooltip={tooltip("kitApp.createVariant", { manualPath: "type#variants", tutorialPath: "hello-semio/model-brick-set" })}
                             level="base"
                           >
                             <Plus />
@@ -1504,7 +1504,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateViewForRow(row);
                             }}
-                            tooltip={t("kitApp.createView")}
+                            tooltip={tooltip("kitApp.createView", { manualPath: "design#views", tutorialPath: "hello-semio/model-design" })}
                             level="base"
                           >
                             <Plus />

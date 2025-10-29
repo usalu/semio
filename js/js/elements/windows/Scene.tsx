@@ -28,6 +28,8 @@ import { Camera, Plane, Point, Vector } from "../../semio";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
+let selectableCursorUsageCount = 0;
+
 // #region SceneModel - Unified abstraction for all interactive 3D models
 
 /**
@@ -201,6 +203,8 @@ interface ModelProps {
   hovered?: boolean;
   /** Click handler for selection */
   onClick?: (event: ThreeEvent<MouseEvent>) => void;
+  /** Double-click handler (e.g., for focus) */
+  onDoubleClick?: (event: ThreeEvent<MouseEvent>) => void;
   /** Hover enter handler */
   onPointerEnter?: (event: ThreeEvent<PointerEvent>) => void;
   /** Hover leave handler */
@@ -214,10 +218,12 @@ interface ModelProps {
   userData?: any;
 }
 
-export const Model: FC<ModelProps> = ({ children, selected = false, hovered = false, onClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
+export const Model: FC<ModelProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const activeBaseColor = useMemo(() => getComputedColor("--active-base"), []);
   const hoverBaseColor = useMemo(() => getComputedColor("--hover-base"), []);
+  const [isPointerOver, setIsPointerOver] = useState(false);
+  const isInteractive = Boolean(onClick || onDoubleClick);
 
   const resolvedColor = useMemo(() => {
     if (color) return color;
@@ -228,9 +234,40 @@ export const Model: FC<ModelProps> = ({ children, selected = false, hovered = fa
 
   const resolvedEmissiveColor = emissiveColor || resolvedColor;
   const resolvedEdgeColor = edgeColor || foregroundColor;
+  const handlePointerEnter = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (isInteractive) {
+        setIsPointerOver(true);
+      }
+      onPointerEnter?.(event);
+    },
+    [isInteractive, onPointerEnter],
+  );
+
+  const handlePointerLeave = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (isInteractive) {
+        setIsPointerOver(false);
+      }
+      onPointerLeave?.(event);
+    },
+    [isInteractive, onPointerLeave],
+  );
+
+  useEffect(() => {
+    if (!isInteractive || !isPointerOver) return;
+    selectableCursorUsageCount += 1;
+    document.body.classList.add("cursor-selectable");
+    return () => {
+      selectableCursorUsageCount = Math.max(0, selectableCursorUsageCount - 1);
+      if (selectableCursorUsageCount === 0) {
+        document.body.classList.remove("cursor-selectable");
+      }
+    };
+  }, [isInteractive, isPointerOver]);
 
   return (
-    <group userData={userData} onClick={onClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+    <group userData={userData} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       {children ? (
         children
       ) : (
@@ -456,16 +493,37 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
   useEffect(() => {
     if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
 
-    let targetObject: THREE.Object3D | null = null;
+    let retryCount = 0;
+    const maxRetries = 20; // Max 1 second of retries (20 * 50ms)
 
-    // Find the model by searching for userData.id matching the focusedItemId (guid)
-    threeScene.traverse((obj: THREE.Object3D) => {
-      if (obj.userData?.id === focusedItemId || obj.name === focusedItemId) {
-        targetObject = obj;
+    // Retry mechanism to handle async scene rendering
+    const findAndFocusObject = () => {
+      if (!cameraRef.current || !controlsRef.current) return;
+
+      let targetObject: THREE.Object3D | null = null;
+
+      // Find the model by searching for userData.id matching the focusedItemId (guid)
+      threeScene.traverse((obj: THREE.Object3D) => {
+        if (obj.userData?.id === focusedItemId || obj.name === focusedItemId) {
+          targetObject = obj;
+        }
+      });
+
+      if (!targetObject) {
+        // Object not found yet - scene might still be rendering
+        retryCount++;
+        if (retryCount < maxRetries) {
+          console.log(`Focus: Object ${focusedItemId} not found, retrying... (${retryCount}/${maxRetries})`);
+          setTimeout(findAndFocusObject, 50);
+        } else {
+          console.warn(`Focus: Object ${focusedItemId} not found after ${maxRetries} retries`);
+          if (onFocusComplete) onFocusComplete();
+        }
+        return;
       }
-    });
 
-    if (targetObject) {
+      console.log(`Focus: Found object ${focusedItemId}, starting zoom animation`);
+
       // Calculate the bounding box to determine zoom distance
       const box = new THREE.Box3().setFromObject(targetObject);
       const center = box.getCenter(new THREE.Vector3());
@@ -482,6 +540,8 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
 
       // Smoothly animate camera to the focused model
       const animate = () => {
+        if (!cameraRef.current || !controlsRef.current) return;
+
         const t = 0.1;
         camera.position.lerp(newPosition, t);
         controlsRef.current.target.lerp(center, t);
@@ -500,9 +560,9 @@ const SceneInner: FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo 
       };
 
       requestAnimationFrame(animate);
-    } else if (onFocusComplete) {
-      onFocusComplete();
-    }
+    };
+
+    findAndFocusObject();
   }, [focusedItemId, threeScene, onFocusComplete]);
 
   return (

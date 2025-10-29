@@ -49,7 +49,7 @@ import { ChevronDown, ChevronRight, FileText, Folder, GripVertical } from "lucid
 import { Children, createContext, FC, isValidElement, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
-import { useTreeState } from "./TreeStateProvider";
+import { TreeStateProvider, useTreeState } from "./TreeStateProvider";
 
 const hasNonEmptyChildren = (children: ReactNode): boolean => {
   if (!children) return false;
@@ -161,7 +161,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
   if (!hasChildren) {
     return (
       <div
-        className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-pointer ${className}`}
+        className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
         style={{ paddingLeft: `${level * 0.75}rem` }}
         onPointerEnter={() => {
           setIsHovered(true);
@@ -208,7 +208,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
-          className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-pointer ${className}`}
+          className={`relative flex items-center gap-1 py-1 hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           role="button"
           onPointerEnter={() => {
@@ -274,7 +274,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
     paddingLeft: `${level * 0.75}rem`,
   };
 
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group cursor-pointer";
+  const baseClasses = `relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -450,7 +450,7 @@ export const TreeItem: FC<TreeItemProps> = ({
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = hasNonEmptyChildren(children);
-  const baseClasses = "relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group cursor-pointer";
+  const baseClasses = `relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -574,7 +574,7 @@ const FileTreeItem: FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? Folder : FileText;
 
-  const baseClasses = "relative flex items-center gap-2 py-1.5 px-3 rounded-md hover:bg-accent transition-colors cursor-pointer select-none";
+  const baseClasses = "relative flex items-center gap-2 py-1.5 px-3 rounded-md hover:bg-accent transition-colors cursor-selectable select-none";
   const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
   const itemClasses = `${baseClasses} ${stateClasses}`;
 
@@ -654,16 +654,18 @@ Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = 
   if (nodes.length === 0) return null;
 
   return (
-    <div className={`not-prose my-8 p-6 rounded-lg border border-border bg-card ${className}`}>
-      {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
-      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
-        <div className="flex flex-col gap-0.5">
-          {nodes.map((node, idx) => (
-            <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
-          ))}
-        </div>
-      </TreeContext.Provider>
-    </div>
+    <TreeStateProvider>
+      <div className={`not-prose my-8 p-6 rounded-lg border border-border bg-card ${className}`}>
+        {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
+          <div className="flex flex-col gap-0.5">
+            {nodes.map((node, idx) => (
+              <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
+            ))}
+          </div>
+        </TreeContext.Provider>
+      </div>
+    </TreeStateProvider>
   );
 };
 

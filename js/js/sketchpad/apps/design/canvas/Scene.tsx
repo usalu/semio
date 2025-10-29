@@ -83,7 +83,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const isHovered = useIsPieceTransitiveHovered();
   const status = usePieceStatus();
 
-  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover } = useDesignAppCommands();
+  const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover, focusPiece } = useDesignAppCommands();
 
   // Use the same color logic as diagram nodes
   const { fill } = useDesignAppPieceColor(undefined, piece.guid);
@@ -123,6 +123,14 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       }
     },
     [selectPiece, removePieceFromSelection, addPieceToSelection, piece.guid],
+  );
+
+  const onDoubleClick = useCallback(
+    (e?: ThreeEvent<MouseEvent>) => {
+      e?.stopPropagation();
+      focusPiece(piece.guid);
+    },
+    [focusPiece, piece.guid],
   );
   // Get computed color including color-mix() resolution
   const materialColor = useMemo(() => {
@@ -209,6 +217,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       selected={isSelected}
       hovered={isHovered}
       onClick={onSelect}
+      onDoubleClick={onDoubleClick}
       onPointerEnter={() => hoverPiece(piece.guid)}
       onPointerLeave={() => clearHover()}
       color={materialColor}
@@ -350,6 +359,7 @@ const DesignAppScene: FC = () => {
   const camera = useDesignAppCamera();
   const focusedPieceGuid = useDesignAppFocusedPieceGuid();
   const panelVisibility = useAppPanelVisibility();
+
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       toggleAccesslFullscreen();
@@ -369,7 +379,10 @@ const DesignAppScene: FC = () => {
     [setCamera],
   );
   const onFocusComplete = useCallback(() => {
-    clearFocus();
+    // Small delay to ensure focus has completed before clearing
+    setTimeout(() => {
+      clearFocus();
+    }, 100);
   }, [clearFocus]);
 
   return (

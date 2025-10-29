@@ -5,7 +5,7 @@ import { Aside } from "../../../elements/display/Aside";
 import { HeadingNode } from "./panels/Details";
 
 // Lazy load SectionTree to avoid loading React Router in Storybook
-const SectionTree = lazy(() => import("./components/SectionTree"));
+const SectionTree = lazy(() => import("../../../elements/aggregation/SectionTree"));
 
 interface HeadingsContextValue {
   headings: HeadingNode[];

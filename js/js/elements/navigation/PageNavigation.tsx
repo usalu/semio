@@ -39,23 +39,23 @@ const PageNavigation: FC<PageNavigationProps> = ({ prev, next }) => {
     <div className="flex items-center justify-between gap-4 pt-8 mt-8 border-t border-border">
       <div className="flex-1">
         {prev && (
-          <Link to={`/${prev.path}`} className="flex items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent hover:border-accent-foreground/20 transition-colors group">
-            <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+          <Link to={`/${prev.path}`} className="flex items-center gap-2 p-4 rounded-lg border border-border hover:bg-hover-panel hover:border-border transition-colors group">
+            <ChevronLeft className="w-5 h-5 text-muted-foreground transition-colors" />
             <div className="flex flex-col items-start">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Previous</span>
-              <span className="text-sm font-medium">{prev.title}</span>
+              <span className="text-sm font-medium text-foreground">{prev.title}</span>
             </div>
           </Link>
         )}
       </div>
       <div className="flex-1 flex justify-end">
         {next && (
-          <Link to={`/${next.path}`} className="flex items-center gap-2 p-4 rounded-lg border border-border hover:bg-accent hover:border-accent-foreground/20 transition-colors group">
+          <Link to={`/${next.path}`} className="flex items-center gap-2 p-4 rounded-lg border border-border hover:bg-hover-panel hover:border-border transition-colors group">
             <div className="flex flex-col items-end">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Next</span>
-              <span className="text-sm font-medium">{next.title}</span>
+              <span className="text-sm font-medium text-foreground">{next.title}</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <ChevronRight className="w-5 h-5 text-muted-foreground transition-colors" />
           </Link>
         )}
       </div>

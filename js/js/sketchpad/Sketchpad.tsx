@@ -29,7 +29,6 @@ import { Design, Type } from "../semio";
 import "./apps";
 import { appRegistry } from "./apps";
 import { DesignAvatar, TypeAvatar } from "./apps/design/panels/Workbench";
-import { HeadingsProvider } from "./apps/docs/mdx-provider";
 import { QualityAvatar } from "./apps/quality/panels/Workbench";
 import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { FocusProvider, PanelSectionProvider } from "./Navbar";
@@ -63,6 +62,20 @@ import {
   WindowEvents,
   YProviderFactory,
 } from "./store";
+
+// Lazy load HeadingsProvider to avoid issues in Storybook
+const HeadingsProviderWrapper: FC<{ children: ReactNode }> = ({ children }) => {
+  const [Provider, setProvider] = useState<FC<{ children: ReactNode }> | null>(null);
+
+  useEffect(() => {
+    import("./apps/docs/mdx-provider")
+      .then((module) => setProvider(() => module.HeadingsProvider))
+      .catch(() => setProvider(() => ({ children }: { children: ReactNode }) => <>{children}</>));
+  }, []);
+
+  if (!Provider) return <>{children}</>;
+  return <Provider>{children}</Provider>;
+};
 
 interface DragDropContextValue {
   activeDraggedType: Type | null;
@@ -324,7 +337,7 @@ const SketchpadBase: FC = () => {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <HeadingsProvider>
+      <HeadingsProviderWrapper>
         <FocusProvider>
           <PanelSectionProvider>
             <FooterItemProvider>
@@ -422,7 +435,7 @@ const SketchpadBase: FC = () => {
           </FooterItemProvider>
         </PanelSectionProvider>
       </FocusProvider>
-      </HeadingsProvider>
+      </HeadingsProviderWrapper>
       {createPortal(
         design && kit ? (
           <KitScopeProvider guid={kit}>

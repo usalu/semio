@@ -21,10 +21,11 @@
 
 import { Line, Sphere, useGLTF } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
-import { FC, useCallback, useMemo, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import SceneComponent from "../../../../elements/windows/Scene";
+import SceneComponent, { Model } from "../../../../elements/windows/Scene";
 import { guid, Point, Port, Type, Vector } from "../../../../semio";
+import { useFocusSafe } from "../../../Navbar";
 import { useKit, useKitCommands, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
 import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppFocusedPortGuid, useTypeAppHover, useTypeAppSelection } from "../store";
@@ -43,7 +44,7 @@ import { TypeAppTools } from "../tools_registry";
  * a point and direction vector. The SceneModel abstraction allows both to be
  * focusable through the unified focus behavior in Scene.tsx.
  */
-const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick }) => {
+const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick, onDoubleClick }) => {
   const position = useMemo(() => [port.point.x, port.point.y, port.point.z] as [number, number, number], [port.point]);
   const direction = useMemo(() => {
     const dir = new THREE.Vector3(port.direction.x, port.direction.y, port.direction.z).normalize();
@@ -73,21 +74,34 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
     [],
   );
 
+  const handleDoubleClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
+      onDoubleClick();
+    },
+    [onDoubleClick],
+  );
+
   return (
-    <group userData={userData} onPointerEnter={handlePointerEvent(onHover)} onPointerLeave={handlePointerEvent(onLeave)} onClick={handlePointerEvent(onClick)}>
-      {/* Base point sphere */}
-      <Sphere args={[0.03]} position={position}>
-        <meshBasicMaterial color={color} />
-      </Sphere>
-
-      {/* Direction line */}
-      <Line points={points} color={color} lineWidth={2} />
-
-      {/* Arrow head sphere */}
-      <Sphere args={[0.05]} position={endPoint}>
-        <meshBasicMaterial color={color} />
-      </Sphere>
-    </group>
+    <Model
+      hovered={isHovered}
+      onClick={handlePointerEvent(onClick)}
+      onDoubleClick={handleDoubleClick}
+      onPointerEnter={handlePointerEvent(onHover)}
+      onPointerLeave={handlePointerEvent(onLeave)}
+      userData={userData}
+      showEdges={false}
+    >
+      <group>
+        <Sphere args={[0.03]} position={position}>
+          <meshBasicMaterial color={color} />
+        </Sphere>
+        <Line points={points} color={color} lineWidth={2} />
+        <Sphere args={[0.05]} position={endPoint}>
+          <meshBasicMaterial color={color} />
+        </Sphere>
+      </group>
+    </Model>
   );
 };
 
@@ -229,8 +243,37 @@ const SceneContent: FC = () => {
   const selection = useTypeAppSelection();
   const hover = useTypeAppHover();
   const appState = useTypeApp((s) => s);
-  const { selectPort, deselectPort, hoverPort, clearHover } = useTypeAppCommands();
+  const { selectPort, deselectPort, hoverPort, clearHover, focusPort } = useTypeAppCommands();
   const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
+  const focusContext = useFocusSafe();
+  const prevItemsRef = useRef<string>("");
+
+  // Set focus items for navbar
+  useEffect(() => {
+    if (!focusContext || !type?.ports) return;
+    const items = type.ports.map((port) => ({
+      id: port.guid,
+      label: port.description || `Port ${port.guid.substring(0, 8)}`,
+      category: "Ports",
+    }));
+    const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
+    if (prevItemsRef.current !== itemsKey) {
+      prevItemsRef.current = itemsKey;
+      focusContext.setFocusItems(items);
+    }
+  }, [focusContext, type?.ports]);
+
+  // Register focus handler for navbar focus
+  useEffect(() => {
+    if (!focusContext) return;
+    const handleFocus = (itemId: string) => {
+      focusPort(itemId);
+    };
+    focusContext.setOnFocusItem(handleFocus);
+    return () => {
+      if (focusContext) focusContext.setOnFocusItem(undefined);
+    };
+  }, [focusContext, focusPort]);
 
   const currentTool = useMemo(() => TypeAppTools.find((tool) => tool.id === activeTool), [activeTool]);
 
@@ -313,6 +356,13 @@ const SceneContent: FC = () => {
     clearHover();
   }, [clearHover]);
 
+  const handlePortDoubleClick = useCallback(
+    (portId: string) => {
+      focusPort(portId);
+    },
+    [focusPort],
+  );
+
   return (
     <>
       {toolContribution?.scene || (
@@ -321,7 +371,7 @@ const SceneContent: FC = () => {
           {type?.ports?.map((port) => {
             const isSelected = selection?.ports?.includes(port.guid) || false;
             const isHovered = hover?.port === port.guid;
-            return <PortVisual key={port.guid} port={port} isSelected={isSelected} isHovered={isHovered} onHover={() => handlePortHover(port.guid)} onLeave={handlePortLeave} onClick={() => handlePortClick(port.guid)} />;
+            return <PortVisual key={port.guid} port={port} isSelected={isSelected} isHovered={isHovered} onHover={() => handlePortHover(port.guid)} onLeave={handlePortLeave} onClick={() => handlePortClick(port.guid)} onDoubleClick={() => handlePortDoubleClick(port.guid)} />;
           })}
           {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
         </>

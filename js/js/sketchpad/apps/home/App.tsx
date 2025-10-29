@@ -538,10 +538,10 @@ const Home: FC = ({}) => {
                 homeCommands.setSortDirection(value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
               ]}
-              tooltip={t("home.sortByName")}
+              tooltip={tooltip("home.sortByName", { manualPath: "interface#sorting" })}
             />
           </div>
         </div>
@@ -574,7 +574,7 @@ const Home: FC = ({}) => {
                         {row.type === "remote" && <Cloud className="size-4" />}
                       </div>
                       <span
-                        className="hover:underline text-left flex-1 min-w-0 truncate"
+                        className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
                         role="button"
                         tabIndex={0}
                         onClick={(e) => {
@@ -593,7 +593,7 @@ const Home: FC = ({}) => {
                             e.stopPropagation();
                             handleCreateVersion(row.name, row.type);
                           }}
-                          tooltip={t("home.createVersion")}
+                          tooltip={tooltip("home.createVersion", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })}
                         >
                           <Plus />
                         </Action>
@@ -712,8 +712,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -733,8 +733,8 @@ const Home: FC = ({}) => {
                             homeCommands.setSortDirection(value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
                           ]}
                           className="px-1 min-w-0"
                         />
@@ -754,8 +754,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -774,8 +774,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("sort.descending") },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending", { manualPath: "interface#sorting" }) },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending", { manualPath: "interface#sorting" }) },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -805,7 +805,7 @@ const Home: FC = ({}) => {
                               <span className="w-4 h-4 shrink-0" />
                             )}
                             <span
-                              className="hover:underline text-left flex-1 min-w-0 truncate"
+                              className="hover:underline text-left flex-1 min-w-0 truncate cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigateToKit(row.kit.guid);
@@ -824,7 +824,7 @@ const Home: FC = ({}) => {
                                   e.stopPropagation();
                                   handleCreateVersion(row.name, row.type);
                                 }}
-                                tooltip={t("home.createVersion")}
+                                tooltip={tooltip("home.createVersion", { manualPath: "kit#versions", tutorialPath: "hello-semio/save-kit" })}
                               >
                                 <Plus />
                               </Action>

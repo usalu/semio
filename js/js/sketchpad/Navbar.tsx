@@ -1870,13 +1870,16 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
   const designAppCommands = useDesignAppCommands(isValidKit && design ? { kit, design } : undefined);
   const typeAppCommands = useTypeAppCommands(isValidKit && type ? { kit, type } : undefined);
   const qualityAppCommands = useQualityAppCommands(isValidKit && quality ? { kit, quality } : undefined);
+  const appCommands = useAppCommands();
   const commands: Record<string, any> = {
     home: homeCommands,
     kit: kitAppCommands,
     design: designAppCommands,
     type: typeAppCommands,
     quality: qualityAppCommands,
+    docs: appCommands,
   };
+  if (!commands[appType]) commands[appType] = appCommands;
 
   const workbenchPanels = useMemo(
     () => ["workbench", "tools"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
@@ -1921,7 +1924,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents 
       });
       togglePanelFn(typedTarget);
     },
-    [appType, commands, visiblePanels],
+    [appCommands, appType, commands, visiblePanels],
   );
 
   useEffect(() => {
@@ -2215,8 +2218,117 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
 
   const upTarget = currentPath === "/" ? undefined : currentPath === "/kits" ? "/" : currentPath.split("/").slice(0, -1).join("/") || "/";
   const isAtRoot = currentPath === "/" || currentPath === "/kits";
+
+  const secondPart = pathParts[2];
+  const thirdPart = pathParts[3];
+  const isDesignApp = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
+  const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
+  const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
+
+  const appType = useAppType();
+  const visiblePanels = useAppPanelVisibility();
+  const panelConfig = getPanelConfigs(t)[appType];
+  const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
+  const homeCommands = useHomeCommands();
+  const isValidKit = kitGuid && !["temporary", "local", "remote"].includes(kitGuid);
+  const kitAppCommands = useKitAppCommands(isValidKit ? { kit: kitGuid } : undefined);
+  const design = thirdPart && isDesignApp ? thirdPart : null;
+  const type = thirdPart && isTypeApp ? thirdPart : null;
+  const quality = thirdPart && secondPart === "qualities" && thirdPart ? thirdPart : null;
+  const designAppCommands = useDesignAppCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
+  const typeAppCommands = useTypeAppCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
+  const qualityAppCommands = useQualityAppCommands(isValidKit && quality ? { kit: kitGuid, quality } : undefined);
+  const appCommands = useAppCommands();
+  const commands: Record<string, any> = {
+    home: homeCommands,
+    kit: kitAppCommands,
+    design: designAppCommands,
+    type: typeAppCommands,
+    quality: qualityAppCommands,
+    docs: appCommands,
+  };
+  if (!commands[appType]) commands[appType] = appCommands;
+
+  const workbenchPanels = useMemo(
+    () => ["workbench", "tools"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
+    [panelConfig],
+  );
+  const hudPanels = useMemo(
+    () => ["hud", "stats"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
+    [panelConfig],
+  );
+  const rightPanels = useMemo(
+    () => ["details", "chat", "settings"].filter((panelKey) => panelConfig.some((panel) => panel.key === panelKey)) as PanelKey[],
+    [panelConfig],
+  );
+
+  const toggleGroupPanel = useCallback(
+    (targetKey: PanelKey | undefined, groupKeys: PanelKey[]) => {
+      const togglePanelFn = commands[appType]?.togglePanel;
+      if (!targetKey || !togglePanelFn) return;
+      const typedTarget = targetKey as keyof PanelVisibility;
+      const isOpen = visiblePanels[typedTarget];
+      if (isOpen) {
+        togglePanelFn(typedTarget);
+        return;
+      }
+      groupKeys.forEach((key) => {
+        if (key !== targetKey && visiblePanels[key as keyof PanelVisibility]) {
+          togglePanelFn(key as keyof PanelVisibility);
+        }
+      });
+      togglePanelFn(typedTarget);
+    },
+    [appCommands, appType, commands, visiblePanels],
+  );
+
   useEffect(() => {
+    const resolvePanelKey = (preferred: PanelKey | undefined, groupKeys: PanelKey[]) => {
+      if (groupKeys.length === 0) return undefined;
+      if (preferred && groupKeys.includes(preferred)) return preferred;
+      return groupKeys[0];
+    };
+
     const handler = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        const key = event.key.toLowerCase();
+        if (key === "j") {
+          const targetKey = resolvePanelKey("workbench", workbenchPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, workbenchPanels);
+          return;
+        }
+        if (key === "k") {
+          const targetKey = resolvePanelKey("hud", hudPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, hudPanels);
+          return;
+        }
+        if (key === "l") {
+          const targetKey = resolvePanelKey("details", rightPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, rightPanels);
+          return;
+        }
+        if (key === "ö" || key === "ø") {
+          const targetKey = resolvePanelKey("tools", workbenchPanels);
+          if (!targetKey) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          toggleGroupPanel(targetKey, workbenchPanels);
+          return;
+        }
+      }
       if (event.key === "F11") {
         event.preventDefault();
         event.stopPropagation();
@@ -2252,34 +2364,19 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
     };
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, [canGoBack, canGoForward, navigate, navigateBack, navigateForward, toggleFullscreen, upTarget]);
-
-  const secondPart = pathParts[2];
-  const thirdPart = pathParts[3];
-  const isDesignApp = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
-  const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
-
-  const appType = useAppType();
-  const visiblePanels = useAppPanelVisibility();
-  const panelConfig = getPanelConfigs(t)[appType];
-  const toolbarConfig = panelConfig.find((p) => p.key === "toolbar");
-  const homeCommands = useHomeCommands();
-  const isValidKit = kitGuid && !["temporary", "local", "remote"].includes(kitGuid);
-  const kitAppCommands = useKitAppCommands(isValidKit ? { kit: kitGuid } : undefined);
-  const design = thirdPart && isDesignApp ? thirdPart : null;
-  const type = thirdPart && isTypeApp ? thirdPart : null;
-  const quality = thirdPart && secondPart === "qualities" && thirdPart ? thirdPart : null;
-  const designAppCommands = useDesignAppCommands(isValidKit && design ? { kit: kitGuid, design } : undefined);
-  const typeAppCommands = useTypeAppCommands(isValidKit && type ? { kit: kitGuid, type } : undefined);
-  const qualityAppCommands = useQualityAppCommands(isValidKit && quality ? { kit: kitGuid, quality } : undefined);
-  const commands: Record<string, any> = {
-    home: homeCommands,
-    kit: kitAppCommands,
-    design: designAppCommands,
-    type: typeAppCommands,
-    quality: qualityAppCommands,
-  };
+  }, [
+    canGoBack,
+    canGoForward,
+    hudPanels,
+    navigate,
+    navigateBack,
+    navigateForward,
+    rightPanels,
+    toggleFullscreen,
+    toggleGroupPanel,
+    upTarget,
+    workbenchPanels,
+  ]);
 
   useEffect(() => {
     if (!isFullscreen) {
@@ -2343,13 +2440,13 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, tooltip, onWindowEvents
         </Toggle>
         {onWindowEvents && (
           <ToggleGroup type="single">
-            <ToggleGroupItem value="minimize" tooltip={t("navbar.minimize")} onClick={onWindowEvents.minimize}>
+            <ToggleGroupItem value="minimize" tooltip={tooltip("navbar.minimize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.minimize}>
               <Minus size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="maximize" tooltip={t("navbar.maximize")} onClick={onWindowEvents.maximize}>
+            <ToggleGroupItem value="maximize" tooltip={tooltip("navbar.maximize", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.maximize}>
               <Square size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="close" tooltip={t("navbar.close")} onClick={onWindowEvents.close} className="hover:bg-danger">
+            <ToggleGroupItem value="close" tooltip={tooltip("navbar.close", { manualPath: "interface#window-controls" })} onClick={onWindowEvents.close} className="hover:bg-danger">
               <X size={16} />
             </ToggleGroupItem>
           </ToggleGroup>

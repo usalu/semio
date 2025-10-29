@@ -291,7 +291,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
     <Handle
       id={port.guid ?? ""}
       type="source"
-      className="left-1/2 top-0"
+      className="left-1/2 top-0 cursor-selectable"
       style={{
         left: x + ICON_WIDTH / 2,
         top: y,
@@ -445,9 +445,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
 
   return (
     <div
+      className="cursor-selectable"
       style={{
         opacity: colorOpacity,
-        cursor: "pointer",
         width: ICON_WIDTH,
         height: ICON_WIDTH,
         position: "relative",
@@ -669,9 +669,9 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
 
   return (
     <div
+      className="cursor-selectable"
       style={{
         opacity,
-        cursor: "pointer",
         width: ICON_WIDTH,
         height: ICON_WIDTH,
         position: "relative",
@@ -1168,6 +1168,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     addPiece,
     setDiagramCenter,
     setDiagramScale,
+    focusPiece,
   } = useDesignAppCommands();
 
   const { updateDesign } = useKitCommands();
@@ -1208,12 +1209,12 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     if (!focusContext) return;
     const items = [
       ...nodes.map((n) => ({
-        id: n.id,
-        label: n.data.piece.description || `Piece ${n.id}`,
+        id: n.data.piece.guid, // Use actual piece.guid for 3D scene focus
+        label: n.data.piece.description || `Piece ${n.data.piece.guid.substring(0, 8)}`,
         category: "Pieces",
       })),
       ...edges.map((e) => ({
-        id: e.id,
+        id: e.data?.SemioConnection?.guid || e.id,
         label: e.data?.SemioConnection?.description || `Connection ${e.id}`,
         category: "Connections",
       })),
@@ -1230,14 +1231,19 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   useEffect(() => {
     if (!focusContext) return;
     const handleFocus = (itemId: string) => {
-      setFocusedItemId(itemId);
+      // itemId is the piece.guid
+      // Find the corresponding React Flow node ID for 2D diagram focus
+      const node = nodes.find((n) => n.data.piece.guid === itemId);
+      if (node) {
+        setFocusedItemId(node.id); // Focus 2D diagram with React Flow node ID
+      }
+      focusPiece(itemId); // Focus 3D scene with piece.guid
     };
     focusContext.setOnFocusItem(handleFocus);
     return () => {
       if (focusContext) focusContext.setOnFocusItem(undefined);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [focusContext, focusPiece, nodes]);
 
   if (!design) return null;
 

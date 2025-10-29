@@ -28,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
 import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
-import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme } from "../store";
+import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme, useTooltip } from "../store";
 
 const LanguageSwitcher: FC = () => {
   const { i18n } = useTranslation();
@@ -49,6 +49,7 @@ interface SettingsProps extends ResizablePanelProps {}
 
 const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const theme = useTheme();
   const layout = useLayout();
   const mode = useMode();
@@ -67,13 +68,13 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           <TreeItem>
             <TreeContent>
               <ToggleGroup label={t("settings.theme")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
-                <ToggleGroupItem value={Theme.SYSTEM} tooltip={t("settings.theme.system")}>
+                <ToggleGroupItem value={Theme.SYSTEM} tooltip={tooltip("settings.theme.system", { manualPath: "interface#theme", tutorialPath: "hello-semio/sketch-setup" })}>
                   <Laptop />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Theme.LIGHT} tooltip={t("settings.theme.light")}>
+                <ToggleGroupItem value={Theme.LIGHT} tooltip={tooltip("settings.theme.light", { manualPath: "interface#theme", tutorialPath: "hello-semio/sketch-setup" })}>
                   <SunIcon />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Theme.DARK} tooltip={t("settings.theme.dark")}>
+                <ToggleGroupItem value={Theme.DARK} tooltip={tooltip("settings.theme.dark", { manualPath: "interface#theme", tutorialPath: "hello-semio/sketch-setup" })}>
                   <MoonIcon />
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -83,10 +84,10 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
             <TreeItem>
               <TreeContent>
                 <ToggleGroup label={t("settings.layout")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
-                  <ToggleGroupItem value={Layout.NORMAL} tooltip={t("settings.layout.normal")}>
+                  <ToggleGroupItem value={Layout.NORMAL} tooltip={tooltip("settings.layout.normal", { manualPath: "interface#layout", tutorialPath: "hello-semio/sketch-setup" })}>
                     <MonitorIcon />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value={Layout.TOUCH} tooltip={t("settings.layout.touch")}>
+                  <ToggleGroupItem value={Layout.TOUCH} tooltip={tooltip("settings.layout.touch", { manualPath: "interface#layout", tutorialPath: "hello-semio/sketch-setup" })}>
                     <FingerprintIcon />
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -96,13 +97,13 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           <TreeItem>
             <TreeContent>
               <ToggleGroup label={t("settings.mode")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
-                <ToggleGroupItem value={Mode.BEGINNER} tooltip={t("settings.mode.beginner")}>
+                <ToggleGroupItem value={Mode.BEGINNER} tooltip={tooltip("settings.mode.beginner", { manualPath: "interface#mode", tutorialPath: "hello-semio/sketch-setup" })}>
                   <GraduationCap />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Mode.NORMAL} tooltip={t("settings.mode.normal")}>
+                <ToggleGroupItem value={Mode.NORMAL} tooltip={tooltip("settings.mode.normal", { manualPath: "interface#mode", tutorialPath: "hello-semio/sketch-setup" })}>
                   <Sparkles />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Mode.EXPERT} tooltip={t("settings.mode.expert")}>
+                <ToggleGroupItem value={Mode.EXPERT} tooltip={tooltip("settings.mode.expert", { manualPath: "interface#mode", tutorialPath: "hello-semio/sketch-setup" })}>
                   <BrainCircuit />
                 </ToggleGroupItem>
               </ToggleGroup>

@@ -392,7 +392,7 @@ const PortsListSectionForm: FC = () => {
                     sortable={true}
                     sortableId={`port-${index}`}
                     isDragHandle={true}
-                    className={`cursor-pointer ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
+                    className={`cursor-selectable ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
                     actions={[
                       {
                         icon: <Minus />,

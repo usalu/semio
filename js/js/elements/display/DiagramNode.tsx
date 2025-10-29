@@ -60,7 +60,7 @@ export const DiagramNode: FC<DiagramNodeProps> = ({ content, selected = false, h
         ${hovered ? "ring-2 ring-[color:var(--hover-base)]" : ""}
         ${isPlaceholder ? "border-[color:var(--disabled-base)] bg-[color:var(--disabled-panel)]" : "border-[color:var(--foreground-panel)] bg-[color:var(--background-panel)]"}
         transition-all duration-150
-        ${onClick ? "cursor-pointer" : "cursor-default"}
+        ${onClick ? "cursor-selectable" : "cursor-default"}
         ${className}
       `}
       onMouseEnter={onMouseEnter}

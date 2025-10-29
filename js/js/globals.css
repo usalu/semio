@@ -104,6 +104,8 @@
     --cursor-move: url("../../assets/cursors/cursor_move_inkscape.svg") 16 16, move;
     --cursor-crosshair: url("../../assets/cursors/cursor_crosshair.svg") 0 0, crosshair;
     --cursor-crosshair-centered: url("../../assets/cursors/cursor_crosshair.svg") 16 16, crosshair;
+    --cursor-selectable: url("../../assets/cursors/cursor_selectable.svg") 0 0, pointer;
+    --cursor-foldable: url("../../assets/cursors/cursor_foldable.svg") 0 0, pointer;
     --cursor-help: help;
     --cursor-not-allowed: not-allowed;
     --cursor-text: text;
@@ -135,6 +137,24 @@
     [class*="before:cursor-pointer"]::before,
     [class*="after:cursor-pointer"]::after {
       cursor: var(--cursor-pointer) !important;
+    }
+
+    .cursor-selectable,
+    [style*="cursor: selectable"],
+    [style*="cursor:selectable"],
+    [class*="cursor-selectable"],
+    [class*="before:cursor-selectable"]::before,
+    [class*="after:cursor-selectable"]::after {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    .cursor-foldable,
+    [style*="cursor: foldable"],
+    [style*="cursor:foldable"],
+    [class*="cursor-foldable"],
+    [class*="before:cursor-foldable"]::before,
+    [class*="after:cursor-foldable"]::after {
+      cursor: var(--cursor-foldable) !important;
     }
 
     .cursor-grab,
@@ -210,12 +230,19 @@
     }
 
     .cursor-not-allowed,
+    [class~="cursor-not-allowed"],
     [style*="cursor: not-allowed"],
-    [style*="cursor:not-allowed"],
-    [class*="cursor-not-allowed"],
-    [class*="before:cursor-not-allowed"]::before,
-    [class*="after:cursor-not-allowed"]::after {
+    [style*="cursor:not-allowed"] {
       cursor: var(--cursor-not-allowed) !important;
+    }
+
+    [class*="cursor-not-allowed"]:is(:disabled, [aria-disabled="true"], [data-disabled="true"]) {
+      cursor: var(--cursor-not-allowed) !important;
+    }
+
+    body.cursor-selectable,
+    body.cursor-selectable * {
+      cursor: var(--cursor-selectable) !important;
     }
 
     .cursor-help,
@@ -237,7 +264,7 @@
     }
 
     .react-flow__node {
-      cursor: var(--cursor-pointer) !important;
+      cursor: var(--cursor-selectable) !important;
     }
 
     .react-flow__edge {
@@ -319,6 +346,8 @@
   --cursor-move: url("../../assets/cursors/cursor_move_dark.svg") 16 16, move;
   --cursor-crosshair: url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0, crosshair;
   --cursor-crosshair-centered: url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16, crosshair;
+  --cursor-selectable: url("../../assets/cursors/cursor_selectable_dark.svg") 0 0, pointer;
+  --cursor-foldable: url("../../assets/cursors/cursor_foldable_dark.svg") 0 0, pointer;
   --info-bg: var(--color-dark-8-9);
   --info-foreground: var(--color-light);
   --info-border: var(--color-info);

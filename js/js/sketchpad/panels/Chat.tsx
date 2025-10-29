@@ -24,12 +24,13 @@ import { useTranslation } from "react-i18next";
 import { Textarea } from "../../elements/input/Textarea";
 import Panel from "../Panel";
 import { ResizablePanelProps } from "../Sketchpad";
-import { useIsMobile } from "../store";
+import { useIsMobile, useTooltip } from "../store";
 
 interface ChatProps extends ResizablePanelProps {}
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   const { t } = useTranslation();
+  const tooltip = useTooltip();
   const isMobile = useIsMobile();
 
   return (
@@ -41,7 +42,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       resizeSide="left"
       footer={
         <div className={`${isMobile ? "p-2" : "p-1"} border-t`}>
-          <Textarea placeholder={t("chat.placeholder")} />
+          <Textarea placeholder={t("chat.placeholder")} tooltip={tooltip("chat.input", { manualPath: "interface#chat", tutorialPath: "hello-semio/sketch-setup" })} />
         </div>
       }
     />
