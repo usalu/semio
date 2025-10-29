@@ -603,7 +603,6 @@ export const AuthorsSection: FC = () => {
 };
 
 const AuthorsSectionForm: FC = () => {
-  const { t } = useTranslation();
   const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
@@ -717,7 +716,6 @@ export const AttributesSection: FC = () => {
 };
 
 const AttributesSectionForm: FC = () => {
-  const { t } = useTranslation();
   const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
@@ -856,7 +854,6 @@ export const PortSection: FC<{ portGuid: Guid }> = ({ portGuid }) => {
 };
 
 const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
-  const { t } = useTranslation();
   const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
@@ -1071,7 +1068,6 @@ export const PortsMultipleSection: FC<{ portGuids: Guid[] }> = ({ portGuids }) =
 };
 
 const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
-  const { t } = useTranslation();
   const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction } = useTypeAppCommands();
   const kitCommands = useKitCommands();
@@ -1137,7 +1133,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
           <Input
             i18n="semio.sketchpad.app.type.panel.details.port.family"
             value={commonFamily || ""}
-            placeholder={commonFamily === undefined ? i18n.t("semio.sketchpad.common.mixedValues") : i18n.t("semio.sketchpad.app.type.portFamilyPlaceholder.label")}
+            placeholderI18n={commonFamily === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portFamilyPlaceholder.label"}
             onChange={(e) => {
               updatePorts({ family: e.target.value });
             }}

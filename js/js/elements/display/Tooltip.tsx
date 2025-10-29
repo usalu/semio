@@ -107,6 +107,16 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
 
+  const handleHotkeyClick = () => {
+    if (labelKey) {
+      window.dispatchEvent(
+        new CustomEvent("navigate-to-hotkey", {
+          detail: { path: labelKey },
+        }),
+      );
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <span>{label}</span>
@@ -128,7 +138,13 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
           ) : (
             <span className="block" />
           )}
-          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono justify-self-end">{hotkey}</kbd> : <span className="block" />}
+          {hotkey ? (
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+              {hotkey}
+            </kbd>
+          ) : (
+            <span className="block" />
+          )}
         </div>
       ) : null}
     </div>
@@ -160,6 +176,14 @@ function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
 
   const displayText = description || label;
 
+  const handleHotkeyClick = () => {
+    window.dispatchEvent(
+      new CustomEvent("navigate-to-hotkey", {
+        detail: { path: i18nKey },
+      }),
+    );
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <span>{displayText}</span>
@@ -181,7 +205,13 @@ function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
           ) : (
             <span className="block" />
           )}
-          {hotkey ? <kbd className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono justify-self-end">{hotkey}</kbd> : <span className="block" />}
+          {hotkey ? (
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-1.5 py-0.5 text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+              {hotkey}
+            </kbd>
+          ) : (
+            <span className="block" />
+          )}
         </div>
       ) : null}
     </div>

@@ -368,8 +368,9 @@ const PortToolContent: FC<ToolRenderContext<TypeAppState>> = ({ state, selection
 export const PortTool: Tool<TypeAppState> = {
   id: ToolType.PORT,
   label: "tools.port.label",
+  i18n: "tools.port.addAndEdit",
   icon: <Crosshair className="h-4 w-4" />,
-  tooltip: "tools.port.addAndEdit",
+  hotkey: "2",
   render: (context: ToolRenderContext<TypeAppState>) => ({
     scene: <PortToolContent {...context} />,
   }),

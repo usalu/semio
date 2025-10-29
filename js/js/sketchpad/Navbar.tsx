@@ -29,7 +29,7 @@ import { ButtonGroup, ButtonGroupItem } from "../elements/input/ButtonGroup";
 import { Toggle } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../elements/navigation/Breadcrumb";
-import { Author, AuthorDiff, Connection, Design, DesignDiff, DesignShallow, FileDiff, generateUniqueName, Guid, KitShallow, Piece, Quality, File as SemioFile, Type, TypeDiff, TypeShallow } from "../semio";
+import { Design, DesignShallow, generateUniqueName, KitShallow, Quality, Type, TypeShallow } from "../semio";
 import "./apps";
 import { appRegistry } from "./apps";
 import { useDesignAppCommands } from "./apps/design/store";
@@ -44,9 +44,12 @@ import {
   useAppCommands,
   useAppPanelVisibility,
   useAppType,
+  useFilteredKitShallows,
   useIsFullscreen,
   useIsMobile,
   useIsNavbarExpanded,
+  useKitCommandsById,
+  useKitKind,
   useKits,
   useMode,
   useNavigation,
@@ -54,8 +57,9 @@ import {
   useSketchpad,
   useSketchpadCommands,
   useSketchpadScope,
-  useSketchpadStore,
   useTooltip,
+  useUpdateRecentFocusItems,
+  useUpdateRecentSearches,
   WindowEvents,
 } from "./store";
 
@@ -255,16 +259,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const isKitApp = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp;
 
   const kit = kits.find((k) => k.guid === kitGuid);
-  const store = useSketchpadStore();
-
-  const kitKind = useMemo(() => {
-    if (!kitGuid || !store.hasKit(kitGuid)) return undefined;
-    const kitStore = store.kit(kitGuid);
-    if (!kitStore) return undefined;
-    if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) return "remote";
-    if (kitStore.isLocallyPersisted) return "local";
-    return "temporary";
-  }, [kitGuid, store]);
+  const kitKind = useKitKind(kitGuid || "");
 
   const kitKindItems = [
     { label: <Clock size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.temporary", href: "/?kind=temporary" },
@@ -272,51 +267,15 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     { label: <Cloud size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
   ];
 
+  const filteredKits = useFilteredKitShallows(kitKind);
   const kitItemsWithCreate = useMemo(() => {
-    const items = kits
-      .filter((k) => {
-        if (!kitKind) return true;
-        const ks = store.kit(k.guid);
-        const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
-        return kKind === kitKind;
-      })
-      .map((k) => ({ label: k.name, href: `/kits/${k.guid}` }));
-
+    const items = filteredKits.map((k) => ({ label: k.name, href: `/kits/${k.guid}` }));
     items.push({ label: "+ " + t("semio.sketchpad.navbar.createKit"), href: "#create-kit" });
     return items;
-  }, [kits, kitKind, store, t]);
+  }, [filteredKits, t]);
 
   const sketchpadCommands = useSketchpadCommands();
-
-  const kitCommands = useMemo(() => {
-    if (!kitGuid || !store.hasKit(kitGuid)) return null;
-    const kitStore = store.kit(kitGuid);
-    return {
-      importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-      exportKit: () => kitStore.execute("semio.kit.export"),
-      createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", author),
-      updateAuthor: (authorId: string, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", authorId, authorDiff),
-      deleteAuthor: (authorId: string) => kitStore.execute("semio.kit.deleteAuthor", authorId),
-      createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
-      updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", guid, diff),
-      deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", guid),
-      createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
-      updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", guid, diff),
-      deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", guid),
-      addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
-      updateFile: (url: string, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
-      removeFile: (url: string) => kitStore.execute("semio.kit.removeFile", url),
-      addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", design, piece),
-      addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", design, pieces),
-      removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", design, piece),
-      removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", design, pieces),
-      addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", design, connection),
-      addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", design, connections),
-      removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", design, connection),
-      removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", design, connections),
-      deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
-    };
-  }, [kitGuid, store]);
+  const kitCommands = useKitCommandsById(kitGuid || undefined);
 
   const artifactKinds = [
     { label: <Layout size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.designs", kind: "designs", href: kitGuid ? `/kits/${kitGuid}?kind=designs` : "/kits?kind=designs" },
@@ -563,35 +522,25 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   }, [kit, kits, t]);
 
   // Build breadcrumb items for home page kits filtered by kind
+  const homeKitsByKind = useFilteredKitShallows(homeKind || undefined);
   const homeKitsForKind = useMemo(() => {
     if (!homeKind) return [];
-    return kits
-      .filter((k) => {
-        const ks = store.kit(k.guid);
-        const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
-        return kKind === homeKind;
-      })
-      .map((k) => ({
-        label: k.name,
-        href: `/?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
-      }));
-  }, [homeKind, kits, store]);
+    return homeKitsByKind.map((k) => ({
+      label: k.name,
+      href: `/?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
+    }));
+  }, [homeKind, homeKitsByKind]);
 
   // Build breadcrumb items for home page versions filtered by name
   const homeVersionsForName = useMemo(() => {
     if (!homeName || !homeKind) return [];
-    return kits
-      .filter((k) => {
-        if (k.name !== homeName) return false;
-        const ks = store.kit(k.guid);
-        const kKind = ks.isLocallyPersisted && ks.isRemotelySynced ? "remote" : ks.isLocallyPersisted ? "local" : "temporary";
-        return kKind === homeKind;
-      })
+    return homeKitsByKind
+      .filter((k) => k.name === homeName)
       .map((k) => ({
         label: k.version || <span className="italic opacity-70">{t("semio.sketchpad.app.kit.defaultVersion")}</span>,
         href: `/kits/${k.guid}`,
       }));
-  }, [homeName, homeKind, kits, store, t]);
+  }, [homeName, homeKind, homeKitsByKind, t]);
 
   // Build breadcrumb items for filtered names in kit app
   const filteredNameItems = useMemo(() => {
@@ -1094,8 +1043,8 @@ const Search: FC = ({}) => {
   const { t } = useTranslation();
 
   const navigate = useNavigate();
-  const store = useSketchpadStore();
   const recentSearches = (useSketchpad((s) => s.recentSearches) as string[]) || [];
+  const updateRecentSearches = useUpdateRecentSearches();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const kits = useKits();
@@ -1189,7 +1138,7 @@ const Search: FC = ({}) => {
       if (path) {
         const next = [path, ...recentSearches.filter((entry) => entry !== path)].slice(0, 20);
         const changed = next.length !== recentSearches.length || next.some((entry, index) => entry !== recentSearches[index]);
-        if (changed) store.change({ recentSearches: next });
+        if (changed) updateRecentSearches(next);
       }
       setOpen(false);
       setQuery("");
@@ -1203,7 +1152,7 @@ const Search: FC = ({}) => {
         else if (type === "docs") navigate(`/${(item as { path: string }).path}`);
       }
     },
-    [navigate, recentSearches, store],
+    [navigate, recentSearches, updateRecentSearches],
   );
 
   const getIcon = (type: SearchResult["type"]) => {
@@ -1310,10 +1259,10 @@ const Focus: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const focusContext = useFocusSafe();
-  const store = useSketchpadStore();
   const appType = useAppType();
   const recentFocusMap = (useSketchpad((s) => s.recentFocusItems) as Record<string, string[]>) || {};
   const recentFocusIds = recentFocusMap[appType] || [];
+  const updateRecentFocusItems = useUpdateRecentFocusItems();
 
   const focusItems = focusContext?.focusItems || [];
   const triggerFocusItem = focusContext?.triggerFocusItem;
@@ -1362,12 +1311,12 @@ const Focus: FC = ({}) => {
     (item: FocusItem) => {
       const next = [item.id, ...recentFocusIds.filter((id) => id !== item.id)].slice(0, 20);
       const changed = next.length !== recentFocusIds.length || next.some((id, index) => id !== recentFocusIds[index]);
-      if (changed) store.change({ recentFocusItems: { [appType]: next } });
+      if (changed) updateRecentFocusItems(appType, next);
       setOpen(false);
       setQuery("");
       if (triggerFocusItem) triggerFocusItem(item.id);
     },
-    [appType, recentFocusIds, store, triggerFocusItem],
+    [appType, recentFocusIds, updateRecentFocusItems, triggerFocusItem],
   );
 
   const groupedResults = useMemo(() => {
@@ -1719,7 +1668,6 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
   const { canGoBack, canGoForward } = useNavigationHistory();
   const [searchParams] = useSearchParams();
   const kits = useKits();
-  const store = useSketchpadStore();
   const pathParts = currentPathname.split("/").filter((p) => p);
   const isKitsPath = pathParts[0] === "kits";
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -1730,14 +1678,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
-  const kitKind = useMemo(() => {
-    if (!kitGuid || !store.hasKit(kitGuid)) return undefined;
-    const kitStore = store.kit(kitGuid);
-    if (!kitStore) return undefined;
-    if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) return "remote";
-    if (kitStore.isLocallyPersisted) return "local";
-    return "temporary";
-  }, [kitGuid, store]);
+  const kitKind = useKitKind(kitGuid || "");
   const currentKit = useMemo(() => {
     if (!kitGuid) return undefined;
     return kits.find((k) => k.guid === kitGuid);

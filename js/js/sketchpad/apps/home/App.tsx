@@ -33,7 +33,8 @@ import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
+import { useAppType, useGetKitKind, useIsMobile, useKits, useNavigation, useSketchpadCommands, useTooltip } from "../../store";
+import { useHotkeys } from "../../hotkeys";
 import { KitSection } from "./panels/Details";
 import { useHome, useHomeCommands } from "./store";
 
@@ -70,7 +71,7 @@ const Home: FC = ({}) => {
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
-  const store = useSketchpadStore();
+  const getKitKind = useGetKitKind();
   const { createKit, navigateToKit } = useSketchpadCommands();
 
   const homeState = useHome() as any;
@@ -129,16 +130,13 @@ const Home: FC = ({}) => {
   const uniqueNames = useMemo(() => {
     const nameSet = new Set<string>();
     kits.forEach((kit) => {
-      const kitStore = store.kit(kit.guid);
-      let type: KitStoreKind = "temporary";
-      if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
-      else if (kitStore.isLocallyPersisted) type = "local";
+      const type = getKitKind(kit.guid) || "temporary";
 
       if (selectedKind && selectedKind !== type) return;
       nameSet.add(kit.name);
     });
     return Array.from(nameSet).sort();
-  }, [kits, store, selectedKind]);
+  }, [kits, getKitKind, selectedKind]);
 
   // Collect unique versions for the selected name
   const uniqueVersions = useMemo(() => {
@@ -164,10 +162,7 @@ const Home: FC = ({}) => {
     const kitGroups = new Map<string, KitShallow[]>();
 
     kits.forEach((kit) => {
-      const kitStore = store.kit(kit.guid);
-      let type: KitStoreKind = "temporary";
-      if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
-      else if (kitStore.isLocallyPersisted) type = "local";
+      const type = getKitKind(kit.guid) || "temporary";
 
       if (selectedKind && selectedKind !== type) return;
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
@@ -185,10 +180,7 @@ const Home: FC = ({}) => {
       const parentKit = defaultKit || groupKits[0];
       const hasChildren = groupKits.some((k) => k.guid !== parentKit.guid);
 
-      const kitStore = store.kit(parentKit.guid);
-      let type: KitStoreKind = "temporary";
-      if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) type = "remote";
-      else if (kitStore.isLocallyPersisted) type = "local";
+      const type = getKitKind(parentKit.guid) || "temporary";
 
       result.push({
         id: parentId,
@@ -205,10 +197,7 @@ const Home: FC = ({}) => {
       if (expandedRows.has(parentId) && hasChildren) {
         groupKits.forEach((kit) => {
           if (kit.guid === parentKit.guid) return;
-          const kitStore = store.kit(kit.guid);
-          let kitKind: KitStoreKind = "temporary";
-          if (kitStore.isLocallyPersisted && kitStore.isRemotelySynced) kitKind = "remote";
-          else if (kitStore.isLocallyPersisted) kitKind = "local";
+          const kitKind = getKitKind(kit.guid) || "temporary";
 
           const versionId = `${parentId}-${kit.version || "default"}`;
           result.push({
@@ -276,7 +265,7 @@ const Home: FC = ({}) => {
     }
 
     return result;
-  }, [kits, store, selectedKind, searchQuery, selectedName, selectedVersion, expandedRows, sortColumn, sortDirection]);
+  }, [kits, getKitKind, selectedKind, searchQuery, selectedName, selectedVersion, expandedRows, sortColumn, sortDirection]);
 
   const { setFocusItems, setOnFocusItem } = useFocus();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -366,6 +355,11 @@ const Home: FC = ({}) => {
     }
     setSearchParams(newParams);
   };
+
+  // Register hotkeys for filter toggles
+  useHotkeys("semio.sketchpad.app.home.filter.kind.temporary.hotkey", () => toggleKind("temporary"));
+  useHotkeys("semio.sketchpad.app.home.filter.kind.local.hotkey", () => toggleKind("local"));
+  useHotkeys("semio.sketchpad.app.home.filter.kind.remote.hotkey", () => toggleKind("remote"));
 
   const toggleName = (name: string) => {
     const newParams = new URLSearchParams(searchParams);

@@ -19,18 +19,17 @@
 
 // #endregion
 
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../elements/input/Select";
 import { Representation } from "../../../semio";
-import { useSketchpadStore } from "../../store";
-import { useTypeAppCommands } from "./store";
+import { useSketchpadStore, useSync } from "../../store";
+import { useTypeAppCommands, useTypeAppSelectedRepresentationGuid } from "./store";
 
 export const RepresentationDropdown: FC = () => {
   const { t } = useTranslation();
   const params = useParams();
-  const sketchpadStore = useSketchpadStore();
 
   const kitGuid = params.kit;
   const typeGuid = params.type;
@@ -41,42 +40,21 @@ export const RepresentationDropdown: FC = () => {
     return { kit: kitGuid, type: typeGuid };
   }, [kitGuid, typeGuid]);
 
-  // Get type and selectedRepresentationGuid from sketchpad store directly
-  // Use a state selector to reactively track changes
-  const type = useMemo(() => {
-    if (!kitGuid || !typeGuid) return undefined;
-    if (!sketchpadStore.hasKit(kitGuid)) return undefined;
+  // Get type directly from the store since this component is rendered in the footer
+  // (outside of KitScopeProvider/TypeScopeProvider context)
+  const sketchpadStore = useSketchpadStore();
+  const typeStore = useMemo(() => {
+    if (!kitGuid || !typeGuid) return null;
+    if (!sketchpadStore.hasKit(kitGuid)) return null;
     const kitStore = sketchpadStore.kit(kitGuid);
-    if (!kitStore || !kitStore.hasType(typeGuid)) return undefined;
-    const typeStore = kitStore.type(typeGuid);
-    return typeStore?.snapshot();
+    if (!kitStore.hasType(typeGuid)) return null;
+    return kitStore.type(typeGuid);
   }, [sketchpadStore, kitGuid, typeGuid]);
 
-  const selectedRepresentationGuid = useMemo(() => {
-    if (!kitGuid || !typeGuid) return undefined;
-    const typeAppStore = sketchpadStore.typeApp(kitGuid, typeGuid);
-    return typeAppStore?.snapshot()?.selectedRepresentationGuid;
-  }, [sketchpadStore, kitGuid, typeGuid]);
+  const type = useSync(typeStore, (t) => t, true);
 
-  // Subscribe to type changes to force re-render when representations change
-  const [, forceUpdate] = useState({});
-  useEffect(() => {
-    if (!kitGuid || !typeGuid) return;
-    if (!sketchpadStore.hasKit(kitGuid)) return;
-    const kitStore = sketchpadStore.kit(kitGuid);
-    if (!kitStore || !kitStore.hasType(typeGuid)) return;
-    const typeStore = kitStore.type(typeGuid);
-    if (!typeStore) return;
-
-    // Use onChangedDeep to catch nested changes like representations array modifications
-    const unsubscribe = typeStore.onChangedDeep(() => {
-      forceUpdate({});
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [sketchpadStore, kitGuid, typeGuid]);
+  // Get selected representation GUID using hook
+  const selectedRepresentationGuid = useTypeAppSelectedRepresentationGuid();
 
   const { setSelectedRepresentation } = useTypeAppCommands(typeAppId);
 

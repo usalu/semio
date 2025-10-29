@@ -22,9 +22,9 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (t) => [
-    { key: "details", icon: Info, tooltip: t("semio.panels.details"), hotkey: "⌘L" },
-    { key: "chat", icon: MessageCircle, tooltip: t("semio.panels.chat"), hotkey: "⌘[" },
-    { key: "settings", icon: Settings, tooltip: t("semio.panels.settings"), hotkey: "⌘," },
+    { key: "details", icon: Info, tooltip: { labelKey: "semio.sketchpad.navbar.panelToggle.details.show" }, hotkey: t("semio.sketchpad.navbar.panelToggle.details.show.hotkey") },
+    { key: "chat", icon: MessageCircle, tooltip: { labelKey: "semio.sketchpad.navbar.panelToggle.chat.show" }, hotkey: t("semio.sketchpad.navbar.panelToggle.chat.show.hotkey") },
+    { key: "settings", icon: Settings, tooltip: { labelKey: "semio.sketchpad.navbar.panelToggle.settings.show" }, hotkey: t("semio.sketchpad.navbar.panelToggle.settings.show.hotkey") },
   ],
   matchesPath: (pathParts) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

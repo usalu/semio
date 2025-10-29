@@ -25,7 +25,7 @@ import { TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
 import { Input } from "../../../../elements/input/Input";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { KitShallow } from "../../../../semio";
-import { useSketchpadStore } from "../../../store";
+import { useKitShallows } from "../../../store";
 import { HomeState, useHome } from "../store";
 
 export const KitSection: FC = () => {
@@ -40,8 +40,8 @@ export const KitSection: FC = () => {
 
 const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   const { t } = useTranslation();
-  const sketchpadStore = useSketchpadStore();
-  const kitShallow = sketchpadStore.kitShallows().find((k) => k.guid === kitId);
+  const kitShallows = useKitShallows();
+  const kitShallow = kitShallows.find((k) => k.guid === kitId);
   if (!kitShallow) {
     return (
       <TreeItem>
@@ -84,8 +84,8 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
 
 const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   const { t } = useTranslation();
-  const sketchpadStore = useSketchpadStore();
-  const kits = kitIds.map((id) => sketchpadStore.kitShallows().find((k) => k.guid === id)).filter((k) => k !== undefined) as KitShallow[];
+  const kitShallows = useKitShallows();
+  const kits = kitIds.map((id) => kitShallows.find((k) => k.guid === id)).filter((k) => k !== undefined) as KitShallow[];
 
   // Helper function to get common value or undefined if different
   const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
@@ -115,7 +115,12 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea label={t("semio.sketchpad.app.kit.description")} value={commonDescription || ""} placeholder={commonDescription === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.descriptionPlaceholder")} readOnly />
+          <Textarea
+            label={t("semio.sketchpad.app.kit.description")}
+            value={commonDescription || ""}
+            placeholder={commonDescription === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.descriptionPlaceholder")}
+            readOnly
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>

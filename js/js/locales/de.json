@@ -1,1009 +1,1470 @@
 {
-  "navbar": {
-    "back": "Go back",
-    "back.beginner": "Click to go back, hold to see history",
-    "forward": "Go forward",
-    "forward.beginner": "Click to go forward, hold to see history",
-    "up": "Go up one level",
-    "up.beginner": "Click to go up one level",
-    "home": "Go to home",
-    "home.beginner": "Click to go to home",
-    "kits": "All kits",
-    "kits.beginner": "Click to see all kits",
-    "docs": "Documentation",
-    "kitKinds": "Expand kit kinds",
-    "kitKinds.beginner": "Click to expand all kit kinds",
-    "kit": "Go to kit",
-    "kit.beginner": "Click to go to kit",
-    "artifacts": "All artifacts",
-    "artifacts.beginner": "Click to see all artifacts that are part of the kit",
-    "designs": "All designs",
-    "designs.beginner": "Click to see all designs",
-    "design": "Go to design",
-    "design.beginner": "Click to go to design",
-    "type": "Go to type",
-    "type.beginner": "Click to go to type",
-    "quality": "Go to quality",
-    "quality.beginner": "Click to go to quality",
-    "selectDesign": "Select design",
-    "selectDesign.beginner": "Click to select a design from the available options",
-    "selectType": "Select type",
-    "selectType.beginner": "Click to select a type from the available options",
-    "selectVariant": "Select variant",
-    "selectVariant.beginner": "Click to select a variant from the available options",
-    "selectView": "Select view",
-    "selectView.beginner": "Click to select a view from the available options",
-    "variant": "Variant",
-    "variant.beginner": "Click to change the variant",
-    "view": "View",
-    "view.beginner": "Click to change the view",
-    "create": "Create",
-    "create.beginner": "Click to create a new item",
-    "createKit": "Create Kit",
-    "createKit.beginner": "Click to create a new kit",
-    "createVersion": "Create Version",
-    "createVersion.beginner": "Click to create a new version of this kit",
-    "createDesign": "Create Design",
-    "createDesign.beginner": "Click to create a new design",
-    "createType": "Create Type",
-    "createType.beginner": "Click to create a new type",
-    "createVariant": "Create Variant",
-    "createVariant.beginner": "Click to create a new variant",
-    "createView": "Create View",
-    "createView.beginner": "Click to create a new view",
-    "fullscreen": "Enter fullscreen",
-    "fullscreen.beginner": "Click to enter fullscreen",
-    "exitFullscreen": "Exit fullscreen",
-    "exitFullscreen.beginner": "Click to exit fullscreen",
-    "minimize": "Minimize window",
-    "minimize.beginner": "Click to minimize window",
-    "maximize": "Maximize window",
-    "maximize.beginner": "Click to maximize window",
-    "close": "Close window",
-    "close.beginner": "Click to close window",
-    "collapse": "Collapse navbar",
-    "collapse.beginner": "Click to collapse navbar",
-    "expand": "Expand navbar",
-    "expand.beginner": "Click to expand navbar",
-    "changePanelType": "Change panel type",
-    "changePanelType.beginner": "Click to change panel type",
-    "panelToggle.workbench.show": "Show Workbench Panel",
-    "panelToggle.workbench.show.beginner": "Click to show the Workbench panel",
-    "panelToggle.workbench.hide": "Hide Workbench Panel",
-    "panelToggle.workbench.hide.beginner": "Click to hide the Workbench panel",
-    "panelToggle.tools.show": "Show Tools Panel",
-    "panelToggle.tools.show.beginner": "Click to show the Tools panel",
-    "panelToggle.tools.hide": "Hide Tools Panel",
-    "panelToggle.tools.hide.beginner": "Click to hide the Tools panel",
-    "panelToggle.hud.show": "Show HUD Panel",
-    "panelToggle.hud.show.beginner": "Click to show the HUD panel",
-    "panelToggle.hud.hide": "Hide HUD Panel",
-    "panelToggle.hud.hide.beginner": "Click to hide the HUD panel",
-    "panelToggle.stats.show": "Show Stats Panel",
-    "panelToggle.stats.show.beginner": "Click to show the Stats panel",
-    "panelToggle.stats.hide": "Hide Stats Panel",
-    "panelToggle.stats.hide.beginner": "Click to hide the Stats panel",
-    "panelToggle.details.show": "Show Details Panel",
-    "panelToggle.details.show.beginner": "Click to show the Details panel",
-    "panelToggle.details.hide": "Hide Details Panel",
-    "panelToggle.details.hide.beginner": "Click to hide the Details panel",
-    "panelToggle.chat.show": "Show Chat Panel",
-    "panelToggle.chat.show.beginner": "Click to show the Chat panel",
-    "panelToggle.chat.hide": "Hide Chat Panel",
-    "panelToggle.chat.hide.beginner": "Click to hide the Chat panel",
-    "panelToggle.settings.show": "Show Settings Panel",
-    "panelToggle.settings.show.beginner": "Click to show the Settings panel",
-    "panelToggle.settings.hide": "Hide Settings Panel",
-    "panelToggle.settings.hide.beginner": "Click to hide the Settings panel",
-    "panelToggle.toolbar.show": "Show Toolbar Panel",
-    "panelToggle.toolbar.show.beginner": "Click to show the Toolbar panel",
-    "panelToggle.toolbar.hide": "Hide Toolbar Panel",
-    "panelToggle.toolbar.hide.beginner": "Click to hide the Toolbar panel",
-    "panelToggle.right.label": "Show Chat or Settings Panel",
-    "panelToggle.right.label.beginner": "Use the dropdown to open the Chat or Settings panel",
-    "searchTitle": "Search",
-    "searchDescription": "Search for kits, designs, types, and more",
-    "searchPlaceholder": "Search...",
-    "search.open": "Open search",
-    "search.open.beginner": "Click to open the search dialog",
-    "search.close": "Close search",
-    "search.close.beginner": "Click to close the search dialog",
-    "noResults": "No results found",
-    "suggestions": "Suggestions"
-  },
-  "panels": {
-    "toolbar": "Toolbar panel",
-    "toolbar.beginner": "Toggle the toolbar panel to access common tools and actions for the current workspace",
-    "toolbar.noTools": "No tools",
-    "details": "Details panel",
-    "details.beginner": "Toggle the details panel to view and edit properties of the selected item in depth",
-    "workbench": "Workbench panel",
-    "workbench.beginner": "Toggle the workbench panel to access your main workspace with available tools and options",
-    "workbench.noSections": "No workbench sections available",
-    "console": "Console panel",
-    "console.beginner": "Toggle the console panel to view logs and debug information",
-    "chat": "Chat panel",
-    "chat.beginner": "Toggle the chat panel to get AI assistance and context-aware help",
-    "settings": "Settings panel",
-    "settings.beginner": "Toggle the settings panel to configure application preferences and workspace options",
-    "tools.noSections": "No tools sections available",
-    "hud.noSections": "No hud sections available"
-  },
-  "kit": {
-    "title": "Kit",
-    "name": "Name",
-    "version": "Version",
-    "defaultVersion": "Default Version",
-    "newVersion": "New Version",
-    "defaultName": "New Kit",
-    "description": "Description",
-    "descriptionPlaceholder": "Enter kit description...",
-    "icon": "Icon",
-    "iconPlaceholder": "Emoji, name, or URL",
-    "image": "Image URL",
-    "imagePlaceholder": "URL to kit image",
-    "homepage": "Homepage",
-    "homepagePlaceholder": "Homepage URL",
-    "license": "License",
-    "licensePlaceholder": "License type",
-    "versionPlaceholder": "Version number",
-    "notAvailable": "Kit not available",
-    "notFound": "Kit not found or not loaded",
-    "noKitLoaded": "No kit loaded"
-  },
-  "design": {
-    "title": "Design",
-    "name": "Name",
-    "defaultName": "New Design",
-    "description": "Description",
-    "descriptionPlaceholder": "Enter design description...",
-    "icon": "Icon",
-    "iconPlaceholder": "Emoji, name, or URL",
-    "image": "Image URL",
-    "imagePlaceholder": "URL to design image",
-    "variant": "Variant",
-    "variantPlaceholder": "Design variant",
-    "defaultVariant": "Default Variant",
-    "newVariant": "New Variant",
-    "view": "View",
-    "viewPlaceholder": "Design view",
-    "defaultView": "Default View",
-    "newView": "New View",
-    "unit": "Unit",
-    "location": "Location",
-    "longitude": "Longitude",
-    "latitude": "Latitude",
-    "altitude": "Altitude",
-    "authors": "Authors",
-    "author": "Author",
-    "authorName": "Name",
-    "authorEmail": "Email",
-    "addAuthor": "Add author",
-    "attributes": "Attributes",
-    "attribute": "Attribute",
-    "attributeName": "Name",
-    "attributeValue": "Value",
-    "attributeValuePlaceholder": "Optional value",
-    "attributeUnit": "Unit",
-    "attributeUnitPlaceholder": "Optional unit",
-    "attributeDefinition": "Definition",
-    "attributeDefinitionPlaceholder": "Optional definition (text or URL)",
-    "addAttribute": "Add attribute",
-    "removeAttribute": "Remove attribute",
-    "metadata": "Metadata",
-    "created": "Created",
-    "updated": "Updated",
-    "pieces": "Pieces",
-    "pieces.multipleTitle": "Multiple Pieces",
-    "connections": "Connections",
-    "connections.multipleTitle": "Multiple Connections",
-    "selection.multipleTitle": "Multiple Selection",
-    "selectOnlyPiecesOrConnections": "Select only pieces or only connections to edit details.",
-    "appTitle": "Design App",
-    "snappiness": "Snappiness",
-    "gridSize": "Grid Size",
-    "variantPrefix": "Variant",
-    "viewPrefix": "View"
-  },
-  "piece": {
-    "id": "ID",
-    "type": "Type",
-    "typePlaceholder": "Select type",
-    "variant": "Variant",
-    "variantPlaceholder": "Select variant",
-    "piece": "Piece",
-    "designPiece": "Design Piece",
-    "designName": "Design Name",
-    "designNamePlaceholder": "Select design",
-    "designVariant": "Design Variant",
-    "designVariantPlaceholder": "Select variant",
-    "designView": "Design View",
-    "designViewPlaceholder": "Select view",
-    "mixedSelection": "Mixed Selection ({{count}})",
-    "mixedSelectionMessage": "Selection contains both design pieces and regular pieces. Select only design pieces or only regular pieces to edit properties.",
-    "multiplePieces": "Multiple Pieces ({{count}})",
-    "multipleDesignPieces": "Multiple Design Pieces ({{count}})",
-    "fixPiece": "Fix piece",
-    "fixPieces": "Fix pieces",
-    "center": "Center",
-    "plane": "Plane",
-    "planeOrigin": "Origin",
-    "planeXAxis": "X Axis",
-    "planeYAxis": "Y Axis",
-    "origin": "Origin"
-  },
-  "connection": {
-    "title": "Connection",
-    "multipleConnections": "Multiple Connections",
-    "connecting": "Connecting",
-    "connected": "Connected",
-    "pieceId": "Piece ID",
-    "portId": "Port ID",
-    "designPieceId": "Design Piece ID",
-    "translation": "Translation",
-    "gap": "Gap",
-    "shift": "Shift",
-    "rise": "Rise",
-    "orientation": "Orientation",
-    "rotation": "Rotation",
-    "turn": "Turn",
-    "tilt": "Tilt",
-    "diagram": "Diagram",
-    "xOffset": "X Offset",
-    "yOffset": "Y Offset"
-  },
-  "port": {
-    "title": "Port",
-    "id": "ID",
-    "description": "Description",
-    "family": "Family",
-    "mandatory": "Mandatory",
-    "yes": "Yes",
-    "no": "No"
-  },
-  "common": {
-    "x": "X",
-    "y": "Y",
-    "z": "Z",
-    "add": "Add",
-    "remove": "Remove",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "create": "Create",
-    "update": "Update",
-    "search": "Search",
-    "filter": "Filter",
-    "sort": "Sort",
-    "ascending": "Ascending",
-    "descending": "Descending",
-    "mixedValues": "Mixed values",
-    "selectDesign": "Select design",
-    "selectType": "Select type",
-    "selectVariant": "Select variant",
-    "selectView": "Select view",
-    "addVariant": "Add variant",
-    "addType": "Add type",
-    "addDesign": "Add design"
-  },
-  "home": {
-    "temporary": "Temporary",
-    "local": "Local",
-    "remote": "Remote",
-    "showTemporary": {
-      "label": "Temporäre Kits anzeigen",
-      "beginner": "Temporäre Kits anzeigen, die nur im Browser gespeichert sind.",
-      "hotkey": "Strg+1"
-    },
-    "hideTemporary": "Hide temporary kits",
-    "hideTemporary.beginner": "Click to hide temporary kits",
-    "showLocal": {
-      "label": "Lokale Kits anzeigen",
-      "beginner": "Kits anzeigen, die lokal auf deinem Gerät gespeichert sind.",
-      "hotkey": "Strg+2"
-    },
-    "hideLocal": "Hide local kits",
-    "hideLocal.beginner": "Click to hide local kits",
-    "showRemote": {
-      "label": "Remote-Kits anzeigen",
-      "beginner": "Kits anzeigen, die mit einem entfernten Speicher synchronisiert sind.",
-      "hotkey": "Strg+3"
-    },
-    "hideRemote": "Hide remote kits",
-    "hideRemote.beginner": "Click to hide remote kits",
-    "createTemporary": {
-      "label": "Temporäres Kit erstellen",
-      "beginner": "Ein neues temporäres Kit im Browserspeicher erstellen.",
-      "hotkey": "Strg+Shift+1"
-    },
-    "createLocal": {
-      "label": "Lokales Kit erstellen",
-      "beginner": "Ein neues Kit erstellen, das lokal auf deinem Gerät gespeichert wird.",
-      "hotkey": "Strg+Shift+2"
-    },
-    "createRemote": {
-      "label": "Remote-Kit erstellen",
-      "beginner": "Ein neues Kit erstellen, das mit einem entfernten Speicher synchronisiert wird.",
-      "hotkey": "Strg+Shift+3"
-    },
-    "createVersion": {
-      "label": "Neue Version erstellen",
-      "beginner": "Eine neue Version für dieses Kit erstellen."
-    },
-    "searchPlaceholder": "Search kits...",
-    "name": "Name",
-    "kind": "Kind",
-    "lastUpdated": "Last updated",
-    "created": "Created",
-    "sortByName": {
-      "label": "Nach Name sortieren",
-      "beginner": "Kits alphabetisch nach ihrem Namen sortieren."
-    },
-    "hideKind": {
-      "label": "Filter ausblenden",
-      "beginner": "Alle Kits unabhängig vom Speichertyp anzeigen."
-    },
-    "createKit": {
-      "label": "Kit erstellen",
-      "beginner": "Ein neues Kit für den ausgewählten Speichertyp erstellen.",
-      "hotkey": "Strg+Shift+K"
-    }
-  },
-  "kitApp": {
-    "designs": "Designs",
-    "designs.multipleTitle": "Multiple Designs",
-    "types": "Types",
-    "types.multipleTitle": "Multiple Types",
-    "qualities": "Qualities",
-    "artifacts.multiple": "Multiple Artifacts",
-    "files": "Files",
-    "authors": "Authors",
-    "showDesigns": "Show designs",
-    "hideDesigns": "Hide designs",
-    "showTypes": "Show types",
-    "hideTypes": "Hide types",
-    "showQualities": "Show qualities",
-    "hideQualities": "Hide qualities",
-    "showFiles": "Show files",
-    "hideFiles": "Hide files",
-    "showAuthors": "Show authors",
-    "hideAuthors": "Hide authors",
-    "showConcept": "Show {{concept}}",
-    "hideConcept": "Hide {{concept}}",
-    "createDesign": "Create new design",
-    "createType": "Create new type",
-    "createQuality": "Create new quality",
-    "createFile": "Create new file",
-    "createAuthor": "Create new author",
-    "createVariant": "Create new variant",
-    "createVariant.beginner": "Click to create a new variant",
-    "createView": "Create new view",
-    "createView.beginner": "Click to create a new view",
-    "name": "Name",
-    "kind": "Kind",
-    "lastUpdated": "Last updated",
-    "created": "Created",
-    "sortByName": "Sort by name"
-  },
-  "breadcrumb": {
-    "starter": "Starter",
-    "metabolism": "Metabolism",
-    "temporary": "Temporary kits",
-    "temporary.beginner": "Click to see all temporary kits",
-    "local": "Local kits",
-    "local.beginner": "Click to see all local kits",
-    "remote": "Remote kits",
-    "remote.beginner": "Click to see all remote kits",
-    "types": "Types",
-    "types.beginner": "Click to see all types",
-    "representations": "Representations",
-    "representations.beginner": "Click to see all representations",
-    "designs": "Designs",
-    "designs.beginner": "Click to see all designs",
-    "qualities": "Qualities",
-    "qualities.beginner": "Click to see all qualities",
-    "files": "Files",
-    "files.beginner": "Click to see all files",
-    "authors": "Authors",
-    "authors.beginner": "Click to see all authors"
-  },
-  "settings": {
-    "general": "Allgemein",
-    "theme": {
-      "label": "Thema",
-      "system": {
-        "label": "Systemthema",
-        "beginner": "Automatisch zwischen hellem und dunklem Modus gemäß Betriebssystem wechseln."
-      },
-      "light": {
-        "label": "Helles Thema",
-        "beginner": "Den hellen Modus unabhängig von der Systemeinstellung verwenden."
-      },
-      "dark": {
-        "label": "Dunkles Thema",
-        "beginner": "Den dunklen Modus unabhängig von der Systemeinstellung verwenden."
-      }
-    },
-    "layout": {
-      "label": "Layout",
-      "normal": {
-        "label": "Standardlayout",
-        "beginner": "Standardlayout für Desktop- und Laptop-Bedienung verwenden."
-      },
-      "touch": {
-        "label": "Touch-Layout",
-        "beginner": "Layout mit größeren Bedienelementen für Touch-Geräte verwenden."
-      }
-    },
-    "mode": {
-      "label": "Modus",
-      "beginner": {
-        "label": "Anfängermodus",
-        "beginner": "Geführte Hinweise und Tutorials anzeigen."
-      },
-      "normal": {
-        "label": "Normalmodus",
-        "beginner": "Kontextbezogene Hilfe ohne Tutorials anzeigen."
-      },
-      "expert": {
-        "label": "Expertenmodus",
-        "beginner": "Hinweise und Tutorials ausblenden."
-      }
-    },
-    "language": "Sprache"
-  },
-  "chat": {
-    "placeholder": "Ask a question about the design..."
-  },
-  "details": {
-    "noSelection": "No Selection",
-    "noSelectionMessage": "Select an item to view details"
-  },
-  "type": {
-    "title": "Type",
-    "name": "Name",
-    "defaultName": "New Type",
-    "description": "Description",
-    "descriptionPlaceholder": "Enter type description...",
-    "icon": "Icon",
-    "iconPlaceholder": "Emoji, name, or URL",
-    "image": "Image URL",
-    "imagePlaceholder": "URL to type image",
-    "variant": "Variant",
-    "variantPlaceholder": "Type variant",
-    "defaultVariant": "Default Variant",
-    "newVariant": "New Variant",
-    "unit": "Unit",
-    "representations": "Representations",
-    "representation": "Representation",
-    "representationUrl": "URL",
-    "representationDescription": "Description",
-    "representationDescriptionPlaceholder": "Enter description...",
-    "representationTags": "Tags",
-    "representationTagsPlaceholder": "Enter tags...",
-    "ports": "Ports",
-    "ports.multipleTitle": "Multiple Ports ({{count}})",
-    "port": "Port",
-    "portsNotFound": "Ports not found",
-    "multiplePortsSelected": "Editing {{count}} ports simultaneously",
-    "portFamily": "Family",
-    "portFamilyPlaceholder": "Enter port family...",
-    "portDescription": "Description",
-    "portDescriptionPlaceholder": "Enter port description...",
-    "portPoint": "Point",
-    "portT": "T",
-    "portDirection": "Direction",
-    "portCompatibleFamilies": "Compatible Families",
-    "portCompatibleFamiliesPlaceholder": "Enter compatible families...",
-    "authors": "Authors",
-    "author": "Author",
-    "authorName": "Name",
-    "attributes": "Attributes",
-    "attribute": "Attribute",
-    "attributeName": "Name",
-    "attributeValue": "Value",
-    "attributeValuePlaceholder": "Optional value",
-    "attributeDefinition": "Definition",
-    "attributeDefinitionPlaceholder": "Optional definition (text or URL)"
-  },
-  "quality": {
-    "title": "Quality",
-    "key": "Key",
-    "defaultKey": "new-quality",
-    "name": "Name",
-    "defaultName": "New Quality",
-    "description": "Description",
-    "formula": "Formula",
-    "formulaPlaceholder": "Enter formula s-expression...",
-    "defaultSiUnit": "SI Unit",
-    "defaultImperialUnit": "Imperial Unit",
-    "kind": "Kind",
-    "canScale": "Can Scale",
-    "defaultValue": "Default Value",
-    "min": "Minimum",
-    "isMinExcluded": "Exclude Minimum",
-    "max": "Maximum",
-    "isMaxExcluded": "Exclude Maximum",
-    "appSettings": "Quality app settings",
-    "functions": "Functions",
-    "qualities": "Qualities",
-    "noQualities": "No qualities available",
-    "numericFunctions": "Numeric",
-    "branchingFunctions": "Branching",
-    "dataStructures": "Data Structures",
-    "add": "Add",
-    "subtract": "Subtract",
-    "multiply": "Multiply",
-    "divide": "Divide",
-    "if": "If",
-    "switch": "Switch",
-    "list": "List",
-    "dictionary": "Dictionary"
-  },
-  "tools": {
-    "port": "Port Tool",
-    "port.beginner": "Click on the mesh to place a port at the intersection point with the surface normal as direction. Hold and drag to orbit the camera.",
-    "port.label": "Port",
-    "port.addAndEdit": "Add and edit ports",
-    "selection": "Selection Tool",
-    "selection.beginner": "Click to select items. Use modifier keys for additive or subtractive selection.",
-    "selection.normal": "Normal",
-    "selection.additive": "Additive",
-    "selection.subtractive": "Subtractive",
-    "selection.selectPieces": "Click to select pieces",
-    "selection.selectPorts": "Click to select ports",
-    "selection.addToSelection": "Add to selection",
-    "selection.removeFromSelection": "Remove from selection",
-    "lasso.rectangular": "Rectangular",
-    "lasso.freeform": "Freeform",
-    "lasso.rectangular.beginner": "Draw rectangle to select multiple pieces",
-    "lasso.freeform.beginner": "Draw freeform shape to select multiple pieces"
-  },
-  "sort": {
-    "ascending": {
-      "label": "Aufsteigend sortieren",
-      "beginner": "Elemente von niedrig nach hoch anordnen."
-    },
-    "descending": {
-      "label": "Absteigend sortieren",
-      "beginner": "Elemente von hoch nach niedrig anordnen."
-    }
-  },
-  "kits": {
-    "multiple": "Multiple Kits ({{count}})",
-    "multipleSelected": "Editing {{count}} kits simultaneously"
-  },
-  "types": {
-    "title": "Types",
-    "multipleSelected": "Editing {{count}} types simultaneously"
-  },
-  "designs": {
-    "title": "Designs",
-    "multipleSelected": "Editing {{count}} designs simultaneously"
-  },
-  "qualities": {
-    "title": "Qualities"
-  },
-  "files": {
-    "title": "Files"
-  },
-  "authors": {
-    "title": "Authors"
-  },
-  "pieces": {
-    "title": "Pieces"
-  },
-  "tooltip": {
-    "manual": "Manual",
-    "tutorial": "Tutorial"
-  },
-  "docs": {
-    "navigation": "Navigation",
-    "tableOfContents": "On This Page",
-    "settings": "Settings",
-    "pagesCompleted": "pages completed",
-    "onThisPage": "On This Page",
-    "noHeadings": "No headings available",
-    "noPages": "No pages available",
-    "docs": "Docs"
-  },
   "semio": {
-    "chat": {
-      "panel": {
-        "input": {
-          "label": "Message",
-          "description": "Enter your message",
-          "description.beginner": "Type your question or message here. Press Enter to send, Shift+Enter for a new line."
-        }
-      }
-    },
-    "type": {
-      "panel": {
-        "details": {
-          "name": {
-            "label": "Name",
-            "description": "Type name",
-            "description.beginner": "The name of the type. This is the primary identifier for the component.",
-            "manual": "type#metadata",
-            "tutorial": "hello-semio/model-brick-set"
-          },
-          "description": {
-            "label": "Description",
-            "description": "Type description",
-            "description.beginner": "A detailed description of what this type represents and how it should be used.",
-            "manual": "type#metadata",
-            "tutorial": "hello-semio/model-brick-set"
-          },
-          "icon": {
-            "label": "Icon",
-            "description": "Icon (emoji, name, or URL)",
-            "description.beginner": "An icon to visually represent this type. Can be an emoji, icon name, or URL to an image.",
-            "manual": "type#metadata",
-            "tutorial": "hello-semio/model-brick-set"
-          },
-          "image": {
-            "label": "Image",
-            "description": "Image URL",
-            "description.beginner": "URL to an image that represents this type. Used for previews and visual identification.",
-            "manual": "type#metadata",
-            "tutorial": "hello-semio/model-brick-set"
-          },
-          "variant": {
-            "label": "Variant",
-            "description": "Type variant",
-            "description.beginner": "Variant name for this type. Variants allow multiple configurations of the same type.",
-            "manual": "type#variants",
-            "tutorial": "hello-semio/model-brick-set"
-          },
-          "unit": {
-            "label": "Unit",
-            "description": "Measurement unit",
-            "description.beginner": "The unit of measurement used for this type (e.g., mm, m, ft).",
-            "manual": "type#metadata",
-            "tutorial": "hello-semio/model-brick-set"
-          },
-          "representation": {
-            "url": {
-              "label": "URL",
-              "description": "Resource URL",
-              "description.beginner": "URL to a 3D model, image, or other resource representing this type.",
-              "manual": "type#representations",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "description": {
-              "label": "Description",
-              "description": "Representation description",
-              "description.beginner": "A description of what this representation shows or how it should be used.",
-              "manual": "type#representations",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "tags": {
-              "label": "Tags",
-              "description": "Representation tags",
-              "description.beginner": "Tags to categorize and filter representations (e.g., 'detailed', 'simplified', 'lod1').",
-              "manual": "type#representations",
-              "tutorial": "hello-semio/model-brick-set"
-            }
-          },
-          "port": {
-            "id": {
-              "label": "ID",
-              "description": "Port identifier",
-              "description.beginner": "Unique identifier for this port. Used to reference the port in connections.",
-              "manual": "type#ports",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "family": {
-              "label": "Family",
-              "description": "Port family",
-              "description.beginner": "Port family name. Ports of the same family can connect to each other.",
-              "manual": "type#ports",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "compatibleFamilies": {
-              "label": "Compatible Families",
-              "description": "Compatible port families",
-              "description.beginner": "List of other port families this port can connect to. Leave empty to allow all families.",
-              "manual": "type#ports",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "description": {
-              "label": "Description",
-              "description": "Port description",
-              "description.beginner": "A description of what this port represents and how it should be used for connections.",
-              "manual": "type#ports",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "t": {
-              "label": "T",
-              "description": "Diagram position",
-              "description.beginner": "Position on the diagram ring (0-1). Controls where the port appears in the 2D diagram view.",
-              "manual": "type#ports",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "direction": {
-              "x": {
-                "label": "X",
-                "description": "X coordinate",
-                "description.beginner": "X coordinate of the port direction vector. This defines which direction the port points in 3D space.",
-                "manual": "type#ports",
-                "tutorial": "hello-semio/model-brick-set"
-              },
-              "y": {
-                "label": "Y",
-                "description": "Y coordinate",
-                "description.beginner": "Y coordinate of the port direction vector. This defines which direction the port points in 3D space.",
-                "manual": "type#ports",
-                "tutorial": "hello-semio/model-brick-set"
-              },
-              "z": {
-                "label": "Z",
-                "description": "Z coordinate",
-                "description.beginner": "Z coordinate of the port direction vector. This defines which direction the port points in 3D space.",
-                "manual": "type#ports",
-                "tutorial": "hello-semio/model-brick-set"
-              }
-            },
-            "point": {
-              "x": {
-                "label": "X",
-                "description": "X position",
-                "description.beginner": "X position of the port in 3D space relative to the type's origin.",
-                "manual": "type#ports",
-                "tutorial": "hello-semio/model-brick-set"
-              },
-              "y": {
-                "label": "Y",
-                "description": "Y position",
-                "description.beginner": "Y position of the port in 3D space relative to the type's origin.",
-                "manual": "type#ports",
-                "tutorial": "hello-semio/model-brick-set"
-              },
-              "z": {
-                "label": "Z",
-                "description": "Z position",
-                "description.beginner": "Z position of the port in 3D space relative to the type's origin.",
-                "manual": "type#ports",
-                "tutorial": "hello-semio/model-brick-set"
-              }
-            }
-          },
-          "attribute": {
-            "name": {
-              "label": "Name",
-              "description": "Attribute name",
-              "description.beginner": "The name of the attribute in kebab-case (e.g., 'material.wood', 'cost.labor').",
-              "manual": "type#attributes",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "value": {
-              "label": "Value",
-              "description": "Attribute value",
-              "description.beginner": "The value of the attribute. Leave empty for boolean attributes (presence = true).",
-              "manual": "type#attributes",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "definition": {
-              "label": "Definition",
-              "description": "Attribute definition",
-              "description.beginner": "Optional definition or documentation for this attribute. Can be text or a URL.",
-              "manual": "type#attributes",
-              "tutorial": "hello-semio/model-brick-set"
-            }
-          },
-          "author": {
-            "name": {
-              "label": "Name",
-              "description": "Author name",
-              "description.beginner": "Full name of the author or contributor.",
-              "manual": "type#authors",
-              "tutorial": "hello-semio/model-brick-set"
-            },
-            "email": {
-              "label": "Email",
-              "description": "Author email",
-              "description.beginner": "Email address for contacting the author.",
-              "manual": "type#authors",
-              "tutorial": "hello-semio/model-brick-set"
-            }
-          }
-        }
-      }
-    },
-    "design": {
-      "panel": {
-        "details": {
-          "name": {
-            "label": "Name",
-            "description": "Design name",
-            "description.beginner": "The name of the design. This is the primary identifier for your composition.",
-            "manual": "design#metadata",
-            "tutorial": "hello-semio/model-design"
-          },
-          "description": {
-            "label": "Description",
-            "description": "Design description",
-            "description.beginner": "A detailed description of what this design represents and how it should be used.",
-            "manual": "design#metadata",
-            "tutorial": "hello-semio/model-design"
-          },
-          "icon": {
-            "label": "Icon",
-            "description": "Design icon URL",
-            "description.beginner": "URL or path to an icon that represents this design in listings and previews.",
-            "manual": "design#metadata",
-            "tutorial": "hello-semio/model-design"
-          },
-          "image": {
-            "label": "Image",
-            "description": "Design preview image URL",
-            "description.beginner": "URL or path to a preview image that showcases this design.",
-            "manual": "design#metadata",
-            "tutorial": "hello-semio/model-design"
-          },
-          "variant": {
-            "label": "Variant",
-            "description": "Design variant name",
-            "description.beginner": "A variant identifier for different versions or configurations of this design.",
-            "manual": "design#variants",
-            "tutorial": "hello-semio/model-design"
-          },
-          "view": {
-            "label": "View",
-            "description": "Design view name",
-            "description.beginner": "The viewing perspective or camera angle for displaying this design.",
-            "manual": "design#views",
-            "tutorial": "hello-semio/model-design"
-          },
-          "unit": {
-            "label": "Unit",
-            "description": "Design unit",
-            "description.beginner": "The measurement unit used for all dimensions in this design (e.g., mm, cm, m).",
-            "manual": "design#metadata",
-            "tutorial": "hello-semio/model-design"
-          },
-          "location": {
-            "longitude": {
-              "label": "Longitude",
-              "description": "Geographic longitude",
-              "description.beginner": "The east-west position of this design's location in decimal degrees.",
-              "manual": "design#location"
-            },
-            "latitude": {
-              "label": "Latitude",
-              "description": "Geographic latitude",
-              "description.beginner": "The north-south position of this design's location in decimal degrees.",
-              "manual": "design#location"
-            }
-          },
-          "author": {
-            "name": {
-              "label": "Name",
-              "description": "Author name",
-              "description.beginner": "The full name of the person who contributed to this design.",
-              "manual": "design#authors"
-            },
-            "email": {
-              "label": "Email",
-              "description": "Author email",
-              "description.beginner": "Contact email address for this author.",
-              "manual": "design#authors"
-            }
-          },
-          "attribute": {
-            "name": {
-              "label": "Name",
-              "description": "Attribute key",
-              "description.beginner": "The unique identifier for this attribute in kebab-case format (e.g., 'material.type').",
-              "manual": "design#attributes"
-            },
-            "value": {
-              "label": "Value",
-              "description": "Attribute value",
-              "description.beginner": "The value associated with this attribute. Leave empty to use as a category flag.",
-              "manual": "design#attributes"
-            },
-            "unit": {
-              "label": "Unit",
-              "description": "Attribute unit",
-              "description.beginner": "The measurement unit for this attribute's value (e.g., mm, kg, °C).",
-              "manual": "design#attributes"
-            },
-            "definition": {
-              "label": "Definition",
-              "description": "Attribute definition",
-              "description.beginner": "A URL or text that defines what this attribute means and how it should be interpreted.",
-              "manual": "design#attributes"
-            }
-          },
-          "createdAt": {
-            "label": "Created At",
-            "description": "Creation timestamp",
-            "description.beginner": "The date and time when this design was first created."
-          },
-          "updatedAt": {
-            "label": "Updated At",
-            "description": "Last modification timestamp",
-            "description.beginner": "The date and time when this design was last modified."
-          },
-          "piece": {
-            "center": {
-              "x": {
-                "label": "X",
-                "description": "X coordinate",
-                "description.beginner": "X diagram coordinate of the center of the piece in 2D layout space.",
-                "manual": "design#diagram",
-                "tutorial": "metabolism/thinking-about-the-diagram"
-              },
-              "y": {
-                "label": "Y",
-                "description": "Y coordinate",
-                "description.beginner": "Y diagram coordinate of the center of the piece in 2D layout space.",
-                "manual": "design#diagram",
-                "tutorial": "metabolism/thinking-about-the-diagram"
-              }
-            }
-          }
-        }
-      }
-    },
     "sketchpad": {
+      "navbar": {
+        "back": {
+          "label": "Go back",
+          "beginner": "Click to go back, hold to see history",
+          "hotkey": "Alt+Left",
+          "manual": "navigation",
+          "tutorial": "getting-started/intro"
+        },
+        "forward": {
+          "label": "Go forward",
+          "beginner": "Click to go forward, hold to see history",
+          "hotkey": "Alt+Right",
+          "manual": "navigation",
+          "tutorial": "getting-started/intro"
+        },
+        "up": {
+          "label": "Go up one level",
+          "beginner": "Click to go up one level in the navigation hierarchy",
+          "hotkey": "Alt+Up",
+          "manual": "navigation",
+          "tutorial": "getting-started/intro"
+        },
+        "home": {
+          "label": "Home",
+          "beginner": "Click to go to home",
+          "hotkey": "Ctrl+Shift+H"
+        },
+        "kitKinds": {
+          "label": "Kit Kinds",
+          "beginner": "Click to expand kit kinds"
+        },
+        "kits": {
+          "label": "Kits",
+          "beginner": "Click to see all kits"
+        },
+        "kitName": {
+          "label": "Kit Name",
+          "beginner": "The name of the kit"
+        },
+        "kitVersion": {
+          "label": "Version",
+          "beginner": "The version of the kit"
+        },
+        "versions": {
+          "label": "Versions",
+          "beginner": "Click to see all versions"
+        },
+        "artifacts": {
+          "label": "Artifacts",
+          "beginner": "Click to see all artifacts"
+        },
+        "selectName": {
+          "label": "Select Name",
+          "beginner": "Click to select a name"
+        },
+        "selectDesign": {
+          "label": "Select Design",
+          "beginner": "Click to select a design"
+        },
+        "design": {
+          "label": "Design",
+          "beginner": "Go to design"
+        },
+        "selectType": {
+          "label": "Select Type",
+          "beginner": "Click to select a type"
+        },
+        "type": {
+          "label": "Type",
+          "beginner": "Go to type"
+        },
+        "quality": {
+          "label": "Quality",
+          "beginner": "Go to quality"
+        },
+        "selectVariant": {
+          "label": "Select Variant",
+          "beginner": "Click to select a variant"
+        },
+        "variant": {
+          "label": "Variant",
+          "beginner": "The variant of the artifact"
+        },
+        "selectView": {
+          "label": "Select View",
+          "beginner": "Click to select a view"
+        },
+        "view": {
+          "label": "View",
+          "beginner": "The view of the artifact"
+        },
+        "docs": {
+          "label": "Documentation",
+          "beginner": "Click to view documentation",
+          "hotkey": "Ctrl+Shift+D"
+        },
+        "sections": {
+          "label": "Sections",
+          "beginner": "Click to see all sections"
+        },
+        "search": {
+          "open": {
+            "label": "Search",
+            "beginner": "Click to open search to quickly find and navigate to any element",
+            "hotkey": "Ctrl+K",
+            "manual": "navigation#search",
+            "tutorial": "getting-started/intro#search"
+          },
+          "close": {
+            "label": "Close Search",
+            "beginner": "Click to close the search dialog",
+            "hotkey": "Escape",
+            "manual": "navigation#search",
+            "tutorial": "getting-started/intro#search"
+          }
+        },
+        "focus": {
+          "open": {
+            "label": "Focus",
+            "beginner": "Click to enter focus mode and hide distractions",
+            "hotkey": "Ctrl+Shift+F",
+            "manual": "navigation#focus",
+            "tutorial": "getting-started/intro#focus"
+          },
+          "close": {
+            "label": "Exit Focus",
+            "beginner": "Click to exit focus mode and show all UI elements",
+            "hotkey": "Escape",
+            "manual": "navigation#focus",
+            "tutorial": "getting-started/intro#focus"
+          }
+        },
+        "fullscreen": {
+          "label": "Fullscreen",
+          "beginner": "Click to enter fullscreen mode for maximum workspace",
+          "hotkey": "F11",
+          "manual": "navigation#fullscreen",
+          "tutorial": "getting-started/intro#fullscreen"
+        },
+        "exitFullscreen": {
+          "label": "Exit Fullscreen",
+          "beginner": "Click to exit fullscreen mode",
+          "hotkey": "F11",
+          "manual": "navigation#fullscreen",
+          "tutorial": "getting-started/intro#fullscreen"
+        },
+        "expand": {
+          "label": "Expand Navbar",
+          "beginner": "Click to expand the navigation bar and show additional options",
+          "hotkey": "Ctrl+Shift+E"
+        },
+        "collapse": {
+          "label": "Collapse Navbar",
+          "beginner": "Click to collapse the navigation bar to save space",
+          "hotkey": "Ctrl+Shift+E"
+        },
+        "minimize": {
+          "label": "Minimize",
+          "beginner": "Click to minimize window",
+          "hotkey": "Ctrl+M"
+        },
+        "maximize": {
+          "label": "Maximize",
+          "beginner": "Click to maximize window"
+        },
+        "close": {
+          "label": "Close",
+          "beginner": "Click to close window",
+          "hotkey": "Ctrl+W"
+        },
+        "changePanelType": {
+          "label": "Change Panel Type",
+          "beginner": "Click to change the panel type"
+        },
+        "breadcrumb": {
+          "home": "Home",
+          "kits": "Kits",
+          "designs": "Designs",
+          "types": "Types",
+          "qualities": "Qualities",
+          "files": "Files",
+          "authors": "Authors",
+          "docs": "Documentation"
+        },
+        "panelToggle": {
+          "toolbar": {
+            "show": {
+              "label": "Show Toolbar",
+              "beginner": "Click to show the Toolbar panel",
+              "manual": "panels/toolbar",
+              "tutorial": "hello-semio/sketch-setup#toolbar"
+            },
+            "hide": {
+              "label": "Hide Toolbar",
+              "beginner": "Click to hide the Toolbar panel",
+              "manual": "panels/toolbar",
+              "tutorial": "hello-semio/sketch-setup#toolbar"
+            }
+          },
+          "workbench": {
+            "show": {
+              "label": "Show Workbench",
+              "beginner": "Click to show the Workbench panel on the left",
+              "hotkey": "Ctrl+J",
+              "manual": "panels/workbench",
+              "tutorial": "hello-semio/sketch-setup#workbench"
+            },
+            "hide": {
+              "label": "Hide Workbench",
+              "beginner": "Click to hide the Workbench panel on the left",
+              "hotkey": "Ctrl+J",
+              "manual": "panels/workbench",
+              "tutorial": "hello-semio/sketch-setup#workbench"
+            }
+          },
+          "tools": {
+            "show": {
+              "label": "Show Tools",
+              "beginner": "Click to show the Tools panel on the left",
+              "hotkey": "Ctrl+J",
+              "manual": "panels/tools",
+              "tutorial": "hello-semio/sketch-setup#tools"
+            },
+            "hide": {
+              "label": "Hide Tools",
+              "beginner": "Click to hide the Tools panel on the left",
+              "hotkey": "Ctrl+J",
+              "manual": "panels/tools",
+              "tutorial": "hello-semio/sketch-setup#tools"
+            }
+          },
+          "hud": {
+            "show": {
+              "label": "Show HUD",
+              "beginner": "Click to show the HUD panel in the middle",
+              "hotkey": "Ctrl+K",
+              "manual": "panels/hud",
+              "tutorial": "hello-semio/sketch-setup#hud"
+            },
+            "hide": {
+              "label": "Hide HUD",
+              "beginner": "Click to hide the HUD panel in the middle",
+              "hotkey": "Ctrl+K",
+              "manual": "panels/hud",
+              "tutorial": "hello-semio/sketch-setup#hud"
+            }
+          },
+          "stats": {
+            "show": {
+              "label": "Show Stats",
+              "beginner": "Click to show the Stats panel in the middle",
+              "hotkey": "Ctrl+K",
+              "manual": "panels/stats",
+              "tutorial": "hello-semio/sketch-setup#stats"
+            },
+            "hide": {
+              "label": "Hide Stats",
+              "beginner": "Click to hide the Stats panel in the middle",
+              "hotkey": "Ctrl+K",
+              "manual": "panels/stats",
+              "tutorial": "hello-semio/sketch-setup#stats"
+            }
+          },
+          "details": {
+            "show": {
+              "label": "Show Details",
+              "beginner": "Click to show the Details panel on the right",
+              "hotkey": "Ctrl+L",
+              "manual": "panels/details",
+              "tutorial": "hello-semio/sketch-setup#details"
+            },
+            "hide": {
+              "label": "Hide Details",
+              "beginner": "Click to hide the Details panel on the right",
+              "hotkey": "Ctrl+L",
+              "manual": "panels/details",
+              "tutorial": "hello-semio/sketch-setup#details"
+            }
+          },
+          "chat": {
+            "show": {
+              "label": "Show Chat",
+              "beginner": "Click to show the Chat panel on the right",
+              "hotkey": "Ctrl+L",
+              "manual": "panels/chat",
+              "tutorial": "hello-semio/sketch-setup#chat"
+            },
+            "hide": {
+              "label": "Hide Chat",
+              "beginner": "Click to hide the Chat panel on the right",
+              "hotkey": "Ctrl+L",
+              "manual": "panels/chat",
+              "tutorial": "hello-semio/sketch-setup#chat"
+            }
+          },
+          "settings": {
+            "show": {
+              "label": "Show Settings",
+              "beginner": "Click to show the Settings panel on the right",
+              "hotkey": "Ctrl+L",
+              "manual": "panels/settings",
+              "tutorial": "hello-semio/sketch-setup#settings"
+            },
+            "hide": {
+              "label": "Hide Settings",
+              "beginner": "Click to hide the Settings panel on the right",
+              "hotkey": "Ctrl+L",
+              "manual": "panels/settings",
+              "tutorial": "hello-semio/sketch-setup#settings"
+            }
+          }
+        }
+      },
       "panel": {
+        "toolbar": {
+          "toggle": {
+            "label": "Toolbar panel",
+            "beginner": "Toggle the toolbar panel to access common tools and actions for the current workspace"
+          },
+          "noTools": "No tools"
+        },
+        "details": {
+          "toggle": {
+            "label": "Details panel",
+            "beginner": "Toggle the details panel to view and edit properties of the selected item in depth"
+          }
+        },
+        "workbench": {
+          "toggle": {
+            "label": "Workbench panel",
+            "beginner": "Toggle the workbench panel to access your main workspace with available tools and options"
+          },
+          "noSections": "No workbench sections available"
+        },
+        "console": {
+          "toggle": {
+            "label": "Console panel",
+            "beginner": "Toggle the console panel to view logs and debug information"
+          }
+        },
+        "chat": {
+          "toggle": {
+            "label": "Chat panel",
+            "beginner": "Toggle the chat panel to get AI assistance and context-aware help"
+          },
+          "input": {
+            "label": "Message",
+            "beginner": "Type your question or message here. Press Enter to send, Shift+Enter for a new line."
+          },
+          "placeholder": "Ask anything..."
+        },
         "settings": {
+          "toggle": {
+            "label": "Settings panel",
+            "beginner": "Toggle the settings panel to configure application preferences and workspace options"
+          },
+          "language": {
+            "label": "Language",
+            "beginner": "Select the language for the application interface"
+          },
           "general": {
-            "label": "Allgemein",
-            "beginner": "Allgemeine Anwendungseinstellungen konfigurieren."
+            "label": "General Settings",
+            "beginner": "Configure general application preferences"
           },
           "theme": {
-            "label": "Thema",
-            "beginner": "Farbschema für die Anwendung auswählen."
+            "label": "Theme",
+            "beginner": "Choose the color theme for the application"
           },
           "layout": {
             "label": "Layout",
-            "beginner": "Fensterlayout und Panel-Anordnung festlegen."
+            "beginner": "Configure the window layout and panel arrangement"
           },
           "mode": {
-            "label": "Modus",
-            "beginner": "Benutzermodus mit passenden Hinweisen auswählen."
-          },
-          "language": {
-            "label": "Sprache",
-            "beginner": "Sprache der Benutzeroberfläche auswählen."
+            "label": "Mode",
+            "beginner": "Select the user interface mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)"
           }
+        },
+        "tools": {
+          "noSections": "No tools sections available"
+        },
+        "hud": {
+          "noSections": "No hud sections available"
         }
       },
       "common": {
+        "add": "Add",
+        "remove": "Remove",
+        "search": "Search",
+        "x": "X",
+        "y": "Y",
+        "z": "Z",
+        "mixedValues": "Mixed values",
+        "selectDesign": "Select design",
+        "selectType": "Select type",
+        "selectVariant": "Select variant",
+        "selectView": "Select view",
+        "addType": {
+          "label": "Add Type",
+          "beginner": "Click to add a new type to the current context",
+          "manual": "manuals/semio/kit#types",
+          "tutorial": "hello-semio/model-brick-set"
+        },
+        "addDesign": {
+          "label": "Add Design",
+          "beginner": "Click to add a new design to the current context",
+          "manual": "manuals/semio/kit#designs",
+          "tutorial": "hello-semio/model-design"
+        },
         "sort": {
           "ascending": {
-            "label": "Aufsteigend sortieren",
-            "beginner": "Elemente von niedrig nach hoch ordnen."
+            "label": "Sort ascending",
+            "beginner": "Sort items from A to Z or smallest to largest."
           },
           "descending": {
-            "label": "Absteigend sortieren",
-            "beginner": "Elemente von hoch nach niedrig ordnen."
+            "label": "Sort descending",
+            "beginner": "Sort items from Z to A or largest to smallest."
           }
         }
       },
       "app": {
         "sort": {
           "ascending": {
-            "label": "Aufsteigend sortieren",
-            "beginner": "Einträge alphabetisch oder nach geringstem Wert ordnen."
+            "label": "Sort ascending",
+            "beginner": "Sort artifacts from A to Z."
           },
           "descending": {
-            "label": "Absteigend sortieren",
-            "beginner": "Einträge rückwärts alphabetisch oder nach größtem Wert ordnen."
+            "label": "Sort descending",
+            "beginner": "Sort artifacts from Z to A."
+          }
+        },
+        "home": {
+          "title": "Home",
+          "description": "Browse and manage your kits",
+          "searchPlaceholder": "Search kits...",
+          "name": "Name",
+          "kind": "Kind",
+          "lastUpdated": "Last Updated",
+          "created": "Created",
+          "kits": {
+            "multiple": "{{count}} Kits"
+          },
+          "filter": {
+            "kind": {
+              "show": {
+                "label": "Filter by kind",
+                "beginner": "Filter kits by their storage type (temporary, local, or remote)",
+                "hotkey": "Ctrl+K"
+              },
+              "create": {
+                "label": "Create new kit",
+                "beginner": "Create a new kit of this type",
+                "hotkey": "Ctrl+Shift+K"
+              },
+              "temporary": {
+                "label": "Show temporary kits",
+                "beginner": "Show kits stored in browser memory (lost on refresh)",
+                "hotkey": "Ctrl+1"
+              },
+              "createTemporary": {
+                "label": "Create temporary kit",
+                "beginner": "Create a new temporary kit stored in browser memory",
+                "hotkey": "Ctrl+Shift+1"
+              },
+              "local": {
+                "label": "Show local kits",
+                "beginner": "Show kits stored locally on your device",
+                "hotkey": "Ctrl+2"
+              },
+              "createLocal": {
+                "label": "Create local kit",
+                "beginner": "Create a new kit stored locally on your device",
+                "hotkey": "Ctrl+Shift+2"
+              },
+              "remote": {
+                "label": "Show remote kits",
+                "beginner": "Show kits synced with remote storage",
+                "hotkey": "Ctrl+3"
+              },
+              "createRemote": {
+                "label": "Create remote kit",
+                "beginner": "Create a new kit synced with remote storage",
+                "hotkey": "Ctrl+Shift+3"
+              }
+            },
+            "name": {
+              "label": "Filter by name",
+              "beginner": "Filter kits by this specific name",
+              "hotkey": "Ctrl+N"
+            },
+            "version": {
+              "label": "Filter by version",
+              "beginner": "Filter kits to this specific version",
+              "hotkey": "Ctrl+V"
+            }
           }
         },
         "kit": {
-          "kind": "Kategorie"
+          "title": "Kit",
+          "description": "View and edit kit metadata",
+          "noKitLoaded": "No kit loaded",
+          "notAvailable": "Kit not available",
+          "name": "Name",
+          "kind": "Kind",
+          "version": "Version",
+          "versionPlaceholder": {
+            "label": "e.g., 1.0.0"
+          },
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": {
+            "label": "Describe what this kit contains..."
+          },
+          "iconPlaceholder": {
+            "label": "🎨 or URL to icon"
+          },
+          "imagePlaceholder": {
+            "label": "URL to preview image"
+          },
+          "homepagePlaceholder": {
+            "label": "https://example.com"
+          },
+          "licensePlaceholder": {
+            "label": "e.g., MIT, GPL-3.0, Apache-2.0"
+          },
+          "defaultName": "New Kit",
+          "newVersion": "New Version",
+          "defaultVersion": "Default",
+          "lastUpdated": "Last Updated",
+          "created": "Created",
+          "filter": {
+            "concept": {
+              "show": {
+                "label": "Show this concept",
+                "beginner": "Click to show artifacts with this concept",
+                "hotkey": "Ctrl+C"
+              },
+              "hide": {
+                "label": "Hide this concept",
+                "beginner": "Click to hide artifacts with this concept",
+                "hotkey": "Ctrl+Shift+C"
+              }
+            },
+            "name": {
+              "label": "Filter by name",
+              "beginner": "Click to filter artifacts by this name",
+              "hotkey": "Ctrl+N"
+            },
+            "variant": {
+              "label": "Filter by variant",
+              "beginner": "Click to filter artifacts by this variant",
+              "hotkey": "Ctrl+Alt+V"
+            },
+            "view": {
+              "label": "Filter by view",
+              "beginner": "Click to filter designs by this view",
+              "hotkey": "Ctrl+Alt+W"
+            }
+          },
+          "designs": {
+            "label": "Designs",
+            "beginner": "Designs in this kit",
+            "manual": "manuals/semio/kit#designs",
+            "tutorial": "hello-semio/model-design",
+            "multipleTitle": "Designs"
+          },
+          "types": {
+            "label": "Types",
+            "beginner": "Types in this kit",
+            "manual": "manuals/semio/kit#types",
+            "tutorial": "hello-semio/model-brick-set",
+            "multipleTitle": "Types"
+          },
+          "kitApp": {
+            "showDesigns": {
+              "label": "Show Designs",
+              "beginner": "Click to show all designs in this kit",
+              "manual": "manuals/semio/kit#designs",
+              "tutorial": "hello-semio/model-design"
+            },
+            "createDesign": {
+              "label": "Create Design",
+              "beginner": "Click to create a new design in this kit",
+              "manual": "manuals/semio/kit#designs",
+              "tutorial": "hello-semio/model-design"
+            },
+            "showTypes": {
+              "label": "Show Types",
+              "beginner": "Click to show all types in this kit",
+              "manual": "manuals/semio/kit#types",
+              "tutorial": "hello-semio/model-brick-set"
+            },
+            "createType": {
+              "label": "Create Type",
+              "beginner": "Click to create a new type in this kit",
+              "manual": "manuals/semio/kit#types",
+              "tutorial": "hello-semio/model-brick-set"
+            },
+            "showQualities": {
+              "label": "Show Qualities",
+              "beginner": "Click to show all qualities in this kit",
+              "manual": "manuals/semio/kit#qualities",
+              "tutorial": "getting-started/intro#quality"
+            },
+            "createQuality": {
+              "label": "Create Quality",
+              "beginner": "Click to create a new quality definition in this kit",
+              "manual": "manuals/semio/kit#qualities",
+              "tutorial": "getting-started/intro#quality"
+            },
+            "showFiles": {
+              "label": "Show Files",
+              "beginner": "Click to show all files in this kit",
+              "manual": "manuals/semio/kit#files",
+              "tutorial": "getting-started/intro#files"
+            },
+            "createFile": {
+              "label": "Create File",
+              "beginner": "Click to add a new file to this kit",
+              "manual": "manuals/semio/kit#files",
+              "tutorial": "getting-started/intro#files"
+            },
+            "showAuthors": {
+              "label": "Show Authors",
+              "beginner": "Click to show all authors of this kit",
+              "manual": "manuals/semio/kit#authors",
+              "tutorial": "getting-started/intro#authors"
+            },
+            "createAuthor": {
+              "label": "Create Author",
+              "beginner": "Click to add a new author to this kit",
+              "manual": "manuals/semio/kit#authors",
+              "tutorial": "getting-started/intro#authors"
+            },
+            "hideKind": {
+              "label": "Hide",
+              "beginner": "Click to hide this artifact category"
+            },
+            "createArtifact": {
+              "label": "Create",
+              "beginner": "Click to create a new artifact of this type"
+            },
+            "sortByName": {
+              "label": "Sort by name",
+              "beginner": "Click to sort artifacts alphabetically by name",
+              "hotkey": "Ctrl+Shift+N"
+            },
+            "createVariant": {
+              "label": "Create variant",
+              "beginner": "Click to create a new variant of this artifact",
+              "manual": "manuals/semio#variants"
+            },
+            "createView": {
+              "label": "Create view",
+              "beginner": "Click to create a new view for this design",
+              "manual": "manuals/semio/design#views"
+            }
+          },
+          "sort": {
+            "ascending": {
+              "label": "Sort ascending",
+              "beginner": "Sort from A to Z or smallest to largest"
+            },
+            "descending": {
+              "label": "Sort descending",
+              "beginner": "Sort from Z to A or largest to smallest"
+            }
+          },
+          "panel": {
+            "details": {
+              "section": {
+                "kit": {
+                  "title": "Kit Details",
+                  "name": {
+                    "label": "Kit name",
+                    "beginner": "The name of the kit. This is the primary identifier for your kit.",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "version": {
+                    "label": "Version",
+                    "beginner": "The version of the kit in semantic versioning format (e.g., 1.0.0).",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "A detailed description of what this kit contains and how it should be used.",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "icon": {
+                    "label": "Icon",
+                    "beginner": "An icon to represent this kit. Can be an emoji or URL to an image.",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "image": {
+                    "label": "Image",
+                    "beginner": "URL to a preview image that showcases this kit.",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "homepage": {
+                    "label": "Homepage",
+                    "beginner": "URL to the homepage or documentation for this kit.",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "license": {
+                    "label": "License",
+                    "beginner": "The license under which this kit is distributed (e.g., MIT, GPL).",
+                    "manual": "kit#metadata",
+                    "tutorial": "hello-semio/save-kit"
+                  }
+                }
+              }
+            },
+            "workbench": {
+              "section": {
+                "types": {
+                  "label": "Types",
+                  "beginner": "Browse and manage all type definitions in this kit.",
+                  "manual": "kit#types",
+                  "tutorial": "hello-semio/model-brick-set"
+                },
+                "designs": {
+                  "label": "Designs",
+                  "beginner": "Browse and manage all design compositions in this kit.",
+                  "manual": "kit#designs",
+                  "tutorial": "hello-semio/model-design"
+                },
+                "qualities": {
+                  "label": "Qualities",
+                  "beginner": "Browse and manage all quality definitions in this kit.",
+                  "manual": "kit#qualities"
+                },
+                "files": {
+                  "label": "Files",
+                  "beginner": "Browse and manage all files included in this kit.",
+                  "manual": "kit#files"
+                },
+                "authors": {
+                  "label": "Authors",
+                  "beginner": "Browse and manage all authors who contributed to this kit.",
+                  "manual": "kit#authors"
+                }
+              }
+            }
+          }
+        },
+        "design": {
+          "title": "Design",
+          "description": "Edit design compositions",
+          "defaultName": "New Design",
+          "newVariant": "New Variant",
+          "newView": "New View",
+          "defaultVariant": "Default",
+          "defaultView": "Default",
+          "descriptionPlaceholder": "Describe this design...",
+          "iconPlaceholder": "???",
+          "imagePlaceholder": "https://example.com/image.png",
+          "variantPlaceholder": "e.g., small, medium, large",
+          "viewPlaceholder": "e.g., front, side, top",
+          "name": "Name",
+          "variant": "Variant",
+          "view": "View",
+          "location": "Location",
+          "authors": "Authors",
+          "author": "Author",
+          "attributes": "Attributes",
+          "attribute": "Attribute",
+          "attributeValuePlaceholder": "Value...",
+          "attributeUnitPlaceholder": "Unit...",
+          "attributeDefinitionPlaceholder": "Definition or URL...",
+          "piece": {
+            "id": "ID",
+            "type": "Type",
+            "center": "Center",
+            "plane": "Plane",
+            "planeOrigin": "Origin",
+            "planeXAxis": "X Axis",
+            "planeYAxis": "Y Axis",
+            "mixedSelectionMessage": "Multiple pieces selected with different values"
+          },
+          "connection": {
+            "gap": "Gap",
+            "shift": "Shift",
+            "rise": "Rise",
+            "rotation": "Rotation",
+            "turn": "Turn",
+            "tilt": "Tilt"
+          },
+          "panel": {
+            "details": {
+              "name": {
+                "label": "Name",
+                "beginner": "The name of the design. This is the primary identifier for your composition.",
+                "manual": "design#metadata",
+                "tutorial": "hello-semio/model-design"
+              },
+              "description": {
+                "label": "Description",
+                "beginner": "A detailed description of what this design represents and how it should be used.",
+                "manual": "design#metadata",
+                "tutorial": "hello-semio/model-design"
+              },
+              "icon": {
+                "label": "Icon",
+                "beginner": "URL or path to an icon that represents this design in listings and previews.",
+                "manual": "design#metadata",
+                "tutorial": "hello-semio/model-design"
+              },
+              "image": {
+                "label": "Image",
+                "beginner": "URL or path to a preview image that showcases this design.",
+                "manual": "design#metadata",
+                "tutorial": "hello-semio/model-design"
+              },
+              "variant": {
+                "label": "Variant",
+                "beginner": "A variant identifier for different versions or configurations of this design.",
+                "manual": "design#variants",
+                "tutorial": "hello-semio/model-design"
+              },
+              "view": {
+                "label": "View",
+                "beginner": "The viewing perspective or camera angle for displaying this design.",
+                "manual": "design#views",
+                "tutorial": "hello-semio/model-design"
+              },
+              "unit": {
+                "label": "Unit",
+                "beginner": "The measurement unit used for all dimensions in this design (e.g., mm, cm, m).",
+                "manual": "design#metadata",
+                "tutorial": "hello-semio/model-design"
+              },
+              "createdAt": {
+                "label": "Created At",
+                "beginner": "The date and time when this design was first created."
+              },
+              "updatedAt": {
+                "label": "Updated At",
+                "beginner": "The date and time when this design was last modified."
+              },
+              "location": {
+                "longitude": {
+                  "label": "Longitude",
+                  "beginner": "The east-west position of this design's location in decimal degrees.",
+                  "manual": "design#location"
+                },
+                "latitude": {
+                  "label": "Latitude",
+                  "beginner": "The north-south position of this design's location in decimal degrees.",
+                  "manual": "design#location"
+                }
+              },
+              "author": {
+                "name": {
+                  "label": "Name",
+                  "beginner": "The full name of the person who contributed to this design.",
+                  "manual": "design#authors"
+                },
+                "email": {
+                  "label": "Email",
+                  "beginner": "Contact email address for this author.",
+                  "manual": "design#authors"
+                }
+              },
+              "attribute": {
+                "name": {
+                  "label": "Name",
+                  "beginner": "The unique identifier for this attribute in kebab-case format (e.g., 'material.type').",
+                  "manual": "design#attributes"
+                },
+                "value": {
+                  "label": "Value",
+                  "beginner": "The value associated with this attribute. Leave empty to use as a category flag.",
+                  "manual": "design#attributes"
+                },
+                "unit": {
+                  "label": "Unit",
+                  "beginner": "The measurement unit for this attribute's value (e.g., mm, kg, °C).",
+                  "manual": "design#attributes"
+                },
+                "definition": {
+                  "label": "Definition",
+                  "beginner": "A URL or text that defines what this attribute means and how it should be interpreted.",
+                  "manual": "design#attributes"
+                }
+              },
+              "section": {
+                "design": {
+                  "title": "Design",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "The name of the design. This is the primary identifier for your composition.",
+                    "manual": "design#metadata",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "A detailed description of what this design represents and how it should be used.",
+                    "manual": "design#metadata",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "icon": {
+                    "label": "Icon",
+                    "beginner": "URL or path to an icon that represents this design in listings and previews.",
+                    "manual": "design#metadata",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "image": {
+                    "label": "Image",
+                    "beginner": "URL or path to a preview image that showcases this design.",
+                    "manual": "design#metadata",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "variant": {
+                    "label": "Variant",
+                    "beginner": "A variant identifier for different versions or configurations of this design.",
+                    "manual": "design#variants",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "view": {
+                    "label": "View",
+                    "beginner": "The viewing perspective or camera angle for displaying this design.",
+                    "manual": "design#views",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "unit": {
+                    "label": "Unit",
+                    "beginner": "The measurement unit used for all dimensions in this design (e.g., mm, cm, m).",
+                    "manual": "design#metadata",
+                    "tutorial": "hello-semio/model-design"
+                  },
+                  "createdAt": {
+                    "label": "Created At",
+                    "beginner": "The date and time when this design was first created."
+                  },
+                  "updatedAt": {
+                    "label": "Updated At",
+                    "beginner": "The date and time when this design was last modified."
+                  }
+                },
+                "location": {
+                  "title": "Location",
+                  "longitude": {
+                    "label": "Longitude",
+                    "beginner": "The east-west position of this design's location in decimal degrees.",
+                    "manual": "design#location"
+                  },
+                  "latitude": {
+                    "label": "Latitude",
+                    "beginner": "The north-south position of this design's location in decimal degrees.",
+                    "manual": "design#location"
+                  }
+                },
+                "authors": {
+                  "title": "Authors",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "The full name of the person who contributed to this design.",
+                    "manual": "design#authors"
+                  },
+                  "email": {
+                    "label": "Email",
+                    "beginner": "Contact email address for this author.",
+                    "manual": "design#authors"
+                  }
+                },
+                "attributes": {
+                  "title": "Attributes",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "The unique identifier for this attribute in kebab-case format (e.g., 'material.type').",
+                    "manual": "design#attributes"
+                  },
+                  "value": {
+                    "label": "Value",
+                    "beginner": "The value associated with this attribute. Leave empty to use as a category flag.",
+                    "manual": "design#attributes"
+                  },
+                  "unit": {
+                    "label": "Unit",
+                    "beginner": "The measurement unit for this attribute's value (e.g., mm, kg, °C).",
+                    "manual": "design#attributes"
+                  },
+                  "definition": {
+                    "label": "Definition",
+                    "beginner": "A URL or text that defines what this attribute means and how it should be interpreted.",
+                    "manual": "design#attributes"
+                  }
+                },
+                "piece": {
+                  "title": "Piece",
+                  "id": {
+                    "label": "ID",
+                    "beginner": "Unique identifier for this piece instance in the design.",
+                    "manual": "design#pieces",
+                    "tutorial": "hello-semio/model-design#pieces"
+                  },
+                  "type": {
+                    "label": "Type",
+                    "beginner": "The type definition this piece is based on. Determines geometry and available ports.",
+                    "manual": "design#pieces",
+                    "tutorial": "hello-semio/model-design#pieces"
+                  },
+                  "center": {
+                    "label": "Center",
+                    "beginner": "The center position of the piece in the 2D diagram layout.",
+                    "manual": "design#diagram",
+                    "tutorial": "metabolism/thinking-about-the-diagram",
+                    "x": {
+                      "label": "X",
+                      "beginner": "X diagram coordinate of the center of the piece in 2D layout space.",
+                      "manual": "design#diagram",
+                      "tutorial": "metabolism/thinking-about-the-diagram"
+                    },
+                    "y": {
+                      "label": "Y",
+                      "beginner": "Y diagram coordinate of the center of the piece in 2D layout space.",
+                      "manual": "design#diagram",
+                      "tutorial": "metabolism/thinking-about-the-diagram"
+                    }
+                  },
+                  "plane": {
+                    "label": "Plane",
+                    "beginner": "The 3D placement plane for this piece. Defines position and orientation in 3D space.",
+                    "manual": "design#pieces",
+                    "tutorial": "hello-semio/model-design#pieces"
+                  },
+                  "planeOrigin": {
+                    "label": "Origin",
+                    "beginner": "The origin point of the piece's placement plane in 3D space.",
+                    "manual": "design#pieces",
+                    "tutorial": "hello-semio/model-design#pieces"
+                  },
+                  "planeXAxis": {
+                    "label": "X Axis",
+                    "beginner": "The X-axis direction vector of the piece's placement plane.",
+                    "manual": "design#pieces",
+                    "tutorial": "hello-semio/model-design#pieces"
+                  },
+                  "planeYAxis": {
+                    "label": "Y Axis",
+                    "beginner": "The Y-axis direction vector of the piece's placement plane.",
+                    "manual": "design#pieces",
+                    "tutorial": "hello-semio/model-design#pieces"
+                  }
+                }
+              }
+            },
+            "workbench": {
+              "section": {
+                "types": {
+                  "label": "Types",
+                  "beginner": "Browse and select from available types to add to your design.",
+                  "manual": "design#types",
+                  "tutorial": "hello-semio/model-design#adding-pieces"
+                },
+                "designs": {
+                  "label": "Designs",
+                  "beginner": "Browse and select from available designs to nest in your current design.",
+                  "manual": "design#nested-designs",
+                  "tutorial": "hello-semio/model-design#nested-designs"
+                }
+              }
+            }
+          }
         },
         "type": {
-          "tools": "Werkzeuge",
-          "noRepresentations": "Keine Darstellungen verfügbar",
-          "selectRepresentation": "Darstellung auswählen"
+          "title": "Type",
+          "description": "Edit type definitions",
+          "tools": "Tools",
+          "noRepresentations": "No representations available",
+          "selectRepresentation": "Select representation",
+          "defaultName": "New Type",
+          "newVariant": "New Variant",
+          "defaultVariant": "Default",
+          "descriptionPlaceholder": {
+            "label": "Describe this type..."
+          },
+          "iconPlaceholder": {
+            "label": "??"
+          },
+          "imagePlaceholder": {
+            "label": "https://example.com/image.png"
+          },
+          "variantPlaceholder": {
+            "label": "e.g., large, small"
+          },
+          "variant": "Variant",
+          "representations": {
+            "label": "Representations",
+            "beginner": "Manage different 3D models, images, and visual representations for this type.",
+            "manual": "type#representations",
+            "tutorial": "hello-semio/model-brick-set#representations"
+          },
+          "representation": "Representation",
+          "representationDescriptionPlaceholder": {
+            "label": "Describe this representation..."
+          },
+          "representationTagsPlaceholder": {
+            "label": "tag1, tag2, tag3"
+          },
+          "ports": {
+            "label": "Ports",
+            "beginner": "Manage connection ports for this type. Ports define where and how pieces can connect.",
+            "manual": "type#ports",
+            "tutorial": "hello-semio/model-brick-set#ports"
+          },
+          "port": {
+            "title": "Port"
+          },
+          "portFamilyPlaceholder": {
+            "label": "e.g., electrical, mechanical"
+          },
+          "portDescriptionPlaceholder": {
+            "label": "Describe this port..."
+          },
+          "portT": "T (diagram position)",
+          "portPoint": {
+            "label": "Point",
+            "beginner": "The 3D position of the port in local coordinates.",
+            "manual": "type#ports",
+            "tutorial": "hello-semio/model-brick-set#ports"
+          },
+          "portDirection": {
+            "label": "Direction",
+            "beginner": "The outward direction vector of the port in local coordinates.",
+            "manual": "type#ports",
+            "tutorial": "hello-semio/model-brick-set#ports"
+          },
+          "portCompatibleFamiliesPlaceholder": {
+            "label": "family1, family2"
+          },
+          "portNotFound": "Port not found",
+          "portsNotFound": "No ports found",
+          "authors": "Authors",
+          "author": "Author",
+          "attributes": "Attributes",
+          "attribute": "Attribute",
+          "attributeValuePlaceholder": {
+            "label": "Value..."
+          },
+          "attributeDefinitionPlaceholder": {
+            "label": "Definition or URL..."
+          },
+          "panel": {
+            "details": {
+              "section": {
+                "type": {
+                  "title": "Type",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "The name of the type. This is the primary identifier for the component.",
+                    "manual": "type#metadata",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "A detailed description of what this type represents and how it should be used.",
+                    "manual": "type#metadata",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "icon": {
+                    "label": "Icon",
+                    "beginner": "An icon to visually represent this type. Can be an emoji, icon name, or URL to an image.",
+                    "manual": "type#metadata",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "image": {
+                    "label": "Image",
+                    "beginner": "URL to an image that represents this type. Used for previews and visual identification.",
+                    "manual": "type#metadata",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "variant": {
+                    "label": "Variant",
+                    "beginner": "Variant name for this type. Variants allow multiple configurations of the same type.",
+                    "manual": "type#variants",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "unit": {
+                    "label": "Unit",
+                    "beginner": "The unit of measurement used for this type (e.g., mm, m, ft).",
+                    "manual": "type#metadata",
+                    "tutorial": "hello-semio/model-brick-set"
+                  }
+                },
+                "representations": {
+                  "title": "Representations",
+                  "url": {
+                    "label": "URL",
+                    "beginner": "URL to a 3D model, image, or other resource representing this type.",
+                    "manual": "type#representations",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "A description of what this representation shows or how it should be used.",
+                    "manual": "type#representations",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "tags": {
+                    "label": "Tags",
+                    "beginner": "Tags to categorize and filter representations (e.g., 'detailed', 'simplified', 'lod1').",
+                    "manual": "type#representations",
+                    "tutorial": "hello-semio/model-brick-set"
+                  }
+                },
+                "ports": {
+                  "title": "Ports",
+                  "id": {
+                    "label": "ID",
+                    "beginner": "Unique identifier for this port. Used to reference the port in connections.",
+                    "manual": "type#ports",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "family": {
+                    "label": "Family",
+                    "beginner": "Port family name. Ports of the same family can connect to each other.",
+                    "manual": "type#ports",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "compatibleFamilies": {
+                    "label": "Compatible Families",
+                    "beginner": "List of other port families this port can connect to. Leave empty to allow all families.",
+                    "manual": "type#ports",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "A description of what this port represents and how it should be used for connections.",
+                    "manual": "type#ports",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "t": {
+                    "label": "T",
+                    "beginner": "Position on the diagram ring (0-1). Controls where the port appears in the 2D diagram view.",
+                    "manual": "type#ports",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "direction": {
+                    "x": {
+                      "label": "X",
+                      "beginner": "X coordinate of the port direction vector. This defines which direction the port points in 3D space.",
+                      "manual": "type#ports",
+                      "tutorial": "hello-semio/model-brick-set"
+                    },
+                    "y": {
+                      "label": "Y",
+                      "beginner": "Y coordinate of the port direction vector. This defines which direction the port points in 3D space.",
+                      "manual": "type#ports",
+                      "tutorial": "hello-semio/model-brick-set"
+                    },
+                    "z": {
+                      "label": "Z",
+                      "beginner": "Z coordinate of the port direction vector. This defines which direction the port points in 3D space.",
+                      "manual": "type#ports",
+                      "tutorial": "hello-semio/model-brick-set"
+                    }
+                  },
+                  "point": {
+                    "x": {
+                      "label": "X",
+                      "beginner": "X position of the port in 3D space relative to the type's origin.",
+                      "manual": "type#ports",
+                      "tutorial": "hello-semio/model-brick-set"
+                    },
+                    "y": {
+                      "label": "Y",
+                      "beginner": "Y position of the port in 3D space relative to the type's origin.",
+                      "manual": "type#ports",
+                      "tutorial": "hello-semio/model-brick-set"
+                    },
+                    "z": {
+                      "label": "Z",
+                      "beginner": "Z position of the port in 3D space relative to the type's origin.",
+                      "manual": "type#ports",
+                      "tutorial": "hello-semio/model-brick-set"
+                    }
+                  }
+                },
+                "attributes": {
+                  "title": "Attributes",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "The name of the attribute in kebab-case (e.g., 'material.wood', 'cost.labor').",
+                    "manual": "type#attributes",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "value": {
+                    "label": "Value",
+                    "beginner": "The value of the attribute. Leave empty for boolean attributes (presence = true).",
+                    "manual": "type#attributes",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "definition": {
+                    "label": "Definition",
+                    "beginner": "Optional definition or documentation for this attribute. Can be text or a URL.",
+                    "manual": "type#attributes",
+                    "tutorial": "hello-semio/model-brick-set"
+                  }
+                },
+                "authors": {
+                  "title": "Authors",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "Full name of the author or contributor.",
+                    "manual": "type#authors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "email": {
+                    "label": "Email",
+                    "beginner": "Email address for contacting the author.",
+                    "manual": "type#authors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "quality": {
+          "title": "Quality",
+          "description": "Define measurement qualities",
+          "defaultName": "New Quality",
+          "functions": {
+            "label": "Functions",
+            "beginner": "Available functions for quality formulas",
+            "manual": "manuals/semio/quality#functions",
+            "tutorial": "getting-started/intro#quality"
+          },
+          "qualities": {
+            "label": "Qualities",
+            "beginner": "Quality definitions in this kit",
+            "manual": "manuals/semio/quality",
+            "tutorial": "getting-started/intro#quality"
+          },
+          "numericFunctions": "Numeric Functions",
+          "add": "Add",
+          "subtract": "Subtract",
+          "multiply": "Multiply",
+          "divide": "Divide",
+          "branchingFunctions": "Branching Functions",
+          "if": "If",
+          "switch": "Switch",
+          "dataStructures": "Data Structures",
+          "list": "List",
+          "dictionary": "Dictionary",
+          "noQualities": "No qualities defined"
+        },
+        "docs": {
+          "title": "Documentation",
+          "description": "Browse documentation and tutorials",
+          "docs": "Docs",
+          "page": "Page",
+          "settings": "Settings",
+          "noPages": "No pages available",
+          "noHeadings": "No headings found"
         }
+      }
+    }
+  },
+  "tooltip": {
+    "manual": "Manual",
+    "tutorial": "Tutorial"
+  },
+  "sort": {
+    "ascending": {
+      "label": "Sort ascending",
+      "beginner": "Order items from lowest to highest."
+    },
+    "descending": {
+      "label": "Sort descending",
+      "beginner": "Order items from highest to lowest."
+    }
+  },
+  "home": {
+    "sortByName": {
+      "label": "Sort by name",
+      "beginner": "Sort kits alphabetically by their name."
+    },
+    "createVersion": {
+      "label": "Create version",
+      "beginner": "Create a new version for this kit."
+    },
+    "hideKind": {
+      "label": "Hide kind filter",
+      "beginner": "Show all kits regardless of storage type."
+    },
+    "createKit": {
+      "label": "Create kit",
+      "beginner": "Create a new kit for the selected storage type.",
+      "hotkey": "Ctrl+Shift+K"
+    },
+    "showTemporary": {
+      "label": "Show temporary kits",
+      "beginner": "Show kits stored in browser memory (lost on refresh).",
+      "hotkey": "Ctrl+1"
+    },
+    "createTemporary": {
+      "label": "Create temporary kit",
+      "beginner": "Create a new temporary kit stored in browser memory.",
+      "hotkey": "Ctrl+Shift+1"
+    },
+    "showLocal": {
+      "label": "Show local kits",
+      "beginner": "Show kits stored locally on your device.",
+      "hotkey": "Ctrl+2"
+    },
+    "createLocal": {
+      "label": "Create local kit",
+      "beginner": "Create a new kit stored locally on your device.",
+      "hotkey": "Ctrl+Shift+2"
+    },
+    "showRemote": {
+      "label": "Show remote kits",
+      "beginner": "Show kits synced with remote storage.",
+      "hotkey": "Ctrl+3"
+    },
+    "createRemote": {
+      "label": "Create remote kit",
+      "beginner": "Create a new kit synced with remote storage.",
+      "hotkey": "Ctrl+Shift+3"
+    }
+  },
+  "settings": {
+    "theme": {
+      "system": {
+        "label": "System theme",
+        "beginner": "Match the interface theme with your operating system."
+      },
+      "light": {
+        "label": "Light theme",
+        "beginner": "Use the light theme regardless of the system setting."
+      },
+      "dark": {
+        "label": "Dark theme",
+        "beginner": "Use the dark theme regardless of the system setting."
+      }
+    },
+    "layout": {
+      "normal": {
+        "label": "Normal layout",
+        "beginner": "Use the standard layout optimized for mouse and keyboard."
+      },
+      "touch": {
+        "label": "Touch layout",
+        "beginner": "Use the layout optimized for touch input."
+      }
+    },
+    "mode": {
+      "beginner": {
+        "label": "Beginner mode",
+        "beginner": "Show full guidance, tutorials, and detailed tooltips."
+      },
+      "normal": {
+        "label": "Normal mode",
+        "beginner": "Show contextual help without tutorials."
+      },
+      "expert": {
+        "label": "Expert mode",
+        "beginner": "Hide guidance and tutorials for a distraction-free workflow."
       }
     }
   }

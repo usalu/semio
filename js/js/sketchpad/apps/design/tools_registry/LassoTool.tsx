@@ -27,15 +27,16 @@ import { DesignAppState } from "../store";
 export const LassoRectangularTool: Tool<DesignAppState> = {
   id: ToolType.LASSO_RECTANGULAR,
   label: "tools.lasso.rectangular",
+  i18n: "tools.lasso.rectangular.extensive",
   icon: <Square className="h-4 w-4" />,
-  tooltip: "tools.lasso.rectangular.extensive",
+  hotkey: "2",
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
 export const LassoFreeformTool: Tool<DesignAppState> = {
   id: ToolType.LASSO_FREEFORM,
   label: "tools.lasso.freeform",
+  i18n: "tools.lasso.freeform.extensive",
   icon: <Lasso className="h-4 w-4" />,
-  tooltip: "tools.lasso.freeform.extensive",
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };

@@ -29,6 +29,7 @@ import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
 import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
 import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme, useTooltip } from "../store";
+import { HotkeySettings } from "./HotkeySettings";
 
 const LanguageSwitcher: FC = () => {
   const { i18n } = useTranslation();
@@ -116,6 +117,7 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           </TreeItem>
         </TreeSection>
       }
+      footer={<HotkeySettings />}
     />
   );
 };

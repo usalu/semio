@@ -96,4 +96,31 @@ export const commands = {
     }
     return {};
   },
+  "semio.sketchpad.setHotkey": (context: SketchpadCommandContext, path: string, value: string): SketchpadCommandResult => {
+    const overrides = { ...context.sketchpad.hotkeyOverrides };
+    overrides[path] = value;
+    return {
+      diff: { hotkeyOverrides: overrides },
+    };
+  },
+  "semio.sketchpad.resetHotkey": (context: SketchpadCommandContext, path: string): SketchpadCommandResult => {
+    const overrides = { ...context.sketchpad.hotkeyOverrides };
+    delete overrides[path];
+    return {
+      diff: { hotkeyOverrides: overrides },
+    };
+  },
+  "semio.sketchpad.resetAllHotkeys": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    return {
+      diff: { hotkeyOverrides: {} },
+    };
+  },
+  "semio.sketchpad.navigateToHotkeySetting": (context: SketchpadCommandContext, path: string): SketchpadCommandResult => {
+    return {
+      diff: {
+        navigation: "/",
+        activeHotkeySetting: path,
+      },
+    };
+  },
 };

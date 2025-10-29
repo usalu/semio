@@ -259,6 +259,23 @@ const SketchpadBase: FC = () => {
     syncNavigation(currentPath);
   }, [currentPath, syncNavigation]);
 
+  // Handle hotkey navigation from tooltips
+  useEffect(() => {
+    const handleNavigateToHotkey = (event: Event) => {
+      const customEvent = event as CustomEvent<{ path: string }>;
+      const path = customEvent.detail.path;
+      // Navigate to home and open settings panel with the hotkey highlighted
+      syncNavigation("/");
+      // This will be handled by the HotkeySettings component via activeHotkeySetting state
+      const store = (window as any).__sketchpadStore__;
+      if (store) {
+        store.change({ activeHotkeySetting: path });
+      }
+    };
+    window.addEventListener("navigate-to-hotkey", handleNavigateToHotkey as EventListener);
+    return () => window.removeEventListener("navigate-to-hotkey", handleNavigateToHotkey as EventListener);
+  }, [syncNavigation]);
+
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove(Theme.DARK);

@@ -33,7 +33,7 @@ import i18n from "../../../i18n";
 import { Author, buildFileTree, Design, flattenFileTree, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../store";
+import { useAppType, useHasKit, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands } from "../../store";
 import { DesignSection, FileSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
 import { KitAppState, useKitApp, useKitAppCommands } from "./store";
 
@@ -73,8 +73,7 @@ const AppContent: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const kitScope = useKitScope();
-  const sketchpadStore = useSketchpadStore();
-  const hasKit = kitScope?.guid ? sketchpadStore.hasKit(kitScope.guid) : false;
+  const hasKit = useHasKit(kitScope?.guid || "");
 
   const kit = useKit() as Kit;
   const kitCommands = useKitCommands();
