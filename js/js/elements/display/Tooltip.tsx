@@ -33,7 +33,7 @@ export interface TooltipConfig {
   hotkey?: string;
 }
 
-export interface I18nTooltipData {
+export interface IdTooltipData {
   label?: string;
   description?: string;
   descriptionBeginner?: string;
@@ -151,22 +151,22 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   );
 }
 
-interface I18nTooltipContentProps {
-  i18nKey: string;
+interface IdTooltipContentProps {
+  id: string;
   mode: Mode;
 }
 
-function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
+function IdTooltipContent({ id, mode }: IdTooltipContentProps) {
   const { t } = useTranslation();
 
   if (mode === Mode.EXPERT) return null;
 
-  const label = t(`${i18nKey}.label`, { defaultValue: "" });
-  const description = mode === Mode.BEGINNER ? t(`${i18nKey}.beginner`, { defaultValue: label }) : label;
+  const label = t(`${id}.label`, { defaultValue: "" });
+  const description = mode === Mode.BEGINNER ? t(`${id}.beginner`, { defaultValue: label }) : label;
 
-  const manualPath = t(`${i18nKey}.manual`, { defaultValue: "" });
-  const tutorialPath = t(`${i18nKey}.tutorial`, { defaultValue: "" });
-  const hotkey = t(`${i18nKey}.hotkey`, { defaultValue: "" });
+  const manualPath = t(`${id}.manual`, { defaultValue: "" });
+  const tutorialPath = t(`${id}.tutorial`, { defaultValue: "" });
+  const hotkey = t(`${id}.hotkey`, { defaultValue: "" });
 
   const showManual = (mode === Mode.BEGINNER || mode === Mode.NORMAL) && manualPath;
   const showTutorial = mode === Mode.BEGINNER && tutorialPath;
@@ -179,7 +179,7 @@ function I18nTooltipContent({ i18nKey, mode }: I18nTooltipContentProps) {
   const handleHotkeyClick = () => {
     window.dispatchEvent(
       new CustomEvent("navigate-to-hotkey", {
-        detail: { path: i18nKey },
+        detail: { path: id },
       }),
     );
   };
@@ -236,22 +236,22 @@ function SemioTooltip({ children, config, mode }: SemioTooltipProps) {
   );
 }
 
-interface I18nSemioTooltipProps {
+interface IdSemioTooltipProps {
   children: React.ReactElement;
-  i18nKey: string;
+  id: string;
   mode: Mode;
 }
 
-function I18nSemioTooltip({ children, i18nKey, mode }: I18nSemioTooltipProps) {
+function IdSemioTooltip({ children, id, mode }: IdSemioTooltipProps) {
   if (mode === Mode.EXPERT) return children;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent>
-        <I18nTooltipContent i18nKey={i18nKey} mode={mode} />
+        <IdTooltipContent id={id} mode={mode} />
       </TooltipContent>
     </Tooltip>
   );
 }
 
-export { EnhancedTooltipContent, I18nSemioTooltip, I18nTooltipContent, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+export { EnhancedTooltipContent, IdSemioTooltip, IdTooltipContent, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };

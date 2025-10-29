@@ -412,7 +412,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "design-types",
-      i18n: "semio.sketchpad.app.kit.types",
+      id: "semio.sketchpad.app.kit.types",
       order: 0,
       defaultOpen: true,
       content: () => <TypesWorkbenchContent />,
@@ -420,7 +420,7 @@ const App: FC<AppProps> = () => {
         {
           icon: <Plus size={12} />,
           onClick: handleCreateType,
-          i18n: "semio.sketchpad.common.addType",
+          id: "semio.sketchpad.common.addType",
         },
       ],
       onPointerEnter: () => {
@@ -436,7 +436,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "design-designs",
-      i18n: "semio.sketchpad.app.kit.designs",
+      id: "semio.sketchpad.app.kit.designs",
       order: 1,
       defaultOpen: true,
       content: () => <DesignsWorkbenchContent />,
@@ -444,7 +444,7 @@ const App: FC<AppProps> = () => {
         {
           icon: <Plus size={12} />,
           onClick: handleCreateDesign,
-          i18n: "semio.sketchpad.common.addDesign",
+          id: "semio.sketchpad.common.addDesign",
         },
       ],
       onPointerEnter: () => {

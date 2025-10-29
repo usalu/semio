@@ -27,8 +27,8 @@ import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Author, guid, Guid, Kit, Type } from "../../../../semio";
 import i18n from "../../../../i18n";
+import { Author, guid, Guid, Kit, Type } from "../../../../semio";
 import { useIsInTypeScope, useKit, useKitCommands, useType } from "../../../kits/store";
 import { useTooltip } from "../../../store";
 import { useTypeAppCommands, useTypeAppHover, useTypeAppSelection } from "../store";
@@ -54,7 +54,7 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.type.panel.details.name"
+            id="semio.sketchpad.app.type.panel.details.name"
             value={type.name}
             onLazyChange={(value) => updateTypeField({ name: value })}
             startTransaction={startTransaction}
@@ -67,9 +67,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Textarea
             lazy
-            i18n="semio.sketchpad.app.type.panel.details.description"
+            id="semio.sketchpad.app.type.panel.details.description"
             value={type.description || ""}
-            placeholderI18n="semio.sketchpad.app.type.descriptionPlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
             onLazyChange={(value) => updateTypeField({ description: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -81,9 +81,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.type.panel.details.icon"
+            id="semio.sketchpad.app.type.panel.details.icon"
             value={type.icon || ""}
-            placeholderI18n="semio.sketchpad.app.type.iconPlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.iconPlaceholder.label"
             onLazyChange={(value) => updateTypeField({ icon: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -95,9 +95,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.type.panel.details.image"
+            id="semio.sketchpad.app.type.panel.details.image"
             value={type.image || ""}
-            placeholderI18n="semio.sketchpad.app.type.imagePlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.imagePlaceholder.label"
             onLazyChange={(value) => updateTypeField({ image: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -109,9 +109,9 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.type.panel.details.variant"
+            id="semio.sketchpad.app.type.panel.details.variant"
             value={type.variant || ""}
-            placeholderI18n="semio.sketchpad.app.type.variantPlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.variantPlaceholder.label"
             onLazyChange={(value) => updateTypeField({ variant: value })}
             startTransaction={startTransaction}
             finalizeTransaction={finalizeTransaction}
@@ -124,7 +124,7 @@ const TypeDetailsForm: FC = () => {
           <TreeContent>
             <Input
               lazy
-              i18n="semio.sketchpad.app.type.panel.details.unit"
+              id="semio.sketchpad.app.type.panel.details.unit"
               value={type.unit}
               onLazyChange={(value) => updateTypeField({ unit: value })}
               startTransaction={startTransaction}
@@ -169,7 +169,7 @@ const RepresentationsSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        i18n="semio.sketchpad.app.type.representations"
+        id="semio.sketchpad.app.type.representations"
         actions={[
           {
             icon: <Plus />,
@@ -182,7 +182,7 @@ const RepresentationsSectionForm: FC = () => {
               });
               finalizeTransaction();
             },
-            i18n: "semio.sketchpad.common.add",
+            id: "semio.sketchpad.common.add",
           },
         ]}
       >
@@ -212,7 +212,8 @@ const RepresentationsSectionForm: FC = () => {
                 <div onPointerEnter={() => hoverRepresentation(representation.guid)} onPointerLeave={() => clearHover()} onClick={() => (isSelected ? deselectRepresentation(representation.guid) : selectRepresentation(representation.guid))}>
                   <TreeItem
                     key={`representation-${index}`}
-                    i18n="semio.sketchpad.app.type.representation" label={representation.url}
+                    id="semio.sketchpad.app.type.representation"
+                    label={representation.url}
                     sortable={true}
                     sortableId={`representation-${index}`}
                     isDragHandle={true}
@@ -229,14 +230,14 @@ const RepresentationsSectionForm: FC = () => {
                           });
                           finalizeTransaction();
                         },
-                        i18n: "semio.sketchpad.common.remove",
+                        id: "semio.sketchpad.common.remove",
                       },
                     ]}
                   >
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          i18n="semio.sketchpad.app.type.panel.details.representation.url"
+                          id="semio.sketchpad.app.type.panel.details.representation.url"
                           value={representation.url}
                           onChange={(e) => {
                             updateRepresentation(representation.guid, { url: e.target.value });
@@ -249,9 +250,9 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          i18n="semio.sketchpad.app.type.panel.details.representation.description"
+                          id="semio.sketchpad.app.type.panel.details.representation.description"
                           value={representation.description || ""}
-                          placeholderI18n="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
+                          placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
                           onChange={(e) => {
                             updateRepresentation(representation.guid, { description: e.target.value });
                           }}
@@ -263,9 +264,9 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          i18n="semio.sketchpad.app.type.panel.details.representation.tags"
+                          id="semio.sketchpad.app.type.panel.details.representation.tags"
                           value={(representation.tags || []).join(", ")}
-                          placeholderI18n="semio.sketchpad.app.type.representationTagsPlaceholder.label"
+                          placeholderId="semio.sketchpad.app.type.representationTagsPlaceholder.label"
                           onChange={(e) => {
                             updateRepresentation(representation.guid, {
                               tags: e.target.value
@@ -337,7 +338,7 @@ const PortsListSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        i18n="semio.sketchpad.app.type.ports"
+        id="semio.sketchpad.app.type.ports"
         actions={[
           {
             icon: <Plus />,
@@ -357,7 +358,7 @@ const PortsListSectionForm: FC = () => {
               });
               finalizeTransaction();
             },
-            i18n: "semio.sketchpad.common.add",
+            id: "semio.sketchpad.common.add",
           },
         ]}
       >
@@ -404,7 +405,8 @@ const PortsListSectionForm: FC = () => {
                 <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
                   <TreeItem
                     key={`port-${index}`}
-                    i18n="semio.sketchpad.app.type.port" label={port.family}
+                    id="semio.sketchpad.app.type.port"
+                    label={port.family}
                     sortable={true}
                     sortableId={`port-${index}`}
                     isDragHandle={true}
@@ -421,16 +423,16 @@ const PortsListSectionForm: FC = () => {
                           });
                           finalizeTransaction();
                         },
-                        i18n: "semio.sketchpad.common.remove",
+                        id: "semio.sketchpad.common.remove",
                       },
                     ]}
                   >
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          i18n="semio.sketchpad.app.type.panel.details.port.family"
+                          id="semio.sketchpad.app.type.panel.details.port.family"
                           value={port.family || ""}
-                          placeholderI18n="semio.sketchpad.app.type.portFamilyPlaceholder.label"
+                          placeholderId="semio.sketchpad.app.type.portFamilyPlaceholder.label"
                           onChange={(e) => {
                             updatePort(port.guid, { family: e.target.value });
                           }}
@@ -442,9 +444,9 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          i18n="semio.sketchpad.app.type.panel.details.port.description"
+                          id="semio.sketchpad.app.type.panel.details.port.description"
                           value={port.description || ""}
-                          placeholderI18n="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
+                          placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
                           onChange={(e) => {
                             updatePort(port.guid, { description: e.target.value });
                           }}
@@ -472,11 +474,11 @@ const PortsListSectionForm: FC = () => {
                         </div>
                       </TreeContent>
                     </TreeItem>
-                    <TreeItem i18n="semio.sketchpad.app.type.portPoint">
+                    <TreeItem id="semio.sketchpad.app.type.portPoint">
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            i18n="semio.sketchpad.app.type.panel.details.port.point.x"
+                            id="semio.sketchpad.app.type.panel.details.port.point.x"
                             value={port.point.x}
                             onChange={(value) => {
                               updatePort(port.guid, { point: { x: value } });
@@ -491,7 +493,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            i18n="semio.sketchpad.app.type.panel.details.port.point.y"
+                            id="semio.sketchpad.app.type.panel.details.port.point.y"
                             value={port.point.y}
                             onChange={(value) => {
                               updatePort(port.guid, { point: { y: value } });
@@ -506,7 +508,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            i18n="semio.sketchpad.app.type.panel.details.port.point.z"
+                            id="semio.sketchpad.app.type.panel.details.port.point.z"
                             value={port.point.z}
                             onChange={(value) => {
                               updatePort(port.guid, { point: { z: value } });
@@ -519,11 +521,11 @@ const PortsListSectionForm: FC = () => {
                         </TreeContent>
                       </TreeItem>
                     </TreeItem>
-                    <TreeItem i18n="semio.sketchpad.app.type.portDirection">
+                    <TreeItem id="semio.sketchpad.app.type.portDirection">
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            i18n="semio.sketchpad.app.type.panel.details.port.direction.x"
+                            id="semio.sketchpad.app.type.panel.details.port.direction.x"
                             value={port.direction.x}
                             onChange={(value) => {
                               updatePort(port.guid, { direction: { x: value } });
@@ -538,7 +540,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            i18n="semio.sketchpad.app.type.panel.details.port.direction.y"
+                            id="semio.sketchpad.app.type.panel.details.port.direction.y"
                             value={port.direction.y}
                             onChange={(value) => {
                               updatePort(port.guid, { direction: { y: value } });
@@ -553,7 +555,7 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            i18n="semio.sketchpad.app.type.panel.details.port.direction.z"
+                            id="semio.sketchpad.app.type.panel.details.port.direction.z"
                             value={port.direction.z}
                             onChange={(value) => {
                               updatePort(port.guid, { direction: { z: value } });
@@ -569,9 +571,9 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          i18n="semio.sketchpad.app.type.panel.details.port.compatibleFamilies"
+                          id="semio.sketchpad.app.type.panel.details.port.compatibleFamilies"
                           value={(port.compatibleFamilies || []).join(", ")}
-                          placeholderI18n="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
+                          placeholderId="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
                           onChange={(e) => {
                             updatePort(port.guid, {
                               compatibleFamilies: e.target.value
@@ -618,7 +620,7 @@ const AuthorsSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        i18n="semio.sketchpad.app.type.authors"
+        id="semio.sketchpad.app.type.authors"
         actions={[
           {
             icon: <Plus />,
@@ -633,7 +635,7 @@ const AuthorsSectionForm: FC = () => {
               updateAuthors([...(type.authors || []), newAuthorGuid]);
               finalizeTransaction();
             },
-            i18n: "semio.sketchpad.common.add",
+            id: "semio.sketchpad.common.add",
           },
         ]}
       >
@@ -658,7 +660,8 @@ const AuthorsSectionForm: FC = () => {
             {(item, index) => (
               <TreeItem
                 key={`author-${index}`}
-                i18n="semio.sketchpad.app.type.author" label={item.name}
+                id="semio.sketchpad.app.type.author"
+                label={item.name}
                 sortable={true}
                 sortableId={`author-${index}`}
                 isDragHandle={true}
@@ -670,14 +673,14 @@ const AuthorsSectionForm: FC = () => {
                       updateAuthors((type.authors || []).filter((_, i: number) => i !== index));
                       finalizeTransaction();
                     },
-                        i18n: "semio.sketchpad.common.remove",
+                    id: "semio.sketchpad.common.remove",
                   },
                 ]}
               >
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.type.panel.details.author.name"
+                      id="semio.sketchpad.app.type.panel.details.author.name"
                       value={item.name}
                       onChange={(e) => {
                         kitCommands.updateAuthor(item.guid, { name: e.target.value });
@@ -690,7 +693,7 @@ const AuthorsSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.type.panel.details.author.email"
+                      id="semio.sketchpad.app.type.panel.details.author.email"
                       value={item.email}
                       onChange={(e) => {
                         kitCommands.updateAuthor(item.guid, { email: e.target.value });
@@ -738,7 +741,7 @@ const AttributesSectionForm: FC = () => {
   return (
     <>
       <TreeItem
-        i18n="semio.sketchpad.app.type.attributes"
+        id="semio.sketchpad.app.type.attributes"
         actions={[
           {
             icon: <Plus />,
@@ -751,7 +754,7 @@ const AttributesSectionForm: FC = () => {
               });
               finalizeTransaction();
             },
-            i18n: "semio.sketchpad.common.add",
+            id: "semio.sketchpad.common.add",
           },
         ]}
       >
@@ -777,7 +780,8 @@ const AttributesSectionForm: FC = () => {
             {(attribute, index) => (
               <TreeItem
                 key={`attribute-${index}`}
-                i18n="semio.sketchpad.app.type.attribute" label={attribute.key}
+                id="semio.sketchpad.app.type.attribute"
+                label={attribute.key}
                 sortable={true}
                 sortableId={`attribute-${index}`}
                 isDragHandle={true}
@@ -793,14 +797,14 @@ const AttributesSectionForm: FC = () => {
                       });
                       finalizeTransaction();
                     },
-                    i18n: "semio.sketchpad.common.remove",
+                    id: "semio.sketchpad.common.remove",
                   },
                 ]}
               >
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.type.panel.details.attribute.name"
+                      id="semio.sketchpad.app.type.panel.details.attribute.name"
                       value={attribute.key}
                       onChange={(e) => {
                         updateAttribute(attribute.guid, { key: e.target.value });
@@ -813,9 +817,9 @@ const AttributesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.type.panel.details.attribute.value"
+                      id="semio.sketchpad.app.type.panel.details.attribute.value"
                       value={attribute.value || ""}
-                      placeholderI18n="semio.sketchpad.app.type.attributeValuePlaceholder.label"
+                      placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label"
                       onChange={(e) => {
                         updateAttribute(attribute.guid, { value: e.target.value });
                       }}
@@ -827,9 +831,9 @@ const AttributesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.type.panel.details.attribute.definition"
+                      id="semio.sketchpad.app.type.panel.details.attribute.definition"
                       value={attribute.definition || ""}
-                      placeholderI18n="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label"
+                      placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label"
                       onChange={(e) => {
                         updateAttribute(attribute.guid, { definition: e.target.value });
                       }}
@@ -865,7 +869,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{i18n.t("semio.sketchpad.app.type.portNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{id.t("semio.sketchpad.app.type.portNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -900,9 +904,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            i18n="semio.sketchpad.app.type.panel.details.port.family"
+            id="semio.sketchpad.app.type.panel.details.port.family"
             value={port.family || ""}
-            placeholderI18n="semio.sketchpad.app.type.portFamilyPlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.portFamilyPlaceholder.label"
             onChange={(e) => {
               updatePort(port.guid, { family: e.target.value });
             }}
@@ -914,9 +918,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Textarea
-            i18n="semio.sketchpad.app.type.panel.details.port.description"
+            id="semio.sketchpad.app.type.panel.details.port.description"
             value={port.description || ""}
-            placeholderI18n="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
             onChange={(e) => {
               updatePort(port.guid, { description: e.target.value });
             }}
@@ -928,7 +932,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <div className="flex flex-col gap-1">
-            <label className="text-xs">{i18n.t("semio.sketchpad.app.type.portT")}</label>
+            <label className="text-xs">{id.t("semio.sketchpad.app.type.portT")}</label>
             <Slider
               value={[port.t ?? 0]}
               onValueChange={([value]) => {
@@ -944,11 +948,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem i18n="semio.sketchpad.app.type.portPoint">
+      <TreeItem id="semio.sketchpad.app.type.portPoint">
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.point.x"
+              id="semio.sketchpad.app.type.panel.details.port.point.x"
               value={port.point.x}
               onChange={(value) => {
                 updatePort(port.guid, { point: { x: value } });
@@ -963,7 +967,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.point.y"
+              id="semio.sketchpad.app.type.panel.details.port.point.y"
               value={port.point.y}
               onChange={(value) => {
                 updatePort(port.guid, { point: { y: value } });
@@ -978,7 +982,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.point.z"
+              id="semio.sketchpad.app.type.panel.details.port.point.z"
               value={port.point.z}
               onChange={(value) => {
                 updatePort(port.guid, { point: { z: value } });
@@ -991,11 +995,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           </TreeContent>
         </TreeItem>
       </TreeItem>
-      <TreeItem i18n="semio.sketchpad.app.type.portDirection">
+      <TreeItem id="semio.sketchpad.app.type.portDirection">
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.direction.x"
+              id="semio.sketchpad.app.type.panel.details.port.direction.x"
               value={port.direction.x}
               onChange={(value) => {
                 updatePort(port.guid, { direction: { x: value } });
@@ -1010,7 +1014,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.direction.y"
+              id="semio.sketchpad.app.type.panel.details.port.direction.y"
               value={port.direction.y}
               onChange={(value) => {
                 updatePort(port.guid, { direction: { y: value } });
@@ -1025,7 +1029,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.direction.z"
+              id="semio.sketchpad.app.type.panel.details.port.direction.z"
               value={port.direction.z}
               onChange={(value) => {
                 updatePort(port.guid, { direction: { z: value } });
@@ -1041,9 +1045,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            i18n="semio.sketchpad.app.type.panel.details.port.compatibleFamilies"
+            id="semio.sketchpad.app.type.panel.details.port.compatibleFamilies"
             value={(port.compatibleFamilies || []).join(", ")}
-            placeholderI18n="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
+            placeholderId="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
             onChange={(e) => {
               updatePort(port.guid, {
                 compatibleFamilies: e.target.value
@@ -1131,9 +1135,9 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            i18n="semio.sketchpad.app.type.panel.details.port.family"
+            id="semio.sketchpad.app.type.panel.details.port.family"
             value={commonFamily || ""}
-            placeholderI18n={commonFamily === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portFamilyPlaceholder.label"}
+            placeholderId={commonFamily === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portFamilyPlaceholder.label"}
             onChange={(e) => {
               updatePorts({ family: e.target.value });
             }}
@@ -1161,11 +1165,11 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem i18n="semio.sketchpad.app.type.portPoint">
+      <TreeItem id="semio.sketchpad.app.type.portPoint">
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.point.x"
+              id="semio.sketchpad.app.type.panel.details.port.point.x"
               value={commonPointX}
               onChange={(value) => {
                 updatePorts({ point: { x: value } });
@@ -1180,7 +1184,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.point.y"
+              id="semio.sketchpad.app.type.panel.details.port.point.y"
               value={commonPointY}
               onChange={(value) => {
                 updatePorts({ point: { y: value } });
@@ -1195,7 +1199,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.point.z"
+              id="semio.sketchpad.app.type.panel.details.port.point.z"
               value={commonPointZ}
               onChange={(value) => {
                 updatePorts({ point: { z: value } });
@@ -1208,11 +1212,11 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
           </TreeContent>
         </TreeItem>
       </TreeItem>
-      <TreeItem i18n="semio.sketchpad.app.type.portDirection">
+      <TreeItem id="semio.sketchpad.app.type.portDirection">
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.direction.x"
+              id="semio.sketchpad.app.type.panel.details.port.direction.x"
               value={commonDirectionX}
               onChange={(value) => {
                 updatePorts({ direction: { x: value } });
@@ -1227,7 +1231,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.direction.y"
+              id="semio.sketchpad.app.type.panel.details.port.direction.y"
               value={commonDirectionY}
               onChange={(value) => {
                 updatePorts({ direction: { y: value } });
@@ -1242,7 +1246,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              i18n="semio.sketchpad.app.type.panel.details.port.direction.z"
+              id="semio.sketchpad.app.type.panel.details.port.direction.z"
               value={commonDirectionZ}
               onChange={(value) => {
                 updatePorts({ direction: { z: value } });

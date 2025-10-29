@@ -51,7 +51,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       resizeSide="left"
       footer={
         <div className={`${isMobile ? "p-2" : "p-1"} border-t`}>
-          <Textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder={t("semio.sketchpad.panel.chat.placeholder")} i18n="semio.sketchpad.panel.chat.input" />
+          <Textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder={t("semio.sketchpad.panel.chat.placeholder")} id="semio.sketchpad.panel.chat.input" />
         </div>
       }
     />

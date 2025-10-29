@@ -22,7 +22,7 @@ import * as React from "react";
 
 import { useTranslation } from "react-i18next";
 import { cn } from "../../semio";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange"> {
   lazy?: boolean;
@@ -32,16 +32,16 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
-  i18n: string;
-  placeholderI18n?: string;
+  id: string;
+  placeholderId?: string;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, i18n, placeholderI18n, placeholder, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, id, placeholderId, placeholder, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const mode = useTooltipMode();
   const { t } = useTranslation();
-  const computedPlaceholder = placeholderI18n ? t(placeholderI18n) : placeholder;
+  const computedPlaceholder = placeholderId ? t(placeholderId) : placeholder;
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -105,7 +105,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     />
   );
 
-  const label = t(`${i18n}.label`);
+  const label = t(`${id}.label`);
 
   return (
     <div className="group flex items-start gap-2 min-w-0 w-full">
@@ -114,7 +114,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           <span className="inline-flex items-start h-9 px-3 py-2 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+          <IdTooltipContent id={id} mode={mode} />
         </TooltipContent>
       </Tooltip>
       {textareaElement}

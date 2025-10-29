@@ -48,7 +48,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronRight, FileText, Folder, GripVertical } from "lucide-react";
 import { Children, createContext, FC, isValidElement, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 import { TreeStateProvider, useTreeState } from "./TreeStateProvider";
@@ -98,12 +98,12 @@ export interface TreeSectionAction {
   icon: ReactNode;
   onClick: () => void;
   title?: string;
-  i18n?: string;
+  id?: string;
 }
 
 interface TreeSectionProps {
   label?: string;
-  i18n?: string;
+  id?: string;
   icon?: ReactNode;
   children?: ReactNode;
   defaultOpen?: boolean;
@@ -117,7 +117,6 @@ interface TreeSectionProps {
 interface SortableTreeItemProps {
   id: string;
   label?: ReactNode;
-  i18n?: string;
   icon?: ReactNode;
   children?: ReactNode;
   onClick?: (event: ReactMouseEvent) => void;
@@ -133,7 +132,7 @@ interface SortableTreeItemProps {
 
 interface TreeItemProps {
   label?: ReactNode;
-  i18n?: string;
+  id?: string;
   icon?: ReactNode;
   children?: ReactNode;
   onClick?: (event: ReactMouseEvent) => void;
@@ -155,12 +154,12 @@ interface SortableTreeItemsProps {
   children: (item: any, index: number) => ReactNode;
 }
 
-export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
+export const TreeSection: FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
   const { t } = useTranslation();
   const mode = useTooltipMode();
-  const displayLabel = i18n ? t(`${i18n}.label`) : label;
+  const displayLabel = id ? t(`${id}.label`) : label;
   const sectionId = `section-${displayLabel}`;
   const open = treeState.getOpenState(sectionId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(sectionId, value);
@@ -190,13 +189,13 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children,
         <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
         <div className="w-[14px] flex-shrink-0" />
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-        {i18n ? (
+        {id ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
             </TooltipTrigger>
             <TooltipContent>
-              <I18nTooltipContent i18nKey={i18n} mode={mode} />
+              <IdTooltipContent id={id} mode={mode} />
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -213,7 +212,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children,
                   e.stopPropagation();
                   action.onClick();
                 }}
-                i18n={action.i18n}
+                id={action.id}
               >
                 {action.icon}
               </Action>
@@ -249,13 +248,13 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children,
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          {i18n ? (
+          {id ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
               </TooltipTrigger>
               <TooltipContent>
-                <I18nTooltipContent i18nKey={i18n} mode={mode} />
+                <IdTooltipContent id={id} mode={mode} />
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -272,7 +271,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children,
                     e.stopPropagation();
                     action.onClick();
                   }}
-                  i18n={action.i18n}
+                  id={action.id}
                 >
                   {action.icon}
                 </Action>
@@ -288,12 +287,12 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children,
   );
 };
 
-const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, i18n, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
+const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children, onClick, className = "", isSelected = false, isHighlighted = false, isDragHandle = false, defaultOpen = true, isLastItem = false, actions = [], onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
   const { t } = useTranslation();
-  const displayLabel = i18n ? t(`${i18n}.label`, { defaultValue: t(i18n) }) : label;
-  const itemKey = i18n ?? displayLabel ?? id;
+  const displayLabel = id ? t(`${id}.label`, { defaultValue: t(id) }) : label;
+  const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
   const open = treeState.getOpenState(itemId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
@@ -355,7 +354,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, i18n, icon, ch
                     e.stopPropagation();
                     action.onClick();
                   }}
-                  i18n={action.i18n}
+                  id={action.id}
                 >
                   {action.icon}
                 </Action>
@@ -409,7 +408,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, i18n, icon, ch
                 e.stopPropagation();
                 action.onClick();
               }}
-              i18n={action.i18n}
+              id={action.id}
             >
               {action.icon}
             </Action>
@@ -443,7 +442,7 @@ export const SortableTreeItems: FC<SortableTreeItemsProps> = ({ items, onReorder
 
 export const TreeItem: FC<TreeItemProps> = ({
   label,
-  i18n,
+  id,
   icon,
   children,
   onClick,
@@ -459,13 +458,12 @@ export const TreeItem: FC<TreeItemProps> = ({
   onDoubleClick,
 }) => {
   const { t } = useTranslation();
-  const resolvedLabel = i18n ? t(`${i18n}.label`, { defaultValue: t(i18n) }) : label;
+  const resolvedLabel = id ? t(`${id}.label`, { defaultValue: t(id) }) : label;
   if (sortable && sortableId) {
     return (
       <SortableTreeItem
         id={sortableId}
         label={resolvedLabel}
-        i18n={i18n}
         icon={icon}
         children={children}
         onClick={onClick}
@@ -483,7 +481,7 @@ export const TreeItem: FC<TreeItemProps> = ({
 
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
-  const itemKey = i18n ?? resolvedLabel ?? sortableId ?? "tree-item";
+  const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
   const itemId = `item-${itemKey}`;
   const open = treeState.getOpenState(itemId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
@@ -530,7 +528,7 @@ export const TreeItem: FC<TreeItemProps> = ({
                     e.stopPropagation();
                     action.onClick();
                   }}
-                  i18n={action.i18n}
+                  id={action.id}
                 >
                   {action.icon}
                 </Action>
@@ -563,7 +561,7 @@ export const TreeItem: FC<TreeItemProps> = ({
                 e.stopPropagation();
                 action.onClick();
               }}
-              i18n={action.i18n}
+              id={action.id}
             >
               {action.icon}
             </Action>

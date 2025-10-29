@@ -23,7 +23,7 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "../../semio";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 function Select({
   label,
@@ -104,12 +104,12 @@ function SelectTrigger({
   size = "default",
   level = "base",
   children,
-  i18n,
+  id,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
   level?: "base" | "panel" | "temporary";
-  i18n?: string;
+  id?: string;
 }) {
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
   const mode = useTooltipMode();
@@ -132,12 +132,12 @@ function SelectTrigger({
     </SelectPrimitive.Trigger>
   );
 
-  if (i18n) {
+  if (id) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{triggerElement}</TooltipTrigger>
         <TooltipContent>
-          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+          <IdTooltipContent id={id} mode={mode} />
         </TooltipContent>
       </Tooltip>
     );

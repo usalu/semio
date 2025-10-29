@@ -1053,8 +1053,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind(selectedKind)}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact(selectedKind)}
-              i18n="semio.sketchpad.app.kitApp.hideKind"
-              actionI18n="semio.sketchpad.app.kitApp.createArtifact"
+              id="semio.sketchpad.app.kitApp.hideKind"
+              actionId="semio.sketchpad.app.kitApp.createArtifact"
             >
               {selectedKind === "designs" && <Layout className="size-4" />}
               {selectedKind === "types" && <Box className="size-4" />}
@@ -1080,7 +1080,7 @@ const AppContent: FC = () => {
           )}
           {selectedConcepts.length > 0 &&
             selectedConcepts.map((concept) => (
-              <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.hide">
+              <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide">
                 {concept}
               </Toggle>
             ))}
@@ -1092,8 +1092,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("designs")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("designs")}
-                i18n="semio.sketchpad.app.kitApp.showDesigns"
-                actionI18n="semio.sketchpad.app.kitApp.createDesign"
+                id="semio.sketchpad.app.kitApp.showDesigns"
+                actionId="semio.sketchpad.app.kitApp.createDesign"
               >
                 <Layout className="size-4" />
               </Toggle>
@@ -1103,8 +1103,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("types")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("types")}
-                i18n="semio.sketchpad.app.kitApp.showTypes"
-                actionI18n="semio.sketchpad.app.kitApp.createType"
+                id="semio.sketchpad.app.kitApp.showTypes"
+                actionId="semio.sketchpad.app.kitApp.createType"
               >
                 <Box className="size-4" />
               </Toggle>
@@ -1114,8 +1114,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("qualities")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("qualities")}
-                i18n="semio.sketchpad.app.kitApp.showQualities"
-                actionI18n="semio.sketchpad.app.kitApp.createQuality"
+                id="semio.sketchpad.app.kitApp.showQualities"
+                actionId="semio.sketchpad.app.kitApp.createQuality"
               >
                 <Award className="size-4" />
               </Toggle>
@@ -1125,8 +1125,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("files")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("files")}
-                i18n="semio.sketchpad.app.kitApp.showFiles"
-                actionI18n="semio.sketchpad.app.kitApp.createFile"
+                id="semio.sketchpad.app.kitApp.showFiles"
+                actionId="semio.sketchpad.app.kitApp.createFile"
               >
                 <FileText className="size-4" />
               </Toggle>
@@ -1136,8 +1136,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("authors")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("authors")}
-                i18n="semio.sketchpad.app.kitApp.showAuthors"
-                actionI18n="semio.sketchpad.app.kitApp.createAuthor"
+                id="semio.sketchpad.app.kitApp.showAuthors"
+                actionId="semio.sketchpad.app.kitApp.createAuthor"
               >
                 <User className="size-4" />
               </Toggle>
@@ -1147,7 +1147,7 @@ const AppContent: FC = () => {
             allConcepts
               .filter((c) => !selectedConcepts.includes(c))
               .map((concept) => (
-                <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.show">
+                <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.show">
                   {concept}
                 </Toggle>
               ))}
@@ -1155,7 +1155,7 @@ const AppContent: FC = () => {
             !selectedName &&
             uniqueNames.length > 0 &&
             uniqueNames.map((name) => (
-              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} i18n="semio.sketchpad.app.kit.filter.name">
+              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name">
                 {name}
               </Toggle>
             ))}
@@ -1164,7 +1164,7 @@ const AppContent: FC = () => {
             selectedVariant === null &&
             uniqueVariants.length > 0 &&
             uniqueVariants.map((variant) => (
-              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)} i18n="semio.sketchpad.app.kit.filter.variant">
+              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)} id="semio.sketchpad.app.kit.filter.variant">
                 {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
               </Toggle>
             ))}
@@ -1175,7 +1175,7 @@ const AppContent: FC = () => {
             uniqueViews
               .filter((view) => view !== selectedView)
               .map((view) => (
-                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)} i18n="semio.sketchpad.app.kit.filter.view">
+                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)} id="semio.sketchpad.app.kit.filter.view">
                   {view || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
                 </Toggle>
               ))}
@@ -1190,10 +1190,10 @@ const AppContent: FC = () => {
                 kitAppCommands.setSortDirection(value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.app.sort.ascending" },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.app.sort.descending" },
+                { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.app.sort.ascending" },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.app.sort.descending" },
               ]}
-              i18n="semio.sketchpad.app.kitApp.sortByName"
+              id="semio.sketchpad.app.kitApp.sortByName"
             />
           </div>
         </div>
@@ -1249,7 +1249,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateVariantForRow(row);
                             }}
-                            i18n="semio.sketchpad.app.kitApp.createVariant"
+                            id="semio.sketchpad.app.kitApp.createVariant"
                             level="base"
                           >
                             <Plus />
@@ -1259,7 +1259,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateViewForRow(row);
                             }}
-                            i18n="semio.sketchpad.app.kitApp.createView"
+                            id="semio.sketchpad.app.kitApp.createView"
                             level="base"
                           >
                             <Plus />
@@ -1272,7 +1272,7 @@ const AppContent: FC = () => {
                             e.stopPropagation();
                             handleCreateVariantForRow(row);
                           }}
-                          i18n="semio.sketchpad.app.kitApp.createVariant"
+                          id="semio.sketchpad.app.kitApp.createVariant"
                           level="base"
                         >
                           <Plus />
@@ -1284,7 +1284,7 @@ const AppContent: FC = () => {
                             e.stopPropagation();
                             handleCreateViewForRow(row);
                           }}
-                          i18n="semio.sketchpad.app.kitApp.createView"
+                          id="semio.sketchpad.app.kitApp.createView"
                           level="base"
                         >
                           <Plus />
@@ -1319,8 +1319,8 @@ const AppContent: FC = () => {
             onPressedChange={() => toggleKind(selectedKind)}
             actionIcon={<Plus className="size-3.5" />}
             onActionClick={() => handleCreateArtifact(selectedKind)}
-            i18n="semio.sketchpad.app.kitApp.hideKind"
-            actionI18n="semio.sketchpad.app.kitApp.createArtifact"
+            id="semio.sketchpad.app.kitApp.hideKind"
+            actionId="semio.sketchpad.app.kitApp.createArtifact"
           >
             {selectedKind === "designs" && <Layout className="size-4" />}
             {selectedKind === "types" && <Box className="size-4" />}
@@ -1346,7 +1346,7 @@ const AppContent: FC = () => {
         )}
         {selectedConcepts.length > 0 &&
           selectedConcepts.map((concept) => (
-            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.hide">
+            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide">
               {concept}
             </Toggle>
           ))}
@@ -1358,8 +1358,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("designs")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("designs")}
-              i18n="semio.sketchpad.app.kitApp.showDesigns"
-              actionI18n="semio.sketchpad.app.kitApp.createDesign"
+              id="semio.sketchpad.app.kitApp.showDesigns"
+              actionId="semio.sketchpad.app.kitApp.createDesign"
             >
               <Layout className="size-4" />
             </Toggle>
@@ -1369,8 +1369,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("types")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("types")}
-              i18n="semio.sketchpad.app.kitApp.showTypes"
-              actionI18n="semio.sketchpad.app.kitApp.createType"
+              id="semio.sketchpad.app.kitApp.showTypes"
+              actionId="semio.sketchpad.app.kitApp.createType"
             >
               <Box className="size-4" />
             </Toggle>
@@ -1380,8 +1380,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("qualities")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("qualities")}
-              i18n="semio.sketchpad.app.kitApp.showQualities"
-              actionI18n="semio.sketchpad.app.kitApp.createQuality"
+              id="semio.sketchpad.app.kitApp.showQualities"
+              actionId="semio.sketchpad.app.kitApp.createQuality"
             >
               <Award className="size-4" />
             </Toggle>
@@ -1391,8 +1391,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("files")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("files")}
-              i18n="semio.sketchpad.app.kitApp.showFiles"
-              actionI18n="semio.sketchpad.app.kitApp.createFile"
+              id="semio.sketchpad.app.kitApp.showFiles"
+              actionId="semio.sketchpad.app.kitApp.createFile"
             >
               <FileText className="size-4" />
             </Toggle>
@@ -1402,8 +1402,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("authors")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("authors")}
-              i18n="semio.sketchpad.app.kitApp.showAuthors"
-              actionI18n="semio.sketchpad.app.kitApp.createAuthor"
+              id="semio.sketchpad.app.kitApp.showAuthors"
+              actionId="semio.sketchpad.app.kitApp.createAuthor"
             >
               <User className="size-4" />
             </Toggle>
@@ -1413,7 +1413,7 @@ const AppContent: FC = () => {
           allConcepts
             .filter((c) => !selectedConcepts.includes(c))
             .map((concept) => (
-              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} i18n="semio.sketchpad.app.kit.filter.concept.show">
+              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.show">
                 {concept}
               </Toggle>
             ))}
@@ -1421,7 +1421,7 @@ const AppContent: FC = () => {
           !selectedName &&
           uniqueNames.length > 0 &&
           uniqueNames.map((name) => (
-            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} i18n="semio.sketchpad.app.kit.filter.name">
+            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name">
               {name}
             </Toggle>
           ))}
@@ -1468,8 +1468,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1489,8 +1489,8 @@ const AppContent: FC = () => {
                         kitAppCommands.setSortDirection(value as "asc" | "desc");
                       }}
                       items={[
-                        { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
-                        { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
+                        { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                        { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
                       ]}
                       className="px-1 min-w-0"
                     />
@@ -1510,8 +1510,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1530,8 +1530,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1582,7 +1582,7 @@ const AppContent: FC = () => {
                                 e.stopPropagation();
                                 handleCreateVariantForRow(row);
                               }}
-                              i18n="semio.sketchpad.app.kitApp.createVariant"
+                              id="semio.sketchpad.app.kitApp.createVariant"
                               level="base"
                             >
                               <Plus />
@@ -1592,7 +1592,7 @@ const AppContent: FC = () => {
                                 e.stopPropagation();
                                 handleCreateViewForRow(row);
                               }}
-                              i18n="semio.sketchpad.app.kitApp.createView"
+                              id="semio.sketchpad.app.kitApp.createView"
                               level="base"
                             >
                               <Plus />
@@ -1605,7 +1605,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateVariantForRow(row);
                             }}
-                            i18n="semio.sketchpad.app.kitApp.createVariant"
+                            id="semio.sketchpad.app.kitApp.createVariant"
                             level="base"
                           >
                             <Plus />
@@ -1617,7 +1617,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateViewForRow(row);
                             }}
-                            i18n="semio.sketchpad.app.kitApp.createView"
+                            id="semio.sketchpad.app.kitApp.createView"
                             level="base"
                           >
                             <Plus />

@@ -29,7 +29,7 @@ export type ResizeSide = "left" | "right" | "top" | "bottom";
 export interface PanelSection {
   id: string;
   label?: string;
-  i18n?: string;
+  id?: string;
   content: ReactNode | (() => ReactNode);
   defaultOpen?: boolean;
   order?: number;
@@ -37,7 +37,7 @@ export interface PanelSection {
     icon: ReactNode;
     onClick: () => void;
     title?: string;
-    i18n?: string;
+    id?: string;
   }>;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
@@ -141,7 +141,7 @@ const Panel: FC<PanelProps> = ({
                   <TreeSection
                     key={section.id}
                     label={section.label}
-                    i18n={section.i18n}
+                    id={section.id}
                     defaultOpen={section.defaultOpen}
                     actions={section.actions}
                     onPointerEnter={section.onPointerEnter}

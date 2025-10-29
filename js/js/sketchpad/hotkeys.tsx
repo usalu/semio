@@ -6,7 +6,7 @@
 
 // #endregion
 
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useHotkeys as useHotkeysHook } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useSketchpadStore } from "./store";

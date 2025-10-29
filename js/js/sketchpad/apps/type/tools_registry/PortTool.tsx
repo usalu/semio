@@ -19,15 +19,15 @@
 
 // #endregion
 
-import { Line, Sphere, useGLTF, useFBX } from "@react-three/drei";
+import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { Crosshair } from "lucide-react";
-import { FC, useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { FC, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { guid, Kit, Point, Port, Type, Vector } from "../../../../semio";
 import { Tool, ToolRenderContext } from "../../../Tool";
-import { useKit, useKitCommands, useKitStore, useType, KitStore } from "../../../kits/store";
+import { KitStore, useKit, useKitCommands, useKitStore, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
 import { TypeAppState, useTypeAppSelectedRepresentationGuid } from "../store";
 
@@ -146,11 +146,11 @@ const LoadedTypeMesh: FC<{
   const ext = fileExtension.toLowerCase();
 
   // Use separate components to avoid conditional hook calls
-  if (ext === 'glb' || ext === 'gltf') {
+  if (ext === "glb" || ext === "gltf") {
     return <GLTFMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
-  } else if (ext === 'fbx') {
+  } else if (ext === "fbx") {
     return <FBXMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
-  } else if (ext === 'obj') {
+  } else if (ext === "obj") {
     return <OBJMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
   } else {
     // Default to GLTF for unknown types
@@ -176,26 +176,24 @@ const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vect
 
   const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
     if (!type?.representations || type.representations.length === 0) {
-      return { representationUrl: null, fileExtension: '', fileGuid: null };
+      return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
     // Find the selected representation or use the first one
-    const representation = selectedRepresentationGuid
-      ? type.representations.find(r => r.guid === selectedRepresentationGuid)
-      : type.representations[0];
+    const representation = selectedRepresentationGuid ? type.representations.find((r) => r.guid === selectedRepresentationGuid) : type.representations[0];
 
     if (!representation) {
-      return { representationUrl: null, fileExtension: '', fileGuid: null };
+      return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
     // Get the file and resolve its URL
     const file = kit?.files?.find((f) => f.guid === representation.file);
     if (!file) {
-      return { representationUrl: null, fileExtension: '', fileGuid: null };
+      return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
     // Extract file extension
-    const ext = file.path.split('.').pop() || '';
+    const ext = file.path.split(".").pop() || "";
 
     // Use kitStore to get the file URL through the file provider
     const url = kitStore.getFileUrl(file.guid);
@@ -224,14 +222,14 @@ const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vect
           setBlobUrl(url);
         }
       } catch (error) {
-        console.error('[TypeMesh] Failed to get blob URL:', error);
+        console.error("[TypeMesh] Failed to get blob URL:", error);
       }
     })();
 
     // Cleanup on unmount or when fileGuid changes
     return () => {
       cancelled = true;
-      if (currentBlobUrl && currentBlobUrl.startsWith('blob:')) {
+      if (currentBlobUrl && currentBlobUrl.startsWith("blob:")) {
         URL.revokeObjectURL(currentBlobUrl);
       }
     };
@@ -368,7 +366,7 @@ const PortToolContent: FC<ToolRenderContext<TypeAppState>> = ({ state, selection
 export const PortTool: Tool<TypeAppState> = {
   id: ToolType.PORT,
   label: "tools.port.label",
-  i18n: "tools.port.addAndEdit",
+  id: "tools.port.addAndEdit",
   icon: <Crosshair className="h-4 w-4" />,
   hotkey: "2",
   render: (context: ToolRenderContext<TypeAppState>) => ({

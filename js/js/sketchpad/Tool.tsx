@@ -48,7 +48,7 @@ export interface Tool<TState = any, TSelection = any> {
   id: ToolType;
   label: string;
   icon: ReactNode;
-  i18n?: string;
+  id?: string;
   hotkey?: string;
   render: (context: ToolRenderContext<TState, TSelection>) => ToolContribution;
 }
@@ -57,7 +57,7 @@ export interface ToolMode {
   id: ToolType;
   label: string;
   icon: ReactNode;
-  i18n?: string;
+  id?: string;
   hotkey?: string;
 }
 
@@ -69,7 +69,7 @@ export interface ToolModeComponentProps {
 }
 
 export const ToolModeComponent: FC<ToolModeComponentProps> = ({ mode, isActive, onActivate, level = "panel" }) => (
-  <ToggleGroupItem value={mode.id} i18n={mode.i18n}>
+  <ToggleGroupItem value={mode.id} id={mode.id}>
     {mode.icon}
   </ToggleGroupItem>
 );
@@ -93,7 +93,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
     const currentMode = tool.modes.find((mode) => mode.id === activeTool);
     const isPressed = !!currentMode;
     const defaultMode = tool.defaultMode || tool.modes[0].id;
-    const dropdownItems: ToggleItem<ToolType>[] = tool.modes.map((mode) => ({ value: mode.id, label: mode.icon, i18n: mode.i18n }));
+    const dropdownItems: ToggleItem<ToolType>[] = tool.modes.map((mode) => ({ value: mode.id, label: mode.icon, id: mode.id }));
     return {
       key: tool.id,
       element: (
@@ -105,7 +105,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
           value={activeTool}
           onValueChange={onToolChange}
           items={dropdownItems}
-          i18n={currentMode?.i18n}
+          id={currentMode?.id}
         />
       ),
     };

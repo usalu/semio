@@ -3,7 +3,7 @@ import { FC, useState } from "react";
 import { cn } from "../../semio";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../Command";
 import { Popover, PopoverContent, PopoverTrigger } from "../Popover";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Button } from "./Button";
 
 interface ComboboxOption {
@@ -22,10 +22,10 @@ interface ComboboxProps {
   className?: string;
   allowClear?: boolean;
   label?: string;
-  i18n?: string;
+  id?: string;
 }
 
-const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, label, i18n }) => {
+const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, label, id }) => {
   const [open, setOpen] = useState(false);
   const mode = useTooltipMode();
 
@@ -59,11 +59,11 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
     </PopoverTrigger>
   );
 
-  const wrappedTrigger = i18n ? (
+  const wrappedTrigger = id ? (
     <Tooltip>
       <TooltipTrigger asChild>{popoverTrigger}</TooltipTrigger>
       <TooltipContent>
-        <I18nTooltipContent i18nKey={i18n} mode={mode} />
+        <IdTooltipContent id={id} mode={mode} />
       </TooltipContent>
     </Tooltip>
   ) : (

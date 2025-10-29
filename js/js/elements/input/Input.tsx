@@ -23,7 +23,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../semio";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
   lazy?: boolean;
@@ -34,18 +34,18 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
-  i18n?: string;
-  placeholderI18n?: string;
+  id?: string;
+  placeholderId?: string;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, i18n, placeholderI18n, placeholder, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, id, placeholderId, placeholder, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
   const mode = useTooltipMode();
   const { t } = useTranslation();
-  const computedPlaceholder = placeholderI18n ? t(placeholderI18n) : placeholder;
+  const computedPlaceholder = placeholderId ? t(placeholderId) : placeholder;
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -123,11 +123,11 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     />
   );
 
-  if (!i18n) {
+  if (!id) {
     return <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>{inputElement}</div>;
   }
 
-  const label = t(`${i18n}.label`);
+  const label = t(`${id}.label`);
 
   return (
     <div className="group flex items-center gap-2 min-w-0 h-9 w-full" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
@@ -136,7 +136,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
           <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+          <IdTooltipContent id={id} mode={mode} />
         </TooltipContent>
       </Tooltip>
       {inputElement}

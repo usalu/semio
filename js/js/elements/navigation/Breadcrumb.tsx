@@ -25,7 +25,7 @@ import * as React from "react";
 
 import { cn } from "../../semio";
 import { Mode } from "../../sketchpad/store";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger } from "../display/Tooltip";
 
 function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
   return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
@@ -35,19 +35,19 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words border overflow-hidden h-auto min-h-9", className)} {...props} />;
 }
 
-function BreadcrumbItem({ className, i18n, mode = Mode.BEGINNER, children, ...props }: React.ComponentProps<"li"> & { i18n?: string; mode?: Mode }) {
+function BreadcrumbItem({ className, id, mode = Mode.BEGINNER, children, ...props }: React.ComponentProps<"li"> & { id?: string; mode?: Mode }) {
   const itemElement = (
     <li data-slot="breadcrumb-item" className={cn("flex items-stretch", className)} {...props}>
       {children}
     </li>
   );
 
-  if (i18n) {
+  if (id) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
         <TooltipContent>
-          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+          <IdTooltipContent id={id} mode={mode} />
         </TooltipContent>
       </Tooltip>
     );
@@ -76,14 +76,14 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
 }
 
 interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
-  items?: { label: React.ReactNode; href: string; i18n?: string }[];
+  items?: { label: React.ReactNode; href: string; id?: string }[];
   onNavigate?: (href: string) => void;
-  i18n?: string;
+  id?: string;
   mode?: Mode;
   level?: "base" | "panel" | "temporary";
 }
 
-function BreadcrumbSeparator({ children, className, items, onNavigate, i18n, mode = Mode.BEGINNER, level = "base", ...props }: BreadcrumbSeparatorProps) {
+function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode = Mode.BEGINNER, level = "base", ...props }: BreadcrumbSeparatorProps) {
   const [open, setOpen] = React.useState(false);
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
@@ -99,12 +99,12 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, i18n, mod
       </li>
     );
 
-    if (i18n) {
+    if (id) {
       return (
         <Tooltip>
           <TooltipTrigger asChild>{separatorElement}</TooltipTrigger>
           <TooltipContent>
-            <I18nTooltipContent i18nKey={i18n} mode={mode} />
+            <IdTooltipContent id={id} mode={mode} />
           </TooltipContent>
         </Tooltip>
       );
@@ -115,7 +115,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, i18n, mod
 
   return (
     <DropdownMenuPrimitive.Root open={open} onOpenChange={setOpen}>
-      {i18n ? (
+      {id ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuPrimitive.Trigger asChild>
@@ -125,7 +125,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, i18n, mod
             </DropdownMenuPrimitive.Trigger>
           </TooltipTrigger>
           <TooltipContent>
-            <I18nTooltipContent i18nKey={i18n} mode={mode} />
+            <IdTooltipContent id={id} mode={mode} />
           </TooltipContent>
         </Tooltip>
       ) : (
@@ -149,11 +149,11 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, i18n, mod
               </DropdownMenuPrimitive.Item>
             );
 
-            const wrappedItem = item.i18n ? (
+            const wrappedItem = item.id ? (
               <Tooltip key={index}>
                 <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
                 <TooltipContent>
-                  <I18nTooltipContent i18nKey={item.i18n} mode={mode} />
+                  <IdTooltipContent id={item.id} mode={mode} />
                 </TooltipContent>
               </Tooltip>
             ) : (

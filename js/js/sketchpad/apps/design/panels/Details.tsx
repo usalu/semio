@@ -73,7 +73,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.name"
+            id="semio.sketchpad.app.design.panel.details.name"
             value={design.name}
             onLazyChange={(value) => updateDesignField({ name: value })}
             startTransaction={startTransaction}
@@ -86,7 +86,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Textarea
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.description"
+            id="semio.sketchpad.app.design.panel.details.description"
             value={design.description || ""}
             placeholder={t("semio.sketchpad.app.design.descriptionPlaceholder")}
             onLazyChange={(value) => updateDesignField({ description: value })}
@@ -100,7 +100,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.icon"
+            id="semio.sketchpad.app.design.panel.details.icon"
             value={design.icon || ""}
             placeholder={t("semio.sketchpad.app.design.iconPlaceholder")}
             onLazyChange={(value) => updateDesignField({ icon: value })}
@@ -114,7 +114,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.image"
+            id="semio.sketchpad.app.design.panel.details.image"
             value={design.image || ""}
             placeholder={t("semio.sketchpad.app.design.imagePlaceholder")}
             onLazyChange={(value) => updateDesignField({ image: value })}
@@ -128,7 +128,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.variant"
+            id="semio.sketchpad.app.design.panel.details.variant"
             value={design.variant || ""}
             placeholder={t("semio.sketchpad.app.design.variantPlaceholder")}
             onLazyChange={(value) => updateDesignField({ variant: value })}
@@ -142,7 +142,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.view"
+            id="semio.sketchpad.app.design.panel.details.view"
             value={design.view || ""}
             placeholder={t("semio.sketchpad.app.design.viewPlaceholder")}
             onLazyChange={(value) => updateDesignField({ view: value })}
@@ -156,7 +156,7 @@ const DesignSectionForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            i18n="semio.sketchpad.app.design.panel.details.unit"
+            id="semio.sketchpad.app.design.panel.details.unit"
             value={design.unit || ""}
             onLazyChange={(value) => updateDesignField({ unit: value })}
             startTransaction={startTransaction}
@@ -179,7 +179,7 @@ const DesignSectionForm: FC = () => {
           <TreeItem>
             <TreeContent>
               <Stepper
-                i18n="semio.sketchpad.app.design.panel.details.location.longitude"
+                id="semio.sketchpad.app.design.panel.details.location.longitude"
                 value={design.location.longitude}
                 onChange={(value) =>
                   handleChange({
@@ -197,7 +197,7 @@ const DesignSectionForm: FC = () => {
           <TreeItem>
             <TreeContent>
               <Stepper
-                i18n="semio.sketchpad.app.design.panel.details.location.latitude"
+                id="semio.sketchpad.app.design.panel.details.location.latitude"
                 value={design.location.latitude}
                 onChange={(value) =>
                   handleChange({
@@ -283,7 +283,7 @@ const DesignSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.design.panel.details.author.name"
+                      id="semio.sketchpad.app.design.panel.details.author.name"
                       value={author.name}
                       onChange={(e) => {
                         const updatedAuthors = [...(design.authors || [])];
@@ -301,7 +301,7 @@ const DesignSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.design.panel.details.author.email"
+                      id="semio.sketchpad.app.design.panel.details.author.email"
                       value={author.email}
                       onChange={(e) => {
                         const updatedAuthors = [...(design.authors || [])];
@@ -376,7 +376,7 @@ const DesignSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.design.panel.details.attribute.name"
+                      id="semio.sketchpad.app.design.panel.details.attribute.name"
                       value={attribute.key}
                       onChange={(e) => {
                         const updatedAttributes = [...(design.attributes || [])];
@@ -394,7 +394,7 @@ const DesignSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.design.panel.details.attribute.value"
+                      id="semio.sketchpad.app.design.panel.details.attribute.value"
                       value={attribute.value || ""}
                       placeholder={t("semio.sketchpad.app.design.attributeValuePlaceholder")}
                       onChange={(e) => {
@@ -413,7 +413,7 @@ const DesignSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.design.panel.details.attribute.unit"
+                      id="semio.sketchpad.app.design.panel.details.attribute.unit"
                       value={attribute.unit || ""}
                       placeholder={t("semio.sketchpad.app.design.attributeUnitPlaceholder")}
                       onChange={(e) => {
@@ -432,7 +432,7 @@ const DesignSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      i18n="semio.sketchpad.app.design.panel.details.attribute.definition"
+                      id="semio.sketchpad.app.design.panel.details.attribute.definition"
                       value={attribute.definition || ""}
                       placeholder={t("semio.sketchpad.app.design.attributeDefinitionPlaceholder")}
                       onChange={(e) => {
@@ -457,7 +457,7 @@ const DesignSectionForm: FC = () => {
         <TreeItem>
           <TreeContent>
             <Input
-              i18n="semio.sketchpad.app.design.panel.details.createdAt"
+              id="semio.sketchpad.app.design.panel.details.createdAt"
               value={(() => {
                 const date = design.createdAt;
                 if (date instanceof Date) return date.toISOString().split("T")[0];
@@ -473,7 +473,7 @@ const DesignSectionForm: FC = () => {
         <TreeItem>
           <TreeContent>
             <Input
-              i18n="semio.sketchpad.app.design.panel.details.updatedAt"
+              id="semio.sketchpad.app.design.panel.details.updatedAt"
               value={(() => {
                 const date = design.updatedAt;
                 if (date instanceof Date) return date.toISOString().split("T")[0];

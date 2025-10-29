@@ -26,7 +26,7 @@ import { Minus, Plus } from "lucide-react";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
-import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Input } from "./Input";
 
 interface StepperProps {
@@ -43,10 +43,10 @@ interface StepperProps {
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
-  i18n: string;
+  id: string;
 }
 
-const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, interactionId, i18n }) => {
+const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, interactionId, id }) => {
   const [internalValue, setInternalValue] = useState(value ?? defaultValue);
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -239,7 +239,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
         step={step}
         min={min}
         max={max}
-        i18n={i18n}
+        id={id}
       />
       <button
         type="button"
@@ -256,7 +256,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
     </div>
   );
 
-  const label = t(`${i18n}.label`);
+  const label = t(`${id}.label`);
 
   return (
     <div className="group flex items-center gap-2 min-w-0 h-9 w-full" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
@@ -265,7 +265,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
           <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <I18nTooltipContent i18nKey={i18n} mode={mode} />
+          <IdTooltipContent id={id} mode={mode} />
         </TooltipContent>
       </Tooltip>
       {stepperElement}

@@ -262,9 +262,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const kitKind = useKitKind(kitGuid || "");
 
   const kitKindItems = [
-    { label: <Clock size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.temporary", href: "/?kind=temporary" },
-    { label: <HardDrive size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.local", href: "/?kind=local" },
-    { label: <Cloud size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
+    { label: <Clock size={16} />, id: "semio.sketchpad.navbar.breadcrumb.temporary", href: "/?kind=temporary" },
+    { label: <HardDrive size={16} />, id: "semio.sketchpad.navbar.breadcrumb.local", href: "/?kind=local" },
+    { label: <Cloud size={16} />, id: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
   ];
 
   const filteredKits = useFilteredKitShallows(kitKind);
@@ -278,11 +278,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const kitCommands = useKitCommandsById(kitGuid || undefined);
 
   const artifactKinds = [
-    { label: <Layout size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.designs", kind: "designs", href: kitGuid ? `/kits/${kitGuid}?kind=designs` : "/kits?kind=designs" },
-    { label: <Box size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.types", kind: "types", href: kitGuid ? `/kits/${kitGuid}?kind=types` : "/kits?kind=types" },
-    { label: <Award size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.qualities", kind: "qualities", href: kitGuid ? `/kits/${kitGuid}?kind=qualities` : "/kits?kind=qualities" },
-    { label: <FileText size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.files", kind: "files", href: kitGuid ? `/kits/${kitGuid}?kind=files` : "/kits?kind=files" },
-    { label: <User size={16} />, i18n: "semio.sketchpad.navbar.breadcrumb.authors", kind: "authors", href: kitGuid ? `/kits/${kitGuid}?kind=authors` : "/kits?kind=authors" },
+    { label: <Layout size={16} />, id: "semio.sketchpad.navbar.breadcrumb.designs", kind: "designs", href: kitGuid ? `/kits/${kitGuid}?kind=designs` : "/kits?kind=designs" },
+    { label: <Box size={16} />, id: "semio.sketchpad.navbar.breadcrumb.types", kind: "types", href: kitGuid ? `/kits/${kitGuid}?kind=types` : "/kits?kind=types" },
+    { label: <Award size={16} />, id: "semio.sketchpad.navbar.breadcrumb.qualities", kind: "qualities", href: kitGuid ? `/kits/${kitGuid}?kind=qualities` : "/kits?kind=qualities" },
+    { label: <FileText size={16} />, id: "semio.sketchpad.navbar.breadcrumb.files", kind: "files", href: kitGuid ? `/kits/${kitGuid}?kind=files` : "/kits?kind=files" },
+    { label: <User size={16} />, id: "semio.sketchpad.navbar.breadcrumb.authors", kind: "authors", href: kitGuid ? `/kits/${kitGuid}?kind=authors` : "/kits?kind=authors" },
   ];
 
   const allDesigns: Design[] = useMemo(() => {
@@ -609,19 +609,19 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     <Breadcrumb className="flex-1 min-w-0">
       <BreadcrumbList>
         {/* Always show Home icon with dropdown to select kinds */}
-        <BreadcrumbItem i18n="semio.sketchpad.navbar.home">
+        <BreadcrumbItem id="semio.sketchpad.navbar.home">
           <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
             <Home size={16} />
           </BreadcrumbLink>
         </BreadcrumbItem>
 
         {/* Show separator with kind selector dropdown */}
-        <BreadcrumbSeparator items={kitKindItems} i18n="semio.sketchpad.navbar.kitKinds" onNavigate={(href) => navigate(href)} />
+        <BreadcrumbSeparator items={kitKindItems} id="semio.sketchpad.navbar.kitKinds" onNavigate={(href) => navigate(href)} />
 
         {/* If viewing a kit (or we have a selected home kind), show the kind breadcrumb */}
         {(kitGuid && kitKind) || homeKind ? (
           <>
-            <BreadcrumbItem i18n={"semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}"}>
+            <BreadcrumbItem id={"semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}"}>
               <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
                 {(kitKind === "temporary" || homeKind === "temporary") && <Clock size={16} />}
                 {(kitKind === "local" || homeKind === "local") && <HardDrive size={16} />}
@@ -630,18 +630,18 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
 
             {/* Show kits dropdown when on home page with kind selected */}
-            {!kitGuid && <BreadcrumbSeparator items={homeKitsForKind} i18n="semio.sketchpad.navbar.kits" onNavigate={(href) => navigate(href)} />}
+            {!kitGuid && <BreadcrumbSeparator items={homeKitsForKind} id="semio.sketchpad.navbar.kits" onNavigate={(href) => navigate(href)} />}
 
             {homeName && (
               <>
-                <BreadcrumbItem i18n="semio.sketchpad.navbar.kitName">
+                <BreadcrumbItem id="semio.sketchpad.navbar.kitName">
                   <BreadcrumbLink onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
                     {homeName}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator items={homeVersionsForName} i18n="semio.sketchpad.navbar.versions" onNavigate={(href) => navigate(href)} />
+                <BreadcrumbSeparator items={homeVersionsForName} id="semio.sketchpad.navbar.versions" onNavigate={(href) => navigate(href)} />
                 {homeVersion !== null && (
-                  <BreadcrumbItem i18n="semio.sketchpad.navbar.kitVersion">
+                  <BreadcrumbItem id="semio.sketchpad.navbar.kitVersion">
                     <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}</BreadcrumbLink>
                   </BreadcrumbItem>
                 )}
@@ -651,7 +651,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               <>
                 <BreadcrumbSeparator
                   items={kitItemsWithCreate}
-                  i18n="semio.sketchpad.navbar.kits"
+                  id="semio.sketchpad.navbar.kits"
                   onNavigate={(href) => {
                     if (href === "#create-kit") handleCreateKit();
                     else navigate(href);
@@ -665,14 +665,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                       navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}`);
                     }}
                     style={{ cursor: "pointer" }}
-                    i18n={"semio.sketchpad.navbar.kit"}
+                    id={"semio.sketchpad.navbar.kit"}
                   >
                     {kit?.name || kitGuid}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator
                   items={kitVersionItems}
-                  i18n="semio.sketchpad.navbar.versions"
+                  id="semio.sketchpad.navbar.versions"
                   onNavigate={(href) => {
                     if (href === "#create-version") handleCreateVersion();
                     else navigate(href);
@@ -687,7 +687,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                       navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}${versionParam}`);
                     }}
                     style={{ cursor: "pointer" }}
-                    i18n={"semio.sketchpad.navbar.kitVersion"}
+                    id={"semio.sketchpad.navbar.kitVersion"}
                   >
                     {kit?.version || <span className="italic opacity-70">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
                   </BreadcrumbLink>
@@ -699,10 +699,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isKitApp && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} i18n="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbSeparator items={artifactKinds} id="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
             {filteredKind && (
               <>
-                <BreadcrumbItem i18n={"semio.sketchpad.navbar.breadcrumb.${filteredKind}"}>
+                <BreadcrumbItem id={"semio.sketchpad.navbar.breadcrumb.${filteredKind}"}>
                   <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }}>
                     {filteredKind === "designs" && <Layout size={16} />}
                     {filteredKind === "types" && <Box size={16} />}
@@ -712,7 +712,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbBreak />
-                <BreadcrumbSeparator items={filteredNameItems} i18n="semio.sketchpad.navbar.selectName" onNavigate={(href) => navigate(href)} />
+                <BreadcrumbSeparator items={filteredNameItems} id="semio.sketchpad.navbar.selectName" onNavigate={(href) => navigate(href)} />
                 {filteredName !== null && (
                   <>
                     <BreadcrumbItem>
@@ -724,12 +724,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                           }
                         }}
                         style={{ cursor: "pointer" }}
-                        i18n={"semio.sketchpad.navbar.name"}
+                        id={"semio.sketchpad.navbar.name"}
                       >
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredVariantItems} i18n="semio.sketchpad.navbar.selectVariant" onNavigate={(href) => navigate(href)} />
+                    <BreadcrumbSeparator items={filteredVariantItems} id="semio.sketchpad.navbar.selectVariant" onNavigate={(href) => navigate(href)} />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && (
@@ -743,12 +743,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                           }
                         }}
                         style={{ cursor: "pointer" }}
-                        i18n={"semio.sketchpad.navbar.variant"}
+                        id={"semio.sketchpad.navbar.variant"}
                       >
                         {filteredVariant || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultVariant")}</span>}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredViewItems} i18n="semio.sketchpad.navbar.selectView" onNavigate={(href) => navigate(href)} />
+                    <BreadcrumbSeparator items={filteredViewItems} id="semio.sketchpad.navbar.selectView" onNavigate={(href) => navigate(href)} />
                   </>
                 )}
                 {filteredName !== null && filteredVariant !== null && filteredView !== null && (
@@ -764,7 +764,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                           }
                         }}
                         style={{ cursor: "pointer" }}
-                        i18n={"semio.sketchpad.navbar.view"}
+                        id={"semio.sketchpad.navbar.view"}
                       >
                         {filteredView || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultView")}</span>}
                       </BreadcrumbLink>
@@ -778,8 +778,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isDesignApp && design && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} i18n="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.breadcrumb.designs">
+            <BreadcrumbSeparator items={artifactKinds} id="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem id="semio.sketchpad.navbar.breadcrumb.designs">
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }}>
                 <Layout size={16} />
               </BreadcrumbLink>
@@ -787,13 +787,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={designNameItems}
-              i18n="semio.sketchpad.navbar.selectDesign"
+              id="semio.sketchpad.navbar.selectDesign"
               onNavigate={(href) => {
                 if (href === "#create-design") handleCreateDesign();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.design">
+            <BreadcrumbItem id="semio.sketchpad.navbar.design">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -807,13 +807,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designVariantItems}
-              i18n="semio.sketchpad.navbar.selectVariant"
+              id="semio.sketchpad.navbar.selectVariant"
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(design, false);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.variant">
+            <BreadcrumbItem id="semio.sketchpad.navbar.variant">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -827,13 +827,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={designViewItems}
-              i18n="semio.sketchpad.navbar.selectView"
+              id="semio.sketchpad.navbar.selectView"
               onNavigate={(href) => {
                 if (href === "#create-view") handleCreateView(design);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.view">
+            <BreadcrumbItem id="semio.sketchpad.navbar.view">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -850,8 +850,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isTypeApp && type && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} i18n="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.breadcrumb.types">
+            <BreadcrumbSeparator items={artifactKinds} id="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem id="semio.sketchpad.navbar.breadcrumb.types">
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }}>
                 <Box size={16} />
               </BreadcrumbLink>
@@ -859,13 +859,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={typeNameItems}
-              i18n="semio.sketchpad.navbar.selectType"
+              id="semio.sketchpad.navbar.selectType"
               onNavigate={(href) => {
                 if (href === "#create-type") handleCreateType();
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.type">
+            <BreadcrumbItem id="semio.sketchpad.navbar.type">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -879,13 +879,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator
               items={typeVariantItems}
-              i18n="semio.sketchpad.navbar.selectVariant"
+              id="semio.sketchpad.navbar.selectVariant"
               onNavigate={(href) => {
                 if (href === "#create-variant") handleCreateVariant(type, true);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.variant">
+            <BreadcrumbItem id="semio.sketchpad.navbar.variant">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -902,14 +902,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         {isQualityApp && quality && (
           <>
             <BreadcrumbBreak />
-            <BreadcrumbSeparator items={artifactKinds} i18n="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.breadcrumb.qualities">
+            <BreadcrumbSeparator items={artifactKinds} id="semio.sketchpad.navbar.artifacts" onNavigate={(href) => navigate(href)} />
+            <BreadcrumbItem id="semio.sketchpad.navbar.breadcrumb.qualities">
               <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }}>
                 <Award size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbBreak />
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.quality">
+            <BreadcrumbItem id="semio.sketchpad.navbar.quality">
               <BreadcrumbLink
                 asChild
                 onClick={(e) => {
@@ -925,7 +925,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         )}
         {isDocsPath && (
           <>
-            <BreadcrumbItem i18n="semio.sketchpad.navbar.docs">
+            <BreadcrumbItem id="semio.sketchpad.navbar.docs">
               <BreadcrumbLink onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>
                 <FileText size={16} />
               </BreadcrumbLink>
@@ -942,7 +942,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                     ),
                     href: `/docs/${s.id}`,
                   }))}
-                  i18n="semio.sketchpad.navbar.sections"
+                  id="semio.sketchpad.navbar.sections"
                   onNavigate={(href) => navigate(href)}
                 />
                 <BreadcrumbItem>
@@ -1176,10 +1176,10 @@ const Search: FC = ({}) => {
 
   return (
     <>
-      <Toggle i18n="semio.sketchpad.navbar.search.open" i18nPressed="semio.sketchpad.navbar.search.close" pressed={open} onPressedChange={setOpen}>
+      <Toggle id="semio.sketchpad.navbar.search.open" i18nPressed="semio.sketchpad.navbar.search.close" pressed={open} onPressedChange={setOpen}>
         <SearchIcon size={16} />
       </Toggle>
-      <CommandDialog i18n={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={open} onOpenChange={setOpen}>
+      <CommandDialog id={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={open} onOpenChange={setOpen}>
         <CommandInput placeholder={t("semio.sketchpad.navbar.searchPlaceholder")} value={query} onValueChange={setQuery} />
         <CommandList>
           <CommandEmpty>{t("semio.sketchpad.navbar.noResults")}</CommandEmpty>
@@ -1333,10 +1333,10 @@ const Focus: FC = ({}) => {
 
   return (
     <>
-      <Toggle i18n="semio.sketchpad.navbar.focus.open" i18nPressed="semio.sketchpad.navbar.focus.close" pressed={open} onPressedChange={setOpen}>
+      <Toggle id="semio.sketchpad.navbar.focus.open" i18nPressed="semio.sketchpad.navbar.focus.close" pressed={open} onPressedChange={setOpen}>
         <FocusIcon size={16} />
       </Toggle>
-      <CommandDialog i18n={t("semio.sketchpad.navbar.focus.title", "Focus")} description={t("semio.sketchpad.navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
+      <CommandDialog id={t("semio.sketchpad.navbar.focus.title", "Focus")} description={t("semio.sketchpad.navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
         <CommandInput placeholder={t("semio.sketchpad.navbar.focus.placeholder", "Search for an element...")} value={query} onValueChange={setQuery} />
         <CommandList>
           <CommandEmpty>{t("semio.sketchpad.navbar.noResults")}</CommandEmpty>
@@ -1571,13 +1571,13 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleWorkbenchPressedChange}
           value={activeWorkbenchPanel}
           onValueChange={handleWorkbenchValueChange}
-          i18n={panelToggleTooltip(activeWorkbenchPanel, isAnyWorkbenchPanelOpen)}
-          dropdownI18n={"semio.sketchpad.navbar.changePanelType"}
+          id={panelToggleTooltip(activeWorkbenchPanel, isAnyWorkbenchPanelOpen)}
+          dropdownId={"semio.sketchpad.navbar.changePanelType"}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
           items={workbenchConfigs.map(({ key, icon: Icon, hotkey }) => ({
             value: key,
             label: <Icon />,
-            i18n: panelToggleTooltip(key, key === activeWorkbenchPanel ? isAnyWorkbenchPanelOpen : false),
+            id: panelToggleTooltip(key, key === activeWorkbenchPanel ? isAnyWorkbenchPanelOpen : false),
             hotkey,
           }))}
         />
@@ -1590,13 +1590,13 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleHudPressedChange}
           value={activeHudPanel}
           onValueChange={handleHudValueChange}
-          i18n={panelToggleTooltip(activeHudPanel, isAnyHudPanelOpen)}
-          dropdownI18n={"semio.sketchpad.navbar.changePanelType"}
+          id={panelToggleTooltip(activeHudPanel, isAnyHudPanelOpen)}
+          dropdownId={"semio.sketchpad.navbar.changePanelType"}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
           items={hudConfigs.map(({ key, icon: Icon, hotkey }) => ({
             value: key,
             label: <Icon />,
-            i18n: panelToggleTooltip(key, key === activeHudPanel ? isAnyHudPanelOpen : false),
+            id: panelToggleTooltip(key, key === activeHudPanel ? isAnyHudPanelOpen : false),
             hotkey,
           }))}
         />
@@ -1616,7 +1616,7 @@ const PanelToggles: FC = ({}) => {
           <ToggleGroupItem
             key={key}
             value={key}
-            i18n={panelToggleTooltip(key, Boolean(visiblePanels[key as keyof PanelVisibility]))}
+            id={panelToggleTooltip(key, Boolean(visiblePanels[key as keyof PanelVisibility]))}
             onClick={() => {
               handleToggle(key as keyof PanelVisibility);
             }}
@@ -1633,14 +1633,14 @@ const PanelToggles: FC = ({}) => {
           onPressedChange={handleRightPressedChange}
           value={activeRightPanel}
           onValueChange={handleRightValueChange}
-          i18n={panelToggleTooltip(activeRightPanel, isAnyRightPanelOpen)}
-          dropdownI18n={"semio.sketchpad.navbar.changePanelType"}
+          id={panelToggleTooltip(activeRightPanel, isAnyRightPanelOpen)}
+          dropdownId={"semio.sketchpad.navbar.changePanelType"}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
           aria-label={rightDropdownAriaLabel}
           items={rightConfigs.map(({ key, icon: Icon, hotkey }) => ({
             value: key,
             label: <Icon />,
-            i18n: panelToggleTooltip(key, key === activeRightPanel ? isAnyRightPanelOpen : false),
+            id: panelToggleTooltip(key, key === activeRightPanel ? isAnyRightPanelOpen : false),
             hotkey,
           }))}
         />
@@ -1652,11 +1652,11 @@ const PanelToggles: FC = ({}) => {
 interface NavbarBaseProps {
   isFullscreen: boolean;
   isNavbarExpanded: boolean;
-  i18n: (key: string) => string | undefined;
+  id: (key: string) => string | undefined;
   onWindowEvents?: WindowEvents;
 }
 
-function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: NavbarBaseProps) {
+function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: NavbarBaseProps) {
   const { t } = useTranslation();
   const { toggleFullscreen, toggleNavbarExpanded, navigateBack, navigateForward } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
@@ -1940,7 +1940,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
   // Default to first panel if none is open
   const activePanel = panelConfig.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key || panelConfig[0]?.key || "";
   const isAnyPanelOpen = panelConfig.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
-  const mobilePanelTooltip = activePanel ? i18n(`semio.sketchpad.navbar.panelToggle.${activePanel}.${isAnyPanelOpen ? "hide" : "show"}`) : undefined;
+  const mobilePanelTooltip = activePanel ? id(`semio.sketchpad.navbar.panelToggle.${activePanel}.${isAnyPanelOpen ? "hide" : "show"}`) : undefined;
 
   const handleMobilePanelToggle = (pressed: boolean) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
@@ -1997,15 +1997,15 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
       {/* Unexpanded navbar */}
       <div className="h-12 flex items-center justify-between px-1 gap-1">
         <ButtonGroup>
-          <ButtonGroupItem value="back" i18n="semio.sketchpad.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
+          <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
-          <ButtonGroupItem value="forward" i18n="semio.sketchpad.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
+          <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
             <ArrowRight size={16} />
           </ButtonGroupItem>
           <ButtonGroupItem
             value="up"
-            i18n="semio.sketchpad.navbar.up"
+            id="semio.sketchpad.navbar.up"
             onClick={() => {
               if (upTarget) navigate(upTarget);
             }}
@@ -2023,14 +2023,14 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
             onPressedChange={handleMobilePanelToggle}
             value={activePanel}
             onValueChange={handleMobilePanelChange}
-            i18n={mobilePanelTooltip}
-            dropdownI18n="semio.sketchpad.navbar.changePanelType"
+            id={mobilePanelTooltip}
+            dropdownId="semio.sketchpad.navbar.changePanelType"
             items={panelConfig
               .filter((p) => p.key !== "toolbar")
               .map(({ key, icon: Icon, hotkey }) => ({
                 value: key,
                 label: <Icon />,
-                i18n: i18n(`navbar.panelToggle.${key}.${key === activePanel && isAnyPanelOpen ? "hide" : "show"}`),
+                id: id(`navbar.panelToggle.${key}.${key === activePanel && isAnyPanelOpen ? "hide" : "show"}`),
                 hotkey,
               }))}
           />
@@ -2039,7 +2039,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
         <div className="flex gap-1">
           {toolbarConfig && (
             <Toggle
-              i18n="semio.sketchpad.navbar.panelToggle.toolbar.show"
+              id="semio.sketchpad.navbar.panelToggle.toolbar.show"
               i18nPressed="semio.sketchpad.navbar.panelToggle.toolbar.hide"
               pressed={!!visiblePanels.toolbar}
               onPressedChange={() => {
@@ -2049,14 +2049,14 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
               <toolbarConfig.icon size={16} />
             </Toggle>
           )}
-          <Toggle i18n="semio.sketchpad.navbar.search.open" i18nPressed="semio.sketchpad.navbar.search.close" pressed={searchOpen} onPressedChange={setSearchOpen}>
+          <Toggle id="semio.sketchpad.navbar.search.open" i18nPressed="semio.sketchpad.navbar.search.close" pressed={searchOpen} onPressedChange={setSearchOpen}>
             <SearchIcon size={16} />
           </Toggle>
           <Focus />
-          <Toggle i18n="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          <Toggle id="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
             <Fullscreen size={16} />
           </Toggle>
-          <Toggle i18n={"semio.sketchpad.navbar.expand"} i18nPressed={"semio.sketchpad.navbar.collapse"} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+          <Toggle id={"semio.sketchpad.navbar.expand"} i18nPressed={"semio.sketchpad.navbar.collapse"} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
             {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
           </Toggle>
         </div>
@@ -2069,13 +2069,13 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
 
           {onWindowEvents && (
             <ButtonGroup>
-              <ButtonGroupItem value="minimize" i18n="semio.sketchpad.navbar.minimize" onClick={onWindowEvents.minimize}>
+              <ButtonGroupItem value="minimize" id="semio.sketchpad.navbar.minimize" onClick={onWindowEvents.minimize}>
                 <Minus size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="maximize" i18n="semio.sketchpad.navbar.maximize" onClick={onWindowEvents.maximize}>
+              <ButtonGroupItem value="maximize" id="semio.sketchpad.navbar.maximize" onClick={onWindowEvents.maximize}>
                 <Square size={16} />
               </ButtonGroupItem>
-              <ButtonGroupItem value="close" i18n="semio.sketchpad.navbar.close" onClick={onWindowEvents.close}>
+              <ButtonGroupItem value="close" id="semio.sketchpad.navbar.close" onClick={onWindowEvents.close}>
                 <X size={16} />
               </ButtonGroupItem>
             </ButtonGroup>
@@ -2084,7 +2084,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
       )}
 
       {/* Search dialog */}
-      <CommandDialog i18n={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={searchOpen} onOpenChange={setSearchOpen}>
+      <CommandDialog id={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={searchOpen} onOpenChange={setSearchOpen}>
         <CommandInput placeholder={t("semio.sketchpad.navbar.searchPlaceholder")} />
         <CommandList>
           <CommandEmpty>{t("semio.sketchpad.navbar.noResults")}</CommandEmpty>
@@ -2095,7 +2095,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: 
   );
 }
 
-function NavbarDesktop({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }: NavbarBaseProps) {
+function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: NavbarBaseProps) {
   const { t } = useTranslation();
   const { toggleFullscreen, navigateBack, navigateForward } = useSketchpadCommands();
   const [isVisible, setIsVisible] = useState(true);
@@ -2277,15 +2277,15 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }:
       style={{ WebkitAppRegion: "drag" } as any}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" i18n="semio.sketchpad.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
+        <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" i18n="semio.sketchpad.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
+        <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
         <ButtonGroupItem
           value="up"
-          i18n="semio.sketchpad.navbar.up"
+          id="semio.sketchpad.navbar.up"
           onClick={() => {
             if (upTarget) navigate(upTarget);
           }}
@@ -2303,7 +2303,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }:
         <PanelToggles />
         {toolbarConfig && (
           <Toggle
-            i18n="semio.sketchpad.navbar.panelToggle.toolbar.show"
+            id="semio.sketchpad.navbar.panelToggle.toolbar.show"
             i18nPressed="semio.sketchpad.navbar.panelToggle.toolbar.hide"
             pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
@@ -2313,18 +2313,18 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, i18n, onWindowEvents }:
             <toolbarConfig.icon />
           </Toggle>
         )}
-        <Toggle i18n="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle id="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
           <Fullscreen />
         </Toggle>
         {onWindowEvents && (
           <ToggleGroup type="single">
-            <ToggleGroupItem value="minimize" i18n="semio.sketchpad.navbar.minimize" onClick={onWindowEvents.minimize}>
+            <ToggleGroupItem value="minimize" id="semio.sketchpad.navbar.minimize" onClick={onWindowEvents.minimize}>
               <Minus size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="maximize" i18n="semio.sketchpad.navbar.maximize" onClick={onWindowEvents.maximize}>
+            <ToggleGroupItem value="maximize" id="semio.sketchpad.navbar.maximize" onClick={onWindowEvents.maximize}>
               <Square size={16} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="close" i18n="semio.sketchpad.navbar.close" onClick={onWindowEvents.close} className="hover:bg-danger">
+            <ToggleGroupItem value="close" id="semio.sketchpad.navbar.close" onClick={onWindowEvents.close} className="hover:bg-danger">
               <X size={16} />
             </ToggleGroupItem>
           </ToggleGroup>
@@ -2343,10 +2343,10 @@ function Navbar() {
   const { onWindowEvents } = useSketchpadScope() as SketchpadScope;
 
   if (isMobile) {
-    return <NavbarMobile isFullscreen={isFullscreen} isNavbarExpanded={isNavbarExpanded} i18n={tooltip} onWindowEvents={onWindowEvents} />;
+    return <NavbarMobile isFullscreen={isFullscreen} isNavbarExpanded={isNavbarExpanded} id={tooltip} onWindowEvents={onWindowEvents} />;
   }
 
-  return <NavbarDesktop isFullscreen={isFullscreen} isNavbarExpanded={isNavbarExpanded} i18n={tooltip} onWindowEvents={onWindowEvents} />;
+  return <NavbarDesktop isFullscreen={isFullscreen} isNavbarExpanded={isNavbarExpanded} id={tooltip} onWindowEvents={onWindowEvents} />;
 }
 
 export default Navbar;
