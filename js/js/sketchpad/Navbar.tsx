@@ -55,6 +55,7 @@ import {
   useSketchpadCommands,
   useSketchpadScope,
   useSketchpadStore,
+  useTooltip,
   WindowEvents,
 } from "./store";
 

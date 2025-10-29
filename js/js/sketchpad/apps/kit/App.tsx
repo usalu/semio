@@ -30,10 +30,10 @@ import { Action } from "../../../elements/input/Action";
 import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
-import { Author, Design, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
+import { Author, buildFileTree, Design, flattenFileTree, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../store";
+import { useAppType, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 import { DesignSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
 import { KitAppState, useKitApp, useKitAppCommands } from "./store";
 
@@ -82,7 +82,7 @@ const AppContent: FC = () => {
   const kitAppCommands = useKitAppCommands();
   const kitApp = useKitApp() as KitAppState;
   const isMobile = useIsMobile();
-  
+
   const [isDragOver, setIsDragOver] = React.useState(false);
 
   const addSection = useAddPanelSection();
@@ -469,6 +469,48 @@ const AppContent: FC = () => {
       });
     }
 
+    if (!selectedKind || selectedKind === "qualities") {
+      kit.qualities?.forEach((quality: Quality) => {
+        if (searchQuery && !quality.name.toLowerCase().includes(searchQuery.toLowerCase()) && !quality.key.toLowerCase().includes(searchQuery.toLowerCase())) return;
+        result.push({
+          id: `quality-${quality.guid}`,
+          kind: "qualities",
+          artifact: quality.name,
+          authors: quality.key,
+          updatedAt: "",
+          createdAt: "",
+          level: 0,
+          hasChildren: false,
+          isExpanded: false,
+          data: quality,
+        });
+      });
+    }
+
+    if (!selectedKind || selectedKind === "files") {
+      // Build file tree from files
+      const fileTree = buildFileTree(kit.files || []);
+      const flatTree = flattenFileTree(fileTree, 0, expandedRows);
+
+      flatTree.forEach((node) => {
+        if (searchQuery && !node.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+
+        result.push({
+          id: `file-${node.path}`,
+          kind: "files",
+          artifact: node.name,
+          authors: node.isDirectory ? `${node.children.length} items` : (node.file?.size ? `${(node.file.size / 1024).toFixed(1)} KB` : ""),
+          updatedAt: node.file ? formatDate(node.file.updatedAt) : "",
+          createdAt: node.file ? formatDate(node.file.createdAt) : "",
+          level: node.level,
+          parentId: node.level > 0 ? `file-${node.path.split("/").slice(0, -1).join("/")}` : undefined,
+          hasChildren: node.isDirectory && node.children.length > 0,
+          isExpanded: node.isExpanded,
+          data: node.file || { guid: node.path, path: node.path } as SemioFile,
+        });
+      });
+    }
+
     if (!selectedKind || selectedKind === "authors") {
       kit.authors?.forEach((author: Author) => {
         if (searchQuery && !author.name.toLowerCase().includes(searchQuery.toLowerCase()) && !author.email.toLowerCase().includes(searchQuery.toLowerCase())) return;
@@ -568,7 +610,7 @@ const AppContent: FC = () => {
     }
 
     return result;
-  }, [kit, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
+  }, [kit, kit.files, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
 
   const { setFocusItems, setOnFocusItem } = useFocus();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -630,7 +672,7 @@ const AppContent: FC = () => {
           pieces: [],
           connections: [],
         };
-        kitCommands.createDesign(newDesign);
+        if (kitCommands) kitCommands.createDesign(newDesign);
         sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
         break;
       }
@@ -643,7 +685,7 @@ const AppContent: FC = () => {
           variant: "",
           ports: [],
         };
-        kitCommands.createType(newType);
+        if (kitCommands) kitCommands.createType(newType);
         sketchpadCommands.navigateToType(kit.guid, newType.guid);
         break;
       }
@@ -657,7 +699,7 @@ const AppContent: FC = () => {
           key: uniqueKey,
           name: uniqueName,
         };
-        kitCommands.createQuality(newQuality);
+        if (kitCommands) kitCommands.createQuality(newQuality);
         sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
         break;
       }
@@ -683,7 +725,7 @@ const AppContent: FC = () => {
         pieces: [],
         connections: [],
       };
-      kitCommands.createDesign(newDesign);
+      if (kitCommands) kitCommands.createDesign(newDesign);
       sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
     } else if (row.kind === "types") {
       const type = row.data as Type;
@@ -695,7 +737,7 @@ const AppContent: FC = () => {
         variant: uniqueVariant,
         ports: [],
       };
-      kitCommands.createType(newType);
+      if (kitCommands) kitCommands.createType(newType);
       sketchpadCommands.navigateToType(kit.guid, newType.guid);
     }
   };
@@ -713,7 +755,7 @@ const AppContent: FC = () => {
       pieces: [],
       connections: [],
     };
-    kitCommands.createDesign(newDesign);
+    if (kitCommands) kitCommands.createDesign(newDesign);
     sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
   };
 
@@ -940,7 +982,7 @@ const AppContent: FC = () => {
   const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
     kitAppCommands.toggleSort(column);
   };
-  
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -948,21 +990,21 @@ const AppContent: FC = () => {
       setIsDragOver(true);
     }
   };
-  
+
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
   };
-  
+
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
-    
+
     for (const file of files) {
       const newFile: SemioFile = {
         guid: guid(),
@@ -972,7 +1014,7 @@ const AppContent: FC = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
+
       try {
         await kitCommands?.addFile(newFile, file);
       } catch (error) {
@@ -1000,8 +1042,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind(selectedKind)}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact(selectedKind)}
-              tooltip={tooltip("kitApp.hideKind")}
-              actionTooltip={tooltip("kitApp.createArtifact")}
+              i18n="semio.sketchpad.app.kitApp.hideKind"
+              actionI18n="semio.sketchpad.app.kitApp.createArtifact"
             >
               {selectedKind === "designs" && <Layout className="size-4" />}
               {selectedKind === "types" && <Box className="size-4" />}
@@ -1039,8 +1081,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("designs")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("designs")}
-                tooltip={tooltip("kitApp.showDesigns")}
-                actionTooltip={tooltip("kitApp.createDesign")}
+                i18n="semio.sketchpad.app.kitApp.showDesigns"
+                actionI18n="semio.sketchpad.app.kitApp.createDesign"
               >
                 <Layout className="size-4" />
               </Toggle>
@@ -1050,8 +1092,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("types")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("types")}
-                tooltip={tooltip("kitApp.showTypes")}
-                actionTooltip={tooltip("kitApp.createType")}
+                i18n="semio.sketchpad.app.kitApp.showTypes"
+                actionI18n="semio.sketchpad.app.kitApp.createType"
               >
                 <Box className="size-4" />
               </Toggle>
@@ -1061,8 +1103,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("qualities")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("qualities")}
-                tooltip={tooltip("kitApp.showQualities")}
-                actionTooltip={tooltip("kitApp.createQuality")}
+                i18n="semio.sketchpad.app.kitApp.showQualities"
+                actionI18n="semio.sketchpad.app.kitApp.createQuality"
               >
                 <Award className="size-4" />
               </Toggle>
@@ -1072,8 +1114,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("files")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("files")}
-                tooltip={tooltip("kitApp.showFiles")}
-                actionTooltip={tooltip("kitApp.createFile")}
+                i18n="semio.sketchpad.app.kitApp.showFiles"
+                actionI18n="semio.sketchpad.app.kitApp.createFile"
               >
                 <FileText className="size-4" />
               </Toggle>
@@ -1083,8 +1125,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("authors")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("authors")}
-                tooltip={tooltip("kitApp.showAuthors")}
-                actionTooltip={tooltip("kitApp.createAuthor")}
+                i18n="semio.sketchpad.app.kitApp.showAuthors"
+                actionI18n="semio.sketchpad.app.kitApp.createAuthor"
               >
                 <User className="size-4" />
               </Toggle>
@@ -1137,10 +1179,10 @@ const AppContent: FC = () => {
                 kitAppCommands.setSortDirection(value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
+                { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.app.sort.ascending" },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.app.sort.descending" },
               ]}
-              tooltip={tooltip("kitApp.sortByName")}
+              i18n="semio.sketchpad.app.kitApp.sortByName"
             />
           </div>
         </div>
@@ -1196,7 +1238,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateVariantForRow(row);
                             }}
-                            tooltip={tooltip("kitApp.createVariant")}
+                            i18n="semio.sketchpad.app.kitApp.createVariant"
                             level="base"
                           >
                             <Plus />
@@ -1206,7 +1248,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateViewForRow(row);
                             }}
-                            tooltip={tooltip("kitApp.createView")}
+                            i18n="semio.sketchpad.app.kitApp.createView"
                             level="base"
                           >
                             <Plus />
@@ -1219,7 +1261,7 @@ const AppContent: FC = () => {
                             e.stopPropagation();
                             handleCreateVariantForRow(row);
                           }}
-                          tooltip={tooltip("kitApp.createVariant")}
+                          i18n="semio.sketchpad.app.kitApp.createVariant"
                           level="base"
                         >
                           <Plus />
@@ -1231,7 +1273,7 @@ const AppContent: FC = () => {
                             e.stopPropagation();
                             handleCreateViewForRow(row);
                           }}
-                          tooltip={tooltip("kitApp.createView")}
+                          i18n="semio.sketchpad.app.kitApp.createView"
                           level="base"
                         >
                           <Plus />
@@ -1266,8 +1308,8 @@ const AppContent: FC = () => {
             onPressedChange={() => toggleKind(selectedKind)}
             actionIcon={<Plus className="size-3.5" />}
             onActionClick={() => handleCreateArtifact(selectedKind)}
-            tooltip={tooltip("kitApp.hideKind")}
-            actionTooltip={tooltip("kitApp.createArtifact")}
+            i18n="semio.sketchpad.app.kitApp.hideKind"
+            actionI18n="semio.sketchpad.app.kitApp.createArtifact"
           >
             {selectedKind === "designs" && <Layout className="size-4" />}
             {selectedKind === "types" && <Box className="size-4" />}
@@ -1305,8 +1347,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("designs")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("designs")}
-              tooltip={tooltip("kitApp.showDesigns")}
-              actionTooltip={tooltip("kitApp.createDesign")}
+              i18n="semio.sketchpad.app.kitApp.showDesigns"
+              actionI18n="semio.sketchpad.app.kitApp.createDesign"
             >
               <Layout className="size-4" />
             </Toggle>
@@ -1316,8 +1358,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("types")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("types")}
-              tooltip={tooltip("kitApp.showTypes")}
-              actionTooltip={tooltip("kitApp.createType")}
+              i18n="semio.sketchpad.app.kitApp.showTypes"
+              actionI18n="semio.sketchpad.app.kitApp.createType"
             >
               <Box className="size-4" />
             </Toggle>
@@ -1327,8 +1369,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("qualities")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("qualities")}
-              tooltip={tooltip("kitApp.showQualities")}
-              actionTooltip={tooltip("kitApp.createQuality")}
+              i18n="semio.sketchpad.app.kitApp.showQualities"
+              actionI18n="semio.sketchpad.app.kitApp.createQuality"
             >
               <Award className="size-4" />
             </Toggle>
@@ -1338,8 +1380,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("files")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("files")}
-              tooltip={tooltip("kitApp.showFiles")}
-              actionTooltip={tooltip("kitApp.createFile")}
+              i18n="semio.sketchpad.app.kitApp.showFiles"
+              actionI18n="semio.sketchpad.app.kitApp.createFile"
             >
               <FileText className="size-4" />
             </Toggle>
@@ -1349,8 +1391,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("authors")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("authors")}
-              tooltip={tooltip("kitApp.showAuthors")}
-              actionTooltip={tooltip("kitApp.createAuthor")}
+              i18n="semio.sketchpad.app.kitApp.showAuthors"
+              actionI18n="semio.sketchpad.app.kitApp.createAuthor"
             >
               <User className="size-4" />
             </Toggle>
@@ -1368,7 +1410,7 @@ const AppContent: FC = () => {
           !selectedName &&
           uniqueNames.length > 0 &&
           uniqueNames.map((name) => (
-            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} i18n="semio.sketchpad.app.kit.filter.name">
               {name}
             </Toggle>
           ))}
@@ -1394,13 +1436,7 @@ const AppContent: FC = () => {
             ))}
         <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
       </div>
-      <ScrollArea 
-        ref={scrollAreaRef} 
-        className="flex-1"
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
+      <ScrollArea ref={scrollAreaRef} className="flex-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
         {isDragOver && (
           <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-10">
             <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
@@ -1421,8 +1457,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1442,8 +1478,8 @@ const AppContent: FC = () => {
                         kitAppCommands.setSortDirection(value as "asc" | "desc");
                       }}
                       items={[
-                        { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
-                        { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
+                        { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
+                        { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
                       ]}
                       className="px-1 min-w-0"
                     />
@@ -1463,8 +1499,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1483,8 +1519,8 @@ const AppContent: FC = () => {
                       kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.ascending") },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: t("semio.sketchpad.common.sort.descending") },
+                      { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: "semio.sketchpad.common.sort.ascending" },
+                      { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: "semio.sketchpad.common.sort.descending" },
                     ]}
                     className="px-1 min-w-0"
                   />
@@ -1535,7 +1571,7 @@ const AppContent: FC = () => {
                                 e.stopPropagation();
                                 handleCreateVariantForRow(row);
                               }}
-                              tooltip={tooltip("kitApp.createVariant")}
+                              i18n="semio.sketchpad.app.kitApp.createVariant"
                               level="base"
                             >
                               <Plus />
@@ -1545,7 +1581,7 @@ const AppContent: FC = () => {
                                 e.stopPropagation();
                                 handleCreateViewForRow(row);
                               }}
-                              tooltip={tooltip("kitApp.createView")}
+                              i18n="semio.sketchpad.app.kitApp.createView"
                               level="base"
                             >
                               <Plus />
@@ -1558,7 +1594,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateVariantForRow(row);
                             }}
-                            tooltip={tooltip("kitApp.createVariant")}
+                            i18n="semio.sketchpad.app.kitApp.createVariant"
                             level="base"
                           >
                             <Plus />
@@ -1570,7 +1606,7 @@ const AppContent: FC = () => {
                               e.stopPropagation();
                               handleCreateViewForRow(row);
                             }}
-                            tooltip={tooltip("kitApp.createView")}
+                            i18n="semio.sketchpad.app.kitApp.createView"
                             level="base"
                           >
                             <Plus />
@@ -1645,3 +1681,10 @@ const App: FC = () => {
 };
 
 export default App;
+
+
+
+
+
+
+

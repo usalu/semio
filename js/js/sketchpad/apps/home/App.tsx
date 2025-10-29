@@ -33,7 +33,7 @@ import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore } from "../../store";
+import { useAppType, useIsMobile, useKits, useNavigation, useSketchpadCommands, useSketchpadStore, useTooltip } from "../../store";
 import { KitSection } from "./panels/Details";
 import { useHome, useHomeCommands } from "./store";
 
@@ -79,6 +79,7 @@ const Home: FC = ({}) => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const tooltip = useTooltip();
 
   const selection = homeState?.selection?.kits || [];
 
@@ -545,10 +546,10 @@ const Home: FC = ({}) => {
                 homeCommands.setSortDirection(value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
+                { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: tooltip("sort.ascending") },
+                { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: tooltip("sort.descending") },
               ]}
-              tooltip={tooltip("home.sortByName")}
+              i18n={tooltip("home.sortByName")}
             />
           </div>
         </div>
@@ -597,7 +598,7 @@ const Home: FC = ({}) => {
                             e.stopPropagation();
                             handleCreateVersion(row.name, row.type);
                           }}
-                          tooltip={tooltip("home.createVersion")}
+                          i18n={tooltip("home.createVersion")}
                         >
                           <Plus />
                         </Action>
@@ -633,8 +634,8 @@ const Home: FC = ({}) => {
                 onPressedChange={() => toggleKind(selectedKind)}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateKit(selectedKind)}
-                tooltip={tooltip("home.hideKind")}
-                actionTooltip={tooltip("home.createKit")}
+                i18n={tooltip("home.hideKind")}
+                actionI18n={tooltip("home.createKit")}
               >
                 {selectedKind === "temporary" && <Clock className="size-4" />}
                 {selectedKind === "local" && <HardDrive className="size-4" />}
@@ -659,8 +660,8 @@ const Home: FC = ({}) => {
                   onPressedChange={() => toggleKind("temporary")}
                   actionIcon={<Plus className="size-3.5" />}
                   onActionClick={() => handleCreateKit("temporary")}
-                  tooltip={tooltip("home.showTemporary")}
-                  actionTooltip={tooltip("home.createTemporary")}
+                  i18n={tooltip("home.showTemporary")}
+                  actionI18n={tooltip("home.createTemporary")}
                 >
                   <Clock className="size-4" />
                 </Toggle>
@@ -670,8 +671,8 @@ const Home: FC = ({}) => {
                   onPressedChange={() => toggleKind("local")}
                   actionIcon={<Plus className="size-3.5" />}
                   onActionClick={() => handleCreateKit("local")}
-                  tooltip={tooltip("home.showLocal")}
-                  actionTooltip={tooltip("home.createLocal")}
+                  i18n={tooltip("home.showLocal")}
+                  actionI18n={tooltip("home.createLocal")}
                 >
                   <HardDrive className="size-4" />
                 </Toggle>
@@ -681,8 +682,8 @@ const Home: FC = ({}) => {
                   onPressedChange={() => toggleKind("remote")}
                   actionIcon={<Plus className="size-3.5" />}
                   onActionClick={() => handleCreateKit("remote")}
-                  tooltip={tooltip("home.showRemote")}
-                  actionTooltip={tooltip("home.createRemote")}
+                  i18n={tooltip("home.showRemote")}
+                  actionI18n={tooltip("home.createRemote")}
                 >
                   <Cloud className="size-4" />
                 </Toggle>
@@ -723,8 +724,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: tooltip("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: tooltip("sort.descending") },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -744,8 +745,8 @@ const Home: FC = ({}) => {
                             homeCommands.setSortDirection(value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: tooltip("sort.ascending") },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: tooltip("sort.descending") },
                           ]}
                           className="px-1 min-w-0"
                         />
@@ -765,8 +766,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: tooltip("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: tooltip("sort.descending") },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -785,8 +786,8 @@ const Home: FC = ({}) => {
                           homeCommands.setSortDirection(value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, tooltip: tooltip("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, tooltip: tooltip("sort.descending") },
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, i18n: tooltip("sort.ascending") },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, i18n: tooltip("sort.descending") },
                         ]}
                         className="px-1 min-w-0"
                       />
@@ -832,7 +833,7 @@ const Home: FC = ({}) => {
                                   e.stopPropagation();
                                   handleCreateVersion(row.name, row.type);
                                 }}
-                                tooltip={tooltip("home.createVersion")}
+                                i18n={tooltip("home.createVersion")}
                               >
                                 <Plus />
                               </Action>

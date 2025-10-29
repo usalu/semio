@@ -1,18 +1,22 @@
 # File Provider System
 
-The file provider system allows Semio kits to store and sync files with remote storage backends (like S3) while keeping them separate from the Y.js document for better performance and scalability.
+The file provider system allows Sketchpad to manage large files outside of the Y.js document, with a composable architecture that supports memory, local, and remote storage.
 
 ## Overview
 
-Files in a kit can be too large to efficiently store in Y.js documents. The file provider system:
-- Separates file storage from Y.js document state
-- Provides automatic file syncing when `fileProviderFactory` is provided
-- Creates blob URLs for in-memory file access
-- Supports any storage backend through a simple interface
+Files in Semio kits can be large (3D models, images, documents) and should not be stored directly in the Y.js document. Instead, files are:
+
+1. **Stored separately** using a file provider
+2. **Referenced** in the kit's Y.js document by ID and path
+3. **Consumed** by components using `URL.createObjectURL()` for blob URLs
 
 ## Architecture
 
-### FileProvider Interface
+The file provider system is **composable**: memory → local → remote
+
+- **Memory only**: Files in memory, lost on reload (temporary kits)
+- **Memory + Local**: Files persisted in IndexedDB (local kits)
+- **Memory + Local + Remote**: Files synced to server, persisted locally (remote kits)
 
 ```typescript
 interface FileProvider {
@@ -21,176 +25,282 @@ interface FileProvider {
   delete: (kitId: string, fileId: string, path: string) => Promise<void>;
   getUrl: (kitId: string, fileId: string, path: string) => string;
 }
-```
 
-### FileProviderFactory
-
-```typescript
 type FileProviderFactory = (kitId: string) => Promise<FileProvider>;
 ```
 
 ## Usage
 
-### With S3
+### Temporary Kit (Memory Only)
 
-```typescript
-import { Sketchpad, createS3FileProviderFactory } from '@semio/js';
-
-const fileProviderFactory = createS3FileProviderFactory({
-  region: 'us-east-1',
-  bucket: 'my-semio-kits',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-});
+```tsx
+import { Sketchpad, createCompositeFileProvider } from "@semio/js";
 
 function App() {
-  return (
-    <Sketchpad 
-      id="my-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
-  );
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
 }
 ```
 
-### With MinIO or S3-Compatible Storage
+### Local Kit (Memory + Local)
 
-```typescript
-const fileProviderFactory = createS3FileProviderFactory({
-  region: 'us-east-1',
-  bucket: 'semio',
-  accessKeyId: 'minioadmin',
-  secretAccessKey: 'minioadmin',
-  endpoint: 'http://localhost:9000',
-});
-```
-
-### In-Memory (Testing/Offline)
-
-```typescript
-import { Sketchpad, createInMemoryFileProviderFactory } from '@semio/js';
-
-const fileProviderFactory = createInMemoryFileProviderFactory();
+```tsx
+import { Sketchpad, createCompositeFileProvider } from "@semio/js";
 
 function App() {
-  return (
-    <Sketchpad 
-      id="my-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
-  );
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: true,
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
 }
 ```
 
-### Without File Provider (Local Only)
+### Remote Kit (Memory + Local + Remote)
+
+```tsx
+import { Sketchpad, createCompositeFileProvider } from "@semio/js";
+
+function App() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: true,
+    remote: {
+      baseUrl: "https://api.example.com",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+```
+
+## Built-in Providers
+
+### Composite File Provider (Recommended)
+
+The composite provider is the recommended way to create file providers. It automatically manages the composition of memory, local, and remote storage:
 
 ```typescript
-// Files will be stored as blob URLs in memory only
-// They will be lost on page reload
-<Sketchpad id="my-sketchpad" />
+const fileProviderFactory = createCompositeFileProvider({
+  memory: true, // Fast access
+  local: true, // Persistent across sessions
+  remote: {
+    // Synchronized with server
+    baseUrl: "https://api.example.com",
+    headers: {
+      /* auth */
+    },
+  },
+});
 ```
+
+**Behavior:**
+
+- **Upload**: Writes to all configured providers in parallel
+- **Download**: Reads from first available (memory → local → remote)
+- **Delete**: Removes from all providers
+- **Works offline**: Uses local storage when remote is unavailable
+
+### Memory File Provider
+
+Stores files in memory using `Map`:
+
+```typescript
+const fileProviderFactory = createMemoryFileProvider();
+```
+
+**Use cases:**
+
+- Temporary kits
+- Testing and development
+- Preview/demo environments
+
+### Local File Provider
+
+Stores files in IndexedDB:
+
+```typescript
+const fileProviderFactory = createLocalFileProvider({
+  dbName: "semio-files",
+  storeName: "files",
+});
+```
+
+**Use cases:**
+
+- Local kits
+- Offline-first applications
+- Persistent storage without backend
+
+### Remote File Provider
+
+Syncs files with a REST API:
+
+```typescript
+const fileProviderFactory = createRemoteFileProvider({
+  baseUrl: "https://api.example.com",
+  headers: {
+    Authorization: "Bearer ...",
+  },
+});
+```
+
+**API Contract:**
+
+- `POST /kits/{kitId}/files/{fileId}` - Upload file (multipart/form-data)
+- `GET /kits/{kitId}/files/{fileId}` - Download file
+- `DELETE /kits/{kitId}/files/{fileId}` - Delete file
 
 ## File Operations
 
-### Adding Files via Drag & Drop
+### Adding Files
 
-Files can be dragged and dropped onto the Kit App canvas. They will be:
-1. Added to the kit's file list in Y.js
-2. Uploaded to the file provider (if configured)
-3. Made available via blob URLs for immediate use
+Files are automatically handled when added to a kit:
 
-### Adding Files Programmatically
+1. User drops files onto the Kit App canvas
+2. Files are uploaded using the file provider
+3. File metadata (ID, path, URL) is added to the kit's Y.js document
+4. Remote URL is stored for later retrieval
 
-```typescript
-import { guid } from '@semio/js';
+### Syncing Files
 
-const file: SemioFile = {
-  guid: guid(),
-  path: 'models/building.ifc',
-  size: blob.size,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-await kitCommands.addFile(file, blob);
-```
-
-## File Storage Structure
-
-Files are stored with the following key structure:
-```
-{bucket}/{kitId}/{fileId}/{filename}
-```
-
-For example:
-```
-my-semio-kits/
-  abc-123-def/
-    file-456/
-      model.ifc
-    file-789/
-      texture.png
-```
-
-## Custom File Providers
-
-You can implement your own file provider for any storage backend:
+Files are automatically synced when a kit is loaded:
 
 ```typescript
-const customFileProviderFactory: FileProviderFactory = async (kitId) => {
-  return {
-    upload: async (kitId, fileId, path, blob) => {
-      // Upload to your storage
-      // Return the remote URL
-      return `https://my-storage.com/${kitId}/${fileId}/${path}`;
-    },
-    
-    download: async (kitId, fileId, path) => {
-      // Download from your storage
-      // Return as Blob
-      const response = await fetch(`https://my-storage.com/${kitId}/${fileId}/${path}`);
-      return await response.blob();
-    },
-    
-    delete: async (kitId, fileId, path) => {
-      // Delete from your storage
-      await fetch(`https://my-storage.com/${kitId}/${fileId}/${path}`, {
-        method: 'DELETE'
-      });
-    },
-    
-    getUrl: (kitId, fileId, path) => {
-      // Return the public URL for the file
-      return `https://my-storage.com/${kitId}/${fileId}/${path}`;
-    },
-  };
-};
+// In KitStore.initializeFileProvider()
+await this.syncFiles();
+
+// Downloads all kit files from the provider
+private async syncFiles() {
+  const files = this.kit?.files || [];
+  await Promise.all(
+    files.map(async (file) => {
+      const blob = await this.fileProvider.download(this.kitId, file.id, file.path);
+      // File is now available locally (in memory and/or IndexedDB)
+    })
+  );
+}
 ```
 
-## File Syncing
+### Consuming Files
 
-When a kit is loaded with a file provider:
-1. The kit store initializes the file provider
-2. All files in the kit are automatically downloaded
-3. Blob URLs are created for each file
-4. Files become immediately available to components
+Components can use files via blob URLs:
 
-When files are added/removed:
-1. Changes are recorded in the Y.js document
-2. Files are uploaded/deleted to/from the remote storage
-3. Blob URLs are created/revoked accordingly
+```typescript
+// In a component
+const fileUrl = kit.files[0].url; // From file provider
+const blobUrl = URL.createObjectURL(blob); // For local display
 
-## Requirements
-
-For S3 file provider:
-```bash
-npm install @aws-sdk/client-s3
+// Later, revoke the URL to free memory
+URL.revokeObjectURL(blobUrl);
 ```
 
-## Notes
+## Custom Providers
 
-- File metadata (path, size, hash, etc.) is stored in Y.js
-- File content (blobs) is stored separately via the file provider
-- Blob URLs are created locally for efficient access
-- File operations are asynchronous and non-blocking
-- The file provider is optional - kits work without it (local/in-memory only)
+### Implementing a Custom Remote Provider
+
+The remote provider expects a REST API. Here's an example backend implementation:
+
+```typescript
+// Backend (Express)
+app.post("/kits/:kitId/files/:fileId", upload.single("file"), async (req, res) => {
+  const { kitId, fileId } = req.params;
+  const file = req.file;
+
+  // Store file (S3, filesystem, etc.)
+  await storage.upload(`${kitId}/${fileId}`, file.buffer);
+
+  res.json({
+    url: `https://cdn.example.com/${kitId}/${fileId}`,
+  });
+});
+
+app.get("/kits/:kitId/files/:fileId", async (req, res) => {
+  const { kitId, fileId } = req.params;
+  const buffer = await storage.download(`${kitId}/${fileId}`);
+  res.send(buffer);
+});
+
+app.delete("/kits/:kitId/files/:fileId", async (req, res) => {
+  const { kitId, fileId } = req.params;
+  await storage.delete(`${kitId}/${fileId}`);
+  res.sendStatus(204);
+});
+```
+
+### Example: S3 Backend
+
+For S3 storage, see `s3-example.ts` for a complete implementation that can be published as a separate package (`@semio/file-provider-s3`).
+
+Key points:
+
+- Keep AWS SDK in separate package to avoid bundling it in core
+- Users install only if they need S3 support
+- Can be used with composite provider as the remote layer
+
+## File Structure
+
+Files are organized by kit, file ID, and path:
+
+```
+{storage}/
+  ├── {kitId}/
+  │   ├── {fileId}/
+  │   │   └── {filename}
+  │   └── {fileId}/
+  │       └── {filename}
+  └── {kitId}/
+      └── ...
+```
+
+## Drag and Drop
+
+The Kit App supports drag-and-drop file uploads:
+
+1. User drags files over the canvas
+2. Drop zone appears with visual feedback
+3. Files are automatically uploaded and added to the kit
+
+## Error Handling
+
+The composite provider automatically handles errors:
+
+```typescript
+// Upload: Succeeds if at least one provider succeeds
+// Download: Tries providers in order (memory → local → remote)
+// Delete: Best effort (doesn't fail if some providers fail)
+```
+
+## Best Practices
+
+1. **Use composite provider** with all three layers for remote kits
+2. **Always include memory** for fast access
+3. **Always include local** for offline support
+4. **Implement retry logic** in remote provider
+5. **Clean up blob URLs** with `URL.revokeObjectURL()` when done
+6. **Validate file types and sizes** before upload
+7. **Show upload progress** for better UX
+
+## Offline Support
+
+The system works offline by design:
+
+- **Memory**: Always available
+- **Local**: Available offline (IndexedDB)
+- **Remote**: Gracefully degrades (uses local cache)
+
+When online again, changes sync automatically via Y.js and file providers.
+
+## Limitations
+
+- File providers are **optional** - Sketchpad works without them
+- Files are **not versioned** - updates overwrite existing files
+- **No conflict resolution** - last write wins
+- **No access control** - implement in your provider if needed

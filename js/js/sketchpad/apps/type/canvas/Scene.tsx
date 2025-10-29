@@ -24,11 +24,11 @@ import { ThreeEvent } from "@react-three/fiber";
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import SceneComponent, { Model } from "../../../../elements/windows/Scene";
-import { guid, Point, Port, Type, Vector } from "../../../../semio";
+import { guid, Kit, Point, Port, Type, Vector } from "../../../../semio";
 import { useFocusSafe } from "../../../Navbar";
-import { useKit, useKitCommands, useType } from "../../../kits/store";
+import { KitStore, useKit, useKitCommands, useKitStore, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
-import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppFocusedPortGuid, useTypeAppHover, useTypeAppSelection } from "../store";
+import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppFocusedPortGuid, useTypeAppHover, useTypeAppSelectedRepresentationGuid, useTypeAppSelection } from "../store";
 import { TypeAppTools } from "../tools_registry";
 
 /**
@@ -66,12 +66,28 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   // userData for making the port focusable by guid
   const userData = useMemo(() => ({ id: port.guid }), [port.guid]);
 
-  const handlePointerEvent = useCallback(
-    (callback: () => void) => (e: ThreeEvent<PointerEvent>) => {
+  const handleClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
-      callback();
+      onClick();
     },
-    [],
+    [onClick],
+  );
+
+  const handlePointerEnter = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      onHover();
+    },
+    [onHover],
+  );
+
+  const handlePointerLeave = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      onLeave();
+    },
+    [onLeave],
   );
 
   const handleDoubleClick = useCallback(
@@ -85,10 +101,10 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   return (
     <Model
       hovered={isHovered}
-      onClick={handlePointerEvent(onClick)}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
-      onPointerEnter={handlePointerEvent(onHover)}
-      onPointerLeave={handlePointerEvent(onLeave)}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
       userData={userData}
       showEdges={false}
     >
@@ -157,16 +173,33 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
   onClearPreview,
 }) => {
   const type = useType() as Type | undefined;
+  const kit = useKit() as Kit | undefined;
+  const kitStore = useKitStore() as KitStore;
+  const selectedRepresentationGuid = useTypeAppSelectedRepresentationGuid();
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const representationUrl = useMemo(() => {
-    if (!type?.representations?.[0]) return null;
-    const url = type.representations[0].url;
-    if (url.startsWith("http")) return url;
-    return null;
-  }, [type]);
+    if (!type?.representations || type.representations.length === 0) return null;
+    
+    // Find the selected representation or use the first one
+    const representation = selectedRepresentationGuid 
+      ? type.representations.find(r => r.guid === selectedRepresentationGuid) 
+      : type.representations[0];
+    
+    if (!representation) return null;
+    
+    // Get the file and resolve its URL
+    const file = kit?.files?.find((f) => f.guid === representation.file);
+    if (!file) return null;
+    
+    // Use kitStore to get the file URL through the file provider
+    const url = kitStore.getFileUrl(file.guid);
+    if (!url) return null;
+    
+    return url;
+  }, [type, kit, kitStore, selectedRepresentationGuid]);
 
   const handlePointerDown = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
@@ -310,11 +343,13 @@ const SceneContent: FC = () => {
           mandatory: false,
         };
 
-        kitCommands.updateType(type.guid, {
-          ports: {
-            added: [newPort],
-          },
-        });
+        if (kitCommands) {
+          kitCommands.updateType(type.guid, {
+            ports: {
+              added: [newPort],
+            },
+          });
+        }
       }
     },
     [type, kit, kitCommands],

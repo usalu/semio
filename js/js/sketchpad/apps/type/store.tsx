@@ -91,6 +91,7 @@ export interface TypeAppDiff {
   activeTool?: ToolType;
   camera?: Camera;
   focusedPortGuid?: Guid | null; // null to clear focus
+  selectedRepresentationGuid?: Guid | null; // null to clear selection
 }
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
 export interface TypeAppState {
@@ -103,6 +104,7 @@ export interface TypeAppState {
   others: TypeAppPresenceOther[];
   camera?: Camera;
   focusedPortGuid?: Guid; // Currently focused port for camera zoom
+  selectedRepresentationGuid?: Guid; // Currently selected representation for display
 }
 
 export interface TypeAppCommandContext extends KitCommandContext {
@@ -254,6 +256,10 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     return this.yMap.get("focusedPortGuid") as Guid | undefined;
   }
 
+  get selectedRepresentationGuid(): Guid | undefined {
+    return this.yMap.get("selectedRepresentationGuid") as Guid | undefined;
+  }
+
   protected hash(state: TypeAppState): string {
     return JSON.stringify(state);
   }
@@ -275,6 +281,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       pastTransactionsStack: this.pastTransactionsStack,
       camera: this.camera,
       focusedPortGuid: this.focusedPortGuid,
+      selectedRepresentationGuid: this.selectedRepresentationGuid,
     } as any;
   }
 
@@ -402,6 +409,13 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
           this.yMap.delete("focusedPortGuid");
         } else {
           this.yMap.set("focusedPortGuid", diff.focusedPortGuid);
+        }
+      }
+      if (diff.selectedRepresentationGuid !== undefined) {
+        if (diff.selectedRepresentationGuid === null) {
+          this.yMap.delete("selectedRepresentationGuid");
+        } else {
+          this.yMap.set("selectedRepresentationGuid", diff.selectedRepresentationGuid);
         }
       }
     });
@@ -662,6 +676,11 @@ export function useTypeAppCommands(id?: TypeAppId) {
         },
       });
     },
+    setSelectedRepresentation: (representationGuid: Guid) => {
+      store.change({
+        selectedRepresentationGuid: representationGuid,
+      });
+    },
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }
@@ -680,6 +699,10 @@ export function useTypeAppIsPortSelected(id: TypeAppId | undefined, portId: stri
 
 export function useTypeAppIsPortHovered(id: TypeAppId | undefined, portId: string): boolean {
   return useTypeApp((s) => s.hover?.port === portId, id) as boolean;
+}
+
+export function useTypeAppSelectedRepresentationGuid(): Guid | undefined {
+  return useTypeApp((s) => s.selectedRepresentationGuid) as Guid | undefined;
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);

@@ -152,8 +152,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     if (label) {
       return (
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+        <div className="flex items-center gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors" title={label}>
             {label}
           </span>
           {wrappedToggle}
@@ -203,8 +203,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     if (label) {
       return (
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+        <div className="flex items-center gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors" title={label}>
             {label}
           </span>
           {wrappedToggle}
@@ -331,8 +331,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     if (label) {
       return (
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+        <div className="flex items-center gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
+          <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors" title={label}>
             {label}
           </span>
           {dropdownElement}
@@ -363,8 +363,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   if (label) {
     return (
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+      <div className="flex items-center gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
+        <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors" title={label}>
           {label}
         </span>
         {wrappedToggle}

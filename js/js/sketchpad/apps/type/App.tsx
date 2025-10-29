@@ -21,12 +21,16 @@
 
 import { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { guid, Representation, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
+import { useAddFooterItem, useRemoveFooterItem } from "../../Footer";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
+import { useKitCommands, useType } from "../../kits/store";
 import { ToolType, useAppType } from "../../store";
 import { KitSection } from "../kit/panels/Details";
 import TypeScene from "./canvas/Scene";
 import { AttributesSection, AuthorsSection, PortSection, PortsListSection, PortsMultipleSection, RepresentationsSection, TypeDetails } from "./panels/Details";
+import { RepresentationDropdown } from "./RepresentationDropdown";
 import { useTypeApp, useTypeAppCommands, useTypeAppSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
@@ -34,6 +38,8 @@ const App: FC = () => {
   const { t } = useTranslation();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const addFooterItem = useAddFooterItem();
+  const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const { setActiveTool } = useTypeAppCommands();
   const app = useTypeApp((s) => s);
@@ -76,10 +82,17 @@ const App: FC = () => {
       content: () => <ToolsToggleGroup />,
     });
 
+    addFooterItem({
+      id: "type-representation-selector",
+      content: <RepresentationDropdown />,
+      order: 0,
+    });
+
     return () => {
       removeSection("toolbar", "type-tools");
+      removeFooterItem("type-representation-selector");
     };
-  }, [addSection, removeSection, appType]);
+  }, [addSection, removeSection, addFooterItem, removeFooterItem, appType]);
 
   // Dynamic details panel based on selection
   useEffect(() => {
@@ -148,6 +161,71 @@ const App: FC = () => {
       removeSection("details", "type-kit");
     };
   }, [addSection, removeSection, appType, selection, t]);
+
+  const type = useType() as Type | undefined;
+  const kitCommands = useKitCommands();
+  const typeAppCommands = useTypeAppCommands();
+
+  // Handle file drops
+  useEffect(() => {
+    if (appType !== "type") return;
+
+    const handleDrop = async (event: DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const files = event.dataTransfer?.files;
+      if (!files || files.length === 0 || !type || !kitCommands || !typeAppCommands) return;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Create File object
+        const newFileGuid = guid();
+        const newFile = {
+          guid: newFileGuid,
+          path: file.name,
+          size: file.size,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        // Create Representation that references the file
+        const newRepresentationGuid = guid();
+        const newRepresentation: Representation = {
+          guid: newRepresentationGuid,
+          file: newFileGuid,
+          description: file.name,
+        };
+
+        // Add file to kit with blob
+        await kitCommands.addFile(newFile, file);
+
+        // Add representation to type
+        await kitCommands.updateType(type.guid, {
+          representations: {
+            added: [newRepresentation],
+          },
+        });
+
+        // Select the new representation
+        typeAppCommands.setSelectedRepresentation?.(newRepresentationGuid);
+      }
+    };
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener("drop", handleDrop);
+    document.addEventListener("dragover", handleDragOver);
+
+    return () => {
+      document.removeEventListener("drop", handleDrop);
+      document.removeEventListener("dragover", handleDragOver);
+    };
+  }, [appType, type, kitCommands, typeAppCommands]);
 
   return (
     <Canvas>

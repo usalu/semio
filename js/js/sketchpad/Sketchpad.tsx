@@ -42,6 +42,7 @@ import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
 import {
   DesignScopeProvider,
+  FileProviderFactory,
   KitScopeProvider,
   Layout,
   SketchpadScopeProvider,
@@ -60,7 +61,6 @@ import {
   useTheme,
   WindowEvents,
   YProviderFactory,
-  FileProviderFactory,
 } from "./store";
 
 // Lazy load HeadingsProvider to avoid issues in Storybook

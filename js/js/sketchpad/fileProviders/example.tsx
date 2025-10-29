@@ -2,135 +2,215 @@
 
 // example.tsx
 
-// Example usage of Semio file provider system
+// File provider usage examples
 
 // #endregion
 
-import React from 'react';
-import { Sketchpad, createS3FileProviderFactory, createInMemoryFileProviderFactory } from '@semio/js';
+import { Sketchpad, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider } from "@semio/js";
 
-// Example 1: Production S3 Setup
-export function ProductionApp() {
-  const fileProviderFactory = createS3FileProviderFactory({
-    region: process.env.AWS_REGION || 'us-east-1',
-    bucket: process.env.AWS_S3_BUCKET || 'my-semio-kits',
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+// #region Example 1: Temporary Kit (Memory Only)
+
+/**
+ * Files are stored in memory and lost on page reload.
+ * Perfect for temporary/demo kits.
+ */
+export function TemporaryKitExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+
+// #endregion Example 1
+
+// #region Example 2: Local Kit (Memory + Local)
+
+/**
+ * Files are persisted in IndexedDB and survive page reloads.
+ * Perfect for offline-first local kits.
+ */
+export function LocalKitExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: true,
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+
+// #endregion Example 2
+
+// #region Example 3: Remote Kit (Memory + Local + Remote)
+
+/**
+ * Files are synced to a remote server but also cached locally.
+ * Works offline and syncs when connection is restored.
+ */
+export function RemoteKitExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: true,
+    remote: {
+      baseUrl: "https://api.example.com",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    },
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+
+// #endregion Example 3
+
+// #region Example 4: Custom Local Configuration
+
+/**
+ * Customize IndexedDB database and store names.
+ */
+export function CustomLocalKitExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: {
+      dbName: "my-app-files",
+      storeName: "kit-files",
+    },
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+
+// #endregion Example 4
+
+// #region Example 5: Remote-Only (No Local Cache)
+
+/**
+ * Files are only stored remotely (not recommended).
+ * No offline support.
+ */
+export function RemoteOnlyExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    remote: {
+      baseUrl: "https://api.example.com",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    },
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+
+// #endregion Example 5
+
+// #region Example 6: Using Individual Providers
+
+/**
+ * Use individual providers directly (not recommended).
+ * Prefer the composite provider for production use.
+ */
+export function IndividualProvidersExample() {
+  // Memory only
+  const memoryProvider = createMemoryFileProvider();
+
+  // Local only
+  const localProvider = createLocalFileProvider({
+    dbName: "semio-files",
+    storeName: "files",
+  });
+
+  // Remote only
+  const remoteProvider = createRemoteFileProvider({
+    baseUrl: "https://api.example.com",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+
+  // Use one of them
+  return <Sketchpad fileProviderFactory={memoryProvider} />;
+}
+
+// #endregion Example 6
+
+// #region Example 7: Dynamic Configuration
+
+/**
+ * Choose provider based on environment or user preferences.
+ */
+export function DynamicConfigExample() {
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const isOfflineMode = navigator.onLine === false;
+  const hasBackend = !!process.env.REACT_APP_API_URL;
+
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: !isDevelopment, // Only use local storage in production
+    remote:
+      hasBackend && !isOfflineMode
+        ? {
+            baseUrl: process.env.REACT_APP_API_URL!,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        : undefined,
+  });
+
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
+}
+
+// #endregion Example 7
+
+// #region Example 8: With Drag and Drop
+
+/**
+ * Complete example with drag-and-drop file uploads.
+ * The Kit App already handles this, but here's how it works.
+ */
+export function DragDropExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: true,
+    remote: {
+      baseUrl: "https://api.example.com",
+    },
   });
 
   return (
-    <Sketchpad 
-      id="production-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
+    <div>
+      <h1>My Kits</h1>
+      <Sketchpad fileProviderFactory={fileProviderFactory} />
+      <p>Drop files on the canvas to upload them to the kit</p>
+    </div>
   );
 }
 
-// Example 2: Development with MinIO
-export function DevelopmentApp() {
-  const fileProviderFactory = createS3FileProviderFactory({
-    region: 'us-east-1',
-    bucket: 'semio-dev',
-    accessKeyId: 'minioadmin',
-    secretAccessKey: 'minioadmin',
-    endpoint: 'http://localhost:9000',
+// #endregion Example 8
+
+// #region Example 9: Recommended Production Setup
+
+/**
+ * Recommended setup for production:
+ * - Memory for fast access
+ * - Local for offline support
+ * - Remote for collaboration
+ */
+export function ProductionExample() {
+  const fileProviderFactory = createCompositeFileProvider({
+    memory: true,
+    local: true,
+    remote: {
+      baseUrl: process.env.REACT_APP_API_URL || "https://api.example.com",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "X-Client-Version": process.env.REACT_APP_VERSION || "1.0.0",
+      },
+    },
   });
 
-  return (
-    <Sketchpad 
-      id="dev-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
-  );
+  return <Sketchpad fileProviderFactory={fileProviderFactory} />;
 }
 
-// Example 3: Testing with In-Memory Provider
-export function TestApp() {
-  const fileProviderFactory = createInMemoryFileProviderFactory();
-
-  return (
-    <Sketchpad 
-      id="test-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
-  );
-}
-
-// Example 4: Offline/Local Only (No File Provider)
-export function OfflineApp() {
-  // Files will be stored as blob URLs in memory only
-  // They will be lost on page reload
-  return <Sketchpad id="offline-sketchpad" />;
-}
-
-// Example 5: Conditional File Provider (Based on Environment)
-export function AdaptiveApp() {
-  const fileProviderFactory = React.useMemo(() => {
-    if (process.env.NODE_ENV === 'production') {
-      return createS3FileProviderFactory({
-        region: process.env.AWS_REGION!,
-        bucket: process.env.AWS_S3_BUCKET!,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      });
-    } else if (process.env.NODE_ENV === 'development') {
-      return createInMemoryFileProviderFactory();
-    }
-    return undefined;
-  }, []);
-
-  return (
-    <Sketchpad 
-      id="adaptive-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
-  );
-}
-
-// Example 6: Custom File Provider
-import type { FileProviderFactory, FileProvider } from '@semio/js';
-
-function createCustomFileProviderFactory(baseUrl: string): FileProviderFactory {
-  return async (kitId: string): Promise<FileProvider> => {
-    return {
-      upload: async (kitId, fileId, path, blob) => {
-        const formData = new FormData();
-        formData.append('file', blob, path);
-        
-        const response = await fetch(`${baseUrl}/kits/${kitId}/files/${fileId}`, {
-          method: 'POST',
-          body: formData,
-        });
-        
-        const { url } = await response.json();
-        return url;
-      },
-
-      download: async (kitId, fileId, path) => {
-        const response = await fetch(`${baseUrl}/kits/${kitId}/files/${fileId}`);
-        return await response.blob();
-      },
-
-      delete: async (kitId, fileId, path) => {
-        await fetch(`${baseUrl}/kits/${kitId}/files/${fileId}`, {
-          method: 'DELETE',
-        });
-      },
-
-      getUrl: (kitId, fileId, path) => {
-        return `${baseUrl}/kits/${kitId}/files/${fileId}`;
-      },
-    };
-  };
-}
-
-export function CustomBackendApp() {
-  const fileProviderFactory = createCustomFileProviderFactory('https://api.example.com');
-
-  return (
-    <Sketchpad 
-      id="custom-backend-sketchpad" 
-      fileProviderFactory={fileProviderFactory}
-    />
-  );
-}
+// #endregion Example 9

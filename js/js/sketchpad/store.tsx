@@ -24,7 +24,6 @@ import { useLocation, useNavigate } from "react-router";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { areSameKit, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow } from "../semio";
-import { useAppType } from "./appType";
 import { commands as sketchpadCommands } from "./commands";
 import { KitStore } from "./kits/store";
 
@@ -66,7 +65,6 @@ export {
   useDesignId,
   useDesigns,
   useDesignScope,
-  useDiffedDesign,
   useExplodeableDesignNodes,
   useFileUrls,
   useFlatDesign,
@@ -89,7 +87,6 @@ export {
   usePieces,
   usePiecesFromIds,
   usePiecesMetadata,
-  usePortColoredTypes,
   useQuality,
   useQualityScope,
   useReplacableDesigns,
@@ -98,6 +95,10 @@ export {
   useTypeScope,
 } from "./kits/store";
 export type { KitCommandContext, KitCommandResult } from "./kits/store";
+
+// Note: useConnectionColor, useDiffedDesign, usePieceWithDiff, and usePortColoredTypes
+// are available in kits/designHelpers.ts but not re-exported here to avoid circular dependencies.
+// Import them directly from "./kits/designHelpers" if needed.
 
 // #region Constants
 
@@ -1766,8 +1767,39 @@ export function migratePath(path: string): string {
   return path;
 }
 
-// Moved to appType.ts to avoid circular dependency
-export { getAppTypeFromPath, useAppType } from "./appType";
+// Inline useAppType to avoid circular dependency
+// Use simple path-based matching instead of appRegistry to avoid circular dependency
+export function useAppType(): AppType {
+  const navigation = useNavigation();
+  return useMemo(() => {
+    const pathParts = navigation.split("/").filter((p: string) => p);
+    if (pathParts.length === 0) return "home";
+
+    // Simple path matching without appRegistry
+    if (pathParts[0] === "kits" && pathParts.length >= 2) {
+      if (pathParts.length >= 4 && pathParts[2] === "designs") return "design";
+      if (pathParts.length >= 4 && pathParts[2] === "types") return "type";
+      if (pathParts.length >= 4 && pathParts[2] === "qualities") return "quality";
+      return "kit";
+    }
+    if (pathParts[0] === "docs") return "docs";
+    return "home";
+  }, [navigation]);
+}
+
+export function getAppTypeFromPath(path: string): AppType {
+  const pathParts = path.split("/").filter((p) => p);
+  if (pathParts.length === 0) return "home";
+
+  if (pathParts[0] === "kits" && pathParts.length >= 2) {
+    if (pathParts.length >= 4 && pathParts[2] === "designs") return "design";
+    if (pathParts.length >= 4 && pathParts[2] === "types") return "type";
+    if (pathParts.length >= 4 && pathParts[2] === "qualities") return "quality";
+    return "kit";
+  }
+  if (pathParts[0] === "docs") return "docs";
+  return "home";
+}
 
 export function useAccess(): Access {
   return useSketchpad((s) => s.access) as Access;

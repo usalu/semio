@@ -75,7 +75,6 @@ import {
   Vector,
   VectorDiff,
   applyDesignDiff,
-  applyKitDiff,
   colorPortsForTypes,
   findDesignInKit,
   findPieceInDesign,
@@ -83,17 +82,20 @@ import {
   findReplacableTypesForPieceInDesign,
   findReplacableTypesForPiecesInDesign,
   flattenDesign,
-  getClusterableGroups,
   getIncludedDesigns,
   getPieceRepresentationUrls,
   piecesMetadata,
 } from "../../semio";
-import type { SketchpadStore, Url, FileProvider, FileProviderFactory } from "../store";
+import type { FileProvider, FileProviderFactory, SketchpadStore, Url } from "../store";
 import { Disposable, Subscribe, YProviderFactory, createObserver, identitySelector, useSketchpadStore, useSync, useSyncDeep } from "../store";
 import { commands as kitCommands } from "./commands";
 
 // Re-export utilities from parent store for use in designAppIntegration
 export { identitySelector };
+
+// Note: useConnectionColor, useDiffedDesign, usePieceWithDiff, and usePortColoredTypes
+// have been moved to designHelpers.ts and are NOT re-exported here to avoid circular dependencies.
+// Internal use in this file imports directly from "./designHelpers".
 
 type YAttributeVal = string;
 type YAttribute = Y.Map<YAttributeVal>;
@@ -1272,7 +1274,7 @@ class RepresentationStore {
   constructor(yRepresentation: YRepresentation, representation: Representation) {
     this.yRepresentation = yRepresentation;
     this.guid = representation.guid;
-    this.url = representation.url;
+    this.file = representation.file;
     this.description = representation.description;
     this.yTags = this.yRepresentation.set("tags", new Y.Array<string>());
     if (representation.tags) this.yTags.push(representation.tags);
@@ -1295,11 +1297,11 @@ class RepresentationStore {
     this.yRepresentation.set("guid", guid);
   }
 
-  get url(): string {
-    return this.yRepresentation.get("url") as string;
+  get file(): string {
+    return this.yRepresentation.get("file") as string;
   }
-  set url(url: string) {
-    this.yRepresentation.set("url", url);
+  set file(file: string) {
+    this.yRepresentation.set("file", file);
   }
 
   get description(): string | undefined {
@@ -1317,7 +1319,7 @@ class RepresentationStore {
     const tags = this.yTags.toArray();
     const currentHash = this.hash({
       guid: this.guid,
-      url: this.url,
+      file: this.file,
       description: this.description,
       tags,
     });
@@ -1328,7 +1330,7 @@ class RepresentationStore {
 
     const representation: Representation = {
       guid: this.guid,
-      url: this.url,
+      file: this.file,
       description: this.description,
       tags,
     };
@@ -1339,7 +1341,7 @@ class RepresentationStore {
   }
 
   apply(diff: RepresentationDiff): void {
-    if (diff.url !== undefined) this.url = diff.url;
+    if (diff.file !== undefined) this.file = diff.file;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.tags !== undefined) {
       this.yTags.delete(0, this.yTags.length);
@@ -1898,21 +1900,6 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
   return useSync<Quality, T>(useQualityStore(identitySelector, id) as QualityStore | null, selector ? selector : identitySelector, deep);
 }
 
-export function usePortColoredTypes(): Type[] {
-  const diffedKit = useDiffedKit();
-  const typesWithColoredPorts = useMemo(() => {
-    if (!diffedKit.types) return [];
-    const colorDiff = colorPortsForTypes(diffedKit.types);
-    return colorDiff.updated
-      ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id === type.guid);
-          return update && update.diff.ports?.added ? { ...type, ports: update.diff.ports.added } : type;
-        })
-      : diffedKit.types;
-  }, [diffedKit.types]);
-  const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
-  return unified.types;
-}
 
 // #endregion Type
 
@@ -2340,24 +2327,6 @@ export function usePiecePlane(): Plane {
 
 // usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
 
-/**
- * Returns both the original piece and the diffed piece.
- * Returns { original: Piece, diffed: Piece | null, hasDiff: boolean }
- * If hasDiff is false, diffed will be null
- */
-export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
-  const originalPiece = usePiece() as Piece;
-  const diffedPiece = useDiffedPiece() as Piece;
-  const status = usePieceStatus();
-
-  const hasDiff = status !== DiffStatus.Unchanged;
-
-  return {
-    original: originalPiece,
-    diffed: hasDiff ? diffedPiece : null,
-    hasDiff,
-  };
-}
 
 // #endregion Piece
 
@@ -2819,41 +2788,6 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 
 // useIsConnectionSelected, useIsConnectionHovered, useConnectionStatus - moved to designAppIntegration.ts
 
-export function useConnectionColor(): { stroke: string; fill: string } {
-  const connection = useConnectionScope();
-  const kitDiff = useDesignAppDiff();
-  const designScope = useDesignScope();
-
-  if (!connection || !designScope || !kitDiff?.designs?.updated) {
-    return DiffStatus.Unchanged;
-  }
-
-  // Find the design diff for the current design
-  const designDiff = kitDiff.designs.updated.find((d) => d.id === designScope.guid);
-
-  if (!designDiff?.diff.connections) {
-    return DiffStatus.Unchanged;
-  }
-
-  const connectionsDiff = designDiff.diff.connections;
-
-  // Check if connection is removed (using composite id)
-  if (connectionsDiff.removed?.some((c) => c.connected.piece === connection.guid && c.connecting.piece === connection.guid)) {
-    return DiffStatus.Removed;
-  }
-
-  // Check if connection is added
-  if (connectionsDiff.added?.some((c) => c.guid === connection.guid)) {
-    return DiffStatus.Added;
-  }
-
-  // Check if connection is updated (using composite id)
-  if (connectionsDiff.updated?.some((c) => c.id.connected.piece === connection.guid && c.id.connecting.piece === connection.guid)) {
-    return DiffStatus.Modified;
-  }
-
-  return DiffStatus.Unchanged;
-}
 
 // #endregion Connection
 
@@ -3655,12 +3589,6 @@ export function usePieces(): Piece[] {
   return design.pieces ?? [];
 }
 
-export function useDiffedDesign(): Design {
-  const kit = useDiffedKit();
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
-  return findDesignInKit(kit, designScope.guid);
-}
 
 export function useFlattenDiff(): DesignDiff {
   const designScope = useDesignScope();
@@ -3715,8 +3643,16 @@ export function usePiecePlanes(): Plane[] {
 
 export function usePieceRepresentationUrls(): Map<string, string> {
   const flatDesign = useFlatDesign();
-  const types = usePortColoredTypes();
-  return useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
+  // TODO: Re-enable once circular dependency is fully resolved
+  // const types = usePortColoredTypes();
+  const types = useKit((k) => k?.types || []) as Type[];
+  const kit = useKit((k) => k as Kit) as Kit | null;
+  const kitStore = useKitStore((s) => s) as KitStore;
+  const files = kit?.files ?? [];
+  const getFileUrl = React.useCallback((fileGuid: string) => {
+    return kitStore.getFileUrl(fileGuid);
+  }, [kitStore]);
+  return useMemo(() => getPieceRepresentationUrls(flatDesign, types, files, getFileUrl), [flatDesign, types, files, getFileUrl]);
 }
 
 export function usePieceDiffStatuses(): DiffStatus[] {
@@ -4099,6 +4035,16 @@ export class KitStore {
     return this.files.get(guid)!;
   }
 
+  getFileUrl(fileGuid: string): string {
+    const fileStore = this.files.get(fileGuid);
+    if (!fileStore) return "";
+    const file = fileStore.snapshot();
+    if (this.fileProvider) {
+      return this.fileProvider.getUrl(this.guid, fileGuid, file.path);
+    }
+    return file.remote ?? "";
+  }
+
   hasQuality(guid: string): boolean {
     return this.qualities.has(guid);
   }
@@ -4316,7 +4262,7 @@ export class KitStore {
     const result = callback(context, ...rest);
     if (result.diff) {
       this.change(result.diff);
-      
+
       // Handle file operations with file provider
       if (this.fileProvider && result.diff.files) {
         // Upload new files
@@ -4336,7 +4282,7 @@ export class KitStore {
             }
           }
         }
-        
+
         // Delete removed files
         if (result.diff.files.removed) {
           for (const fileId of result.diff.files.removed) {
@@ -4360,7 +4306,7 @@ export class KitStore {
         }
       }
     }
-    
+
     // Handle local files (in-memory or blob URLs)
     if (result.files) {
       result.files.forEach((file) => {
@@ -4368,7 +4314,7 @@ export class KitStore {
         this.regularFiles.set(file.name, objectUrl);
       });
     }
-    
+
     console.groupEnd();
     return result as T;
   }

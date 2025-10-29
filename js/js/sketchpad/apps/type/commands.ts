@@ -160,4 +160,11 @@ export const commands = {
       },
     };
   },
+  "semio.typeApp.selectRepresentation": (context: TypeAppCommandContext, representationGuid: Guid): TypeAppCommandResult => {
+    return {
+      diff: {
+        selectedRepresentationGuid: representationGuid,
+      },
+    };
+  },
 };

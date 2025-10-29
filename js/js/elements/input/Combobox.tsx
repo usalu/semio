@@ -71,8 +71,8 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
   );
 
   return (
-    <div className={cn("flex items-center gap-2 min-w-0", className)}>
-      {label && <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>}
+    <div className={cn("flex items-center gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel", className)}>
+      {label && <span className="text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors">{label}</span>}
       <Popover open={open} onOpenChange={handleOpenChange}>
         {wrappedTrigger}
         <PopoverContent className="w-full p-0" align="start">

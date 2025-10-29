@@ -1153,7 +1153,7 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 export const RepresentationSchema = z.object({
   guid: z.string(),
   tags: z.array(z.string()).optional(),
-  url: z.string(),
+  file: z.string(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -1168,7 +1168,7 @@ export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
 export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => {
   const diff: RepresentationDiff = {};
   if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
-  if (before.url !== after.url) diff.url = after.url;
+  if (before.file !== after.file) diff.file = after.file;
   if (before.description !== after.description) diff.description = after.description;
   if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
@@ -1176,7 +1176,7 @@ export const getRepresentationDiff = (before: Representation, after: Representat
 export const inverseRepresentationDiff = (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
   const inverse: RepresentationDiff = {};
   if (appliedDiff.tags !== undefined) inverse.tags = original.tags;
-  if (appliedDiff.url !== undefined) inverse.url = original.url;
+  if (appliedDiff.file !== undefined) inverse.file = original.file;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
@@ -1188,7 +1188,7 @@ export const applyRepresentationDiff = (base: Representation, diff: Representati
   return {
     ...base,
     tags: diff.tags ?? base.tags,
-    url: diff.url ?? base.url,
+    file: diff.file ?? base.file,
     description: diff.description ?? base.description,
     attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
@@ -1643,12 +1643,33 @@ export const PiecesDiffSchema = z.object({
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 
 /**
- * 🔗 Returns a map of piece ids to representation urls for the given design and types.
+ * 🔗 Returns a map of piece ids to representation file guids for the given design and types.
+ * @param design - The design with the pieces to get the representation file guids for.
+ * @param types - The types of the pieces with the representations.
+ * @returns A map of piece ids to representation file guids.
+ */
+export const getPieceRepresentationFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
+  const representationFileGuids = new Map<string, string>();
+  design.pieces?.forEach((p) => {
+    if (!p.type) return;
+    const type = types.find((t) => t.guid === p.type);
+    if (!type) throw new Error(`Type ${p.type} for piece ${p.guid} not found`);
+    if (!type.representations) throw new Error(`Type ${p.type} for piece ${p.guid} has no representations`);
+    const representation = findRepresentation(type.representations, tags);
+    representationFileGuids.set(p.guid, representation.file);
+  });
+  return representationFileGuids;
+};
+
+/**
+ * 🔗 Returns a map of piece ids to representation urls for the given design, types, and files.
  * @param design - The design with the pieces to get the representation urls for.
  * @param types - The types of the pieces with the representations.
+ * @param files - The files in the kit to resolve urls from.
+ * @param getFileUrl - Function to get the url for a file (from file provider).
  * @returns A map of piece ids to representation urls.
  */
-export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
+export const getPieceRepresentationUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
   const representationUrls = new Map<string, string>();
   design.pieces?.forEach((p) => {
     if (!p.type) return;
@@ -1656,7 +1677,9 @@ export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: 
     if (!type) throw new Error(`Type ${p.type} for piece ${p.guid} not found`);
     if (!type.representations) throw new Error(`Type ${p.type} for piece ${p.guid} has no representations`);
     const representation = findRepresentation(type.representations, tags);
-    representationUrls.set(p.guid, representation.url);
+    const file = files.find((f) => f.guid === representation.file);
+    if (!file) throw new Error(`File ${representation.file} for representation ${representation.guid} not found`);
+    representationUrls.set(p.guid, getFileUrl(file.guid));
   });
   return representationUrls;
 };
@@ -3204,6 +3227,83 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
 export const parseDesignIdFromVariant = (variant: string): string => {
   return variant.split("-")[0];
 };
+
+// #region File Tree Utilities
+
+export interface FileTreeNode {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  children: FileTreeNode[];
+  file?: File;
+}
+
+/**
+ * Builds a hierarchical tree structure from file paths.
+ * @param files - Array of files with paths
+ * @returns Root nodes of the file tree
+ */
+export const buildFileTree = (files: File[]): FileTreeNode[] => {
+  const root: FileTreeNode[] = [];
+  const nodeMap = new Map<string, FileTreeNode>();
+
+  files.forEach((file) => {
+    const parts = file.path.split("/").filter((p) => p.length > 0);
+    let currentPath = "";
+    let currentLevel = root;
+
+    parts.forEach((part, index) => {
+      const isLast = index === parts.length - 1;
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+
+      if (!nodeMap.has(currentPath)) {
+        const node: FileTreeNode = {
+          name: part,
+          path: currentPath,
+          isDirectory: !isLast,
+          children: [],
+          file: isLast ? file : undefined,
+        };
+        nodeMap.set(currentPath, node);
+        currentLevel.push(node);
+      }
+
+      if (!isLast) {
+        currentLevel = nodeMap.get(currentPath)!.children;
+      }
+    });
+  });
+
+  return root;
+};
+
+/**
+ * Flattens a file tree into a list with depth information.
+ * @param nodes - File tree nodes
+ * @param level - Current depth level
+ * @param expandedPaths - Set of expanded directory paths
+ * @returns Flattened list of nodes with metadata
+ */
+export const flattenFileTree = (
+  nodes: FileTreeNode[],
+  level: number = 0,
+  expandedPaths: Set<string> = new Set()
+): Array<FileTreeNode & { level: number; isExpanded: boolean }> => {
+  const result: Array<FileTreeNode & { level: number; isExpanded: boolean }> = [];
+
+  nodes.forEach((node) => {
+    const isExpanded = expandedPaths.has(node.path);
+    result.push({ ...node, level, isExpanded });
+
+    if (node.isDirectory && isExpanded && node.children.length > 0) {
+      result.push(...flattenFileTree(node.children, level + 1, expandedPaths));
+    }
+  });
+
+  return result;
+};
+
+// #endregion File Tree Utilities
 
 // File utility functions
 export const createFileFromDataUri = (url: string, dataUri: string): File => {

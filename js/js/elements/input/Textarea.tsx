@@ -105,10 +105,10 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const label = t(`${i18n}.label`);
 
   return (
-    <div className="flex items-start gap-2 min-w-0">
+    <div className="flex items-start gap-2 min-w-0 w-full transition-colors hover:bg-hover-panel">
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:text-hover">{label}</span>
+          <span className="text-xs font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate cursor-pointer transition-colors">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
           <I18nTooltipContent i18nKey={i18n} mode={mode} />

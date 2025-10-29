@@ -2,9 +2,10 @@
 
 // index.ts
 
-// File provider implementations for Semio
+// Core file provider implementations for Semio
 
 // #endregion
 
-export { createS3FileProviderFactory, createInMemoryFileProviderFactory } from "./s3FileProvider";
-export type { S3Config } from "./s3FileProvider";
+export { createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider } from "./providers";
+export type { CompositeFileProviderConfig, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig } from "./providers";
+

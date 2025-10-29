@@ -23,10 +23,10 @@ import "./i18n";
 import i18n from "./i18n";
 
 export type { TooltipConfig } from "./elements/display/Tooltip";
+export { createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider } from "./sketchpad/fileProviders";
+export type { CompositeFileProviderConfig, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig } from "./sketchpad/fileProviders";
 export { default as Sketchpad } from "./sketchpad/Sketchpad";
-export type { YProviderFactory, FileProvider, FileProviderFactory } from "./sketchpad/store";
-export { createS3FileProviderFactory, createInMemoryFileProviderFactory } from "./sketchpad/fileProviders";
-export type { S3Config } from "./sketchpad/fileProviders";
+export type { FileProvider, FileProviderFactory, YProviderFactory } from "./sketchpad/store";
 export { i18n };
 
 // Export docs elements for MDX

@@ -28,14 +28,16 @@ export type ResizeSide = "left" | "right" | "top" | "bottom";
 
 export interface PanelSection {
   id: string;
-  label: string;
+  label?: string;
+  i18n?: string;
   content: ReactNode | (() => ReactNode);
   defaultOpen?: boolean;
   order?: number;
   actions?: Array<{
     icon: ReactNode;
     onClick: () => void;
-    title: string;
+    title?: string;
+    i18n?: string;
   }>;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
@@ -136,7 +138,16 @@ const Panel: FC<PanelProps> = ({
               {sortedSections.map((section) => {
                 const Content = typeof section.content === "function" ? section.content : null;
                 return (
-                  <TreeSection key={section.id} label={section.label} defaultOpen={section.defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
+                  <TreeSection
+                    key={section.id}
+                    label={section.label}
+                    i18n={section.i18n}
+                    defaultOpen={section.defaultOpen}
+                    actions={section.actions}
+                    onPointerEnter={section.onPointerEnter}
+                    onPointerLeave={section.onPointerLeave}
+                    onDoubleClick={section.onDoubleClick}
+                  >
                     {Content ? <Content /> : section.content}
                   </TreeSection>
                 );

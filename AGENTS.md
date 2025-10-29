@@ -189,7 +189,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER remove code that is commented out.
 - NEVER add comments to the code. Especially not to communicate to the user.
 - NEVER ask to run a command where you are not using the output. All dev servers, debugging and testing processes are running.
-- NEVER run modifying `git` commands. Only read-only `git`commands are allowed. If you messed up, ALWAYS fix the file.
+- NEVER run modifying `git` commands such as (`git checkout`, `git branch`, …). Only read-only `git` commands are allowed. If you messed up, ALWAYS fix the file.
 - NEVER add comments to the code.
 - NEVER create tests unless you are explicitly asked to.
 - ALWAYS use inline syntax if possible.
@@ -197,7 +197,7 @@ Stats provide computed or measured performance data for entire designs using the
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
-- Whenever adding ui elements ALWAYS use i18n setups and provide translations for the existing languages.
+- NEVER add raw to ui elements. ALWAYS use i18n setups and provide translations for the existing languages. Every ui element has an i18n key which has information about
 - ALWAYS add `[ORIGIN] `(replace ORIGIN with a file, function, class, … name to identify the origin) prefix to temporary logs so that `\[*\]*` can be used to filter them out.
 - NEVER build or run the code.
 
@@ -465,7 +465,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ │ └── serial-conversion
 │ │ │ │ │ │ │ │ ├── index.mdx
 │ │ │ │ │ │ │ │ └── sketchpad
-│ │ │ │ │ │ │ │   └── index.mdx
+│ │ │ │ │ │ │ │ └── index.mdx
 │ │ │ │ │ ├── panels
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ ├── Settings.tsx
@@ -528,29 +528,14 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── config.ts
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
-│ │ │ ├── docs
-│ │ │ │ ├── getting-started
-│ │ │ │ │ ├── installation.mdx
-│ │ │ │ │ ├── intro
-│ │ │ │ │ │ ├── think-in-semio.mdx
-│ │ │ │ │ │ └── why-semio.mdx
-│ │ │ │ │ └── starter.mdx
-│ │ │ │ ├── integrations
-│ │ │ │ ├── manuals
-│ │ │ │ ├── showcases
-│ │ │ │ │ └── metabolism.mdx
-│ │ │ │ ├── theory
-│ │ │ │ │ ├── design-information-modeling.mdx
-│ │ │ │ │ ├── graphs.mdx
-│ │ │ │ │ └── kit-of-parts-architecture.mdx
-│ │ │ │ ├── tutorials
-│ │ │ │ │ └── hello-semio
-│ │ │ │ │ │ ├── model-brick-set.mdx
-│ │ │ │ │ │ ├── model-design.mdx
-│ │ │ │ │ │ ├── save-kit.mdx
-│ │ │ │ │ │ ├── show-design.mdx
-│ │ │ │ │ │ └── sketch-setup.mdx
-│ │ │ │ └── index.mdx
+│ │ │ ├── fileProviders
+│ │ │ │ ├── IMPLEMENTATION.md
+│ │ │ │ ├── README.md
+│ │ │ │ ├── SUMMARY.md
+│ │ │ │ ├── example.tsx
+│ │ │ │ ├── index.ts
+│ │ │ │ ├── providers.ts
+│ │ │ │ └── s3-example.ts
 │ │ │ ├── kits
 │ │ │ │ ├── commands.ts
 │ │ │ │ └── store.tsx

@@ -47,6 +47,8 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronRight, FileText, Folder, GripVertical } from "lucide-react";
 import { Children, createContext, FC, isValidElement, ReactNode, useContext, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { I18nTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 import { Action } from "../input/Action";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible";
 import { TreeStateProvider, useTreeState } from "./TreeStateProvider";
@@ -96,10 +98,12 @@ export interface TreeSectionAction {
   icon: ReactNode;
   onClick: () => void;
   title?: string;
+  i18n?: string;
 }
 
 interface TreeSectionProps {
-  label: string;
+  label?: string;
+  i18n?: string;
   icon?: ReactNode;
   children?: ReactNode;
   defaultOpen?: boolean;
@@ -149,10 +153,13 @@ interface SortableTreeItemsProps {
   children: (item: any, index: number) => ReactNode;
 }
 
-export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
+export const TreeSection: FC<TreeSectionProps> = ({ label, i18n, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = useContext(TreeContext);
   const treeState = useTreeState();
-  const sectionId = `section-${label}`;
+  const { t } = useTranslation();
+  const mode = useTooltipMode();
+  const displayLabel = i18n ? t(`${i18n}.label`) : label;
+  const sectionId = `section-${displayLabel}`;
   const open = treeState.getOpenState(sectionId, defaultOpen);
   const setOpen = (value: boolean) => treeState.setOpenState(sectionId, value);
   const [isHovered, setIsHovered] = useState(false);
@@ -181,7 +188,18 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
         <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
         <div className="w-[14px] flex-shrink-0" />
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-        <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
+        {i18n ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <I18nTooltipContent i18nKey={i18n} mode={mode} />
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+        )}
         {actions.length > 0 && (
           <div className="flex items-center gap-0.5">
             {actions.map((action, index) => (
@@ -193,7 +211,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
                   e.stopPropagation();
                   action.onClick();
                 }}
-                tooltip={action.title}
+                i18n={action.i18n}
               >
                 {action.icon}
               </Action>
@@ -229,7 +247,18 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           {open ? <ChevronDown size={14} className="flex-shrink-0" /> : <ChevronRight size={14} className="flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</span>
+          {i18n ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <I18nTooltipContent i18nKey={i18n} mode={mode} />
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+          )}
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
@@ -241,7 +270,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
                     e.stopPropagation();
                     action.onClick();
                   }}
-                  tooltip={action.title}
+                  i18n={action.i18n}
                 >
                   {action.icon}
                 </Action>
@@ -321,7 +350,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
                     e.stopPropagation();
                     action.onClick();
                   }}
-                  tooltip={action.title}
+                  i18n={action.i18n}
                 >
                   {action.icon}
                 </Action>
@@ -375,7 +404,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
                 e.stopPropagation();
                 action.onClick();
               }}
-              tooltip={action.title}
+              i18n={action.i18n}
             >
               {action.icon}
             </Action>
@@ -491,7 +520,7 @@ export const TreeItem: FC<TreeItemProps> = ({
                     e.stopPropagation();
                     action.onClick();
                   }}
-                  tooltip={action.title}
+                  i18n={action.i18n}
                 >
                   {action.icon}
                 </Action>
@@ -524,7 +553,7 @@ export const TreeItem: FC<TreeItemProps> = ({
                 e.stopPropagation();
                 action.onClick();
               }}
-              tooltip={action.title}
+              i18n={action.i18n}
             >
               {action.icon}
             </Action>
