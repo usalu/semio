@@ -103,9 +103,11 @@ const App: FC = () => {
     const hasSinglePort = selection?.ports && selection.ports.length === 1;
 
     // Remove all previous sections
+    const portsMultipleId = "semio.sketchpad.app.type.panel.details.section.ports.multipleTitle";
+
     removeSection("details", "semio.sketchpad.app.type.title");
     removeSection("details", "semio.sketchpad.app.type.port.title");
-    removeSection("details", "ports.multipleTitle");
+    removeSection("details", portsMultipleId);
     removeSection("details", "semio.sketchpad.app.kit.title");
 
     if (hasSinglePort) {
@@ -119,7 +121,7 @@ const App: FC = () => {
     } else if (hasMultiplePorts) {
       // Multiple ports selected: show Ports section then Type section
       addSection("details", {
-        id: "ports.multipleTitle",
+        id: portsMultipleId,
         translationParams: { count: selection.ports!.length },
         order: 0,
         defaultOpen: true,
@@ -154,7 +156,7 @@ const App: FC = () => {
     return () => {
       removeSection("details", "semio.sketchpad.app.type.title");
       removeSection("details", "semio.sketchpad.app.type.port.title");
-      removeSection("details", "ports.multipleTitle");
+      removeSection("details", portsMultipleId);
       removeSection("details", "semio.sketchpad.app.kit.title");
     };
   }, [addSection, removeSection, appType, selection]);

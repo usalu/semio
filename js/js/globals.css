@@ -402,7 +402,7 @@
     --tw-prose-links: var(--accent);
     --tw-prose-bold: var(--foreground);
     --tw-prose-counters: var(--muted-foreground);
-    --tw-prose-bullets: var(--muted-foreground);
+    --tw-prose-bullets: var(--primary);
     --tw-prose-hr: var(--border-color);
     --tw-prose-quotes: var(--foreground);
     --tw-prose-quote-borders: var(--border-color);
@@ -415,13 +415,18 @@
     color: var(--accent);
   }
   .prose a:hover {
-    color: var(--active-base);
+    color: var(--hover-base);
   }
   .prose code {
     background-color: var(--muted);
   }
   .prose pre code {
     background-color: transparent;
+  }
+  .prose blockquote {
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    padding: var(--spacing);
   }
 }
 /* https://reactflow.dev/learn/customization/theming */

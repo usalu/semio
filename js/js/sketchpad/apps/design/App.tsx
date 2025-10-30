@@ -149,13 +149,19 @@ const App: FC<AppProps> = () => {
     const hasPortSelected = selection.port !== undefined;
     const hasSelection = hasPieces || hasConnections || hasPortSelected;
 
+    const pieceSingleId = "semio.sketchpad.app.design.panel.details.section.piece.title";
+    const pieceMultipleId = "semio.sketchpad.app.design.panel.details.section.piece.multipleTitle";
+    const connectionSingleId = "semio.sketchpad.app.design.panel.details.section.connection.title";
+    const connectionMultipleId = "semio.sketchpad.app.design.panel.details.section.connection.multipleTitle";
+    const selectionMultipleId = "semio.sketchpad.app.design.panel.details.section.selection.multipleTitle";
+
     removeSection("details", "semio.sketchpad.app.design.title");
     removeSection("details", "semio.sketchpad.app.type.port.title");
-    removeSection("details", "semio.sketchpad.app.design.piece.piece");
-    removeSection("details", "semio.pieces.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.design.connection.title");
-    removeSection("details", "connections.multipleTitle");
-    removeSection("details", "selection.multipleTitle");
+    removeSection("details", pieceSingleId);
+    removeSection("details", pieceMultipleId);
+    removeSection("details", connectionSingleId);
+    removeSection("details", connectionMultipleId);
+    removeSection("details", selectionMultipleId);
     removeSection("details", "semio.sketchpad.app.kit.title");
 
     if (!hasSelection) {
@@ -182,10 +188,11 @@ const App: FC<AppProps> = () => {
       });
     } else {
       if (hasPieces) {
-        const piecesSectionId = selection.pieces!.length === 1 ? "semio.sketchpad.app.design.piece.piece" : "semio.pieces.multipleTitle";
+        const piecesCount = selection.pieces!.length;
+        const piecesSectionId = piecesCount === 1 ? pieceSingleId : pieceMultipleId;
         addSection("details", {
           id: piecesSectionId,
-          translationParams: selection.pieces!.length === 1 ? undefined : { count: selection.pieces!.length },
+          translationParams: piecesCount === 1 ? undefined : { count: piecesCount },
           order: 0,
           defaultOpen: true,
           content: () => <PiecesSection />,
@@ -194,7 +201,7 @@ const App: FC<AppProps> = () => {
       if (hasConnections) {
         const connGuids = selection.connections!;
         const conns = findConnectionsInDesign(design!, connGuids);
-        const connectionsSectionId = conns.length === 1 ? "semio.sketchpad.app.design.connection.title" : "connections.multipleTitle";
+        const connectionsSectionId = conns.length === 1 ? connectionSingleId : connectionMultipleId;
         addSection("details", {
           id: connectionsSectionId,
           translationParams: conns.length === 1 ? undefined : { count: conns.length },
@@ -205,7 +212,7 @@ const App: FC<AppProps> = () => {
       }
       if (hasPieces && hasConnections) {
         addSection("details", {
-          id: "selection.multipleTitle",
+          id: selectionMultipleId,
           order: 20,
           defaultOpen: true,
           content: () => (
@@ -235,11 +242,11 @@ const App: FC<AppProps> = () => {
     return () => {
       removeSection("details", "semio.sketchpad.app.design.title");
       removeSection("details", "semio.sketchpad.app.type.port.title");
-      removeSection("details", "semio.sketchpad.app.design.piece.piece");
-      removeSection("details", "semio.pieces.multipleTitle");
-      removeSection("details", "semio.sketchpad.app.design.connection.title");
-      removeSection("details", "connections.multipleTitle");
-      removeSection("details", "selection.multipleTitle");
+      removeSection("details", pieceSingleId);
+      removeSection("details", pieceMultipleId);
+      removeSection("details", connectionSingleId);
+      removeSection("details", connectionMultipleId);
+      removeSection("details", selectionMultipleId);
       removeSection("details", "semio.sketchpad.app.kit.title");
     };
   }, [selection, addSection, removeSection, appType, t, design]);

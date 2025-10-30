@@ -186,7 +186,9 @@ const AppContent: FC = () => {
     const authorsCount = selection?.authors?.length || 0;
     const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, filesCount > 0, authorsCount > 0].filter(Boolean).length;
 
-    removeSection("details", "artifacts.multiple");
+    const artifactsMultipleId = "semio.sketchpad.app.kit.artifacts.multiple";
+
+    removeSection("details", artifactsMultipleId);
     removeSection("details", "semio.sketchpad.app.design.title");
     removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
     removeSection("details", "semio.sketchpad.app.type.title");
@@ -197,7 +199,8 @@ const AppContent: FC = () => {
 
     if (totalSelectedKinds > 1) {
       addSection("details", {
-        id: "artifacts.multiple",
+        id: artifactsMultipleId,
+        translationParams: { count: totalSelectedKinds },
         order: 0,
         defaultOpen: true,
         content: () => <MultipleArtifactsSection />,
@@ -245,7 +248,7 @@ const AppContent: FC = () => {
     });
 
     return () => {
-      removeSection("details", "artifacts.multiple");
+      removeSection("details", artifactsMultipleId);
       removeSection("details", "semio.sketchpad.app.design.title");
       removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
       removeSection("details", "semio.sketchpad.app.type.title");

@@ -33,10 +33,11 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   id: string;
+  showLabel?: boolean;
   placeholderId?: string;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, id, placeholderId, placeholder, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, id, showLabel, placeholderId, placeholder, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const mode = useTooltipMode();
@@ -104,6 +105,8 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       {...props}
     />
   );
+
+  if (!showLabel) return textareaElement;
 
   const label = t(`${id}.label`);
 

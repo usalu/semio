@@ -8,16 +8,23 @@
 
 import { FC, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Tree } from "../../../../elements/aggregation/Tree";
+import { TreeItem } from "../../../../elements/aggregation/Tree";
+import { TreeStateProvider } from "../../../../elements/aggregation/TreeStateProvider";
 import PageNavigation from "../../../../elements/navigation/PageNavigation";
 import Page from "../../../../elements/windows/Page";
 import { useFocus } from "../../../Navbar";
 import { MDXProvider, useHeadings } from "../mdx-provider";
-import { docsRegistry } from "../registry";
+import { docsRegistry, DocsPage } from "../registry";
 
 interface PageCanvasProps {
   MDXContent?: React.ComponentType;
   frontmatter?: any;
+}
+
+interface TreeNode {
+  name: string;
+  page?: DocsPage;
+  children: Map<string, TreeNode>;
 }
 
 const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
@@ -40,16 +47,46 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     return currentPath.endsWith("/index") || currentPath.split("/").pop() === currentPath.split("/")[0];
   }, [currentPath]);
 
-  // Get section tree for index pages
-  const sectionTree = useMemo(() => {
+  // Build tree structure for current section/folder
+  const treeData = useMemo(() => {
     if (!isIndexPage) return null;
 
-    const path = location.pathname.replace(/^\/docs\//, "");
-    const parts = path.split("/");
+    const path = location.pathname.replace(/^\//, "");
+    const parts = path.split("/").filter(Boolean);
     const section = parts[0];
+    
+    // Get all pages in this section
+    const pages = docsRegistry.getPagesBySection(section);
+    if (pages.length === 0) return null;
 
-    const tree = docsRegistry.getSectionTree(section);
-    return tree.length > 0 ? tree : null;
+    // Build tree structure
+    const root: TreeNode = { name: "root", children: new Map() };
+    
+    pages.forEach((page) => {
+      const pageParts = page.path.replace(`${section}/`, "").split("/");
+      let currentNode = root;
+      
+      pageParts.forEach((part, index) => {
+        if (!currentNode.children.has(part)) {
+          currentNode.children.set(part, {
+            name: part,
+            children: new Map(),
+          });
+        }
+        currentNode = currentNode.children.get(part)!;
+        
+        // If this is the last part and it's "index", assign to parent
+        if (index === pageParts.length - 1 && part === "index") {
+          const parent = pageParts.length === 1 ? root : 
+            pageParts.slice(0, -1).reduce((node, p) => node.children.get(p)!, root);
+          parent.page = page;
+        } else if (index === pageParts.length - 1) {
+          currentNode.page = page;
+        }
+      });
+    });
+    
+    return root.children.size > 0 ? root : null;
   }, [isIndexPage, location.pathname]);
 
   // Get navigation links
@@ -127,6 +164,60 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Render tree node recursively
+  const renderTreeNode = (node: TreeNode): React.ReactNode[] => {
+    const items: React.ReactNode[] = [];
+
+    node.children.forEach((childNode, name) => {
+      const hasChildren = childNode.children.size > 0;
+      const hasPage = !!childNode.page;
+
+      if (hasChildren) {
+        // Folder with possible index page
+        const folderLabel = childNode.page?.title || name
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+
+        const isCurrentPage = !!(childNode.page && currentPath && childNode.page.path === currentPath);
+        const folderIcon = childNode.page?.icon;
+
+        items.push(
+          <TreeItem
+            key={childNode.page?.path || name}
+            label={folderLabel}
+            icon={folderIcon ? <span className="text-sm">{folderIcon}</span> : undefined}
+            defaultOpen={true}
+            isHighlighted={isCurrentPage}
+            onClick={childNode.page ? () => {
+              navigate(`/${childNode.page!.path}`);
+            } : undefined}
+          >
+            {renderTreeNode(childNode)}
+          </TreeItem>,
+        );
+      } else if (hasPage && childNode.page) {
+        // Leaf page
+        const isCurrentPage = !!(currentPath && childNode.page.path === currentPath);
+        const pageIcon = childNode.page.icon;
+
+        items.push(
+          <TreeItem
+            key={childNode.page.path}
+            label={childNode.page.title}
+            icon={pageIcon ? <span className="text-sm">{pageIcon}</span> : undefined}
+            isHighlighted={isCurrentPage}
+            onClick={() => {
+              navigate(`/${childNode.page!.path}`);
+            }}
+          />,
+        );
+      }
+    });
+
+    return items;
+  };
+
   return (
     <div ref={containerRef} className="h-full">
       <Page
@@ -142,13 +233,15 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         </MDXProvider>
 
         {/* Auto-inject section tree on index pages */}
-        {sectionTree && (
-          <Tree.Section
-            nodes={sectionTree}
-            currentPath={currentPath}
-            onNavigate={(path) => navigate(`/${path}`)}
-            as="div"
-          />
+        {treeData && (
+          <TreeStateProvider>
+            <div className="not-prose my-8 p-6 rounded-lg border border-border bg-card">
+              <h3 className="text-lg font-semibold mb-4">In this section</h3>
+              <div className="flex flex-col gap-0.5">
+                {renderTreeNode(treeData)}
+              </div>
+            </div>
+          </TreeStateProvider>
         )}
       </Page>
     </div>

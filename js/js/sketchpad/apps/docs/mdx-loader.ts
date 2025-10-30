@@ -20,6 +20,7 @@ export interface MDXFileInfo {
   section: string;
   title: string;
   description?: string;
+  icon?: string;
   order?: number;
   module?: MDXModule;
 }
@@ -88,6 +89,7 @@ export function getAllMDXFiles(): MDXFileInfo[] {
         section: pathToSection(filePath),
         title: pathToTitle(filePath, frontmatter),
         description: frontmatter?.description,
+        icon: frontmatter?.icon,
         order: frontmatter?.order ?? 999,
         module,
       };

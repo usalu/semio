@@ -138,7 +138,10 @@ const Panel: FC<PanelProps> = ({
               {additionalContent}
               {sortedSections.map((section) => {
                 const Content = typeof section.content === "function" ? section.content : null;
-                const sectionLabel = t(section.id, section.translationParams ?? {});
+                const params = section.translationParams ?? {};
+                const translatedLabel = t(`${section.id}.label`, { ...params, defaultValue: "" });
+                let sectionLabel = translatedLabel || t(section.id, { ...params, defaultValue: section.id });
+                if (sectionLabel === "[object Object]") sectionLabel = section.id;
                 return (
                   <TreeSection
                     key={section.id}

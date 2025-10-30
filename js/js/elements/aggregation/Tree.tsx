@@ -149,7 +149,7 @@ interface TreeItemProps {
 }
 
 interface SortableTreeItemsProps {
-  items: { id: string; [key: string]: any }[];
+  items: { id: string;[key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => ReactNode;
 }
@@ -308,7 +308,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
   };
 
   const baseClasses = `relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
-  const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
+  const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
   if (hasChildren && displayLabel) {
@@ -500,7 +500,7 @@ export const TreeItem: FC<TreeItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const baseClasses = `relative flex items-center gap-1 py-0.5 hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
-  const stateClasses = `${isSelected ? "bg-accent" : ""} ${isHighlighted ? "bg-accent/50" : ""}`;
+  const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
   if (hasChildren && resolvedLabel) {
@@ -604,6 +604,7 @@ export const TreeItems: FC<{ children: ReactNode[]; renderItem: (child: ReactNod
 export interface FileTreeNode {
   title: string;
   path: string;
+  icon?: string;
   isFolder: boolean;
   children?: FileTreeNode[];
 }
@@ -651,7 +652,11 @@ const FileTreeItem: FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as
 
   const content = (
     <>
-      <Icon className="w-4 h-4 shrink-0" />
+      {node.icon ? (
+        <span className="text-sm shrink-0">{node.icon}</span>
+      ) : (
+        <Icon className="w-4 h-4 shrink-0" />
+      )}
       <span className="text-sm">{node.title}</span>
     </>
   );

@@ -19,13 +19,13 @@ export interface CardProps {
 export const Card: FC<CardProps> = ({ title, icon, children, className = "" }) => {
   const IconComponent = typeof icon === "string" ? null : icon;
   return (
-    <div className={`border border-border rounded p-4 bg-panel hover:bg-panel-hover transition-colors ${className}`}>
+    <div className={`border p-4 ${className}`}>
       <div className="flex items-start gap-3 mb-2">
         {IconComponent && <IconComponent className="w-5 h-5 flex-shrink-0 mt-0.5" />}
         {typeof icon === "string" && <span className="text-xl flex-shrink-0">{icon}</span>}
         <h3 className="font-semibold text-base">{title}</h3>
       </div>
-      <div className="text-sm text-muted-foreground">{children}</div>
+      <div className="text-sm">{children}</div>
     </div>
   );
 };

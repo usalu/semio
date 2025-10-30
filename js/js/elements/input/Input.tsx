@@ -34,18 +34,19 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
-  id?: string;
+  id: string;
   placeholderId?: string;
+  showLabel?: boolean;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, id, placeholderId, placeholder, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, id, placeholderId, placeholder, showLabel, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
   const mode = useTooltipMode();
   const { t } = useTranslation();
-  const computedPlaceholder = placeholderId ? t(placeholderId) : placeholder;
+  const computedPlaceholder = placeholderId ? t(`${placeholderId}.label`) : placeholder;
 
   React.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -123,7 +124,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     />
   );
 
-  if (!id) {
+  if (!showLabel) {
     return <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>{inputElement}</div>;
   }
 

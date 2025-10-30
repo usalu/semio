@@ -21,6 +21,8 @@
 
 import { FC, ReactNode } from "react";
 import { Handle, Position } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
+import { cn } from "../../semio";
 
 export interface DiagramNodeProps {
   /** Content to display inside the node */
@@ -79,6 +81,7 @@ export const DiagramNode: FC<DiagramNodeProps> = ({ content, selected = false, h
 /**
  * Placeholder node for showing drop targets
  */
-export const PlaceholderDiagramNode: FC<{ label?: string; onClick?: () => void }> = ({ label = "+ Drop here", onClick }) => (
-  <DiagramNode content={label} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />
-);
+export const PlaceholderDiagramNode: FC<{ id?: string; onClick?: () => void }> = ({ id = "diagram.placeholder", onClick }) => {
+  const { t } = useTranslation();
+  return <DiagramNode content={t(`${id}.label`)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
+};

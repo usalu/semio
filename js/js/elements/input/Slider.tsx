@@ -20,6 +20,7 @@
 // #endregion
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useActiveInteraction, useSketchpadCommands } from "../../sketchpad/store";
 import { Input } from "./Input";
 
@@ -32,7 +33,7 @@ function Slider({
   value,
   min = 0,
   max = 100,
-  label,
+  showLabel,
   onValueChange,
   onPointerDown,
   onPointerUp,
@@ -44,7 +45,7 @@ function Slider({
   id,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
-  label?: string;
+  showLabel?: boolean;
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
@@ -52,7 +53,7 @@ function Slider({
   finalizeTransaction?: () => void;
   abortTransaction?: () => void;
   interactionId?: string;
-  id?: string;
+  id: string;
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
@@ -60,6 +61,7 @@ function Slider({
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
   const mode = useTooltipMode();
+  const { t } = useTranslation();
 
   const _values = React.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
@@ -190,10 +192,15 @@ function Slider({
 
   return (
     <div className={cn("group flex items-center gap-2 min-w-0 h-9 w-full", className)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-      {label && (
-        <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer" title={label}>
-          {label}
-        </span>
+      {showLabel && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{t(`${id}.label`)}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} mode={mode} />
+          </TooltipContent>
+        </Tooltip>
       )}
       <div className="flex items-center gap-2 flex-1 min-w-0 h-9">
         {wrappedSlider}

@@ -20,6 +20,7 @@
 // #endregion
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "../../semio";
 import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
@@ -56,17 +57,28 @@ const ButtonGroupContext = React.createContext<VariantProps<typeof buttonGroupIt
   level: "base",
 });
 
-function ButtonGroup({ className, variant, size, level = "base", label, children, ...props }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupItemVariants> & { label?: string }) {
+function ButtonGroup({ className, variant, size, level = "base", id, showLabel, children, ...props }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupItemVariants> & { id: string; showLabel?: boolean }) {
+  const { t } = useTranslation();
+  const mode = useTooltipMode();
+
   const buttonGroupElement = (
     <div data-slot="button-group" data-variant={variant} data-size={size} data-level={level} className={cn("group/button-group flex w-fit items-stretch border border-border divide-x divide-border overflow-hidden h-9", className)} {...props}>
       <ButtonGroupContext.Provider value={{ variant, size, level }}>{children}</ButtonGroupContext.Provider>
     </div>
   );
 
-  if (label) {
+  if (showLabel) {
+    const label = t(`${id}.label`);
     return (
       <div className="group flex items-center gap-2 min-w-0 w-full">
-        <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer">{label}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} mode={mode} />
+          </TooltipContent>
+        </Tooltip>
         {buttonGroupElement}
       </div>
     );

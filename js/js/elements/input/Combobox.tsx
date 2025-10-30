@@ -1,5 +1,6 @@
 import { Check, ChevronsUpDown } from "lucide-react";
 import { FC, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../semio";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../Command";
 import { Popover, PopoverContent, PopoverTrigger } from "../Popover";
@@ -21,13 +22,14 @@ interface ComboboxProps {
   finalizeTransaction?: () => void;
   className?: string;
   allowClear?: boolean;
-  label?: string;
-  id?: string;
+  showLabel?: boolean;
+  id: string;
 }
 
-const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, label, id }) => {
+const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, showLabel, id }) => {
   const [open, setOpen] = useState(false);
   const mode = useTooltipMode();
+  const { t } = useTranslation();
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -72,7 +74,16 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
 
   return (
     <div className={cn("group flex items-center gap-2 min-w-0 w-full", className)}>
-      {label && <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer">{label}</span>}
+      {showLabel && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{t(`${id}.label`)}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} mode={mode} />
+          </TooltipContent>
+        </Tooltip>
+      )}
       <Popover open={open} onOpenChange={handleOpenChange}>
         {wrappedTrigger}
         <PopoverContent className="w-full p-0" align="start">

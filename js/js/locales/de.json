@@ -409,6 +409,10 @@
           "manual": "manuals/semio/kit#designs",
           "tutorial": "hello-semio/model-design"
         },
+        "addVariant": {
+          "label": "Variante hinzufuegen",
+          "beginner": "Erstellt eine neue Variante im aktuellen Kontext"
+        },
         "sort": {
           "ascending": {
             "label": "Sort ascending",
@@ -559,18 +563,39 @@
             }
           },
           "designs": {
-            "label": "Designs",
-            "beginner": "Designs in this kit",
+            "label": "Entwuerfe",
+            "beginner": "Entwuerfe in diesem Kit",
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
-            "multipleTitle": "Designs"
+            "multipleTitle_one": "{{count}} Entwurf",
+            "multipleTitle_other": "{{count}} Entwuerfe"
           },
           "types": {
-            "label": "Types",
-            "beginner": "Types in this kit",
+            "label": "Typen",
+            "beginner": "Typen in diesem Kit",
             "manual": "manuals/semio/kit#types",
             "tutorial": "hello-semio/model-brick-set",
-            "multipleTitle": "Types"
+            "multipleTitle_one": "{{count}} Typ",
+            "multipleTitle_other": "{{count}} Typen"
+          },
+          "file": {
+            "title": "Datei"
+          },
+                "files": {
+            "multipleTitle_one": "{{count}} Datei",
+            "multipleTitle_other": "{{count}} Dateien"
+          },
+          "qualities": {
+            "multipleTitle_one": "{{count}} Qualitaet",
+            "multipleTitle_other": "{{count}} Qualitaeten"
+          },
+          "authors": {
+            "multipleTitle_one": "{{count}} Autor",
+            "multipleTitle_other": "{{count}} Autoren"
+          },
+          "artifacts": {
+            "multiple_one": "{{count}} Artefaktkategorie",
+            "multiple_other": "{{count}} Artefaktkategorien"
           },
           "kitApp": {
             "showDesigns": {
@@ -720,13 +745,13 @@
             "workbench": {
               "section": {
                 "types": {
-                  "label": "Types",
+                  "label": "Typen",
                   "beginner": "Browse and manage all type definitions in this kit.",
                   "manual": "kit#types",
                   "tutorial": "hello-semio/model-brick-set"
                 },
                 "designs": {
-                  "label": "Designs",
+                  "label": "Entwuerfe",
                   "beginner": "Browse and manage all design compositions in this kit.",
                   "manual": "kit#designs",
                   "tutorial": "hello-semio/model-design"
@@ -996,6 +1021,7 @@
                 },
                 "piece": {
                   "title": "Piece",
+                  "multipleTitle": "{{count}} Bauteile",
                   "id": {
                     "label": "ID",
                     "beginner": "Unique identifier for this piece instance in the design.",
@@ -1050,19 +1076,26 @@
                     "manual": "design#pieces",
                     "tutorial": "hello-semio/model-design#pieces"
                   }
+                },
+                "connection": {
+                  "title": "Verbindung",
+                  "multipleTitle": "{{count}} Verbindungen"
+                },
+                "selection": {
+                  "multipleTitle": "Mehrfachauswahl"
                 }
               }
             },
             "workbench": {
               "section": {
                 "types": {
-                  "label": "Types",
+                  "label": "Typen",
                   "beginner": "Browse and select from available types to add to your design.",
                   "manual": "design#types",
                   "tutorial": "hello-semio/model-design#adding-pieces"
                 },
                 "designs": {
-                  "label": "Designs",
+                  "label": "Entwuerfe",
                   "beginner": "Browse and select from available designs to nest in your current design.",
                   "manual": "design#nested-designs",
                   "tutorial": "hello-semio/model-design#nested-designs"
@@ -1219,6 +1252,7 @@
                 },
                 "ports": {
                   "title": "Ports",
+                  "multipleTitle": "{{count}} Ports",
                   "id": {
                     "label": "ID",
                     "beginner": "Unique identifier for this port. Used to reference the port in connections.",
@@ -1472,6 +1506,12 @@
         "label": "Expert mode",
         "beginner": "Hide guidance and tutorials for a distraction-free workflow."
       }
+    }
+  },
+  "diagram": {
+    "placeholder": {
+      "label": "+ Hier ablegen",
+      "beginner": "Teile hier ablegen, um sie dem Design hinzuzufuegen."
     }
   }
 }

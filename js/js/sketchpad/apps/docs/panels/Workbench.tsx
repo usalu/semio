@@ -9,7 +9,7 @@
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { TreeContent, TreeItem, TreeSection } from "../../../../elements/aggregation/Tree";
+import { TreeItem } from "../../../../elements/aggregation/Tree";
 import { DocsPage, docsRegistry } from "../registry";
 
 interface PageTreeNode {
@@ -58,12 +58,13 @@ function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, se
         .join(" ");
 
       const isCurrentPage = !!(childNode.page && currentPath && childNode.page.path === `docs/${currentPath}`);
+      const folderIcon = childNode.page?.icon;
 
       items.push(
         <TreeItem
           key={childNode.page?.path || name}
           label={folderLabel}
-          icon={<span className="text-sm">📁</span>}
+          icon={folderIcon ? <span className="text-sm">{folderIcon}</span> : undefined}
           defaultOpen={false}
           isHighlighted={isCurrentPage}
           onClick={childNode.page ? () => {
@@ -74,13 +75,16 @@ function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, se
           {renderTreeNode(childNode, navigate, selectPage, section, currentPath)}
         </TreeItem>,
       );
-    } else if (hasPage) {
+    } else if (hasPage && childNode.page) {
       // This is a leaf page (no children)
       const isCurrentPage = !!(currentPath && childNode.page.path === `docs/${currentPath}`);
+      const pageIcon = childNode.page.icon;
+
       items.push(
         <TreeItem
           key={childNode.page.path}
           label={childNode.page.title}
+          icon={pageIcon ? <span className="text-sm">{pageIcon}</span> : undefined}
           isHighlighted={isCurrentPage}
           onClick={() => {
             selectPage(section, childNode.page!.path);
@@ -99,9 +103,7 @@ interface WorkbenchProps {
 }
 
 const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-
   const sections = docsRegistry.getAllSections();
 
   return (
@@ -109,23 +111,24 @@ const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
       {sections.map((section) => {
         const pages = docsRegistry.getPagesBySection(section.id);
         const tree = buildTree(pages, section.id);
+        const sectionPath = `docs/${section.id}/index`;
+        const sectionPage = docsRegistry.getPage(sectionPath);
+        const isCurrentPage = !!(currentPath && sectionPath === `docs/${currentPath}`);
+        const sectionIcon = section.icon || "📁";
 
         return (
-          <TreeSection
+          <TreeItem
             key={section.id}
             label={section.label}
-            icon={section.icon ? <span aria-hidden="true">{section.icon}</span> : undefined}
+            icon={<span className="text-sm">{sectionIcon}</span>}
             defaultOpen={true}
+            isHighlighted={isCurrentPage}
+            onClick={sectionPage ? () => {
+              navigate(`/${sectionPath}`);
+            } : undefined}
           >
             {renderTreeNode(tree, navigate, () => {}, section.id, currentPath)}
-            {pages.length === 0 && (
-              <TreeItem>
-                <TreeContent>
-                  <p className="text-sm text-muted-foreground">{section.description || t("semio.sketchpad.app.docs.noPages")}</p>
-                </TreeContent>
-              </TreeItem>
-            )}
-          </TreeSection>
+          </TreeItem>
         );
       })}
     </>

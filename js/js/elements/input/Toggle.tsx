@@ -24,6 +24,7 @@ import * as TogglePrimitive from "@radix-ui/react-toggle";
 import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "../../semio";
 import { Popover, PopoverAnchor, PopoverContent } from "../Popover";
@@ -58,9 +59,9 @@ export interface ToggleItem<T extends string> {
 
 interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type"> {
   type?: "default";
-  id?: string;
+  id: string;
   i18nPressed?: string;
-  label?: string;
+  showLabel?: boolean;
   level?: "base" | "panel" | "temporary";
 }
 
@@ -69,8 +70,8 @@ interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<t
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
-  id?: string;
-  label?: string;
+  id: string;
+  showLabel?: boolean;
   level?: "base" | "panel" | "temporary";
 }
 
@@ -79,8 +80,8 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
-  id?: string;
-  label?: string;
+  id: string;
+  showLabel?: boolean;
   placeholder?: string;
   dropdownId?: string;
   level?: "base" | "panel" | "temporary";
@@ -90,8 +91,8 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   type: "withAction";
   actionIcon: React.ReactNode;
   onActionClick: () => void;
-  id?: string;
-  label?: string;
+  id: string;
+  showLabel?: boolean;
   actionId?: string;
   level?: "base" | "panel" | "temporary";
 }
@@ -100,10 +101,11 @@ type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleP
 
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   const mode = useTooltipMode();
+  const { t } = useTranslation();
 
   // Cycle type
   if ("type" in props && props.type === "cycle") {
-    const { className, value, onValueChange, items, id, label, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, id, showLabel, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -150,12 +152,18 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       toggleElement
     );
 
-    if (label) {
+    if (showLabel) {
+      const label = t(`${id}.label`);
       return (
         <div className="group flex items-center gap-2 min-w-0 w-full">
-          <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel" title={label}>
-            {label}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <IdTooltipContent id={id} mode={mode} />
+            </TooltipContent>
+          </Tooltip>
           {wrappedToggle}
         </div>
       );
@@ -166,7 +174,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // WithAction type
   if ("type" in props && props.type === "withAction") {
-    const { className, actionIcon, onActionClick, id, label, actionId, level = "base", type, pressed, ...restProps } = props;
+    const { className, actionIcon, onActionClick, id, showLabel, actionId, level = "base", type, pressed, ...restProps } = props;
 
     const mainContent = id ? (
       <Tooltip>
@@ -201,12 +209,18 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     const wrappedToggle = toggleElement;
 
-    if (label) {
+    if (showLabel) {
+      const label = t(`${id}.label`);
       return (
         <div className="group flex items-center gap-2 min-w-0 w-full">
-          <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel" title={label}>
-            {label}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <IdTooltipContent id={id} mode={mode} />
+            </TooltipContent>
+          </Tooltip>
           {wrappedToggle}
         </div>
       );
@@ -217,7 +231,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   // Dropdown type
   if ("type" in props && props.type === "dropdown") {
-    const { className, value, onValueChange, items, id, label, dropdownId, level = "base", pressed, onPressedChange, type, ...restProps } = props;
+    const { className, value, onValueChange, items, id, showLabel, dropdownId, level = "base", pressed, onPressedChange, type, ...restProps } = props;
 
     if (!items || items.length === 0) return null;
 
@@ -329,12 +343,18 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       </Popover>
     );
 
-    if (label) {
+    if (showLabel) {
+      const label = t(`${id}.label`);
       return (
         <div className="group flex items-center gap-2 min-w-0 w-full">
-          <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel" title={label}>
-            {label}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <IdTooltipContent id={id} mode={mode} />
+            </TooltipContent>
+          </Tooltip>
           {dropdownElement}
         </div>
       );
@@ -344,7 +364,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   // Standard toggle
-  const { className, id, i18nPressed, label, level = "base", type, pressed, ...restProps } = props as ToggleStandardProps;
+  const { className, id, i18nPressed, showLabel, level = "base", type, pressed, ...restProps } = props as ToggleStandardProps;
 
   const activeTooltip = pressed && i18nPressed ? i18nPressed : id;
 
@@ -361,12 +381,18 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     toggleElement
   );
 
-  if (label) {
+  if (showLabel) {
+    const label = t(`${id}.label`);
     return (
       <div className="group flex items-center gap-2 min-w-0 w-full">
-        <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel" title={label}>
-          {label}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} mode={mode} />
+          </TooltipContent>
+        </Tooltip>
         {wrappedToggle}
       </div>
     );

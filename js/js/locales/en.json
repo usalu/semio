@@ -386,8 +386,14 @@
         }
       },
       "common": {
-        "add": "Add",
-        "remove": "Remove",
+        "add": {
+          "label": "Add",
+          "beginner": "Click to add a new item"
+        },
+        "remove": {
+          "label": "Remove",
+          "beginner": "Click to remove this item"
+        },
         "search": "Search",
         "x": "X",
         "y": "Y",
@@ -408,6 +414,10 @@
           "beginner": "Click to add a new design to the current context",
           "manual": "manuals/semio/kit#designs",
           "tutorial": "hello-semio/model-design"
+        },
+        "addVariant": {
+          "label": "Add Variant",
+          "beginner": "Click to create a new variant in the current context"
         },
         "sort": {
           "ascending": {
@@ -499,6 +509,7 @@
         },
         "kit": {
           "title": "Kit",
+          "label": "Kit",
           "description": "View and edit kit metadata",
           "noKitLoaded": "No kit loaded",
           "notAvailable": "Kit not available",
@@ -563,14 +574,52 @@
             "beginner": "Designs in this kit",
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
-            "multipleTitle": "Designs"
+            "multipleTitle": {
+              "label_one": "{{count}} Design",
+              "label_other": "{{count}} Designs"
+            },
+            "multipleTitle_one": "{{count}} Design",
+            "multipleTitle_other": "{{count}} Designs"
           },
           "types": {
             "label": "Types",
             "beginner": "Types in this kit",
             "manual": "manuals/semio/kit#types",
             "tutorial": "hello-semio/model-brick-set",
-            "multipleTitle": "Types"
+            "multipleTitle": {
+              "label_one": "{{count}} Type",
+              "label_other": "{{count}} Types"
+            },
+            "multipleTitle_one": "{{count}} Type",
+            "multipleTitle_other": "{{count}} Types"
+          },
+          "file": {
+            "title": "File",
+            "label": "File"
+          },
+          "files": {
+            "multipleTitle": {
+              "label_one": "{{count}} File",
+              "label_other": "{{count}} Files"
+            },
+            "multipleTitle_one": "{{count}} File",
+            "multipleTitle_other": "{{count}} Files"
+          },
+          "qualities": {
+            "multipleTitle_one": "{{count}} Quality",
+            "multipleTitle_other": "{{count}} Qualities"
+          },
+          "authors": {
+            "multipleTitle_one": "{{count}} Author",
+            "multipleTitle_other": "{{count}} Authors"
+          },
+          "artifacts": {
+            "multiple": {
+              "label_one": "{{count}} Artifact Kind",
+              "label_other": "{{count}} Artifact Kinds"
+            },
+            "multiple_one": "{{count}} Artifact Kind",
+            "multiple_other": "{{count}} Artifact Kinds"
           },
           "kitApp": {
             "showDesigns": {
@@ -752,6 +801,7 @@
         },
         "design": {
           "title": "Design",
+          "label": "Design",
           "description": "Edit design compositions",
           "tools": "Tools",
           "defaultName": "New Design",
@@ -996,6 +1046,7 @@
                 },
                 "piece": {
                   "title": "Piece",
+                  "multipleTitle": "{{count}} Pieces",
                   "id": {
                     "label": "ID",
                     "beginner": "Unique identifier for this piece instance in the design.",
@@ -1050,6 +1101,13 @@
                     "manual": "design#pieces",
                     "tutorial": "hello-semio/model-design#pieces"
                   }
+                },
+                "connection": {
+                  "title": "Connection",
+                  "multipleTitle": "{{count}} Connections"
+                },
+                "selection": {
+                  "multipleTitle": "Multiple Selection"
                 }
               }
             },
@@ -1078,6 +1136,7 @@
         },
         "type": {
           "title": "Type",
+          "label": "Type",
           "description": "Edit type definitions",
           "tools": "Tools",
           "noRepresentations": "No representations available",
@@ -1118,7 +1177,8 @@
             "tutorial": "hello-semio/model-brick-set#ports"
           },
           "port": {
-            "title": "Port"
+            "title": "Port",
+            "label": "Port"
           },
           "portFamilyPlaceholder": {
             "label": "e.g., electrical, mechanical"
@@ -1219,6 +1279,7 @@
                 },
                 "ports": {
                   "title": "Ports",
+                  "multipleTitle": "{{count}} Ports",
                   "id": {
                     "label": "ID",
                     "beginner": "Unique identifier for this port. Used to reference the port in connections.",
@@ -1472,6 +1533,12 @@
         "label": "Expert mode",
         "beginner": "Hide guidance and tutorials for a distraction-free workflow."
       }
+    }
+  },
+  "diagram": {
+    "placeholder": {
+      "label": "+ Drop here",
+      "beginner": "Drop pieces here to add them to the design."
     }
   }
 }

@@ -21,12 +21,14 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "../../semio";
 import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
 
 function Select({
-  label,
+  id,
+  showLabel,
   children,
   value,
   defaultValue,
@@ -34,7 +36,7 @@ function Select({
   startTransaction,
   finalizeTransaction,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root> & { label?: string; startTransaction?: () => void; finalizeTransaction?: () => void }) {
+}: React.ComponentProps<typeof SelectPrimitive.Root> & { id: string; showLabel?: boolean; startTransaction?: () => void; finalizeTransaction?: () => void }) {
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -66,6 +68,9 @@ function Select({
     onOpenChange?.(open);
   };
 
+  const { t } = useTranslation();
+  const mode = useTooltipMode();
+
   const selectElement = (
     <SelectPrimitive.Root
       data-slot="select"
@@ -77,12 +82,18 @@ function Select({
     </SelectPrimitive.Root>
   );
 
-  if (label) {
+  if (showLabel) {
+    const label = t(`${id}.label`);
     return (
       <div className="group flex items-center gap-2 min-w-0 w-full">
-        <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer" title={label}>
-          {label}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} mode={mode} />
+          </TooltipContent>
+        </Tooltip>
         {selectElement}
       </div>
     );

@@ -55,27 +55,27 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={t("semio.sketchpad.app.kit.versionPlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={t("semio.sketchpad.app.kit.versionPlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={t("semio.sketchpad.app.kit.descriptionPlaceholder")} readOnly />
+          <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={t("semio.sketchpad.app.kit.descriptionPlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={t("semio.sketchpad.app.kit.iconPlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={t("semio.sketchpad.app.kit.iconPlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={t("semio.sketchpad.app.kit.imagePlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={t("semio.sketchpad.app.kit.imagePlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
     </>
@@ -105,12 +105,12 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? t("semio.sketchpad.common.mixedValues") : undefined} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? t("semio.sketchpad.common.mixedValues") : undefined} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kits.version" value={commonVersion || ""} placeholder={commonVersion === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.versionPlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kits.version" value={commonVersion || ""} placeholder={commonVersion === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.versionPlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -120,17 +120,18 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             value={commonDescription || ""}
             placeholder={commonDescription === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.descriptionPlaceholder")}
             readOnly
+            showLabel
           />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kits.icon" value={commonIcon || ""} placeholder={commonIcon === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.iconPlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kits.icon" value={commonIcon || ""} placeholder={commonIcon === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.iconPlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kits.image" value={commonImage || ""} placeholder={commonImage === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.imagePlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.home.panel.details.kits.image" value={commonImage || ""} placeholder={commonImage === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.imagePlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
     </>

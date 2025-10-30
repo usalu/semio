@@ -21,6 +21,7 @@
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import { type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "../../semio";
 import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
@@ -32,24 +33,36 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariant
 });
 
 interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children"> {
-  label?: string;
+  id: string;
+  showLabel?: boolean;
   children: React.ReactNode;
   level?: "base" | "panel" | "temporary";
 }
 
-function ToggleGroup({ className, label, level = "base", children, ...restProps }: ToggleGroupProps) {
+function ToggleGroup({ className, id, showLabel, level = "base", children, ...restProps }: ToggleGroupProps) {
   console.log("[ToggleGroup] Rendering with level:", level, "children:", children, "restProps:", restProps);
   const variant = "default";
+  const { t } = useTranslation();
+  const mode = useTooltipMode();
+
   const toggleGroupElement = (
     <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} className={cn("group/toggle-group flex w-fit items-stretch border border-border divide-x divide-border overflow-hidden h-9", className)} {...restProps}>
       <ToggleGroupContext.Provider value={{ variant, level }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
 
-  if (label) {
+  if (showLabel) {
+    const label = t(`${id}.label`);
     return (
       <div className="group flex items-center gap-2 min-w-0 w-full">
-        <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate transition-colors group-hover:bg-hover-panel cursor-pointer">{label}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-9 items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} mode={mode} />
+          </TooltipContent>
+        </Tooltip>
         {toggleGroupElement}
       </div>
     );
