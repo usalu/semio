@@ -25,11 +25,11 @@ import { FC, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import SceneComponent, { Model } from "../../../../elements/windows/Scene";
-import { guid, Kit, Point, Port, Type, Vector } from "../../../../semio";
+import { guid, Kit, Point, Port, Representation, selectBestRepresentation, Type, Vector } from "../../../../semio";
 import { useFocusSafe } from "../../../Navbar";
 import { KitStore, useKit, useKitCommands, useKitStore, useType } from "../../../kits/store";
 import { ToolType } from "../../../store";
-import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppFocusedPortGuid, useTypeAppHover, useTypeAppSelectedRepresentationGuid, useTypeAppSelection } from "../store";
+import { useTypeApp, useTypeAppActiveTool, useTypeAppCamera, useTypeAppCommands, useTypeAppFocusedPortGuid, useTypeAppHover, useTypeAppSelectedRepresentationGuid, useTypeAppSelectedRepresentationTags, useTypeAppSelection } from "../store";
 import { TypeAppTools } from "../tools_registry";
 
 /**
@@ -209,15 +209,15 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
-  const type = useType(undefined, undefined, true) as Type | undefined; // Use deep observation for representations
-  const kit = useKit(undefined, undefined, true) as Kit | undefined; // Use deep observation for files
+  const type = useType(undefined, undefined, true) as Type | undefined;
+  const kit = useKit(undefined, undefined, true) as Kit | undefined;
   const kitStore = useKitStore() as KitStore;
   const selectedRepresentationGuid = useTypeAppSelectedRepresentationGuid();
+  const selectedRepresentationTags = useTypeAppSelectedRepresentationTags();
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // State to hold blob URL that needs cleanup
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
@@ -225,30 +225,35 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    // Find the selected representation or use the first one
-    const representation = selectedRepresentationGuid ? type.representations.find((r) => r.guid === selectedRepresentationGuid) : type.representations[0];
+    let representation: Representation | undefined;
+
+    if (selectedRepresentationGuid) {
+      representation = type.representations.find((r) => r.guid === selectedRepresentationGuid);
+    } else if (selectedRepresentationTags.length > 0) {
+      representation = selectBestRepresentation(type.representations, selectedRepresentationTags);
+    } else {
+      const defaultRep = type.representations.find((r) => !r.tags || r.tags.length === 0);
+      representation = defaultRep ?? type.representations[0];
+    }
 
     if (!representation) {
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    // Get the file and resolve its URL
     const file = kit?.files?.find((f) => f.guid === representation.file);
     if (!file) {
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    // Extract file extension
     const ext = file.path.split(".").pop() || "";
 
-    // Use kitStore to get the file URL through the file provider
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
       return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
 
     return { representationUrl: url, fileExtension: ext, fileGuid: file.guid };
-  }, [type, kit, kitStore, selectedRepresentationGuid]);
+  }, [type, kit, kitStore, selectedRepresentationGuid, selectedRepresentationTags]);
 
   // Convert file provider URLs to blob URLs that Three.js can load
   useEffect(() => {

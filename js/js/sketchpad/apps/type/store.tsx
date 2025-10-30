@@ -90,8 +90,9 @@ export interface TypeAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   activeTool?: ToolType;
   camera?: Camera;
-  focusedPortGuid?: Guid | null; // null to clear focus
-  selectedRepresentationGuid?: Guid | null; // null to clear selection
+  focusedPortGuid?: Guid | null;
+  selectedRepresentationGuid?: Guid | null;
+  selectedRepresentationTags?: string[];
 }
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
 export interface TypeAppState {
@@ -103,8 +104,9 @@ export interface TypeAppState {
   presence?: TypeAppPresence;
   others: TypeAppPresenceOther[];
   camera?: Camera;
-  focusedPortGuid?: Guid; // Currently focused port for camera zoom
-  selectedRepresentationGuid?: Guid; // Currently selected representation for display
+  focusedPortGuid?: Guid;
+  selectedRepresentationGuid?: Guid;
+  selectedRepresentationTags?: string[];
 }
 
 export interface TypeAppCommandContext extends KitCommandContext {
@@ -266,6 +268,11 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     return this.yMap.get("selectedRepresentationGuid") as Guid | undefined;
   }
 
+  get selectedRepresentationTags(): string[] {
+    const yTags = this.yMap.get("selectedRepresentationTags") as Y.Array<string> | undefined;
+    return yTags ? yTags.toArray() : [];
+  }
+
   protected hash(state: TypeAppState): string {
     return JSON.stringify(state);
   }
@@ -288,6 +295,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       camera: this.camera,
       focusedPortGuid: this.focusedPortGuid,
       selectedRepresentationGuid: this.selectedRepresentationGuid,
+      selectedRepresentationTags: this.selectedRepresentationTags,
     } as any;
   }
 
@@ -422,6 +430,17 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
           this.yMap.delete("selectedRepresentationGuid");
         } else {
           this.yMap.set("selectedRepresentationGuid", diff.selectedRepresentationGuid);
+        }
+      }
+      if (diff.selectedRepresentationTags !== undefined) {
+        let yTags = this.yMap.get("selectedRepresentationTags") as Y.Array<string>;
+        if (!yTags) {
+          yTags = new Y.Array<string>();
+          this.yMap.set("selectedRepresentationTags", yTags);
+        }
+        yTags.delete(0, yTags.length);
+        if (diff.selectedRepresentationTags.length > 0) {
+          yTags.push(diff.selectedRepresentationTags);
         }
       }
     });
@@ -575,6 +594,10 @@ export function useTypeAppCommands(id?: TypeAppId) {
       hoverPort: noOp,
       hoverRepresentation: noOp,
       clearHover: noOp,
+      addRepresentationTag: noOp,
+      removeRepresentationTag: noOp,
+      clearRepresentationTags: noOp,
+      setRepresentationTags: noOp,
       execute: noOp,
     };
   }
@@ -701,6 +724,10 @@ export function useTypeAppCommands(id?: TypeAppId) {
         selectedRepresentationGuid: representationGuid,
       });
     },
+    addRepresentationTag: (origin: string, tag: string) => store.execute("semio.typeApp.addRepresentationTag", origin, tag),
+    removeRepresentationTag: (origin: string, tag: string) => store.execute("semio.typeApp.removeRepresentationTag", origin, tag),
+    clearRepresentationTags: (origin: string) => store.execute("semio.typeApp.clearRepresentationTags", origin),
+    setRepresentationTags: (origin: string, tags: string[]) => store.execute("semio.typeApp.setRepresentationTags", origin, tags),
     execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
@@ -723,6 +750,10 @@ export function useTypeAppIsPortHovered(id: TypeAppId | undefined, portId: strin
 
 export function useTypeAppSelectedRepresentationGuid(): Guid | undefined {
   return useTypeApp((s) => s.selectedRepresentationGuid) as Guid | undefined;
+}
+
+export function useTypeAppSelectedRepresentationTags(): string[] {
+  return useTypeApp((s) => s.selectedRepresentationTags ?? []) as string[];
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);

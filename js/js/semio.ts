@@ -1204,11 +1204,44 @@ export const areSameRepresentation = (representation: Representation, other: Rep
   return representation.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
 };
 
-const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
+export const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
   const indices = representations.map((r) => jaccard(r.tags, tags));
   const maxIndex = Math.max(...indices);
   const maxIndexIndex = indices.indexOf(maxIndex);
   return representations[maxIndexIndex];
+};
+
+export const getAllTagsFromRepresentations = (representations: Representation[]): string[] => {
+  const tagsSet = new Set<string>();
+  representations.forEach((r) => {
+    r.tags?.forEach((tag) => tagsSet.add(tag));
+  });
+  return Array.from(tagsSet).sort();
+};
+
+export const filterRepresentationsByTags = (representations: Representation[], selectedTags: string[]): Representation[] => {
+  if (selectedTags.length === 0) return representations;
+  return representations.filter((r) => {
+    if (!r.tags || r.tags.length === 0) return false;
+    return selectedTags.every((tag) => r.tags?.includes(tag));
+  });
+};
+
+export const getAvailableTagsForRepresentations = (representations: Representation[], selectedTags: string[]): string[] => {
+  const filteredReps = filterRepresentationsByTags(representations, selectedTags);
+  const availableTags = getAllTagsFromRepresentations(filteredReps);
+  return availableTags.filter((tag) => !selectedTags.includes(tag));
+};
+
+export const selectBestRepresentation = (representations: Representation[], selectedTags: string[]): Representation | undefined => {
+  if (representations.length === 0) return undefined;
+  if (selectedTags.length === 0) {
+    const defaultRep = representations.find((r) => !r.tags || r.tags.length === 0);
+    return defaultRep ?? representations[0];
+  }
+  const filteredReps = filterRepresentationsByTags(representations, selectedTags);
+  if (filteredReps.length === 0) return undefined;
+  return findRepresentation(filteredReps, selectedTags);
 };
 
 // #endregion Representation

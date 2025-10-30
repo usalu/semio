@@ -127,7 +127,7 @@ const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
               navigate(`/${sectionPath}`);
             } : undefined}
           >
-            {renderTreeNode(tree, navigate, () => {}, section.id, currentPath)}
+            {renderTreeNode(tree, navigate, () => { }, section.id, currentPath)}
           </TreeItem>
         );
       })}

@@ -26,11 +26,11 @@ import React, { FC, Suspense, useCallback, useEffect, useMemo, useState } from "
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import Scene, { Model, TransformableModel } from "../../../../elements/windows/Scene";
-import { Camera, Design, DiffStatus, Kit, Piece, Plane, planeToMatrix, toThreeRotation, Type } from "../../../../semio";
+import { Camera, Design, DiffStatus, Kit, Piece, Plane, planeToMatrix, Representation, selectBestRepresentation, toThreeRotation, Type } from "../../../../semio";
 import { KitStore, PieceScopeProvider, useDesign, useKit, useKitStore, usePiece, useType } from "../../../kits/store";
 import { useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePieceStatus } from "../../../kits/designAppIntegration";
 import { useAppPanelVisibility } from "../../../store";
-import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFocusedPieceGuid, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelection } from "../store";
+import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFocusedPieceGuid, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelectedRepresentationTags, useDesignAppSelection } from "../store";
 import { SharedTransformControls } from "./SharedTransformControls";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -123,13 +123,21 @@ const PieceMesh: FC = () => {
   const type = useType(undefined, piece.type) as Type | undefined;
   const kit = useKit(undefined, undefined, true) as Kit | undefined;
   const kitStore = useKitStore() as KitStore;
+  const selectedRepresentationTags = useDesignAppSelectedRepresentationTags();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
     if (!type?.representations || type.representations.length === 0) {
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
-    const representation = type.representations[0];
+    const tagsForType = selectedRepresentationTags[type.guid] ?? [];
+    let representation: Representation | undefined;
+    if (tagsForType.length > 0) {
+      representation = selectBestRepresentation(type.representations, tagsForType);
+    } else {
+      const defaultRep = type.representations.find((r) => !r.tags || r.tags.length === 0);
+      representation = defaultRep ?? type.representations[0];
+    }
     if (!representation) {
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
@@ -143,7 +151,7 @@ const PieceMesh: FC = () => {
       return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
     return { representationUrl: url, fileExtension: ext, fileGuid: file.guid };
-  }, [type, kit, kitStore]);
+  }, [type, kit, kitStore, selectedRepresentationTags]);
 
   useEffect(() => {
     if (!fileGuid) {

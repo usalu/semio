@@ -1125,10 +1125,10 @@
                   "manual": "design#nested-designs",
                   "tutorial": "hello-semio/model-design#nested-designs"
                 }
+              }
+            }
           }
-        }
-      }
-    },
+        },
         "docs": {
           "docs": "Docs",
           "page": "Page",
@@ -1141,6 +1141,8 @@
           "tools": "Tools",
           "noRepresentations": "No representations available",
           "selectRepresentation": "Select representation",
+          "noTags": "No tags available",
+          "clearTags": "Clear all",
           "defaultName": "New Type",
           "newVariant": "New Variant",
           "defaultVariant": "Default",

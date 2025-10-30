@@ -110,7 +110,13 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kits.version" value={commonVersion || ""} placeholder={commonVersion === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.versionPlaceholder")} readOnly showLabel />
+          <Input
+            id="semio.sketchpad.app.home.panel.details.kits.version"
+            value={commonVersion || ""}
+            placeholder={commonVersion === undefined ? t("semio.sketchpad.common.mixedValues") : t("semio.sketchpad.app.kit.versionPlaceholder")}
+            readOnly
+            showLabel
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>

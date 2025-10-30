@@ -19,10 +19,9 @@
 
 // #endregion
 
-import { FC, ReactNode } from "react";
 import { Handle, Position } from "@xyflow/react";
+import { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { cn } from "../../semio";
 
 export interface DiagramNodeProps {
   /** Content to display inside the node */

@@ -26,6 +26,7 @@ import * as Y from "yjs";
 import { areSameKit, Author, AuthorDiff, Connection, Design, DesignDiff, FileDiff, guid, Guid, inverseKitDiff, Kit, KitDiff, KitShallow, Piece, File as SemioFile, Type, TypeDiff } from "../semio";
 import { commands as sketchpadCommands } from "./commands";
 import { KitStore } from "./kits/store";
+import { TutorialStore } from "./tutorials/store";
 
 // Forward type declarations to avoid circular dependencies with app stores
 export interface DesignAppId {
@@ -999,6 +1000,7 @@ export class SketchpadStore {
   private readonly qualityAppDeletedSubscribers: Set<Subscribe>;
   private readonly designAppCreatedSubscribers: Set<Subscribe>;
   private readonly designAppDeletedSubscribers: Set<Subscribe>;
+  private readonly tutorialStoreInstance: any;
   // private readonly broadcastChannel: BroadcastChannel;
 
   constructor(id?: string, remote?: RemoteProviders) {
@@ -1042,6 +1044,9 @@ export class SketchpadStore {
     this.yTypeApps = this.yDoc.getMap("typeApps");
     this.yQualityApps = this.yDoc.getMap("qualityApps");
     this.yDesignApps = this.yDoc.getMap("designApps");
+
+    const yTutorials = this.yDoc.getMap("tutorials");
+    this.tutorialStoreInstance = new TutorialStore(yTutorials, (fn) => this.yDoc.transact(fn));
 
     // Load persisted kits from IndexedDB
     this.loadPersistedKits();
@@ -1408,6 +1413,15 @@ export class SketchpadStore {
       rest = args;
     }
 
+    this.tutorialStoreInstance.checkCommandCompletion(command, origin, rest);
+    const tutorialState = this.tutorialStoreInstance.snapshot();
+    if (tutorialState.recordingState === "recording") {
+      this.tutorialStoreInstance.recordEvent({
+        type: "command",
+        data: { command, origin, args: rest },
+      });
+    }
+
     if (command === "semio.sketchpad.createKit") {
       console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const kit = rest[0] as Kit;
@@ -1508,6 +1522,10 @@ export class SketchpadStore {
       this.homeStore = homeFactory(this, this.yHome, this.yDoc.transact.bind(this.yDoc));
     }
     return this.homeStore;
+  }
+
+  tutorialStore(): TutorialStore {
+    return this.tutorialStoreInstance;
   }
 
   kitApp(guid: string): KitAppStoreInstance {

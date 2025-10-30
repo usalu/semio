@@ -32,6 +32,7 @@ import TypeScene from "./canvas/Scene";
 import { AttributesSection, AuthorsSection, PortSection, PortsListSection, PortsMultipleSection, RepresentationsSection, TypeDetails } from "./panels/Details";
 import { RepresentationDropdown } from "./RepresentationDropdown";
 import { useTypeApp, useTypeAppCommands, useTypeAppSelection } from "./store";
+import { TagFilter } from "./TagFilter";
 import { ToolsToggleGroup } from "./Tools";
 
 const App: FC = () => {
@@ -83,13 +84,20 @@ const App: FC = () => {
     });
 
     addFooterItem({
+      id: "type-tag-filter",
+      content: <TagFilter />,
+      order: 0,
+    });
+
+    addFooterItem({
       id: "type-representation-selector",
       content: <RepresentationDropdown />,
-      order: 0,
+      order: 1,
     });
 
     return () => {
     removeSection("toolbar", "semio.sketchpad.app.type.tools");
+      removeFooterItem("type-tag-filter");
       removeFooterItem("type-representation-selector");
     };
   }, [addSection, removeSection, addFooterItem, removeFooterItem, appType]);

@@ -167,4 +167,35 @@ export const commands = {
       },
     };
   },
+  "semio.typeApp.addRepresentationTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
+    const currentTags = context.typeApp.selectedRepresentationTags ?? [];
+    if (currentTags.includes(tag)) return { diff: {} };
+    return {
+      diff: {
+        selectedRepresentationTags: [...currentTags, tag],
+      },
+    };
+  },
+  "semio.typeApp.removeRepresentationTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
+    const currentTags = context.typeApp.selectedRepresentationTags ?? [];
+    return {
+      diff: {
+        selectedRepresentationTags: currentTags.filter((t) => t !== tag),
+      },
+    };
+  },
+  "semio.typeApp.clearRepresentationTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
+    return {
+      diff: {
+        selectedRepresentationTags: [],
+      },
+    };
+  },
+  "semio.typeApp.setRepresentationTags": (context: TypeAppCommandContext, tags: string[]): TypeAppCommandResult => {
+    return {
+      diff: {
+        selectedRepresentationTags: tags,
+      },
+    };
+  },
 };

@@ -54,18 +54,18 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     const path = location.pathname.replace(/^\//, "");
     const parts = path.split("/").filter(Boolean);
     const section = parts[0];
-    
+
     // Get all pages in this section
     const pages = docsRegistry.getPagesBySection(section);
     if (pages.length === 0) return null;
 
     // Build tree structure
     const root: TreeNode = { name: "root", children: new Map() };
-    
+
     pages.forEach((page) => {
       const pageParts = page.path.replace(`${section}/`, "").split("/");
       let currentNode = root;
-      
+
       pageParts.forEach((part, index) => {
         if (!currentNode.children.has(part)) {
           currentNode.children.set(part, {
@@ -74,10 +74,10 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
           });
         }
         currentNode = currentNode.children.get(part)!;
-        
+
         // If this is the last part and it's "index", assign to parent
         if (index === pageParts.length - 1 && part === "index") {
-          const parent = pageParts.length === 1 ? root : 
+          const parent = pageParts.length === 1 ? root :
             pageParts.slice(0, -1).reduce((node, p) => node.children.get(p)!, root);
           parent.page = page;
         } else if (index === pageParts.length - 1) {
@@ -85,7 +85,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         }
       });
     });
-    
+
     return root.children.size > 0 ? root : null;
   }, [isIndexPage, location.pathname]);
 
@@ -96,17 +96,17 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     return {
       prev: prev
         ? {
-            path: prev.path,
-            title: prev.title,
-            section: prev.section,
-          }
+          path: prev.path,
+          title: prev.title,
+          section: prev.section,
+        }
         : undefined,
       next: next
         ? {
-            path: next.path,
-            title: next.title,
-            section: next.section,
-          }
+          path: next.path,
+          title: next.title,
+          section: next.section,
+        }
         : undefined,
     };
   }, [currentPath]);

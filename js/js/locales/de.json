@@ -581,7 +581,7 @@
           "file": {
             "title": "Datei"
           },
-                "files": {
+          "files": {
             "multipleTitle_one": "{{count}} Datei",
             "multipleTitle_other": "{{count}} Dateien"
           },
@@ -1101,9 +1101,9 @@
                   "tutorial": "hello-semio/model-design#nested-designs"
                 }
               }
-        }
-      }
-    },
+            }
+          }
+        },
         "docs": {
           "docs": "Dokumentation",
           "page": "Seite",

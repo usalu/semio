@@ -40,6 +40,7 @@ import Stats from "./panels/Stats";
 import Toolbar from "./panels/Toolbar";
 import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
+import { RecordingControls, TutorialControls, TutorialOverlay, TutorialProvider } from "./tutorials";
 import {
   DesignScopeProvider,
   KitScopeProvider,
@@ -58,6 +59,7 @@ import {
   useNavigation,
   useSketchpad,
   useSketchpadCommands,
+  useSketchpadStore,
   useTheme,
   WindowEvents,
 } from "./store";
@@ -521,15 +523,17 @@ const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents }) => {
   return (
     <TooltipProvider>
       <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents}>
-        <TooltipModeProvider>
-          <DragDropProvider>
-            <MemoryRouter>
-              <Routes>
-                <Route element={<SketchpadBase />}>{generateRoutes()}</Route>
-              </Routes>
-            </MemoryRouter>
-          </DragDropProvider>
-        </TooltipModeProvider>
+        <TutorialProviderWrapper>
+          <TooltipModeProvider>
+            <DragDropProvider>
+              <MemoryRouter>
+                <Routes>
+                  <Route element={<SketchpadBase />}>{generateRoutes()}</Route>
+                </Routes>
+              </MemoryRouter>
+            </DragDropProvider>
+          </TooltipModeProvider>
+        </TutorialProviderWrapper>
       </SketchpadScopeProvider>
     </TooltipProvider>
   );
@@ -541,6 +545,25 @@ const TooltipModeProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setTooltipModeProvider(() => mode);
   }, [mode]);
   return <>{children}</>;
+};
+
+const TutorialProviderWrapper: FC<{ children: ReactNode }> = ({ children }) => {
+  try {
+    const store = useSketchpadStore();
+    const tutorialStore = store.tutorialStore();
+
+    return (
+      <TutorialProvider store={tutorialStore}>
+        {children}
+        <TutorialOverlay />
+        <TutorialControls />
+        <RecordingControls />
+      </TutorialProvider>
+    );
+  } catch (e) {
+    console.error("Failed to get tutorial store:", e);
+    return <>{children}</>;
+  }
 };
 
 export default Sketchpad;

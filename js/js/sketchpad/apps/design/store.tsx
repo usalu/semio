@@ -100,7 +100,8 @@ export interface DesignAppDiff {
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
-  focusedPieceGuid?: Guid | null; // null to clear focus
+  focusedPieceGuid?: Guid | null;
+  selectedRepresentationTags?: Record<Guid, string[]>;
 }
 export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
 export interface DesignAppState {
@@ -114,8 +115,9 @@ export interface DesignAppState {
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
-  focusedPieceGuid?: Guid; // Currently focused piece for camera zoom
-  currentTransactionStackLength?: number; // Added to trigger re-renders when stack changes
+  focusedPieceGuid?: Guid;
+  currentTransactionStackLength?: number;
+  selectedRepresentationTags?: Record<Guid, string[]>;
 }
 
 export interface DesignAppCommandContext extends KitCommandContext {
@@ -370,6 +372,16 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
     return this.yMap.get("focusedPieceGuid") as Guid | undefined;
   }
 
+  get selectedRepresentationTags(): Record<Guid, string[]> {
+    const yTagsMap = this.yMap.get("selectedRepresentationTags") as Y.Map<Y.Array<string>> | undefined;
+    if (!yTagsMap) return {};
+    const result: Record<Guid, string[]> = {};
+    yTagsMap.forEach((yTags, typeGuid) => {
+      result[typeGuid] = yTags.toArray();
+    });
+    return result;
+  }
+
   kit(): KitStore {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
@@ -399,7 +411,8 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
       diagramCenter: this.diagramCenter,
       diagramScale: this.diagramScale,
       focusedPieceGuid: this.focusedPieceGuid,
-      currentTransactionStackLength: this.currentTransactionStack.length, // Include stack length in snapshot
+      currentTransactionStackLength: this.currentTransactionStack.length,
+      selectedRepresentationTags: this.selectedRepresentationTags,
     };
   }
 
@@ -583,6 +596,26 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
           this.yMap.set("focusedPieceGuid", diff.focusedPieceGuid);
         }
       }
+      if (diff.selectedRepresentationTags !== undefined) {
+        let yTagsMap = this.yMap.get("selectedRepresentationTags") as Y.Map<Y.Array<string>>;
+        if (!yTagsMap) {
+          yTagsMap = new Y.Map<Y.Array<string>>();
+          this.yMap.set("selectedRepresentationTags", yTagsMap);
+        }
+        Object.entries(diff.selectedRepresentationTags).forEach(([typeGuid, tags]) => {
+          if (tags.length === 0) {
+            yTagsMap.delete(typeGuid);
+          } else {
+            let yTags = yTagsMap.get(typeGuid) as Y.Array<string>;
+            if (!yTags) {
+              yTags = new Y.Array<string>();
+              yTagsMap.set(typeGuid, yTags);
+            }
+            yTags.delete(0, yTags.length);
+            yTags.push(tags);
+          }
+        });
+      }
     });
   };
 
@@ -727,6 +760,10 @@ export function useDesignAppDiagramScale(): number | undefined {
 
 export function useDesignAppFocusedPieceGuid(): Guid | undefined {
   return useDesignApp((s) => s.focusedPieceGuid) as Guid | undefined;
+}
+
+export function useDesignAppSelectedRepresentationTags(): Record<Guid, string[]> {
+  return useDesignApp((s) => s.selectedRepresentationTags ?? {}) as Record<Guid, string[]>;
 }
 
 export function useDesignAppHover(): DesignAppHover | undefined {
