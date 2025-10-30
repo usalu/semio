@@ -76,11 +76,10 @@ const App: FC = () => {
     if (appType !== "type") return;
 
     addSection("toolbar", {
-      id: "type-tools",
-      label: t("semio.sketchpad.app.type.tools"),
+      id: "semio.sketchpad.app.type.tools",
       order: 0,
       defaultOpen: true,
-      content: () => <ToolsToggleGroup />,
+      content: <ToolsToggleGroup />,
     });
 
     addFooterItem({
@@ -90,7 +89,7 @@ const App: FC = () => {
     });
 
     return () => {
-      removeSection("toolbar", "type-tools");
+    removeSection("toolbar", "semio.sketchpad.app.type.tools");
       removeFooterItem("type-representation-selector");
     };
   }, [addSection, removeSection, addFooterItem, removeFooterItem, appType]);
@@ -104,16 +103,15 @@ const App: FC = () => {
     const hasSinglePort = selection?.ports && selection.ports.length === 1;
 
     // Remove all previous sections
-    removeSection("details", "type-details");
-    removeSection("details", "type-port");
-    removeSection("details", "type-ports-multiple");
-    removeSection("details", "type-kit");
+    removeSection("details", "semio.sketchpad.app.type.title");
+    removeSection("details", "semio.sketchpad.app.type.port.title");
+    removeSection("details", "ports.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.kit.title");
 
     if (hasSinglePort) {
       // Single port selected: show Port section then Type section
       addSection("details", {
-        id: "type-port",
-        label: t("semio.sketchpad.app.type.port.title"),
+        id: "semio.sketchpad.app.type.port.title",
         order: 0,
         defaultOpen: true,
         content: () => <PortSection portGuid={selection.ports![0]} />,
@@ -121,8 +119,8 @@ const App: FC = () => {
     } else if (hasMultiplePorts) {
       // Multiple ports selected: show Ports section then Type section
       addSection("details", {
-        id: "type-ports-multiple",
-        label: t("ports.multipleTitle", { count: selection.ports!.length }),
+        id: "ports.multipleTitle",
+        translationParams: { count: selection.ports!.length },
         order: 0,
         defaultOpen: true,
         content: () => <PortsMultipleSection portGuids={selection.ports!} />,
@@ -131,8 +129,7 @@ const App: FC = () => {
 
     // Always show Type section (with all subsections)
     addSection("details", {
-      id: "type-details",
-      label: t("semio.sketchpad.app.type.title"),
+      id: "semio.sketchpad.app.type.title",
       order: 50,
       defaultOpen: true,
       content: () => (
@@ -148,20 +145,19 @@ const App: FC = () => {
 
     // Always add Kit section at the bottom
     addSection("details", {
-      id: "type-kit",
-      label: t("semio.sketchpad.app.kit.title"),
+      id: "semio.sketchpad.app.kit.title",
       order: 100,
       defaultOpen: true,
       content: () => <KitSection />,
     });
 
     return () => {
-      removeSection("details", "type-details");
-      removeSection("details", "type-port");
-      removeSection("details", "type-ports-multiple");
-      removeSection("details", "type-kit");
+      removeSection("details", "semio.sketchpad.app.type.title");
+      removeSection("details", "semio.sketchpad.app.type.port.title");
+      removeSection("details", "ports.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.kit.title");
     };
-  }, [addSection, removeSection, appType, selection, t]);
+  }, [addSection, removeSection, appType, selection]);
 
   const type = useType() as Type | undefined;
   const kitCommands = useKitCommands();
@@ -201,10 +197,10 @@ const App: FC = () => {
         };
 
         // Add file to kit with blob
-        await kitCommands.addFile(newFile, file);
+        await kitCommands.addFile("semio.sketchpad.app.type.panel.details.addFile", newFile, file);
 
         // Add representation to type
-        await kitCommands.updateType(type.guid, {
+        await kitCommands.updateType("semio.sketchpad.app.type.panel.details.addRepresentation", type.guid, {
           representations: {
             added: [newRepresentation],
           },

@@ -20,6 +20,7 @@
 // #endregion
 
 import { FC, ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollArea } from "../aggregation/ScrollArea";
 import { Tree, TreeSection } from "../aggregation/Tree";
 import { TreeStateProvider } from "../aggregation/TreeStateProvider";
@@ -28,11 +29,10 @@ export type ResizeSide = "left" | "right" | "top" | "bottom";
 
 export interface PanelSection {
   id: string;
-  label?: string;
-  id?: string;
   content: ReactNode | (() => ReactNode);
   defaultOpen?: boolean;
   order?: number;
+  translationParams?: Record<string, unknown>;
   actions?: Array<{
     icon: ReactNode;
     onClick: () => void;
@@ -77,6 +77,7 @@ const Panel: FC<PanelProps> = ({
   className = "",
   opacity = 1,
 }) => {
+  const { t } = useTranslation();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   if (!visible) return null;
@@ -137,10 +138,11 @@ const Panel: FC<PanelProps> = ({
               {additionalContent}
               {sortedSections.map((section) => {
                 const Content = typeof section.content === "function" ? section.content : null;
+                const sectionLabel = t(section.id, section.translationParams ?? {});
                 return (
                   <TreeSection
                     key={section.id}
-                    label={section.label}
+                    label={sectionLabel}
                     id={section.id}
                     defaultOpen={section.defaultOpen}
                     actions={section.actions}

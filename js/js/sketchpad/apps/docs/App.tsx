@@ -39,35 +39,32 @@ const DocsApp: FC = () => {
     const SettingsWrapper = () => <DocsSettings />;
 
     addSection("workbench", {
-      id: "docs-navigation",
-      label: t("semio.sketchpad.app.docs.docs", "Docs"),
+      id: "semio.sketchpad.app.docs.docs",
       order: 1,
       defaultOpen: true,
       content: WorkbenchWrapper,
     });
 
     addSection("details", {
-      id: "docs-toc",
-      label: t("semio.sketchpad.app.docs.page", "Page"),
+      id: "semio.sketchpad.app.docs.page",
       order: 1,
       defaultOpen: true,
       content: DetailsWrapper,
     });
 
     addSection("settings", {
-      id: "docs-settings",
-      label: t("semio.sketchpad.app.docs.settings", "Settings"),
+      id: "semio.sketchpad.app.docs.settings",
       order: 1,
       defaultOpen: true,
       content: SettingsWrapper,
     });
 
     return () => {
-      removeSection("workbench", "docs-navigation");
-      removeSection("details", "docs-toc");
-      removeSection("settings", "docs-settings");
+      removeSection("workbench", "semio.sketchpad.app.docs.docs");
+      removeSection("details", "semio.sketchpad.app.docs.page");
+      removeSection("settings", "semio.sketchpad.app.docs.settings");
     };
-  }, [appType, addSection, removeSection, t, fullPath]);
+  }, [appType, addSection, removeSection, fullPath]);
 
   useEffect(() => {
     const loadContent = async () => {

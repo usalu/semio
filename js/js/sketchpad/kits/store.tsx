@@ -3756,11 +3756,13 @@ type YKits = Y.Array<YKit>;
 export interface KitCommandContext {
   kit: Kit;
   fileUrls: Map<Url, Url>;
+  origin?: string;
 }
 
 export interface KitCommandResult {
   diff?: KitDiff;
   files?: File[];
+  origin?: string;
 }
 
 export class KitStore {
@@ -4333,13 +4335,27 @@ export class KitStore {
     return createObserver(this.yKit, subscribe, true);
   };
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    console.group(`Executing command: "${command}"`);
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.type.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.kit.updateDesign" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit store`);
     const context: KitCommandContext = {
       kit: this.snapshot(),
       fileUrls: this.fileUrls,
+      origin,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -4483,32 +4499,32 @@ export function useKitCommands() {
 
   const kitStore = store.kit(kitGuid);
   return {
-    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-    exportKit: () => kitStore.execute("semio.kit.export"),
-    createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", author),
-    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", Guid, authorDiff),
-    deleteAuthor: (Guid: Guid) => kitStore.execute("semio.kit.deleteAuthor", Guid),
-    createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
-    updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", guid, diff),
-    deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", guid),
-    createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
-    updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", guid, diff),
-    deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", guid),
-    createQuality: (quality: Quality) => kitStore.execute("semio.kit.createQuality", quality),
-    updateQuality: (guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", guid, diff),
-    deleteQuality: (guid: Guid) => kitStore.execute("semio.kit.deleteQuality", guid),
-    addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
-    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
-    removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
-    addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", design, piece),
-    addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", design, pieces),
-    removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", design, piece),
-    removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", design, pieces),
-    addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", design, connection),
-    addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", design, connections),
-    removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", design, connection),
-    removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", design, connections),
-    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
+    importKit: (origin: string, url: string) => kitStore.execute("semio.kit.import", origin, url),
+    exportKit: (origin: string) => kitStore.execute("semio.kit.export", origin),
+    createAuthor: (origin: string, author: Author) => kitStore.execute("semio.kit.createAuthor", origin, author),
+    updateAuthor: (origin: string, Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", origin, Guid, authorDiff),
+    deleteAuthor: (origin: string, Guid: Guid) => kitStore.execute("semio.kit.deleteAuthor", origin, Guid),
+    createType: (origin: string, type: Type) => kitStore.execute("semio.kit.createType", origin, type),
+    updateType: (origin: string, guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", origin, guid, diff),
+    deleteType: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteType", origin, guid),
+    createDesign: (origin: string, design: Design) => kitStore.execute("semio.kit.createDesign", origin, design),
+    updateDesign: (origin: string, guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", origin, guid, diff),
+    deleteDesign: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteDesign", origin, guid),
+    createQuality: (origin: string, quality: Quality) => kitStore.execute("semio.kit.createQuality", origin, quality),
+    updateQuality: (origin: string, guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", origin, guid, diff),
+    deleteQuality: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteQuality", origin, guid),
+    addFile: (origin: string, file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", origin, file, blob),
+    updateFile: (origin: string, url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", origin, url, fileDiff, blob),
+    removeFile: (origin: string, url: Url) => kitStore.execute("semio.kit.removeFile", origin, url),
+    addPiece: (origin: string, design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", origin, design, piece),
+    addPieces: (origin: string, design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", origin, design, pieces),
+    removePiece: (origin: string, design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", origin, design, piece),
+    removePieces: (origin: string, design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", origin, design, pieces),
+    addConnection: (origin: string, design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", origin, design, connection),
+    addConnections: (origin: string, design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", origin, design, connections),
+    removeConnection: (origin: string, design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", origin, design, connection),
+    removeConnections: (origin: string, design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", origin, design, connections),
+    deleteSelected: (origin: string, design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
   };
 }
 

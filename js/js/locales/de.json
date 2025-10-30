@@ -753,6 +753,7 @@
         "design": {
           "title": "Design",
           "description": "Edit design compositions",
+          "tools": "Werkzeuge",
           "defaultName": "New Design",
           "newVariant": "New Variant",
           "newView": "New View",
@@ -1067,8 +1068,13 @@
                   "tutorial": "hello-semio/model-design#nested-designs"
                 }
               }
-            }
-          }
+        }
+      }
+    },
+        "docs": {
+          "docs": "Dokumentation",
+          "page": "Seite",
+          "settings": "Einstellungen"
         },
         "type": {
           "title": "Type",

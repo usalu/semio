@@ -149,17 +149,18 @@ const App: FC<AppProps> = () => {
     const hasPortSelected = selection.port !== undefined;
     const hasSelection = hasPieces || hasConnections || hasPortSelected;
 
-    removeSection("details", "design-details");
-    removeSection("details", "design-port");
-    removeSection("details", "design-pieces");
-    removeSection("details", "design-connections");
-    removeSection("details", "design-mixed");
-    removeSection("details", "design-kit");
+    removeSection("details", "semio.sketchpad.app.design.title");
+    removeSection("details", "semio.sketchpad.app.type.port.title");
+    removeSection("details", "semio.sketchpad.app.design.piece.piece");
+    removeSection("details", "semio.pieces.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.design.connection.title");
+    removeSection("details", "connections.multipleTitle");
+    removeSection("details", "selection.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.kit.title");
 
     if (!hasSelection) {
       addSection("details", {
-        id: "design-details",
-        label: t("semio.sketchpad.app.design.title"),
+        id: "semio.sketchpad.app.design.title",
         order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -168,24 +169,23 @@ const App: FC<AppProps> = () => {
       const portPieceId = selection.port!.piece;
       const portId = selection.port!.port;
       addSection("details", {
-        id: "design-port",
-        label: t("semio.sketchpad.app.type.port.title"),
+        id: "semio.sketchpad.app.type.port.title",
         order: 0,
         defaultOpen: true,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
       });
       addSection("details", {
-        id: "design-details",
-        label: t("semio.sketchpad.app.design.title"),
+        id: "semio.sketchpad.app.design.title",
         order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
       });
     } else {
       if (hasPieces) {
+        const piecesSectionId = selection.pieces!.length === 1 ? "semio.sketchpad.app.design.piece.piece" : "semio.pieces.multipleTitle";
         addSection("details", {
-          id: "design-pieces",
-          label: selection.pieces!.length === 1 ? t("semio.sketchpad.app.design.piece.piece") : t("semio.pieces.multipleTitle"),
+          id: piecesSectionId,
+          translationParams: selection.pieces!.length === 1 ? undefined : { count: selection.pieces!.length },
           order: 0,
           defaultOpen: true,
           content: () => <PiecesSection />,
@@ -194,9 +194,10 @@ const App: FC<AppProps> = () => {
       if (hasConnections) {
         const connGuids = selection.connections!;
         const conns = findConnectionsInDesign(design!, connGuids);
+        const connectionsSectionId = conns.length === 1 ? "semio.sketchpad.app.design.connection.title" : "connections.multipleTitle";
         addSection("details", {
-          id: "design-connections",
-          label: conns.length === 1 ? t("semio.sketchpad.app.design.connection.title") : t("connections.multipleTitle"),
+          id: connectionsSectionId,
+          translationParams: conns.length === 1 ? undefined : { count: conns.length },
           order: 10,
           defaultOpen: true,
           content: () => <ConnectionsSection connections={conns} />,
@@ -204,8 +205,7 @@ const App: FC<AppProps> = () => {
       }
       if (hasPieces && hasConnections) {
         addSection("details", {
-          id: "design-mixed",
-          label: t("selection.multipleTitle"),
+          id: "selection.multipleTitle",
           order: 20,
           defaultOpen: true,
           content: () => (
@@ -218,8 +218,7 @@ const App: FC<AppProps> = () => {
         });
       }
       addSection("details", {
-        id: "design-details",
-        label: t("semio.sketchpad.app.design.title"),
+        id: "semio.sketchpad.app.design.title",
         order: 50,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -227,20 +226,21 @@ const App: FC<AppProps> = () => {
     }
 
     addSection("details", {
-      id: "design-kit",
-      label: t("semio.sketchpad.app.kit.title"),
+      id: "semio.sketchpad.app.kit.title",
       order: 100,
       defaultOpen: true,
       content: () => <KitSection />,
     });
 
     return () => {
-      removeSection("details", "design-details");
-      removeSection("details", "design-port");
-      removeSection("details", "design-pieces");
-      removeSection("details", "design-connections");
-      removeSection("details", "design-mixed");
-      removeSection("details", "design-kit");
+      removeSection("details", "semio.sketchpad.app.design.title");
+      removeSection("details", "semio.sketchpad.app.type.port.title");
+      removeSection("details", "semio.sketchpad.app.design.piece.piece");
+      removeSection("details", "semio.pieces.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.design.connection.title");
+      removeSection("details", "connections.multipleTitle");
+      removeSection("details", "selection.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.kit.title");
     };
   }, [selection, addSection, removeSection, appType, t, design]);
 
@@ -261,7 +261,7 @@ const App: FC<AppProps> = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      kitAppCommands.addType(newType);
+      kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.createVariant", newType);
       navigateToType(kit.guid, newType.guid);
     };
 
@@ -287,7 +287,7 @@ const App: FC<AppProps> = () => {
                 {
                   icon: <Plus size={12} />,
                   onClick: () => handleCreateVariant(name),
-                  title: t("semio.sketchpad.common.addVariant"),
+                  id: "semio.sketchpad.common.addVariant",
                 },
               ]}
             >
@@ -322,7 +322,7 @@ const App: FC<AppProps> = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      kitAppCommands.addDesign(newDesign);
+      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createVariant", newDesign);
       navigateToDesign(kit.guid, newDesign.guid);
     };
 
@@ -348,7 +348,7 @@ const App: FC<AppProps> = () => {
                 {
                   icon: <Plus size={12} />,
                   onClick: () => handleCreateVariant(name),
-                  title: t("semio.sketchpad.common.addVariant"),
+                  id: "semio.sketchpad.common.addVariant",
                 },
               ]}
             >
@@ -371,14 +371,13 @@ const App: FC<AppProps> = () => {
     if (appType !== "design") return;
 
     addSection("toolbar", {
-      id: "design-tools",
-      label: "Tools",
+      id: "semio.sketchpad.app.design.tools",
       order: 0,
-      content: () => <ToolsToggleGroup />,
+      content: <ToolsToggleGroup />,
     });
 
     return () => {
-      removeSection("toolbar", "design-tools");
+      removeSection("toolbar", "semio.sketchpad.app.design.tools");
     };
   }, [appType, addSection, removeSection]);
 
@@ -393,7 +392,7 @@ const App: FC<AppProps> = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      kitAppCommands.addType(newType);
+      kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.create", newType);
       navigateToType(kit.guid, newType.guid);
     };
 
@@ -406,12 +405,11 @@ const App: FC<AppProps> = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      kitAppCommands.addDesign(newDesign);
+      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.create", newDesign);
       navigateToDesign(kit.guid, newDesign.guid);
     };
 
     addSection("workbench", {
-      id: "design-types",
       id: "semio.sketchpad.app.kit.types",
       order: 0,
       defaultOpen: true,
@@ -435,7 +433,6 @@ const App: FC<AppProps> = () => {
     });
 
     addSection("workbench", {
-      id: "design-designs",
       id: "semio.sketchpad.app.kit.designs",
       order: 1,
       defaultOpen: true,
@@ -458,16 +455,15 @@ const App: FC<AppProps> = () => {
       },
     });
     return () => {
-      removeSection("workbench", "design-types");
-      removeSection("workbench", "design-designs");
+      removeSection("workbench", "semio.sketchpad.app.kit.types");
+      removeSection("workbench", "semio.sketchpad.app.kit.designs");
     };
   }, [appType, kit.types, kit.designs]);
 
   // Add settings section
   useEffect(() => {
     addSection("settings", {
-      id: "design-app-settings",
-      label: t("semio.sketchpad.app.design.appTitle"),
+      id: "semio.sketchpad.app.design.appTitle",
       order: 100,
       defaultOpen: true,
       content: () => (
@@ -492,7 +488,7 @@ const App: FC<AppProps> = () => {
     });
 
     return () => {
-      removeSection("settings", "design-app-settings");
+      removeSection("settings", "semio.sketchpad.app.design.appTitle");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

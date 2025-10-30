@@ -21,6 +21,7 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { FC, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../elements/display/HoverCard";
@@ -40,6 +41,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   // Always call useType unconditionally, even if typeId is undefined
   const typeFromStore = useType(undefined, typeId || "") as Type | null;
   const type = typeProp || typeFromStore;
+  const { t } = useTranslation();
   const { setActiveInteraction, navigateToType } = useSketchpadCommands();
   const { hoverType, clearHover } = useDesignAppCommands();
   const activeInteraction = useActiveInteraction();
@@ -129,10 +131,10 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
           navigateToType(kitGuid, type.guid);
         }}
         onPointerEnter={() => {
-          if (isInDesignScope) hoverType(type.guid);
+          if (isInDesignScope) hoverType("semio.sketchpad.app.design.panel.workbench.type.hover", type.guid);
         }}
         onPointerLeave={() => {
-          if (isInDesignScope) clearHover();
+          if (isInDesignScope) clearHover("semio.sketchpad.app.design.panel.workbench.type.leave");
         }}
       >
         {avatar}
@@ -153,10 +155,10 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
         navigateToType(kitGuid, type.guid);
       }}
       onPointerEnter={() => {
-        if (isInDesignScope) hoverType(type.guid);
+        if (isInDesignScope) hoverType("semio.sketchpad.app.design.panel.workbench.type.hover", type.guid);
       }}
       onPointerLeave={() => {
-        if (isInDesignScope) clearHover();
+        if (isInDesignScope) clearHover("semio.sketchpad.app.design.panel.workbench.type.leave");
       }}
     >
       <HoverCard openDelay={500}>
@@ -166,10 +168,10 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
             {type.variant ? (
               <>
                 <h4 className="text-sm font-semibold">{type.variant}</h4>
-                <p className="text-sm">{type.description || "No description available."}</p>
+                <p className="text-sm">{type.description || t("semio.sketchpad.common.noDescription")}</p>
               </>
             ) : (
-              <p className="text-sm">{type.description || "No description available."}</p>
+              <p className="text-sm">{type.description || t("semio.sketchpad.common.noDescription")}</p>
             )}
           </div>
         </HoverCardContent>
@@ -186,6 +188,7 @@ interface DesignAvatarProps {
 }
 
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designProp, showHoverCard = false, isActive = false }) => {
+  const { t } = useTranslation();
   const isInDesignScope = useIsInDesignScope();
   const { setActiveInteraction, navigateToDesign } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
@@ -208,11 +211,14 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       if (hoverFromScope.pieces.some((pieceId: string) => currentDesignFromScope.pieces?.some((piece: Piece) => piece.guid === pieceId && piece.design === design.guid))) return true;
     }
     if (hoverFromScope?.ports && hoverFromScope.ports.length > 0 && currentDesignFromScope?.pieces?.length) {
-      if (hoverFromScope.ports.some((port) => {
-        const targetId = port.designPiece || port.piece;
-        if (!targetId) return false;
-        return currentDesignFromScope.pieces?.some((piece: Piece) => piece.guid === targetId && piece.design === design.guid);
-      })) return true;
+      if (
+        hoverFromScope.ports.some((port) => {
+          const targetId = port.designPiece || port.piece;
+          if (!targetId) return false;
+          return currentDesignFromScope.pieces?.some((piece: Piece) => piece.guid === targetId && piece.design === design.guid);
+        })
+      )
+        return true;
     }
     if (hoverFromScope?.types && hoverFromScope.types.length > 0 && design.pieces?.length) {
       if (
@@ -288,10 +294,10 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
           navigateToDesign(kitGuid, design.guid);
         }}
         onPointerEnter={() => {
-          if (!isActive && isInDesignScope) commandsFromScope.hoverDesign(design.guid);
+          if (!isActive && isInDesignScope) commandsFromScope.hoverDesign("semio.sketchpad.app.design.panel.workbench.design.hover", design.guid);
         }}
         onPointerLeave={() => {
-          if (!isActive && isInDesignScope) commandsFromScope.clearHover();
+          if (!isActive && isInDesignScope) commandsFromScope.clearHover("semio.sketchpad.app.design.panel.workbench.design.leave");
         }}
       >
         {avatar}
@@ -312,10 +318,10 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
         navigateToDesign(kitGuid, design.guid);
       }}
       onPointerEnter={() => {
-        if (!isActive && isInDesignScope) commandsFromScope.hoverDesign(design.guid);
+        if (!isActive && isInDesignScope) commandsFromScope.hoverDesign("semio.sketchpad.app.design.panel.workbench.design.hover", design.guid);
       }}
       onPointerLeave={() => {
-        if (!isActive && isInDesignScope) commandsFromScope.clearHover();
+        if (!isActive && isInDesignScope) commandsFromScope.clearHover("semio.sketchpad.app.design.panel.workbench.design.leave");
       }}
     >
       <HoverCard openDelay={500}>
@@ -328,7 +334,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
                 {design.view && design.view !== "Default" && ` (${design.view})`}
               </h4>
             )}
-            <p className="text-sm">{design.description || "No description available."}</p>
+            <p className="text-sm">{design.description || t("semio.sketchpad.common.noDescription")}</p>
           </div>
         </HoverCardContent>
       </HoverCard>

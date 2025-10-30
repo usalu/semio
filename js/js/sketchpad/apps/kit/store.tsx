@@ -23,7 +23,22 @@ import { Camera } from "three";
 import * as Y from "yjs";
 import { areSameKit, Coord, Design, DesignDiff, DiffStatus, Guid, KitDiff, Type, TypeDiff } from "../../../semio";
 import { KitCommandContext, KitStore, useKitScope } from "../../kits/store";
-import { identitySelector, KitAppId, KitDiffAppEdit, KitDiffAppStore, PanelVisibility, registerKitAppStoreFactory, SketchpadStore, useSketchpadStore, useSync, useSyncDeep, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../store";
+import {
+  identitySelector,
+  KitAppId,
+  KitDiffAppEdit,
+  KitDiffAppStore,
+  PanelVisibility,
+  registerKitAppStoreFactory,
+  SketchpadStore,
+  useSketchpadStore,
+  useSync,
+  useSyncDeep,
+  YAttributes,
+  YLeafMapNumber,
+  YLeafMapString,
+  YStringArray,
+} from "../../store";
 import { commands as kitAppCommands } from "./commands";
 
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
@@ -522,38 +537,48 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
     }
   }
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.kit.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.kitApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
     if (command === "semio.kitApp.startTransaction") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.kitApp.finalizeTransaction") {
-      console.group(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
       console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitApp.abortTransaction") {
-      console.group(`Executing (special) command: "${command}"`);
       this.abortTransaction();
       console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitApp.undo") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitApp.redo") {
-      console.group(`Executing (special) command: "${command}"`);
+      console.group(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       console.groupEnd();
       return {} as T;
     }
 
-    console.group(`Executing command: "${command}"`);
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit app store`);
 
@@ -564,6 +589,7 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
       kitApp: state,
       kit: kitStore.snapshot(),
       fileUrls: kitStore.fileUrls,
+      origin,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -588,7 +614,7 @@ export function initializeKitAppStore() {
 }
 
 // Auto-initialize if this module is imported
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setTimeout(() => initializeKitAppStore(), 0);
 }
 
@@ -689,49 +715,49 @@ export function useKitAppCommands(id?: KitAppId) {
     };
   }
   return {
-    startTransaction: () => store.execute("semio.kitApp.startTransaction"),
-    finalizeTransaction: () => store.execute("semio.kitApp.finalizeTransaction"),
-    abortTransaction: () => store.execute("semio.kitApp.abortTransaction"),
-    undo: () => store.execute("semio.kitApp.undo"),
-    redo: () => store.execute("semio.kitApp.redo"),
-    selectAll: () => store.execute("semio.kitApp.selectAll"),
-    deselectAll: () => store.execute("semio.kitApp.deselectAll"),
-    selectType: (Guid: Guid) => store.execute("semio.kitApp.selectType", Guid),
-    selectTypes: (typeIds: Guid[]) => store.execute("semio.kitApp.selectTypes", typeIds),
-    addTypeToSelection: (Guid: Guid) => store.execute("semio.kitApp.addTypeToSelection", Guid),
-    removeTypeFromSelection: (Guid: Guid) => store.execute("semio.kitApp.removeTypeFromSelection", Guid),
-    selectDesign: (Guid: Guid) => store.execute("semio.kitApp.selectDesign", Guid),
-    selectDesigns: (designIds: Guid[]) => store.execute("semio.kitApp.selectDesigns", designIds),
-    addDesignToSelection: (Guid: Guid) => store.execute("semio.kitApp.addDesignToSelection", Guid),
-    removeDesignFromSelection: (Guid: Guid) => store.execute("semio.kitApp.removeDesignFromSelection", Guid),
-    selectQuality: (key: string) => store.execute("semio.kitApp.selectQuality", key),
-    selectQualities: (keys: string[]) => store.execute("semio.kitApp.selectQualities", keys),
-    addQualityToSelection: (key: string) => store.execute("semio.kitApp.addQualityToSelection", key),
-    removeQualityFromSelection: (key: string) => store.execute("semio.kitApp.removeQualityFromSelection", key),
-    selectFile: (path: string) => store.execute("semio.kitApp.selectFile", path),
-    selectFiles: (paths: string[]) => store.execute("semio.kitApp.selectFiles", paths),
-    addFileToSelection: (path: string) => store.execute("semio.kitApp.addFileToSelection", path),
-    removeFileFromSelection: (path: string) => store.execute("semio.kitApp.removeFileFromSelection", path),
-    selectAuthor: (name: string) => store.execute("semio.kitApp.selectAuthor", name),
-    selectAuthors: (names: string[]) => store.execute("semio.kitApp.selectAuthors", names),
-    addAuthorToSelection: (name: string) => store.execute("semio.kitApp.addAuthorToSelection", name),
-    removeAuthorFromSelection: (name: string) => store.execute("semio.kitApp.removeAuthorFromSelection", name),
-    deleteSelected: () => store.execute("semio.kitApp.deleteSelected"),
-    toggleTypesFullscreen: () => store.execute("semio.kitApp.toggleTypesFullscreen"),
-    toggleDesignsFullscreen: () => store.execute("semio.kitApp.toggleDesignsFullscreen"),
-    addType: (type: Type) => store.execute("semio.kitApp.addType", type),
-    addTypes: (types: Type[]) => store.execute("semio.kitApp.addTypes", types),
-    removeType: (Guid: Guid) => store.execute("semio.kitApp.removeType", Guid),
-    removeTypes: (typeIds: Guid[]) => store.execute("semio.kitApp.removeTypes", typeIds),
-    addDesign: (design: Design) => store.execute("semio.kitApp.addDesign", design),
-    addDesigns: (designs: Design[]) => store.execute("semio.kitApp.addDesigns", designs),
-    removeDesign: (Guid: Guid) => store.execute("semio.kitApp.removeDesign", Guid),
-    removeDesigns: (designIds: Guid[]) => store.execute("semio.kitApp.removeDesigns", designIds),
-    updateType: (Guid: Guid, typeDiff: TypeDiff) => store.execute("semio.kitApp.updateType", Guid, typeDiff),
-    updateTypes: (updates: { id: Guid; diff: TypeDiff }[]) => store.execute("semio.kitApp.updateTypes", updates),
-    updateDesign: (Guid: Guid, designDiff: DesignDiff) => store.execute("semio.kitApp.updateDesign", Guid, designDiff),
-    updateDesigns: (updates: { id: Guid; diff: DesignDiff }[]) => store.execute("semio.kitApp.updateDesigns", updates),
-    togglePanel: (panelKey: keyof PanelVisibility) => {
+    startTransaction: (origin: string) => store.execute("semio.kitApp.startTransaction", origin),
+    finalizeTransaction: (origin: string) => store.execute("semio.kitApp.finalizeTransaction", origin),
+    abortTransaction: (origin: string) => store.execute("semio.kitApp.abortTransaction", origin),
+    undo: (origin: string) => store.execute("semio.kitApp.undo", origin),
+    redo: (origin: string) => store.execute("semio.kitApp.redo", origin),
+    selectAll: (origin: string) => store.execute("semio.kitApp.selectAll", origin),
+    deselectAll: (origin: string) => store.execute("semio.kitApp.deselectAll", origin),
+    selectType: (origin: string, Guid: Guid) => store.execute("semio.kitApp.selectType", origin, Guid),
+    selectTypes: (origin: string, typeIds: Guid[]) => store.execute("semio.kitApp.selectTypes", origin, typeIds),
+    addTypeToSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.addTypeToSelection", origin, Guid),
+    removeTypeFromSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeTypeFromSelection", origin, Guid),
+    selectDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.selectDesign", origin, Guid),
+    selectDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.selectDesigns", origin, designIds),
+    addDesignToSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.addDesignToSelection", origin, Guid),
+    removeDesignFromSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesignFromSelection", origin, Guid),
+    selectQuality: (origin: string, key: string) => store.execute("semio.kitApp.selectQuality", origin, key),
+    selectQualities: (origin: string, keys: string[]) => store.execute("semio.kitApp.selectQualities", origin, keys),
+    addQualityToSelection: (origin: string, key: string) => store.execute("semio.kitApp.addQualityToSelection", origin, key),
+    removeQualityFromSelection: (origin: string, key: string) => store.execute("semio.kitApp.removeQualityFromSelection", origin, key),
+    selectFile: (origin: string, path: string) => store.execute("semio.kitApp.selectFile", origin, path),
+    selectFiles: (origin: string, paths: string[]) => store.execute("semio.kitApp.selectFiles", origin, paths),
+    addFileToSelection: (origin: string, path: string) => store.execute("semio.kitApp.addFileToSelection", origin, path),
+    removeFileFromSelection: (origin: string, path: string) => store.execute("semio.kitApp.removeFileFromSelection", origin, path),
+    selectAuthor: (origin: string, name: string) => store.execute("semio.kitApp.selectAuthor", origin, name),
+    selectAuthors: (origin: string, names: string[]) => store.execute("semio.kitApp.selectAuthors", origin, names),
+    addAuthorToSelection: (origin: string, name: string) => store.execute("semio.kitApp.addAuthorToSelection", origin, name),
+    removeAuthorFromSelection: (origin: string, name: string) => store.execute("semio.kitApp.removeAuthorFromSelection", origin, name),
+    deleteSelected: (origin: string) => store.execute("semio.kitApp.deleteSelected", origin),
+    toggleTypesFullscreen: (origin: string) => store.execute("semio.kitApp.toggleTypesFullscreen", origin),
+    toggleDesignsFullscreen: (origin: string) => store.execute("semio.kitApp.toggleDesignsFullscreen", origin),
+    addType: (origin: string, type: Type) => store.execute("semio.kitApp.addType", origin, type),
+    addTypes: (origin: string, types: Type[]) => store.execute("semio.kitApp.addTypes", origin, types),
+    removeType: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeType", origin, Guid),
+    removeTypes: (origin: string, typeIds: Guid[]) => store.execute("semio.kitApp.removeTypes", origin, typeIds),
+    addDesign: (origin: string, design: Design) => store.execute("semio.kitApp.addDesign", origin, design),
+    addDesigns: (origin: string, designs: Design[]) => store.execute("semio.kitApp.addDesigns", origin, designs),
+    removeDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesign", origin, Guid),
+    removeDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.removeDesigns", origin, designIds),
+    updateType: (origin: string, Guid: Guid, typeDiff: TypeDiff) => store.execute("semio.kitApp.updateType", origin, Guid, typeDiff),
+    updateTypes: (origin: string, updates: { id: Guid; diff: TypeDiff }[]) => store.execute("semio.kitApp.updateTypes", origin, updates),
+    updateDesign: (origin: string, Guid: Guid, designDiff: DesignDiff) => store.execute("semio.kitApp.updateDesign", origin, Guid, designDiff),
+    updateDesigns: (origin: string, updates: { id: Guid; diff: DesignDiff }[]) => store.execute("semio.kitApp.updateDesigns", origin, updates),
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
         panelVisibility: {
@@ -739,13 +765,13 @@ export function useKitAppCommands(id?: KitAppId) {
         },
       });
     },
-    setFilterSearch: (search: string) => store.execute("semio.kitApp.setFilterSearch", search),
-    setExpandedRows: (rows: string[]) => store.execute("semio.kitApp.setExpandedRows", rows),
-    toggleExpandedRow: (rowId: string) => store.execute("semio.kitApp.toggleExpandedRow", rowId),
-    setSortColumn: (column: KitAppSortColumn) => store.execute("semio.kitApp.setSortColumn", column),
-    setSortDirection: (direction: KitAppSortDirection) => store.execute("semio.kitApp.setSortDirection", direction),
-    toggleSort: (column: KitAppSortColumn) => store.execute("semio.kitApp.toggleSort", column),
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+    setFilterSearch: (origin: string, search: string) => store.execute("semio.kitApp.setFilterSearch", origin, search),
+    setExpandedRows: (origin: string, rows: string[]) => store.execute("semio.kitApp.setExpandedRows", origin, rows),
+    toggleExpandedRow: (origin: string, rowId: string) => store.execute("semio.kitApp.toggleExpandedRow", origin, rowId),
+    setSortColumn: (origin: string, column: KitAppSortColumn) => store.execute("semio.kitApp.setSortColumn", origin, column),
+    setSortDirection: (origin: string, direction: KitAppSortDirection) => store.execute("semio.kitApp.setSortDirection", origin, direction),
+    toggleSort: (origin: string, column: KitAppSortColumn) => store.execute("semio.kitApp.toggleSort", origin, column),
+    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
 

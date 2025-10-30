@@ -84,23 +84,21 @@ const App: FC<AppProps> = () => {
     if (appType !== "quality") return;
 
     addSection("details", {
-      id: "quality-details",
-      label: t("semio.sketchpad.app.quality.title"),
+      id: "semio.sketchpad.app.quality.title",
       order: 0,
       defaultOpen: true,
       content: () => <QualityDetails />,
     });
 
     return () => {
-      removeSection("details", "quality-details");
+      removeSection("details", "semio.sketchpad.app.quality.title");
     };
-  }, [appType, addSection, removeSection, t]);
+  }, [appType, addSection, removeSection]);
 
   useEffect(() => {
     if (appType !== "quality") return;
 
     addSection("workbench", {
-      id: "quality-functions",
       id: "semio.sketchpad.app.quality.functions",
       order: 0,
       defaultOpen: true,
@@ -108,7 +106,6 @@ const App: FC<AppProps> = () => {
     });
 
     addSection("workbench", {
-      id: "quality-qualities",
       id: "semio.sketchpad.app.quality.qualities",
       order: 1,
       defaultOpen: true,
@@ -116,10 +113,10 @@ const App: FC<AppProps> = () => {
     });
 
     return () => {
-      removeSection("workbench", "quality-functions");
-      removeSection("workbench", "quality-qualities");
+      removeSection("workbench", "semio.sketchpad.app.quality.functions");
+      removeSection("workbench", "semio.sketchpad.app.quality.qualities");
     };
-  }, [appType, addSection, removeSection, t]);
+  }, [appType, addSection, removeSection]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;

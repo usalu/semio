@@ -51,7 +51,7 @@ export const RepresentationDropdown: FC = () => {
     return kitStore.type(typeGuid);
   }, [sketchpadStore, kitGuid, typeGuid]);
 
-  const type = useSync(typeStore, (t) => t, true);
+  const type = useSync(typeStore ?? null, (t) => t, true);
 
   // Get selected representation GUID using hook
   const selectedRepresentationGuid = useTypeAppSelectedRepresentationGuid();
@@ -69,7 +69,7 @@ export const RepresentationDropdown: FC = () => {
 
   const handleValueChange = (value: string) => {
     if (setSelectedRepresentation) {
-      setSelectedRepresentation(value);
+      setSelectedRepresentation("semio.sketchpad.app.type.footer.representationDropdown", value);
     }
   };
 

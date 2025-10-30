@@ -19,7 +19,6 @@
 
 // #endregion
 
-import { t } from "i18next";
 import { BrainCircuit, FingerprintIcon, GraduationCap, Laptop, MonitorIcon, MoonIcon, Sparkles, SunIcon } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,7 +31,7 @@ import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadComma
 import { HotkeySettings } from "./HotkeySettings";
 
 const LanguageSwitcher: FC = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <Select label={t("semio.sketchpad.panel.settings.language.label")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
       <SelectTrigger className="w-32" level="panel">
@@ -68,14 +67,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
         <TreeSection label={t("semio.sketchpad.panel.settings.general.label")} defaultOpen={true}>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("semio.sketchpad.panel.settings.theme.label")} type="single" value={theme} onValueChange={(value: string) => setTheme(value as Theme)} level="panel">
-                <ToggleGroupItem value={Theme.SYSTEM} tooltip={tooltip("settings.theme.system")}>
+              <ToggleGroup label={t("semio.sketchpad.panel.settings.theme.label")} type="single" value={theme} onValueChange={(value: string) => setTheme("semio.sketchpad.panel.settings.theme", value as Theme)} level="panel">
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.theme.system" value={Theme.SYSTEM}>
                   <Laptop />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Theme.LIGHT} tooltip={tooltip("settings.theme.light")}>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.theme.light" value={Theme.LIGHT}>
                   <SunIcon />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Theme.DARK} tooltip={tooltip("settings.theme.dark")}>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.theme.dark" value={Theme.DARK}>
                   <MoonIcon />
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -84,11 +83,11 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           {!isMobile && (
             <TreeItem>
               <TreeContent>
-                <ToggleGroup label={t("semio.sketchpad.panel.settings.layout.label")} type="single" value={layout} onValueChange={(value: string) => setLayout(value as Layout)} level="panel">
-                  <ToggleGroupItem value={Layout.NORMAL} tooltip={tooltip("settings.layout.normal")}>
+                <ToggleGroup label={t("semio.sketchpad.panel.settings.layout.label")} type="single" value={layout} onValueChange={(value: string) => setLayout("semio.sketchpad.panel.settings.layout", value as Layout)} level="panel">
+                  <ToggleGroupItem id="semio.sketchpad.panel.settings.layout.normal" value={Layout.NORMAL}>
                     <MonitorIcon />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value={Layout.TOUCH} tooltip={tooltip("settings.layout.touch")}>
+                  <ToggleGroupItem id="semio.sketchpad.panel.settings.layout.touch" value={Layout.TOUCH}>
                     <FingerprintIcon />
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -97,14 +96,14 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           )}
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("semio.sketchpad.panel.settings.mode.label")} type="single" value={mode} onValueChange={(value: string) => setMode(value as Mode)} level="panel">
-                <ToggleGroupItem value={Mode.BEGINNER} tooltip={tooltip("settings.mode.beginner")}>
+              <ToggleGroup label={t("semio.sketchpad.panel.settings.mode.label")} type="single" value={mode} onValueChange={(value: string) => setMode("semio.sketchpad.panel.settings.mode", value as Mode)} level="panel">
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.beginner" value={Mode.BEGINNER}>
                   <GraduationCap />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Mode.NORMAL} tooltip={tooltip("settings.mode.normal")}>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.normal" value={Mode.NORMAL}>
                   <Sparkles />
                 </ToggleGroupItem>
-                <ToggleGroupItem value={Mode.EXPERT} tooltip={tooltip("settings.mode.expert")}>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.expert" value={Mode.EXPERT}>
                   <BrainCircuit />
                 </ToggleGroupItem>
               </ToggleGroup>

@@ -186,16 +186,18 @@ const AppContent: FC = () => {
     const authorsCount = selection?.authors?.length || 0;
     const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, filesCount > 0, authorsCount > 0].filter(Boolean).length;
 
-    removeSection("details", "kit-multiple-artifacts");
-    removeSection("details", "kit-design");
-    removeSection("details", "kit-type");
-    removeSection("details", "kit-file");
-    removeSection("details", "kit-details");
+    removeSection("details", "artifacts.multiple");
+    removeSection("details", "semio.sketchpad.app.design.title");
+    removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.type.title");
+    removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.kit.file.title");
+    removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.kit.title");
 
     if (totalSelectedKinds > 1) {
       addSection("details", {
-        id: "kit-multiple-artifacts",
-        label: t("artifacts.multiple"),
+        id: "artifacts.multiple",
         order: 0,
         defaultOpen: true,
         content: () => <MultipleArtifactsSection />,
@@ -203,9 +205,10 @@ const AppContent: FC = () => {
     }
 
     if (designsCount > 0 && totalSelectedKinds === 1) {
+      const designSectionId = designsCount === 1 ? "semio.sketchpad.app.design.title" : "semio.sketchpad.app.kit.designs.multipleTitle";
       addSection("details", {
-        id: "kit-design",
-        label: designsCount === 1 ? t("semio.sketchpad.app.design.title") : t("semio.sketchpad.app.kit.designs.multipleTitle"),
+        id: designSectionId,
+        translationParams: designsCount === 1 ? undefined : { count: designsCount },
         order: 10,
         defaultOpen: true,
         content: () => <DesignSection />,
@@ -213,9 +216,10 @@ const AppContent: FC = () => {
     }
 
     if (typesCount > 0 && totalSelectedKinds === 1) {
+      const typeSectionId = typesCount === 1 ? "semio.sketchpad.app.type.title" : "semio.sketchpad.app.kit.types.multipleTitle";
       addSection("details", {
-        id: "kit-type",
-        label: typesCount === 1 ? t("semio.sketchpad.app.type.title") : t("semio.sketchpad.app.kit.types.multipleTitle"),
+        id: typeSectionId,
+        translationParams: typesCount === 1 ? undefined : { count: typesCount },
         order: 20,
         defaultOpen: true,
         content: () => <TypeSection />,
@@ -223,9 +227,10 @@ const AppContent: FC = () => {
     }
 
     if (filesCount > 0 && totalSelectedKinds === 1) {
+      const fileSectionId = filesCount === 1 ? "semio.sketchpad.app.kit.file.title" : "semio.sketchpad.app.kit.files.multipleTitle";
       addSection("details", {
-        id: "kit-file",
-        label: filesCount === 1 ? t("semio.sketchpad.app.kit.file.title") : t("semio.sketchpad.app.kit.files.multipleTitle"),
+        id: fileSectionId,
+        translationParams: filesCount === 1 ? undefined : { count: filesCount },
         order: 30,
         defaultOpen: true,
         content: () => <FileSection />,
@@ -233,21 +238,23 @@ const AppContent: FC = () => {
     }
 
     addSection("details", {
-      id: "kit-details",
-      label: t("semio.sketchpad.app.kit.title"),
+      id: "semio.sketchpad.app.kit.title",
       order: 100,
       defaultOpen: true,
       content: () => <KitSection />,
     });
 
     return () => {
-      removeSection("details", "kit-multiple-artifacts");
-      removeSection("details", "kit-design");
-      removeSection("details", "kit-type");
-      removeSection("details", "kit-file");
-      removeSection("details", "kit-details");
+      removeSection("details", "artifacts.multiple");
+      removeSection("details", "semio.sketchpad.app.design.title");
+      removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.type.title");
+      removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.kit.file.title");
+      removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.kit.title");
     };
-  }, [addSection, removeSection, appType, t, kitApp?.selection]);
+  }, [addSection, removeSection, appType, kitApp?.selection]);
 
   // Auto-select design/type when select parameter is present
   useEffect(() => {
@@ -256,7 +263,7 @@ const AppContent: FC = () => {
     if (selectedKind === "designs") {
       const design = kit.designs?.find((d: Design) => d.guid === selectParam);
       if (design) {
-        kitAppCommands.selectDesign(selectParam);
+        kitAppCommands.selectDesign("semio.sketchpad.app.kit.autoselect.design", selectParam);
         // Remove the select parameter after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
@@ -265,7 +272,7 @@ const AppContent: FC = () => {
     } else if (selectedKind === "types") {
       const type = kit.types?.find((t: Type) => t.guid === selectParam);
       if (type) {
-        kitAppCommands.selectType(selectParam);
+        kitAppCommands.selectType("semio.sketchpad.app.kit.autoselect.type", selectParam);
         // Remove the select parameter after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
@@ -667,7 +674,7 @@ const AppContent: FC = () => {
   }, [focusedItemId, rows]);
 
   const toggleRow = (rowId: string) => {
-    kitAppCommands.toggleExpandedRow(rowId);
+    kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.toggleRow", rowId);
   };
 
   const handleCreateArtifact = (kind: ArtifactKind) => {
@@ -683,7 +690,7 @@ const AppContent: FC = () => {
           pieces: [],
           connections: [],
         };
-        if (kitCommands) kitCommands.createDesign(newDesign);
+        if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createDesign", newDesign);
         sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
         break;
       }
@@ -696,7 +703,7 @@ const AppContent: FC = () => {
           variant: "",
           ports: [],
         };
-        if (kitCommands) kitCommands.createType(newType);
+        if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createType", newType);
         sketchpadCommands.navigateToType(kit.guid, newType.guid);
         break;
       }
@@ -710,7 +717,7 @@ const AppContent: FC = () => {
           key: uniqueKey,
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createQuality(newQuality);
+        if (kitCommands) kitCommands.createQuality("semio.sketchpad.app.kit.canvas.table.createQuality", newQuality);
         sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
         break;
       }
@@ -736,7 +743,7 @@ const AppContent: FC = () => {
         pieces: [],
         connections: [],
       };
-      if (kitCommands) kitCommands.createDesign(newDesign);
+      if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createVariant", newDesign);
       sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
     } else if (row.kind === "types") {
       const type = row.data as Type;
@@ -748,7 +755,7 @@ const AppContent: FC = () => {
         variant: uniqueVariant,
         ports: [],
       };
-      if (kitCommands) kitCommands.createType(newType);
+      if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createVariant", newType);
       sketchpadCommands.navigateToType(kit.guid, newType.guid);
     }
   };
@@ -766,7 +773,7 @@ const AppContent: FC = () => {
       pieces: [],
       connections: [],
     };
-    if (kitCommands) kitCommands.createDesign(newDesign);
+    if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createView", newDesign);
     sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
   };
 
@@ -851,19 +858,19 @@ const AppContent: FC = () => {
               .slice(start, end + 1)
               .filter((r) => r.kind === "designs")
               .map((r) => (r.data as Design).guid);
-            kitAppCommands.selectDesigns(rangeIds);
+            kitAppCommands.selectDesigns("semio.sketchpad.app.kit.canvas.table.selectDesignsRange", rangeIds);
           }
         } else {
-          kitAppCommands.selectDesign(designId);
+          kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesignShift", designId);
         }
       } else if (e.metaKey || e.ctrlKey) {
         if (selection.designs.includes(designId)) {
-          kitAppCommands.removeDesignFromSelection(designId);
+          kitAppCommands.removeDesignFromSelection("semio.sketchpad.app.kit.canvas.table.removeDesignCtrl", designId);
         } else {
-          kitAppCommands.addDesignToSelection(designId);
+          kitAppCommands.addDesignToSelection("semio.sketchpad.app.kit.canvas.table.addDesignCtrl", designId);
         }
       } else {
-        kitAppCommands.selectDesign(designId);
+        kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesign", designId);
       }
     } else if (row.kind === "types") {
       const typeId = (row.data as Type).guid;
@@ -879,19 +886,19 @@ const AppContent: FC = () => {
               .slice(start, end + 1)
               .filter((r) => r.kind === "types")
               .map((r) => (r.data as Type).guid);
-            kitAppCommands.selectTypes(rangeIds);
+            kitAppCommands.selectTypes("semio.sketchpad.app.kit.canvas.table.selectTypesRange", rangeIds);
           }
         } else {
-          kitAppCommands.selectType(typeId);
+          kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectTypeShift", typeId);
         }
       } else if (e.metaKey || e.ctrlKey) {
         if (selection.types.includes(typeId)) {
-          kitAppCommands.removeTypeFromSelection(typeId);
+          kitAppCommands.removeTypeFromSelection("semio.sketchpad.app.kit.canvas.table.removeTypeCtrl", typeId);
         } else {
-          kitAppCommands.addTypeToSelection(typeId);
+          kitAppCommands.addTypeToSelection("semio.sketchpad.app.kit.canvas.table.addTypeCtrl", typeId);
         }
       } else {
-        kitAppCommands.selectType(typeId);
+        kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectType", typeId);
       }
     } else if (row.kind === "qualities") {
       const qualityKey = (row.data as Quality).key;
@@ -907,19 +914,19 @@ const AppContent: FC = () => {
               .slice(start, end + 1)
               .filter((r) => r.kind === "qualities")
               .map((r) => (r.data as Quality).key);
-            kitAppCommands.selectQualities(rangeKeys);
+            kitAppCommands.selectQualities("semio.sketchpad.app.kit.canvas.table.selectQualitiesRange", rangeKeys);
           }
         } else {
-          kitAppCommands.selectQuality(qualityKey);
+          kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQualityShift", qualityKey);
         }
       } else if (e.metaKey || e.ctrlKey) {
         if (selection.qualities.includes(qualityKey)) {
-          kitAppCommands.removeQualityFromSelection(qualityKey);
+          kitAppCommands.removeQualityFromSelection("semio.sketchpad.app.kit.canvas.table.removeQualityCtrl", qualityKey);
         } else {
-          kitAppCommands.addQualityToSelection(qualityKey);
+          kitAppCommands.addQualityToSelection("semio.sketchpad.app.kit.canvas.table.addQualityCtrl", qualityKey);
         }
       } else {
-        kitAppCommands.selectQuality(qualityKey);
+        kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", qualityKey);
       }
     } else if (row.kind === "files") {
       const filePath = (row.data as SemioFile).path;
@@ -935,19 +942,19 @@ const AppContent: FC = () => {
               .slice(start, end + 1)
               .filter((r) => r.kind === "files")
               .map((r) => (r.data as SemioFile).path);
-            kitAppCommands.selectFiles(rangePaths);
+            kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", rangePaths);
           }
         } else {
-          kitAppCommands.selectFile(filePath);
+          kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFileShift", filePath);
         }
       } else if (e.metaKey || e.ctrlKey) {
         if (selection.files.includes(filePath)) {
-          kitAppCommands.removeFileFromSelection(filePath);
+          kitAppCommands.removeFileFromSelection("semio.sketchpad.app.kit.canvas.table.removeFileCtrl", filePath);
         } else {
-          kitAppCommands.addFileToSelection(filePath);
+          kitAppCommands.addFileToSelection("semio.sketchpad.app.kit.canvas.table.addFileCtrl", filePath);
         }
       } else {
-        kitAppCommands.selectFile(filePath);
+        kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", filePath);
       }
     } else if (row.kind === "authors") {
       const authorName = (row.data as Author).name;
@@ -963,19 +970,19 @@ const AppContent: FC = () => {
               .slice(start, end + 1)
               .filter((r) => r.kind === "authors")
               .map((r) => (r.data as Author).name);
-            kitAppCommands.selectAuthors(rangeNames);
+            kitAppCommands.selectAuthors("semio.sketchpad.app.kit.canvas.table.selectAuthorsRange", rangeNames);
           }
         } else {
-          kitAppCommands.selectAuthor(authorName);
+          kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthorShift", authorName);
         }
       } else if (e.metaKey || e.ctrlKey) {
         if (selection.authors.includes(authorName)) {
-          kitAppCommands.removeAuthorFromSelection(authorName);
+          kitAppCommands.removeAuthorFromSelection("semio.sketchpad.app.kit.canvas.table.removeAuthorCtrl", authorName);
         } else {
-          kitAppCommands.addAuthorToSelection(authorName);
+          kitAppCommands.addAuthorToSelection("semio.sketchpad.app.kit.canvas.table.addAuthorCtrl", authorName);
         }
       } else {
-        kitAppCommands.selectAuthor(authorName);
+        kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthor", authorName);
       }
     }
   };
@@ -991,7 +998,7 @@ const AppContent: FC = () => {
   };
 
   const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
-    kitAppCommands.toggleSort(column);
+    kitAppCommands.toggleSort("semio.sketchpad.app.kit.canvas.table.toggleSort", column);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -1040,7 +1047,7 @@ const AppContent: FC = () => {
         className="flex flex-col h-full"
         onClick={(e: React.MouseEvent) => {
           if (e.target === e.currentTarget) {
-            kitAppCommands.deselectAll();
+            kitAppCommands.deselectAll("semio.sketchpad.app.kit.canvas.table.deselect");
           }
         }}
       >
@@ -1180,14 +1187,14 @@ const AppContent: FC = () => {
                 </Toggle>
               ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
+            <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)} />
             <Toggle
               type="dropdown"
               pressed={sortColumn === "artifact"}
               value={sortColumn === "artifact" ? sortDirection : "asc"}
               onValueChange={(value) => {
-                kitAppCommands.setSortColumn("artifact");
-                kitAppCommands.setSortDirection(value as "asc" | "desc");
+                kitAppCommands.setSortColumn("semio.sketchpad.app.kit.filter.artifact.sortColumn", "artifact");
+                kitAppCommands.setSortDirection("semio.sketchpad.app.kit.filter.artifact.sortDirection", value as "asc" | "desc");
               }}
               items={[
                 { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.app.sort.ascending" },
@@ -1306,7 +1313,7 @@ const AppContent: FC = () => {
       className="flex flex-col h-full"
       onClick={(e: React.MouseEvent) => {
         if (e.target === e.currentTarget) {
-          kitAppCommands.deselectAll();
+          kitAppCommands.deselectAll("semio.sketchpad.app.kit.canvas.table.deselect");
         }
       }}
     >
@@ -1445,7 +1452,7 @@ const AppContent: FC = () => {
                 {view || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
               </Toggle>
             ))}
-        <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />
+        <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)} />
       </div>
       <ScrollArea ref={scrollAreaRef} className="flex-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
         {isDragOver && (
@@ -1464,8 +1471,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "artifact"}
                     value={sortColumn === "artifact" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("artifact");
-                      kitAppCommands.setSortDirection(value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
+                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
@@ -1485,8 +1492,8 @@ const AppContent: FC = () => {
                       pressed={sortColumn === "kind"}
                       value={sortColumn === "kind" ? sortDirection : "asc"}
                       onValueChange={(value) => {
-                        kitAppCommands.setSortColumn("kind");
-                        kitAppCommands.setSortDirection(value as "asc" | "desc");
+                        kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.kind.sortColumn", "kind");
+                        kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.kind.sortDirection", value as "asc" | "desc");
                       }}
                       items={[
                         { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
@@ -1506,8 +1513,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "updatedAt"}
                     value={sortColumn === "updatedAt" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("updatedAt");
-                      kitAppCommands.setSortDirection(value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.updatedAt.sortColumn", "updatedAt");
+                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.updatedAt.sortDirection", value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
@@ -1526,8 +1533,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "createdAt"}
                     value={sortColumn === "createdAt" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("createdAt");
-                      kitAppCommands.setSortDirection(value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.createdAt.sortColumn", "createdAt");
+                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.createdAt.sortDirection", value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },

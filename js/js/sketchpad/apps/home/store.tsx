@@ -51,6 +51,7 @@ export interface HomeDiff {
 
 export interface HomeCommandContext {
   home: HomeState;
+  origin?: string;
 }
 
 export interface HomeCommandResult {
@@ -206,15 +207,28 @@ export class HomeStore {
     };
   }
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    console.group(`Executing command: "${command}"`);
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.home.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.home.selectKit" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
       console.groupEnd();
       throw new Error(`Command "${command}" not found in home store`);
     }
     const state = this.snapshot();
-    const context: HomeCommandContext = { home: state };
+    const context: HomeCommandContext = { home: state, origin };
     const result = callback(context, ...rest);
     if (result.diff) {
       this.change(result.diff);
@@ -247,7 +261,7 @@ export function useHomePanelVisibility(): PanelVisibility {
 export function useHomeCommands() {
   const store = useHomeStore() as HomeStore;
   return {
-    togglePanel: (panelKey: keyof PanelVisibility) => {
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
         panelVisibility: {
@@ -255,7 +269,7 @@ export function useHomeCommands() {
         },
       });
     },
-    selectKit: (Guid: Guid) => {
+    selectKit: (origin: string, Guid: Guid) => {
       const current = store.snapshot();
       store.change({
         selection: {
@@ -264,21 +278,21 @@ export function useHomeCommands() {
         },
       });
     },
-    addKitToSelection: (Guid: Guid) => {
+    addKitToSelection: (origin: string, Guid: Guid) => {
       store.change({
         selection: {
           added: [Guid],
         },
       });
     },
-    removeKitFromSelection: (Guid: Guid) => {
+    removeKitFromSelection: (origin: string, Guid: Guid) => {
       store.change({
         selection: {
           removed: [Guid],
         },
       });
     },
-    selectKits: (kitIds: Guid[]) => {
+    selectKits: (origin: string, kitIds: Guid[]) => {
       const current = store.snapshot();
       store.change({
         selection: {
@@ -287,7 +301,7 @@ export function useHomeCommands() {
         },
       });
     },
-    deselectAll: () => {
+    deselectAll: (origin: string) => {
       const current = store.snapshot();
       store.change({
         selection: {
@@ -295,17 +309,17 @@ export function useHomeCommands() {
         },
       });
     },
-    setSortColumn: (column: HomeSortColumn) => {
+    setSortColumn: (origin: string, column: HomeSortColumn) => {
       store.change({
         sortColumn: column,
       });
     },
-    setSortDirection: (direction: HomeSortDirection) => {
+    setSortDirection: (origin: string, direction: HomeSortDirection) => {
       store.change({
         sortDirection: direction,
       });
     },
-    toggleSort: (column: HomeSortColumn) => {
+    toggleSort: (origin: string, column: HomeSortColumn) => {
       const current = store.snapshot();
       if (current.sortColumn === column) {
         store.change({
@@ -318,7 +332,7 @@ export function useHomeCommands() {
         });
       }
     },
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
 

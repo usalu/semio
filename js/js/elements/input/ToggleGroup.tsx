@@ -38,6 +38,7 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 }
 
 function ToggleGroup({ className, label, level = "base", children, ...restProps }: ToggleGroupProps) {
+  console.log("[ToggleGroup] Rendering with level:", level, "children:", children, "restProps:", restProps);
   const variant = "default";
   const toggleGroupElement = (
     <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} className={cn("group/toggle-group flex w-fit items-stretch border border-border divide-x divide-border overflow-hidden h-9", className)} {...restProps}>
@@ -65,6 +66,7 @@ function ToggleGroupItem({
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
   id?: string;
 }) {
+  console.log("[ToggleGroupItem] Rendering with id:", id, "children:", children, "props:", props);
   const context = React.useContext(ToggleGroupContext);
   const mode = useTooltipMode();
 

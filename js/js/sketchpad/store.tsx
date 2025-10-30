@@ -320,6 +320,7 @@ export interface AppDiff<TSelectionDiff = any> {
 
 export interface AppCommandResult<TDiff = any> {
   diff?: TDiff;
+  origin?: string;
 }
 
 export interface PanelVisibility {
@@ -958,9 +959,11 @@ export interface SketchpadDiff {
 
 export interface SketchpadCommandContext {
   sketchpad: SketchpadState;
+  origin?: string;
 }
 export interface SketchpadCommandResult {
   diff?: SketchpadDiff;
+  origin?: string;
 }
 
 export class SketchpadStore {
@@ -1022,6 +1025,11 @@ export class SketchpadStore {
 
     if (id) {
       this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
+      // Override isMobile after persistence loads (it should reflect current window, not persisted value)
+      this.persistence.once("synced", () => {
+        const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
+        this.ySketchpad.set("isMobile", isMobile);
+      });
       if (this.remote) {
         this.remote.yProvider(this.yDoc, id);
       }
@@ -1073,9 +1081,9 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("isNavbarExpanded")) {
         this.ySketchpad.set("isNavbarExpanded", false);
       }
-      if (!this.ySketchpad.has("isMobile")) {
-        this.ySketchpad.set("isMobile", false);
-      }
+      // Always set isMobile based on current window size (not persisted preference)
+      const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
+      this.ySketchpad.set("isMobile", isMobile);
       if (!this.ySketchpad.has("activeInteraction")) {
         this.ySketchpad.set("activeInteraction", "");
       }
@@ -1386,9 +1394,22 @@ export class SketchpadStore {
     return createObserver(this.ySketchpad, subscribe, true);
   };
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.type.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.typeApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
     if (command === "semio.sketchpad.createKit") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const kit = rest[0] as Kit;
       const local = rest[1] as boolean | undefined;
       const remote = rest[2] as boolean | undefined;
@@ -1396,32 +1417,33 @@ export class SketchpadStore {
       return {} as T;
     }
     if (command === "semio.sketchpad.createKitApp") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const id = rest[0] as KitAppId;
       this.createKitApp(id.kit);
       return {} as T;
     }
     if (command === "semio.sketchpad.createDesignApp") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const id = rest[0] as DesignAppId;
       this.createDesignApp(id.kit, id.design);
       return {} as T;
     }
     if (command === "semio.sketchpad.importKit") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const Guid = rest[0] as Guid;
       const url = rest[1] as string;
       const kitStore = this.kits.get(Guid);
       if (kitStore) {
-        await kitStore.execute("semio.kit.import", url);
+        await kitStore.execute("semio.kit.import", origin, url);
       }
       return {} as T;
     }
-    console.group(`Executing command: "${command}"`);
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     const context: SketchpadCommandContext = {
       sketchpad: this.snapshot(),
+      origin,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -2060,19 +2082,19 @@ export function useAppCommands() {
           break;
         case "docs":
           return {
-            togglePanel: (panelKey: keyof PanelVisibility) => {
+            togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
               updateDocsPanelVisibilityState((prev) => ({
                 ...prev,
                 [panelKey]: !prev[panelKey],
               }));
             },
-            execute: (command: string, ...args: any[]) => {},
+            execute: (origin: string, command: string, ...args: any[]) => {},
           };
       }
     } catch (e) {}
 
     return {
-      togglePanel: (panelKey: keyof PanelVisibility) => {
+      togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
         if (!app) {
           return;
         }
@@ -2085,9 +2107,9 @@ export function useAppCommands() {
           });
         } catch (e) {}
       },
-      execute: (command: string, ...args: any[]) => {
+      execute: (origin: string, command: string, ...args: any[]) => {
         if (!app) return;
-        return app.execute(command, ...args);
+        return app.execute(command, origin, ...args);
       },
     };
   }, [store, appType, kitGuid, itemGuid, navigation]);
@@ -2118,32 +2140,32 @@ export function useSketchpadCommands() {
   const navigate = useNavigate();
   return useMemo(
     () => ({
-      setAccess: (access: Access) => store.execute("semio.sketchpad.setAccess", access),
-      setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
-      setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
-      setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
-      toggleFullscreen: () => store.execute("semio.sketchpad.toggleFullscreen"),
-      toggleNavbarExpanded: () => store.execute("semio.sketchpad.toggleNavbarExpanded"),
-      setIsMobile: (isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", isMobile),
-      setActiveInteraction: (interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", interactionId),
-      syncNavigation: (path: string) => store.execute("semio.sketchpad.syncNavigation", path),
-      createKit: (kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", kit, local, remote),
-      createKitApp: (kitAppId: KitAppId) => store.execute("semio.sketchpad.createKitApp", kitAppId),
-      createDesignApp: (designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", designAppId),
+      setAccess: (origin: string, access: Access) => store.execute("semio.sketchpad.setAccess", origin, access),
+      setTheme: (origin: string, theme: Theme) => store.execute("semio.sketchpad.setTheme", origin, theme),
+      setLayout: (origin: string, layout: Layout) => store.execute("semio.sketchpad.setLayout", origin, layout),
+      setMode: (origin: string, mode: Mode) => store.execute("semio.sketchpad.setMode", origin, mode),
+      toggleFullscreen: (origin: string) => store.execute("semio.sketchpad.toggleFullscreen", origin),
+      toggleNavbarExpanded: (origin: string) => store.execute("semio.sketchpad.toggleNavbarExpanded", origin),
+      setIsMobile: (origin: string, isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", origin, isMobile),
+      setActiveInteraction: (origin: string, interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", origin, interactionId),
+      syncNavigation: (origin: string, path: string) => store.execute("semio.sketchpad.syncNavigation", origin, path),
+      createKit: (origin: string, kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", origin, kit, local, remote),
+      createKitApp: (origin: string, kitAppId: KitAppId) => store.execute("semio.sketchpad.createKitApp", origin, kitAppId),
+      createDesignApp: (origin: string, designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", origin, designAppId),
       navigateToKit: (kit: Guid, search?: string) => navigate(`/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`),
       navigateToDesign: (kit: Guid, design: Guid) => navigate(`/kits/${kit}/designs/${design}`),
       navigateToType: (kit: Guid, type: Guid) => navigate(`/kits/${kit}/types/${type}`),
       navigateToQuality: (kit: Guid, quality: Guid) => navigate(`/kits/${kit}/qualities/${quality}`),
-      navigateBack: () => {
-        store.execute("semio.sketchpad.navigateBack");
+      navigateBack: (origin: string) => {
+        store.execute("semio.sketchpad.navigateBack", origin);
         const state = store.snapshot();
         const targetPath = state.navigationHistory[state.navigationHistoryIndex];
         if (targetPath) {
           navigate(targetPath);
         }
       },
-      navigateForward: () => {
-        store.execute("semio.sketchpad.navigateForward");
+      navigateForward: (origin: string) => {
+        store.execute("semio.sketchpad.navigateForward", origin);
         const state = store.snapshot();
         const targetPath = state.navigationHistory[state.navigationHistoryIndex];
         if (targetPath) {
@@ -2200,29 +2222,29 @@ export function useKitCommandsById(kitGuid?: string) {
     if (!kitGuid || !store.hasKit(kitGuid)) return null;
     const kitStore = store.kit(kitGuid);
     return {
-      importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-      exportKit: () => kitStore.execute("semio.kit.export"),
-      createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", author),
-      updateAuthor: (authorId: string, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", authorId, authorDiff),
-      deleteAuthor: (authorId: string) => kitStore.execute("semio.kit.deleteAuthor", authorId),
-      createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
-      updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", guid, diff),
-      deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", guid),
-      createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
-      updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", guid, diff),
-      deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", guid),
-      addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
-      updateFile: (url: string, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
-      removeFile: (url: string) => kitStore.execute("semio.kit.removeFile", url),
-      addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", design, piece),
-      addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", design, pieces),
-      removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", design, piece),
-      removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", design, pieces),
-      addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", design, connection),
-      addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", design, connections),
-      removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", design, connection),
-      removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", design, connections),
-      deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", design, selectedPieces, selectedConnections),
+      importKit: (origin: string, url: string) => kitStore.execute("semio.kit.import", origin, url),
+      exportKit: (origin: string) => kitStore.execute("semio.kit.export", origin),
+      createAuthor: (origin: string, author: Author) => kitStore.execute("semio.kit.createAuthor", origin, author),
+      updateAuthor: (origin: string, authorId: string, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", origin, authorId, authorDiff),
+      deleteAuthor: (origin: string, authorId: string) => kitStore.execute("semio.kit.deleteAuthor", origin, authorId),
+      createType: (origin: string, type: Type) => kitStore.execute("semio.kit.createType", origin, type),
+      updateType: (origin: string, guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", origin, guid, diff),
+      deleteType: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteType", origin, guid),
+      createDesign: (origin: string, design: Design) => kitStore.execute("semio.kit.createDesign", origin, design),
+      updateDesign: (origin: string, guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", origin, guid, diff),
+      deleteDesign: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteDesign", origin, guid),
+      addFile: (origin: string, file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", origin, file, blob),
+      updateFile: (origin: string, url: string, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", origin, url, fileDiff, blob),
+      removeFile: (origin: string, url: string) => kitStore.execute("semio.kit.removeFile", origin, url),
+      addPiece: (origin: string, design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", origin, design, piece),
+      addPieces: (origin: string, design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", origin, design, pieces),
+      removePiece: (origin: string, design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", origin, design, piece),
+      removePieces: (origin: string, design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", origin, design, pieces),
+      addConnection: (origin: string, design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", origin, design, connection),
+      addConnections: (origin: string, design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", origin, design, connections),
+      removeConnection: (origin: string, design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", origin, design, connection),
+      removeConnections: (origin: string, design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", origin, design, connections),
+      deleteSelected: (origin: string, design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
     };
   }, [kitGuid, store]);
 }

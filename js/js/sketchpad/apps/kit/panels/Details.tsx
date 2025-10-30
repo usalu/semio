@@ -58,9 +58,9 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.name"
               value={kit.name}
               onLazyChange={(value) => kitStore.change({ name: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
             />
           </TreeContent>
         </TreeItem>
@@ -72,9 +72,9 @@ const KitSectionForm: FC = () => {
               value={kit.version || ""}
               placeholder={t("semio.sketchpad.app.kit.versionPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ version: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
             />
           </TreeContent>
         </TreeItem>
@@ -86,9 +86,9 @@ const KitSectionForm: FC = () => {
               value={kit.description || ""}
               placeholder={t("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ description: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
             />
           </TreeContent>
         </TreeItem>
@@ -100,9 +100,9 @@ const KitSectionForm: FC = () => {
               value={kit.icon || ""}
               placeholder={t("semio.sketchpad.app.kit.iconPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ icon: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
             />
           </TreeContent>
         </TreeItem>
@@ -114,9 +114,9 @@ const KitSectionForm: FC = () => {
               value={kit.image || ""}
               placeholder={t("semio.sketchpad.app.kit.imagePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ image: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
             />
           </TreeContent>
         </TreeItem>
@@ -128,9 +128,9 @@ const KitSectionForm: FC = () => {
               value={kit.homepage || ""}
               placeholder={t("semio.sketchpad.app.kit.homepagePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ homepage: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
             />
           </TreeContent>
         </TreeItem>
@@ -142,9 +142,9 @@ const KitSectionForm: FC = () => {
               value={kit.license || ""}
               placeholder={t("semio.sketchpad.app.kit.licensePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ license: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
             />
           </TreeContent>
         </TreeItem>
@@ -239,17 +239,17 @@ const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.name" value={design.name} readOnly />
+          <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.variant" value={design.variant || ""} placeholder={t("semio.sketchpad.app.design.variantPlaceholder")} readOnly />
+          <Input id="semio.sketchpad.app.design.panel.details.section.design.variant" value={design.variant || ""} placeholder={t("semio.sketchpad.app.design.variantPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea id="semio.sketchpad.app.design.panel.details.description" value={design.description || ""} placeholder={t("semio.sketchpad.app.design.descriptionPlaceholder")} readOnly />
+          <Textarea id="semio.sketchpad.app.design.panel.details.section.design.description" value={design.description || ""} placeholder={t("semio.sketchpad.app.design.descriptionPlaceholder")} readOnly />
         </TreeContent>
       </TreeItem>
     </>

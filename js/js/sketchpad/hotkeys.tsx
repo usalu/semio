@@ -58,7 +58,7 @@ export function useResetHotkey(): (path: HotkeyPath) => void {
 export function useResetAllHotkeys(): () => void {
   const store = useSketchpadStore();
   return useCallback(() => {
-    store.executeCommand("semio.sketchpad.resetAllHotkeys");
+    store.executeCommand("semio.sketchpad.resetAllHotkeys", "semio.sketchpad.hotkeys.resetAll");
   }, [store]);
 }
 

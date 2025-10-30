@@ -35,7 +35,7 @@ const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
       id: tool.id,
       label: t(tool.label),
       icon: tool.icon,
-      id: tool.id,
+      tooltipId: tool.tooltipId,
       hotkey: tool.hotkey,
     })),
   },
@@ -46,7 +46,7 @@ const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
       id: tool.id,
       label: t(tool.label),
       icon: tool.icon,
-      id: tool.id,
+      tooltipId: tool.tooltipId,
       hotkey: tool.hotkey,
     })),
   },
@@ -61,5 +61,10 @@ export const ToolsToggleGroup: FC = () => {
   if (!kit || !design || !app) return null;
 
   const activeTool = app?.activeTool || ToolType.SELECTION_NORMAL;
-  return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={setActiveTool} level="panel" />;
+
+  const handleToolChange = (toolType: ToolType) => {
+    setActiveTool("toolbar", toolType);
+  };
+
+  return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={handleToolChange} level="panel" />;
 };

@@ -319,7 +319,7 @@ const PortToolContent: FC<ToolRenderContext<TypeAppState>> = ({ state, selection
           mandatory: false,
         };
 
-        kitCommands.updateType(type.guid, {
+        kitCommands.updateType("semio.sketchpad.app.type.tool.port.addPort", type.guid, {
           ports: {
             added: [newPort],
           },
@@ -366,7 +366,7 @@ const PortToolContent: FC<ToolRenderContext<TypeAppState>> = ({ state, selection
 export const PortTool: Tool<TypeAppState> = {
   id: ToolType.PORT,
   label: "tools.port.label",
-  id: "tools.port.addAndEdit",
+  tooltipId: "tools.port.addAndEdit",
   icon: <Crosshair className="h-4 w-4" />,
   hotkey: "2",
   render: (context: ToolRenderContext<TypeAppState>) => ({

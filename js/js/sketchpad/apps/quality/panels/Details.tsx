@@ -39,67 +39,74 @@ export const QualityDetails: FC = () => {
     <>
       <TreeItem label={t("semio.sketchpad.app.quality.key")}>
         <TreeContent>
-          <Input value={quality.key ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.key" value={quality.key ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.name")}>
         <TreeContent>
-          <Input value={quality.name ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.name" value={quality.name ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.description")}>
         <TreeContent>
-          <Textarea value={quality.description ?? ""} readOnly className="w-full" />
+          <Textarea id="semio.sketchpad.app.quality.panel.details.description" value={quality.description ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.formula")}>
         <TreeContent>
-          <Textarea value={quality.formula ?? ""} onChange={(e) => updateFormula(e.target.value)} className="w-full font-mono text-xs" rows={5} placeholder={t("semio.sketchpad.app.quality.formulaPlaceholder")} />
+          <Textarea
+            id="semio.sketchpad.app.quality.panel.details.formula"
+            value={quality.formula ?? ""}
+            onChange={(e) => updateFormula("semio.sketchpad.app.quality.panel.details.formula", e.target.value)}
+            className="w-full font-mono text-xs"
+            rows={5}
+            placeholder={t("semio.sketchpad.app.quality.formulaPlaceholder")}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.defaultSiUnit")}>
         <TreeContent>
-          <Input value={quality.defaultSiUnit ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.defaultSiUnit" value={quality.defaultSiUnit ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.defaultImperialUnit")}>
         <TreeContent>
-          <Input value={quality.defaultImperialUnit ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.defaultImperialUnit" value={quality.defaultImperialUnit ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.kind")}>
         <TreeContent>
-          <Input type="number" value={quality.kind?.toString() ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.kind" type="number" value={quality.kind?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.canScale")}>
         <TreeContent>
-          <Input type="checkbox" checked={quality.canScale ?? false} disabled className="h-4 w-4" />
+          <Input id="semio.sketchpad.app.quality.panel.details.canScale" type="checkbox" checked={quality.canScale ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.defaultValue")}>
         <TreeContent>
-          <Input type="number" value={quality.defaultValue?.toString() ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.defaultValue" type="number" value={quality.defaultValue?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.min")}>
         <TreeContent>
-          <Input type="number" value={quality.min?.toString() ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.min" type="number" value={quality.min?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.isMinExcluded")}>
         <TreeContent>
-          <Input type="checkbox" checked={quality.isMinExcluded ?? false} disabled className="h-4 w-4" />
+          <Input id="semio.sketchpad.app.quality.panel.details.isMinExcluded" type="checkbox" checked={quality.isMinExcluded ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.max")}>
         <TreeContent>
-          <Input type="number" value={quality.max?.toString() ?? ""} readOnly className="w-full" />
+          <Input id="semio.sketchpad.app.quality.panel.details.max" type="number" value={quality.max?.toString() ?? ""} readOnly className="w-full" />
         </TreeContent>
       </TreeItem>
       <TreeItem label={t("semio.sketchpad.app.quality.isMaxExcluded")}>
         <TreeContent>
-          <Input type="checkbox" checked={quality.isMaxExcluded ?? false} disabled className="h-4 w-4" />
+          <Input id="semio.sketchpad.app.quality.panel.details.isMaxExcluded" type="checkbox" checked={quality.isMaxExcluded ?? false} disabled className="h-4 w-4" />
         </TreeContent>
       </TreeItem>
     </>

@@ -229,7 +229,7 @@ const SketchpadBase: FC = () => {
 
   useEffect(() => {
     const checkMobile = () => {
-      updateIsMobile(window.innerWidth < 768);
+      updateIsMobile("semio.sketchpad.window.resize", window.innerWidth < 768);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -246,7 +246,7 @@ const SketchpadBase: FC = () => {
       }
       // Force touch layout on mobile
       if (layout !== Layout.TOUCH) {
-        setLayout(Layout.TOUCH);
+        setLayout("semio.sketchpad.mobile.forceTouch", Layout.TOUCH);
       }
     } else {
       // On desktop, always update the saved desktop layout when user changes it
@@ -256,7 +256,7 @@ const SketchpadBase: FC = () => {
 
   // Sync React Router location to store navigation
   useEffect(() => {
-    syncNavigation(currentPath);
+    syncNavigation("semio.sketchpad.router.sync", currentPath);
   }, [currentPath, syncNavigation]);
 
   // Handle hotkey navigation from tooltips
@@ -265,7 +265,7 @@ const SketchpadBase: FC = () => {
       const customEvent = event as CustomEvent<{ path: string }>;
       const path = customEvent.detail.path;
       // Navigate to home and open settings panel with the hotkey highlighted
-      syncNavigation("/");
+      syncNavigation("semio.sketchpad.hotkey.navigate", "/");
       // This will be handled by the HotkeySettings component via activeHotkeySetting state
       const store = (window as any).__sketchpadStore__;
       if (store) {
@@ -295,7 +295,7 @@ const SketchpadBase: FC = () => {
   useEffect(() => {
     if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
+      setTheme("semio.sketchpad.theme.systemDetect", prefersDark ? Theme.DARK : Theme.LIGHT);
     }
   }, [theme, layout, setTheme, setLayout]);
 
@@ -343,7 +343,7 @@ const SketchpadBase: FC = () => {
     setActiveDraggedDesign(null);
     setActiveDraggedFunction(null);
     setActiveDraggedQuality(null);
-    setActiveInteraction(undefined);
+    setActiveInteraction("semio.sketchpad.drag.clear", undefined);
   };
 
   // Get the single visible panel on mobile

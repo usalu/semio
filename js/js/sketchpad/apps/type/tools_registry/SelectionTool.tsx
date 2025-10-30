@@ -27,7 +27,7 @@ import { TypeAppState } from "../store";
 export const SelectionNormalTool: Tool<TypeAppState> = {
   id: ToolType.SELECTION_NORMAL,
   label: "tools.selection.normal",
-  id: "tools.selection.selectPorts",
+  tooltipId: "tools.selection.selectPorts",
   icon: <MousePointer2 className="h-4 w-4" />,
   hotkey: "1",
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
@@ -36,7 +36,7 @@ export const SelectionNormalTool: Tool<TypeAppState> = {
 export const SelectionAdditiveTool: Tool<TypeAppState> = {
   id: ToolType.SELECTION_ADDITIVE,
   label: "tools.selection.additive",
-  id: "tools.selection.addToSelection",
+  tooltipId: "tools.selection.addToSelection",
   icon: <Plus className="h-4 w-4" />,
   hotkey: "Shift",
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
@@ -45,7 +45,7 @@ export const SelectionAdditiveTool: Tool<TypeAppState> = {
 export const SelectionSubtractiveTool: Tool<TypeAppState> = {
   id: ToolType.SELECTION_SUBTRACTIVE,
   label: "tools.selection.subtractive",
-  id: "tools.selection.removeFromSelection",
+  tooltipId: "tools.selection.removeFromSelection",
   icon: <Minus className="h-4 w-4" />,
   hotkey: "Ctrl",
   render: (context: ToolRenderContext<TypeAppState>) => ({}),

@@ -175,9 +175,10 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
 
   const isInteracting = interactionId && activeInteraction === interactionId;
   const shouldFade = activeInteraction && !isInteracting;
+  const labelElementId = `${id.split(".").join("-")}-label`;
 
   const stepperElement = (
-    <div className="flex items-center flex-1 min-w-0 h-9">
+    <div className="flex h-9 flex-1 min-w-0 items-stretch border border-border transition-[border-color] focus-within:border-accent">
       <button
         type="button"
         onMouseDown={handleMouseDown(-step)}
@@ -186,7 +187,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className="h-9 w-9 border border-r-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        className="flex h-full w-9 cursor-pointer items-center justify-center border-r border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -235,11 +236,11 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
             }
           }
         }}
-        className="border-l-0 border-r-0 text-center"
+        className="border-0 text-center focus-visible:border-0"
         step={step}
         min={min}
         max={max}
-        id={id}
+        aria-labelledby={labelElementId}
       />
       <button
         type="button"
@@ -249,7 +250,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className="h-9 w-9 border border-l-0 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        className="flex h-full w-9 cursor-pointer items-center justify-center border-l border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -262,7 +263,7 @@ const Stepper: FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1
     <div className="group flex items-center gap-2 min-w-0 h-9 w-full" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+          <span id={labelElementId} className="inline-flex h-full items-center px-3 text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
         </TooltipTrigger>
         <TooltipContent>
           <IdTooltipContent id={id} mode={mode} />

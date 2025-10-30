@@ -20,13 +20,14 @@
 
 // #endregion
 
-import { Edges, Line, Select } from "@react-three/drei";
-import { ThreeEvent } from "@react-three/fiber";
-import React, { FC, useCallback, useMemo } from "react";
+import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
+import { ThreeEvent, useLoader } from "@react-three/fiber";
+import React, { FC, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import Scene, { Model, TransformableModel } from "../../../../elements/windows/Scene";
-import { Camera, Design, DiffStatus, Piece, Plane, planeToMatrix, toThreeRotation } from "../../../../semio";
-import { PieceScopeProvider, useDesign, usePiece } from "../../../kits/store";
+import { Camera, Design, DiffStatus, Kit, Piece, Plane, planeToMatrix, toThreeRotation, Type } from "../../../../semio";
+import { KitStore, PieceScopeProvider, useDesign, useKit, useKitStore, usePiece, useType } from "../../../kits/store";
 import { useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePieceStatus } from "../../../kits/designAppIntegration";
 import { useAppPanelVisibility } from "../../../store";
 import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFocusedPieceGuid, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelection } from "../store";
@@ -59,6 +60,125 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
       <Line points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]} color={new THREE.Color(getComputedColor("--color-primary"))} />
       <Line points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)]} color={new THREE.Color(getComputedColor("--color-primary"))} />
     </group>
+  );
+};
+
+const GLTFMesh: FC<{ url: string }> = ({ url }) => {
+  const gltf = useGLTF(url);
+  const clonedScene = useMemo(() => {
+    const cloned = gltf.scene.clone();
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.raycast = THREE.Mesh.prototype.raycast;
+      }
+    });
+    return cloned;
+  }, [gltf.scene]);
+  return <primitive object={clonedScene} />;
+};
+
+const FBXMesh: FC<{ url: string }> = ({ url }) => {
+  const scene = useFBX(url);
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone();
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.raycast = THREE.Mesh.prototype.raycast;
+      }
+    });
+    return cloned;
+  }, [scene]);
+  return <primitive object={clonedScene} />;
+};
+
+const OBJMesh: FC<{ url: string }> = ({ url }) => {
+  const obj = useLoader(OBJLoader, url);
+  const clonedScene = useMemo(() => {
+    const cloned = obj.clone();
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.raycast = THREE.Mesh.prototype.raycast;
+      }
+    });
+    return cloned;
+  }, [obj]);
+  return <primitive object={clonedScene} />;
+};
+
+const LoadedPieceMesh: FC<{ url: string; fileExtension: string }> = ({ url, fileExtension }) => {
+  const ext = fileExtension.toLowerCase();
+  if (ext === "glb" || ext === "gltf") {
+    return <GLTFMesh url={url} />;
+  } else if (ext === "fbx") {
+    return <FBXMesh url={url} />;
+  } else if (ext === "obj") {
+    return <OBJMesh url={url} />;
+  } else {
+    return <GLTFMesh url={url} />;
+  }
+};
+
+const PieceMesh: FC = () => {
+  const piece = usePiece() as Piece;
+  const type = useType(undefined, piece.type) as Type | undefined;
+  const kit = useKit(undefined, undefined, true) as Kit | undefined;
+  const kitStore = useKitStore() as KitStore;
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+  const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
+    if (!type?.representations || type.representations.length === 0) {
+      return { representationUrl: null, fileExtension: "", fileGuid: null };
+    }
+    const representation = type.representations[0];
+    if (!representation) {
+      return { representationUrl: null, fileExtension: "", fileGuid: null };
+    }
+    const file = kit?.files?.find((f) => f.guid === representation.file);
+    if (!file) {
+      return { representationUrl: null, fileExtension: "", fileGuid: null };
+    }
+    const ext = file.path.split(".").pop() || "";
+    const url = kitStore.getFileUrl(file.guid);
+    if (!url) {
+      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
+    }
+    return { representationUrl: url, fileExtension: ext, fileGuid: file.guid };
+  }, [type, kit, kitStore]);
+
+  useEffect(() => {
+    if (!fileGuid) {
+      setBlobUrl(null);
+      return;
+    }
+    let cancelled = false;
+    let currentBlobUrl: string | null = null;
+    (async () => {
+      try {
+        const url = await kitStore.getFileBlobUrl(fileGuid);
+        if (!cancelled && url) {
+          currentBlobUrl = url;
+          setBlobUrl(url);
+        }
+      } catch (error) {
+        console.error("[PieceMesh] Failed to get blob URL:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (currentBlobUrl && currentBlobUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+    };
+  }, [fileGuid, kitStore]);
+
+  if (!blobUrl) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} />
+    </Suspense>
   );
 };
 
@@ -115,11 +235,11 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const onSelect = useCallback(
     (e?: ThreeEvent<MouseEvent>) => {
       if (e?.ctrlKey || e?.metaKey) {
-        removePieceFromSelection(piece.guid);
+        removePieceFromSelection("semio.sketchpad.app.design.canvas.scene.modelPiece.removePieceFromSelection", piece.guid);
       } else if (e?.shiftKey) {
-        addPieceToSelection(piece.guid);
+        addPieceToSelection("semio.sketchpad.app.design.canvas.scene.modelPiece.addPieceToSelection", piece.guid);
       } else {
-        selectPiece(piece.guid);
+        selectPiece("semio.sketchpad.app.design.canvas.scene.modelPiece.selectPiece", piece.guid);
       }
     },
     [selectPiece, removePieceFromSelection, addPieceToSelection, piece.guid],
@@ -128,7 +248,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const onDoubleClick = useCallback(
     (e?: ThreeEvent<MouseEvent>) => {
       e?.stopPropagation();
-      focusPiece(piece.guid);
+      focusPiece("semio.sketchpad.app.design.canvas.scene.modelPiece.focusPiece", piece.guid);
     },
     [focusPiece, piece.guid],
   );
@@ -212,14 +332,14 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const userData = useMemo(() => ({ id: piece.guid }), [piece.guid]);
 
   // Diffed/current piece mesh using Model component
-  const diffedMeshContent = (
+  const diffedMeshContent = piece.design ? (
     <Model
       selected={isSelected}
       hovered={isHovered}
       onClick={onSelect}
       onDoubleClick={onDoubleClick}
-      onPointerEnter={() => hoverPiece(piece.guid)}
-      onPointerLeave={() => clearHover()}
+      onPointerEnter={() => hoverPiece("semio.sketchpad.app.design.canvas.scene.modelPiece.hoverPiece", piece.guid)}
+      onPointerLeave={() => clearHover("semio.sketchpad.app.design.canvas.scene.modelPiece.clearHover")}
       color={materialColor}
       emissiveColor={emissiveColor}
       emissiveIntensity={0.45}
@@ -227,6 +347,15 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       edgeColor={foregroundColor}
       userData={userData}
     />
+  ) : (
+    <group
+      onClick={onSelect}
+      onDoubleClick={onDoubleClick}
+      onPointerEnter={() => hoverPiece("semio.sketchpad.app.design.canvas.scene.modelPiece.hoverPiece", piece.guid)}
+      onPointerLeave={() => clearHover("semio.sketchpad.app.design.canvas.scene.modelPiece.clearHover")}
+    >
+      <PieceMesh />
+    </group>
   );
 
   // Render the piece at its current position (diffed or original)
@@ -302,7 +431,7 @@ const ModelDesign: FC = () => {
     (selected: THREE.Object3D[]) => {
       const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
       if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index])) {
-        selectPieces(newSelectedPieceIds);
+        selectPieces("semio.sketchpad.app.design.canvas.scene.modelDesign.selectPieces", newSelectedPieceIds);
       }
     },
     [selectPieces, selection.pieces],
@@ -326,7 +455,7 @@ const ModelDesign: FC = () => {
   const handleMultiPlaneUpdate = useCallback(
     (updates: Array<{ modelGuid: string; newPlane: Plane }>) => {
       updates.forEach(({ modelGuid, newPlane }) => {
-        updatePiece(modelGuid, { plane: newPlane });
+        updatePiece("semio.sketchpad.app.design.canvas.scene.modelDesign.updatePiece", modelGuid, { plane: newPlane });
       });
     },
     [updatePiece],
@@ -348,7 +477,13 @@ const ModelDesign: FC = () => {
       </Select>
 
       {/* Single shared transform control for all selected models */}
-      <SharedTransformControls selectedModels={selectedModels} onUpdate={handleMultiPlaneUpdate} onTransformStart={startTransaction} onTransformEnd={finalizeTransaction} mode="translate" />
+      <SharedTransformControls
+        selectedModels={selectedModels}
+        onUpdate={handleMultiPlaneUpdate}
+        onTransformStart={() => startTransaction("semio.sketchpad.app.design.canvas.scene.sharedTransformControls.start")}
+        onTransformEnd={() => finalizeTransaction("semio.sketchpad.app.design.canvas.scene.sharedTransformControls.end")}
+        mode="translate"
+      />
     </>
   );
 };
@@ -362,26 +497,26 @@ const DesignAppScene: FC = () => {
 
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
-      toggleAccesslFullscreen();
+      toggleAccesslFullscreen("semio.sketchpad.app.design.canvas.scene.doubleClickCapture");
     },
     [toggleAccesslFullscreen],
   );
   const onPointerMissed = useCallback(
     (e: MouseEvent) => {
-      if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
+      if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll("semio.sketchpad.app.design.canvas.scene.pointerMissed");
     },
     [deselectAll],
   );
   const onCameraChange = useCallback(
     (newCamera: Camera) => {
-      setCamera(newCamera);
+      setCamera("semio.sketchpad.app.design.canvas.scene.cameraChange", newCamera);
     },
     [setCamera],
   );
   const onFocusComplete = useCallback(() => {
     // Small delay to ensure focus has completed before clearing
     setTimeout(() => {
-      clearFocus();
+      clearFocus("semio.sketchpad.app.design.canvas.scene.focusComplete");
     }, 100);
   }, [clearFocus]);
 

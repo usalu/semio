@@ -334,34 +334,47 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
     });
   };
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.quality.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.qualityApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
     if (command === "semio.qualityApp.startTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.qualityApp.finalizeTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.qualityApp.abortTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
       this.abortTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.qualityApp.undo") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.qualityApp.redo") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }
 
-    console.group(`Executing command: "${command}"`);
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
       console.groupEnd();
@@ -378,6 +391,7 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
       kit: kitState,
       Guid: quality?.guid || this.Guid.quality,
       fileUrls: kitStore.fileUrls,
+      origin,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -406,7 +420,7 @@ export function initializeQualityAppStore() {
 }
 
 // Auto-initialize if this module is imported
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setTimeout(() => initializeQualityAppStore(), 0);
 }
 
@@ -461,23 +475,23 @@ export function useQualityAppCommands(id?: QualityAppId) {
     };
   }
   return {
-    startTransaction: () => store.startTransaction(),
-    finalizeTransaction: () => store.finalizeTransaction(),
-    abortTransaction: () => store.abortTransaction(),
-    undo: () => store.undo(),
-    redo: () => store.redo(),
-    toggleFormulaFullscreen: () => store.execute("semio.qualityApp.toggleFormulaFullscreen"),
-    toggleDiagramFullscreen: () => store.execute("semio.qualityApp.toggleDiagramFullscreen"),
-    setActiveTool: (tool: ToolType) => store.execute("semio.qualityApp.setActiveTool", tool),
-    updateFormula: (formula: string) => store.execute("semio.qualityApp.updateFormula", formula),
-    addFormulaNode: (node: FormulaNode) => store.execute("semio.qualityApp.addFormulaNode", node),
-    removeFormulaNode: (nodeId: Guid) => store.execute("semio.qualityApp.removeFormulaNode", nodeId),
-    selectFormulaNode: (nodeId: Guid) => store.execute("semio.qualityApp.selectFormulaNode", nodeId),
-    deselectAll: () => store.execute("semio.qualityApp.deselectAll"),
-    hoverFormulaNode: (nodeId: Guid) => store.execute("semio.qualityApp.hoverFormulaNode", nodeId),
-    clearHover: () => store.execute("semio.qualityApp.clearHover"),
-    connectNodes: (sourceId: Guid, targetId: Guid) => store.execute("semio.qualityApp.connectNodes", sourceId, targetId),
-    togglePanel: (panelKey: keyof PanelVisibility) => {
+    startTransaction: (origin: string) => store.startTransaction(),
+    finalizeTransaction: (origin: string) => store.finalizeTransaction(),
+    abortTransaction: (origin: string) => store.abortTransaction(),
+    undo: (origin: string) => store.undo(),
+    redo: (origin: string) => store.redo(),
+    toggleFormulaFullscreen: (origin: string) => store.execute("semio.qualityApp.toggleFormulaFullscreen", origin),
+    toggleDiagramFullscreen: (origin: string) => store.execute("semio.qualityApp.toggleDiagramFullscreen", origin),
+    setActiveTool: (origin: string, tool: ToolType) => store.execute("semio.qualityApp.setActiveTool", origin, tool),
+    updateFormula: (origin: string, formula: string) => store.execute("semio.qualityApp.updateFormula", origin, formula),
+    addFormulaNode: (origin: string, node: FormulaNode) => store.execute("semio.qualityApp.addFormulaNode", origin, node),
+    removeFormulaNode: (origin: string, nodeId: Guid) => store.execute("semio.qualityApp.removeFormulaNode", origin, nodeId),
+    selectFormulaNode: (origin: string, nodeId: Guid) => store.execute("semio.qualityApp.selectFormulaNode", origin, nodeId),
+    deselectAll: (origin: string) => store.execute("semio.qualityApp.deselectAll", origin),
+    hoverFormulaNode: (origin: string, nodeId: Guid) => store.execute("semio.qualityApp.hoverFormulaNode", origin, nodeId),
+    clearHover: (origin: string) => store.execute("semio.qualityApp.clearHover", origin),
+    connectNodes: (origin: string, sourceId: Guid, targetId: Guid) => store.execute("semio.qualityApp.connectNodes", origin, sourceId, targetId),
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
         panelVisibility: {
@@ -485,6 +499,6 @@ export function useQualityAppCommands(id?: QualityAppId) {
         },
       });
     },
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }

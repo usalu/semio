@@ -318,13 +318,6 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           ref={setNodeRef}
           style={style}
           className={itemClasses}
-          onClick={(e) => {
-            if (e.detail > 1) return;
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(!open);
-            onClick?.(e);
-          }}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -335,14 +328,33 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({ id, label, icon, children
           onMouseLeave={() => setIsHovered(false)}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
-          {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
+          <button
+            className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
+          </button>
           {isDragHandle && (
             <Action level="panel" className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
               <GripVertical size={12} className="text-muted-foreground" />
             </Action>
           )}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as ReactNode}</span>
+          <span
+            className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable"
+            onClick={(e) => {
+              if (e.detail > 1) return;
+              e.preventDefault();
+              e.stopPropagation();
+              onClick?.(e);
+            }}
+          >
+            {displayLabel as ReactNode}
+          </span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (
@@ -497,13 +509,6 @@ export const TreeItem: FC<TreeItemProps> = ({
         <div
           className={itemClasses}
           style={{ paddingLeft: `${level * 0.75}rem` }}
-          onClick={(e) => {
-            if (e.detail > 1) return;
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(!open);
-            onClick?.(e);
-          }}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -514,9 +519,28 @@ export const TreeItem: FC<TreeItemProps> = ({
           onMouseLeave={() => setIsHovered(false)}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
-          {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
+          <button
+            className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            {open ? <ChevronDown size={12} className="flex-shrink-0" /> : <ChevronRight size={12} className="flex-shrink-0" />}
+          </button>
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as ReactNode}</span>
+          <span
+            className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable"
+            onClick={(e) => {
+              if (e.detail > 1) return;
+              e.preventDefault();
+              e.stopPropagation();
+              onClick?.(e);
+            }}
+          >
+            {resolvedLabel as ReactNode}
+          </span>
           {actions.length > 0 && (
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => (

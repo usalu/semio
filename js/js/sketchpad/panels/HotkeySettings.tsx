@@ -35,7 +35,7 @@ const HotkeyItem: FC<HotkeyItemProps> = ({ path, label }) => {
       <TreeContent>
         <div className="flex items-center gap-2 w-full">
           <span className="flex-1 text-sm">{label}</span>
-          <Input className={`w-32 text-xs ${isActive ? "ring-2 ring-primary" : ""}`} value={hotkey || ""} onChange={(e) => setHotkey(path, e.target.value)} placeholder="None" />
+          <Input className={`w-32 text-xs ${isActive ? "ring-2 ring-primary" : ""}`} value={hotkey || ""} onChange={(e) => setHotkey(path, e.target.value)} placeholderId="semio.sketchpad.panel.settings.hotkey.none" />
           {isOverridden && (
             <Button variant="ghost" onClick={() => resetHotkey(path)}>
               <RotateCcw className="h-3 w-3" />

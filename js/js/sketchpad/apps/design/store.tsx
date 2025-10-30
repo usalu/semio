@@ -232,6 +232,12 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
       yPanelVisibility.set("chat", false);
       yPanelVisibility.set("settings", false);
       yMap.set("panelVisibility", yPanelVisibility as any);
+    } else {
+      // Ensure toolbar field exists for existing instances
+      const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
+      if (yPanelVisibility && !yPanelVisibility.has("toolbar")) {
+        yPanelVisibility.set("toolbar", true);
+      }
     }
 
     // Camera, diagramCenter, and diagramScale are already handled by their getters/setters
@@ -580,34 +586,47 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
     });
   };
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.design.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.designApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
     if (command === "semio.designApp.startTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.designApp.finalizeTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designApp.abortTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
       this.abortTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designApp.undo") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.designApp.redo") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }
 
-    console.group(`Executing command: "${command}"`);
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design app store`);
 
@@ -620,6 +639,7 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
       kit: kitState,
       Guid: this.design().guid,
       fileUrls: kitStore.fileUrls,
+      origin,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -644,7 +664,7 @@ export function initializeDesignAppStore() {
 }
 
 // Auto-initialize if this module is imported
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Use setTimeout to defer execution until after module initialization
   setTimeout(() => initializeDesignAppStore(), 0);
 }
@@ -716,64 +736,64 @@ export function useDesignAppHover(): DesignAppHover | undefined {
 export function useDesignAppCommands(id?: DesignAppId) {
   const store = useDesignAppStore(undefined, id) as DesignAppStore;
   return {
-    startTransaction: () => {
-      void store.execute("semio.designApp.startTransaction");
+    startTransaction: (origin: string) => {
+      void store.execute("semio.designApp.startTransaction", origin);
     },
-    finalizeTransaction: () => {
-      void store.execute("semio.designApp.finalizeTransaction");
+    finalizeTransaction: (origin: string) => {
+      void store.execute("semio.designApp.finalizeTransaction", origin);
     },
-    abortTransaction: () => {
-      void store.execute("semio.designApp.abortTransaction");
+    abortTransaction: (origin: string) => {
+      void store.execute("semio.designApp.abortTransaction", origin);
     },
-    undo: () => {
-      void store.execute("semio.designApp.undo");
+    undo: (origin: string) => {
+      void store.execute("semio.designApp.undo", origin);
     },
-    redo: () => {
-      void store.execute("semio.designApp.redo");
+    redo: (origin: string) => {
+      void store.execute("semio.designApp.redo", origin);
     },
-    selectAll: () => store.execute("semio.designApp.selectAll"),
-    deselectAll: () => store.execute("semio.designApp.deselectAll"),
-    selectPiece: (guid: Guid) => store.execute("semio.designApp.selectPiece", guid),
-    selectPieces: (guids: Guid[]) => store.execute("semio.designApp.selectPieces", guids),
-    addPieceToSelection: (guid: Guid) => store.execute("semio.designApp.addPieceToSelection", guid),
-    removePieceFromSelection: (guid: Guid) => store.execute("semio.designApp.removePieceFromSelection", guid),
-    selectConnection: (connectionGuid: Guid) => store.execute("semio.designApp.selectConnection", connectionGuid),
-    addConnectionToSelection: (connectionGuid: Guid) => store.execute("semio.designApp.addConnectionToSelection", connectionGuid),
-    removeConnectionFromSelection: (connectionGuid: Guid) => store.execute("semio.designApp.removeConnectionFromSelection", connectionGuid),
-    selectPiecePort: (piece: Guid, port: Guid) => store.execute("semio.designApp.selectPiecePort", piece, port),
-    deselectPiecePort: () => store.execute("semio.designApp.deselectPiecePort"),
-    deleteSelected: () => store.execute("semio.designApp.deleteSelected"),
-    toggleDiagramFullscreen: () => store.execute("semio.designApp.toggleDiagramFullscreen"),
-    toggleAccesslFullscreen: () => store.execute("semio.designApp.toggleAccesslFullscreen"),
-    setActiveTool: (tool: ToolType) => store.execute("semio.designApp.setActiveTool", tool),
-    addPiece: (piece: Piece) => store.execute("semio.designApp.addPiece", piece),
-    addPieces: (pieces: Piece[]) => store.execute("semio.designApp.addPieces", pieces),
-    removePiece: (piece: Guid) => store.execute("semio.designApp.removePiece", piece),
-    removePieces: (pieces: Guid[]) => store.execute("semio.designApp.removePieces", pieces),
-    addConnection: (connection: Connection) => store.execute("semio.designApp.addConnection", connection),
-    addConnections: (connections: Connection[]) => store.execute("semio.designApp.addConnections", connections),
-    removeConnection: (connection: Guid) => store.execute("semio.designApp.removeConnection", connection),
-    removeConnections: (connections: Guid[]) => store.execute("semio.designApp.removeConnections", connections),
-    updatePiece: (piece: Guid, pieceDiff: PieceDiff) => store.execute("semio.designApp.updatePiece", piece, pieceDiff),
-    updatePieces: (updates: { id: Guid; diff: PieceDiff }[]) => store.execute("semio.designApp.updatePieces", updates),
-    updateConnection: (connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", connection, connectionDiff),
-    updateConnections: (updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designApp.updateConnections", updates),
-    setCamera: (camera: Camera) => store.execute("semio.designApp.setCamera", camera),
-    focusPiece: (pieceGuid: Guid) => store.execute("semio.designApp.focusPiece", pieceGuid),
-    clearFocus: () => store.execute("semio.designApp.clearFocus"),
-    setDiagramCenter: (center: Coord) => store.execute("semio.designApp.setDiagramCenter", center),
-    setDiagramScale: (scale: number) => store.execute("semio.designApp.setDiagramScale", scale),
-    hoverPiece: (guid: Guid) => store.execute("semio.designApp.hoverPiece", guid),
-    hoverPieces: (guids: Guid[]) => store.execute("semio.designApp.hoverPieces", guids),
-    hoverConnection: (guid: Guid) => store.execute("semio.designApp.hoverConnection", guid),
-    hoverConnections: (guids: Guid[]) => store.execute("semio.designApp.hoverConnections", guids),
-    hoverPort: (pieceGuid: Guid, portGuid: Guid) => store.execute("semio.designApp.hoverPort", pieceGuid, portGuid),
-    hoverType: (guid: Guid) => store.execute("semio.designApp.hoverType", guid),
-    hoverTypes: (guids: Guid[]) => store.execute("semio.designApp.hoverTypes", guids),
-    hoverDesign: (guid: Guid) => store.execute("semio.designApp.hoverDesign", guid),
-    hoverDesigns: (guids: Guid[]) => store.execute("semio.designApp.hoverDesigns", guids),
-    clearHover: () => store.execute("semio.designApp.clearHover"),
-    togglePanel: (panelKey: keyof PanelVisibility) => {
+    selectAll: (origin: string) => store.execute("semio.designApp.selectAll", origin),
+    deselectAll: (origin: string) => store.execute("semio.designApp.deselectAll", origin),
+    selectPiece: (origin: string, guid: Guid) => store.execute("semio.designApp.selectPiece", origin, guid),
+    selectPieces: (origin: string, guids: Guid[]) => store.execute("semio.designApp.selectPieces", origin, guids),
+    addPieceToSelection: (origin: string, guid: Guid) => store.execute("semio.designApp.addPieceToSelection", origin, guid),
+    removePieceFromSelection: (origin: string, guid: Guid) => store.execute("semio.designApp.removePieceFromSelection", origin, guid),
+    selectConnection: (origin: string, connectionGuid: Guid) => store.execute("semio.designApp.selectConnection", origin, connectionGuid),
+    addConnectionToSelection: (origin: string, connectionGuid: Guid) => store.execute("semio.designApp.addConnectionToSelection", origin, connectionGuid),
+    removeConnectionFromSelection: (origin: string, connectionGuid: Guid) => store.execute("semio.designApp.removeConnectionFromSelection", origin, connectionGuid),
+    selectPiecePort: (origin: string, piece: Guid, port: Guid) => store.execute("semio.designApp.selectPiecePort", origin, piece, port),
+    deselectPiecePort: (origin: string) => store.execute("semio.designApp.deselectPiecePort", origin),
+    deleteSelected: (origin: string) => store.execute("semio.designApp.deleteSelected", origin),
+    toggleDiagramFullscreen: (origin: string) => store.execute("semio.designApp.toggleDiagramFullscreen", origin),
+    toggleAccesslFullscreen: (origin: string) => store.execute("semio.designApp.toggleAccesslFullscreen", origin),
+    setActiveTool: (origin: string, tool: ToolType) => store.execute("semio.designApp.setActiveTool", origin, tool),
+    addPiece: (origin: string, piece: Piece) => store.execute("semio.designApp.addPiece", origin, piece),
+    addPieces: (origin: string, pieces: Piece[]) => store.execute("semio.designApp.addPieces", origin, pieces),
+    removePiece: (origin: string, piece: Guid) => store.execute("semio.designApp.removePiece", origin, piece),
+    removePieces: (origin: string, pieces: Guid[]) => store.execute("semio.designApp.removePieces", origin, pieces),
+    addConnection: (origin: string, connection: Connection) => store.execute("semio.designApp.addConnection", origin, connection),
+    addConnections: (origin: string, connections: Connection[]) => store.execute("semio.designApp.addConnections", origin, connections),
+    removeConnection: (origin: string, connection: Guid) => store.execute("semio.designApp.removeConnection", origin, connection),
+    removeConnections: (origin: string, connections: Guid[]) => store.execute("semio.designApp.removeConnections", origin, connections),
+    updatePiece: (origin: string, piece: Guid, pieceDiff: PieceDiff) => store.execute("semio.designApp.updatePiece", origin, piece, pieceDiff),
+    updatePieces: (origin: string, updates: { id: Guid; diff: PieceDiff }[]) => store.execute("semio.designApp.updatePieces", origin, updates),
+    updateConnection: (origin: string, connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", origin, connection, connectionDiff),
+    updateConnections: (origin: string, updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designApp.updateConnections", origin, updates),
+    setCamera: (origin: string, camera: Camera) => store.execute("semio.designApp.setCamera", origin, camera),
+    focusPiece: (origin: string, pieceGuid: Guid) => store.execute("semio.designApp.focusPiece", origin, pieceGuid),
+    clearFocus: (origin: string) => store.execute("semio.designApp.clearFocus", origin),
+    setDiagramCenter: (origin: string, center: Coord) => store.execute("semio.designApp.setDiagramCenter", origin, center),
+    setDiagramScale: (origin: string, scale: number) => store.execute("semio.designApp.setDiagramScale", origin, scale),
+    hoverPiece: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverPiece", origin, guid),
+    hoverPieces: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverPieces", origin, guids),
+    hoverConnection: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverConnection", origin, guid),
+    hoverConnections: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverConnections", origin, guids),
+    hoverPort: (origin: string, pieceGuid: Guid, portGuid: Guid) => store.execute("semio.designApp.hoverPort", origin, pieceGuid, portGuid),
+    hoverType: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverType", origin, guid),
+    hoverTypes: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverTypes", origin, guids),
+    hoverDesign: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverDesign", origin, guid),
+    hoverDesigns: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverDesigns", origin, guids),
+    clearHover: (origin: string) => store.execute("semio.designApp.clearHover", origin),
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
         panelVisibility: {
@@ -781,7 +801,7 @@ export function useDesignAppCommands(id?: DesignAppId) {
         },
       });
     },
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
 

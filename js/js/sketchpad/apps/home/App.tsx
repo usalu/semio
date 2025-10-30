@@ -93,13 +93,14 @@ const Home: FC = ({}) => {
     const hasMultipleKits = selection.length > 1;
 
     // Remove previous section
-    removeSection("details", "home-kit");
+    removeSection("details", "semio.sketchpad.app.kit.title");
+    removeSection("details", "semio.sketchpad.app.home.kits.multiple");
 
     // Only show section if something is selected
     if (hasKits) {
       addSection("details", {
-        id: "home-kit",
-        label: hasSingleKit ? t("semio.sketchpad.app.kit.title") : t("semio.sketchpad.app.home.kits.multiple", { count: selection.length }),
+        id: hasSingleKit ? "semio.sketchpad.app.kit.title" : "semio.sketchpad.app.home.kits.multiple",
+        translationParams: hasSingleKit ? undefined : { count: selection.length },
         order: 0,
         defaultOpen: true,
         content: () => <KitSection />,
@@ -107,9 +108,10 @@ const Home: FC = ({}) => {
     }
 
     return () => {
-      removeSection("details", "home-kit");
+      removeSection("details", "semio.sketchpad.app.kit.title");
+      removeSection("details", "semio.sketchpad.app.home.kits.multiple");
     };
-  }, [appType, addSection, removeSection, t, selection.length]);
+  }, [appType, addSection, removeSection, selection.length]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitStoreKind | null;
@@ -419,24 +421,24 @@ const Home: FC = ({}) => {
           const start = Math.min(lastIndex, currentIndex);
           const end = Math.max(lastIndex, currentIndex);
           const rangeIds = rows.slice(start, end + 1).map((r) => r.kit.guid);
-          homeCommands.selectKits(rangeIds);
+          homeCommands.selectKits("semio.sketchpad.app.home.canvas.table.selectKitsRange", rangeIds);
         }
       } else {
-        homeCommands.selectKit(kitId);
+        homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKitShift", kitId);
       }
     } else if (e.metaKey || e.ctrlKey) {
       if (selection.includes(kitId)) {
-        homeCommands.removeKitFromSelection(kitId);
+        homeCommands.removeKitFromSelection("semio.sketchpad.app.home.canvas.table.removeKitCtrl", kitId);
       } else {
-        homeCommands.addKitToSelection(kitId);
+        homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.addKitCtrl", kitId);
       }
     } else {
-      homeCommands.selectKit(kitId);
+      homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKit", kitId);
     }
   };
 
   const handleSortClick = (column: "name" | "type" | "updatedAt" | "createdAt") => {
-    homeCommands.toggleSort(column);
+    homeCommands.toggleSort("semio.sketchpad.app.home.canvas.table.toggleSort", column);
   };
 
   if (isMobile) {
@@ -445,7 +447,7 @@ const Home: FC = ({}) => {
         className="flex flex-col h-full"
         onClick={(e: React.MouseEvent) => {
           if (e.target === e.currentTarget) {
-            homeCommands.deselectAll();
+            homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
           }
         }}
       >
@@ -536,8 +538,8 @@ const Home: FC = ({}) => {
               type="dropdown"
               value={sortColumn === "name" ? sortDirection : "asc"}
               onValueChange={(value) => {
-                homeCommands.setSortColumn("name");
-                homeCommands.setSortDirection(value as "asc" | "desc");
+                homeCommands.setSortColumn("semio.sketchpad.app.home.filter.name.sortColumn", "name");
+                homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
               }}
               items={[
                 { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
@@ -615,7 +617,7 @@ const Home: FC = ({}) => {
           className="flex flex-col h-full"
           onClick={(e: React.MouseEvent) => {
             if (e.target === e.currentTarget) {
-              homeCommands.deselectAll();
+              homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
             }
           }}
         >
@@ -714,8 +716,8 @@ const Home: FC = ({}) => {
                         pressed={sortColumn === "name"}
                         value={sortColumn === "name" ? sortDirection : "asc"}
                         onValueChange={(value) => {
-                          homeCommands.setSortColumn("name");
-                          homeCommands.setSortDirection(value as "asc" | "desc");
+                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.name.sortColumn", "name");
+                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
                         }}
                         items={[
                           { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
@@ -735,8 +737,8 @@ const Home: FC = ({}) => {
                           pressed={sortColumn === "type"}
                           value={sortColumn === "type" ? sortDirection : "asc"}
                           onValueChange={(value) => {
-                            homeCommands.setSortColumn("type");
-                            homeCommands.setSortDirection(value as "asc" | "desc");
+                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
+                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
                           }}
                           items={[
                             { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
@@ -756,8 +758,8 @@ const Home: FC = ({}) => {
                         pressed={sortColumn === "updatedAt"}
                         value={sortColumn === "updatedAt" ? sortDirection : "asc"}
                         onValueChange={(value) => {
-                          homeCommands.setSortColumn("updatedAt");
-                          homeCommands.setSortDirection(value as "asc" | "desc");
+                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.updatedAt.sortColumn", "updatedAt");
+                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.updatedAt.sortDirection", value as "asc" | "desc");
                         }}
                         items={[
                           { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
@@ -776,8 +778,8 @@ const Home: FC = ({}) => {
                         pressed={sortColumn === "createdAt"}
                         value={sortColumn === "createdAt" ? sortDirection : "asc"}
                         onValueChange={(value) => {
-                          homeCommands.setSortColumn("createdAt");
-                          homeCommands.setSortDirection(value as "asc" | "desc");
+                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.createdAt.sortColumn", "createdAt");
+                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.createdAt.sortDirection", value as "asc" | "desc");
                         }}
                         items={[
                           { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },

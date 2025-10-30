@@ -44,8 +44,8 @@ const TypeDetailsForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const updateTypeField = (diff: any) => {
-    kitCommands.updateType(type.guid, diff);
+  const updateTypeField = (origin: string, diff: any) => {
+    kitCommands?.updateType(origin, type.guid, diff);
   };
 
   return (
@@ -54,12 +54,12 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.name"
+            id="semio.sketchpad.app.type.panel.details.section.type.name"
             value={type.name}
-            onLazyChange={(value) => updateTypeField({ name: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.name", { name: value })}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.type.name")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.type.name")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.type.name")}
           />
         </TreeContent>
       </TreeItem>
@@ -67,13 +67,13 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Textarea
             lazy
-            id="semio.sketchpad.app.type.panel.details.description"
+            id="semio.sketchpad.app.type.panel.details.section.type.description"
             value={type.description || ""}
             placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
-            onLazyChange={(value) => updateTypeField({ description: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.description", { description: value })}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.type.description")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.type.description")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.type.description")}
           />
         </TreeContent>
       </TreeItem>
@@ -81,13 +81,13 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.icon"
+            id="semio.sketchpad.app.type.panel.details.section.type.icon"
             value={type.icon || ""}
             placeholderId="semio.sketchpad.app.type.iconPlaceholder.label"
-            onLazyChange={(value) => updateTypeField({ icon: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.icon", { icon: value })}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.type.icon")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.type.icon")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.type.icon")}
           />
         </TreeContent>
       </TreeItem>
@@ -95,13 +95,13 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.image"
+            id="semio.sketchpad.app.type.panel.details.section.type.image"
             value={type.image || ""}
             placeholderId="semio.sketchpad.app.type.imagePlaceholder.label"
-            onLazyChange={(value) => updateTypeField({ image: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.image", { image: value })}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.type.image")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.type.image")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.type.image")}
           />
         </TreeContent>
       </TreeItem>
@@ -109,13 +109,13 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.variant"
+            id="semio.sketchpad.app.type.panel.details.section.type.variant"
             value={type.variant || ""}
             placeholderId="semio.sketchpad.app.type.variantPlaceholder.label"
-            onLazyChange={(value) => updateTypeField({ variant: value })}
-            startTransaction={startTransaction}
-            finalizeTransaction={finalizeTransaction}
-            abortTransaction={abortTransaction}
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.variant", { variant: value })}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.type.variant")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.type.variant")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.type.variant")}
           />
         </TreeContent>
       </TreeItem>
@@ -124,12 +124,12 @@ const TypeDetailsForm: FC = () => {
           <TreeContent>
             <Input
               lazy
-              id="semio.sketchpad.app.type.panel.details.unit"
+              id="semio.sketchpad.app.type.panel.details.section.type.unit"
               value={type.unit}
-              onLazyChange={(value) => updateTypeField({ unit: value })}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.unit", { unit: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.type.unit")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.type.unit")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.type.unit")}
             />
           </TreeContent>
         </TreeItem>
@@ -152,12 +152,12 @@ const RepresentationsSectionForm: FC = () => {
   const selection = useTypeAppSelection();
   const hover = useTypeAppHover();
 
-  const applyDiff = (diff: any) => {
-    kitCommands.updateType(type.guid, diff);
+  const applyDiff = (origin: string, diff: any) => {
+    kitCommands?.updateType(origin, type.guid, diff);
   };
 
-  const updateRepresentation = (id: string, representationDiff: any) => {
-    applyDiff({
+  const updateRepresentation = (origin: string, id: string, representationDiff: any) => {
+    applyDiff(origin, {
       representations: {
         updated: [{ id, diff: representationDiff }],
       },
@@ -174,13 +174,14 @@ const RepresentationsSectionForm: FC = () => {
           {
             icon: <Plus />,
             onClick: () => {
-              startTransaction();
-              applyDiff({
+              const origin = "semio.sketchpad.app.type.panel.details.representations.add";
+              startTransaction?.(origin);
+              applyDiff(origin, {
                 representations: {
                   added: [{ guid: guid(), url: "", tags: [] }],
                 },
               });
-              finalizeTransaction();
+              finalizeTransaction?.(origin);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -195,21 +196,28 @@ const RepresentationsSectionForm: FC = () => {
             }))}
             onReorder={(oldIndex, newIndex) => {
               if (!type.representations) return;
-              startTransaction();
-              applyDiff({
+              const origin = "semio.sketchpad.app.type.panel.details.representations.reorder";
+              startTransaction?.(origin);
+              applyDiff(origin, {
                 representations: {
                   removed: type.representations.map((representation: any) => representation.guid),
                   added: arrayMove(type.representations, oldIndex, newIndex),
                 },
               });
-              finalizeTransaction();
+              finalizeTransaction?.(origin);
             }}
           >
             {(representation, index) => {
               const isSelected = selection?.representations?.includes(representation.guid) || false;
               const isHovered = hover?.representation === representation.guid;
               return (
-                <div onPointerEnter={() => hoverRepresentation(representation.guid)} onPointerLeave={() => clearHover()} onClick={() => (isSelected ? deselectRepresentation(representation.guid) : selectRepresentation(representation.guid))}>
+                <div
+                  onPointerEnter={() => hoverRepresentation("semio.sketchpad.app.type.panel.details.representation.hover", representation.guid)}
+                  onPointerLeave={() => clearHover("semio.sketchpad.app.type.panel.details.representation.leave")}
+                  onClick={() =>
+                    isSelected ? deselectRepresentation("semio.sketchpad.app.type.panel.details.representation.deselect", representation.guid) : selectRepresentation("semio.sketchpad.app.type.panel.details.representation.select", representation.guid)
+                  }
+                >
                   <TreeItem
                     key={`representation-${index}`}
                     id="semio.sketchpad.app.type.representation"
@@ -222,13 +230,14 @@ const RepresentationsSectionForm: FC = () => {
                       {
                         icon: <Minus />,
                         onClick: () => {
-                          startTransaction();
-                          applyDiff({
+                          const origin = "semio.sketchpad.app.type.panel.details.representations.remove";
+                          startTransaction?.(origin);
+                          applyDiff(origin, {
                             representations: {
                               removed: [representation.guid],
                             },
                           });
-                          finalizeTransaction();
+                          finalizeTransaction?.(origin);
                         },
                         id: "semio.sketchpad.common.remove",
                       },
@@ -237,46 +246,46 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          id="semio.sketchpad.app.type.panel.details.representation.url"
+                          id="semio.sketchpad.app.type.panel.details.section.representations.url"
                           value={representation.url}
                           onChange={(e) => {
-                            updateRepresentation(representation.guid, { url: e.target.value });
+                            updateRepresentation("semio.sketchpad.app.type.panel.details.section.representations.url", representation.guid, { url: e.target.value });
                           }}
-                          onFocus={startTransaction}
-                          onBlur={finalizeTransaction}
+                          onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.representations.url")}
+                          onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.representations.url")}
                         />
                       </TreeContent>
                     </TreeItem>
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          id="semio.sketchpad.app.type.panel.details.representation.description"
+                          id="semio.sketchpad.app.type.panel.details.section.representations.description"
                           value={representation.description || ""}
                           placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
                           onChange={(e) => {
-                            updateRepresentation(representation.guid, { description: e.target.value });
+                            updateRepresentation("semio.sketchpad.app.type.panel.details.section.representations.description", representation.guid, { description: e.target.value });
                           }}
-                          onFocus={startTransaction}
-                          onBlur={finalizeTransaction}
+                          onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.representations.description")}
+                          onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.representations.description")}
                         />
                       </TreeContent>
                     </TreeItem>
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          id="semio.sketchpad.app.type.panel.details.representation.tags"
+                          id="semio.sketchpad.app.type.panel.details.section.representations.tags"
                           value={(representation.tags || []).join(", ")}
                           placeholderId="semio.sketchpad.app.type.representationTagsPlaceholder.label"
                           onChange={(e) => {
-                            updateRepresentation(representation.guid, {
+                            updateRepresentation("semio.sketchpad.app.type.panel.details.section.representations.tags", representation.guid, {
                               tags: e.target.value
                                 .split(",")
                                 .map((tag) => tag.trim())
                                 .filter((tag) => tag),
                             });
                           }}
-                          onFocus={startTransaction}
-                          onBlur={finalizeTransaction}
+                          onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.representations.tags")}
+                          onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.representations.tags")}
                         />
                       </TreeContent>
                     </TreeItem>
@@ -305,11 +314,11 @@ const PortsListSectionForm: FC = () => {
   const selection = useTypeAppSelection();
   const hover = useTypeAppHover();
 
-  const applyDiff = (diff: any) => {
-    kitCommands.updateType(type.guid, diff);
+  const applyDiff = (origin: string, diff: any) => {
+    kitCommands?.updateType(origin, type.guid, diff);
   };
 
-  const updatePort = (id: string, portDiff: any) => {
+  const updatePort = (origin: string, id: string, portDiff: any) => {
     const port = type.ports?.find((existingPort) => existingPort.guid === id);
     const diff: any = { ...portDiff };
     if (port) {
@@ -326,7 +335,7 @@ const PortsListSectionForm: FC = () => {
         if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
       }
     }
-    applyDiff({
+    applyDiff(origin, {
       ports: {
         updated: [{ id, diff }],
       },
@@ -343,8 +352,9 @@ const PortsListSectionForm: FC = () => {
           {
             icon: <Plus />,
             onClick: () => {
-              startTransaction();
-              applyDiff({
+              const origin = "semio.sketchpad.app.type.panel.details.ports.add";
+              startTransaction?.(origin);
+              applyDiff(origin, {
                 ports: {
                   added: [
                     {
@@ -356,7 +366,7 @@ const PortsListSectionForm: FC = () => {
                   ],
                 },
               });
-              finalizeTransaction();
+              finalizeTransaction?.(origin);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -371,14 +381,15 @@ const PortsListSectionForm: FC = () => {
             }))}
             onReorder={(oldIndex, newIndex) => {
               if (!type.ports) return;
-              startTransaction();
-              applyDiff({
+              const origin = "semio.sketchpad.app.type.panel.details.ports.reorder";
+              startTransaction?.(origin);
+              applyDiff(origin, {
                 ports: {
                   removed: type.ports.map((existingPort: any) => existingPort.guid),
                   added: arrayMove(type.ports, oldIndex, newIndex),
                 },
               });
-              finalizeTransaction();
+              finalizeTransaction?.(origin);
             }}
           >
             {(port, index) => {
@@ -387,18 +398,18 @@ const PortsListSectionForm: FC = () => {
               const handleClick = (event: React.MouseEvent) => {
                 event.stopPropagation();
                 if (isSelected) {
-                  deselectPort(port.guid);
+                  deselectPort("semio.sketchpad.app.type.panel.details.section.ports.deselect", port.guid);
                 } else {
-                  selectPort(port.guid);
+                  selectPort("semio.sketchpad.app.type.panel.details.section.ports.select", port.guid);
                 }
               };
 
               const handleHover = () => {
-                hoverPort(port.guid);
+                hoverPort("semio.sketchpad.app.type.panel.details.section.ports.hover", port.guid);
               };
 
               const handleLeave = () => {
-                clearHover();
+                clearHover("semio.sketchpad.app.type.panel.details.section.ports.leave");
               };
 
               return (
@@ -415,13 +426,14 @@ const PortsListSectionForm: FC = () => {
                       {
                         icon: <Minus />,
                         onClick: () => {
-                          startTransaction();
-                          applyDiff({
+                          const origin = "semio.sketchpad.app.type.panel.details.ports.remove";
+                          startTransaction?.(origin);
+                          applyDiff(origin, {
                             ports: {
                               removed: [port.guid],
                             },
                           });
-                          finalizeTransaction();
+                          finalizeTransaction?.(origin);
                         },
                         id: "semio.sketchpad.common.remove",
                       },
@@ -430,28 +442,28 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          id="semio.sketchpad.app.type.panel.details.port.family"
+                          id="semio.sketchpad.app.type.panel.details.section.ports.family"
                           value={port.family || ""}
                           placeholderId="semio.sketchpad.app.type.portFamilyPlaceholder.label"
                           onChange={(e) => {
-                            updatePort(port.guid, { family: e.target.value });
+                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.family", port.guid, { family: e.target.value });
                           }}
-                          onFocus={startTransaction}
-                          onBlur={finalizeTransaction}
+                          onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.family")}
+                          onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.family")}
                         />
                       </TreeContent>
                     </TreeItem>
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          id="semio.sketchpad.app.type.panel.details.port.description"
+                          id="semio.sketchpad.app.type.panel.details.section.ports.description"
                           value={port.description || ""}
                           placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
                           onChange={(e) => {
-                            updatePort(port.guid, { description: e.target.value });
+                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.description", port.guid, { description: e.target.value });
                           }}
-                          onFocus={startTransaction}
-                          onBlur={finalizeTransaction}
+                          onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.description")}
+                          onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.description")}
                         />
                       </TreeContent>
                     </TreeItem>
@@ -462,11 +474,11 @@ const PortsListSectionForm: FC = () => {
                           <Slider
                             value={[port.t ?? 0]}
                             onValueChange={([value]) => {
-                              updatePort(port.guid, { t: value });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.t", port.guid, { t: value });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
                             min={0}
                             max={1}
                             step={0.01}
@@ -478,14 +490,14 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.port.point.x"
+                            id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
                             value={port.point.x}
                             onChange={(value) => {
-                              updatePort(port.guid, { point: { x: value } });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.x", port.guid, { point: { x: value } });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
                             step={0.1}
                           />
                         </TreeContent>
@@ -493,14 +505,14 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.port.point.y"
+                            id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
                             value={port.point.y}
                             onChange={(value) => {
-                              updatePort(port.guid, { point: { y: value } });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.y", port.guid, { point: { y: value } });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
                             step={0.1}
                           />
                         </TreeContent>
@@ -508,14 +520,14 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.port.point.z"
+                            id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
                             value={port.point.z}
                             onChange={(value) => {
-                              updatePort(port.guid, { point: { z: value } });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.z", port.guid, { point: { z: value } });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
                             step={0.1}
                           />
                         </TreeContent>
@@ -525,14 +537,14 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.port.direction.x"
+                            id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
                             value={port.direction.x}
                             onChange={(value) => {
-                              updatePort(port.guid, { direction: { x: value } });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.x", port.guid, { direction: { x: value } });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
                             step={0.1}
                           />
                         </TreeContent>
@@ -540,14 +552,14 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.port.direction.y"
+                            id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
                             value={port.direction.y}
                             onChange={(value) => {
-                              updatePort(port.guid, { direction: { y: value } });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.y", port.guid, { direction: { y: value } });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
                             step={0.1}
                           />
                         </TreeContent>
@@ -555,14 +567,14 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.port.direction.z"
+                            id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
                             value={port.direction.z}
                             onChange={(value) => {
-                              updatePort(port.guid, { direction: { z: value } });
+                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.z", port.guid, { direction: { z: value } });
                             }}
-                            startTransaction={startTransaction}
-                            finalizeTransaction={finalizeTransaction}
-                            abortTransaction={abortTransaction}
+                            startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+                            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+                            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
                             step={0.1}
                           />
                         </TreeContent>
@@ -571,19 +583,19 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          id="semio.sketchpad.app.type.panel.details.port.compatibleFamilies"
+                          id="semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies"
                           value={(port.compatibleFamilies || []).join(", ")}
                           placeholderId="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
                           onChange={(e) => {
-                            updatePort(port.guid, {
+                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies", port.guid, {
                               compatibleFamilies: e.target.value
                                 .split(",")
                                 .map((family) => family.trim())
                                 .filter((family) => family),
                             });
                           }}
-                          onFocus={startTransaction}
-                          onBlur={finalizeTransaction}
+                          onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies")}
+                          onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies")}
                         />
                       </TreeContent>
                     </TreeItem>
@@ -611,8 +623,8 @@ const AuthorsSectionForm: FC = () => {
   const type = useType(undefined, undefined, true) as Type;
   const kit = useKit() as Kit;
 
-  const updateAuthors = (authors: string[]) => {
-    kitCommands.updateType(type.guid, { authors });
+  const updateAuthors = (origin: string, authors: string[]) => {
+    kitCommands?.updateType(origin, type.guid, { authors });
   };
 
   const hasAuthors = type.authors && type.authors.length > 0;
@@ -625,15 +637,16 @@ const AuthorsSectionForm: FC = () => {
           {
             icon: <Plus />,
             onClick: () => {
-              startTransaction();
+              const origin = "semio.sketchpad.app.type.panel.details.authors.add";
+              startTransaction?.(origin);
               const newAuthorGuid = guid();
-              kitCommands.createAuthor({
+              kitCommands?.createAuthor(origin, {
                 guid: newAuthorGuid,
                 name: "",
                 email: "",
               });
-              updateAuthors([...(type.authors || []), newAuthorGuid]);
-              finalizeTransaction();
+              updateAuthors(origin, [...(type.authors || []), newAuthorGuid]);
+              finalizeTransaction?.(origin);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -652,9 +665,10 @@ const AuthorsSectionForm: FC = () => {
               };
             })}
             onReorder={(oldIndex, newIndex) => {
-              startTransaction();
-              updateAuthors(arrayMove(type.authors!, oldIndex, newIndex));
-              finalizeTransaction();
+              const origin = "semio.sketchpad.app.type.panel.details.authors.reorder";
+              startTransaction?.(origin);
+              updateAuthors(origin, arrayMove(type.authors!, oldIndex, newIndex));
+              finalizeTransaction?.(origin);
             }}
           >
             {(item, index) => (
@@ -669,9 +683,13 @@ const AuthorsSectionForm: FC = () => {
                   {
                     icon: <Minus />,
                     onClick: () => {
-                      startTransaction();
-                      updateAuthors((type.authors || []).filter((_, i: number) => i !== index));
-                      finalizeTransaction();
+                      const origin = "semio.sketchpad.app.type.panel.details.authors.remove";
+                      startTransaction?.(origin);
+                      updateAuthors(
+                        origin,
+                        (type.authors || []).filter((_, i: number) => i !== index),
+                      );
+                      finalizeTransaction?.(origin);
                     },
                     id: "semio.sketchpad.common.remove",
                   },
@@ -680,26 +698,26 @@ const AuthorsSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      id="semio.sketchpad.app.type.panel.details.author.name"
+                      id="semio.sketchpad.app.type.panel.details.section.authors.name"
                       value={item.name}
                       onChange={(e) => {
-                        kitCommands.updateAuthor(item.guid, { name: e.target.value });
+                        kitCommands?.updateAuthor("semio.sketchpad.app.type.panel.details.section.authors.name", item.guid, { name: e.target.value });
                       }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
+                      onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.authors.name")}
+                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.authors.name")}
                     />
                   </TreeContent>
                 </TreeItem>
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      id="semio.sketchpad.app.type.panel.details.author.email"
+                      id="semio.sketchpad.app.type.panel.details.section.authors.email"
                       value={item.email}
                       onChange={(e) => {
-                        kitCommands.updateAuthor(item.guid, { email: e.target.value });
+                        kitCommands?.updateAuthor("semio.sketchpad.app.type.panel.details.section.authors.email", item.guid, { email: e.target.value });
                       }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
+                      onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.authors.email")}
+                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.authors.email")}
                     />
                   </TreeContent>
                 </TreeItem>
@@ -724,12 +742,12 @@ const AttributesSectionForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const applyDiff = (diff: any) => {
-    kitCommands.updateType(type.guid, diff);
+  const applyDiff = (origin: string, diff: any) => {
+    kitCommands?.updateType(origin, type.guid, diff);
   };
 
-  const updateAttribute = (id: string, attributeDiff: any) => {
-    applyDiff({
+  const updateAttribute = (origin: string, id: string, attributeDiff: any) => {
+    applyDiff(origin, {
       attributes: {
         updated: [{ id, diff: attributeDiff }],
       },
@@ -746,13 +764,14 @@ const AttributesSectionForm: FC = () => {
           {
             icon: <Plus />,
             onClick: () => {
-              startTransaction();
-              applyDiff({
+              const origin = "semio.sketchpad.app.type.panel.details.attributes.add";
+              startTransaction?.(origin);
+              applyDiff(origin, {
                 attributes: {
                   added: [{ guid: guid(), key: "" }],
                 },
               });
-              finalizeTransaction();
+              finalizeTransaction?.(origin);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -767,14 +786,15 @@ const AttributesSectionForm: FC = () => {
             }))}
             onReorder={(oldIndex, newIndex) => {
               if (!type.attributes) return;
-              startTransaction();
-              applyDiff({
+              const origin = "semio.sketchpad.app.type.panel.details.attributes.reorder";
+              startTransaction?.(origin);
+              applyDiff(origin, {
                 attributes: {
                   removed: type.attributes.map((attribute: any) => attribute.guid),
                   added: arrayMove(type.attributes, oldIndex, newIndex),
                 },
               });
-              finalizeTransaction();
+              finalizeTransaction?.(origin);
             }}
           >
             {(attribute, index) => (
@@ -789,13 +809,14 @@ const AttributesSectionForm: FC = () => {
                   {
                     icon: <Minus />,
                     onClick: () => {
-                      startTransaction();
-                      applyDiff({
+                      const origin = "semio.sketchpad.app.type.panel.details.attributes.remove";
+                      startTransaction?.(origin);
+                      applyDiff(origin, {
                         attributes: {
                           removed: [attribute.guid],
                         },
                       });
-                      finalizeTransaction();
+                      finalizeTransaction?.(origin);
                     },
                     id: "semio.sketchpad.common.remove",
                   },
@@ -804,41 +825,41 @@ const AttributesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      id="semio.sketchpad.app.type.panel.details.attribute.name"
+                      id="semio.sketchpad.app.type.panel.details.section.attributes.name"
                       value={attribute.key}
                       onChange={(e) => {
-                        updateAttribute(attribute.guid, { key: e.target.value });
+                        updateAttribute("semio.sketchpad.app.type.panel.details.section.attributes.name", attribute.guid, { key: e.target.value });
                       }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
+                      onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.attributes.name")}
+                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.attributes.name")}
                     />
                   </TreeContent>
                 </TreeItem>
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      id="semio.sketchpad.app.type.panel.details.attribute.value"
+                      id="semio.sketchpad.app.type.panel.details.section.attributes.value"
                       value={attribute.value || ""}
                       placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label"
                       onChange={(e) => {
-                        updateAttribute(attribute.guid, { value: e.target.value });
+                        updateAttribute("semio.sketchpad.app.type.panel.details.section.attributes.value", attribute.guid, { value: e.target.value });
                       }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
+                      onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.attributes.value")}
+                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.attributes.value")}
                     />
                   </TreeContent>
                 </TreeItem>
                 <TreeItem>
                   <TreeContent>
                     <Input
-                      id="semio.sketchpad.app.type.panel.details.attribute.definition"
+                      id="semio.sketchpad.app.type.panel.details.section.attributes.definition"
                       value={attribute.definition || ""}
                       placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label"
                       onChange={(e) => {
-                        updateAttribute(attribute.guid, { definition: e.target.value });
+                        updateAttribute("semio.sketchpad.app.type.panel.details.section.attributes.definition", attribute.guid, { definition: e.target.value });
                       }}
-                      onFocus={startTransaction}
-                      onBlur={finalizeTransaction}
+                      onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.attributes.definition")}
+                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.attributes.definition")}
                     />
                   </TreeContent>
                 </TreeItem>
@@ -869,13 +890,13 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{id.t("semio.sketchpad.app.type.portNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{i18n.t("semio.sketchpad.app.type.portNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
   }
 
-  const updatePort = (id: string, portDiff: any) => {
+  const updatePort = (origin: string, id: string, portDiff: any) => {
     const port = type.ports?.find((existingPort) => existingPort.guid === id);
     const diff: any = { ...portDiff };
     if (port) {
@@ -892,7 +913,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
       }
     }
-    kitCommands.updateType(type.guid, {
+    kitCommands?.updateType(origin, type.guid, {
       ports: {
         updated: [{ id, diff }],
       },
@@ -904,43 +925,43 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            id="semio.sketchpad.app.type.panel.details.port.family"
+            id="semio.sketchpad.app.type.panel.details.section.ports.family"
             value={port.family || ""}
             placeholderId="semio.sketchpad.app.type.portFamilyPlaceholder.label"
             onChange={(e) => {
-              updatePort(port.guid, { family: e.target.value });
+              updatePort("semio.sketchpad.app.type.panel.details.section.ports.family", port.guid, { family: e.target.value });
             }}
-            onFocus={startTransaction}
-            onBlur={finalizeTransaction}
+            onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.family")}
+            onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.family")}
           />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
           <Textarea
-            id="semio.sketchpad.app.type.panel.details.port.description"
+            id="semio.sketchpad.app.type.panel.details.section.ports.description"
             value={port.description || ""}
             placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
             onChange={(e) => {
-              updatePort(port.guid, { description: e.target.value });
+              updatePort("semio.sketchpad.app.type.panel.details.section.ports.description", port.guid, { description: e.target.value });
             }}
-            onFocus={startTransaction}
-            onBlur={finalizeTransaction}
+            onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.description")}
+            onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.description")}
           />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
           <div className="flex flex-col gap-1">
-            <label className="text-xs">{id.t("semio.sketchpad.app.type.portT")}</label>
+            <label className="text-xs">{i18n.t("semio.sketchpad.app.type.portT")}</label>
             <Slider
               value={[port.t ?? 0]}
               onValueChange={([value]) => {
-                updatePort(port.guid, { t: value });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.t", port.guid, { t: value });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
               min={0}
               max={1}
               step={0.01}
@@ -952,14 +973,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.point.x"
+              id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
               value={port.point.x}
               onChange={(value) => {
-                updatePort(port.guid, { point: { x: value } });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.x", port.guid, { point: { x: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
               step={0.1}
             />
           </TreeContent>
@@ -967,14 +988,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.point.y"
+              id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
               value={port.point.y}
               onChange={(value) => {
-                updatePort(port.guid, { point: { y: value } });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.y", port.guid, { point: { y: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
               step={0.1}
             />
           </TreeContent>
@@ -982,14 +1003,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.point.z"
+              id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
               value={port.point.z}
               onChange={(value) => {
-                updatePort(port.guid, { point: { z: value } });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.z", port.guid, { point: { z: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
               step={0.1}
             />
           </TreeContent>
@@ -999,14 +1020,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.direction.x"
+              id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
               value={port.direction.x}
               onChange={(value) => {
-                updatePort(port.guid, { direction: { x: value } });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.x", port.guid, { direction: { x: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
               step={0.1}
             />
           </TreeContent>
@@ -1014,14 +1035,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.direction.y"
+              id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
               value={port.direction.y}
               onChange={(value) => {
-                updatePort(port.guid, { direction: { y: value } });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.y", port.guid, { direction: { y: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
               step={0.1}
             />
           </TreeContent>
@@ -1029,14 +1050,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.direction.z"
+              id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
               value={port.direction.z}
               onChange={(value) => {
-                updatePort(port.guid, { direction: { z: value } });
+                updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.z", port.guid, { direction: { z: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
               step={0.1}
             />
           </TreeContent>
@@ -1045,19 +1066,19 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            id="semio.sketchpad.app.type.panel.details.port.compatibleFamilies"
+            id="semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies"
             value={(port.compatibleFamilies || []).join(", ")}
             placeholderId="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
             onChange={(e) => {
-              updatePort(port.guid, {
+              updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies", port.guid, {
                 compatibleFamilies: e.target.value
                   .split(",")
                   .map((family) => family.trim())
                   .filter((family) => family),
               });
             }}
-            onFocus={startTransaction}
-            onBlur={finalizeTransaction}
+            onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies")}
+            onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies")}
           />
         </TreeContent>
       </TreeItem>
@@ -1096,8 +1117,8 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
     return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
   };
 
-  const updatePorts = (portDiff: any) => {
-    startTransaction();
+  const updatePorts = (origin: string, portDiff: any) => {
+    startTransaction?.(origin);
     ports.forEach((port) => {
       const diff: any = { ...portDiff };
       if (portDiff.point) {
@@ -1112,13 +1133,13 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
         if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
       }
-      kitCommands.updateType(type.guid, {
+      kitCommands?.updateType(origin, type.guid, {
         ports: {
           updated: [{ id: port.guid, diff }],
         },
       });
     });
-    finalizeTransaction();
+    finalizeTransaction?.(origin);
   };
 
   const commonFamily = getCommonValue((p) => p.family);
@@ -1135,14 +1156,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
       <TreeItem>
         <TreeContent>
           <Input
-            id="semio.sketchpad.app.type.panel.details.port.family"
+            id="semio.sketchpad.app.type.panel.details.section.ports.family"
             value={commonFamily || ""}
             placeholderId={commonFamily === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portFamilyPlaceholder.label"}
             onChange={(e) => {
-              updatePorts({ family: e.target.value });
+              updatePorts("semio.sketchpad.app.type.panel.details.section.ports.family", { family: e.target.value });
             }}
-            onFocus={startTransaction}
-            onBlur={finalizeTransaction}
+            onFocus={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.family")}
+            onBlur={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.family")}
           />
         </TreeContent>
       </TreeItem>
@@ -1153,11 +1174,11 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
             <Slider
               value={[commonT ?? 0]}
               onValueChange={([value]) => {
-                updatePorts({ t: value });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.t", { t: value });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.t")}
               min={0}
               max={1}
               step={0.01}
@@ -1169,14 +1190,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.point.x"
+              id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
               value={commonPointX}
               onChange={(value) => {
-                updatePorts({ point: { x: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.point.x", { point: { x: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
               step={0.1}
             />
           </TreeContent>
@@ -1184,14 +1205,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.point.y"
+              id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
               value={commonPointY}
               onChange={(value) => {
-                updatePorts({ point: { y: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.point.y", { point: { y: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
               step={0.1}
             />
           </TreeContent>
@@ -1199,14 +1220,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.point.z"
+              id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
               value={commonPointZ}
               onChange={(value) => {
-                updatePorts({ point: { z: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.point.z", { point: { z: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
               step={0.1}
             />
           </TreeContent>
@@ -1216,14 +1237,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.direction.x"
+              id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
               value={commonDirectionX}
               onChange={(value) => {
-                updatePorts({ direction: { x: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.direction.x", { direction: { x: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
               step={0.1}
             />
           </TreeContent>
@@ -1231,14 +1252,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.direction.y"
+              id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
               value={commonDirectionY}
               onChange={(value) => {
-                updatePorts({ direction: { y: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.direction.y", { direction: { y: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
               step={0.1}
             />
           </TreeContent>
@@ -1246,14 +1267,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.port.direction.z"
+              id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
               value={commonDirectionZ}
               onChange={(value) => {
-                updatePorts({ direction: { z: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.direction.z", { direction: { z: value } });
               }}
-              startTransaction={startTransaction}
-              finalizeTransaction={finalizeTransaction}
-              abortTransaction={abortTransaction}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
               step={0.1}
             />
           </TreeContent>

@@ -303,19 +303,19 @@ export const commands = {
 
             if (type.representations) {
               for (const rep of type.representations) {
-                repStmt.run([rep.url, rep.description ?? "", typeDbId]);
+                repStmt.run([rep.file, rep.description ?? "", typeDbId]);
                 const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                 insertQualities(rep.attributes, "representation_id", repDbId);
                 if (rep.tags) {
                   rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
                 }
-                const fileUrl = context.fileUrls.get(rep.url);
+                const fileUrl = context.fileUrls.get(rep.file);
                 if (fileUrl) {
                   try {
                     const response = await fetch(fileUrl);
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
-                    zip.file(rep.url, fileData);
+                    zip.file(rep.file, fileData);
                   } catch (error) {}
                 }
               }

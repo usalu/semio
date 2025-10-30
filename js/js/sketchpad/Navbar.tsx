@@ -65,10 +65,10 @@ import {
 
 export interface PanelSection {
   id: string;
-  label: string;
   content: ReactNode | (() => ReactNode);
   defaultOpen?: boolean;
   order?: number;
+  translationParams?: Record<string, unknown>;
   actions?: Array<{
     icon: ReactNode;
     onClick: () => void;
@@ -208,7 +208,7 @@ export const useRemovePanelSection = () => {
 export interface PanelDefinition {
   key: string;
   icon: React.ComponentType<{ size?: number }>;
-  i18n: import("../elements/display/Tooltip").TooltipConfig;
+  tooltip: import("../elements/display/Tooltip").TooltipConfig;
   hotkey: string;
 }
 
@@ -300,12 +300,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return (kit.qualities as any[]).filter((q): q is Quality => typeof q === "object" && q.guid !== undefined);
   }, [kit?.qualities]);
 
-  const handleCreateKit = useCallback(() => {
+  const handleCreateKit = useCallback((origin: string) => {
     const guid = crypto.randomUUID();
     const now = new Date();
     const existingNames = kits.map((k) => k.name);
     const uniqueName = generateUniqueName(t("semio.sketchpad.app.kit.defaultName"), existingNames);
-    sketchpadCommands.createKit({
+    sketchpadCommands.createKit(origin, {
       guid,
       name: uniqueName,
       version: "",
@@ -315,13 +315,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     navigate(`/kits/${guid}`);
   }, [navigate, sketchpadCommands, kits, t]);
 
-  const handleCreateVersion = useCallback(() => {
+  const handleCreateVersion = useCallback((origin: string) => {
     if (!kit) return;
     const newGuid = crypto.randomUUID();
     const now = new Date();
     const existingVersions = kits.filter((k) => k.name === kit.name).map((k) => k.version || "");
     const uniqueVersion = generateUniqueName(t("semio.sketchpad.app.kit.newVersion"), existingVersions);
-    sketchpadCommands.createKit({
+    sketchpadCommands.createKit(origin, {
       guid: newGuid,
       name: kit.name,
       version: uniqueVersion,
@@ -329,41 +329,41 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       updatedAt: now,
     });
     navigate(`/kits/${newGuid}`);
-  }, [kit, kits, navigate, sketchpadCommands]);
+  }, [kit, kits, navigate, sketchpadCommands, t]);
 
   const handleCreateDesign = useCallback(
-    (name?: string) => {
+    (origin: string, name?: string) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allDesigns.map((d) => d.name);
       const uniqueName = name || generateUniqueName(t("semio.sketchpad.app.design.defaultName"), existingNames);
-      kitCommands.createDesign({ guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
+      kitCommands.createDesign(origin, { guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
       navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allDesigns, t],
   );
 
   const handleCreateType = useCallback(
-    (name?: string) => {
+    (origin: string, name?: string) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allTypes.map((t) => t.name);
       const uniqueName = name || generateUniqueName(t("semio.sketchpad.app.type.defaultName"), existingNames);
-      kitCommands.createType({ guid, name: uniqueName, variant: "", ports: [] });
+      kitCommands.createType(origin, { guid, name: uniqueName, variant: "", ports: [] });
       navigate(`/kits/${kitGuid}/types/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allTypes, t],
   );
 
   const handleCreateVariant = useCallback(
-    (designOrType: Design | Type, isType: boolean) => {
+    (origin: string, designOrType: Design | Type, isType: boolean) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       if (!isType) {
         const d = designOrType as Design;
         const existingVariants = allDesigns.filter((design) => design.name === d.name).map((design) => design.variant || "");
         const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.design.newVariant"), existingVariants);
-        kitCommands.createDesign({
+        kitCommands.createDesign(origin, {
           guid,
           name: d.name,
           variant: uniqueVariant,
@@ -376,7 +376,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         const typeObj = designOrType as Type;
         const existingVariants = allTypes.filter((type) => type.name === typeObj.name).map((type) => type.variant || "");
         const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.type.newVariant"), existingVariants);
-        kitCommands.createType({
+        kitCommands.createType(origin, {
           guid,
           name: typeObj.name,
           variant: uniqueVariant,
@@ -385,16 +385,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         navigate(`/kits/${kitGuid}/types/${guid}`);
       }
     },
-    [kitCommands, kitGuid, navigate, allDesigns, allTypes],
+    [kitCommands, kitGuid, navigate, allDesigns, allTypes, t],
   );
 
   const handleCreateView = useCallback(
-    (design: Design) => {
+    (origin: string, design: Design) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingViews = allDesigns.filter((d) => d.name === design.name && (d.variant || "") === (design.variant || "")).map((d) => d.view || "");
       const uniqueView = generateUniqueName(t("semio.sketchpad.app.design.newView"), existingViews);
-      kitCommands.createDesign({
+      kitCommands.createDesign(origin, {
         guid,
         name: design.name,
         variant: design.variant,
@@ -404,22 +404,22 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       });
       navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
-    [kitCommands, kitGuid, navigate, allDesigns],
+    [kitCommands, kitGuid, navigate, allDesigns, t],
   );
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = useCallback((origin: string) => {
     if (!kit || !filteredKind || !kitCommands) return;
 
     switch (filteredKind) {
       case "designs":
-        handleCreateDesign();
+        handleCreateDesign(origin);
         break;
       case "types":
-        handleCreateType();
+        handleCreateType(origin);
         break;
       case "authors":
         const guid = crypto.randomUUID();
-        kitCommands.createAuthor({ guid, name: "New Author", email: "" });
+        kitCommands.createAuthor(origin, { guid, name: "New Author", email: "" });
         break;
       case "qualities":
         // TODO: Add createQuality command
@@ -653,7 +653,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   items={kitItemsWithCreate}
                   id="semio.sketchpad.navbar.kits"
                   onNavigate={(href) => {
-                    if (href === "#create-kit") handleCreateKit();
+                    if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
                     else navigate(href);
                   }}
                 />
@@ -674,7 +674,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   items={kitVersionItems}
                   id="semio.sketchpad.navbar.versions"
                   onNavigate={(href) => {
-                    if (href === "#create-version") handleCreateVersion();
+                    if (href === "#create-version") handleCreateVersion("semio.sketchpad.navbar.versions");
                     else navigate(href);
                   }}
                 />
@@ -789,7 +789,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               items={designNameItems}
               id="semio.sketchpad.navbar.selectDesign"
               onNavigate={(href) => {
-                if (href === "#create-design") handleCreateDesign();
+                if (href === "#create-design") handleCreateDesign("semio.sketchpad.navbar.selectDesign");
                 else navigate(href);
               }}
             />
@@ -809,7 +809,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               items={designVariantItems}
               id="semio.sketchpad.navbar.selectVariant"
               onNavigate={(href) => {
-                if (href === "#create-variant") handleCreateVariant(design, false);
+                if (href === "#create-variant") handleCreateVariant("semio.sketchpad.navbar.selectVariant", design, false);
                 else navigate(href);
               }}
             />
@@ -829,7 +829,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               items={designViewItems}
               id="semio.sketchpad.navbar.selectView"
               onNavigate={(href) => {
-                if (href === "#create-view") handleCreateView(design);
+                if (href === "#create-view") handleCreateView("semio.sketchpad.navbar.selectView", design);
                 else navigate(href);
               }}
             />
@@ -861,7 +861,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               items={typeNameItems}
               id="semio.sketchpad.navbar.selectType"
               onNavigate={(href) => {
-                if (href === "#create-type") handleCreateType();
+                if (href === "#create-type") handleCreateType("semio.sketchpad.navbar.selectType");
                 else navigate(href);
               }}
             />
@@ -881,7 +881,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               items={typeVariantItems}
               id="semio.sketchpad.navbar.selectVariant"
               onNavigate={(href) => {
-                if (href === "#create-variant") handleCreateVariant(type, true);
+                if (href === "#create-variant") handleCreateVariant("semio.sketchpad.navbar.selectVariant", type, true);
                 else navigate(href);
               }}
             />
@@ -1179,8 +1179,8 @@ const Search: FC = ({}) => {
       <Toggle id="semio.sketchpad.navbar.search.open" i18nPressed="semio.sketchpad.navbar.search.close" pressed={open} onPressedChange={setOpen}>
         <SearchIcon size={16} />
       </Toggle>
-      <CommandDialog id={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder={t("semio.sketchpad.navbar.searchPlaceholder")} value={query} onValueChange={setQuery} />
+      <CommandDialog title={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={open} onOpenChange={setOpen}>
+        <CommandInput id="semio.sketchpad.navbar.searchInput" placeholder={t("semio.sketchpad.navbar.searchPlaceholder")} value={query} onValueChange={setQuery} />
         <CommandList>
           <CommandEmpty>{t("semio.sketchpad.navbar.noResults")}</CommandEmpty>
           {searchResults.length > 0 && (
@@ -1336,8 +1336,8 @@ const Focus: FC = ({}) => {
       <Toggle id="semio.sketchpad.navbar.focus.open" i18nPressed="semio.sketchpad.navbar.focus.close" pressed={open} onPressedChange={setOpen}>
         <FocusIcon size={16} />
       </Toggle>
-      <CommandDialog id={t("semio.sketchpad.navbar.focus.title", "Focus")} description={t("semio.sketchpad.navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder={t("semio.sketchpad.navbar.focus.placeholder", "Search for an element...")} value={query} onValueChange={setQuery} />
+      <CommandDialog title={t("semio.sketchpad.navbar.focus.title", "Focus")} description={t("semio.sketchpad.navbar.focus.description", "Focus on an element in the current view")} open={open} onOpenChange={setOpen}>
+        <CommandInput id="semio.sketchpad.navbar.focus.input" placeholder={t("semio.sketchpad.navbar.focus.placeholder", "Search for an element...")} value={query} onValueChange={setQuery} />
         <CommandList>
           <CommandEmpty>{t("semio.sketchpad.navbar.noResults")}</CommandEmpty>
           {Object.entries(groupedResults).map(([category, items]) => (
@@ -1427,9 +1427,9 @@ const PanelToggles: FC = ({}) => {
   const otherConfigs = panelConfig.filter((p) => !workbenchPanels.includes(p.key) && !hudPanels.includes(p.key) && !rightPanels.includes(p.key) && p.key !== "toolbar");
 
   const panelToggleTooltip = (panelKey: string, open: boolean) => (panelKey ? `semio.sketchpad.navbar.panelToggle.${panelKey}.${open ? "hide" : "show"}` : undefined);
-  const rightDropdownAriaLabel = `semio.sketchpad.navbar.panelToggle.right.label` || undefined;
+  const rightDropdownAriaLabel = `semio.sketchpad.navbar.panelToggle.right.label`;
 
-  const handleToggle = (panelKey: keyof PanelVisibility) => {
+  const handleToggle = (origin: string, panelKey: keyof PanelVisibility) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     const current = visiblePanels[panelKey];
 
@@ -1437,7 +1437,7 @@ const PanelToggles: FC = ({}) => {
       if (!current) {
         (Object.keys(visiblePanels) as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
-            togglePanel(p);
+            togglePanel(origin, p);
           }
         });
       }
@@ -1445,43 +1445,43 @@ const PanelToggles: FC = ({}) => {
       if (!current && rightPanels.includes(panelKey)) {
         (rightPanels as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
-            togglePanel(p);
+            togglePanel(origin, p);
           }
         });
       }
       if (!current && workbenchPanels.includes(panelKey)) {
         (workbenchPanels as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
-            togglePanel(p);
+            togglePanel(origin, p);
           }
         });
       }
       if (!current && hudPanels.includes(panelKey)) {
         (hudPanels as Array<keyof PanelVisibility>).forEach((p) => {
           if (p !== panelKey && visiblePanels[p]) {
-            togglePanel(p);
+            togglePanel(origin, p);
           }
         });
       }
     }
-    togglePanel(panelKey);
+    togglePanel(origin, panelKey);
   };
 
-  const handleWorkbenchPressedChange = (pressed: boolean) => {
+  const handleWorkbenchPressedChange = (origin: string, pressed: boolean) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
-        handleToggle(activeWorkbenchPanel as keyof PanelVisibility);
+        handleToggle(origin, activeWorkbenchPanel as keyof PanelVisibility);
       }
     } else {
       const openPanel = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
-        togglePanel(openPanel.key as keyof PanelVisibility);
+        togglePanel(origin, openPanel.key as keyof PanelVisibility);
       }
     }
   };
 
-  const handleWorkbenchValueChange = (value: string | undefined) => {
+  const handleWorkbenchValueChange = (origin: string, value: string | undefined) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
     workbenchSelectionRef.current = value;
@@ -1491,28 +1491,28 @@ const PanelToggles: FC = ({}) => {
       const shouldOpen = p === value;
 
       if (isOpen && !shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       } else if (!isOpen && shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       }
     });
   };
 
-  const handleHudPressedChange = (pressed: boolean) => {
+  const handleHudPressedChange = (origin: string, pressed: boolean) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
-        handleToggle(activeHudPanel as keyof PanelVisibility);
+        handleToggle(origin, activeHudPanel as keyof PanelVisibility);
       }
     } else {
       const openPanel = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
-        togglePanel(openPanel.key as keyof PanelVisibility);
+        togglePanel(origin, openPanel.key as keyof PanelVisibility);
       }
     }
   };
 
-  const handleHudValueChange = (value: string | undefined) => {
+  const handleHudValueChange = (origin: string, value: string | undefined) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
     hudSelectionRef.current = value;
@@ -1522,28 +1522,28 @@ const PanelToggles: FC = ({}) => {
       const shouldOpen = p === value;
 
       if (isOpen && !shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       } else if (!isOpen && shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       }
     });
   };
 
-  const handleRightPressedChange = (pressed: boolean) => {
+  const handleRightPressedChange = (origin: string, pressed: boolean) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
-        handleToggle(activeRightPanel as keyof PanelVisibility);
+        handleToggle(origin, activeRightPanel as keyof PanelVisibility);
       }
     } else {
       const openPanel = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
-        togglePanel(openPanel.key as keyof PanelVisibility);
+        togglePanel(origin, openPanel.key as keyof PanelVisibility);
       }
     }
   };
 
-  const handleRightValueChange = (value: string | undefined) => {
+  const handleRightValueChange = (origin: string, value: string | undefined) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
     rightSelectionRef.current = value;
@@ -1553,9 +1553,9 @@ const PanelToggles: FC = ({}) => {
       const shouldOpen = p === value;
 
       if (isOpen && !shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       } else if (!isOpen && shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       }
     });
   };
@@ -1568,9 +1568,9 @@ const PanelToggles: FC = ({}) => {
         <Toggle
           type="dropdown"
           pressed={isAnyWorkbenchPanelOpen}
-          onPressedChange={handleWorkbenchPressedChange}
+          onPressedChange={(pressed) => handleWorkbenchPressedChange(panelToggleTooltip(activeWorkbenchPanel, isAnyWorkbenchPanelOpen) || "semio.sketchpad.navbar.panelToggle.workbench", pressed)}
           value={activeWorkbenchPanel}
-          onValueChange={handleWorkbenchValueChange}
+          onValueChange={(value) => handleWorkbenchValueChange(panelToggleTooltip(activeWorkbenchPanel, isAnyWorkbenchPanelOpen) || "semio.sketchpad.navbar.panelToggle.workbench", value)}
           id={panelToggleTooltip(activeWorkbenchPanel, isAnyWorkbenchPanelOpen)}
           dropdownId={"semio.sketchpad.navbar.changePanelType"}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
@@ -1587,9 +1587,9 @@ const PanelToggles: FC = ({}) => {
         <Toggle
           type="dropdown"
           pressed={isAnyHudPanelOpen}
-          onPressedChange={handleHudPressedChange}
+          onPressedChange={(pressed) => handleHudPressedChange(panelToggleTooltip(activeHudPanel, isAnyHudPanelOpen) || "semio.sketchpad.navbar.panelToggle.hud", pressed)}
           value={activeHudPanel}
-          onValueChange={handleHudValueChange}
+          onValueChange={(value) => handleHudValueChange(panelToggleTooltip(activeHudPanel, isAnyHudPanelOpen) || "semio.sketchpad.navbar.panelToggle.hud", value)}
           id={panelToggleTooltip(activeHudPanel, isAnyHudPanelOpen)}
           dropdownId={"semio.sketchpad.navbar.changePanelType"}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
@@ -1618,7 +1618,7 @@ const PanelToggles: FC = ({}) => {
             value={key}
             id={panelToggleTooltip(key, Boolean(visiblePanels[key as keyof PanelVisibility]))}
             onClick={() => {
-              handleToggle(key as keyof PanelVisibility);
+              handleToggle(panelToggleTooltip(key, Boolean(visiblePanels[key as keyof PanelVisibility])) || `semio.sketchpad.navbar.panelToggle.${key}`, key as keyof PanelVisibility);
             }}
           >
             <Icon />
@@ -1630,9 +1630,9 @@ const PanelToggles: FC = ({}) => {
         <Toggle
           type="dropdown"
           pressed={isAnyRightPanelOpen}
-          onPressedChange={handleRightPressedChange}
+          onPressedChange={(pressed) => handleRightPressedChange(panelToggleTooltip(activeRightPanel, isAnyRightPanelOpen) || "semio.sketchpad.navbar.panelToggle.right", pressed)}
           value={activeRightPanel}
-          onValueChange={handleRightValueChange}
+          onValueChange={(value) => handleRightValueChange(panelToggleTooltip(activeRightPanel, isAnyRightPanelOpen) || "semio.sketchpad.navbar.panelToggle.right", value)}
           id={panelToggleTooltip(activeRightPanel, isAnyRightPanelOpen)}
           dropdownId={"semio.sketchpad.navbar.changePanelType"}
           className="border-0 border-l first:border-l-0 -ml-px first:ml-0"
@@ -1903,7 +1903,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        toggleFullscreen();
+        toggleFullscreen("semio.sketchpad.keyboard.f11");
         return;
       }
       if (!event.altKey || event.ctrlKey || event.metaKey) return;
@@ -1915,7 +1915,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        navigateBack();
+        navigateBack("semio.sketchpad.keyboard.altLeft");
         return;
       }
       if (event.key === "ArrowRight") {
@@ -1923,7 +1923,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        navigateForward();
+        navigateForward("semio.sketchpad.keyboard.altRight");
         return;
       }
       if (!upTarget) return;
@@ -1942,26 +1942,26 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
   const isAnyPanelOpen = panelConfig.some((p) => visiblePanels[p.key as keyof PanelVisibility]);
   const mobilePanelTooltip = activePanel ? id(`semio.sketchpad.navbar.panelToggle.${activePanel}.${isAnyPanelOpen ? "hide" : "show"}`) : undefined;
 
-  const handleMobilePanelToggle = (pressed: boolean) => {
+  const handleMobilePanelToggle = (origin: string, pressed: boolean) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (pressed) {
       // Open the active panel if none is open
       if (activePanel && !visiblePanels[activePanel as keyof PanelVisibility]) {
-        togglePanel(activePanel as keyof PanelVisibility);
+        togglePanel(origin, activePanel as keyof PanelVisibility);
       } else if (!activePanel && panelConfig.length > 0) {
         // Default to first panel
-        togglePanel(panelConfig[0].key as keyof PanelVisibility);
+        togglePanel(origin, panelConfig[0].key as keyof PanelVisibility);
       }
     } else {
       // Close the currently open panel
       const openPanel = panelConfig.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
       if (openPanel) {
-        togglePanel(openPanel.key as keyof PanelVisibility);
+        togglePanel(origin, openPanel.key as keyof PanelVisibility);
       }
     }
   };
 
-  const handleMobilePanelChange = (value: string | undefined) => {
+  const handleMobilePanelChange = (origin: string, value: string | undefined) => {
     const togglePanel = commands[appType]?.togglePanel || (() => {});
     if (!value) return;
 
@@ -1971,9 +1971,9 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
       const shouldOpen = p === value;
 
       if (isOpen && !shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       } else if (!isOpen && shouldOpen) {
-        togglePanel(p);
+        togglePanel(origin, p);
       }
     });
   };
@@ -1997,10 +1997,10 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
       {/* Unexpanded navbar */}
       <div className="h-12 flex items-center justify-between px-1 gap-1">
         <ButtonGroup>
-          <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
+          <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={() => navigateBack("semio.sketchpad.navbar.back")} disabled={!canGoBack}>
             <ArrowLeft size={16} />
           </ButtonGroupItem>
-          <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
+          <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={() => navigateForward("semio.sketchpad.navbar.forward")} disabled={!canGoForward}>
             <ArrowRight size={16} />
           </ButtonGroupItem>
           <ButtonGroupItem
@@ -2020,9 +2020,9 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
           <Toggle
             type="dropdown"
             pressed={isAnyPanelOpen}
-            onPressedChange={handleMobilePanelToggle}
+            onPressedChange={(pressed) => handleMobilePanelToggle(mobilePanelTooltip || "semio.sketchpad.navbar.panelToggle", pressed)}
             value={activePanel}
-            onValueChange={handleMobilePanelChange}
+            onValueChange={(value) => handleMobilePanelChange(mobilePanelTooltip || "semio.sketchpad.navbar.panelToggle", value)}
             id={mobilePanelTooltip}
             dropdownId="semio.sketchpad.navbar.changePanelType"
             items={panelConfig
@@ -2043,7 +2043,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
               i18nPressed="semio.sketchpad.navbar.panelToggle.toolbar.hide"
               pressed={!!visiblePanels.toolbar}
               onPressedChange={() => {
-                commands[appType]?.togglePanel("toolbar");
+                commands[appType]?.togglePanel("semio.sketchpad.navbar.panelToggle.toolbar.show", "toolbar");
               }}
             >
               <toolbarConfig.icon size={16} />
@@ -2053,10 +2053,10 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
             <SearchIcon size={16} />
           </Toggle>
           <Focus />
-          <Toggle id="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+          <Toggle id="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={() => toggleFullscreen("semio.sketchpad.navbar.fullscreen")}>
             <Fullscreen size={16} />
           </Toggle>
-          <Toggle id={"semio.sketchpad.navbar.expand"} i18nPressed={"semio.sketchpad.navbar.collapse"} pressed={isNavbarExpanded} onPressedChange={toggleNavbarExpanded}>
+          <Toggle id={"semio.sketchpad.navbar.expand"} i18nPressed={"semio.sketchpad.navbar.collapse"} pressed={isNavbarExpanded} onPressedChange={() => toggleNavbarExpanded("semio.sketchpad.navbar.expand")}>
             {isNavbarExpanded ? <ChevronUp /> : <ChevronDown />}
           </Toggle>
         </div>
@@ -2084,8 +2084,8 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
       )}
 
       {/* Search dialog */}
-      <CommandDialog id={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder={t("semio.sketchpad.navbar.searchPlaceholder")} />
+      <CommandDialog title={t("semio.sketchpad.navbar.searchTitle")} description={t("semio.sketchpad.navbar.searchDescription")} open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput id="semio.sketchpad.navbar.search.input" placeholder={t("semio.sketchpad.navbar.searchPlaceholder")} />
         <CommandList>
           <CommandEmpty>{t("semio.sketchpad.navbar.noResults")}</CommandEmpty>
           <CommandGroup heading={t("semio.sketchpad.navbar.suggestions")}>{/* TODO: Add command items here */}</CommandGroup>
@@ -2223,7 +2223,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: N
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        toggleFullscreen();
+        toggleFullscreen("semio.sketchpad.keyboard.f11");
         return;
       }
       if (!event.altKey || event.ctrlKey || event.metaKey) return;
@@ -2235,7 +2235,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: N
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        navigateBack();
+        navigateBack("semio.sketchpad.keyboard.altLeft");
         return;
       }
       if (event.key === "ArrowRight") {
@@ -2243,7 +2243,7 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: N
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        navigateForward();
+        navigateForward("semio.sketchpad.keyboard.altRight");
         return;
       }
       if (!upTarget) return;
@@ -2277,10 +2277,10 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: N
       style={{ WebkitAppRegion: "drag" } as any}
     >
       <ButtonGroup>
-        <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={navigateBack} disabled={!canGoBack}>
+        <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={() => navigateBack("semio.sketchpad.navbar.back")} disabled={!canGoBack}>
           <ArrowLeft size={16} />
         </ButtonGroupItem>
-        <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={navigateForward} disabled={!canGoForward}>
+        <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={() => navigateForward("semio.sketchpad.navbar.forward")} disabled={!canGoForward}>
           <ArrowRight size={16} />
         </ButtonGroupItem>
         <ButtonGroupItem
@@ -2307,13 +2307,13 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: N
             i18nPressed="semio.sketchpad.navbar.panelToggle.toolbar.hide"
             pressed={!!visiblePanels.toolbar}
             onPressedChange={() => {
-              commands[appType]?.togglePanel("toolbar");
+              commands[appType]?.togglePanel("semio.sketchpad.navbar.panelToggle.toolbar.show", "toolbar");
             }}
           >
             <toolbarConfig.icon />
           </Toggle>
         )}
-        <Toggle id="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={toggleFullscreen}>
+        <Toggle id="semio.sketchpad.navbar.fullscreen" i18nPressed="semio.sketchpad.navbar.exitFullscreen" pressed={isFullscreen} onPressedChange={() => toggleFullscreen("semio.sketchpad.navbar.fullscreen")}>
           <Fullscreen />
         </Toggle>
         {onWindowEvents && (

@@ -423,7 +423,7 @@ const SceneContent: FC = () => {
         };
 
         if (kitCommands) {
-          kitCommands.updateType(type.guid, {
+          kitCommands.updateType("semio.sketchpad.app.type.canvas.scene.addPort", type.guid, {
             ports: {
               added: [newPort],
             },

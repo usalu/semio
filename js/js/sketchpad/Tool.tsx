@@ -48,7 +48,7 @@ export interface Tool<TState = any, TSelection = any> {
   id: ToolType;
   label: string;
   icon: ReactNode;
-  id?: string;
+  tooltipId?: string;
   hotkey?: string;
   render: (context: ToolRenderContext<TState, TSelection>) => ToolContribution;
 }
@@ -57,7 +57,7 @@ export interface ToolMode {
   id: ToolType;
   label: string;
   icon: ReactNode;
-  id?: string;
+  tooltipId?: string;
   hotkey?: string;
 }
 
@@ -69,7 +69,7 @@ export interface ToolModeComponentProps {
 }
 
 export const ToolModeComponent: FC<ToolModeComponentProps> = ({ mode, isActive, onActivate, level = "panel" }) => (
-  <ToggleGroupItem value={mode.id} id={mode.id}>
+  <ToggleGroupItem value={mode.id} id={mode.tooltipId}>
     {mode.icon}
   </ToggleGroupItem>
 );
@@ -93,7 +93,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
     const currentMode = tool.modes.find((mode) => mode.id === activeTool);
     const isPressed = !!currentMode;
     const defaultMode = tool.defaultMode || tool.modes[0].id;
-    const dropdownItems: ToggleItem<ToolType>[] = tool.modes.map((mode) => ({ value: mode.id, label: mode.icon, id: mode.id }));
+    const dropdownItems: ToggleItem<ToolType>[] = tool.modes.map((mode) => ({ value: mode.id, label: mode.icon, id: mode.tooltipId }));
     return {
       key: tool.id,
       element: (
@@ -105,7 +105,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
           value={activeTool}
           onValueChange={onToolChange}
           items={dropdownItems}
-          id={currentMode?.id}
+          id={currentMode?.tooltipId}
         />
       ),
     };
@@ -115,11 +115,12 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
   const flushSingles = () => {
     if (pendingSingles.length === 0) return;
     const key = pendingSingles.map((tool) => tool.id).join("-");
+    const toolsToRender = [...pendingSingles]; // Create a copy!
     segments.push({
       key,
       element: (
         <ToggleGroup type="single" level={level} value={activeTool} onValueChange={(value: string) => value && onToolChange(value as ToolType)}>
-          {pendingSingles.map((tool) => {
+          {toolsToRender.map((tool) => {
             const mode = tool.modes[0];
             return <ToolModeComponent key={mode.id} mode={mode} isActive={activeTool === mode.id} onActivate={onToolChange} level={level} />;
           })}

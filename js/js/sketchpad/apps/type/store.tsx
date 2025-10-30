@@ -155,6 +155,12 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
         yPanelVisibility.set("chat", false);
         yPanelVisibility.set("settings", false);
         yMap.set("panelVisibility", yPanelVisibility);
+      } else {
+        // Ensure toolbar field exists for existing instances
+        const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (yPanelVisibility && !yPanelVisibility.has("toolbar")) {
+          yPanelVisibility.set("toolbar", true);
+        }
       }
     });
 
@@ -421,33 +427,46 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     });
   };
 
-  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.type.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.typeApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
     if (command === "semio.typeApp.startTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.typeApp.finalizeTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
       this.finalizeTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.typeApp.abortTransaction") {
-      console.log(`Executing (special) command: "${command}"`);
       this.abortTransaction();
+      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.typeApp.undo") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.typeApp.redo") {
-      console.log(`Executing (special) command: "${command}"`);
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }
-    console.group(`Executing command: "${command}"`);
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
       console.groupEnd();
@@ -464,6 +483,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       typeApp,
       Guid: typeGuid,
       fileUrls: kitStore.fileUrls,
+      origin,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -559,14 +579,14 @@ export function useTypeAppCommands(id?: TypeAppId) {
     };
   }
   return {
-    startTransaction: () => store.execute("semio.typeApp.startTransaction"),
-    finalizeTransaction: () => store.execute("semio.typeApp.finalizeTransaction"),
-    abortTransaction: () => store.execute("semio.typeApp.abortTransaction"),
-    undo: () => store.execute("semio.typeApp.undo"),
-    redo: () => store.execute("semio.typeApp.redo"),
-    selectAll: () => store.execute("semio.typeApp.selectAll"),
-    deselectAll: () => store.execute("semio.typeApp.deselectAll"),
-    togglePanel: (panelKey: keyof PanelVisibility) => {
+    startTransaction: (origin: string) => store.execute("semio.typeApp.startTransaction", origin),
+    finalizeTransaction: (origin: string) => store.execute("semio.typeApp.finalizeTransaction", origin),
+    abortTransaction: (origin: string) => store.execute("semio.typeApp.abortTransaction", origin),
+    undo: (origin: string) => store.execute("semio.typeApp.undo", origin),
+    redo: (origin: string) => store.execute("semio.typeApp.redo", origin),
+    selectAll: (origin: string) => store.execute("semio.typeApp.selectAll", origin),
+    deselectAll: (origin: string) => store.execute("semio.typeApp.deselectAll", origin),
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
         panelVisibility: {
@@ -574,15 +594,15 @@ export function useTypeAppCommands(id?: TypeAppId) {
         },
       });
     },
-    setCamera: (camera: Camera) => {
+    setCamera: (origin: string, camera: Camera) => {
       store.change({ camera });
     },
-    focusPort: (portGuid: Guid) => store.execute("semio.typeApp.focusPort", portGuid),
-    clearFocus: () => store.execute("semio.typeApp.clearFocus"),
-    setActiveTool: (tool: ToolType) => {
+    focusPort: (origin: string, portGuid: Guid) => store.execute("semio.typeApp.focusPort", origin, portGuid),
+    clearFocus: (origin: string) => store.execute("semio.typeApp.clearFocus", origin),
+    setActiveTool: (origin: string, tool: ToolType) => {
       store.change({ activeTool: tool });
     },
-    selectPort: (portId: Guid) => {
+    selectPort: (origin: string, portId: Guid) => {
       const selection = store.selection;
       const ports = selection.ports || [];
       if (!ports.includes(portId)) {
@@ -595,7 +615,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
         });
       }
     },
-    deselectPort: (portId?: Guid) => {
+    deselectPort: (origin: string, portId?: Guid) => {
       const selection = store.selection;
       const ports = selection.ports || [];
       if (portId) {
@@ -618,7 +638,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
         });
       }
     },
-    selectRepresentation: (representationId: Guid) => {
+    selectRepresentation: (origin: string, representationId: Guid) => {
       const selection = store.selection;
       const representations = selection.representations || [];
       if (!representations.includes(representationId)) {
@@ -631,7 +651,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
         });
       }
     },
-    deselectRepresentation: (representationId?: Guid) => {
+    deselectRepresentation: (origin: string, representationId?: Guid) => {
       const selection = store.selection;
       const representations = selection.representations || [];
       if (representationId) {
@@ -654,21 +674,21 @@ export function useTypeAppCommands(id?: TypeAppId) {
         });
       }
     },
-    hoverPort: (portId: Guid) => {
+    hoverPort: (origin: string, portId: Guid) => {
       store.change({
         hover: {
           port: portId,
         },
       });
     },
-    hoverRepresentation: (representationId: Guid) => {
+    hoverRepresentation: (origin: string, representationId: Guid) => {
       store.change({
         hover: {
           representation: representationId,
         },
       });
     },
-    clearHover: () => {
+    clearHover: (origin: string) => {
       store.change({
         hover: {
           port: undefined,
@@ -676,12 +696,12 @@ export function useTypeAppCommands(id?: TypeAppId) {
         },
       });
     },
-    setSelectedRepresentation: (representationGuid: Guid) => {
+    setSelectedRepresentation: (origin: string, representationGuid: Guid) => {
       store.change({
         selectedRepresentationGuid: representationGuid,
       });
     },
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
 
