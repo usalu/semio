@@ -20,7 +20,7 @@
 // #endregion
 
 import Fuse, { FuseResult } from "fuse.js";
-import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Focus as FocusIcon, Fullscreen, HardDrive, Home, Layout, Minus, Search as SearchIcon, Square, User, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, Award, Box, ChevronDown, ChevronUp, Clock, Cloud, FileText, Focus as FocusIcon, Fullscreen, GraduationCap, HardDrive, Home, Layout, Minus, Search as SearchIcon, Square, User, X } from "lucide-react";
 import { createContext, FC, Fragment, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
@@ -62,6 +62,7 @@ import {
   useUpdateRecentSearches,
   WindowEvents,
 } from "./store";
+import { useAvailableTutorials, useTutorialStore, Tutorial } from "./tutorials";
 
 export interface PanelSection {
   id: string;
@@ -999,9 +1000,9 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                   const label = match?.title
                     ? match.title
                     : part
-                        .split("-")
-                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                        .join(" ");
+                      .split("-")
+                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                      .join(" ");
 
                   breadcrumbItems.push(
                     <Fragment key={partialPath}>
@@ -1025,8 +1026,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 };
 
 type SearchResult = {
-  type: "kit" | "design" | "type" | "quality" | "docs";
-  item: KitShallow | DesignShallow | TypeShallow | Quality | { title: string; description?: string; path: string };
+  type: "kit" | "design" | "type" | "quality" | "docs" | "tutorial";
+  item: KitShallow | DesignShallow | TypeShallow | Quality | { title: string; description?: string; path: string } | { id: string; name: string; description?: string };
   kitGuid?: string;
 };
 
@@ -1036,10 +1037,11 @@ const buildSearchResultPath = (result: SearchResult): string => {
   if (result.type === "type") return `/kits/${result.kitGuid}/types/${(result.item as TypeShallow).guid}`;
   if (result.type === "quality") return `/kits/${result.kitGuid}?kind=qualities&select=${(result.item as Quality).guid}`;
   if (result.type === "docs") return `/${(result.item as { path: string }).path}`;
+  if (result.type === "tutorial") return `/?tutorial=${(result.item as { id: string }).id}`;
   return "";
 };
 
-const Search: FC = ({}) => {
+const Search: FC = ({ }) => {
   const { t } = useTranslation();
 
   const navigate = useNavigate();
@@ -1048,6 +1050,7 @@ const Search: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const kits = useKits();
+  const tutorials = useAvailableTutorials();
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p") {
@@ -1081,8 +1084,11 @@ const Search: FC = ({}) => {
     docsPages.forEach((page) => {
       results.push({ type: "docs", item: page });
     });
+    tutorials.forEach((tutorial) => {
+      results.push({ type: "tutorial", item: { id: tutorial.id, name: tutorial.name, description: tutorial.description } });
+    });
     return results;
-  }, [kits]);
+  }, [kits, tutorials]);
 
   const searchIndex = useMemo(() => {
     const map = new Map<string, SearchResult>();
@@ -1124,6 +1130,7 @@ const Search: FC = ({}) => {
 
   const groupedSearchResults = useMemo(() => {
     return {
+      tutorials: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "tutorial"),
       kits: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "kit"),
       designs: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "design"),
       types: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "type"),
@@ -1131,6 +1138,8 @@ const Search: FC = ({}) => {
       docs: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "docs"),
     };
   }, [searchResults]);
+
+  const tutorialStore = useTutorialStore();
 
   const handleSelect = useCallback(
     (result: SearchResult) => {
@@ -1142,8 +1151,13 @@ const Search: FC = ({}) => {
       }
       setOpen(false);
       setQuery("");
-      if (path) navigate(path);
-      else {
+
+      if (result.type === "tutorial") {
+        const tutorial = result.item as Tutorial;
+        tutorialStore.startTutorial(tutorial.id);
+      } else if (path) {
+        navigate(path);
+      } else {
         const { type, item, kitGuid } = result;
         if (type === "kit") navigate(`/kits/${(item as KitShallow).guid}`);
         else if (type === "design") navigate(`/kits/${kitGuid}/designs/${(item as DesignShallow).guid}`);
@@ -1152,7 +1166,7 @@ const Search: FC = ({}) => {
         else if (type === "docs") navigate(`/${(item as { path: string }).path}`);
       }
     },
-    [navigate, recentSearches, updateRecentSearches],
+    [navigate, recentSearches, updateRecentSearches, tutorialStore],
   );
 
   const getIcon = (type: SearchResult["type"]) => {
@@ -1161,6 +1175,7 @@ const Search: FC = ({}) => {
     if (type === "type") return <Box size={16} />;
     if (type === "quality") return <Award size={16} />;
     if (type === "docs") return <FileText size={16} />;
+    if (type === "tutorial") return <GraduationCap size={16} />;
     return null;
   };
 
@@ -1168,6 +1183,7 @@ const Search: FC = ({}) => {
     const { type, item } = result;
     if (type === "quality") return (item as Quality).name;
     if (type === "docs") return (item as { title: string }).title;
+    if (type === "tutorial") return (item as Tutorial).name;
     const name = (item as any).name || "";
     const variant = (item as any).variant || "";
     const view = (item as any).view || "";
@@ -1245,6 +1261,18 @@ const Search: FC = ({}) => {
                   ))}
                 </CommandGroup>
               )}
+              {groupedSearchResults.tutorials.length > 0 && (
+                <CommandGroup heading={t("semio.sketchpad.navbar.tutorials", "Tutorials")}>
+                  {groupedSearchResults.tutorials.map((r: FuseResult<SearchResult>, idx: number) => (
+                    <CommandItem key={`tutorial-${(r.item.item as Tutorial).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                      <div className="flex items-center gap-2">
+                        {getIcon(r.item.type)}
+                        <span>{getDisplayName(r.item)}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
             </>
           )}
         </CommandList>
@@ -1253,7 +1281,7 @@ const Search: FC = ({}) => {
   );
 };
 
-const Focus: FC = ({}) => {
+const Focus: FC = ({ }) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
@@ -1358,7 +1386,7 @@ const Focus: FC = ({}) => {
   );
 };
 
-const PanelToggles: FC = ({}) => {
+const PanelToggles: FC = ({ }) => {
   const { t } = useTranslation();
 
   const { kit, design, type, quality } = useParams();
@@ -1430,7 +1458,7 @@ const PanelToggles: FC = ({}) => {
   const rightDropdownAriaLabel = `semio.sketchpad.navbar.panelToggle.right.label`;
 
   const handleToggle = (origin: string, panelKey: keyof PanelVisibility) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     const current = visiblePanels[panelKey];
 
     if (isMobile) {
@@ -1468,7 +1496,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleWorkbenchPressedChange = (origin: string, pressed: boolean) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
         handleToggle(origin, activeWorkbenchPanel as keyof PanelVisibility);
@@ -1482,7 +1510,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleWorkbenchValueChange = (origin: string, value: string | undefined) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (!value) return;
     workbenchSelectionRef.current = value;
 
@@ -1499,7 +1527,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleHudPressedChange = (origin: string, pressed: boolean) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
         handleToggle(origin, activeHudPanel as keyof PanelVisibility);
@@ -1513,7 +1541,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleHudValueChange = (origin: string, value: string | undefined) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (!value) return;
     hudSelectionRef.current = value;
 
@@ -1530,7 +1558,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleRightPressedChange = (origin: string, pressed: boolean) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (pressed) {
       if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
         handleToggle(origin, activeRightPanel as keyof PanelVisibility);
@@ -1544,7 +1572,7 @@ const PanelToggles: FC = ({}) => {
   };
 
   const handleRightValueChange = (origin: string, value: string | undefined) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (!value) return;
     rightSelectionRef.current = value;
 
@@ -1943,7 +1971,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
   const mobilePanelTooltip = activePanel ? id(`semio.sketchpad.navbar.panelToggle.${activePanel}.${isAnyPanelOpen ? "hide" : "show"}`) : undefined;
 
   const handleMobilePanelToggle = (origin: string, pressed: boolean) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (pressed) {
       // Open the active panel if none is open
       if (activePanel && !visiblePanels[activePanel as keyof PanelVisibility]) {
@@ -1962,7 +1990,7 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
   };
 
   const handleMobilePanelChange = (origin: string, value: string | undefined) => {
-    const togglePanel = commands[appType]?.togglePanel || (() => {});
+    const togglePanel = commands[appType]?.togglePanel || (() => { });
     if (!value) return;
 
     // Close all other panels and open the selected one

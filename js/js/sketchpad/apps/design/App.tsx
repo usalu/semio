@@ -275,7 +275,7 @@ const App: FC<AppProps> = () => {
     return (
       <>
         {Object.entries(typesByName).map(([name, variants]) => (
-          <div key={name} onPointerEnter={() => hoverTypes(variants.map((v) => v.guid))} onPointerLeave={() => clearHover()}>
+          <div key={name} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", variants.map((v) => v.guid))} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
             <TreeItem
               label={name}
               defaultOpen={true}
@@ -336,7 +336,7 @@ const App: FC<AppProps> = () => {
     return (
       <>
         {Object.entries(designsByName).map(([name, designs]) => (
-          <div key={name} onPointerEnter={() => hoverDesigns(designs.map((d) => d.guid))} onPointerLeave={() => clearHover()}>
+          <div key={name} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", designs.map((d) => d.guid))} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
             <TreeItem
               label={name}
               defaultOpen={true}
@@ -430,9 +430,9 @@ const App: FC<AppProps> = () => {
       ],
       onPointerEnter: () => {
         if (!kit.types || kit.types.length === 0) return;
-        hoverTypes(kit.types.map((type) => type.guid));
+        hoverTypes("semio.sketchpad.app.design.panel.workbench.typesSection.hover", kit.types.map((type) => type.guid));
       },
-      onPointerLeave: () => clearHover(),
+      onPointerLeave: () => clearHover("semio.sketchpad.app.design.panel.workbench.typesSection.leave"),
       onDoubleClick: () => {
         if (!kit?.guid) return;
         navigateToKit(kit.guid, "kind=types");
@@ -453,9 +453,9 @@ const App: FC<AppProps> = () => {
       ],
       onPointerEnter: () => {
         if (!kit.designs || kit.designs.length === 0) return;
-        hoverDesigns(kit.designs.map((design) => design.guid));
+        hoverDesigns("semio.sketchpad.app.design.panel.workbench.designsSection.hover", kit.designs.map((design) => design.guid));
       },
-      onPointerLeave: () => clearHover(),
+      onPointerLeave: () => clearHover("semio.sketchpad.app.design.panel.workbench.designsSection.leave"),
       onDoubleClick: () => {
         if (!kit?.guid) return;
         navigateToKit(kit.guid, "kind=designs");
@@ -514,7 +514,7 @@ const App: FC<AppProps> = () => {
       });
 
       if (activeDraggedType) {
-        startTransaction();
+        startTransaction("semio.sketchpad.app.design.dragEnd.type");
         const pieceGuid = guid();
         const piece = {
           guid: pieceGuid,
@@ -522,10 +522,10 @@ const App: FC<AppProps> = () => {
           type: activeDraggedType.guid,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
-        addPiece(piece);
-        finalizeTransaction();
+        addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
+        finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
       } else if (activeDraggedDesign) {
-        startTransaction();
+        startTransaction("semio.sketchpad.app.design.dragEnd.design");
         const pieceGuid = guid();
         const piece = {
           guid: pieceGuid,
@@ -533,8 +533,8 @@ const App: FC<AppProps> = () => {
           design: activeDraggedDesign.guid,
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
         };
-        addPiece(piece);
-        finalizeTransaction();
+        addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
+        finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
       }
     }
 

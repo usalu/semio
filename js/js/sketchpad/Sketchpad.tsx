@@ -40,7 +40,9 @@ import Stats from "./panels/Stats";
 import Toolbar from "./panels/Toolbar";
 import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
-import { RecordingControls, TutorialControls, TutorialOverlay, TutorialProvider } from "./tutorials";
+import { FreezeButton } from "./panels/FreezeButton";
+import { TimetravelButton } from "./panels/TimetravelButton";
+import { RecordButton, RecordingControls, TutorialControls, TutorialOverlay, TutorialProvider } from "./tutorials";
 import {
   DesignScopeProvider,
   KitScopeProvider,
@@ -52,6 +54,7 @@ import {
   TypeScopeProvider,
   useAppPanelVisibility,
   useAppType,
+  useExpertise,
   useIsMobile,
   useIsNavbarExpanded,
   useLayout,
@@ -357,6 +360,11 @@ const SketchpadBase: FC = () => {
         <FocusProvider>
           <PanelSectionProvider>
             <FooterItemProvider>
+              <TutorialControls />
+              <RecordingControls />
+              <RecordButton />
+              <FreezeButton />
+              <TimetravelButton />
               <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
                 <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
                   <Navbar />
@@ -502,9 +510,10 @@ interface SketchpadProps {
   id?: string;
   remote?: RemoteProviders;
   onWindowEvents?: WindowEvents;
+  initialState?: import("./store").ExtendedInitialState;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents, initialState }) => {
   const [registryReady, setRegistryReady] = useState(false);
 
   useEffect(() => {
@@ -522,7 +531,7 @@ const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents }) => {
 
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents}>
+      <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState}>
         <TutorialProviderWrapper>
           <TooltipModeProvider>
             <DragDropProvider>
@@ -540,10 +549,10 @@ const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents }) => {
 };
 
 const TooltipModeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const mode = useMode();
+  const expertise = useExpertise();
   useEffect(() => {
-    setTooltipModeProvider(() => mode);
-  }, [mode]);
+    setTooltipModeProvider(() => expertise);
+  }, [expertise]);
   return <>{children}</>;
 };
 
@@ -556,8 +565,6 @@ const TutorialProviderWrapper: FC<{ children: ReactNode }> = ({ children }) => {
       <TutorialProvider store={tutorialStore}>
         {children}
         <TutorialOverlay />
-        <TutorialControls />
-        <RecordingControls />
       </TutorialProvider>
     );
   } catch (e) {

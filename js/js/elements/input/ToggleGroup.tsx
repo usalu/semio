@@ -40,7 +40,6 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 }
 
 function ToggleGroup({ className, id, showLabel, level = "base", children, ...restProps }: ToggleGroupProps) {
-  console.log("[ToggleGroup] Rendering with level:", level, "children:", children, "restProps:", restProps);
   const variant = "default";
   const { t } = useTranslation();
   const mode = useTooltipMode();
@@ -79,7 +78,6 @@ function ToggleGroupItem({
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
   id?: string;
 }) {
-  console.log("[ToggleGroupItem] Rendering with id:", id, "children:", children, "props:", props);
   const context = React.useContext(ToggleGroupContext);
   const mode = useTooltipMode();
 

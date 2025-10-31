@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
 import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
-import { Layout, Mode, Theme, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme, useTooltip } from "../store";
+import { Expertise, Layout, Mode, Theme, useExpertise, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme, useTooltip } from "../store";
 import { HotkeySettings } from "./HotkeySettings";
 
 const LanguageSwitcher: FC = () => {
@@ -52,8 +52,9 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
   const tooltip = useTooltip();
   const theme = useTheme();
   const layout = useLayout();
+  const expertise = useExpertise();
   const mode = useMode();
-  const { setTheme, setLayout, setMode } = useSketchpadCommands();
+  const { setTheme, setLayout, setExpertise, setMode } = useSketchpadCommands();
   const isMobile = useIsMobile();
 
   return (
@@ -96,15 +97,27 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           )}
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("semio.sketchpad.panel.settings.mode.label")} type="single" value={mode} onValueChange={(value: string) => setMode("semio.sketchpad.panel.settings.mode", value as Mode)} level="panel">
-                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.beginner" value={Mode.BEGINNER}>
+              <ToggleGroup id="semio.sketchpad.panel.settings.expertise" type="single" value={expertise} onValueChange={(value: string) => setExpertise("semio.sketchpad.panel.settings.expertise", value as Expertise)} level="panel">
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.expertise.beginner" value={Expertise.BEGINNER}>
                   <GraduationCap />
                 </ToggleGroupItem>
-                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.normal" value={Mode.NORMAL}>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.expertise.normal" value={Expertise.NORMAL}>
                   <Sparkles />
                 </ToggleGroupItem>
-                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.expert" value={Mode.EXPERT}>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.expertise.expert" value={Expertise.EXPERT}>
                   <BrainCircuit />
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </TreeContent>
+          </TreeItem>
+          <TreeItem>
+            <TreeContent>
+              <ToggleGroup id="semio.sketchpad.panel.settings.mode" type="single" value={mode} onValueChange={(value: string) => setMode("semio.sketchpad.panel.settings.mode", value as Mode)} level="panel">
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.user" value={Mode.USER}>
+                  User
+                </ToggleGroupItem>
+                <ToggleGroupItem id="semio.sketchpad.panel.settings.mode.dev" value={Mode.DEV}>
+                  Dev
                 </ToggleGroupItem>
               </ToggleGroup>
             </TreeContent>

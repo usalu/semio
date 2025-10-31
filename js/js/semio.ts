@@ -1220,7 +1220,7 @@ export const getAllTagsFromRepresentations = (representations: Representation[])
 };
 
 export const filterRepresentationsByTags = (representations: Representation[], selectedTags: string[]): Representation[] => {
-  if (selectedTags.length === 0) return representations;
+  if (!selectedTags || selectedTags.length === 0) return representations;
   return representations.filter((r) => {
     if (!r.tags || r.tags.length === 0) return false;
     return selectedTags.every((tag) => r.tags?.includes(tag));
@@ -2314,23 +2314,50 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     if (p.guid) pieceMap[p.guid] = p;
   });
 
+  console.log(`[ORIGIN] flattenDesign: Starting with ${flatDesign.pieces?.length || 0} pieces and ${flatDesign.connections?.length || 0} connections`);
+  console.log(`[ORIGIN] flattenDesign: Piece GUIDs in array:`, flatDesign.pieces?.map(p => p.guid));
+  console.log(`[ORIGIN] flattenDesign: Piece GUIDs in map:`, Object.keys(pieceMap));
+  if (flatDesign.connections && flatDesign.connections.length > 0) {
+    console.log(`[ORIGIN] flattenDesign: Connection details:`, flatDesign.connections.map(c => ({
+      guid: c.guid,
+      connected: c.connected.piece,
+      connecting: c.connecting.piece
+    })));
+  }
+
   const cy = cytoscape({
     elements: {
       nodes: flatDesign.pieces!.map((piece) => ({
-        data: { id_: piece.guid, label: piece.guid },
+        data: { id: piece.guid, label: piece.guid },
       })),
-      edges: flatDesign.connections?.map((connection, index) => {
-        const sourceId = connection.connected.piece;
-        const targetId = connection.connecting.piece;
-        return {
-          data: {
-            id: `${sourceId}--${targetId}`,
-            source: sourceId,
-            target: targetId,
-            connectionData: connection,
-          },
-        };
-      }),
+      edges: flatDesign.connections
+        ?.filter((connection) => {
+          const sourceId = connection.connected.piece;
+          const targetId = connection.connecting.piece;
+          const sourceExists = pieceMap[sourceId];
+          const targetExists = pieceMap[targetId];
+          if (!sourceExists) {
+            console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - source piece ${sourceId} not found`);
+            return false;
+          }
+          if (!targetExists) {
+            console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - target piece ${targetId} not found`);
+            return false;
+          }
+          return true;
+        })
+        .map((connection, index) => {
+          const sourceId = connection.connected.piece;
+          const targetId = connection.connecting.piece;
+          return {
+            data: {
+              id: `${sourceId}--${targetId}`,
+              source: sourceId,
+              target: targetId,
+              connectionData: connection,
+            },
+          };
+        }),
     } as any,
     headless: true,
   });
@@ -3130,7 +3157,7 @@ export const piecesMetadata = (
   }
   const flattenDiff = flattenDesign(kit, designGuid);
   const flatDesign = applyDesignDiff(design, flattenDiff);
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.guid);
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
   return new Map(

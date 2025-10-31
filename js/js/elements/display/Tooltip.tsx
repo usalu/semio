@@ -24,7 +24,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { cn } from "../../semio";
-import { Mode } from "../../sketchpad/store";
+import { Expertise } from "../../sketchpad/store";
 
 export interface TooltipConfig {
   labelKey: string;
@@ -42,15 +42,15 @@ export interface IdTooltipData {
   hotkey?: string;
 }
 
-let getModeFunction: (() => Mode) | undefined;
+let getExpertiseFunction: (() => Expertise) | undefined;
 
-export function setTooltipModeProvider(fn: () => Mode) {
-  getModeFunction = fn;
+export function setTooltipModeProvider(fn: () => Expertise) {
+  getExpertiseFunction = fn;
 }
 
-export function useTooltipMode(): Mode {
-  if (!getModeFunction) return Mode.BEGINNER;
-  return getModeFunction();
+export function useTooltipMode(): Expertise {
+  if (!getExpertiseFunction) return Expertise.BEGINNER;
+  return getExpertiseFunction();
 }
 
 function TooltipProvider({ delayDuration = 0, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
@@ -89,19 +89,19 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
 
 interface EnhancedTooltipContentProps {
   config: TooltipConfig;
-  mode: Mode;
+  mode: Expertise;
 }
 
 function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
   const { t } = useTranslation();
 
-  if (mode === Mode.EXPERT) return null;
+  if (mode === Expertise.EXPERT) return null;
 
   const { labelKey, manualPath, tutorialPath, hotkey } = config;
-  const showManual = mode === Mode.BEGINNER || mode === Mode.NORMAL;
-  const showTutorial = mode === Mode.BEGINNER;
+  const showManual = mode === Expertise.BEGINNER || mode === Expertise.NORMAL;
+  const showTutorial = mode === Expertise.BEGINNER;
 
-  const labelKeyToUse = mode === Mode.BEGINNER ? `${labelKey}.beginner` : labelKey;
+  const labelKeyToUse = mode === Expertise.BEGINNER ? `${labelKey}.beginner` : labelKey;
   const label = t(labelKeyToUse, { defaultValue: t(labelKey) });
 
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
@@ -153,23 +153,23 @@ function EnhancedTooltipContent({ config, mode }: EnhancedTooltipContentProps) {
 
 interface IdTooltipContentProps {
   id: string;
-  mode: Mode;
+  mode: Expertise;
 }
 
 function IdTooltipContent({ id, mode }: IdTooltipContentProps) {
   const { t } = useTranslation();
 
-  if (mode === Mode.EXPERT) return null;
+  if (mode === Expertise.EXPERT) return null;
 
   const label = t(`${id}.label`, { defaultValue: "" });
-  const description = mode === Mode.BEGINNER ? t(`${id}.beginner`, { defaultValue: label }) : label;
+  const description = mode === Expertise.BEGINNER ? t(`${id}.beginner`, { defaultValue: label }) : label;
 
   const manualPath = t(`${id}.manual`, { defaultValue: "" });
   const tutorialPath = t(`${id}.tutorial`, { defaultValue: "" });
   const hotkey = t(`${id}.hotkey`, { defaultValue: "" });
 
-  const showManual = (mode === Mode.BEGINNER || mode === Mode.NORMAL) && manualPath;
-  const showTutorial = mode === Mode.BEGINNER && tutorialPath;
+  const showManual = (mode === Expertise.BEGINNER || mode === Expertise.NORMAL) && manualPath;
+  const showTutorial = mode === Expertise.BEGINNER && tutorialPath;
 
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
@@ -221,11 +221,11 @@ function IdTooltipContent({ id, mode }: IdTooltipContentProps) {
 interface SemioTooltipProps {
   children: React.ReactElement;
   config: TooltipConfig;
-  mode: Mode;
+  mode: Expertise;
 }
 
 function SemioTooltip({ children, config, mode }: SemioTooltipProps) {
-  if (mode === Mode.EXPERT) return children;
+  if (mode === Expertise.EXPERT) return children;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
@@ -239,11 +239,11 @@ function SemioTooltip({ children, config, mode }: SemioTooltipProps) {
 interface IdSemioTooltipProps {
   children: React.ReactElement;
   id: string;
-  mode: Mode;
+  mode: Expertise;
 }
 
 function IdSemioTooltip({ children, id, mode }: IdSemioTooltipProps) {
-  if (mode === Mode.EXPERT) return children;
+  if (mode === Expertise.EXPERT) return children;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>

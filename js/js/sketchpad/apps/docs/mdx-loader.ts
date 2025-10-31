@@ -22,6 +22,7 @@ export interface MDXFileInfo {
   description?: string;
   icon?: string;
   order?: number;
+  concepts?: string[];
   module?: MDXModule;
 }
 
@@ -91,6 +92,7 @@ export function getAllMDXFiles(): MDXFileInfo[] {
         description: frontmatter?.description,
         icon: frontmatter?.icon,
         order: frontmatter?.order ?? 999,
+        concepts: frontmatter?.concepts,
         module,
       };
     });

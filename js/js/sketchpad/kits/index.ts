@@ -19,3 +19,12 @@ export {
   useIsPieceTransitiveHovered,
   usePieceStatus,
 } from "./designAppIntegration";
+
+// Re-export flat piece hooks (already exported from store.tsx, but explicitly listed for clarity)
+export {
+  useFlatPiece,
+  useFlatPieceCenter,
+  useFlatPiecePlane,
+  useIsConnectedPiece,
+  usePieceParentConnection,
+} from "./store";

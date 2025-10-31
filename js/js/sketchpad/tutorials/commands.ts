@@ -46,6 +46,17 @@ export const commands = {
     context.tutorialStore.goToMilestone(index);
     return { success: true };
   },
+  "semio.tutorial.add": (context: TutorialCommandContext, tutorial: Tutorial): TutorialCommandResult => {
+    context.tutorialStore.addTutorial(tutorial);
+    return { success: true };
+  },
+  "semio.tutorial.remove": (context: TutorialCommandContext, tutorialId: string): TutorialCommandResult => {
+    context.tutorialStore.removeTutorial(tutorialId);
+    return { success: true };
+  },
+};
+
+export const devCommands = {
   "semio.recording.start": (context: TutorialCommandContext, name: string, tutorialId?: string): TutorialCommandResult => {
     context.tutorialStore.startRecording(name, tutorialId);
     return { success: true };
@@ -61,14 +72,6 @@ export const commands = {
   "semio.recording.stop": (context: TutorialCommandContext): TutorialCommandResult => {
     const recording = context.tutorialStore.stopRecording();
     return { success: true, data: recording };
-  },
-  "semio.tutorial.add": (context: TutorialCommandContext, tutorial: Tutorial): TutorialCommandResult => {
-    context.tutorialStore.addTutorial(tutorial);
-    return { success: true };
-  },
-  "semio.tutorial.remove": (context: TutorialCommandContext, tutorialId: string): TutorialCommandResult => {
-    context.tutorialStore.removeTutorial(tutorialId);
-    return { success: true };
   },
   "semio.recording.convertToTutorial": (context: TutorialCommandContext, recording: TutorialRecording, name: string, description?: string): TutorialCommandResult => {
     const tutorial = context.tutorialStore.convertRecordingToTutorial(recording, name, description);

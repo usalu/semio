@@ -119,10 +119,15 @@ export enum Layout {
   TOUCH = "touch",
 }
 
-export enum Mode {
+export enum Expertise {
   BEGINNER = "beginner",
   NORMAL = "normal",
   EXPERT = "expert",
+}
+
+export enum Mode {
+  USER = "user",
+  DEV = "dev",
 }
 
 export type AppType = string;
@@ -924,6 +929,7 @@ export interface SketchpadChangableState {
   access: Access;
   theme: Theme;
   layout: Layout;
+  expertise: Expertise;
   mode: Mode;
   appSettings: AppSettings;
   panelSizes: PanelSizes;
@@ -947,6 +953,7 @@ export interface SketchpadDiff {
   access?: Access;
   theme?: Theme;
   layout?: Layout;
+  expertise?: Expertise;
   mode?: Mode;
   appSettings?: AppSettings;
   panelSizes?: Partial<PanelSizes>;
@@ -956,6 +963,33 @@ export interface SketchpadDiff {
   activeInteraction?: string;
   hotkeyOverrides?: Record<string, string>;
   activeHotkeySetting?: string;
+}
+
+export interface InitialStateKit {
+  kit: Kit;
+  local?: boolean;
+  remote?: boolean;
+}
+
+export interface ExtendedInitialState extends Partial<SketchpadState> {
+  kits?: InitialStateKit[];
+}
+
+// Timetravel: Complete application state snapshot
+export interface CompleteState {
+  sketchpad: SketchpadState;
+  kits: Array<{
+    guid: string;
+    local: boolean;
+    remote: boolean;
+    kit: Kit;
+  }>;
+  kitApps: Record<string, any>;  // Kit app states
+  typeApps: Record<string, any>;  // Type app states
+  qualityApps: Record<string, any>;  // Quality app states
+  designApps: Record<string, Record<string, any>>;  // Design app states by kit/design
+  home?: any;  // Home app state
+  tutorials: any;  // Tutorial state
 }
 
 export interface SketchpadCommandContext {
@@ -986,6 +1020,7 @@ export class SketchpadStore {
   private readonly designApps: Map<string, Map<string, DesignAppStoreInstance>>;
   private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
+  private readonly commandMetadata: Map<string, { user?: boolean }>;
   private cache?: SketchpadState;
   private cacheHash?: string;
   private kitShallowsCache?: KitShallow[];
@@ -1003,7 +1038,7 @@ export class SketchpadStore {
   private readonly tutorialStoreInstance: any;
   // private readonly broadcastChannel: BroadcastChannel;
 
-  constructor(id?: string, remote?: RemoteProviders) {
+  constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState) {
     this.id = id;
     this.remote = remote;
     // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
@@ -1014,6 +1049,7 @@ export class SketchpadStore {
     this.qualityApps = new Map();
     this.designApps = new Map();
     this.commandRegistry = new Map();
+    this.commandMetadata = new Map();
     this.kitCreatedSubscribers = new Set();
     this.kitDeletedSubscribers = new Set();
     this.kitAppCreatedSubscribers = new Set();
@@ -1077,8 +1113,11 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("layout")) {
         this.ySketchpad.set("layout", Layout.NORMAL);
       }
+      if (!this.ySketchpad.has("expertise")) {
+        this.ySketchpad.set("expertise", Expertise.BEGINNER);
+      }
       if (!this.ySketchpad.has("mode")) {
-        this.ySketchpad.set("mode", Mode.BEGINNER);
+        this.ySketchpad.set("mode", Mode.USER);
       }
       if (!this.ySketchpad.has("isFullscreen")) {
         this.ySketchpad.set("isFullscreen", false);
@@ -1123,6 +1162,40 @@ export class SketchpadStore {
     Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
     });
+
+    import("./commands").then((module) => {
+      Object.entries(module.devCommands).forEach(([commandId, command]) => {
+        this.registerCommand(commandId, command, { user: false });
+      });
+    });
+
+    if (initialState) {
+      this.yDoc.transact(() => {
+        if (initialState.navigation !== undefined) this.ySketchpad.set("navigation", initialState.navigation);
+        if (initialState.navigationHistory !== undefined) this.ySketchpad.set("navigationHistory", JSON.stringify(initialState.navigationHistory));
+        if (initialState.navigationHistoryIndex !== undefined) this.ySketchpad.set("navigationHistoryIndex", initialState.navigationHistoryIndex);
+        if (initialState.recentSearches !== undefined) this.ySketchpad.set("recentSearches", JSON.stringify(initialState.recentSearches));
+        if (initialState.recentFocusItems !== undefined) this.ySketchpad.set("recentFocusItems", JSON.stringify(initialState.recentFocusItems));
+        if (initialState.access !== undefined) this.ySketchpad.set("access", initialState.access);
+        if (initialState.theme !== undefined) this.ySketchpad.set("theme", initialState.theme);
+        if (initialState.layout !== undefined) this.ySketchpad.set("layout", initialState.layout);
+        if (initialState.expertise !== undefined) this.ySketchpad.set("expertise", initialState.expertise);
+        if (initialState.mode !== undefined) this.ySketchpad.set("mode", initialState.mode);
+        if (initialState.appSettings !== undefined) this.ySketchpad.set("appSettings", JSON.stringify(initialState.appSettings));
+        if (initialState.panelSizes !== undefined) this.ySketchpad.set("panelSizes", JSON.stringify(initialState.panelSizes));
+        if (initialState.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", initialState.isFullscreen);
+        if (initialState.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", initialState.isNavbarExpanded);
+        if (initialState.hotkeyOverrides !== undefined) this.ySketchpad.set("hotkeyOverrides", JSON.stringify(initialState.hotkeyOverrides));
+        if (initialState.activeHotkeySetting !== undefined) this.ySketchpad.set("activeHotkeySetting", initialState.activeHotkeySetting);
+      });
+      
+      // Create kits from initial state
+      if (initialState.kits) {
+        initialState.kits.forEach(({ kit, local, remote }) => {
+          this.createKit(kit, local, remote);
+        });
+      }
+    }
   }
 
   hash = (state: SketchpadState): string => {
@@ -1169,7 +1242,8 @@ export class SketchpadStore {
       access: this.ySketchpad.get("access") as Access,
       theme: this.ySketchpad.get("theme") as Theme,
       layout: this.ySketchpad.get("layout") as Layout,
-      mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.BEGINNER,
+      expertise: (this.ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
+      mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.USER,
       appSettings: appSettings,
       panelSizes: panelSizes,
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
@@ -1452,6 +1526,35 @@ export class SketchpadStore {
       }
       return {} as T;
     }
+    if (command === "semio.sketchpad.freeze") {
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
+      const completeState = this.dumpState();
+      const stateJson = JSON.stringify(completeState, null, 2);
+      const blob = new Blob([stateJson], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `semio-freeze-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return {} as T;
+    }
+    if (command === "semio.sketchpad.timetravel") {
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = async (e: Event) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const text = await file.text();
+          const state = JSON.parse(text) as CompleteState;
+          this.loadState(state);
+        }
+      };
+      input.click();
+      return {} as T;
+    }
     console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
@@ -1471,18 +1574,183 @@ export class SketchpadStore {
     return this.executeCommand(command, ...rest);
   }
 
-  registerCommand(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable {
+  registerCommand(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult, metadata?: { user?: boolean }): Disposable {
     this.commandRegistry.set(command, callback);
+    if (metadata) {
+      this.commandMetadata.set(command, metadata);
+    }
     return () => {
       this.commandRegistry.delete(command);
+      this.commandMetadata.delete(command);
     };
+  }
+
+  isUserCommand(command: string): boolean {
+    const metadata = this.commandMetadata.get(command);
+    return metadata?.user !== false;
   }
 
   get commands() {
     return {
       execute: this.executeCommand.bind(this),
       register: this.registerCommand.bind(this),
+      isUserCommand: this.isUserCommand.bind(this),
     };
+  }
+
+  // Timetravel: Dump complete application state
+  dumpState(): CompleteState {
+    const sketchpad = this.snapshot();
+    
+    const kits = Array.from(this.kits.entries()).map(([guid, kitStore]) => {
+      const kitMetadataArray = this.yKits.toArray();
+      const kitMetadata = kitMetadataArray.find((m) => m.get("guid") === guid);
+      return {
+        guid,
+        local: kitMetadata?.get("local") === true,
+        remote: kitMetadata?.get("remote") === true,
+        kit: kitStore.snapshot(),
+      };
+    });
+
+    const kitApps: Record<string, any> = {};
+    this.kitApps.forEach((app, guid) => {
+      kitApps[guid] = app.snapshot();
+    });
+
+    const typeApps: Record<string, any> = {};
+    this.typeApps.forEach((app, key) => {
+      typeApps[key] = app.snapshot();
+    });
+
+    const qualityApps: Record<string, any> = {};
+    this.qualityApps.forEach((app, key) => {
+      qualityApps[key] = app.snapshot();
+    });
+
+    const designApps: Record<string, Record<string, any>> = {};
+    this.designApps.forEach((designMap, kitGuid) => {
+      designApps[kitGuid] = {};
+      designMap.forEach((app, designGuid) => {
+        designApps[kitGuid][designGuid] = app.snapshot();
+      });
+    });
+
+    const home = this.homeStore?.snapshot();
+    const tutorials = this.tutorialStoreInstance.snapshot();
+
+    return {
+      sketchpad,
+      kits,
+      kitApps,
+      typeApps,
+      qualityApps,
+      designApps,
+      home,
+      tutorials,
+    };
+  }
+
+  // Timetravel: Load complete application state (no validation, destructive)
+  loadState(state: CompleteState): void {
+    this.yDoc.transact(() => {
+      // Clear all existing state
+      this.kits.clear();
+      this.kitApps.clear();
+      this.typeApps.clear();
+      this.qualityApps.clear();
+      this.designApps.clear();
+
+      this.yKits.delete(0, this.yKits.length);
+      this.yKitApps.forEach((_, key) => this.yKitApps.delete(key));
+      this.yTypeApps.forEach((_, key) => this.yTypeApps.delete(key));
+      this.yQualityApps.forEach((_, key) => this.yQualityApps.delete(key));
+      this.yDesignApps.forEach((_, key) => this.yDesignApps.delete(key));
+      this.yHome.forEach((_, key) => this.yHome.delete(key));
+
+      // Restore sketchpad state
+      this.ySketchpad.set("navigation", state.sketchpad.navigation);
+      this.ySketchpad.set("navigationHistory", JSON.stringify(state.sketchpad.navigationHistory));
+      this.ySketchpad.set("navigationHistoryIndex", state.sketchpad.navigationHistoryIndex);
+      this.ySketchpad.set("recentSearches", JSON.stringify(state.sketchpad.recentSearches));
+      this.ySketchpad.set("recentFocusItems", JSON.stringify(state.sketchpad.recentFocusItems));
+      this.ySketchpad.set("access", state.sketchpad.access);
+      this.ySketchpad.set("theme", state.sketchpad.theme);
+      this.ySketchpad.set("layout", state.sketchpad.layout);
+      this.ySketchpad.set("expertise", state.sketchpad.expertise);
+      this.ySketchpad.set("mode", state.sketchpad.mode);
+      this.ySketchpad.set("appSettings", JSON.stringify(state.sketchpad.appSettings));
+      this.ySketchpad.set("panelSizes", JSON.stringify(state.sketchpad.panelSizes));
+      this.ySketchpad.set("isFullscreen", state.sketchpad.isFullscreen);
+      this.ySketchpad.set("isNavbarExpanded", state.sketchpad.isNavbarExpanded);
+      this.ySketchpad.set("isMobile", state.sketchpad.isMobile);
+      if (state.sketchpad.activeInteraction) {
+        this.ySketchpad.set("activeInteraction", state.sketchpad.activeInteraction);
+      }
+      if (state.sketchpad.hotkeyOverrides) {
+        this.ySketchpad.set("hotkeyOverrides", JSON.stringify(state.sketchpad.hotkeyOverrides));
+      }
+      if (state.sketchpad.activeHotkeySetting) {
+        this.ySketchpad.set("activeHotkeySetting", state.sketchpad.activeHotkeySetting);
+      }
+
+      // Restore kits
+      state.kits.forEach(({ guid, local, remote, kit }) => {
+        this.createKit(kit, local, remote);
+      });
+
+      // Restore kit apps
+      Object.entries(state.kitApps).forEach(([guid, appState]) => {
+        this.createKitApp(guid);
+        const kitApp = this.kitApps.get(guid);
+        if (kitApp && kitApp.loadState) {
+          kitApp.loadState(appState);
+        }
+      });
+
+      // Restore type apps
+      Object.entries(state.typeApps).forEach(([key, appState]) => {
+        const [kitGuid, typeGuid] = key.split(":");
+        this.createTypeApp(kitGuid, typeGuid);
+        const typeApp = this.typeApps.get(key);
+        if (typeApp && typeApp.loadState) {
+          typeApp.loadState(appState);
+        }
+      });
+
+      // Restore quality apps
+      Object.entries(state.qualityApps).forEach(([key, appState]) => {
+        const [kitGuid, qualityGuid] = key.split(":");
+        this.createQualityApp(kitGuid, qualityGuid);
+        const qualityApp = this.qualityApps.get(key);
+        if (qualityApp && qualityApp.loadState) {
+          qualityApp.loadState(appState);
+        }
+      });
+
+      // Restore design apps
+      Object.entries(state.designApps).forEach(([kitGuid, designs]) => {
+        Object.entries(designs).forEach(([designGuid, appState]) => {
+          this.createDesignApp(kitGuid, designGuid);
+          const designApp = this.designApps.get(kitGuid)?.get(designGuid);
+          if (designApp && designApp.loadState) {
+            designApp.loadState(appState);
+          }
+        });
+      });
+
+      // Restore home
+      if (state.home && this.homeStore && this.homeStore.loadState) {
+        this.homeStore.loadState(state.home);
+      }
+
+      // Restore tutorials
+      if (state.tutorials && this.tutorialStoreInstance.loadState) {
+        this.tutorialStoreInstance.loadState(state.tutorials);
+      }
+    });
+
+    console.log("[DEBUG] State loaded successfully");
   }
 
   hasKit(guid: string): boolean {
@@ -1777,13 +2045,18 @@ export type WindowEvents = {
 };
 export type SketchpadScope = { id: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; children: React.ReactNode }) => {
   // Use useMemo to ensure the ID is stable across re-renders when props.id is undefined
   const id = useMemo(() => props.id || guid(), [props.id]);
 
   if (!stores.has(id)) {
-    const store = new SketchpadStore(id, props?.remote);
+    const store = new SketchpadStore(id, props?.remote, props?.initialState);
     stores.set(id, store);
+    
+    // Expose store on window for dev tools and storybook
+    if (typeof window !== "undefined") {
+      (window as any).__SEMIO_STORE__ = store;
+    }
   }
   return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, props.children as any);
 };
@@ -1873,10 +2146,14 @@ export function useMode(): Mode {
   return useSketchpad((s) => s.mode) as Mode;
 }
 
+export function useExpertise(): Expertise {
+  return useSketchpad((s) => s.expertise) as Expertise;
+}
+
 export function useTooltip(): (key: string) => string | undefined {
-  const mode = useMode();
+  const expertise = useExpertise();
   return (key: string) => {
-    if (mode === Mode.EXPERT) return undefined;
+    if (expertise === Expertise.EXPERT) return undefined;
     return key;
   };
 }
@@ -2161,7 +2438,10 @@ export function useSketchpadCommands() {
       setAccess: (origin: string, access: Access) => store.execute("semio.sketchpad.setAccess", origin, access),
       setTheme: (origin: string, theme: Theme) => store.execute("semio.sketchpad.setTheme", origin, theme),
       setLayout: (origin: string, layout: Layout) => store.execute("semio.sketchpad.setLayout", origin, layout),
+      setExpertise: (origin: string, expertise: Expertise) => store.execute("semio.sketchpad.setExpertise", origin, expertise),
       setMode: (origin: string, mode: Mode) => store.execute("semio.sketchpad.setMode", origin, mode),
+      exportState: (origin: string) => store.execute("semio.sketchpad.exportState", origin),
+      setState: (origin: string, state: Partial<SketchpadState>) => store.execute("semio.sketchpad.setState", origin, state),
       toggleFullscreen: (origin: string) => store.execute("semio.sketchpad.toggleFullscreen", origin),
       toggleNavbarExpanded: (origin: string) => store.execute("semio.sketchpad.toggleNavbarExpanded", origin),
       setIsMobile: (origin: string, isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", origin, isMobile),

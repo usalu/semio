@@ -32,6 +32,7 @@ import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { Author, buildFileTree, Design, flattenFileTree, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
+import { ConceptFilter } from "../../ConceptFilter";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
 import { useAppType, useHasKit, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands } from "../../store";
 import { DesignSection, FileSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
@@ -1054,6 +1055,8 @@ const AppContent: FC = () => {
           }
         }}
       >
+        {/* Concept Filter */}
+        <ConceptFilter allConcepts={allConcepts} paramName="c" />
         {/* Flexible filter layout with automatic wrapping for mobile */}
         <div className="flex flex-wrap items-center gap-1 p-1 border-b">
           {selectedKind && (
@@ -1667,7 +1670,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { }
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {

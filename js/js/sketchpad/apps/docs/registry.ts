@@ -16,9 +16,10 @@ export interface DocsPage {
   path: string;
   section: string;
   order?: number;
+  concepts?: string[];
 }
 
-export interface DocsSection extends SectionInfo {}
+export interface DocsSection extends SectionInfo { }
 
 class DocsRegistry {
   getAllSections(): DocsSection[] {

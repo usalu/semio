@@ -198,7 +198,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
 - NEVER add raw to ui elements. ALWAYS use i18n setups and provide translations for the existing languages. Every ui element has an i18n key which has information about
-- ALWAYS add `[ORIGIN] `(replace ORIGIN with a file, function, class, … name to identify the origin) prefix to temporary logs so that `\[*\]*` can be used to filter them out.
+- ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - NEVER build or run the code.
 
 ### Styling
@@ -528,6 +528,17 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── config.ts
 │ │ │ │ ├── store.tsx
 │ │ │ │ └── Tools.tsx
+│ │ ├── tutorials
+│ │ │ ├── commands.ts
+│ │ │ ├── exampleTutorial.ts
+│ │ │ ├── IMPLEMENTATION.md
+│ │ │ ├── index.ts
+│ │ │ ├── README.md
+│ │ │ ├── sketchpadTour.ts
+│ │ │ ├── store.tsx
+│ │ │ ├── TutorialControls.tsx
+│ │ │ ├── TutorialOverlay.tsx
+│ │ │ └── types.ts
 │ │ │ ├── fileProviders
 │ │ │ │ ├── IMPLEMENTATION.md
 │ │ │ │ ├── README.md
@@ -641,6 +652,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - State managment ALWAYS is in the corresponding store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
+- Commands ALWAYS have an origin. ALWAYS add the id of the ui element as origin when calling commands.
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.
 
@@ -711,6 +723,14 @@ useEffect(() => {
   return () => removeSection("details", "my-section");
 }, [appType, addSection, removeSection]);
 ```
+
+##### Tutorials
+
+The tutorial system lives in `js/js/sketchpad/tutorials` and re-exports everything via `index.ts`. Tutorials are managed by `TutorialStore`, which wraps a Y.js map and keeps playback, milestone ordering, and recording state (`TutorialPlaybackState`, `TutorialRecordingState`). Always create the store with the app transaction handler so tutorial mutations participate in undo/redo.
+
+Wrap consumers in `TutorialProvider` and use the helper hooks (`useTutorialStore`, `useActiveTutorial`, `useTutorialProgress`, `useTutorialCommandInterceptor`, etc.) instead of accessing the store directly. `TutorialControls` and `TutorialOverlay` are the canonical UI integrations for playback, highlighting, and recording.
+
+Tutorial commands live in `commands.ts` under the `semio.tutorial.*` and `semio.recording.*` namespaces; extend the exported `tutorialCommands` object and re-export through `index.ts` when adding behaviors. Bundle reusable walkthroughs or recordings as modules (for example `sketchpadTour.ts`) that return `Tutorial` objects and register them with `addTutorial`.
 
 #### Styling
 

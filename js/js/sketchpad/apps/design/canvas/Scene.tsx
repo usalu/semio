@@ -27,7 +27,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import Scene, { Model, TransformableModel } from "../../../../elements/windows/Scene";
 import { Camera, Design, DiffStatus, Kit, Piece, Plane, planeToMatrix, Representation, selectBestRepresentation, toThreeRotation, Type } from "../../../../semio";
-import { KitStore, PieceScopeProvider, useDesign, useKit, useKitStore, usePiece, useType } from "../../../kits/store";
+import { KitStore, PieceScopeProvider, useDesign, useFlatPiecePlane, useKit, useKitStore, usePiece, useType } from "../../../kits/store";
 import { useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePieceStatus } from "../../../kits/designAppIntegration";
 import { useAppPanelVisibility } from "../../../store";
 import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFocusedPieceGuid, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelectedRepresentationTags, useDesignAppSelection } from "../store";
@@ -210,6 +210,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const isSelected = useIsPieceSelected();
   const isHovered = useIsPieceTransitiveHovered();
   const status = usePieceStatus();
+  const flatPlane = useFlatPiecePlane();
 
   const { selectPiece, removePieceFromSelection, addPieceToSelection, hoverPiece, clearHover, focusPiece } = useDesignAppCommands();
 
@@ -219,14 +220,18 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
 
+  // For connected pieces, use flat plane. For fixed pieces, use stored plane.
+  const originalPlane = piece.plane || flatPlane;
+  const diffedPlane = diffedPiece.plane || flatPlane;
+
   // Check if there's an actual plane difference (compare values, not just references)
   const hasDiff = useMemo(() => {
     if (status === DiffStatus.Unchanged) return false;
-    if (!piece.plane || !diffedPiece.plane) return false;
+    if (!originalPlane || !diffedPlane) return false;
 
     // Compare plane values
-    const p1 = piece.plane;
-    const p2 = diffedPiece.plane;
+    const p1 = originalPlane;
+    const p2 = diffedPlane;
     return (
       p1.origin.x !== p2.origin.x ||
       p1.origin.y !== p2.origin.y ||
@@ -238,7 +243,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       p1.yAxis.y !== p2.yAxis.y ||
       p1.yAxis.z !== p2.yAxis.z
     );
-  }, [status, piece.plane, diffedPiece.plane]);
+  }, [status, originalPlane, diffedPlane]);
 
   const onSelect = useCallback(
     (e?: ThreeEvent<MouseEvent>) => {
@@ -297,32 +302,32 @@ const ModelPiece: FC<ModelPieceProps> = () => {
 
   // Original piece matrix
   const originalMatrix = useMemo(() => {
-    if (!piece.plane) return null;
-    const planeMatrix = planeToMatrix(piece.plane as Plane);
+    if (!originalPlane) return null;
+    const planeMatrix = planeToMatrix(originalPlane as Plane);
     // Apply coordinate system transformation: rotationMatrix * planeMatrix
     const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeMatrix);
     return threeMatrix;
-  }, [piece.plane]);
+  }, [originalPlane]);
 
   // Diffed piece matrix
   const diffedMatrix = useMemo(() => {
-    if (!diffedPiece.plane || !hasDiff) return null;
-    const planeMatrix = planeToMatrix(diffedPiece.plane as Plane);
+    if (!diffedPlane || !hasDiff) return null;
+    const planeMatrix = planeToMatrix(diffedPlane as Plane);
     // Apply coordinate system transformation: rotationMatrix * planeMatrix
     const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeMatrix);
     return threeMatrix;
-  }, [diffedPiece, hasDiff]);
+  }, [diffedPlane, hasDiff]);
 
   // Use diffed matrix for transform controls, original for visual reference
   const transformProps = useMemo(() => {
     const matrix = diffedMatrix || originalMatrix;
-    if (!matrix || !piece.plane) return null;
+    if (!matrix || !originalPlane) return null;
     const position = new THREE.Vector3();
     const quaternion = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     matrix.decompose(position, quaternion, scale);
     return { position, quaternion, scale };
-  }, [diffedMatrix, originalMatrix, piece.plane]);
+  }, [diffedMatrix, originalMatrix, originalPlane]);
 
   // Original piece mesh (edges only when there's a diff)
   const originalMeshContent =

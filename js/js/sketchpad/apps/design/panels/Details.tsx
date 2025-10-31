@@ -20,16 +20,18 @@
 // #endregion
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { Minus, Plus } from "lucide-react";
+import { Link2Off, Minus, Plus } from "lucide-react";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { SortableTreeItems, TreeContent, TreeItem } from "../../../../elements/aggregation/Tree";
+import { Button } from "../../../../elements/input/Button";
 import Combobox from "../../../../elements/input/Combobox";
 import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Connection, Design, Guid, Kit, Piece, findDesignInKit, findPieceInDesign, findTypeInKit, guid } from "../../../../semio";
+import { useFlatPieceCenter, useFlatPiecePlane, useIsConnectedPiece, usePieceParentConnection, usePiecesMetadata } from "../../../kits";
 import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePiecesFromIds, useReplacableDesigns, useReplacableTypes, useTooltip } from "../../../store";
 import { useDesignAppCommands, useDesignAppSelection } from "../store";
 
@@ -930,6 +932,28 @@ const PiecesSectionForm: FC = () => {
               />
             </TreeContent>
           </TreeItem>
+        </TreeItem>
+      )}
+      {isSingle && piece && !piece.plane && (
+        <TreeItem>
+          <TreeContent>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-muted-foreground">
+                {t("semio.sketchpad.app.design.piece.connectedPieceInfo")}
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const origin = "semio.sketchpad.app.design.panel.details.section.piece.fixPiece";
+                  // TODO: Implement fix piece by getting flat plane and center, removing connection, and setting plane/center
+                  console.log("[ORIGIN] Fix piece not yet implemented", origin);
+                }}
+              >
+                <Link2Off className="h-4 w-4" />
+                {t("semio.sketchpad.app.design.piece.fixPiece")}
+              </Button>
+            </div>
+          </TreeContent>
         </TreeItem>
       )}
       {hasPlane && (

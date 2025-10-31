@@ -183,7 +183,8 @@
           "qualities": "Qualities",
           "files": "Files",
           "authors": "Authors",
-          "docs": "Documentation"
+          "docs": "Documentation",
+          "tutorials": "Tutorials"
         },
         "panelToggle": {
           "toolbar": {
@@ -385,6 +386,28 @@
           "noSections": "No hud sections available"
         }
       },
+      "footer": {
+        "freeze": {
+          "action": {
+            "label": "Freeze State",
+            "beginner": "Export the complete application state as a JSON file for backup or debugging",
+            "normal": "Download a complete snapshot of the current state",
+            "expert": "Dump complete state to JSON",
+            "manual": "dev/timetravel",
+            "tutorial": "advanced/timetravel"
+          }
+        },
+        "timetravel": {
+          "action": {
+            "label": "Timetravel",
+            "beginner": "Load a previously saved state from a JSON file to restore the application to that point",
+            "normal": "Load state from a JSON file",
+            "expert": "Load state from JSON",
+            "manual": "dev/timetravel",
+            "tutorial": "advanced/timetravel"
+          }
+        }
+      },
       "common": {
         "add": {
           "label": "Add",
@@ -556,17 +579,23 @@
             "name": {
               "label": "Filter by name",
               "beginner": "Click to filter artifacts by this name",
-              "hotkey": "Ctrl+N"
+              "hotkey": "Ctrl+N",
+              "manual": "manuals/semio/kit",
+              "tutorial": "hello-semio/model-design"
             },
             "variant": {
               "label": "Filter by variant",
               "beginner": "Click to filter artifacts by this variant",
-              "hotkey": "Ctrl+Alt+V"
+              "hotkey": "Ctrl+Alt+V",
+              "manual": "manuals/semio#variants",
+              "tutorial": "hello-semio/model-design"
             },
             "view": {
               "label": "Filter by view",
               "beginner": "Click to filter designs by this view",
-              "hotkey": "Ctrl+Alt+W"
+              "hotkey": "Ctrl+Alt+W",
+              "manual": "manuals/semio/design#views",
+              "tutorial": "hello-semio/model-design"
             }
           },
           "designs": {
@@ -698,12 +727,14 @@
             "createVariant": {
               "label": "Create variant",
               "beginner": "Click to create a new variant of this artifact",
-              "manual": "manuals/semio#variants"
+              "manual": "manuals/semio#variants",
+              "tutorial": "hello-semio/model-design"
             },
             "createView": {
               "label": "Create view",
               "beginner": "Click to create a new view for this design",
-              "manual": "manuals/semio/design#views"
+              "manual": "manuals/semio/design#views",
+              "tutorial": "hello-semio/model-design"
             }
           },
           "sort": {
@@ -833,7 +864,9 @@
             "planeOrigin": "Origin",
             "planeXAxis": "X Axis",
             "planeYAxis": "Y Axis",
-            "mixedSelectionMessage": "Multiple pieces selected with different values"
+            "mixedSelectionMessage": "Multiple pieces selected with different values",
+            "connectedPieceInfo": "This piece is connected to another piece. Its position and orientation are computed from the connection. To make it independent, click 'Fix Piece'.",
+            "fixPiece": "Fix Piece"
           },
           "connection": {
             "gap": "Gap",

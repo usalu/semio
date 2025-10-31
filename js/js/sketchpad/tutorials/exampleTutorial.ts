@@ -16,6 +16,7 @@ export const helloTutorial: Tutorial = {
   totalDuration: 300,
   icon: "🎓",
   image: "/tutorials/hello-semio.png",
+  concepts: ["hello-semio", "getting-started", "beginner"],
   milestones: [
     {
       id: guid(),

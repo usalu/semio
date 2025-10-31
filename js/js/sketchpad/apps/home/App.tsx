@@ -21,7 +21,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { ArrowDown, ArrowUp, Clock, Cloud, HardDrive, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock, Cloud, FileText, HardDrive, Plus } from "lucide-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
@@ -32,6 +32,8 @@ import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
+import { ConceptFilter } from "../../ConceptFilter";
+import { docsRegistry } from "../docs/registry";
 import { useHotkeys } from "../../hotkeys";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
 import { useAppType, useGetKitKind, useIsMobile, useKits, useNavigation, useSketchpadCommands, useTooltip } from "../../store";
@@ -47,10 +49,11 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  type: KitStoreKind;
+  type: KitStoreKind | "docs";
   updatedAt: string;
   createdAt: string;
-  kit: KitShallow;
+  kit?: KitShallow;
+  docsPath?: string;
 };
 
 const ChevronRight: FC<{ className?: string }> = ({ className }) => (
@@ -65,7 +68,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({}) => {
+const Home: FC = ({ }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -152,6 +155,21 @@ const Home: FC = ({}) => {
     return Array.from(versionSet).sort();
   }, [kits, selectedName]);
 
+  // Collect all unique concepts from kits
+  const allConcepts = useMemo(() => {
+    const conceptSet = new Set<string>();
+    kits.forEach((kit) => {
+      kit.concepts?.forEach((concept) => conceptSet.add(concept));
+    });
+    return Array.from(conceptSet).sort();
+  }, [kits]);
+
+  // Get selected concepts from search params
+  const selectedConcepts = useMemo(() => {
+    const conceptsParam = searchParams.get("concepts");
+    return conceptsParam ? conceptsParam.split(",").filter(Boolean) : [];
+  }, [searchParams]);
+
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
     const locale = i18n.language === "de" ? de : enUS;
@@ -161,6 +179,64 @@ const Home: FC = ({}) => {
       if (isNaN(parsedDate.getTime())) return "";
       return formatDistanceToNow(parsedDate, { addSuffix: true, locale });
     };
+
+    // Add Docs section at the top
+    const allDocsPages = docsRegistry.getAllPages();
+    const allDocsSections = docsRegistry.getAllSections();
+
+    const docsParentId = "docs-root";
+    result.push({
+      id: docsParentId,
+      name: "Documentation",
+      level: 0,
+      hasChildren: true,
+      isExpanded: expandedRows.has(docsParentId),
+      type: "docs",
+      updatedAt: "",
+      createdAt: "",
+      kit: undefined,
+      docsPath: undefined,
+    });
+
+    if (expandedRows.has(docsParentId)) {
+      allDocsSections.forEach((section) => {
+        const sectionId = `docs-section-${section.id}`;
+        const sectionPages = docsRegistry.getPagesBySection(section.id);
+
+        result.push({
+          id: sectionId,
+          name: section.label,
+          level: 1,
+          parentId: docsParentId,
+          hasChildren: sectionPages.length > 0,
+          isExpanded: expandedRows.has(sectionId),
+          type: "docs",
+          updatedAt: "",
+          createdAt: "",
+          kit: undefined,
+          docsPath: undefined,
+        });
+
+        if (expandedRows.has(sectionId)) {
+          sectionPages.forEach((page) => {
+            result.push({
+              id: `docs-page-${page.path}`,
+              name: page.title,
+              level: 2,
+              parentId: sectionId,
+              hasChildren: false,
+              isExpanded: false,
+              type: "docs",
+              updatedAt: "",
+              createdAt: "",
+              kit: undefined,
+              docsPath: page.path,
+            });
+          });
+        }
+      });
+    }
+
     const kitGroups = new Map<string, KitShallow[]>();
 
     kits.forEach((kit) => {
@@ -170,6 +246,7 @@ const Home: FC = ({}) => {
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
       if (selectedName && kit.name !== selectedName) return;
       if (selectedVersion && (kit.version || "") !== selectedVersion) return;
+      if (selectedConcepts.length > 0 && !kit.concepts?.some((c) => selectedConcepts.includes(c))) return;
 
       const key = kit.name;
       if (!kitGroups.has(key)) kitGroups.set(key, []);
@@ -324,7 +401,7 @@ const Home: FC = ({}) => {
     };
     const local = type === "local" || type === "remote";
     const remote = type === "remote";
-    createKit(newKit, local, remote);
+    createKit("semio.sketchpad.app.home.canvas.table.createKit", newKit, local, remote);
     navigateToKit(newKit.guid);
   };
 
@@ -340,7 +417,7 @@ const Home: FC = ({}) => {
     };
     const local = type === "local" || type === "remote";
     const remote = type === "remote";
-    createKit(newKit, local, remote);
+    createKit("semio.sketchpad.app.home.canvas.table.createVersion", newKit, local, remote);
     navigateToKit(newKit.guid);
   };
 
@@ -554,15 +631,28 @@ const Home: FC = ({}) => {
         <ScrollArea className="flex-1">
           <div className="flex flex-col">
             {rows.map((row) => {
-              const isSelected = selection.includes(row.kit.guid);
+              const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
+              const isDocsRow = row.type === "docs";
               return (
                 <div
                   key={row.id}
                   className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
                   role="button"
                   tabIndex={0}
-                  onClick={(e) => handleRowClick(row.kit.guid, e)}
-                  onDoubleClick={() => navigateToKit(row.kit.guid)}
+                  onClick={(e) => {
+                    if (isDocsRow && row.docsPath) {
+                      navigate(`/${row.docsPath}`);
+                    } else if (row.kit) {
+                      handleRowClick(row.kit.guid, e);
+                    }
+                  }}
+                  onDoubleClick={() => {
+                    if (isDocsRow && row.docsPath) {
+                      navigate(`/${row.docsPath}`);
+                    } else if (row.kit) {
+                      navigateToKit(row.kit.guid);
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -583,16 +673,17 @@ const Home: FC = ({}) => {
                         {row.type === "temporary" && <Clock className="size-4" />}
                         {row.type === "local" && <HardDrive className="size-4" />}
                         {row.type === "remote" && <Cloud className="size-4" />}
+                        {row.type === "docs" && <FileText className="size-4" />}
                       </div>
                       <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
-                      {row.level === 0 && (
+                      {row.level === 0 && row.type !== "docs" && (
                         <Action
                           level="base"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCreateVersion(row.name, row.type);
+                            handleCreateVersion(row.name, row.type as KitStoreKind);
                           }}
                           id={tooltip("home.createVersion")}
                         >
@@ -704,6 +795,8 @@ const Home: FC = ({}) => {
               ))}
             <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
           </div>
+          {/* Concept Filter */}
+          <ConceptFilter allConcepts={allConcepts} />
           <ScrollArea ref={scrollAreaRef} className="flex-1">
             <table className="w-full border-collapse">
               <thead className="sticky top-0 border-b">
@@ -793,13 +886,26 @@ const Home: FC = ({}) => {
               </thead>
               <tbody>
                 {rows.map((row) => {
-                  const isSelected = selection.includes(row.kit.guid);
+                  const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
+                  const isDocsRow = row.type === "docs";
                   return (
                     <tr
                       key={row.id}
                       className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
-                      onClick={(e) => handleRowClick(row.kit.guid, e)}
-                      onDoubleClick={() => navigateToKit(row.kit.guid)}
+                      onClick={(e) => {
+                        if (isDocsRow && row.docsPath) {
+                          navigate(`/${row.docsPath}`);
+                        } else if (row.kit) {
+                          handleRowClick(row.kit.guid, e);
+                        }
+                      }}
+                      onDoubleClick={() => {
+                        if (isDocsRow && row.docsPath) {
+                          navigate(`/${row.docsPath}`);
+                        } else if (row.kit) {
+                          navigateToKit(row.kit.guid);
+                        }
+                      }}
                       role="button"
                       tabIndex={0}
                     >
@@ -822,12 +928,12 @@ const Home: FC = ({}) => {
                             <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                           </div>
                           <div className="flex items-center gap-0.5 shrink-0">
-                            {row.level === 0 && (
+                            {row.level === 0 && row.type !== "docs" && (
                               <Action
                                 level="base"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCreateVersion(row.name, row.type);
+                                  handleCreateVersion(row.name, row.type as KitStoreKind);
                                 }}
                                 id={tooltip("home.createVersion")}
                               >
@@ -842,6 +948,7 @@ const Home: FC = ({}) => {
                           {row.type === "temporary" && <Clock className="size-4" />}
                           {row.type === "local" && <HardDrive className="size-4" />}
                           {row.type === "remote" && <Cloud className="size-4" />}
+                          {row.type === "docs" && <FileText className="size-4" />}
                         </td>
                       )}
                       <td className="p-1">{row.updatedAt}</td>

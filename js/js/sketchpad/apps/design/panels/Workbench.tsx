@@ -80,7 +80,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
   const enhancedListeners = {
     ...listeners,
     onPointerDown: (e: React.PointerEvent) => {
-      setActiveInteraction(interactionId);
+      setActiveInteraction("semio.sketchpad.app.design.panel.workbench.type.drag", interactionId);
       listeners?.onPointerDown?.(e);
     },
   };
@@ -124,7 +124,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
         {...enhancedListeners}
         {...attributes}
         onDoubleClick={() => {
-          setActiveInteraction(undefined);
+          setActiveInteraction("semio.sketchpad.app.design.panel.workbench.type.navigate", undefined);
           if (!kitGuid) {
             return;
           }
@@ -148,7 +148,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       {...enhancedListeners}
       {...attributes}
       onDoubleClick={() => {
-        setActiveInteraction(undefined);
+        setActiveInteraction("semio.sketchpad.app.design.panel.workbench.type.navigate", undefined);
         if (!kitGuid) {
           return;
         }
@@ -250,7 +250,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
     ...listeners,
     onPointerDown: (e: React.PointerEvent) => {
       if (!isActive) {
-        setActiveInteraction(interactionId);
+        setActiveInteraction("semio.sketchpad.app.design.panel.workbench.design.drag", interactionId);
         listeners?.onPointerDown?.(e);
       }
     },
@@ -287,7 +287,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
         {...enhancedListeners}
         {...attributes}
         onDoubleClick={() => {
-          setActiveInteraction(undefined);
+          setActiveInteraction("semio.sketchpad.app.design.panel.workbench.design.navigate", undefined);
           if (!kitGuid) {
             return;
           }
@@ -311,7 +311,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
       {...enhancedListeners}
       {...attributes}
       onDoubleClick={() => {
-        setActiveInteraction(undefined);
+        setActiveInteraction("semio.sketchpad.app.design.panel.workbench.design.navigate", undefined);
         if (!kitGuid) {
           return;
         }

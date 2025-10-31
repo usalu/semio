@@ -14,6 +14,7 @@ export interface PageFrontmatter {
   description?: string;
   icon?: string;
   order?: number;
+  concepts?: string[];
   sidebar?: {
     label?: string;
     badge?: string;

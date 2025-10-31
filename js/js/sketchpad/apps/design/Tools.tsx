@@ -62,9 +62,5 @@ export const ToolsToggleGroup: FC = () => {
 
   const activeTool = app?.activeTool || ToolType.SELECTION_NORMAL;
 
-  const handleToolChange = (toolType: ToolType) => {
-    setActiveTool("toolbar", toolType);
-  };
-
-  return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={handleToolChange} level="panel" />;
+  return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool)} level="panel" />;
 };

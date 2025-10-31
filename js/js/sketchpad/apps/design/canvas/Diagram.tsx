@@ -46,7 +46,7 @@ import {
 
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { Button } from "../../../../elements/input/Button";
-import { ConnectionScopeProvider, PieceScopeProvider, useDesign, useExplodeableDesignNodes, useKit, useKitCommands } from "../../../kits/store";
+import { ConnectionScopeProvider, PieceScopeProvider, useDesign, useExplodeableDesignNodes, useFlatDesign, useKit, useKitCommands, usePiecesMetadata } from "../../../kits/store";
 import { useClusterableGroups, useDiffedPiece, useIsConnectionHovered, useIsPieceHovered } from "../../../kits/designAppIntegration";
 import { useFocusSafe } from "../../../Navbar";
 import { ToolType, useAppPanelVisibility, useSketchpadCommands } from "../../../store";
@@ -303,7 +303,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
       role="button"
       onClick={onClick}
       onPointerEnter={() => {
-        if (port.guid) hoverPort(pieceId, port.guid);
+        if (port.guid) hoverPort("semio.sketchpad.app.design.canvas.diagram.portHandle.onPointerEnter", pieceId, port.guid);
       }}
       onPointerLeave={() => {
         // Do nothing - let parent handle hover clear
@@ -319,11 +319,23 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     type,
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
   const ports = type.ports;
-  const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignAppCommands();
+  const commands = useDesignAppCommands();
   const selection = useDesignAppSelection();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isDesignPiece = !!piece.design;
+
+  const selectPiecePort = useCallback((piece: Guid, port: Guid) => {
+    commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode", piece, port);
+  }, [commands]);
+
+  const deselectPiecePort = useCallback(() => {
+    commands.deselectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode");
+  }, [commands]);
+
+  const addConnection = useCallback((connection: SemioConnection) => {
+    commands.addConnection("semio.sketchpad.app.design.canvas.diagram.pieceNode", connection);
+  }, [commands]);
 
   const handleMouseEnter = useCallback(() => {
     // Clear any global pending clear hover
@@ -335,9 +347,9 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     // Only set hover if this is a different piece
     if (currentHoveredPieceGuid !== guid) {
       currentHoveredPieceGuid = guid;
-      hoverPiece(guid);
+      commands.hoverPiece("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseEnter", guid);
     }
-  }, [guid, hoverPiece]);
+  }, [guid, commands]);
 
   const handleMouseLeave = useCallback(() => {
     // Clear any existing global timeout
@@ -350,12 +362,12 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     const pieceGuidAtLeave = guid;
     globalHoverClearTimeout = setTimeout(() => {
       if (currentHoveredPieceGuid === pieceGuidAtLeave) {
-        clearHover();
+        commands.clearHover("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseLeave");
         currentHoveredPieceGuid = null;
       }
       globalHoverClearTimeout = null;
     }, 50);
-  }, [guid, clearHover]);
+  }, [guid, commands]);
 
   return (
     <PieceScopeProvider guid={guid}>
@@ -418,7 +430,20 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
 
+    if (!port.guid || !piece.guid) {
+      console.error("[ORIGIN] Port or piece guid is undefined", { portGuid: port.guid, pieceGuid: piece.guid });
+      return;
+    }
+
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
+      if (!currentSelectedPort.piece || !currentSelectedPort.port) {
+        console.error("[ORIGIN] Selected port has undefined piece or port guid", { 
+          selectedPiece: currentSelectedPort.piece, 
+          selectedPort: currentSelectedPort.port 
+        });
+        return;
+      }
+
       const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
@@ -432,7 +457,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
       deselectPiecePort();
     } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
       deselectPiecePort();
-    } else if (port.guid) selectPiecePort(piece.guid, port.guid);
+    } else {
+      selectPiecePort(piece.guid, port.guid);
+    }
   };
 
   // Calculate original position in pixels for the ghost node
@@ -494,10 +521,22 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     piece: { guid, attributes },
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
-  const { selectPiecePort, deselectPiecePort, addConnection, hoverPiece, clearHover } = useDesignAppCommands();
+  const commands = useDesignAppCommands();
   const selection = useDesignAppSelection();
   const isSelected = selection?.pieces?.includes(guid) ?? false;
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+
+  const selectPiecePort = useCallback((piece: Guid, port: Guid) => {
+    commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.designNode", piece, port);
+  }, [commands]);
+
+  const deselectPiecePort = useCallback(() => {
+    commands.deselectPiecePort("semio.sketchpad.app.design.canvas.diagram.designNode");
+  }, [commands]);
+
+  const addConnection = useCallback((connection: SemioConnection) => {
+    commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
+  }, [commands]);
 
   const handleMouseEnter = useCallback(() => {
     // Clear any global pending clear hover
@@ -509,9 +548,9 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     // Only set hover if this is a different piece
     if (currentHoveredPieceGuid !== guid) {
       currentHoveredPieceGuid = guid;
-      hoverPiece(guid);
+      commands.hoverPiece("semio.sketchpad.app.design.canvas.diagram.designNode.handleMouseEnter", guid);
     }
-  }, [guid, hoverPiece]);
+  }, [guid, commands]);
 
   const handleMouseLeave = useCallback(() => {
     // Clear any existing global timeout
@@ -524,12 +563,12 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     const pieceGuidAtLeave = guid;
     globalHoverClearTimeout = setTimeout(() => {
       if (currentHoveredPieceGuid === pieceGuidAtLeave) {
-        clearHover();
+        commands.clearHover("semio.sketchpad.app.design.canvas.diagram.designNode.handleMouseLeave");
         currentHoveredPieceGuid = null;
       }
       globalHoverClearTimeout = null;
     }, 50);
-  }, [guid, clearHover]);
+  }, [guid, commands]);
 
   const ports: Port[] = externalConnections.map((SemioConnection, portIndex) => {
     const connectedIsDesignPiece = SemioConnection.connected.piece === piece.guid || SemioConnection.connected.designPiece === piece.guid;
@@ -624,7 +663,20 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection?.port;
 
+    if (!port.guid || !piece.guid) {
+      console.error("[ORIGIN] Port or piece guid is undefined in DesignNode", { portGuid: port.guid, pieceGuid: piece.guid });
+      return;
+    }
+
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
+      if (!currentSelectedPort.piece || !currentSelectedPort.port) {
+        console.error("[ORIGIN] Selected port has undefined piece or port guid in DesignNode", { 
+          selectedPiece: currentSelectedPort.piece, 
+          selectedPort: currentSelectedPort.port 
+        });
+        return;
+      }
+
       const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
@@ -638,7 +690,9 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
       deselectPiecePort();
     } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
       deselectPiecePort();
-    } else if (port.guid) selectPiecePort(piece.guid, port.guid);
+    } else {
+      selectPiecePort(piece.guid, port.guid);
+    }
   };
 
   let fillClass = "fill-transparent";
@@ -811,9 +865,9 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
         stroke="transparent"
         strokeWidth={Math.max(strokeWidth, 6)}
         onPointerEnter={() => {
-          if (connectionGuid) hoverConnection(connectionGuid);
+          if (connectionGuid) hoverConnection("semio.sketchpad.app.design.canvas.diagram.connectionEdge.onPointerEnter", connectionGuid);
         }}
-        onPointerLeave={() => clearHover()}
+        onPointerLeave={() => clearHover("semio.sketchpad.app.design.canvas.diagram.connectionEdge.onPointerLeave")}
       />
     </g>
   );
@@ -1183,13 +1237,9 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const savedDiagramScale = useDesignAppDiagramScale();
   const panelVisibility = useAppPanelVisibility();
 
-  // const design = useDiffedDesign();
   const design = useDesign() as Design | null;
-  // const types = usePortColoredTypes();
-  // const flattenedDesign = useFlatDesign();
-  const flattenedDesign = design;
-  // const metadata = usePiecesMetadata();
-  const metadata = useMemo(() => new Map(), []);
+  const flattenedDesign = useFlatDesign();
+  const metadata = usePiecesMetadata();
 
   const { nodes, edges } = useMemo(() => {
     if (!design || !flattenedDesign) return { nodes: [], edges: [] };
@@ -1237,7 +1287,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       if (node) {
         setFocusedItemId(node.id); // Focus 2D diagram with React Flow node ID
       }
-      focusPiece(itemId); // Focus 3D scene with piece.guid
+      focusPiece("semio.sketchpad.app.design.canvas.diagram.handleFocus", itemId); // Focus 3D scene with piece.guid
     };
     focusContext.setOnFocusItem(handleFocus);
     return () => {
@@ -1258,7 +1308,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && dragState) {
         // Abort the transaction and reset drag state
-        abortTransaction();
+        abortTransaction("semio.sketchpad.app.design.canvas.diagram.handleEscape");
         setDragState(null);
         setHelperLines([]);
 
@@ -1292,19 +1342,19 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const onMoveEnd = useCallback(() => {
     if (isUpdatingViewportRef.current || !reactFlowInstanceRef.current) return;
     const viewport = reactFlowInstanceRef.current.getViewport();
-    setDiagramCenter({ x: viewport.x, y: viewport.y });
-    setDiagramScale(viewport.zoom);
+    setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", { x: viewport.x, y: viewport.y });
+    setDiagramScale("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", viewport.zoom);
   }, [reactFlowInstanceRef, setDiagramCenter, setDiagramScale]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     console.log("onNodeClick fired", node.id, "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
-    if (e.ctrlKey || e.metaKey) removePieceFromSelection(pieceId);
-    else if (e.shiftKey) addPieceToSelection(pieceId);
-    else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection(pieceId);
-    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection(pieceId);
-    else selectPiece(pieceId);
+    if (e.ctrlKey || e.metaKey) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
+    else if (e.shiftKey) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
+    else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
+    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
+    else selectPiece("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
   };
 
   const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
@@ -1319,24 +1369,24 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
     e.stopPropagation();
     const connectionId = edge.data!.SemioConnection.guid;
-    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(connectionId);
-    else if (e.shiftKey) addConnectionToSelection(connectionId);
-    else if (activeTool === ToolType.SELECTION_ADDITIVE) addConnectionToSelection(connectionId);
-    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removeConnectionFromSelection(connectionId);
-    else selectConnection(connectionId);
+    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
+    else if (e.shiftKey) addConnectionToSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
+    else if (activeTool === ToolType.SELECTION_ADDITIVE) addConnectionToSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
+    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removeConnectionFromSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
+    else selectConnection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
     console.log("onPaneClick fired", "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
     e.stopPropagation();
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
-      deselectAll();
+      deselectAll("semio.sketchpad.app.design.canvas.diagram.onPaneClick");
     }
   };
 
   const onDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleDiagramFullscreen();
+    toggleDiagramFullscreen("semio.sketchpad.app.design.canvas.diagram.onDoubleClick");
   };
 
   const onCluster = useCallback(
@@ -1361,13 +1411,13 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       const ctrlKey = event.ctrlKey || event.metaKey;
       const shiftKey = event.shiftKey;
 
-      if (ctrlKey) isNodeSelected ? removePieceFromSelection(pieceId) : addPieceToSelection(pieceId);
-      else if (shiftKey) !isNodeSelected ? addPieceToSelection(pieceId) : selectPiece(pieceId);
-      else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection(pieceId);
-      else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection(pieceId);
-      else if (!isNodeSelected) selectPiece(pieceId);
+      if (ctrlKey) isNodeSelected ? removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId) : addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
+      else if (shiftKey) !isNodeSelected ? addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId) : selectPiece("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
+      else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
+      else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
+      else if (!isNodeSelected) selectPiece("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
 
-      startTransaction();
+      startTransaction("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart");
       setDragState({ lastPostition: { x: node.position.x, y: node.position.y } });
       setHelperLines([]);
     },
@@ -1852,9 +1902,33 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
             if (existingConnection) continue;
             const otherInternalNode = reactFlowInstanceRef.current.getInternalNode(otherNode.id)!;
             for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
-              const port = findPortInType(type, handle.id!);
+              if (!handle.id) {
+                console.error("[ORIGIN] onNodeDrag: handle.id is undefined", { handle, selectedNode });
+                continue;
+              }
+              const port = findPortInType(type, handle.id);
+              if (!port || !port.guid) {
+                console.error("[ORIGIN] onNodeDrag: port or port.guid is undefined", { port, handleId: handle.id, type });
+                continue;
+              }
               for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
-                const otherPort = findPortInType((otherNode as PieceNode).data.type, otherHandle.id!);
+                if (!otherHandle.id) {
+                  console.error("[ORIGIN] onNodeDrag: otherHandle.id is undefined", { otherHandle, otherNode });
+                  continue;
+                }
+                const otherPort = findPortInType((otherNode as PieceNode).data.type, otherHandle.id);
+                if (!otherPort || !otherPort.guid) {
+                  console.error("[ORIGIN] onNodeDrag: otherPort or otherPort.guid is undefined", { otherPort, otherHandleId: otherHandle.id, otherNode });
+                  continue;
+                }
+                if (!selectedNode.data.piece.guid) {
+                  console.error("[ORIGIN] onNodeDrag: selectedNode.data.piece.guid is undefined", { selectedNode });
+                  continue;
+                }
+                if (!otherNode.data.piece.guid) {
+                  console.error("[ORIGIN] onNodeDrag: otherNode.data.piece.guid is undefined", { otherNode });
+                  continue;
+                }
                 const haveSameFixedPiece = fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId;
                 if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || (design && isPortInUse(design, piece.guid, port.guid)) || (design && isPortInUse(design, otherNode.data.piece.guid, otherPort.guid))) continue;
                 const dx = selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x);
@@ -1866,12 +1940,12 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
                     connected: {
                       guid: crypto.randomUUID(),
                       piece: otherNode.data.piece.guid,
-                      port: otherHandle.id!,
+                      port: otherHandle.id,
                     },
                     connecting: {
                       guid: crypto.randomUUID(),
                       piece: selectedNode.data.piece.guid,
-                      port: handle.id!,
+                      port: handle.id,
                     },
                     x: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
                     y: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
@@ -1910,10 +1984,10 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       }
 
       if (addedConnections.length > 0) {
-        addedConnections.forEach((conn) => addConnection(conn));
+        addedConnections.forEach((conn) => addConnection("semio.sketchpad.app.design.canvas.diagram.onNodeDrag", conn));
       }
       if (updatedPieces.length > 0) {
-        updatePieces(updatedPieces);
+        updatePieces("semio.sketchpad.app.design.canvas.diagram.onNodeDrag", updatedPieces);
       }
       setDragState({
         ...dragState!,
@@ -1924,7 +1998,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   const onNodeDragStop = useCallback(() => {
-    finalizeTransaction();
+    finalizeTransaction("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop");
     setDragState(null);
     setHelperLines([]);
   }, [finalizeTransaction]);
@@ -1944,17 +2018,34 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
       const sourcePieceId = extractPieceIdFromNodeId(params.source!);
       const targetPieceId = extractPieceIdFromNodeId(params.target!);
 
+      if (!sourcePieceId) {
+        console.error("[ORIGIN] onConnect: sourcePieceId is undefined", { params, sourceInternalNode });
+        return;
+      }
+      if (!targetPieceId) {
+        console.error("[ORIGIN] onConnect: targetPieceId is undefined", { params, targetInternalNode });
+        return;
+      }
+      if (!params.sourceHandle) {
+        console.error("[ORIGIN] onConnect: params.sourceHandle is undefined", { params });
+        return;
+      }
+      if (!params.targetHandle) {
+        console.error("[ORIGIN] onConnect: params.targetHandle is undefined", { params });
+        return;
+      }
+
       const newConnection = {
         guid: crypto.randomUUID(),
         connected: {
           guid: crypto.randomUUID(),
           piece: sourcePieceId,
-          port: params.sourceHandle!,
+          port: params.sourceHandle,
         },
         connecting: {
           guid: crypto.randomUUID(),
           piece: targetPieceId,
-          port: params.targetHandle!,
+          port: params.targetHandle,
         },
         x: (sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
         y: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
@@ -1962,7 +2053,7 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
       if (!design) return;
       if (((design as Design).connections ?? []).find((c: SemioConnection) => areSameConnection(c, newConnection))) return;
-      addConnection(newConnection);
+      addConnection("semio.sketchpad.app.design.canvas.diagram.onConnect", newConnection);
     },
     [addConnection, reactFlowInstanceRef, design],
   );

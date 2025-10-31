@@ -6,11 +6,12 @@
 
 // #endregion
 
-import { Pause, Play, SkipBack, SkipForward, Square, X } from "lucide-react";
+import { Download, Pause, Play, SkipBack, SkipForward, Square, X } from "lucide-react";
 import { FC, useEffect } from "react";
 import { Button } from "../../elements/input/Button";
 import { Slider } from "../../elements/input/Slider";
 import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
+import { Mode, useMode } from "../store";
 import { TutorialPlaybackState, useActiveTutorial, useCurrentMilestone, useIsTutorialActive, usePlaybackState, useTutorialProgress, useTutorialStore } from "./store";
 
 export const TutorialControls: FC = () => {
@@ -101,14 +102,19 @@ export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const store = useTutorialStore();
+  const mode = useMode();
 
   useEffect(() => {
+    if (mode !== Mode.DEV) {
+      removeFooterItem("recording-controls");
+      return () => { };
+    }
     const state = store.snapshot();
     if (state.recordingState !== "idle") {
       addFooterItem({
         id: "recording-controls",
         content: <RecordingControlsContent />,
-        order: 101,
+        order: 1,
       });
     } else {
       removeFooterItem("recording-controls");
@@ -119,7 +125,7 @@ export const RecordingControls: FC = () => {
         addFooterItem({
           id: "recording-controls",
           content: <RecordingControlsContent />,
-          order: 101,
+          order: 1,
         });
       } else {
         removeFooterItem("recording-controls");
@@ -129,7 +135,7 @@ export const RecordingControls: FC = () => {
       unsubscribe();
       removeFooterItem("recording-controls");
     };
-  }, [store, addFooterItem, removeFooterItem]);
+  }, [store, addFooterItem, removeFooterItem, mode]);
 
   return null;
 };
@@ -139,6 +145,13 @@ const RecordingControlsContent: FC = () => {
   const state = store.snapshot();
   const isRecording = state.recordingState === "recording";
   const isPaused = state.recordingState === "paused";
+
+  const handleStop = () => {
+    const recording = store.stopRecording();
+    if (recording) {
+      store.downloadRecording(recording);
+    }
+  };
 
   return (
     <div className="flex items-center gap-2 px-2">
@@ -159,7 +172,7 @@ const RecordingControlsContent: FC = () => {
       >
         {isRecording ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
       </Button>
-      <Button variant="ghost" onClick={() => store.stopRecording()} className="h-4 w-4 p-0">
+      <Button variant="ghost" onClick={handleStop} className="h-4 w-4 p-0">
         <Square className="h-3 w-3" />
       </Button>
       {state.activeRecording && <div className="text-xs text-muted">{state.activeRecording.name}</div>}

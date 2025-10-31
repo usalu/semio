@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { Access, Layout, migratePath, Mode, SketchpadCommandContext, SketchpadCommandResult, Theme } from "./store";
+import { Access, Expertise, Layout, migratePath, Mode, SketchpadCommandContext, SketchpadCommandResult, Theme } from "./store";
 
 export const commands = {
   "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
@@ -35,6 +35,11 @@ export const commands = {
   "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
     return {
       diff: { layout },
+    };
+  },
+  "semio.sketchpad.setExpertise": (context: SketchpadCommandContext, expertise: Expertise): SketchpadCommandResult => {
+    return {
+      diff: { expertise },
     };
   },
   "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
@@ -122,5 +127,16 @@ export const commands = {
         activeHotkeySetting: path,
       },
     };
+  },
+};
+
+export const devCommands = {
+  "semio.sketchpad.freeze": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    // This command needs access to the store, which will be passed via special handling
+    return {};
+  },
+  "semio.sketchpad.timetravel": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    // This command needs access to the store, which will be passed via special handling
+    return {};
   },
 };

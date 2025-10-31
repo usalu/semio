@@ -7,6 +7,7 @@
 // #endregion
 
 export { commands as tutorialCommands } from "./commands";
+export { RecordButton } from "./RecordButton";
 export { RecordingControls, TutorialControls } from "./TutorialControls";
 export { TutorialOverlay } from "./TutorialOverlay";
 export {
@@ -30,3 +31,5 @@ export {
 } from "./store";
 export type { Tutorial, TutorialMilestone, TutorialRecording, TutorialRecordingEvent, TutorialState } from "./store";
 export type { TutorialCommandContext, TutorialCommandResult } from "./commands";
+export { helloTutorial } from "./exampleTutorial";
+export { sketchpadTour } from "./sketchpadTour";

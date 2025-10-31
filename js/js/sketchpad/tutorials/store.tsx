@@ -48,6 +48,7 @@ export interface Tutorial {
   totalDuration?: number;
   icon?: string;
   image?: string;
+  concepts?: string[];
 }
 
 export interface TutorialRecordingEvent {
@@ -341,6 +342,19 @@ export class TutorialStore {
     return recording;
   }
 
+  downloadRecording(recording: TutorialRecording): void {
+    const json = JSON.stringify(recording, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${recording.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${recording.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   recordEvent(event: Omit<TutorialRecordingEvent, "timestamp">): void {
     const state = this.snapshot();
     if (state.recordingState !== TutorialRecordingState.RECORDING || !state.activeRecording) return;
@@ -425,6 +439,24 @@ export const TutorialProvider: FC<{ store: TutorialStore; children: ReactNode }>
     return unsubscribe;
   }, [store]);
 
+  useEffect(() => {
+    const registerBuiltInTutorials = async () => {
+      try {
+        const { helloTutorial, sketchpadTour } = await import("./index");
+        const existingIds = state.availableTutorials.map((t) => t.id);
+        if (!existingIds.includes(helloTutorial.id)) {
+          store.addTutorial(helloTutorial);
+        }
+        if (!existingIds.includes(sketchpadTour.id)) {
+          store.addTutorial(sketchpadTour);
+        }
+      } catch (e) {
+        console.error("Failed to register built-in tutorials:", e);
+      }
+    };
+    registerBuiltInTutorials();
+  }, [store, state.availableTutorials]);
+
   return <TutorialContext.Provider value={{ store, state }}>{children}</TutorialContext.Provider>;
 };
 
@@ -476,7 +508,7 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
 
   useEffect(() => {
     const originalExecute = onCommandExecute;
-    return () => {};
+    return () => { };
   }, [store, isRecording, onCommandExecute]);
 
   return useCallback(

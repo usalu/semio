@@ -2322,6 +2322,71 @@ export function usePiecePlane(): Plane {
   return plane;
 }
 
+export function useFlatPiece<T>(selector?: (piece: Piece) => T, id?: Guid): T | Piece | null {
+  const pieceScope = usePieceScope();
+  const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
+  const metadata = usePiecesMetadata();
+  const piece = usePiece(identitySelector, pieceGuid || undefined) as Piece | null;
+  
+  if (!piece || !pieceGuid) return null;
+  
+  const meta = metadata.get(pieceGuid);
+  if (!meta) return piece;
+  
+  const flatPiece: Piece = {
+    ...piece,
+    plane: meta.plane,
+    center: meta.center,
+  };
+  
+  return selector ? selector(flatPiece) : flatPiece;
+}
+
+export function useFlatPiecePlane(id?: Guid): Plane {
+  const plane = useFlatPiece((p) => p.plane, id) as Plane | undefined;
+
+  if (!plane) {
+    return {
+      origin: { x: 0, y: 0, z: 0 },
+      xAxis: { x: 1, y: 0, z: 0 },
+      yAxis: { x: 0, y: 1, z: 0 },
+    };
+  }
+
+  return plane;
+}
+
+export function useFlatPieceCenter(id?: Guid): Coord {
+  const center = useFlatPiece((p) => p.center, id) as Coord | undefined;
+
+  if (!center) {
+    return { x: 0, y: 0 };
+  }
+
+  return center;
+}
+
+export function useIsConnectedPiece(id?: Guid): boolean {
+  const pieceScope = usePieceScope();
+  const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
+  const metadata = usePiecesMetadata();
+  
+  if (!pieceGuid) return false;
+  
+  const meta = metadata.get(pieceGuid);
+  return meta ? meta.parentPieceId !== null : false;
+}
+
+export function usePieceParentConnection(id?: Guid): Connection | null {
+  const pieceScope = usePieceScope();
+  const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
+  const design = useDesign() as Design;
+  
+  if (!pieceGuid || !design.connections) return null;
+  
+  return design.connections.find((c: Connection) => c.connecting.piece === pieceGuid || c.connected.piece === pieceGuid) ?? null;
+}
+
 // usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
 
 // #endregion Piece
@@ -2478,6 +2543,9 @@ class SideStore {
 
   get piece(): Guid {
     const pieceUuid = this.ySide.get("piece") as string;
+    if (!pieceUuid) {
+      throw new Error(`[ORIGIN] SideStore.piece: pieceUuid is undefined for side ${this.guid}`);
+    }
     return this.parent.piece(pieceUuid).guid;
   }
   set piece(piece: Guid) {
@@ -2599,9 +2667,9 @@ class ConnectionStore {
     this.parent = parent;
     this.yConnection = yConnection;
     this.guid = connection.guid;
-    const yConnected = new Y.Map<YSideVal>();
+    const yConnected = this.yConnection.set("connected", new Y.Map<YSideVal>());
     this.connected = new SideStore(parent, yConnected, connection.connected);
-    const yConnecting = new Y.Map<YSideVal>();
+    const yConnecting = this.yConnection.set("connecting", new Y.Map<YSideVal>());
     this.connecting = new SideStore(parent, yConnecting, connection.connecting);
     this.gap = connection.gap;
     this.shift = connection.shift;
