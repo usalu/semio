@@ -169,13 +169,29 @@ export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): bo
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
 class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
+  private readonly kitGuid: Guid;
+  private readonly designGuid: Guid;
+
   constructor(parent: SketchpadStore, yMap: YDesignApp, transact: (fn: () => void) => void, id: DesignAppId, state?: DesignAppState) {
     super(parent, yMap, transact);
 
-    const kit = this.parent.kit(id.kit);
-    const design = kit.design(id.design);
-    yMap.set("kit", kit.guid);
-    yMap.set("design", design.guid);
+    // Try to get kit and design from yMap first (for persisted state)
+    // If not present, use the provided id and set them in yMap
+    let kitGuid = yMap.get("kit") as string;
+    let designGuid = yMap.get("design") as string;
+
+    if (!kitGuid || !designGuid) {
+      const kit = this.parent.kit(id.kit);
+      const design = kit.design(id.design);
+      kitGuid = kit.guid;
+      designGuid = design.guid;
+      yMap.set("kit", kitGuid);
+      yMap.set("design", designGuid);
+    }
+
+    // Store kit and design GUIDs as instance properties for reliable access
+    this.kitGuid = kitGuid;
+    this.designGuid = designGuid;
 
     // Only initialize if not already set (preserve existing values when reopening)
     if (!yMap.has("fullscreenWindow")) {
@@ -383,11 +399,11 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
   }
 
   kit(): KitStore {
-    return this.parent.kit(this.yMap.get("kit") as string);
+    return this.parent.kit(this.kitGuid);
   }
 
   design(): DesignStore {
-    return this.kit().design(this.yMap.get("design") as string);
+    return this.kit().design(this.designGuid);
   }
 
   protected getSelection(): DesignAppSelection {

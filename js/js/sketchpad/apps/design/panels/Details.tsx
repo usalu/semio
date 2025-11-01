@@ -1209,7 +1209,7 @@ const ConnectionsSectionForm: FC<{
       {!isSingle && (
         <TreeItem>
           <TreeContent>
-            <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
+            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.design.panel.details.section.connection.multipleEditing", { count: connections.length })}</p>
           </TreeContent>
         </TreeItem>
       )}

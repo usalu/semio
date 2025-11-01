@@ -40,9 +40,6 @@ import Stats from "./panels/Stats";
 import Toolbar from "./panels/Toolbar";
 import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
-import { FreezeButton } from "./panels/FreezeButton";
-import { TimetravelButton } from "./panels/TimetravelButton";
-import { RecordButton, RecordingControls, TutorialControls, TutorialOverlay, TutorialProvider } from "./tutorials";
 import {
   DesignScopeProvider,
   KitScopeProvider,
@@ -58,7 +55,6 @@ import {
   useIsMobile,
   useIsNavbarExpanded,
   useLayout,
-  useMode,
   useNavigation,
   useSketchpad,
   useSketchpadCommands,
@@ -66,6 +62,7 @@ import {
   useTheme,
   WindowEvents,
 } from "./store";
+import { RecordButton, RecordingControls, TutorialControls, TutorialOverlay, TutorialProvider } from "./tutorials";
 
 // Lazy load HeadingsProvider to avoid issues in Storybook
 const HeadingsProviderWrapper: FC<{ children: ReactNode }> = ({ children }) => {
@@ -363,8 +360,6 @@ const SketchpadBase: FC = () => {
               <TutorialControls />
               <RecordingControls />
               <RecordButton />
-              <FreezeButton />
-              <TimetravelButton />
               <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
                 <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
                   <Navbar />
@@ -529,13 +524,15 @@ const Sketchpad: FC<SketchpadProps> = ({ id, remote, onWindowEvents, initialStat
     return null; // Or a loading spinner
   }
 
+  const initialEntries = initialState?.navigation ? [initialState.navigation] : undefined;
+
   return (
     <TooltipProvider>
       <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState}>
         <TutorialProviderWrapper>
           <TooltipModeProvider>
             <DragDropProvider>
-              <MemoryRouter>
+              <MemoryRouter initialEntries={initialEntries}>
                 <Routes>
                   <Route element={<SketchpadBase />}>{generateRoutes()}</Route>
                 </Routes>

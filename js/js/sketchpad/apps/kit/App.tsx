@@ -1028,19 +1028,56 @@ const AppContent: FC = () => {
     if (files.length === 0) return;
 
     for (const file of files) {
-      const newFile: SemioFile = {
-        guid: guid(),
-        path: file.name,
-        size: file.size,
-        hash: undefined,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      // Check if file is a zip file
+      if (file.name.toLowerCase().endsWith('.zip')) {
+        try {
+          console.log(`[DEBUG] Processing zip file: ${file.name}`);
+          // Import JSZip dynamically
+          const JSZip = (await import('jszip')).default;
+          const zip = await JSZip.loadAsync(file);
+          
+          // Extract all files from zip
+          const extractPromises: Promise<void>[] = [];
+          zip.forEach((relativePath, zipEntry) => {
+            if (!zipEntry.dir) {
+              extractPromises.push(
+                zipEntry.async('blob').then(async (fileBlob) => {
+                  const extractedFile: SemioFile = {
+                    guid: guid(),
+                    path: relativePath,
+                    size: fileBlob.size,
+                    hash: undefined,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  };
+                  await kitCommands?.addFile("semio.sketchpad.app.kit.dropZip", extractedFile, fileBlob);
+                  console.log(`[DEBUG] Extracted and added file ${relativePath} from zip`);
+                })
+              );
+            }
+          });
+          
+          await Promise.all(extractPromises);
+          console.log(`[DEBUG] Successfully extracted ${extractPromises.length} files from ${file.name}`);
+        } catch (error) {
+          console.error(`Failed to extract zip file ${file.name}:`, error);
+        }
+      } else {
+        // Handle regular file
+        const newFile: SemioFile = {
+          guid: guid(),
+          path: file.name,
+          size: file.size,
+          hash: undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
-      try {
-        await kitCommands?.addFile(newFile, file);
-      } catch (error) {
-        console.error(`Failed to add file ${file.name}:`, error);
+        try {
+          await kitCommands?.addFile("semio.sketchpad.app.kit.dropFile", newFile, file);
+        } catch (error) {
+          console.error(`Failed to add file ${file.name}:`, error);
+        }
       }
     }
   };

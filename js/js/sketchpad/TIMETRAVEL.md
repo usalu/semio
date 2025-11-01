@@ -12,19 +12,20 @@ The system captures **everything**:
 
 ```typescript
 interface CompleteState {
-  sketchpad: SketchpadState;  // Navigation, settings, UI state
-  kits: Array<{               // All loaded kits
+  sketchpad: SketchpadState; // Navigation, settings, UI state
+  kits: Array<{
+    // All loaded kits
     guid: string;
-    local: boolean;           // Persistence flags
+    local: boolean; // Persistence flags
     remote: boolean;
-    kit: Kit;                 // Full kit data
+    kit: Kit; // Full kit data
   }>;
-  kitApps: Record<string, any>;      // Kit editor states
-  typeApps: Record<string, any>;     // Type editor states  
-  qualityApps: Record<string, any>;  // Quality editor states
-  designApps: Record<string, Record<string, any>>;  // Design editor states
-  home?: any;                 // Home screen state
-  tutorials: any;             // Tutorial/recording state
+  kitApps: Record<string, any>; // Kit editor states
+  typeApps: Record<string, any>; // Type editor states
+  qualityApps: Record<string, any>; // Quality editor states
+  designApps: Record<string, Record<string, any>>; // Design editor states
+  home?: any; // Home screen state
+  tutorials: any; // Tutorial/recording state
 }
 ```
 
@@ -33,6 +34,7 @@ interface CompleteState {
 #### `dumpState(): CompleteState`
 
 Exports the complete application state including:
+
 - Sketchpad settings (navigation, theme, layout, expertise, mode, etc.)
 - All kits with their types, designs, qualities, files
 - All active app states (kit apps, type apps, design apps, quality apps)
@@ -41,6 +43,7 @@ Exports the complete application state including:
 #### `loadState(state: CompleteState): void`
 
 Destructively loads a complete state:
+
 - Clears all existing kits and apps
 - Restores sketchpad settings
 - Recreates all kits with correct local/remote flags
@@ -73,6 +76,7 @@ Two new buttons appear in the footer when `mode === Mode.DEV`:
 - **Timetravel** (Upload icon): Loads state from file
 
 Components:
+
 - `FreezeButton.tsx` - Registers freeze button
 - `TimetravelButton.tsx` - Registers timetravel button
 
@@ -81,6 +85,7 @@ Components:
 ### Exporting State
 
 1. Set mode to DEV:
+
    ```typescript
    store.execute("semio.sketchpad.setMode", origin, Mode.DEV);
    ```
@@ -112,7 +117,7 @@ export const HelloSemio: Story = {
   },
   play: async ({ canvasElement }) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     const store = (window as any).__SEMIO_STORE__;
     if (store && store.loadState) {
       store.loadState(helloSemioInitialState);
@@ -140,8 +145,12 @@ const helloSemioInitialState: CompleteState = {
       remote: false,
       kit: {
         name: "Hello Semio Kit",
-        types: [/* type definitions */],
-        designs: [/* design definitions */],
+        types: [
+          /* type definitions */
+        ],
+        designs: [
+          /* design definitions */
+        ],
         // ... complete kit structure
       },
     },
@@ -201,22 +210,27 @@ if (command === "semio.sketchpad.timetravel") {
 ## Files Changed
 
 ### Core
+
 - `js/js/sketchpad/store.tsx` - Added CompleteState, dumpState, loadState, window exposure
 - `js/js/sketchpad/commands.ts` - Added freeze/timetravel dev commands
 
 ### UI Components
+
 - `js/js/sketchpad/panels/FreezeButton.tsx` - New freeze button component
 - `js/js/sketchpad/panels/TimetravelButton.tsx` - New timetravel button component
 - `js/js/sketchpad/Sketchpad.tsx` - Integrated freeze/timetravel buttons
 
 ### Storybook
+
 - `js/js/sketchpad/Sketchpad.stories.tsx` - Added HelloSemio story with state loading
 
 ### Localization
+
 - `js/js/locales/en.json` - Added footer.freeze and footer.timetravel translations
 - `js/js/locales/de.json` - Added German translations
 
 ### Examples
+
 - `examples/hello-semio/initial-state-example.ts` - Complete state example (kept for reference)
 - `examples/hello-semio/INITIAL_STATE.md` - Documentation
 

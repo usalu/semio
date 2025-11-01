@@ -20,37 +20,15 @@
 // #endregion
 
 import { Upload } from "lucide-react";
-import { useEffect } from "react";
-import { Action } from "../../elements/input/Action";
-import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
-import { Mode, useMode, useSketchpadStore } from "../store";
+import { ButtonGroupItem } from "../../elements/input/ButtonGroup";
+import { useSketchpadStore } from "../store";
 
 export function TimetravelButton() {
-  const mode = useMode();
   const store = useSketchpadStore();
-  const addFooterItem = useAddFooterItem();
-  const removeFooterItem = useRemoveFooterItem();
 
-  useEffect(() => {
-    if (mode === Mode.DEV) {
-      addFooterItem({
-        id: "semio.sketchpad.footer.timetravel",
-        order: -99,
-        content: (
-          <Action
-            id="semio.sketchpad.footer.timetravel.action"
-            onClick={() => store.execute("semio.sketchpad.timetravel", "semio.sketchpad.footer.timetravel.action")}
-          >
-            <Upload className="w-4 h-4" />
-          </Action>
-        ),
-      });
-
-      return () => {
-        removeFooterItem("semio.sketchpad.footer.timetravel");
-      };
-    }
-  }, [mode, store, addFooterItem, removeFooterItem]);
-
-  return null;
+  return (
+    <ButtonGroupItem id="semio.sketchpad.navbar.timetravel" value="timetravel" onClick={() => store.execute("semio.sketchpad.timetravel", "semio.sketchpad.navbar.timetravel")}>
+      <Upload size={16} />
+    </ButtonGroupItem>
+  );
 }

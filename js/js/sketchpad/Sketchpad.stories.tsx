@@ -21,7 +21,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import Sketchpad from "./Sketchpad";
-import type { CompleteState, ExtendedInitialState } from "./store";
+import type { CompleteState } from "./store";
 import { Access, Expertise, Layout, Mode, Theme } from "./store";
 
 const meta = {
@@ -243,22 +243,15 @@ const helloSemioInitialState: CompleteState = {
   },
 };
 
-export const HelloSemio: Story = {
+export const ReadyToConnect: Story = {
   args: {
-    id: "hello-semio-story",
-  },
-  render: (args) => {
-    // Load the state after component mounts
-    return <Sketchpad {...args} />;
-  },
-  play: async ({ canvasElement }) => {
-    // Wait a bit for the store to initialize
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Find the sketchpad store and load the state
-    const store = (window as any).__SEMIO_STORE__;
-    if (store && store.loadState) {
-      store.loadState(helloSemioInitialState);
-    }
+    id: "ready-to-connect-story",
+    initialState: {
+      kits: helloSemioInitialState.kits,
+      navigation: "/kits/hello-kit/designs/hello-design",
+      navigationHistory: ["/", "/kits/hello-kit", "/kits/hello-kit/designs/hello-design"],
+      navigationHistoryIndex: 2,
+      mode: Mode.DEV,
+    },
   },
 };

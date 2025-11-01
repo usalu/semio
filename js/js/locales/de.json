@@ -384,30 +384,25 @@
         },
         "hud": {
           "noSections": "Keine HUD-Bereiche verfuegbar"
-        }
-      },
-      "footer": {
+        },
         "freeze": {
-          "action": {
-            "label": "Zustand einfrieren",
-            "beginner": "Exportieren Sie den kompletten Anwendungszustand als JSON-Datei fuer Backup oder Debugging",
-            "normal": "Vollstaendigen Schnappschuss des aktuellen Zustands herunterladen",
-            "expert": "Kompletten Zustand in JSON ausgeben",
-            "manual": "dev/timetravel",
-            "tutorial": "advanced/timetravel"
-          }
+          "label": "Zustand einfrieren",
+          "beginner": "Exportieren Sie den kompletten Anwendungszustand als JSON-Datei fuer Backup oder Debugging",
+          "normal": "Vollstaendigen Schnappschuss des aktuellen Zustands herunterladen",
+          "expert": "Kompletten Zustand in JSON ausgeben",
+          "manual": "dev/timetravel",
+          "tutorial": "advanced/timetravel"
         },
         "timetravel": {
-          "action": {
-            "label": "Zeitreise",
-            "beginner": "Laden Sie einen zuvor gespeicherten Zustand aus einer JSON-Datei, um die Anwendung zu diesem Zeitpunkt wiederherzustellen",
-            "normal": "Zustand aus JSON-Datei laden",
-            "expert": "Zustand aus JSON laden",
-            "manual": "dev/timetravel",
-            "tutorial": "advanced/timetravel"
-          }
+          "label": "Zeitreise",
+          "beginner": "Laden Sie einen zuvor gespeicherten Zustand aus einer JSON-Datei, um die Anwendung zu diesem Zeitpunkt wiederherzustellen",
+          "normal": "Zustand aus JSON-Datei laden",
+          "expert": "Zustand aus JSON laden",
+          "manual": "dev/timetravel",
+          "tutorial": "advanced/timetravel"
         }
       },
+      "footer": {},
       "common": {
         "add": {
           "label": "Hinzufuegen",
@@ -877,12 +872,14 @@
             "fixPiece": "Teil fixieren"
           },
           "connection": {
-            "gap": "Abstand",
-            "shift": "Verschiebung",
-            "rise": "Anhebung",
-            "rotation": "Drehung",
-            "turn": "Drehung",
-            "tilt": "Neigung"
+            "gap": "Gap",
+            "shift": "Shift",
+            "rise": "Rise",
+            "rotation": "Rotation",
+            "turn": "Turn",
+            "tilt": "Tilt",
+            "x": "Diagram X Offset",
+            "y": "Diagram Y Offset"
           },
           "panel": {
             "details": {
@@ -1157,7 +1154,50 @@
                   "title": {
                     "label": "Verbindung"
                   },
-                  "multipleTitle": "{{count}} Verbindungen"
+                  "multipleTitle": "{{count}} Verbindungen",
+                  "multipleEditing": "{{count}} Verbindungen werden gleichzeitig bearbeitet",
+                  "connectingPieceId": {
+                    "label": "Connecting Piece"
+                  },
+                  "connectingPortId": {
+                    "label": "Connecting Port"
+                  },
+                  "connectingDesignPieceId": {
+                    "label": "Connecting Design Piece"
+                  },
+                  "connectedPieceId": {
+                    "label": "Connected Piece"
+                  },
+                  "connectedPortId": {
+                    "label": "Connected Port"
+                  },
+                  "connectedDesignPieceId": {
+                    "label": "Connected Design Piece"
+                  },
+                  "gap": {
+                    "label": "Gap"
+                  },
+                  "shift": {
+                    "label": "Shift"
+                  },
+                  "rise": {
+                    "label": "Rise"
+                  },
+                  "rotation": {
+                    "label": "Rotation"
+                  },
+                  "turn": {
+                    "label": "Turn"
+                  },
+                  "tilt": {
+                    "label": "Tilt"
+                  },
+                  "x": {
+                    "label": "Diagram X Offset"
+                  },
+                  "y": {
+                    "label": "Diagram Y Offset"
+                  }
                 },
                 "selection": {
                   "multipleTitle": "Mehrfachauswahl"

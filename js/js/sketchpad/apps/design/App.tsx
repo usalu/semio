@@ -55,7 +55,7 @@ import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppFullscreen, useDesignAppSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
-export interface AppProps {}
+export interface AppProps { }
 
 const CanvasWithSync: FC<{ fullscreenWindow: DesignAppFullscreenWindow; children: ReactNode }> = memo(({ fullscreenWindow, children }) => {
   const { setFullscreenWindow } = useCanvasContext();

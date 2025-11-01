@@ -2327,18 +2327,18 @@ export function useFlatPiece<T>(selector?: (piece: Piece) => T, id?: Guid): T | 
   const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
   const metadata = usePiecesMetadata();
   const piece = usePiece(identitySelector, pieceGuid || undefined) as Piece | null;
-  
+
   if (!piece || !pieceGuid) return null;
-  
+
   const meta = metadata.get(pieceGuid);
   if (!meta) return piece;
-  
+
   const flatPiece: Piece = {
     ...piece,
     plane: meta.plane,
     center: meta.center,
   };
-  
+
   return selector ? selector(flatPiece) : flatPiece;
 }
 
@@ -2370,9 +2370,9 @@ export function useIsConnectedPiece(id?: Guid): boolean {
   const pieceScope = usePieceScope();
   const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
   const metadata = usePiecesMetadata();
-  
+
   if (!pieceGuid) return false;
-  
+
   const meta = metadata.get(pieceGuid);
   return meta ? meta.parentPieceId !== null : false;
 }
@@ -2381,9 +2381,9 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
   const pieceScope = usePieceScope();
   const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
   const design = useDesign() as Design;
-  
+
   if (!pieceGuid || !design.connections) return null;
-  
+
   return design.connections.find((c: Connection) => c.connecting.piece === pieceGuid || c.connected.piece === pieceGuid) ?? null;
 }
 
@@ -4567,6 +4567,16 @@ export function useKitCommands() {
 
   const kitStore = store.kit(kitGuid);
   return {
+    startTransaction: (origin: string) => {
+      console.group(`[${origin}] Transaction: "kit.startTransaction"`);
+      kitStore.doc.transact(() => {}, origin);
+    },
+    finalizeTransaction: (origin: string) => {
+      console.groupEnd();
+    },
+    abortTransaction: (origin: string) => {
+      console.groupEnd();
+    },
     importKit: (origin: string, url: string) => kitStore.execute("semio.kit.import", origin, url),
     exportKit: (origin: string) => kitStore.execute("semio.kit.export", origin),
     createAuthor: (origin: string, author: Author) => kitStore.execute("semio.kit.createAuthor", origin, author),

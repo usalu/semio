@@ -20,37 +20,15 @@
 // #endregion
 
 import { Download } from "lucide-react";
-import { useEffect } from "react";
-import { Action } from "../../elements/input/Action";
-import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
-import { Mode, useMode, useSketchpadStore } from "../store";
+import { ButtonGroupItem } from "../../elements/input/ButtonGroup";
+import { useSketchpadStore } from "../store";
 
 export function FreezeButton() {
-  const mode = useMode();
   const store = useSketchpadStore();
-  const addFooterItem = useAddFooterItem();
-  const removeFooterItem = useRemoveFooterItem();
 
-  useEffect(() => {
-    if (mode === Mode.DEV) {
-      addFooterItem({
-        id: "semio.sketchpad.footer.freeze",
-        order: -100,
-        content: (
-          <Action
-            id="semio.sketchpad.footer.freeze.action"
-            onClick={() => store.execute("semio.sketchpad.freeze", "semio.sketchpad.footer.freeze.action")}
-          >
-            <Download className="w-4 h-4" />
-          </Action>
-        ),
-      });
-
-      return () => {
-        removeFooterItem("semio.sketchpad.footer.freeze");
-      };
-    }
-  }, [mode, store, addFooterItem, removeFooterItem]);
-
-  return null;
+  return (
+    <ButtonGroupItem id="semio.sketchpad.navbar.freeze" value="freeze" onClick={() => store.execute("semio.sketchpad.freeze", "semio.sketchpad.navbar.freeze")}>
+      <Download size={16} />
+    </ButtonGroupItem>
+  );
 }

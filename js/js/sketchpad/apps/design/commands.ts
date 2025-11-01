@@ -269,6 +269,11 @@ export const commands = {
     };
   },
   "semio.designApp.addConnection": (context: DesignAppCommandContext, connection: Connection): DesignAppCommandResult => {
+    // When a connection is created, the "connecting" piece becomes linked (loses its plane and center)
+    // while the "connected" piece remains fixed. The flatten algorithm will compute the linked piece's
+    // plane and center based on the connection parameters.
+    const connectingPieceGuid = connection.connecting.piece;
+    
     return {
       diff: {},
       kitDiff: {
@@ -276,7 +281,17 @@ export const commands = {
           updated: [
             {
               id: context.Guid,
-              diff: { connections: { added: [connection] } },
+              diff: {
+                connections: { added: [connection] },
+                pieces: {
+                  updated: [
+                    {
+                      id: connectingPieceGuid,
+                      diff: { plane: null as any, center: null as any },
+                    },
+                  ],
+                },
+              },
             },
           ],
         },
@@ -284,6 +299,12 @@ export const commands = {
     };
   },
   "semio.designApp.addConnections": (context: DesignAppCommandContext, connections: Connection[]): DesignAppCommandResult => {
+    // When connections are created, each "connecting" piece becomes linked (loses its plane and center)
+    const connectingPieces = connections.map((conn) => ({
+      id: conn.connecting.piece,
+      diff: { plane: null as any, center: null as any },
+    }));
+    
     return {
       diff: {},
       kitDiff: {
@@ -291,7 +312,10 @@ export const commands = {
           updated: [
             {
               id: context.Guid,
-              diff: { connections: { added: connections } },
+              diff: {
+                connections: { added: connections },
+                pieces: { updated: connectingPieces },
+              },
             },
           ],
         },

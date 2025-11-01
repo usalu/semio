@@ -384,30 +384,25 @@
         },
         "hud": {
           "noSections": "No hud sections available"
-        }
-      },
-      "footer": {
+        },
         "freeze": {
-          "action": {
-            "label": "Freeze State",
-            "beginner": "Export the complete application state as a JSON file for backup or debugging",
-            "normal": "Download a complete snapshot of the current state",
-            "expert": "Dump complete state to JSON",
-            "manual": "dev/timetravel",
-            "tutorial": "advanced/timetravel"
-          }
+          "label": "Freeze State",
+          "beginner": "Export the complete application state as a JSON file for backup or debugging",
+          "normal": "Download a complete snapshot of the current state",
+          "expert": "Dump complete state to JSON",
+          "manual": "dev/timetravel",
+          "tutorial": "advanced/timetravel"
         },
         "timetravel": {
-          "action": {
-            "label": "Timetravel",
-            "beginner": "Load a previously saved state from a JSON file to restore the application to that point",
-            "normal": "Load state from a JSON file",
-            "expert": "Load state from JSON",
-            "manual": "dev/timetravel",
-            "tutorial": "advanced/timetravel"
-          }
+          "label": "Timetravel",
+          "beginner": "Load a previously saved state from a JSON file to restore the application to that point",
+          "normal": "Load state from a JSON file",
+          "expert": "Load state from JSON",
+          "manual": "dev/timetravel",
+          "tutorial": "advanced/timetravel"
         }
       },
+      "footer": {},
       "common": {
         "add": {
           "label": "Add",
@@ -856,6 +851,16 @@
           "attributeValuePlaceholder": "Value...",
           "attributeUnitPlaceholder": "Unit...",
           "attributeDefinitionPlaceholder": "Definition or URL...",
+          "connection": {
+            "gap": "Gap",
+            "shift": "Shift",
+            "rise": "Rise",
+            "rotation": "Rotation",
+            "turn": "Turn",
+            "tilt": "Tilt",
+            "x": "Diagram X Offset",
+            "y": "Diagram Y Offset"
+          },
           "piece": {
             "id": "ID",
             "type": "Type",
@@ -1137,7 +1142,50 @@
                 },
                 "connection": {
                   "title": "Connection",
-                  "multipleTitle": "{{count}} Connections"
+                  "multipleTitle": "{{count}} Connections",
+                  "multipleEditing": "Editing {{count}} connections simultaneously",
+                  "connectingPieceId": {
+                    "label": "Connecting Piece"
+                  },
+                  "connectingPortId": {
+                    "label": "Connecting Port"
+                  },
+                  "connectingDesignPieceId": {
+                    "label": "Connecting Design Piece"
+                  },
+                  "connectedPieceId": {
+                    "label": "Connected Piece"
+                  },
+                  "connectedPortId": {
+                    "label": "Connected Port"
+                  },
+                  "connectedDesignPieceId": {
+                    "label": "Connected Design Piece"
+                  },
+                  "gap": {
+                    "label": "Gap"
+                  },
+                  "shift": {
+                    "label": "Shift"
+                  },
+                  "rise": {
+                    "label": "Rise"
+                  },
+                  "rotation": {
+                    "label": "Rotation"
+                  },
+                  "turn": {
+                    "label": "Turn"
+                  },
+                  "tilt": {
+                    "label": "Tilt"
+                  },
+                  "x": {
+                    "label": "Diagram X Offset"
+                  },
+                  "y": {
+                    "label": "Diagram Y Offset"
+                  }
                 },
                 "selection": {
                   "multipleTitle": "Multiple Selection"

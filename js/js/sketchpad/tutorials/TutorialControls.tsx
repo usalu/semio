@@ -6,7 +6,7 @@
 
 // #endregion
 
-import { Download, Pause, Play, SkipBack, SkipForward, Square, X } from "lucide-react";
+import { Pause, Play, SkipBack, SkipForward, Square, X } from "lucide-react";
 import { FC, useEffect } from "react";
 import { Button } from "../../elements/input/Button";
 import { Slider } from "../../elements/input/Slider";
@@ -78,15 +78,7 @@ const TutorialControlsContent: FC = () => {
       </div>
       <div className="flex-1 min-w-[200px] max-w-[400px]">
         <div className="flex items-center gap-2">
-          <Slider
-            id="tutorial-progress"
-            value={[progress.current]}
-            min={0}
-            max={Math.max(progress.total - 1, 0)}
-            step={1}
-            onValueChange={(value) => store.goToMilestone(value[0])}
-            className="flex-1"
-          />
+          <Slider id="tutorial-progress" value={[progress.current]} min={0} max={Math.max(progress.total - 1, 0)} step={1} onValueChange={(value) => store.goToMilestone(value[0])} className="flex-1" />
           <span className="text-xs tabular-nums">
             {progress.current + 1}/{progress.total}
           </span>
@@ -107,7 +99,7 @@ export const RecordingControls: FC = () => {
   useEffect(() => {
     if (mode !== Mode.DEV) {
       removeFooterItem("recording-controls");
-      return () => { };
+      return () => {};
     }
     const state = store.snapshot();
     if (state.recordingState !== "idle") {

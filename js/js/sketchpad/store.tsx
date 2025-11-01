@@ -984,12 +984,12 @@ export interface CompleteState {
     remote: boolean;
     kit: Kit;
   }>;
-  kitApps: Record<string, any>;  // Kit app states
-  typeApps: Record<string, any>;  // Type app states
-  qualityApps: Record<string, any>;  // Quality app states
-  designApps: Record<string, Record<string, any>>;  // Design app states by kit/design
-  home?: any;  // Home app state
-  tutorials: any;  // Tutorial state
+  kitApps: Record<string, any>; // Kit app states
+  typeApps: Record<string, any>; // Type app states
+  qualityApps: Record<string, any>; // Quality app states
+  designApps: Record<string, Record<string, any>>; // Design app states by kit/design
+  home?: any; // Home app state
+  tutorials: any; // Tutorial state
 }
 
 export interface SketchpadCommandContext {
@@ -1188,7 +1188,7 @@ export class SketchpadStore {
         if (initialState.hotkeyOverrides !== undefined) this.ySketchpad.set("hotkeyOverrides", JSON.stringify(initialState.hotkeyOverrides));
         if (initialState.activeHotkeySetting !== undefined) this.ySketchpad.set("activeHotkeySetting", initialState.activeHotkeySetting);
       });
-      
+
       // Create kits from initial state
       if (initialState.kits) {
         initialState.kits.forEach(({ kit, local, remote }) => {
@@ -1275,6 +1275,55 @@ export class SketchpadStore {
     });
 
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
+
+    // Try to load kit files from public folder
+    this.loadKitFilesFromPublic(kit.guid, kitStore);
+  };
+
+  // Load kit files from public/{guid}.zip
+  private loadKitFilesFromPublic = async (kitGuid: string, kitStore: KitStore) => {
+    try {
+      const zipUrl = `/public/${kitGuid}.zip`;
+      const response = await fetch(zipUrl);
+      
+      if (!response.ok) {
+        console.log(`[DEBUG] No zip file found for kit ${kitGuid} at ${zipUrl}`);
+        return;
+      }
+
+      const blob = await response.blob();
+      console.log(`[DEBUG] Loading files from ${zipUrl} for kit ${kitGuid}`);
+      
+      // Import JSZip dynamically
+      const JSZip = (await import('jszip')).default;
+      const zip = await JSZip.loadAsync(blob);
+      
+      // Extract all files from zip
+      const filePromises: Promise<void>[] = [];
+      zip.forEach((relativePath, zipEntry) => {
+        if (!zipEntry.dir) {
+          filePromises.push(
+            zipEntry.async('blob').then(async (fileBlob) => {
+              const file: SemioFile = {
+                guid: guid(),
+                path: relativePath,
+                size: fileBlob.size,
+                hash: undefined,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+              await kitStore.execute("semio.kit.addFile", "system.loadKitFiles", file, fileBlob);
+              console.log(`[DEBUG] Added file ${relativePath} to kit ${kitGuid}`);
+            })
+          );
+        }
+      });
+      
+      await Promise.all(filePromises);
+      console.log(`[DEBUG] Successfully loaded ${filePromises.length} files for kit ${kitGuid}`);
+    } catch (error) {
+      console.log(`[DEBUG] Failed to load kit files from public folder for ${kitGuid}:`, error);
+    }
   };
 
   createKitApp = (kit: Guid) => {
@@ -1601,7 +1650,7 @@ export class SketchpadStore {
   // Timetravel: Dump complete application state
   dumpState(): CompleteState {
     const sketchpad = this.snapshot();
-    
+
     const kits = Array.from(this.kits.entries()).map(([guid, kitStore]) => {
       const kitMetadataArray = this.yKits.toArray();
       const kitMetadata = kitMetadataArray.find((m) => m.get("guid") === guid);
@@ -1694,7 +1743,7 @@ export class SketchpadStore {
         this.ySketchpad.set("activeHotkeySetting", state.sketchpad.activeHotkeySetting);
       }
 
-      // Restore kits
+      // Restore kits (createKit will automatically load files from public)
       state.kits.forEach(({ guid, local, remote, kit }) => {
         this.createKit(kit, local, remote);
       });
@@ -2052,7 +2101,7 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
   if (!stores.has(id)) {
     const store = new SketchpadStore(id, props?.remote, props?.initialState);
     stores.set(id, store);
-    
+
     // Expose store on window for dev tools and storybook
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_STORE__ = store;

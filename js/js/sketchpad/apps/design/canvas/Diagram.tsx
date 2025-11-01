@@ -437,9 +437,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
 
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
       if (!currentSelectedPort.piece || !currentSelectedPort.port) {
-        console.error("[ORIGIN] Selected port has undefined piece or port guid", { 
-          selectedPiece: currentSelectedPort.piece, 
-          selectedPort: currentSelectedPort.port 
+        console.error("[ORIGIN] Selected port has undefined piece or port guid", {
+          selectedPiece: currentSelectedPort.piece,
+          selectedPort: currentSelectedPort.port
         });
         return;
       }
@@ -465,9 +465,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   // Calculate original position in pixels for the ghost node
   const originalPixelPos = hasCenterDiff
     ? {
-        x: (piece.center?.x ?? 0) * ICON_WIDTH,
-        y: -(piece.center?.y ?? 0) * ICON_WIDTH,
-      }
+      x: (piece.center?.x ?? 0) * ICON_WIDTH,
+      y: -(piece.center?.y ?? 0) * ICON_WIDTH,
+    }
     : null;
 
   return (
@@ -670,9 +670,9 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
 
     if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
       if (!currentSelectedPort.piece || !currentSelectedPort.port) {
-        console.error("[ORIGIN] Selected port has undefined piece or port guid in DesignNode", { 
-          selectedPiece: currentSelectedPort.piece, 
-          selectedPort: currentSelectedPort.port 
+        console.error("[ORIGIN] Selected port has undefined piece or port guid in DesignNode", {
+          selectedPiece: currentSelectedPort.piece,
+          selectedPort: currentSelectedPort.port
         });
         return;
       }
@@ -1174,16 +1174,16 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const parentConnectionGuid =
     selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-          const selectedPieceGuid = selection.pieces[0];
-          const pieceMetadata = metadata.get(selectedPieceGuid);
-          if (pieceMetadata?.parentPieceId) {
-            const parentConnection = design.connections?.find(
-              (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
-            );
-            return parentConnection?.guid ?? null;
-          }
-          return null;
-        })()
+        const selectedPieceGuid = selection.pieces[0];
+        const pieceMetadata = metadata.get(selectedPieceGuid);
+        if (pieceMetadata?.parentPieceId) {
+          const parentConnection = design.connections?.find(
+            (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
+          );
+          return parentConnection?.guid ?? null;
+        }
+        return null;
+      })()
       : null;
 
   const connectionEdges =
@@ -1391,14 +1391,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => { });
     },
     [execute],
   );
 
   const onExpand = useCallback(
     (target: string) => {
-      execute?.("explode", { designId: target }).catch(() => {});
+      execute?.("explode", { designId: target }).catch(() => { });
     },
     [execute],
   );
