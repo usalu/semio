@@ -27,6 +27,7 @@ import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
+import { Toggle } from "../../../../elements/input/Toggle";
 import i18n from "../../../../i18n";
 import { Author, guid, Guid, Kit, Type } from "../../../../semio";
 import { useIsInTypeScope, useKit, useKitCommands, useType } from "../../../kits/store";
@@ -100,10 +101,20 @@ const TypeDetailsForm: FC = () => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.type.variant"
-            value={type.variant || ""}
-            placeholderId="semio.sketchpad.app.type.variantPlaceholder.label"
-            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.variant", { variant: value })}
+            id="semio.sketchpad.app.type.panel.details.section.type.parent"
+            value={type.parent || ""}
+            placeholderId="semio.sketchpad.app.type.parentPlaceholder.label"
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.parent", { parent: value })}
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Toggle
+            id="semio.sketchpad.app.type.panel.details.section.type.abstract"
+            pressed={type.isAbstract || false}
+            onPressedChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.abstract", { isAbstract: value })}
             showLabel
           />
         </TreeContent>

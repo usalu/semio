@@ -18,6 +18,10 @@ For Inter-Process-Communication (IPC) the JSON-schema in `./jsonschema/kit.json`
 
 A `design` is an undirected graph of `pieces` (nodes) and `connections` (edges) with organizational `layers`, `groups`, `stats`, `attributes`, and `concepts`.
 
+A `design` is _proto_ (a _protodesign_) when it has no _parent_ `design`.
+
+The _children_ of a _parent_ `design` are _subdesigns_.
+
 A _flat_ `design` has no `connections` and all `pieces` are _fixed_.
 
 The `pieces` are _placed_ _hierarchically_ (breadth-first) for every _component_.
@@ -27,6 +31,10 @@ Additional `connections` which where not used in the _placement_ can be used to 
 ## Type
 
 A `type` is a reusable component with different `representations`, `ports`, `attributes`, `concepts`, and `authors`.
+
+The `type` is _proto_ (a _prototype_) when it has no _parent_.
+
+The _childen_ of a _parent_ `type` are _subtypes_.
 
 A `type` can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location**.
 
@@ -212,41 +220,6 @@ Stats provide computed or measured performance data for entire designs using the
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
 - The ui ALWAYS consists of three layers: 1. base, 2. panel and 3. temporary. Every layer has a darker background color and is on top of the previous layer. Every ui element ALWAYS has an enum for the layer and hence ALWAYS has three different color sets.
 - ALWAYS indicate on the element and the cursor when it is interactive. Clickable elements have a pointer cursor and a hover effect. Dragable elements have a grab cursor. While dragging, the cursor changes to a grabbing cursor.
-
-## Glossary
-
-### Nouns
-
-- Kit: A collection of qualities,types and designs. Can be either static (a special .zip file) or dynamic (bound to a runtime).
-- Design: An undirected graph of pieces (nodes) and connections (edges).
-- Type: A reusable component with different representations and ports.
-- Piece: An instance of either a type or a design.
-- Port: A conceptual connection point with an outwards direction.
-- Connection: A 3D-Link between two pieces with translation parameters (gap, shift, rise) and rotation parameters (rotation, turn, tilt).
-- Representation: A tagged url to a resource with an optional description.
-- Attribute: Metadata with a name, an optional value, an optional unit and an optional definition (url or text).
-- Tag: A kebab-cased name.
-- Plane: A location (origin) and orientation (x-axis, y-axis and derived z-axis) in 3D space.
-- Url: Either relative (to the root of the .zip file) or remote (http, https, ftp, …) string.
-- Cluster: A group of connected pieces.
-- Hierarchy: The length of the shortest path to the next fixed piece.
-- Vector: A vector in 3D space.
-- Point: A point in 3D space.
-
-### Adjectives
-
-- A `fixed` piece is a piece with a plane.
-- A `linked` piece is a piece that is not fixed and is connected with a connection.
-- A `connected` piece that is not `fixed` and is connected to at least one other piece.
-- A `flat` design has no connections and all pieces are fixed.
-- A `mandatory` port is a port that must be connected in a design.
-- A `static` kit is a special .zip file.
-- A `dynamic` kit is bound to a runtime.
-- A `relative` url is relative to the root of the .zip file.
-- A `remote` url is http, https, ftp, etc.
-- A `default` representation has no tags.
-- A `default` port family means the port is compatible with all other ports.
-- A `virtual` type is an intermediate type that needs other `virtual` types to form a `physical` type.
 
 ## File Structure
 
@@ -539,6 +512,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── exampleTutorial.ts
 │ │ │ ├── index.ts
 │ │ │ ├── README.md
+│ │ │ ├── RecordButton.tsx
 │ │ │ ├── sketchpadTour.ts
 │ │ │ ├── store.tsx
 │ │ │ ├── TutorialControls.tsx
@@ -736,6 +710,14 @@ The tutorial system lives in `js/js/sketchpad/tutorials` and re-exports everythi
 Wrap consumers in `TutorialProvider` and use the helper hooks (`useTutorialStore`, `useActiveTutorial`, `useTutorialProgress`, `useTutorialCommandInterceptor`, etc.) instead of accessing the store directly. `TutorialControls` and `TutorialOverlay` are the canonical UI integrations for playback, highlighting, and recording.
 
 Tutorial commands live in `commands.ts` under the `semio.tutorial.*` and `semio.recording.*` namespaces; extend the exported `tutorialCommands` object and re-export through `index.ts` when adding behaviors. Bundle reusable walkthroughs or recordings as modules (for example `sketchpadTour.ts`) that return `Tutorial` objects and register them with `addTutorial`.
+
+##### Footer
+
+`FooterItemProvider` wraps `Sketchpad` so apps can register footer entries with `useAddFooterItem` and remove them via `useRemoveFooterItem`; the provider keeps items ordered by the optional `order` field.
+
+Register items inside effects and always call the remove helper in the cleanup; default contributions live under each app's `Footer.tsx` module.
+
+Providing an `id` shows the translated `IdTooltipContent`, and the base footer auto-hides in fullscreen until the cursor nears the bottom edge, so interactive elements must tolerate that visibility change.
 
 #### Styling
 

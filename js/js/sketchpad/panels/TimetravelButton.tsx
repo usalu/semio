@@ -21,7 +21,6 @@
 
 import { Upload } from "lucide-react";
 import { FC, useEffect } from "react";
-import { Button } from "../../elements/input/Button";
 import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
 import { Mode, useMode, useSketchpadStore } from "../store";
 
@@ -33,22 +32,19 @@ export const TimetravelButton: FC = () => {
 
   useEffect(() => {
     if (mode !== Mode.DEV) {
-      removeFooterItem("timetravel-button");
+      removeFooterItem("semio.sketchpad.footer.timetravel");
       return;
     }
 
     addFooterItem({
-      id: "timetravel-button",
-      content: (
-        <Button id="footer-timetravel-button" variant="ghost" onClick={() => store.execute("semio.sketchpad.timetravel", "semio.sketchpad.footer.timetravel")} className="h-5 w-8 p-0">
-          <Upload className="h-3 w-3" />
-        </Button>
-      ),
+      id: "semio.sketchpad.footer.timetravel",
+      icon: Upload,
+      onClick: () => store.execute("semio.sketchpad.timetravel", "semio.sketchpad.footer.timetravel"),
       order: 1001,
     });
 
     return () => {
-      removeFooterItem("timetravel-button");
+      removeFooterItem("semio.sketchpad.footer.timetravel");
     };
   }, [mode, store, addFooterItem, removeFooterItem]);
 

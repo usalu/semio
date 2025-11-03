@@ -21,7 +21,6 @@
 
 import { Download } from "lucide-react";
 import { FC, useEffect } from "react";
-import { Button } from "../../elements/input/Button";
 import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
 import { Mode, useMode, useSketchpadStore } from "../store";
 
@@ -33,22 +32,19 @@ export const FreezeButton: FC = () => {
 
   useEffect(() => {
     if (mode !== Mode.DEV) {
-      removeFooterItem("freeze-button");
+      removeFooterItem("semio.sketchpad.footer.freeze");
       return;
     }
 
     addFooterItem({
-      id: "freeze-button",
-      content: (
-        <Button id="footer-freeze-button" variant="ghost" onClick={() => store.execute("semio.sketchpad.freeze", "semio.sketchpad.footer.freeze")} className="h-5 w-8 p-0">
-          <Download className="h-3 w-3" />
-        </Button>
-      ),
+      id: "semio.sketchpad.footer.freeze",
+      icon: Download,
+      onClick: () => store.execute("semio.sketchpad.freeze", "semio.sketchpad.footer.freeze"),
       order: 1000,
     });
 
     return () => {
-      removeFooterItem("freeze-button");
+      removeFooterItem("semio.sketchpad.footer.freeze");
     };
   }, [mode, store, addFooterItem, removeFooterItem]);
 

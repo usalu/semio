@@ -270,7 +270,7 @@ export const commands = {
     // while the "connected" piece remains fixed. The flatten algorithm will compute the linked piece's
     // plane and center based on the connection parameters.
     const connectingPieceGuid = connection.connecting.piece;
-    
+
     return {
       diff: {},
       kitDiff: {
@@ -301,7 +301,7 @@ export const commands = {
       id: conn.connecting.piece,
       diff: { plane: null as any, center: null as any },
     }));
-    
+
     return {
       diff: {},
       kitDiff: {

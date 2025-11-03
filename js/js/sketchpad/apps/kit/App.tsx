@@ -101,11 +101,9 @@ const AppContent: FC = () => {
     );
   }
 
-  // Get filters from search params (?kind=&name=&variant=&view=)
+  // Get filters from search params (?kind=&name=)
   const selectedKind = searchParams.get("kind") as ArtifactKind | null;
   const selectedName = searchParams.get("name");
-  const selectedVariant = searchParams.get("variant");
-  const selectedView = searchParams.get("view");
 
   // Get concepts and search from search params
   const selectedConcepts = searchParams.getAll("c");
@@ -145,38 +143,7 @@ const AppContent: FC = () => {
     return Array.from(nameSet).sort();
   }, [kit?.designs, kit?.types, selectedKind]);
 
-  // Collect unique variants for the selected name
-  const uniqueVariants = useMemo(() => {
-    if (!selectedName) return [];
-    const variantSet = new Set<string>();
-    if (!selectedKind || selectedKind === "designs") {
-      kit?.designs?.forEach((d: Design) => {
-        if (d.name === selectedName) {
-          variantSet.add(d.variant || "");
-        }
-      });
-    }
-    if (!selectedKind || selectedKind === "types") {
-      kit?.types?.forEach((t: Type) => {
-        if (t.name === selectedName) {
-          variantSet.add(t.variant || "");
-        }
-      });
-    }
-    return Array.from(variantSet).sort();
-  }, [kit?.designs, kit?.types, selectedKind, selectedName]);
 
-  // Collect unique views for the selected name and variant (only for designs)
-  const uniqueViews = useMemo(() => {
-    if (!selectedName || selectedVariant === null || selectedKind !== "designs") return [];
-    const viewSet = new Set<string>();
-    kit?.designs?.forEach((d: Design) => {
-      if (d.name === selectedName && (d.variant || "") === selectedVariant) {
-        viewSet.add(d.view || "");
-      }
-    });
-    return Array.from(viewSet).sort();
-  }, [kit?.designs, selectedKind, selectedName, selectedVariant]);
 
   useEffect(() => {
     if (appType !== "kit") {
@@ -318,191 +285,88 @@ const AppContent: FC = () => {
         designGroups.get(key)!.push(design);
       });
 
-      designGroups.forEach((designs, name) => {
-        // Apply name filter
-        if (selectedName && name !== selectedName) return;
+      // Helper function to recursively build design hierarchy
+      const buildDesignHierarchy = (designs: Design[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
+        const childDesigns = designs.filter((d) => d.parent === parentGuid);
 
-        const filteredDesigns = designs.filter((d) => {
-          if (selectedConcepts.length > 0 && !d.concepts?.some((c) => selectedConcepts.includes(c))) return false;
-          if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-          // Apply variant filter
-          if (selectedVariant && (d.variant || "") !== selectedVariant) return false;
-          // Apply view filter
-          if (selectedView && (d.view || "") !== selectedView) return false;
-          return true;
-        });
+        childDesigns.forEach((design) => {
+          if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c))) return;
+          if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-        if (filteredDesigns.length === 0) return;
+          const rowId = `design-${design.guid}`;
+          const children = designs.filter((d) => d.parent === design.guid);
+          const hasChildren = children.length > 0;
 
-        // Find the default design (default variant and default view)
-        const defaultDesign = filteredDesigns.find((d) => (!d.variant || d.variant === "") && (!d.view || d.view === ""));
+          result.push({
+            id: rowId,
+            kind: "designs",
+            artifact: design.name,
+            authors: design.authors?.join(", ") || "",
+            updatedAt: formatDate(design.updatedAt),
+            createdAt: formatDate(design.createdAt),
+            level,
+            parentId: parentRowId,
+            hasChildren,
+            isExpanded: expandedRows.has(rowId),
+            data: design,
+          });
 
-        // Group by variant
-        const variantGroups = new Map<string, Design[]>();
-        filteredDesigns.forEach((design) => {
-          const variantKey = design.variant || "";
-          if (!variantGroups.has(variantKey)) variantGroups.set(variantKey, []);
-          variantGroups.get(variantKey)!.push(design);
-        });
-
-        const hasMultipleVariants = variantGroups.size > 1 || (variantGroups.size === 1 && Array.from(variantGroups.keys())[0] !== "");
-        const defaultVariantDesigns = variantGroups.get("") || [];
-        const defaultVariantNonDefaultViews = defaultVariantDesigns.filter((d) => d.view && d.view !== "");
-        const hasDefaultVariantViews = defaultVariantNonDefaultViews.length > 0;
-
-        const parentId = `design-${name}`;
-
-        // Parent row shows the default variant and default view
-        result.push({
-          id: parentId,
-          kind: "designs",
-          artifact: name,
-          authors: defaultDesign?.authors?.join(", ") || "",
-          updatedAt: defaultDesign ? formatDate(defaultDesign.updatedAt) : "",
-          createdAt: defaultDesign ? formatDate(defaultDesign.createdAt) : "",
-          level: 0,
-          hasChildren: hasMultipleVariants || hasDefaultVariantViews,
-          isExpanded: expandedRows.has(parentId),
-          data: defaultDesign || filteredDesigns[0],
-        });
-
-        if (expandedRows.has(parentId)) {
-          // Show views for default variant if they exist
-          if (hasDefaultVariantViews) {
-            defaultVariantNonDefaultViews.forEach((design) => {
-              const viewId = `${parentId}-default-${design.view}`;
-              result.push({
-                id: viewId,
-                kind: "designs",
-                artifact: `View: ${design.view}`,
-                authors: design.authors?.join(", ") || "",
-                updatedAt: formatDate(design.updatedAt),
-                createdAt: formatDate(design.createdAt),
-                level: 1,
-                parentId,
-                hasChildren: false,
-                isExpanded: false,
-                data: design,
-              });
-            });
+          if (expandedRows.has(rowId) && hasChildren) {
+            buildDesignHierarchy(designs, design.guid, level + 1, rowId);
           }
+        });
+      };
 
-          // Only show variant rows if there are non-default variants
-          if (hasMultipleVariants) {
-            variantGroups.forEach((variantDesigns, variant) => {
-              // Skip default variant as it's shown in parent row
-              if (variant === "") return;
+      // Apply name filter
+      const filteredDesigns = kit.designs?.filter((d) => {
+        if (selectedName && d.name !== selectedName) return false;
+        return true;
+      }) || [];
 
-              const variantId = `${parentId}-${variant}`;
-              const viewGroups = variantDesigns.filter((d) => d.view && d.view !== "");
-              const hasMultipleViews = viewGroups.length > 0;
-              const defaultViewDesign = variantDesigns.find((d) => !d.view || d.view === "");
-
-              result.push({
-                id: variantId,
-                kind: "designs",
-                artifact: `Variant: ${variant}`,
-                authors: defaultViewDesign?.authors?.join(", ") || "",
-                updatedAt: defaultViewDesign ? formatDate(defaultViewDesign.updatedAt) : "",
-                createdAt: defaultViewDesign ? formatDate(defaultViewDesign.createdAt) : "",
-                level: 1,
-                parentId,
-                hasChildren: hasMultipleViews,
-                isExpanded: expandedRows.has(variantId),
-                data: defaultViewDesign || variantDesigns[0],
-              });
-
-              // Only show view rows for non-default views
-              if (expandedRows.has(variantId) && hasMultipleViews) {
-                viewGroups.forEach((design) => {
-                  const viewId = `${variantId}-${design.view}`;
-                  result.push({
-                    id: viewId,
-                    kind: "designs",
-                    artifact: `View: ${design.view}`,
-                    authors: design.authors?.join(", ") || "",
-                    updatedAt: formatDate(design.updatedAt),
-                    createdAt: formatDate(design.createdAt),
-                    level: 2,
-                    parentId: variantId,
-                    hasChildren: false,
-                    isExpanded: false,
-                    data: design,
-                  });
-                });
-              }
-            });
-          }
-        }
-      });
+      // Start with root designs (no parent)
+      buildDesignHierarchy(filteredDesigns, undefined, 0);
     }
 
     if (!selectedKind || selectedKind === "types") {
-      const typeGroups = new Map<string, Type[]>();
-      kit.types?.forEach((type: Type) => {
-        const key = type.name;
-        if (!typeGroups.has(key)) typeGroups.set(key, []);
-        typeGroups.get(key)!.push(type);
-      });
+      // Helper function to recursively build type hierarchy
+      const buildTypeHierarchy = (types: Type[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
+        const childTypes = types.filter((t) => t.parent === parentGuid);
 
-      typeGroups.forEach((types, name) => {
-        // Apply name filter
-        if (selectedName && name !== selectedName) return;
+        childTypes.forEach((type) => {
+          if (searchQuery && !type.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-        const filteredTypes = types.filter((t) => {
-          if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-          // Apply variant filter
-          if (selectedVariant && (t.variant || "") !== selectedVariant) return false;
-          return true;
-        });
+          const rowId = `type-${type.guid}`;
+          const children = types.filter((t) => t.parent === type.guid);
+          const hasChildren = children.length > 0;
 
-        if (filteredTypes.length === 0) return;
-
-        // Find the default type (default variant)
-        const defaultType = filteredTypes.find((t) => !t.variant || t.variant === "");
-
-        // Check if there are non-default variants
-        const hasMultipleVariants = filteredTypes.some((t) => t.variant && t.variant !== "");
-
-        const parentId = `type-${name}`;
-
-        // Parent row shows the default variant
-        result.push({
-          id: parentId,
-          kind: "types",
-          artifact: name,
-          authors: defaultType?.authors?.join(", ") || "",
-          updatedAt: defaultType ? formatDate(defaultType.updatedAt) : "",
-          createdAt: defaultType ? formatDate(defaultType.createdAt) : "",
-          level: 0,
-          hasChildren: hasMultipleVariants,
-          isExpanded: expandedRows.has(parentId),
-          data: defaultType || filteredTypes[0],
-        });
-
-        // Only show variant rows if there are non-default variants
-        if (expandedRows.has(parentId) && hasMultipleVariants) {
-          filteredTypes.forEach((type) => {
-            // Skip default variant as it's shown in parent row
-            if (!type.variant || type.variant === "") return;
-
-            const variantId = `${parentId}-${type.variant}`;
-            result.push({
-              id: variantId,
-              kind: "types",
-              artifact: `Variant: ${type.variant}`,
-              authors: type.authors?.join(", ") || "",
-              updatedAt: formatDate(type.updatedAt),
-              createdAt: formatDate(type.createdAt),
-              level: 1,
-              parentId,
-              hasChildren: false,
-              isExpanded: false,
-              data: type,
-            });
+          result.push({
+            id: rowId,
+            kind: "types",
+            artifact: type.name,
+            authors: type.authors?.join(", ") || "",
+            updatedAt: formatDate(type.updatedAt),
+            createdAt: formatDate(type.createdAt),
+            level,
+            parentId: parentRowId,
+            hasChildren,
+            isExpanded: expandedRows.has(rowId),
+            data: type,
           });
-        }
-      });
+
+          if (expandedRows.has(rowId) && hasChildren) {
+            buildTypeHierarchy(types, type.guid, level + 1, rowId);
+          }
+        });
+      };
+
+      // Apply name filter
+      const filteredTypes = kit.types?.filter((t) => {
+        if (selectedName && t.name !== selectedName) return false;
+        return true;
+      }) || [];
+
+      // Start with root types (no parent)
+      buildTypeHierarchy(filteredTypes, undefined, 0);
     }
 
     if (!selectedKind || selectedKind === "qualities") {
@@ -750,7 +614,7 @@ const AppContent: FC = () => {
     }
 
     return result;
-  }, [kit, kit.files, selectedKind, selectedName, selectedVariant, selectedView, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
+  }, [kit, kit.files, selectedKind, selectedName, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
 
   const { setFocusItems, setOnFocusItem } = useFocus();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -879,8 +743,6 @@ const AppContent: FC = () => {
         const newDesign: Design = {
           guid: guid(),
           name: uniqueName,
-          variant: "",
-          view: "",
           pieces: [],
           connections: [],
         };
@@ -894,7 +756,6 @@ const AppContent: FC = () => {
         const newType: Type = {
           guid: guid(),
           name: uniqueName,
-          variant: "",
           ports: [],
         };
         if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createType", newType);
@@ -936,51 +797,33 @@ const AppContent: FC = () => {
     }
   };
 
-  const handleCreateVariantForRow = (row: TableRow) => {
+  const handleCreateChildForRow = (row: TableRow) => {
     if (row.kind === "designs") {
       const design = row.data as Design;
-      const existingVariants = (kit.designs || []).filter((d: Design) => d.name === design.name).map((d: Design) => d.variant || "");
-      const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.design.newVariant"), existingVariants);
+      const existingNames = (kit.designs || []).filter((d: Design) => d.parent === design.guid).map((d: Design) => d.name);
+      const uniqueName = generateUniqueName(design.name, existingNames);
       const newDesign: Design = {
         guid: guid(),
-        name: design.name,
-        variant: uniqueVariant,
-        view: "",
+        name: uniqueName,
+        parent: design.guid,
         pieces: [],
         connections: [],
       };
-      if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createVariant", newDesign);
+      if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createChild", newDesign);
       sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
     } else if (row.kind === "types") {
       const type = row.data as Type;
-      const existingVariants = (kit.types || []).filter((t: Type) => t.name === type.name).map((t: Type) => t.variant || "");
-      const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.type.newVariant"), existingVariants);
+      const existingNames = (kit.types || []).filter((t: Type) => t.parent === type.guid).map((t: Type) => t.name);
+      const uniqueName = generateUniqueName(type.name, existingNames);
       const newType: Type = {
         guid: guid(),
-        name: type.name,
-        variant: uniqueVariant,
+        name: uniqueName,
+        parent: type.guid,
         ports: [],
       };
-      if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createVariant", newType);
+      if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createChild", newType);
       sketchpadCommands.navigateToType(kit.guid, newType.guid);
     }
-  };
-
-  const handleCreateViewForRow = (row: TableRow) => {
-    if (row.kind !== "designs") return;
-    const design = row.data as Design;
-    const existingViews = (kit.designs || []).filter((d: Design) => d.name === design.name && d.variant === design.variant).map((d: Design) => d.view || "");
-    const uniqueView = generateUniqueName(t("semio.sketchpad.app.design.newView"), existingViews);
-    const newDesign: Design = {
-      guid: guid(),
-      name: design.name,
-      variant: design.variant,
-      view: uniqueView,
-      pieces: [],
-      connections: [],
-    };
-    if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createView", newDesign);
-    sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
   };
 
   const toggleKind = (kind: ArtifactKind) => {
@@ -1027,27 +870,7 @@ const AppContent: FC = () => {
     setSearchParams(newParams);
   };
 
-  const toggleVariant = (variant: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (selectedVariant === variant) {
-      newParams.delete("variant");
-      newParams.delete("view");
-    } else {
-      newParams.set("variant", variant);
-      newParams.delete("view");
-    }
-    setSearchParams(newParams);
-  };
 
-  const toggleView = (view: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (selectedView === view) {
-      newParams.delete("view");
-    } else {
-      newParams.set("view", view);
-    }
-    setSearchParams(newParams);
-  };
 
   const handleRowClick = (row: TableRow, e: React.MouseEvent) => {
     if (row.kind === "designs") {
@@ -1349,16 +1172,6 @@ const AppContent: FC = () => {
               {selectedName}
             </Toggle>
           )}
-          {selectedVariant !== null && (
-            <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
-              {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
-            </Toggle>
-          )}
-          {selectedView !== null && (
-            <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
-              {selectedView || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
-            </Toggle>
-          )}
           {selectedConcepts.length > 0 &&
             selectedConcepts.map((concept) => (
               <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide">
@@ -1451,26 +1264,6 @@ const AppContent: FC = () => {
                 {name}
               </Toggle>
             ))}
-          {selectedKind &&
-            selectedName &&
-            selectedVariant === null &&
-            uniqueVariants.length > 0 &&
-            uniqueVariants.map((variant) => (
-              <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)} id="semio.sketchpad.app.kit.filter.variant">
-                {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
-              </Toggle>
-            ))}
-          {selectedKind === "designs" &&
-            selectedName &&
-            selectedVariant !== null &&
-            uniqueViews.length > 0 &&
-            uniqueViews
-              .filter((view) => view !== selectedView)
-              .map((view) => (
-                <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)} id="semio.sketchpad.app.kit.filter.view">
-                  {view || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
-                </Toggle>
-              ))}
           <div className="flex items-center gap-1 flex-1 min-w-[160px]">
             <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)} />
             <Toggle
@@ -1544,49 +1337,13 @@ const AppContent: FC = () => {
                       <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
-                      {row.kind === "designs" && row.level === 0 && (
-                        <>
-                          <Action
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateVariantForRow(row);
-                            }}
-                            id="semio.sketchpad.app.kitApp.createVariant"
-                            level="base"
-                          >
-                            <Plus />
-                          </Action>
-                          <Action
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateViewForRow(row);
-                            }}
-                            id="semio.sketchpad.app.kitApp.createView"
-                            level="base"
-                          >
-                            <Plus />
-                          </Action>
-                        </>
-                      )}
-                      {row.kind === "types" && row.level === 0 && (
+                      {(row.kind === "designs" || row.kind === "types") && (
                         <Action
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCreateVariantForRow(row);
+                            handleCreateChildForRow(row);
                           }}
-                          id="semio.sketchpad.app.kitApp.createVariant"
-                          level="base"
-                        >
-                          <Plus />
-                        </Action>
-                      )}
-                      {row.kind === "designs" && row.level === 1 && (
-                        <Action
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCreateViewForRow(row);
-                          }}
-                          id="semio.sketchpad.app.kitApp.createView"
+                          id="semio.sketchpad.app.kitApp.createChild"
                           level="base"
                         >
                           <Plus />
@@ -1628,22 +1385,13 @@ const AppContent: FC = () => {
             {selectedKind === "types" && <Box className="size-4" />}
             {selectedKind === "qualities" && <Award className="size-4" />}
             {selectedKind === "files" && <FileText className="size-4" />}
+            {selectedKind === "folders" && <FolderIcon className="size-4" />}
             {selectedKind === "authors" && <User className="size-4" />}
           </Toggle>
         )}
         {selectedName && (
           <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
             {selectedName}
-          </Toggle>
-        )}
-        {selectedVariant !== null && (
-          <Toggle pressed={true} onPressedChange={() => toggleVariant(selectedVariant)}>
-            {selectedVariant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
-          </Toggle>
-        )}
-        {selectedView !== null && (
-          <Toggle pressed={true} onPressedChange={() => toggleView(selectedView)}>
-            {selectedView || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
           </Toggle>
         )}
         {selectedConcepts.length > 0 &&
@@ -1701,6 +1449,17 @@ const AppContent: FC = () => {
             <Toggle
               type="withAction"
               pressed={false}
+              onPressedChange={() => toggleKind("folders")}
+              actionIcon={<Plus className="size-3.5" />}
+              onActionClick={() => handleCreateArtifact("folders")}
+              id="semio.sketchpad.app.kitApp.showFolders"
+              actionId="semio.sketchpad.app.kitApp.createFolder"
+            >
+              <FolderIcon className="size-4" />
+            </Toggle>
+            <Toggle
+              type="withAction"
+              pressed={false}
               onPressedChange={() => toggleKind("authors")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("authors")}
@@ -1727,26 +1486,6 @@ const AppContent: FC = () => {
               {name}
             </Toggle>
           ))}
-        {selectedKind &&
-          selectedName &&
-          selectedVariant === null &&
-          uniqueVariants.length > 0 &&
-          uniqueVariants.map((variant) => (
-            <Toggle key={variant} pressed={false} onPressedChange={() => toggleVariant(variant)}>
-              {variant || <span className="italic opacity-50">{selectedKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>}
-            </Toggle>
-          ))}
-        {selectedKind === "designs" &&
-          selectedName &&
-          selectedVariant !== null &&
-          uniqueViews.length > 0 &&
-          uniqueViews
-            .filter((view) => view !== selectedView)
-            .map((view) => (
-              <Toggle key={view} pressed={false} onPressedChange={() => toggleView(view)}>
-                {view || <span className="italic opacity-50">{t("semio.sketchpad.app.design.defaultView")}</span>}
-              </Toggle>
-            ))}
         <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)} />
       </div>
       <ScrollArea ref={scrollAreaRef} className="flex-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
@@ -1886,49 +1625,13 @@ const AppContent: FC = () => {
                         <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
-                        {row.kind === "designs" && row.level === 0 && (
-                          <>
-                            <Action
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCreateVariantForRow(row);
-                              }}
-                              id="semio.sketchpad.app.kitApp.createVariant"
-                              level="base"
-                            >
-                              <Plus />
-                            </Action>
-                            <Action
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCreateViewForRow(row);
-                              }}
-                              id="semio.sketchpad.app.kitApp.createView"
-                              level="base"
-                            >
-                              <Plus />
-                            </Action>
-                          </>
-                        )}
-                        {row.kind === "types" && row.level === 0 && (
+                        {(row.kind === "designs" || row.kind === "types") && (
                           <Action
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCreateVariantForRow(row);
+                              handleCreateChildForRow(row);
                             }}
-                            id="semio.sketchpad.app.kitApp.createVariant"
-                            level="base"
-                          >
-                            <Plus />
-                          </Action>
-                        )}
-                        {row.kind === "designs" && row.level === 1 && (
-                          <Action
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateViewForRow(row);
-                            }}
-                            id="semio.sketchpad.app.kitApp.createView"
+                            id="semio.sketchpad.app.kitApp.createChild"
                             level="base"
                           >
                             <Plus />

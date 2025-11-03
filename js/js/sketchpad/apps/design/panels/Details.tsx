@@ -733,13 +733,13 @@ const PiecesSectionForm: FC = () => {
     () =>
       commonTypeName && !isDesignPiece
         ? [
-            ...new Set(
-              allReplacableTypes
-                .filter((t) => t.name === commonTypeName)
-                .map((t) => t.variant)
-                .filter((v): v is string => Boolean(v)),
-            ),
-          ]
+          ...new Set(
+            allReplacableTypes
+              .filter((t) => t.name === commonTypeName)
+              .map((t) => t.variant)
+              .filter((v): v is string => Boolean(v)),
+          ),
+        ]
         : [],
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
@@ -755,24 +755,24 @@ const PiecesSectionForm: FC = () => {
   // Get available design variants and views
   const availableDesignVariants = pieceDesign
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === pieceDesign.name)
-            .map((d) => d.variant)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === pieceDesign.name)
+          .map((d) => d.variant)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   const availableDesignViews = pieceDesign
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === pieceDesign.name && (d.variant || "") === (pieceDesign.variant || ""))
-            .map((d) => d.view)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === pieceDesign.name && (d.variant || "") === (pieceDesign.variant || ""))
+          .map((d) => d.view)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   let parentConnection: Connection | null = null;
@@ -1132,7 +1132,7 @@ const ConnectionsSectionForm: FC<{
   const handleChange = (updatedConnection: Connection) => {
     if (!updatedConnection || !updatedConnection.guid) return;
     const origin = "semio.sketchpad.app.design.panel.details.section.connection.change";
-    
+
     // Calculate diff between current and updated connection
     const diff: ConnectionDiff = {};
     if (connection) {
@@ -1145,7 +1145,7 @@ const ConnectionsSectionForm: FC<{
       if (updatedConnection.x !== connection.x) diff.x = updatedConnection.x;
       if (updatedConnection.y !== connection.y) diff.y = updatedConnection.y;
     }
-    
+
     updateConnection(origin, updatedConnection.guid, diff);
   };
 

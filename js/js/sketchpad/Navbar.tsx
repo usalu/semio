@@ -254,8 +254,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const filteredKind = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
   const filteredName = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("name") : null;
-  const filteredVariant = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("variant") : null;
-  const filteredView = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("view") : null;
 
   const isKitApp = kitGuid && !isDesignApp && !isTypeApp && !isQualityApp;
 
@@ -339,79 +337,59 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   );
 
   const handleCreateDesign = useCallback(
-    (origin: string, name?: string) => {
+    (origin: string, name?: string, parent?: string) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allDesigns.map((d) => d.name);
       const uniqueName = name || generateUniqueName(t("semio.sketchpad.app.design.defaultName"), existingNames);
-      kitCommands.createDesign(origin, { guid, name: uniqueName, variant: "", view: "", pieces: [], connections: [] });
+      kitCommands.createDesign(origin, { guid, name: uniqueName, parent, pieces: [], connections: [] });
       navigate(`/kits/${kitGuid}/designs/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allDesigns, t],
   );
 
   const handleCreateType = useCallback(
-    (origin: string, name?: string) => {
+    (origin: string, name?: string, parent?: string) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       const existingNames = allTypes.map((t) => t.name);
       const uniqueName = name || generateUniqueName(t("semio.sketchpad.app.type.defaultName"), existingNames);
-      kitCommands.createType(origin, { guid, name: uniqueName, variant: "", ports: [] });
+      kitCommands.createType(origin, { guid, name: uniqueName, parent, ports: [] });
       navigate(`/kits/${kitGuid}/types/${guid}`);
     },
     [kitCommands, kitGuid, navigate, allTypes, t],
   );
 
-  const handleCreateVariant = useCallback(
+  const handleCreateChild = useCallback(
     (origin: string, designOrType: Design | Type, isType: boolean) => {
       if (!kitCommands) return;
       const guid = crypto.randomUUID();
       if (!isType) {
         const d = designOrType as Design;
-        const existingVariants = allDesigns.filter((design) => design.name === d.name).map((design) => design.variant || "");
-        const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.design.newVariant"), existingVariants);
+        const existingNames = allDesigns.filter((design) => design.parent === d.guid).map((design) => design.name);
+        const uniqueName = generateUniqueName(d.name, existingNames);
         kitCommands.createDesign(origin, {
           guid,
-          name: d.name,
-          variant: uniqueVariant,
-          view: "",
+          name: uniqueName,
+          parent: d.guid,
           pieces: [],
           connections: [],
         });
         navigate(`/kits/${kitGuid}/designs/${guid}`);
       } else {
         const typeObj = designOrType as Type;
-        const existingVariants = allTypes.filter((type) => type.name === typeObj.name).map((type) => type.variant || "");
-        const uniqueVariant = generateUniqueName(t("semio.sketchpad.app.type.newVariant"), existingVariants);
+        const existingNames = allTypes.filter((type) => type.parent === typeObj.guid).map((type) => type.name);
+        const uniqueName = generateUniqueName(typeObj.name, existingNames);
         kitCommands.createType(origin, {
           guid,
-          name: typeObj.name,
-          variant: uniqueVariant,
+          name: uniqueName,
+          parent: typeObj.guid,
           ports: [],
         });
         navigate(`/kits/${kitGuid}/types/${guid}`);
       }
     },
     [kitCommands, kitGuid, navigate, allDesigns, allTypes, t],
-  );
-
-  const handleCreateView = useCallback(
-    (origin: string, design: Design) => {
-      if (!kitCommands) return;
-      const guid = crypto.randomUUID();
-      const existingViews = allDesigns.filter((d) => d.name === design.name && (d.variant || "") === (design.variant || "")).map((d) => d.view || "");
-      const uniqueView = generateUniqueName(t("semio.sketchpad.app.design.newView"), existingViews);
-      kitCommands.createDesign(origin, {
-        guid,
-        name: design.name,
-        variant: design.variant,
-        view: uniqueView,
-        pieces: [],
-        connections: [],
-      });
-      navigate(`/kits/${kitGuid}/designs/${guid}`);
-    },
-    [kitCommands, kitGuid, navigate, allDesigns, t],
   );
 
   const handleCreate = useCallback(
@@ -459,32 +437,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return items;
   }, [allDesigns, kitGuid, t]);
 
-  const designVariantItems = useMemo(() => {
+  const designChildItems = useMemo(() => {
     if (!design) return [];
-    const variants = new Map<string, Design>();
-    allDesigns.forEach((d) => {
-      if (d.name === design.name) {
-        const key = d.variant || "";
-        if (!variants.has(key)) variants.set(key, d);
-      }
-    });
-    const items = Array.from(variants.entries()).map(([variant, d]) => ({
-      label: variant || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultVariant")}</span>,
+    const children = allDesigns.filter((d) => d.parent === design.guid);
+    const items = children.map((d) => ({
+      label: d.name,
       href: `/kits/${kitGuid}/designs/${d.guid}`,
     }));
-    items.push({ label: "+ " + t("semio.sketchpad.navbar.createVariant"), href: "#create-variant" });
-    return items;
-  }, [design, allDesigns, kitGuid, t]);
-
-  const designViewItems = useMemo(() => {
-    if (!design) return [];
-    const items = allDesigns
-      .filter((d) => d.name === design.name && (d.variant || "") === (design.variant || ""))
-      .map((d) => ({
-        label: d.view || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultView")}</span>,
-        href: `/kits/${kitGuid}/designs/${d.guid}`,
-      }));
-    items.push({ label: "+ " + t("semio.sketchpad.navbar.createView"), href: "#create-view" });
+    items.push({ label: "+ " + t("semio.sketchpad.navbar.createChild"), href: "#create-child" });
     return items;
   }, [design, allDesigns, kitGuid, t]);
 
@@ -502,20 +462,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return items;
   }, [allTypes, kitGuid, t]);
 
-  const typeVariantItems = useMemo(() => {
+  const typeChildItems = useMemo(() => {
     if (!type) return [];
-    const variants = new Map<string, Type>();
-    allTypes.forEach((t) => {
-      if (t.name === type.name) {
-        const key = t.variant || "";
-        if (!variants.has(key)) variants.set(key, t);
-      }
-    });
-    const items = Array.from(variants.entries()).map(([variant, typeObj]) => ({
-      label: variant || <span className="italic opacity-70">{t("semio.sketchpad.app.type.defaultVariant")}</span>,
+    const children = allTypes.filter((t) => t.parent === type.guid);
+    const items = children.map((typeObj) => ({
+      label: typeObj.name,
       href: `/kits/${kitGuid}/types/${typeObj.guid}`,
     }));
-    items.push({ label: "+ " + t("semio.sketchpad.navbar.createVariant"), href: "#create-variant" });
+    items.push({ label: "+ " + t("semio.sketchpad.navbar.createChild"), href: "#create-child" });
     return items;
   }, [type, allTypes, kitGuid, t]);
 
@@ -569,47 +523,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }));
   }, [kit, filteredKind, allDesigns, allTypes, kitGuid]);
 
-  // Build breadcrumb items for filtered variants in kit app
-  const filteredVariantItems = useMemo(() => {
-    if (!kit || !filteredKind || !filteredName) return [];
-    const variantSet = new Set<string>();
 
-    if (filteredKind === "designs") {
-      allDesigns.forEach((d) => {
-        if (d.name === filteredName) {
-          variantSet.add(d.variant || "");
-        }
-      });
-    } else if (filteredKind === "types") {
-      allTypes.forEach((t) => {
-        if (t.name === filteredName) {
-          variantSet.add(t.variant || "");
-        }
-      });
-    }
-
-    return Array.from(variantSet).map((variant) => ({
-      label: variant || <span className="italic opacity-70">{filteredKind === "designs" ? t("semio.sketchpad.app.design.defaultVariant") : t("semio.sketchpad.app.type.defaultVariant")}</span>,
-      href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(variant)}`,
-    }));
-  }, [kit, filteredKind, filteredName, allDesigns, allTypes, kitGuid, t]);
-
-  // Build breadcrumb items for filtered views in kit app
-  const filteredViewItems = useMemo(() => {
-    if (!kit || filteredKind !== "designs" || !filteredName || filteredVariant === null) return [];
-    const viewSet = new Set<string>();
-
-    allDesigns.forEach((d) => {
-      if (d.name === filteredName && (d.variant || "") === filteredVariant) {
-        viewSet.add(d.view || "");
-      }
-    });
-
-    return Array.from(viewSet).map((view) => ({
-      label: view || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultView")}</span>,
-      href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant)}&view=${encodeURIComponent(view)}`,
-    }));
-  }, [kit, filteredKind, filteredName, filteredVariant, allDesigns, kitGuid, t]);
 
   // Determine if we're at root or if a kind filter is active
   const isAtRoot = navigation === "/";
@@ -739,46 +653,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                         {filteredName}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredVariantItems} id="semio.sketchpad.navbar.selectVariant" onNavigate={(href) => navigate(href)} />
-                  </>
-                )}
-                {filteredName !== null && filteredVariant !== null && (
-                  <>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink
-                        onClick={() => {
-                          const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName && (d.variant || "") === filteredVariant);
-                          if (firstMatchingDesign) {
-                            navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant || "")}&select=${firstMatchingDesign.guid}`);
-                          }
-                        }}
-                        style={{ cursor: "pointer" }}
-                        id={"semio.sketchpad.navbar.variant"}
-                      >
-                        {filteredVariant || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultVariant")}</span>}
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator items={filteredViewItems} id="semio.sketchpad.navbar.selectView" onNavigate={(href) => navigate(href)} />
-                  </>
-                )}
-                {filteredName !== null && filteredVariant !== null && filteredView !== null && (
-                  <>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink
-                        onClick={() => {
-                          const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName && (d.variant || "") === filteredVariant && (d.view || "") === filteredView);
-                          if (firstMatchingDesign) {
-                            navigate(
-                              `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&variant=${encodeURIComponent(filteredVariant || "")}&view=${encodeURIComponent(filteredView || "")}&select=${firstMatchingDesign.guid}`,
-                            );
-                          }
-                        }}
-                        style={{ cursor: "pointer" }}
-                        id={"semio.sketchpad.navbar.view"}
-                      >
-                        {filteredView || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultView")}</span>}
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
                   </>
                 )}
               </>
@@ -816,45 +690,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
-              items={designVariantItems}
-              id="semio.sketchpad.navbar.selectVariant"
+              items={designChildItems}
+              id="semio.sketchpad.navbar.selectChild"
               onNavigate={(href) => {
-                if (href === "#create-variant") handleCreateVariant("semio.sketchpad.navbar.selectVariant", design, false);
+                if (href === "#create-child") handleCreateChild("semio.sketchpad.navbar.selectChild", design, false);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem id="semio.sketchpad.navbar.variant">
-              <BreadcrumbLink
-                asChild
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&select=${design.guid}`);
-                }}
-              >
-                <button type="button">{design.variant || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultVariant")}</span>}</button>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={designViewItems}
-              id="semio.sketchpad.navbar.selectView"
-              onNavigate={(href) => {
-                if (href === "#create-view") handleCreateView("semio.sketchpad.navbar.selectView", design);
-                else navigate(href);
-              }}
-            />
-            <BreadcrumbItem id="semio.sketchpad.navbar.view">
-              <BreadcrumbLink
-                asChild
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(design.name)}&variant=${encodeURIComponent(design.variant || "")}&view=${encodeURIComponent(design.view || "")}&select=${design.guid}`);
-                }}
-              >
-                <button type="button">{design.view || <span className="italic opacity-70">{t("semio.sketchpad.app.design.defaultView")}</span>}</button>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
           </>
         )}
         {isTypeApp && type && (
@@ -888,25 +730,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator
-              items={typeVariantItems}
-              id="semio.sketchpad.navbar.selectVariant"
+              items={typeChildItems}
+              id="semio.sketchpad.navbar.selectChild"
               onNavigate={(href) => {
-                if (href === "#create-variant") handleCreateVariant("semio.sketchpad.navbar.selectVariant", type, true);
+                if (href === "#create-child") handleCreateChild("semio.sketchpad.navbar.selectChild", type, true);
                 else navigate(href);
               }}
             />
-            <BreadcrumbItem id="semio.sketchpad.navbar.variant">
-              <BreadcrumbLink
-                asChild
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(type.name)}&variant=${encodeURIComponent(type.variant || "")}&select=${type.guid}`);
-                }}
-              >
-                <button type="button">{type.variant || <span className="italic opacity-70">{t("semio.sketchpad.app.type.defaultVariant")}</span>}</button>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
           </>
         )}
         {isQualityApp && quality && (
@@ -1114,8 +944,6 @@ const Search: FC = ({}) => {
         keys: [
           { name: "item.name", weight: 2 },
           { name: "item.title", weight: 2 },
-          { name: "item.variant", weight: 1.5 },
-          { name: "item.view", weight: 1 },
           { name: "item.description", weight: 0.5 },
           { name: "item.key", weight: 1.5 },
           { name: "item.path", weight: 1 },
@@ -1193,10 +1021,7 @@ const Search: FC = ({}) => {
     if (type === "quality") return (item as Quality).name;
     if (type === "docs") return (item as { title: string }).title;
     if (type === "tutorial") return (item as Tutorial).name;
-    const name = (item as any).name || "";
-    const variant = (item as any).variant || "";
-    const view = (item as any).view || "";
-    return [name, variant, view].filter(Boolean).join(" - ");
+    return (item as any).name || "";
   };
 
   return (
@@ -1789,12 +1614,10 @@ function NavbarMobile({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: Na
     if (isDesignAppPath && kitGuid && currentDesign) {
       add(`/kits/${kitGuid}?kind=designs`);
       add(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(currentDesign.name)}&select=${currentDesign.guid}`);
-      add(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(currentDesign.name)}&variant=${encodeURIComponent(currentDesign.variant || "")}&select=${currentDesign.guid}`);
     }
     if (isTypeAppPath && kitGuid && currentType) {
       add(`/kits/${kitGuid}?kind=types`);
       add(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(currentType.name)}&select=${currentType.guid}`);
-      add(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(currentType.name)}&variant=${encodeURIComponent(currentType.variant || "")}&select=${currentType.guid}`);
     }
     add(currentPath);
     return items;

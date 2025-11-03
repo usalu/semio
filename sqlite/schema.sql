@@ -39,7 +39,8 @@ CREATE TABLE type (
 	description VARCHAR(512) NOT NULL, 
 	icon VARCHAR(1024) NOT NULL, 
 	image VARCHAR(1024) NOT NULL, 
-	variant VARCHAR(64) NOT NULL, 
+	parent_id INTEGER, 
+	is_abstract BOOLEAN NOT NULL DEFAULT 0, 
 	stock INTEGER NOT NULL, 
 	"virtual" BOOLEAN NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
@@ -50,7 +51,8 @@ CREATE TABLE type (
 	location_latitude FLOAT, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), 
+	CONSTRAINT "Unique name and parent in kit" UNIQUE (name, parent_id, kit_id), 
+	FOREIGN KEY(parent_id) REFERENCES type (id), 
 	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
 CREATE TABLE design (
@@ -58,8 +60,8 @@ CREATE TABLE design (
 	description VARCHAR(512) NOT NULL, 
 	icon VARCHAR(1024) NOT NULL, 
 	image VARCHAR(1024) NOT NULL, 
-	variant VARCHAR(64) NOT NULL, 
-	"view" VARCHAR(64) NOT NULL, 
+	parent_id INTEGER, 
+	is_abstract BOOLEAN NOT NULL DEFAULT 0, 
 	unit VARCHAR(64) NOT NULL, 
 	created DATETIME NOT NULL, 
 	updated DATETIME NOT NULL, 
@@ -68,7 +70,8 @@ CREATE TABLE design (
 	location_latitude FLOAT, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	UNIQUE (name, variant, "view", kit_id), 
+	UNIQUE (name, parent_id, kit_id), 
+	FOREIGN KEY(parent_id) REFERENCES design (id), 
 	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
 CREATE TABLE representation (

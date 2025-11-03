@@ -75,12 +75,6 @@ export class Generator {
     animal = animal.charAt(0).toUpperCase() + animal.slice(1);
     return `${animal}`;
   }
-  public static randomVariant(seed: number = Math.floor(Math.random() * 1000000)): string {
-    const random = new SeededRandom(seed);
-    let adjective = adjectives[random.nextInt(adjectives.length)];
-    adjective = adjective.charAt(0).toUpperCase() + adjective.slice(1);
-    return `${adjective}`;
-  }
 }
 
 export const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
@@ -1006,7 +1000,6 @@ export const QualitySchema = z.object({
   formula: z.string().optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
-  variant: z.string().optional(),
   unit: z.string().optional(),
   benchmarks: z.array(BenchmarkSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
@@ -1038,7 +1031,6 @@ export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => 
   if (before.formula !== after.formula) diff.formula = after.formula;
   if (before.icon !== after.icon) diff.icon = after.icon;
   if (before.image !== after.image) diff.image = after.image;
-  if (before.variant !== after.variant) diff.variant = after.variant;
   if (before.unit !== after.unit) diff.unit = after.unit;
   if (before.benchmarks !== after.benchmarks) diff.benchmarks = getBenchmarksDiff(before.benchmarks ?? [], after.benchmarks ?? []);
   if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
@@ -1062,7 +1054,6 @@ export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff):
   if (appliedDiff.formula !== undefined) inverse.formula = original.formula;
   if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
   if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.variant !== undefined) inverse.variant = original.variant;
   if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
   if (appliedDiff.benchmarks !== undefined) inverse.benchmarks = inverseBenchmarksDiff(original.benchmarks ?? [], appliedDiff.benchmarks);
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
@@ -1095,7 +1086,6 @@ export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
     formula: diff.formula ?? base.formula,
     icon: diff.icon ?? base.icon,
     image: diff.image ?? base.image,
-    variant: diff.variant ?? base.variant,
     unit: diff.unit ?? base.unit,
     benchmarks: diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : base.benchmarks,
     attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
@@ -1568,7 +1558,8 @@ export const findPort = (ports: Port[], portGuid: string): Port => {
 export const TypeSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  variant: z.string().optional(),
+  parent: z.string().optional(),
+  isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
@@ -2051,9 +2042,9 @@ export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.par
 export const DesignSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  variant: z.string().optional(),
+  parent: z.string().optional(),
+  isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
-  view: z.string().optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
   stats: z.array(StatSchema).optional(),
@@ -3067,34 +3058,14 @@ export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
 });
 
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
-  if (!designPiece.type) return [];
+  if (!designPiece.design) return [];
 
-  const pieceType = findTypeInKit(kit, designPiece.type);
-  if (pieceType.name !== "design") return [];
-
-  // Parse the current design ID from the piece's type.variant
-  const currentVariant = pieceType.variant || "";
-  const parts = currentVariant.split("-");
-  const currentDesignName = parts[0];
-  const currentDesignVariant = parts[1] || "";
-  const currentDesignView = parts[2] || "";
-
-  // Find all designs in the kit that could be replacements
   const allDesigns = kit.designs || [];
+  const currentDesign = findDesignInKit(kit, designPiece.design);
 
-  // For now, return designs with the same name but different variant/view
-  // This is a simplified implementation - in the future we could add more sophisticated
-  // compatibility checking based on piece IDs and port compatibility
   return allDesigns.filter((design) => {
-    // Don't include the current design
-    if (design.name === currentDesignName && (design.variant || "") === currentDesignVariant && (design.view || "") === currentDesignView) {
-      return false;
-    }
-
-    // For now, allow any design to be a replacement
-    // TODO: Add more sophisticated compatibility checking:
-    // - Same piece IDs
-    // - Compatible outgoing ports
+    if (design.guid === currentDesign.guid) return false;
+    if (design.isAbstract) return false;
     return true;
   });
 };
@@ -3174,7 +3145,8 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
   }
   return (
     kit.types?.filter((replacementType) => {
-      if (variants !== undefined && !variants.includes(replacementType.variant ?? "")) return false;
+      if (replacementType.isAbstract) return false;
+      if (variants !== undefined && !variants.includes(replacementType.parent ?? "")) return false;
       if (!replacementType.ports || replacementType.ports.length === 0) return requiredPorts.length === 0;
       return requiredPorts.every((requiredPort) => {
         return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
@@ -3210,7 +3182,8 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
   }
   return (
     kit.types?.filter((replacementType) => {
-      if (variants !== undefined && !variants.includes(replacementType.variant ?? "")) return false;
+      if (replacementType.isAbstract) return false;
+      if (variants !== undefined && !variants.includes(replacementType.parent ?? "")) return false;
       if (!replacementType.ports || replacementType.ports.length === 0) return externalConnections.length === 0;
       return externalConnections.every(({ requiredPort }) => {
         return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));

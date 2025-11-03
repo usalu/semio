@@ -68,7 +68,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
     if (isInDesignScope || !(error instanceof Error)) throw error;
   }
 
-  const interactionId = type ? `type-${type.name}-${type.variant || ""}` : "type-unknown";
+  const interactionId = type ? `type-${type.guid}` : "type-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: interactionId,
     data: { type },
@@ -93,7 +93,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
       const pieceType = piece.type as Type | string | undefined;
       if (!pieceType) return false;
       if (typeof pieceType === "string") {
-        return pieceType === type.guid || pieceType === type.name || pieceType === type.variant;
+        return pieceType === type.guid || pieceType === type.name;
       }
       return pieceType.guid === type.guid;
     });
@@ -106,8 +106,8 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
 
   const isActiveSelection = isSelected;
 
-  const displayVariant = type.variant || type.name || "??";
-  const initials = displayVariant.substring(0, 2).toUpperCase();
+  const displayName = type.name || "??";
+  const initials = displayName.substring(0, 2).toUpperCase();
   const avatar = (
     <Avatar
       className={`cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)] ${isActiveSelection ? "ring-1 ring-inset ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-inset ring-[color:var(--hover-base)]" : ""}`}
@@ -165,14 +165,9 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, type: typeProp, showHo
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">
           <div className="space-y-1">
-            {type.variant ? (
-              <>
-                <h4 className="text-sm font-semibold">{type.variant}</h4>
-                <p className="text-sm">{type.description || t("semio.sketchpad.common.noDescription")}</p>
-              </>
-            ) : (
-              <p className="text-sm">{type.description || t("semio.sketchpad.common.noDescription")}</p>
-            )}
+            <h4 className="text-sm font-semibold">{type.name}</h4>
+            {type.isAbstract && <span className="text-xs text-muted-foreground">(Abstract)</span>}
+            <p className="text-sm">{type.description || t("semio.sketchpad.common.noDescription")}</p>
           </div>
         </HoverCardContent>
       </HoverCard>
@@ -236,7 +231,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
     return false;
   }, [design, hoverFromScope, currentDesignFromScope]);
 
-  const interactionId = design ? `design-${design.name}-${design.variant || ""}-${design.view || ""}` : "design-unknown";
+  const interactionId = design ? `design-${design.guid}` : "design-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: interactionId,
     data: { design },
@@ -267,10 +262,8 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
     return null;
   }
 
-  const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");
-
-  const displayVariant = design.variant || design.name || "??";
-  const initials = displayVariant.substring(0, 2).toUpperCase();
+  const displayName = design.name || "??";
+  const initials = displayName.substring(0, 2).toUpperCase();
   const avatar = (
     <Avatar
       className={`select-none ${isActive ? "cursor-default" : "cursor-grab active:cursor-grabbing"} border-[color:var(--border-color)] ${isSelectedDesign ? "ring-1 ring-inset ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-inset ring-[color:var(--hover-base)]" : ""}`}
@@ -328,12 +321,8 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, design: designPr
         <HoverCardTrigger asChild>{avatar}</HoverCardTrigger>
         <HoverCardContent className="w-80">
           <div className="space-y-1">
-            {!isDefault && (
-              <h4 className="text-sm font-semibold">
-                {design.variant || design.name}
-                {design.view && design.view !== "Default" && ` (${design.view})`}
-              </h4>
-            )}
+            <h4 className="text-sm font-semibold">{design.name}</h4>
+            {design.isAbstract && <span className="text-xs text-muted-foreground">(Abstract)</span>}
             <p className="text-sm">{design.description || t("semio.sketchpad.common.noDescription")}</p>
           </div>
         </HoverCardContent>

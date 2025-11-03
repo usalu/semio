@@ -318,13 +318,13 @@ export const commands = {
         }
 
         if (kit.types) {
-          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, parent_id, is_abstract, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
           const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
           const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
           for (const type of kit.types) {
-            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit || "", nowIso, nowIso, Guid]);
+            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.parent || null, type.isAbstract ? 1 : 0, type.unit || "", nowIso, nowIso, Guid]);
             const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
             insertQualities(type.attributes, "type_id", typeDbId);
             insertAuthors(type.authors, "type_id", typeDbId);

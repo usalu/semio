@@ -33,10 +33,11 @@ import i18n from "../../../i18n";
 import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { ConceptFilter } from "../../ConceptFilter";
-import { docsRegistry } from "../docs/registry";
 import { useHotkeys } from "../../hotkeys";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
 import { useAppType, useGetKitKind, useIsMobile, useKits, useNavigation, useSketchpadCommands, useTooltip } from "../../store";
+import { docsRegistry } from "../docs/registry";
+import { HomeAppFooter } from "./Footer";
 import { KitSection } from "./panels/Details";
 import { useHome, useHomeCommands } from "./store";
 
@@ -68,7 +69,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({ }) => {
+const Home: FC = ({}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -701,136 +702,117 @@ const Home: FC = ({ }) => {
   }
 
   return (
-    <Canvas>
-      <Window id="home-table">
-        <div
-          className="flex flex-col h-full"
-          onClick={(e: React.MouseEvent) => {
-            if (e.target === e.currentTarget) {
-              homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
-            }
-          }}
-        >
-          {/* Flexible filter layout with automatic wrapping */}
-          <div className="flex flex-wrap items-center gap-1 p-1 border-b">
-            {selectedKind && (
-              <Toggle
-                type="withAction"
-                pressed={true}
-                onPressedChange={() => toggleKind(selectedKind)}
-                actionIcon={<Plus className="size-3.5" />}
-                onActionClick={() => handleCreateKit(selectedKind)}
-                id={tooltip("home.hideKind")}
-                actionId={tooltip("home.createKit")}
-              >
-                {selectedKind === "temporary" && <Clock className="size-4" />}
-                {selectedKind === "local" && <HardDrive className="size-4" />}
-                {selectedKind === "remote" && <Cloud className="size-4" />}
-              </Toggle>
-            )}
-            {selectedName && (
-              <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-                {selectedName}
-              </Toggle>
-            )}
-            {selectedVersion !== null && (
-              <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-                {selectedVersion || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
-              </Toggle>
-            )}
-            {!selectedKind && (
-              <>
+    <>
+      <HomeAppFooter />
+      <Canvas>
+        <Window id="home-table">
+          <div
+            className="flex flex-col h-full"
+            onClick={(e: React.MouseEvent) => {
+              if (e.target === e.currentTarget) {
+                homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
+              }
+            }}
+          >
+            {/* Flexible filter layout with automatic wrapping */}
+            <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+              {selectedKind && (
                 <Toggle
                   type="withAction"
-                  pressed={false}
-                  onPressedChange={() => toggleKind("temporary")}
+                  pressed={true}
+                  onPressedChange={() => toggleKind(selectedKind)}
                   actionIcon={<Plus className="size-3.5" />}
-                  onActionClick={() => handleCreateKit("temporary")}
-                  id={tooltip("home.showTemporary")}
-                  actionId={tooltip("home.createTemporary")}
+                  onActionClick={() => handleCreateKit(selectedKind)}
+                  id={tooltip("home.hideKind")}
+                  actionId={tooltip("home.createKit")}
                 >
-                  <Clock className="size-4" />
+                  {selectedKind === "temporary" && <Clock className="size-4" />}
+                  {selectedKind === "local" && <HardDrive className="size-4" />}
+                  {selectedKind === "remote" && <Cloud className="size-4" />}
                 </Toggle>
-                <Toggle
-                  type="withAction"
-                  pressed={false}
-                  onPressedChange={() => toggleKind("local")}
-                  actionIcon={<Plus className="size-3.5" />}
-                  onActionClick={() => handleCreateKit("local")}
-                  id={tooltip("home.showLocal")}
-                  actionId={tooltip("home.createLocal")}
-                >
-                  <HardDrive className="size-4" />
+              )}
+              {selectedName && (
+                <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+                  {selectedName}
                 </Toggle>
-                <Toggle
-                  type="withAction"
-                  pressed={false}
-                  onPressedChange={() => toggleKind("remote")}
-                  actionIcon={<Plus className="size-3.5" />}
-                  onActionClick={() => handleCreateKit("remote")}
-                  id={tooltip("home.showRemote")}
-                  actionId={tooltip("home.createRemote")}
-                >
-                  <Cloud className="size-4" />
+              )}
+              {selectedVersion !== null && (
+                <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
+                  {selectedVersion || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
                 </Toggle>
-              </>
-            )}
-            {selectedKind &&
-              !selectedName &&
-              uniqueNames.length > 0 &&
-              uniqueNames.map((name) => (
-                <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
-                  {name}
-                </Toggle>
-              ))}
-            {selectedKind &&
-              selectedName &&
-              selectedVersion === null &&
-              uniqueVersions.length > 0 &&
-              uniqueVersions.map((version) => (
-                <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                  {version || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
-                </Toggle>
-              ))}
-            <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
-          </div>
-          {/* Concept Filter */}
-          <ConceptFilter allConcepts={allConcepts} />
-          <ScrollArea ref={scrollAreaRef} className="flex-1">
-            <table className="w-full border-collapse">
-              <thead className="sticky top-0 border-b">
-                <tr className="h-9">
-                  <th className="text-left p-1 font-medium relative group">
-                    <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.home.name")}</span>
-                      <Toggle
-                        type="dropdown"
-                        pressed={sortColumn === "name"}
-                        value={sortColumn === "name" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.name.sortColumn", "name");
-                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
-                        ]}
-                        className="px-1 min-w-0"
-                      />
-                    </div>
-                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-                  </th>
-                  {!selectedKind && (
+              )}
+              {!selectedKind && (
+                <>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("temporary")}
+                    actionIcon={<Plus className="size-3.5" />}
+                    onActionClick={() => handleCreateKit("temporary")}
+                    id={tooltip("home.showTemporary")}
+                    actionId={tooltip("home.createTemporary")}
+                  >
+                    <Clock className="size-4" />
+                  </Toggle>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("local")}
+                    actionIcon={<Plus className="size-3.5" />}
+                    onActionClick={() => handleCreateKit("local")}
+                    id={tooltip("home.showLocal")}
+                    actionId={tooltip("home.createLocal")}
+                  >
+                    <HardDrive className="size-4" />
+                  </Toggle>
+                  <Toggle
+                    type="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("remote")}
+                    actionIcon={<Plus className="size-3.5" />}
+                    onActionClick={() => handleCreateKit("remote")}
+                    id={tooltip("home.showRemote")}
+                    actionId={tooltip("home.createRemote")}
+                  >
+                    <Cloud className="size-4" />
+                  </Toggle>
+                </>
+              )}
+              {selectedKind &&
+                !selectedName &&
+                uniqueNames.length > 0 &&
+                uniqueNames.map((name) => (
+                  <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+                    {name}
+                  </Toggle>
+                ))}
+              {selectedKind &&
+                selectedName &&
+                selectedVersion === null &&
+                uniqueVersions.length > 0 &&
+                uniqueVersions.map((version) => (
+                  <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
+                    {version || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
+                  </Toggle>
+                ))}
+              <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+            </div>
+            {/* Concept Filter */}
+            <ConceptFilter allConcepts={allConcepts} />
+            <ScrollArea ref={scrollAreaRef} className="flex-1">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 border-b">
+                  <tr className="h-9">
                     <th className="text-left p-1 font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.sketchpad.app.home.kind")}</span>
+                        <span>{t("semio.sketchpad.app.home.name")}</span>
                         <Toggle
                           type="dropdown"
-                          pressed={sortColumn === "type"}
-                          value={sortColumn === "type" ? sortDirection : "asc"}
+                          pressed={sortColumn === "name"}
+                          value={sortColumn === "name" ? sortDirection : "asc"}
                           onValueChange={(value) => {
-                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
-                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
+                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.name.sortColumn", "name");
+                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
                           }}
                           items={[
                             { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
@@ -841,126 +823,148 @@ const Home: FC = ({ }) => {
                       </div>
                       <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
                     </th>
-                  )}
-                  <th className="text-left p-1 font-medium relative group">
-                    <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.home.lastUpdated")}</span>
-                      <Toggle
-                        type="dropdown"
-                        pressed={sortColumn === "updatedAt"}
-                        value={sortColumn === "updatedAt" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.updatedAt.sortColumn", "updatedAt");
-                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.updatedAt.sortDirection", value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
-                        ]}
-                        className="px-1 min-w-0"
-                      />
-                    </div>
-                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-                  </th>
-                  <th className="text-left p-1 font-medium relative group">
-                    <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.home.created")}</span>
-                      <Toggle
-                        type="dropdown"
-                        pressed={sortColumn === "createdAt"}
-                        value={sortColumn === "createdAt" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.createdAt.sortColumn", "createdAt");
-                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.createdAt.sortDirection", value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
-                        ]}
-                        className="px-1 min-w-0"
-                      />
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
-                  const isDocsRow = row.type === "docs";
-                  return (
-                    <tr
-                      key={row.id}
-                      className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
-                      onClick={(e) => {
-                        if (isDocsRow && row.docsPath) {
-                          navigate(`/${row.docsPath}`);
-                        } else if (row.kit) {
-                          handleRowClick(row.kit.guid, e);
-                        }
-                      }}
-                      onDoubleClick={() => {
-                        if (isDocsRow && row.docsPath) {
-                          navigate(`/${row.docsPath}`);
-                        } else if (row.kit) {
-                          navigateToKit(row.kit.guid);
-                        }
-                      }}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <td className="p-1" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
-                          <div className="flex items-center gap-1 flex-1 min-w-0">
-                            {row.hasChildren ? (
-                              <Action
-                                level="base"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleRow(row.id);
-                                }}
-                              >
-                                {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-                              </Action>
-                            ) : (
-                              <span className="w-4 h-4 shrink-0" />
-                            )}
-                            <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
-                          </div>
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            {row.level === 0 && row.type !== "docs" && (
-                              <Action
-                                level="base"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCreateVersion(row.name, row.type as KitStoreKind);
-                                }}
-                                id={tooltip("home.createVersion")}
-                              >
-                                <Plus />
-                              </Action>
-                            )}
-                          </div>
+                    {!selectedKind && (
+                      <th className="text-left p-1 font-medium relative group">
+                        <div className="flex items-center justify-between w-full">
+                          <span>{t("semio.sketchpad.app.home.kind")}</span>
+                          <Toggle
+                            type="dropdown"
+                            pressed={sortColumn === "type"}
+                            value={sortColumn === "type" ? sortDirection : "asc"}
+                            onValueChange={(value) => {
+                              homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
+                              homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
+                            }}
+                            items={[
+                              { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
+                              { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                            ]}
+                            className="px-1 min-w-0"
+                          />
                         </div>
-                      </td>
-                      {!selectedKind && (
-                        <td className="p-1">
-                          {row.type === "temporary" && <Clock className="size-4" />}
-                          {row.type === "local" && <HardDrive className="size-4" />}
-                          {row.type === "remote" && <Cloud className="size-4" />}
-                          {row.type === "docs" && <FileText className="size-4" />}
+                        <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                      </th>
+                    )}
+                    <th className="text-left p-1 font-medium relative group">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{t("semio.sketchpad.app.home.lastUpdated")}</span>
+                        <Toggle
+                          type="dropdown"
+                          pressed={sortColumn === "updatedAt"}
+                          value={sortColumn === "updatedAt" ? sortDirection : "asc"}
+                          onValueChange={(value) => {
+                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.updatedAt.sortColumn", "updatedAt");
+                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.updatedAt.sortDirection", value as "asc" | "desc");
+                          }}
+                          items={[
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                          ]}
+                          className="px-1 min-w-0"
+                        />
+                      </div>
+                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                    </th>
+                    <th className="text-left p-1 font-medium relative group">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{t("semio.sketchpad.app.home.created")}</span>
+                        <Toggle
+                          type="dropdown"
+                          pressed={sortColumn === "createdAt"}
+                          value={sortColumn === "createdAt" ? sortDirection : "asc"}
+                          onValueChange={(value) => {
+                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.createdAt.sortColumn", "createdAt");
+                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.createdAt.sortDirection", value as "asc" | "desc");
+                          }}
+                          items={[
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                          ]}
+                          className="px-1 min-w-0"
+                        />
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => {
+                    const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
+                    const isDocsRow = row.type === "docs";
+                    return (
+                      <tr
+                        key={row.id}
+                        className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                        onClick={(e) => {
+                          if (isDocsRow && row.docsPath) {
+                            navigate(`/${row.docsPath}`);
+                          } else if (row.kit) {
+                            handleRowClick(row.kit.guid, e);
+                          }
+                        }}
+                        onDoubleClick={() => {
+                          if (isDocsRow && row.docsPath) {
+                            navigate(`/${row.docsPath}`);
+                          } else if (row.kit) {
+                            navigateToKit(row.kit.guid);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <td className="p-1" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                              {row.hasChildren ? (
+                                <Action
+                                  level="base"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleRow(row.id);
+                                  }}
+                                >
+                                  {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                                </Action>
+                              ) : (
+                                <span className="w-4 h-4 shrink-0" />
+                              )}
+                              <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              {row.level === 0 && row.type !== "docs" && (
+                                <Action
+                                  level="base"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCreateVersion(row.name, row.type as KitStoreKind);
+                                  }}
+                                  id={tooltip("home.createVersion")}
+                                >
+                                  <Plus />
+                                </Action>
+                              )}
+                            </div>
+                          </div>
                         </td>
-                      )}
-                      <td className="p-1">{row.updatedAt}</td>
-                      <td className="p-1">{row.createdAt}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </ScrollArea>
-        </div>
-      </Window>
-    </Canvas>
+                        {!selectedKind && (
+                          <td className="p-1">
+                            {row.type === "temporary" && <Clock className="size-4" />}
+                            {row.type === "local" && <HardDrive className="size-4" />}
+                            {row.type === "remote" && <Cloud className="size-4" />}
+                            {row.type === "docs" && <FileText className="size-4" />}
+                          </td>
+                        )}
+                        <td className="p-1">{row.updatedAt}</td>
+                        <td className="p-1">{row.createdAt}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </ScrollArea>
+          </div>
+        </Window>
+      </Canvas>
+    </>
   );
 };
 

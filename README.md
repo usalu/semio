@@ -227,6 +227,10 @@ For Inter-Process-Communication (IPC) the JSON-schema in [`./jsonschema/kit.json
 
 A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
 
+A [`design`](#-design-) is _proto_ (a _protodesign_) when it has no _parent_.
+
+_Children_ of a _parent_ are \_subdesigns.
+
 A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
 
 The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _component_ 🌿
@@ -236,6 +240,10 @@ Additional [`connections`](#-connection-) which where not used in the _placement
 ## 🏠 Type [↑](#-specs-)
 
 A [`type`](#-type-) is a reusable component with different [`representations`](#-representation-), [`ports`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
+
+A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
+
+_Children_ of a _parent_ are \_subtypes.
 
 A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
 

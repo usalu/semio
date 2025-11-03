@@ -23,24 +23,20 @@ import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { guid, Representation, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
-import { useAddFooterItem, useRemoveFooterItem } from "../../Footer";
 import { useKitCommands, useType } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { ToolType, useAppType } from "../../store";
 import { KitSection } from "../kit/panels/Details";
 import TypeScene from "./canvas/Scene";
+import { TypeAppFooter } from "./Footer";
 import { AttributesSection, AuthorsSection, PortSection, PortsListSection, PortsMultipleSection, RepresentationsSection, TypeDetails } from "./panels/Details";
-import { RepresentationDropdown } from "./RepresentationDropdown";
 import { useTypeApp, useTypeAppCommands, useTypeAppSelection } from "./store";
-import { TagFilter } from "./TagFilter";
 import { ToolsToggleGroup } from "./Tools";
 
 const App: FC = () => {
   const { t } = useTranslation();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
-  const addFooterItem = useAddFooterItem();
-  const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const { setActiveTool } = useTypeAppCommands();
   const app = useTypeApp((s) => s);
@@ -52,17 +48,17 @@ const App: FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (activeTool === ToolType.SELECTION_NORMAL) {
         if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          setActiveTool(ToolType.SELECTION_ADDITIVE);
+          setActiveTool("semio.sketchpad.app.type.keydown.shift", ToolType.SELECTION_ADDITIVE);
         } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-          setActiveTool(ToolType.SELECTION_SUBTRACTIVE);
+          setActiveTool("semio.sketchpad.app.type.keydown.ctrl", ToolType.SELECTION_SUBTRACTIVE);
         }
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (activeTool === ToolType.SELECTION_ADDITIVE && !e.shiftKey) {
-        setActiveTool(ToolType.SELECTION_NORMAL);
+        setActiveTool("semio.sketchpad.app.type.keyup.shift", ToolType.SELECTION_NORMAL);
       } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
-        setActiveTool(ToolType.SELECTION_NORMAL);
+        setActiveTool("semio.sketchpad.app.type.keyup.ctrl", ToolType.SELECTION_NORMAL);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -82,24 +78,10 @@ const App: FC = () => {
       content: <ToolsToggleGroup />,
     });
 
-    addFooterItem({
-      id: "type-tag-filter",
-      content: <TagFilter />,
-      order: 0,
-    });
-
-    addFooterItem({
-      id: "type-representation-selector",
-      content: <RepresentationDropdown />,
-      order: 1,
-    });
-
     return () => {
-    removeSection("toolbar", "semio.sketchpad.app.type.tools");
-      removeFooterItem("type-tag-filter");
-      removeFooterItem("type-representation-selector");
+      removeSection("toolbar", "semio.sketchpad.app.type.tools");
     };
-  }, [addSection, removeSection, addFooterItem, removeFooterItem, appType]);
+  }, [addSection, removeSection, appType]);
 
   // Dynamic details panel based on selection
   useEffect(() => {
@@ -212,7 +194,7 @@ const App: FC = () => {
         });
 
         // Select the new representation
-        typeAppCommands.setSelectedRepresentation?.(newRepresentationGuid);
+        typeAppCommands.setSelectedRepresentation?.("semio.sketchpad.app.type.dropRepresentation", newRepresentationGuid);
       }
     };
 
@@ -245,11 +227,14 @@ const App: FC = () => {
   }, [appType, type, kitCommands, typeAppCommands]);
 
   return (
-    <Canvas>
-      <Window id="type-scene">
-        <TypeScene isDragOver={isDragOver} />
-      </Window>
-    </Canvas>
+    <>
+      <TypeAppFooter />
+      <Canvas>
+        <Window id="type-scene">
+          <TypeScene isDragOver={isDragOver} />
+        </Window>
+      </Canvas>
+    </>
   );
 };
 

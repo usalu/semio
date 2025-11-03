@@ -342,12 +342,12 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     // so connection.x/y = child.center - parent.center
     const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
     const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
-    
+
     if (parentPiece?.center && childPiece?.center) {
       connection.x = childPiece.center.x - parentPiece.center.x;
       connection.y = childPiece.center.y - parentPiece.center.y;
     }
-    
+
     commands.addConnection("semio.sketchpad.app.design.canvas.diagram.pieceNode", connection);
   }, [commands, design]);
 
@@ -563,12 +563,12 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     // so connection.x/y = child.center - parent.center
     const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
     const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
-    
+
     if (parentPiece?.center && childPiece?.center) {
       connection.x = childPiece.center.x - parentPiece.center.x;
       connection.y = childPiece.center.y - parentPiece.center.y;
     }
-    
+
     commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
   }, [commands, design]);
 

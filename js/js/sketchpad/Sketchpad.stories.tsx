@@ -95,7 +95,6 @@ const helloSemioInitialState: CompleteState = {
           {
             guid: "connector-type",
             name: "Connector Block",
-            variant: "",
             representations: [
               {
                 guid: "rep-1",
@@ -139,12 +138,6 @@ const helloSemioInitialState: CompleteState = {
           {
             guid: "hello-design",
             name: "Hello Design",
-            variant: "",
-            view: JSON.stringify({
-              position: { x: 0, y: 5, z: 5 },
-              forward: { x: 0, y: -0.707, z: -0.707 },
-              up: { x: 0, y: 0.707, z: -0.707 },
-            }),
             pieces: [
               {
                 guid: "piece-1",

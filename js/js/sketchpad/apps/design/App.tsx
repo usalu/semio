@@ -40,7 +40,7 @@ import { useTranslation } from "react-i18next";
 
 import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
-import { Design, findConnectionsInDesign, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
+import { Design, findConnectionsInDesign, generateUniqueName, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
 import { Canvas, HorizontalWindows, useCanvasContext } from "../../Canvas";
 import { useDesign, useKit } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
@@ -50,6 +50,7 @@ import { KitSection } from "../kit/panels/Details";
 import { useKitAppCommands } from "../kit/store";
 import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
+import { DesignAppFooter } from "./Footer";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
 import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppFullscreen, useDesignAppSelection } from "./store";
@@ -250,133 +251,125 @@ const App: FC<AppProps> = () => {
       return acc;
     }, {});
 
-    const handleCreateVariant = (name: string) => {
-      const existingTypes = typesByName[name] || [];
-      const variantNumber = existingTypes.length + 1;
+    const handleCreateChild = (parentType: Type) => {
+      const existingChildren = kit.types?.filter((t) => t.parent === parentType.guid) || [];
+      const uniqueName = generateUniqueName(parentType.name, existingChildren.map((t) => t.name));
       const newType: Type = {
         guid: guid(),
-        name,
-        variant: `Variant ${variantNumber}`,
+        name: uniqueName,
+        parent: parentType.guid,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.createVariant", newType);
+      kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.createChild", newType);
       navigateToType(kit.guid, newType.guid);
     };
 
-    return (
-      <>
-        {Object.entries(typesByName).map(([name, variants]) => (
+    const renderTypeTree = (types: Type[]): ReactNode[] => {
+      return types.map((type) => {
+        const children = kit.types?.filter((t) => t.parent === type.guid) || [];
+        return (
           <div
-            key={name}
-            onPointerEnter={() =>
-              hoverTypes(
-                "semio.sketchpad.app.design.panel.workbench.types.hover",
-                variants.map((v) => v.guid),
-              )
-            }
+            key={type.guid}
+            onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])}
             onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}
           >
             <TreeItem
-              label={name}
+              label={type.name}
               onDoubleClick={(event) => {
                 if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
                   return;
                 }
                 event.preventDefault();
                 event.stopPropagation();
-                if (!kit?.guid) {
-                  return;
-                }
-                navigateToKit(kit.guid, `kind=types&name=${encodeURIComponent(name)}`);
+                navigateToType(kit.guid, type.guid);
               }}
               actions={[
                 {
                   icon: <Plus size={12} />,
-                  onClick: () => handleCreateVariant(name),
-                  id: "semio.sketchpad.common.addVariant",
+                  onClick: () => handleCreateChild(type),
+                  id: "semio.sketchpad.common.addChild",
                 },
               ]}
             >
-              <TreeContent>
-                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                  {variants.map((type: Type) => (
-                    <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
-                  ))}
-                </div>
-              </TreeContent>
+              {children.length > 0 && (
+                <TreeContent>
+                  <div className="space-y-1">{renderTypeTree(children)}</div>
+                </TreeContent>
+              )}
             </TreeItem>
           </div>
-        ))}
+        );
+      });
+    };
+
+    const rootTypes = kit.types?.filter((t) => !t.parent) || [];
+
+    return (
+      <>
+        {renderTypeTree(rootTypes)}
       </>
     );
   };
 
   const DesignsWorkbenchContent: FC = () => {
-    const designsByName = (kit.designs || []).reduce((acc: Record<string, Design[]>, design: Design) => {
-      if (!acc[design.name]) acc[design.name] = [];
-      acc[design.name].push(design);
-      return acc;
-    }, {});
-
-    const handleCreateVariant = (name: string) => {
-      const existingDesigns = designsByName[name] || [];
-      const variantNumber = existingDesigns.length + 1;
+    const handleCreateChild = (parentDesign: Design) => {
+      const existingChildren = kit.designs?.filter((d) => d.parent === parentDesign.guid) || [];
+      const uniqueName = generateUniqueName(parentDesign.name, existingChildren.map((d) => d.name));
       const newDesign: Design = {
         guid: guid(),
-        name,
-        variant: `Variant ${variantNumber}`,
+        name: uniqueName,
+        parent: parentDesign.guid,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createVariant", newDesign);
+      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createChild", newDesign);
       navigateToDesign(kit.guid, newDesign.guid);
     };
 
-    return (
-      <>
-        {Object.entries(designsByName).map(([name, designs]) => (
+    const renderDesignTree = (designs: Design[]): ReactNode[] => {
+      return designs.map((d) => {
+        const children = kit.designs?.filter((child) => child.parent === d.guid) || [];
+        return (
           <div
-            key={name}
-            onPointerEnter={() =>
-              hoverDesigns(
-                "semio.sketchpad.app.design.panel.workbench.designs.hover",
-                designs.map((d) => d.guid),
-              )
-            }
+            key={d.guid}
+            onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [d.guid])}
             onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}
           >
             <TreeItem
-              label={name}
+              label={d.name}
               onDoubleClick={(event) => {
                 if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
                   return;
                 }
                 event.preventDefault();
                 event.stopPropagation();
-                if (!kit?.guid) {
-                  return;
-                }
-                navigateToKit(kit.guid, `kind=designs&name=${encodeURIComponent(name)}`);
+                navigateToDesign(kit.guid, d.guid);
               }}
               actions={[
                 {
                   icon: <Plus size={12} />,
-                  onClick: () => handleCreateVariant(name),
-                  id: "semio.sketchpad.common.addVariant",
+                  onClick: () => handleCreateChild(d),
+                  id: "semio.sketchpad.common.addChild",
                 },
               ]}
             >
-              <TreeContent>
-                <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
-                  {designs.map((d: Design) => (
-                    <DesignAvatar key={`${d.name}-${d.variant}-${d.view}`} design={d} showHoverCard={true} isActive={design?.guid === d.guid} />
-                  ))}
-                </div>
-              </TreeContent>
+              {children.length > 0 && (
+                <TreeContent>
+                  <div className="space-y-1">{renderDesignTree(children)}</div>
+                </TreeContent>
+              )}
             </TreeItem>
           </div>
-        ))}
+        );
+      });
+    };
+
+    const rootDesigns = kit.designs?.filter((d) => !d.parent) || [];
+
+    return (
+      <>
+        {renderDesignTree(rootDesigns)}
       </>
     );
   };
@@ -583,6 +576,7 @@ const App: FC<AppProps> = () => {
           />
         </CanvasWithSync>
       </Canvas>
+      <DesignAppFooter />
     </ReactFlowProvider>
   );
 };

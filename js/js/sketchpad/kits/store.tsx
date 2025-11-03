@@ -1647,7 +1647,8 @@ export class TypeStore {
 
     this.guid = type.guid;
     this.name = type.name;
-    this.variant = type.variant;
+    this.parentGuid = type.parent;
+    this.abstract = type.isAbstract;
     this.stock = type.stock;
     this.virtual = type.virtual;
     this.unit = type.unit;
@@ -1710,11 +1711,19 @@ export class TypeStore {
   set name(name: string) {
     this.yType.set("name", name);
   }
-  get variant(): string | undefined {
-    return this.yType.get("variant") as string | undefined;
+  get parentGuid(): string | undefined {
+    return this.yType.get("parent") as string | undefined;
   }
-  set variant(variant: string | undefined) {
-    this.yType.set("variant", variant || "");
+  set parentGuid(parent: string | undefined) {
+    if (parent) this.yType.set("parent", parent);
+    else this.yType.delete("parent");
+  }
+  get abstract(): boolean | undefined {
+    return this.yType.get("isAbstract") as boolean | undefined;
+  }
+  set abstract(isAbstract: boolean | undefined) {
+    if (isAbstract) this.yType.set("isAbstract", isAbstract);
+    else this.yType.delete("isAbstract");
   }
   get stock(): number | undefined {
     return this.yType.get("stock") as number | undefined;
@@ -1844,7 +1853,8 @@ export class TypeStore {
     const currentData = {
       guid: this.guid,
       name: this.name,
-      variant: this.variant,
+      parent: this.parentGuid,
+      isAbstract: this.abstract,
       stock: this.stock,
       virtual: this.virtual,
       unit: this.unit,
@@ -1871,7 +1881,14 @@ export class TypeStore {
   change = (diff: TypeDiff) => {
     this.parent.yDoc.transact(() => {
       if (diff.name !== undefined) this.yType.set("name", diff.name);
-      if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
+      if (diff.parent !== undefined) {
+        if (diff.parent) this.yType.set("parent", diff.parent);
+        else this.yType.delete("parent");
+      }
+      if (diff.isAbstract !== undefined) {
+        if (diff.isAbstract) this.yType.set("isAbstract", diff.isAbstract);
+        else this.yType.delete("isAbstract");
+      }
       if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
       if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
       if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
@@ -3156,8 +3173,8 @@ export class DesignStore {
     this.authors = new Map();
 
     this.name = design.name;
-    this.variant = design.variant;
-    this.view = design.view;
+    this.parentGuid = design.parent;
+    this.abstract = design.isAbstract;
     this.canScale = design.canScale;
     this.canMirror = design.canMirror;
     this.unit = design.unit;
@@ -3256,17 +3273,19 @@ export class DesignStore {
   set name(name: string) {
     this.yDesign.set("name", name);
   }
-  get variant(): string | undefined {
-    return this.yDesign.get("variant") as string | undefined;
+  get parentGuid(): string | undefined {
+    return this.yDesign.get("parent") as string | undefined;
   }
-  set variant(variant: string | undefined) {
-    this.yDesign.set("variant", variant || "");
+  set parentGuid(parent: string | undefined) {
+    if (parent) this.yDesign.set("parent", parent);
+    else this.yDesign.delete("parent");
   }
-  get view(): string | undefined {
-    return this.yDesign.get("view") as string | undefined;
+  get abstract(): boolean | undefined {
+    return this.yDesign.get("isAbstract") as boolean | undefined;
   }
-  set view(view: string | undefined) {
-    this.yDesign.set("view", view || "");
+  set abstract(isAbstract: boolean | undefined) {
+    if (isAbstract) this.yDesign.set("isAbstract", isAbstract);
+    else this.yDesign.delete("isAbstract");
   }
   get canScale(): boolean | undefined {
     return this.yDesign.get("canScale") as boolean | undefined;
@@ -3411,8 +3430,8 @@ export class DesignStore {
     const currentData = {
       guid: this.guid,
       name: this.name,
-      variant: this.variant,
-      view: this.view,
+      parent: this.parentGuid,
+      isAbstract: this.abstract,
       canScale: this.canScale,
       canMirror: this.canMirror,
       unit: this.unit,
@@ -3445,8 +3464,8 @@ export class DesignStore {
 
   change = (diff: DesignDiff) => {
     if (diff.name !== undefined) this.name = diff.name;
-    if (diff.variant !== undefined) this.variant = diff.variant;
-    if (diff.view !== undefined) this.view = diff.view;
+    if (diff.parent !== undefined) this.parentGuid = diff.parent;
+    if (diff.isAbstract !== undefined) this.abstract = diff.isAbstract;
     if (diff.canScale !== undefined) this.canScale = diff.canScale;
     if (diff.canMirror !== undefined) this.canMirror = diff.canMirror;
     if (diff.unit !== undefined) this.unit = diff.unit;
@@ -3823,7 +3842,7 @@ export function useIncludedDesigns() {
 
 export function useDesignId() {
   const design = useDesign() as Design;
-  return useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  return useMemo(() => ({ name: design.name, parent: design.parent }), [design.name, design.parent]);
 }
 
 // useClusterableGroups - moved to designAppIntegration.ts
@@ -4189,7 +4208,7 @@ export class KitStore {
   }
 
   createType(type: Type): void {
-    if (this.hasType(type.guid)) throw new Error(`Type (${type.name}, ${type.variant || ""}) already exists.`);
+    if (this.hasType(type.guid)) throw new Error(`Type (${type.name}) already exists.`);
     const yType = new Y.Map<YTypeVal>();
     const yTypeStore = new TypeStore(this, yType, type);
     this.yTypes.push([yType]);
@@ -4205,7 +4224,7 @@ export class KitStore {
   }
 
   createDesign(design: Design): void {
-    if (this.hasDesign(design.guid)) throw new Error(`Design (${design.name}, ${design.variant || ""}, ${design.view || ""}) already exists.`);
+    if (this.hasDesign(design.guid)) throw new Error(`Design (${design.name}) already exists.`);
     const yDesign = new Y.Map<YDesignVal>();
     this.yDesigns.push([yDesign]);
     const yDesignStore = new DesignStore(this, yDesign, design);

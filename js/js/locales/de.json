@@ -76,21 +76,13 @@
           "label": "Qualitaet",
           "beginner": "Zur Qualitaet gehen"
         },
-        "selectVariant": {
-          "label": "Variante auswaehlen",
-          "beginner": "Klicken, um eine Variante auszuwaehlen"
+        "parent": {
+          "label": "Elternteil",
+          "beginner": "Das Elternteil des Artefakts"
         },
-        "variant": {
-          "label": "Variante",
-          "beginner": "Die Variante des Artefakts"
-        },
-        "selectView": {
-          "label": "Ansicht auswaehlen",
-          "beginner": "Klicken, um eine Ansicht auszuwaehlen"
-        },
-        "view": {
-          "label": "Ansicht",
-          "beginner": "Die Ansicht des Artefakts"
+        "abstract": {
+          "label": "Abstrakt",
+          "beginner": "Ob das Artefakt abstrakt ist"
         },
         "docs": {
           "label": "Dokumentation",
@@ -419,8 +411,6 @@
         "mixedValues": "Gemischte Werte",
         "selectDesign": "Entwurf auswaehlen",
         "selectType": "Typ auswaehlen",
-        "selectVariant": "Variante auswaehlen",
-        "selectView": "Ansicht auswaehlen",
         "addType": {
           "label": "Typ hinzufuegen",
           "beginner": "Klicken, um einen neuen Typ zum aktuellen Kontext hinzuzufuegen",
@@ -433,9 +423,9 @@
           "manual": "manuals/semio/kit#designs",
           "tutorial": "hello-semio/model-design"
         },
-        "addVariant": {
-          "label": "Variante hinzufuegen",
-          "beginner": "Klicken, um eine neue Variante im aktuellen Kontext zu erstellen"
+        "addChild": {
+          "label": "Kind hinzufuegen",
+          "beginner": "Klicken, um ein neues Kind-Artefakt zu erstellen"
         },
         "sort": {
           "ascending": {
@@ -578,20 +568,6 @@
               "beginner": "Klicken, um Artefakte nach diesem Namen zu filtern",
               "hotkey": "Ctrl+N",
               "manual": "manuals/semio/kit",
-              "tutorial": "hello-semio/model-design"
-            },
-            "variant": {
-              "label": "Nach Variante filtern",
-              "beginner": "Klicken, um Artefakte nach dieser Variante zu filtern",
-              "hotkey": "Ctrl+Alt+V",
-              "manual": "manuals/semio#variants",
-              "tutorial": "hello-semio/model-design"
-            },
-            "view": {
-              "label": "Nach Ansicht filtern",
-              "beginner": "Klicken, um Entwuerfe nach dieser Ansicht zu filtern",
-              "hotkey": "Ctrl+Alt+W",
-              "manual": "manuals/semio/design#views",
               "tutorial": "hello-semio/model-design"
             }
           },

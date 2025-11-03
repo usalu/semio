@@ -76,21 +76,13 @@
           "label": "Quality",
           "beginner": "Go to quality"
         },
-        "selectVariant": {
-          "label": "Select Variant",
-          "beginner": "Click to select a variant"
+        "parent": {
+          "label": "Parent",
+          "beginner": "The parent of the artifact"
         },
-        "variant": {
-          "label": "Variant",
-          "beginner": "The variant of the artifact"
-        },
-        "selectView": {
-          "label": "Select View",
-          "beginner": "Click to select a view"
-        },
-        "view": {
-          "label": "View",
-          "beginner": "The view of the artifact"
+        "abstract": {
+          "label": "Abstract",
+          "beginner": "Whether the artifact is abstract"
         },
         "docs": {
           "label": "Documentation",
@@ -419,8 +411,6 @@
         "mixedValues": "Mixed values",
         "selectDesign": "Select design",
         "selectType": "Select type",
-        "selectVariant": "Select variant",
-        "selectView": "Select view",
         "addType": {
           "label": "Add Type",
           "beginner": "Click to add a new type to the current context",
@@ -433,9 +423,9 @@
           "manual": "manuals/semio/kit#designs",
           "tutorial": "hello-semio/model-design"
         },
-        "addVariant": {
-          "label": "Add Variant",
-          "beginner": "Click to create a new variant in the current context"
+        "addChild": {
+          "label": "Add Child",
+          "beginner": "Click to create a new child artifact"
         },
         "sort": {
           "ascending": {
@@ -576,20 +566,6 @@
               "beginner": "Click to filter artifacts by this name",
               "hotkey": "Ctrl+N",
               "manual": "manuals/semio/kit",
-              "tutorial": "hello-semio/model-design"
-            },
-            "variant": {
-              "label": "Filter by variant",
-              "beginner": "Click to filter artifacts by this variant",
-              "hotkey": "Ctrl+Alt+V",
-              "manual": "manuals/semio#variants",
-              "tutorial": "hello-semio/model-design"
-            },
-            "view": {
-              "label": "Filter by view",
-              "beginner": "Click to filter designs by this view",
-              "hotkey": "Ctrl+Alt+W",
-              "manual": "manuals/semio/design#views",
               "tutorial": "hello-semio/model-design"
             }
           },
