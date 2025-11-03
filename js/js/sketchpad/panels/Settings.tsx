@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ToggleGroup, ToggleGroupItem } from "../../elements/input/ToggleGroup";
 import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
-import { Expertise, Layout, Mode, Theme, useExpertise, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme, useTooltip } from "../store";
+import { Expertise, type Layout, Mode, Theme, useExpertise, useIsMobile, useLayout, useMode, useSketchpadCommands, useTheme, useTooltip } from "../store";
 import { HotkeySettings } from "./HotkeySettings";
 
 const LanguageSwitcher: FC = () => {
@@ -84,11 +84,17 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
           {!isMobile && (
             <TreeItem>
               <TreeContent>
-                <ToggleGroup label={t("semio.sketchpad.panel.settings.layout.label")} type="single" value={layout} onValueChange={(value: string) => setLayout("semio.sketchpad.panel.settings.layout", value as Layout)} level="panel">
-                  <ToggleGroupItem id="semio.sketchpad.panel.settings.layout.normal" value={Layout.NORMAL}>
+                <ToggleGroup
+                  id="semio.sketchpad.panel.settings.layout"
+                  type="single"
+                  value={typeof layout === "string" ? layout : "desktop"}
+                  onValueChange={(value: string) => setLayout("semio.sketchpad.panel.settings.layout", value as Layout)}
+                  level="panel"
+                >
+                  <ToggleGroupItem id="semio.sketchpad.panel.settings.layout.desktop" value="desktop">
                     <MonitorIcon />
                   </ToggleGroupItem>
-                  <ToggleGroupItem id="semio.sketchpad.panel.settings.layout.touch" value={Layout.TOUCH}>
+                  <ToggleGroupItem id="semio.sketchpad.panel.settings.layout.tablet" value="tablet">
                     <FingerprintIcon />
                   </ToggleGroupItem>
                 </ToggleGroup>

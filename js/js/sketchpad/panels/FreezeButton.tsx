@@ -20,15 +20,37 @@
 // #endregion
 
 import { Download } from "lucide-react";
-import { ButtonGroupItem } from "../../elements/input/ButtonGroup";
-import { useSketchpadStore } from "../store";
+import { FC, useEffect } from "react";
+import { Button } from "../../elements/input/Button";
+import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
+import { Mode, useMode, useSketchpadStore } from "../store";
 
-export function FreezeButton() {
+export const FreezeButton: FC = () => {
+  const addFooterItem = useAddFooterItem();
+  const removeFooterItem = useRemoveFooterItem();
+  const mode = useMode();
   const store = useSketchpadStore();
 
-  return (
-    <ButtonGroupItem id="semio.sketchpad.navbar.freeze" value="freeze" onClick={() => store.execute("semio.sketchpad.freeze", "semio.sketchpad.navbar.freeze")}>
-      <Download size={16} />
-    </ButtonGroupItem>
-  );
-}
+  useEffect(() => {
+    if (mode !== Mode.DEV) {
+      removeFooterItem("freeze-button");
+      return;
+    }
+
+    addFooterItem({
+      id: "freeze-button",
+      content: (
+        <Button id="footer-freeze-button" variant="ghost" onClick={() => store.execute("semio.sketchpad.freeze", "semio.sketchpad.footer.freeze")} className="h-5 w-8 p-0">
+          <Download className="h-3 w-3" />
+        </Button>
+      ),
+      order: 1000,
+    });
+
+    return () => {
+      removeFooterItem("freeze-button");
+    };
+  }, [mode, store, addFooterItem, removeFooterItem]);
+
+  return null;
+};

@@ -86,7 +86,6 @@ const App: FC<AppProps> = () => {
     addSection("details", {
       id: "semio.sketchpad.app.quality.title",
       order: 0,
-      defaultOpen: true,
       content: () => <QualityDetails />,
     });
 
@@ -101,14 +100,12 @@ const App: FC<AppProps> = () => {
     addSection("workbench", {
       id: "semio.sketchpad.app.quality.functions",
       order: 0,
-      defaultOpen: true,
       content: () => <QualityWorkbench />,
     });
 
     addSection("workbench", {
       id: "semio.sketchpad.app.quality.qualities",
       order: 1,
-      defaultOpen: true,
       content: () => <QualityWorkbenchQualities />,
     });
 

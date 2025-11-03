@@ -41,21 +41,18 @@ const DocsApp: FC = () => {
     addSection("workbench", {
       id: "semio.sketchpad.app.docs.docs",
       order: 1,
-      defaultOpen: true,
       content: WorkbenchWrapper,
     });
 
     addSection("details", {
       id: "semio.sketchpad.app.docs.page",
       order: 1,
-      defaultOpen: true,
       content: DetailsWrapper,
     });
 
     addSection("settings", {
       id: "semio.sketchpad.app.docs.settings",
       order: 1,
-      defaultOpen: true,
       content: SettingsWrapper,
     });
 

@@ -39,6 +39,8 @@ import {
   DesignShallow,
   DiffStatus,
   FileDiff,
+  Folder,
+  FolderDiff,
   Group,
   GroupDiff,
   Guid,
@@ -933,6 +935,134 @@ class FileStore {
 }
 
 // #endregion File
+
+// #region Folder
+
+type YFolder = Y.Map<string | YAttributes>;
+type YFolders = Y.Array<YFolder>;
+
+class FolderStore {
+  yFolder: YFolder;
+  private cache?: import("../../semio").Folder;
+  private cacheHash?: string;
+
+  constructor(yFolder: YFolder, folder: import("../../semio").Folder) {
+    this.yFolder = yFolder;
+    this.guid = folder.guid;
+    this.name = folder.name;
+    this.parent = folder.parent;
+    this.description = folder.description;
+    this.createdAt = folder.createdAt;
+    this.updatedAt = folder.updatedAt;
+    this.createdBy = folder.createdBy;
+    this.updatedBy = folder.updatedBy;
+  }
+
+  get guid(): string {
+    return this.yFolder.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yFolder.set("guid", guid);
+  }
+
+  get name(): string {
+    return this.yFolder.get("name") as string;
+  }
+  set name(name: string) {
+    this.yFolder.set("name", name);
+  }
+
+  get parent(): string | undefined {
+    return this.yFolder.get("parent") as string | undefined;
+  }
+  set parent(parent: string | undefined) {
+    this.yFolder.set("parent", parent || "");
+  }
+
+  get description(): string | undefined {
+    return this.yFolder.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yFolder.set("description", description || "");
+  }
+
+  get createdAt(): Date | undefined {
+    const date = this.yFolder.get("createdAt") as string | undefined;
+    return date ? new Date(date) : undefined;
+  }
+  set createdAt(createdAt: Date | undefined) {
+    this.yFolder.set("createdAt", createdAt?.toISOString() || "");
+  }
+
+  get updatedAt(): Date | undefined {
+    const date = this.yFolder.get("updatedAt") as string | undefined;
+    return date ? new Date(date) : undefined;
+  }
+  set updatedAt(updatedAt: Date | undefined) {
+    this.yFolder.set("updatedAt", updatedAt?.toISOString() || "");
+  }
+
+  get createdBy(): Guid | undefined {
+    return this.yFolder.get("createdBy") as string | undefined;
+  }
+  set createdBy(createdBy: Guid | undefined) {
+    this.yFolder.set("createdBy", createdBy || "");
+  }
+
+  get updatedBy(): Guid | undefined {
+    return this.yFolder.get("updatedBy") as string | undefined;
+  }
+  set updatedBy(updatedBy: Guid | undefined) {
+    this.yFolder.set("updatedBy", updatedBy || "");
+  }
+
+  hashFolder = (folder: import("../../semio").Folder): string => {
+    return JSON.stringify(folder);
+  };
+
+  snapshot = (): import("../../semio").Folder => {
+    const currentData = {
+      guid: this.guid,
+      name: this.name,
+      parent: this.parent,
+      description: this.description,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
+    };
+    const currentHash = this.hashFolder(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  change = (diff: import("../../semio").FolderDiff) => {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.parent !== undefined) this.parent = diff.parent;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.createdAt !== undefined) this.createdAt = diff.createdAt;
+    if (diff.updatedAt !== undefined) this.updatedAt = diff.updatedAt;
+    if (diff.createdBy !== undefined) this.createdBy = diff.createdBy;
+    if (diff.updatedBy !== undefined) this.updatedBy = diff.updatedBy;
+    this.cache = undefined;
+    this.cacheHash = undefined;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yFolder, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yFolder, subscribe, true);
+  };
+}
+
+// #endregion Folder
 
 // #region Benchmark
 
@@ -3817,7 +3947,7 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 // #region Kit
 
 type YIdMap = Y.Map<string>;
-type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
+type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFiles | YFolders | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
 type YKit = Y.Map<YKitVal>;
 type YKits = Y.Array<YKit>;
 
@@ -3845,6 +3975,8 @@ export class KitStore {
   private readonly designs: Map<string, DesignStore>;
   private readonly yFiles: YFiles;
   private readonly files: Map<string, FileStore>;
+  private readonly yFolders: YFolders;
+  private readonly folders: Map<string, FolderStore>;
   private readonly yQualities: YQualities;
   private readonly qualities: Map<string, QualityStore>;
   private readonly yBenchmarks: YBenchmarks;
@@ -3869,6 +4001,7 @@ export class KitStore {
     this.types = new Map();
     this.designs = new Map();
     this.files = new Map();
+    this.folders = new Map();
     this.qualities = new Map();
     this.benchmarks = new Map();
     this.authors = new Map();
@@ -3878,6 +4011,7 @@ export class KitStore {
     this.yTypes = this.yDoc.getArray("types");
     this.yDesigns = this.yDoc.getArray("designs");
     this.yFiles = this.yDoc.getArray("files");
+    this.yFolders = this.yDoc.getArray("folders");
     this.yQualities = this.yDoc.getArray("qualities");
     this.yBenchmarks = this.yDoc.getArray("benchmarks");
     this.yAuthors = this.yDoc.getArray("authors");
@@ -3898,6 +4032,7 @@ export class KitStore {
 
       kit.attributes?.forEach((attribute) => this.createAttribute(attribute));
       kit.authors?.forEach((author) => this.createAuthor(author));
+      kit.folders?.forEach((folder) => this.createFolder(folder));
       kit.qualities?.forEach((quality) => this.createQuality(quality));
       kit.types?.forEach((type) => this.createType(type));
       kit.designs?.forEach((design) => this.createDesign(design));
@@ -4097,6 +4232,38 @@ export class KitStore {
     return this.files.get(guid)!;
   }
 
+  hasFolder(guid: string): boolean {
+    return this.folders.has(guid);
+  }
+
+  createFolder(folder: Folder): void {
+    if (this.hasFolder(folder.guid)) throw new Error(`Folder (${folder.name}) already exists.`);
+    const yFolder = new Y.Map() as YFolder;
+    this.yFolders.push([yFolder]);
+    const yFolderStore = new FolderStore(yFolder, folder);
+    this.folders.set(folder.guid, yFolderStore);
+  }
+
+  updateFolder(guid: string, folderDiff: FolderDiff): void {
+    const folderStore = this.folders.get(guid);
+    if (!folderStore) throw new Error(`Folder with guid ${guid} not found.`);
+    folderStore.change(folderDiff);
+  }
+
+  deleteFolder(guid: string): void {
+    const folderStore = this.folders.get(guid);
+    if (!folderStore) throw new Error(`Folder with guid ${guid} not found.`);
+    const index = this.yFolders.toArray().indexOf(folderStore.yFolder);
+    if (index !== -1) {
+      this.yFolders.delete(index, 1);
+    }
+    this.folders.delete(guid);
+  }
+
+  folder(guid: string): FolderStore {
+    return this.folders.get(guid)!;
+  }
+
   getFileUrl(fileGuid: string): string {
     const fileStore = this.files.get(fileGuid);
     if (!fileStore) return "";
@@ -4226,6 +4393,7 @@ export class KitStore {
       designs: Array.from(this.designs.values()).map((design) => design.snapshot()),
       qualities: Array.from(this.qualities.values()).map((quality) => quality.snapshot()),
       files: Array.from(this.files.values()).map((file) => file.snapshot()),
+      folders: Array.from(this.folders.values()).map((folder) => folder.snapshot()),
       authors: Array.from(this.authors.values()).map((author) => author.snapshot()),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       createdAt: this.createdAt,
@@ -4356,6 +4524,34 @@ export class KitStore {
               });
               if (index !== -1) {
                 this.yFiles.delete(index, 1);
+              }
+            }
+          });
+        }
+      }
+      if (diff.folders) {
+        if (diff.folders.added) {
+          diff.folders.added.forEach((folder) => this.createFolder(folder));
+        }
+        if (diff.folders.updated) {
+          diff.folders.updated.forEach(({ id, diff: folderDiff }) => {
+            const folderStore = this.folders.get(id);
+            if (folderStore) {
+              folderStore.change(folderDiff);
+            }
+          });
+        }
+        if (diff.folders.removed) {
+          diff.folders.removed.forEach((folderGuid) => {
+            if (this.folders.has(folderGuid)) {
+              this.folders.delete(folderGuid);
+              // Find and delete from Y.Array
+              const index = Array.from(this.yFolders).findIndex((yFolder: any) => {
+                const yMap = yFolder[0] as Y.Map<any>;
+                return yMap.get("guid") === folderGuid;
+              });
+              if (index !== -1) {
+                this.yFolders.delete(index, 1);
               }
             }
           });
@@ -4569,7 +4765,7 @@ export function useKitCommands() {
   return {
     startTransaction: (origin: string) => {
       console.group(`[${origin}] Transaction: "kit.startTransaction"`);
-      kitStore.doc.transact(() => {}, origin);
+      kitStore.yDoc.transact(() => {}, origin);
     },
     finalizeTransaction: (origin: string) => {
       console.groupEnd();
@@ -4594,6 +4790,10 @@ export function useKitCommands() {
     addFile: (origin: string, file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", origin, file, blob),
     updateFile: (origin: string, url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", origin, url, fileDiff, blob),
     removeFile: (origin: string, url: Url) => kitStore.execute("semio.kit.removeFile", origin, url),
+    createFolder: (origin: string, folder: Folder) => kitStore.execute("semio.kit.createFolder", origin, folder),
+    updateFolder: (origin: string, guid: Guid, folderDiff: FolderDiff) => kitStore.execute("semio.kit.updateFolder", origin, guid, folderDiff),
+    deleteFolder: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteFolder", origin, guid),
+    moveToFolder: (origin: string, artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("semio.kit.moveToFolder", origin, artifactKind, artifactGuid, folderGuid),
     addPiece: (origin: string, design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", origin, design, piece),
     addPieces: (origin: string, design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", origin, design, pieces),
     removePiece: (origin: string, design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", origin, design, piece),

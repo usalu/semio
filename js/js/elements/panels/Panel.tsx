@@ -136,7 +136,7 @@ const Panel: FC<PanelProps> = ({
           <TreeStateProvider>
             <Tree className="min-w-0 overflow-hidden">
               {additionalContent}
-              {sortedSections.map((section) => {
+              {sortedSections.map((section, index) => {
                 const Content = typeof section.content === "function" ? section.content : null;
                 const params = section.translationParams ?? {};
                 const translatedLabel = t(`${section.id}.label`, { ...params, defaultValue: "" });
@@ -147,7 +147,7 @@ const Panel: FC<PanelProps> = ({
                     key={section.id}
                     label={sectionLabel}
                     id={section.id}
-                    defaultOpen={section.defaultOpen}
+                    defaultOpen={section.defaultOpen ?? index === 0}
                     actions={section.actions}
                     onPointerEnter={section.onPointerEnter}
                     onPointerLeave={section.onPointerLeave}

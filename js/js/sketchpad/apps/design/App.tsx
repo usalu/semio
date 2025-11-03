@@ -55,7 +55,7 @@ import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppFullscreen, useDesignAppSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
-export interface AppProps { }
+export interface AppProps {}
 
 const CanvasWithSync: FC<{ fullscreenWindow: DesignAppFullscreenWindow; children: ReactNode }> = memo(({ fullscreenWindow, children }) => {
   const { setFullscreenWindow } = useCanvasContext();
@@ -95,7 +95,7 @@ const App: FC<AppProps> = () => {
   const selection = useDesignAppSelection();
   const design = useDesign() as Design | undefined;
   const kit = useKit() as Kit;
-  const appSettings = useSketchpad((s) => s.appSettings) as any;
+  const appSettings = useSketchpad((s) => s.settings?.apps) as any;
   const panelVisibility = useAppPanelVisibility();
   const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
 
@@ -168,7 +168,6 @@ const App: FC<AppProps> = () => {
       addSection("details", {
         id: "semio.sketchpad.app.design.title",
         order: 50,
-        defaultOpen: true,
         content: () => <DesignSection />,
       });
     } else if (hasPortSelected) {
@@ -177,13 +176,11 @@ const App: FC<AppProps> = () => {
       addSection("details", {
         id: "semio.sketchpad.app.type.port.title",
         order: 0,
-        defaultOpen: true,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
       });
       addSection("details", {
         id: "semio.sketchpad.app.design.title",
         order: 50,
-        defaultOpen: true,
         content: () => <DesignSection />,
       });
     } else {
@@ -194,7 +191,6 @@ const App: FC<AppProps> = () => {
           id: piecesSectionId,
           translationParams: piecesCount === 1 ? undefined : { count: piecesCount },
           order: 0,
-          defaultOpen: true,
           content: () => <PiecesSection />,
         });
       }
@@ -206,7 +202,6 @@ const App: FC<AppProps> = () => {
           id: connectionsSectionId,
           translationParams: conns.length === 1 ? undefined : { count: conns.length },
           order: 10,
-          defaultOpen: true,
           content: () => <ConnectionsSection connections={conns} />,
         });
       }
@@ -214,7 +209,6 @@ const App: FC<AppProps> = () => {
         addSection("details", {
           id: selectionMultipleId,
           order: 20,
-          defaultOpen: true,
           content: () => (
             <TreeItem>
               <TreeContent>
@@ -227,7 +221,6 @@ const App: FC<AppProps> = () => {
       addSection("details", {
         id: "semio.sketchpad.app.design.title",
         order: 50,
-        defaultOpen: true,
         content: () => <DesignSection />,
       });
     }
@@ -235,7 +228,6 @@ const App: FC<AppProps> = () => {
     addSection("details", {
       id: "semio.sketchpad.app.kit.title",
       order: 100,
-      defaultOpen: true,
       content: () => <KitSection />,
     });
 
@@ -275,10 +267,18 @@ const App: FC<AppProps> = () => {
     return (
       <>
         {Object.entries(typesByName).map(([name, variants]) => (
-          <div key={name} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", variants.map((v) => v.guid))} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
+          <div
+            key={name}
+            onPointerEnter={() =>
+              hoverTypes(
+                "semio.sketchpad.app.design.panel.workbench.types.hover",
+                variants.map((v) => v.guid),
+              )
+            }
+            onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}
+          >
             <TreeItem
               label={name}
-              defaultOpen={true}
               onDoubleClick={(event) => {
                 if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
                   return;
@@ -336,10 +336,18 @@ const App: FC<AppProps> = () => {
     return (
       <>
         {Object.entries(designsByName).map(([name, designs]) => (
-          <div key={name} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", designs.map((d) => d.guid))} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
+          <div
+            key={name}
+            onPointerEnter={() =>
+              hoverDesigns(
+                "semio.sketchpad.app.design.panel.workbench.designs.hover",
+                designs.map((d) => d.guid),
+              )
+            }
+            onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}
+          >
             <TreeItem
               label={name}
-              defaultOpen={true}
               onDoubleClick={(event) => {
                 if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
                   return;
@@ -419,7 +427,6 @@ const App: FC<AppProps> = () => {
     addSection("workbench", {
       id: "semio.sketchpad.app.kit.types",
       order: 0,
-      defaultOpen: true,
       content: () => <TypesWorkbenchContent />,
       actions: [
         {
@@ -430,7 +437,10 @@ const App: FC<AppProps> = () => {
       ],
       onPointerEnter: () => {
         if (!kit.types || kit.types.length === 0) return;
-        hoverTypes("semio.sketchpad.app.design.panel.workbench.typesSection.hover", kit.types.map((type) => type.guid));
+        hoverTypes(
+          "semio.sketchpad.app.design.panel.workbench.typesSection.hover",
+          kit.types.map((type) => type.guid),
+        );
       },
       onPointerLeave: () => clearHover("semio.sketchpad.app.design.panel.workbench.typesSection.leave"),
       onDoubleClick: () => {
@@ -442,7 +452,6 @@ const App: FC<AppProps> = () => {
     addSection("workbench", {
       id: "semio.sketchpad.app.kit.designs",
       order: 1,
-      defaultOpen: true,
       content: () => <DesignsWorkbenchContent />,
       actions: [
         {
@@ -453,7 +462,10 @@ const App: FC<AppProps> = () => {
       ],
       onPointerEnter: () => {
         if (!kit.designs || kit.designs.length === 0) return;
-        hoverDesigns("semio.sketchpad.app.design.panel.workbench.designsSection.hover", kit.designs.map((design) => design.guid));
+        hoverDesigns(
+          "semio.sketchpad.app.design.panel.workbench.designsSection.hover",
+          kit.designs.map((design) => design.guid),
+        );
       },
       onPointerLeave: () => clearHover("semio.sketchpad.app.design.panel.workbench.designsSection.leave"),
       onDoubleClick: () => {
@@ -472,16 +484,15 @@ const App: FC<AppProps> = () => {
     addSection("settings", {
       id: "semio.sketchpad.app.design.appTitle",
       order: 100,
-      defaultOpen: true,
       content: () => (
         <>
           <TreeItem>
             <TreeContent>
               <div className="flex flex-col gap-1">
                 <label>
-                  {t("semio.sketchpad.app.design.snappiness")}: {appSettings.design?.snappiness}
+                  {t("semio.sketchpad.app.design.proximityConnectDistance")}: {appSettings.design?.proximityConnectDistance}
                 </label>
-                <input type="range" min="0" max="20" value={appSettings.design?.snappiness || 10} className="w-full" readOnly />
+                <input type="range" min="0" max="20" value={appSettings.design?.proximityConnectDistance || 10} className="w-full" readOnly />
               </div>
             </TreeContent>
           </TreeItem>

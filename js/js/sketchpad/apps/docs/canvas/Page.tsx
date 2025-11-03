@@ -187,7 +187,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
             key={childNode.page?.path || name}
             label={folderLabel}
             icon={folderIcon ? <span className="text-sm">{folderIcon}</span> : undefined}
-            defaultOpen={true}
             isHighlighted={isCurrentPage}
             onClick={childNode.page ? () => {
               navigate(`/${childNode.page!.path}`);

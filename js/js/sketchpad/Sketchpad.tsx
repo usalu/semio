@@ -34,9 +34,11 @@ import Footer, { FooterItemProvider } from "./Footer";
 import Navbar, { FocusProvider, PanelSectionProvider } from "./Navbar";
 import Chat from "./panels/Chat";
 import Details from "./panels/Details";
+import { FreezeButton } from "./panels/FreezeButton";
 import Hud from "./panels/Hud";
 import Settings from "./panels/Settings";
 import Stats from "./panels/Stats";
+import { TimetravelButton } from "./panels/TimetravelButton";
 import Toolbar from "./panels/Toolbar";
 import Tools from "./panels/Tools";
 import Workbench from "./panels/Workbench";
@@ -227,7 +229,7 @@ const SketchpadBase: FC = () => {
   // Store the desktop layout preference when not on mobile
   const desktopLayoutRef = useRef<Layout>(layout);
   const navbarRef = useRef<HTMLDivElement>(null);
-  const [navbarHeight, setNavbarHeight] = useState(48); // Default 48px (h-12)
+  const [navbarHeight, setNavbarHeight] = useState(48);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -236,23 +238,26 @@ const SketchpadBase: FC = () => {
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [updateIsMobile]);
 
   // Handle layout switching based on mobile state
   useEffect(() => {
     if (isMobile) {
       // Save current layout before switching to mobile
-      if (layout !== Layout.TOUCH) {
+      if (typeof layout !== "object") {
         desktopLayoutRef.current = layout;
       }
-      // Force touch layout on mobile
-      if (layout !== Layout.TOUCH) {
-        setLayout("semio.sketchpad.mobile.forceTouch", Layout.TOUCH);
+      // Force object layout on mobile with expansion states
+      if (typeof layout !== "object") {
+        setLayout("semio.sketchpad.mobile.forceObject", { isNavbarExpanded: false, isFooterExpanded: false });
       }
     } else {
-      // On desktop, always update the saved desktop layout when user changes it
-      desktopLayoutRef.current = layout;
+      // On desktop, restore the saved desktop layout if we're currently in object mode
+      if (typeof layout === "object") {
+        setLayout("semio.sketchpad.desktop.restore", desktopLayoutRef.current);
+      } else {
+        desktopLayoutRef.current = layout;
+      }
     }
   }, [isMobile, layout, setLayout]);
 
@@ -288,9 +293,9 @@ const SketchpadBase: FC = () => {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove(Layout.TOUCH);
-    if (layout === Layout.TOUCH) {
-      root.classList.add(Layout.TOUCH);
+    root.classList.remove("tablet");
+    if (layout === "tablet") {
+      root.classList.add("tablet");
     }
   }, [layout]);
 
@@ -360,6 +365,8 @@ const SketchpadBase: FC = () => {
               <TutorialControls />
               <RecordingControls />
               <RecordButton />
+              <FreezeButton />
+              <TimetravelButton />
               <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-base text-foreground relative border">
                 <div ref={navbarRef} className={`absolute top-0 left-0 right-0 z-50 ${isFullscreen ? "fixed" : ""}`}>
                   <Navbar />

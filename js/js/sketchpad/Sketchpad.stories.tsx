@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import Sketchpad from "./Sketchpad";
 import type { CompleteState } from "./store";
-import { Access, Expertise, Layout, Mode, Theme } from "./store";
+import { Expertise, Mode, Theme } from "./store";
 
 const meta = {
   title: "Sketchpad",
@@ -49,20 +49,21 @@ export const Default: Story = {
 // Example with initial state - Hello Semio tutorial
 const helloSemioInitialState: CompleteState = {
   sketchpad: {
-    navigation: "/kits/hello-kit/designs/hello-design",
-    navigationHistory: ["/", "/kits/hello-kit", "/kits/hello-kit/designs/hello-design"],
+    navigation: "/kits/metabolism/designs/hello-design",
+    navigationHistory: ["/", "/kits/metabolism", "/kits/metabolism/designs/hello-design"],
     navigationHistoryIndex: 2,
     recentSearches: [],
     recentFocusItems: {},
-    access: Access.USER,
     theme: Theme.SYSTEM,
-    layout: Layout.NORMAL,
+    layout: "desktop",
     expertise: Expertise.NORMAL,
     mode: Mode.DEV,
-    appSettings: {
-      design: { snappiness: 10, gridSize: 24 },
-      type: {},
-      kit: {},
+    settings: {
+      apps: {
+        design: { diagram: { proximityConnectDistance: 10 }, scene: { gridSize: 24 } },
+        type: {},
+        kit: {},
+      },
     },
     panelSizes: {
       toolbarHeight: 52,
@@ -76,7 +77,6 @@ const helloSemioInitialState: CompleteState = {
       consoleHeight: 200,
     },
     isFullscreen: false,
-    isNavbarExpanded: false,
     isMobile: false,
     activeInteraction: "",
     hotkeyOverrides: {},
@@ -84,12 +84,12 @@ const helloSemioInitialState: CompleteState = {
   },
   kits: [
     {
-      guid: "hello-kit",
-      local: true,
+      guid: "metabolism",
+      local: false,
       remote: false,
       kit: {
-        guid: "hello-kit",
-        name: "Hello Semio Kit",
+        guid: "metabolism",
+        name: "Metabolism",
         version: "1.0.0",
         types: [
           {
@@ -205,7 +205,7 @@ const helloSemioInitialState: CompleteState = {
   typeApps: {},
   qualityApps: {},
   designApps: {
-    "hello-kit": {
+    metabolism: {
       "hello-design": {
         selectedPieces: ["piece-1", "piece-2"],
         selectedConnections: [],
@@ -248,8 +248,8 @@ export const ReadyToConnect: Story = {
     id: "ready-to-connect-story",
     initialState: {
       kits: helloSemioInitialState.kits,
-      navigation: "/kits/hello-kit/designs/hello-design",
-      navigationHistory: ["/", "/kits/hello-kit", "/kits/hello-kit/designs/hello-design"],
+      navigation: "/kits/metabolism/designs/hello-design",
+      navigationHistory: ["/", "/kits/metabolism", "/kits/metabolism/designs/hello-design"],
       navigationHistoryIndex: 2,
       mode: Mode.DEV,
     },

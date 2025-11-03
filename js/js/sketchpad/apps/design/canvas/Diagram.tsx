@@ -333,9 +333,23 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     commands.deselectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode");
   }, [commands]);
 
+  const design = useDesign() as Design | undefined;
+
   const addConnection = useCallback((connection: SemioConnection) => {
+    // Extract x and y from piece centers
+    // connected is parent, connecting is child
+    // child.center = parent.center + connection.x/y
+    // so connection.x/y = child.center - parent.center
+    const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
+    const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
+    
+    if (parentPiece?.center && childPiece?.center) {
+      connection.x = childPiece.center.x - parentPiece.center.x;
+      connection.y = childPiece.center.y - parentPiece.center.y;
+    }
+    
     commands.addConnection("semio.sketchpad.app.design.canvas.diagram.pieceNode", connection);
-  }, [commands]);
+  }, [commands, design]);
 
   const handleMouseEnter = useCallback(() => {
     // Clear any global pending clear hover
@@ -496,18 +510,24 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
           }}
         >
           <svg width={ICON_WIDTH} height={ICON_WIDTH}>
-            <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className="stroke-[var(--muted-foreground)] stroke-2 fill-transparent" strokeDasharray="4 4" />
-            {isDesignPiece && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--muted-foreground)] stroke-2 fill-transparent" strokeDasharray="4 4" />}
+            <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className="stroke-[var(--muted-foreground)] fill-transparent" strokeDasharray="4 4" strokeWidth={isDesignPiece ? 4 : 2} />
+            {piece.plane && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--muted-foreground)] stroke-2 fill-transparent" strokeDasharray="4 4" />}
           </svg>
         </div>
       )}
 
       {/* Current/diffed node */}
-      <Avatar role="button" title={avatarTitle} className={`w-full h-full border-[color:var(--border-color)] ${ringClass}`} style={{ borderColor: stroke }}>
+      <Avatar role="button" title={avatarTitle} className={`w-full h-full border-[color:var(--border-color)] ${ringClass}`} style={{ borderColor: stroke, borderWidth: isDesignPiece ? 4 : undefined }}>
         <AvatarFallback className="select-none text-xs font-bold" style={fallbackStyle}>
           {initials}
         </AvatarFallback>
       </Avatar>
+      {/* Second circle for fixed pieces */}
+      {diffedPiece.plane && (
+        <svg width={ICON_WIDTH} height={ICON_WIDTH} style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
+          <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--foreground)] stroke-2 fill-transparent" />
+        </svg>
+      )}
       {ports?.map((port: Port, portIndex: number) => (
         <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selection?.port?.piece === piece.guid && selection?.port?.port === port.guid} onPortClick={onPortClick} />
       ))}
@@ -526,6 +546,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const isSelected = selection?.pieces?.includes(guid) ?? false;
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
+  const design = useDesign() as Design | undefined;
+
   const selectPiecePort = useCallback((piece: Guid, port: Guid) => {
     commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.designNode", piece, port);
   }, [commands]);
@@ -535,8 +557,20 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   }, [commands]);
 
   const addConnection = useCallback((connection: SemioConnection) => {
+    // Extract x and y from piece centers
+    // connected is parent, connecting is child
+    // child.center = parent.center + connection.x/y
+    // so connection.x/y = child.center - parent.center
+    const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
+    const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
+    
+    if (parentPiece?.center && childPiece?.center) {
+      connection.x = childPiece.center.x - parentPiece.center.x;
+      connection.y = childPiece.center.y - parentPiece.center.y;
+    }
+    
     commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
-  }, [commands]);
+  }, [commands, design]);
 
   const handleMouseEnter = useCallback(() => {
     // Clear any global pending clear hover
@@ -696,28 +730,28 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
   };
 
   let fillClass = "fill-transparent";
-  let strokeClass = "stroke-[var(--foreground)] stroke-2";
+  let strokeColor = "var(--foreground)";
   let opacity = 1;
 
   if (diff === DiffStatus.Added) {
     fillClass = "fill-[var(--color-success)]";
-    strokeClass = "stroke-[var(--color-success)] stroke-2";
+    strokeColor = "var(--color-success)";
   } else if (diff === DiffStatus.Removed) {
     fillClass = "fill-[var(--color-danger)]";
-    strokeClass = "stroke-[var(--color-danger)] stroke-2";
+    strokeColor = "var(--color-danger)";
     opacity = 0.2;
   } else if (diff === DiffStatus.Modified) {
     fillClass = "fill-[var(--color-warning)]";
-    strokeClass = "stroke-[var(--color-warning)] stroke-2";
+    strokeColor = "var(--color-warning)";
   }
   if (isHovered && !isSelected) {
     fillClass = "fill-[var(--hover-base)]";
-    strokeClass = "stroke-[var(--foreground)] stroke-2";
+    strokeColor = "var(--foreground)";
     opacity = 1;
   }
   if (isSelected) {
     fillClass = "fill-[var(--active-base)]";
-    strokeClass = "stroke-[var(--foreground)] stroke-2";
+    strokeColor = "var(--foreground)";
     opacity = 1;
   }
 
@@ -735,7 +769,8 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
       onPointerLeave={onMouseLeave}
     >
       <svg width={ICON_WIDTH} height={ICON_WIDTH} role="button" style={{ pointerEvents: "all" }}>
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={fillClass} stroke={strokeColor} strokeWidth={4} />
+        {piece.plane && <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--foreground)] stroke-2 fill-transparent" />}
         <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className={`text-xs font-bold ${isSelected ? "fill-[var(--active-foreground)]" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
           {piece.guid}
         </text>

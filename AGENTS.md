@@ -412,6 +412,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── LassoTool.tsx
 │ │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── Footer.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── store.tsx
@@ -473,6 +474,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── Footer.tsx
 │ │ │ │ │ ├── mdx-loader.ts
 │ │ │ │ │ ├── mdx-provider.tsx
 │ │ │ │ │ ├── registry.ts
@@ -485,6 +487,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── Footer.tsx
 │ │ │ │ │ └── store.tsx
 │ │ │ │ ├── kit
 │ │ │ │ │ ├── canvas
@@ -493,6 +496,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ │ ├── Details.tsx
 │ │ │ │ │ │ └── Settings.tsx
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── Footer.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── config.ts
 │ │ │ │ │ └── store.tsx
@@ -507,6 +511,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── tools_registry
 │ │ │ │ │ │ └── index.tsx
 │ │ │ │ │ ├── App.tsx
+│ │ │ │ │ ├── Footer.tsx
 │ │ │ │ │ ├── commands.ts
 │ │ │ │ │ ├── config.ts
 │ │ │ │ │ ├── functions.ts
@@ -524,6 +529,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ │ ├── PortTool.tsx
 │ │ │ │ │ └── SelectionTool.tsx
 │ │ │ │ ├── App.tsx
+│ │ │ │ ├── Footer.tsx
 │ │ │ │ ├── commands.ts
 │ │ │ │ ├── config.ts
 │ │ │ │ ├── store.tsx
@@ -531,7 +537,6 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── tutorials
 │ │ │ ├── commands.ts
 │ │ │ ├── exampleTutorial.ts
-│ │ │ ├── IMPLEMENTATION.md
 │ │ │ ├── index.ts
 │ │ │ ├── README.md
 │ │ │ ├── sketchpadTour.ts

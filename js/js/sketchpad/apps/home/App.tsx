@@ -105,7 +105,6 @@ const Home: FC = ({ }) => {
         id: hasSingleKit ? "semio.sketchpad.app.kit.title" : "semio.sketchpad.app.home.kits.multiple",
         translationParams: hasSingleKit ? undefined : { count: selection.length },
         order: 0,
-        defaultOpen: true,
         content: () => <KitSection />,
       });
     }

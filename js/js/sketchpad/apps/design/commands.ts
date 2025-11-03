@@ -20,13 +20,10 @@
 // #endregion
 
 import { Camera, Connection, ConnectionDiff, Coord, findDesignInKit, Guid, Piece, PieceDiff } from "../../../semio";
-import { Access, Layout, Theme, ToolType } from "../../store";
+import { type Layout, Theme, ToolType } from "../../store";
 import { DesignAppCommandContext, DesignAppCommandResult, DesignAppFullscreenWindow } from "./store";
 
 export const commands = {
-  "semio.designApp.setAccess": (context: DesignAppCommandContext, access: Access): DesignAppCommandResult => {
-    return { diff: {} };
-  },
   "semio.designApp.setTheme": (context: DesignAppCommandContext, theme: Theme): DesignAppCommandResult => {
     return { diff: {} };
   },

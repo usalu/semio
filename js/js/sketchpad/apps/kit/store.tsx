@@ -50,6 +50,7 @@ export interface KitAppSelection {
   designs?: Guid[];
   qualities?: string[];
   files?: string[];
+  folders?: Guid[];
   authors?: string[];
 }
 const emptyKitAppSelection: KitAppSelection = {};
@@ -69,6 +70,10 @@ export interface KitAppSelectionFilesDiff {
   added?: string[];
   removed?: string[];
 }
+export interface KitAppSelectionFoldersDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
 export interface KitAppSelectionAuthorsDiff {
   added?: string[];
   removed?: string[];
@@ -78,6 +83,7 @@ export interface KitAppSelectionDiff {
   designs?: KitAppSelectionDesignsDiff;
   qualities?: KitAppSelectionQualitiesDiff;
   files?: KitAppSelectionFilesDiff;
+  folders?: KitAppSelectionFoldersDiff;
   authors?: KitAppSelectionAuthorsDiff;
 }
 export enum KitAppFullscreenWindow {
@@ -179,6 +185,17 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
     }
   }
 
+  // Inverse folders diff
+  if (diff.folders) {
+    inverseDiff.folders = {};
+    if (diff.folders.added) {
+      inverseDiff.folders.removed = diff.folders.added;
+    }
+    if (diff.folders.removed) {
+      inverseDiff.folders.added = diff.folders.removed;
+    }
+  }
+
   // Inverse authors diff
   if (diff.authors) {
     inverseDiff.authors = {};
@@ -213,8 +230,28 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
     if (state?.selection?.designs?.length) {
       selectedDesigns.push(state.selection.designs);
     }
+    const selectedQualities = new Y.Array<string>();
+    if (state?.selection?.qualities?.length) {
+      selectedQualities.push(state.selection.qualities);
+    }
+    const selectedFiles = new Y.Array<string>();
+    if (state?.selection?.files?.length) {
+      selectedFiles.push(state.selection.files);
+    }
+    const selectedFolders = new Y.Array<string>();
+    if (state?.selection?.folders?.length) {
+      selectedFolders.push(state.selection.folders);
+    }
+    const selectedAuthors = new Y.Array<string>();
+    if (state?.selection?.authors?.length) {
+      selectedAuthors.push(state.selection.authors);
+    }
     selection.set("types", selectedTypes);
     selection.set("designs", selectedDesigns);
+    selection.set("qualities", selectedQualities);
+    selection.set("files", selectedFiles);
+    selection.set("folders", selectedFolders);
+    selection.set("authors", selectedAuthors);
     yMap.set("selection", selection);
 
     yMap.set("isTransactionActive", false);
@@ -290,6 +327,12 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
     const files = selection.get("files") as Y.Array<string>;
     if (files && files.length > 0) {
       result.files = files.toArray();
+    }
+
+    // Get folders
+    const folders = selection.get("folders") as Y.Array<string>;
+    if (folders && folders.length > 0) {
+      result.folders = folders.toArray();
     }
 
     // Get authors
@@ -512,6 +555,30 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
       }
     }
 
+    // Apply folders diff
+    if (selectionDiff.folders) {
+      let folders = (selection.get("folders") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("folders")) {
+        selection.set("folders", folders);
+      }
+
+      if (selectionDiff.folders.added) {
+        for (const folder of selectionDiff.folders.added) {
+          if (!folders.toArray().includes(folder)) {
+            folders.push([folder]);
+          }
+        }
+      }
+      if (selectionDiff.folders.removed) {
+        for (const folder of selectionDiff.folders.removed) {
+          const index = folders.toArray().indexOf(folder);
+          if (index !== -1) {
+            folders.delete(index, 1);
+          }
+        }
+      }
+    }
+
     // Apply authors diff
     if (selectionDiff.authors) {
       let authors = (selection.get("authors") as Y.Array<string>) || new Y.Array<string>();
@@ -685,6 +752,10 @@ export function useKitAppCommands(id?: KitAppId) {
       selectFiles: noOp,
       addFileToSelection: noOp,
       removeFileFromSelection: noOp,
+      selectFolder: noOp,
+      selectFolders: noOp,
+      addFolderToSelection: noOp,
+      removeFolderFromSelection: noOp,
       selectAuthor: noOp,
       selectAuthors: noOp,
       addAuthorToSelection: noOp,
@@ -738,6 +809,10 @@ export function useKitAppCommands(id?: KitAppId) {
     selectFiles: (origin: string, paths: string[]) => store.execute("semio.kitApp.selectFiles", origin, paths),
     addFileToSelection: (origin: string, path: string) => store.execute("semio.kitApp.addFileToSelection", origin, path),
     removeFileFromSelection: (origin: string, path: string) => store.execute("semio.kitApp.removeFileFromSelection", origin, path),
+    selectFolder: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectFolder", origin, guid),
+    selectFolders: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectFolders", origin, guids),
+    addFolderToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addFolderToSelection", origin, guid),
+    removeFolderFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeFolderFromSelection", origin, guid),
     selectAuthor: (origin: string, name: string) => store.execute("semio.kitApp.selectAuthor", origin, name),
     selectAuthors: (origin: string, names: string[]) => store.execute("semio.kitApp.selectAuthors", origin, names),
     addAuthorToSelection: (origin: string, name: string) => store.execute("semio.kitApp.addAuthorToSelection", origin, name),

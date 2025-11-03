@@ -1119,7 +1119,43 @@
                     "label": "Plane",
                     "beginner": "The 3D placement plane for this piece. Defines position and orientation in 3D space.",
                     "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
+                    "tutorial": "hello-semio/model-design#pieces",
+                    "origin": {
+                      "label": "Origin",
+                      "x": {
+                        "label": "Origin X"
+                      },
+                      "y": {
+                        "label": "Origin Y"
+                      },
+                      "z": {
+                        "label": "Origin Z"
+                      }
+                    },
+                    "xaxis": {
+                      "label": "X Axis",
+                      "x": {
+                        "label": "Axis X"
+                      },
+                      "y": {
+                        "label": "Axis Y"
+                      },
+                      "z": {
+                        "label": "Axis Z"
+                      }
+                    },
+                    "yaxis": {
+                      "label": "Y Axis",
+                      "x": {
+                        "label": "Axis X"
+                      },
+                      "y": {
+                        "label": "Axis Y"
+                      },
+                      "z": {
+                        "label": "Axis Z"
+                      }
+                    }
                   },
                   "planeOrigin": {
                     "label": "Origin",

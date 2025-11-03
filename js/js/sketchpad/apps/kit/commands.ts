@@ -20,13 +20,10 @@
 // #endregion
 
 import { Design, DesignDiff, Guid, Type, TypeDiff } from "../../../semio";
-import { Access, Layout, Theme } from "../../store";
+import { type Layout, Theme } from "../../store";
 import { KitAppCommandContext, KitAppCommandResult, KitAppFullscreenWindow, KitAppSortColumn, KitAppSortDirection } from "./store";
 
 export const commands = {
-  "semio.kitApp.setAccess": (context: KitAppCommandContext, access: Access): KitAppCommandResult => {
-    return { diff: {} };
-  },
   "semio.kitApp.setTheme": (context: KitAppCommandContext, theme: Theme): KitAppCommandResult => {
     return { diff: {} };
   },
@@ -272,6 +269,60 @@ export const commands = {
       diff: {
         selection: {
           files: { removed: [path] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectFolder": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: {
+            removed: currentSelection?.folders ?? [],
+            added: [guid],
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectFolders": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: {
+            removed: currentSelection?.folders ?? [],
+            added: guids,
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addFolderToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          folders: { added: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeFolderFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          folders: { removed: [guid] },
         },
       },
     };

@@ -19,17 +19,12 @@
 
 // #endregion
 
-import { Access, Expertise, Layout, migratePath, Mode, SketchpadCommandContext, SketchpadCommandResult, Theme } from "./store";
+import { Expertise, Layout, migratePath, Mode, SketchpadCommandContext, SketchpadCommandResult, Theme } from "./store";
 
 export const commands = {
   "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
     return {
       diff: { theme },
-    };
-  },
-  "semio.sketchpad.setAccess": (context: SketchpadCommandContext, access: Access): SketchpadCommandResult => {
-    return {
-      diff: { access },
     };
   },
   "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
@@ -53,9 +48,22 @@ export const commands = {
     };
   },
   "semio.sketchpad.toggleNavbarExpanded": (context: SketchpadCommandContext): SketchpadCommandResult => {
-    return {
-      diff: { isNavbarExpanded: !context.sketchpad.isNavbarExpanded },
-    };
+    const layout = context.sketchpad.layout;
+    if (typeof layout === "object") {
+      return {
+        diff: { layout: { ...layout, isNavbarExpanded: !layout.isNavbarExpanded } },
+      };
+    }
+    return {};
+  },
+  "semio.sketchpad.toggleFooterExpanded": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    const layout = context.sketchpad.layout;
+    if (typeof layout === "object") {
+      return {
+        diff: { layout: { ...layout, isFooterExpanded: !layout.isFooterExpanded } },
+      };
+    }
+    return {};
   },
   "semio.sketchpad.setIsMobile": (context: SketchpadCommandContext, isMobile: boolean): SketchpadCommandResult => {
     if (context.sketchpad.isMobile !== isMobile) {

@@ -79,7 +79,6 @@ const App: FC = () => {
     addSection("toolbar", {
       id: "semio.sketchpad.app.type.tools",
       order: 0,
-      defaultOpen: true,
       content: <ToolsToggleGroup />,
     });
 
@@ -123,7 +122,6 @@ const App: FC = () => {
       addSection("details", {
         id: "semio.sketchpad.app.type.port.title",
         order: 0,
-        defaultOpen: true,
         content: () => <PortSection portGuid={selection.ports![0]} />,
       });
     } else if (hasMultiplePorts) {
@@ -132,7 +130,6 @@ const App: FC = () => {
         id: portsMultipleId,
         translationParams: { count: selection.ports!.length },
         order: 0,
-        defaultOpen: true,
         content: () => <PortsMultipleSection portGuids={selection.ports!} />,
       });
     }
@@ -141,7 +138,6 @@ const App: FC = () => {
     addSection("details", {
       id: "semio.sketchpad.app.type.title",
       order: 50,
-      defaultOpen: true,
       content: () => (
         <>
           <TypeDetails />
@@ -157,7 +153,6 @@ const App: FC = () => {
     addSection("details", {
       id: "semio.sketchpad.app.kit.title",
       order: 100,
-      defaultOpen: true,
       content: () => <KitSection />,
     });
 

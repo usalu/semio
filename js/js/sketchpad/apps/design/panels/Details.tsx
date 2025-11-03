@@ -30,7 +30,7 @@ import { Input } from "../../../../elements/input/Input";
 import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
-import { Connection, Design, Guid, Kit, Piece, findDesignInKit, findPieceInDesign, findTypeInKit, guid } from "../../../../semio";
+import { Connection, ConnectionDiff, Design, Guid, Kit, Piece, findDesignInKit, findPieceInDesign, findTypeInKit, guid } from "../../../../semio";
 import { useFlatPieceCenter, useFlatPiecePlane, useIsConnectedPiece, usePieceParentConnection, usePiecesMetadata } from "../../../kits";
 import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePiecesFromIds, useReplacableDesigns, useReplacableTypes, useTooltip } from "../../../store";
 import { useDesignAppCommands, useDesignAppSelection } from "../store";
@@ -242,8 +242,7 @@ const DesignSectionForm: FC = () => {
             onClick: () => {
               const origin = "semio.sketchpad.app.design.panel.details.authors.add";
               startTransaction(origin);
-              handleChange(origin, {
-                ...design,
+              updateDesignField(origin, {
                 authors: [...(design.authors || []), { name: "", email: "" }],
               });
               finalizeTransaction(origin);
@@ -262,8 +261,7 @@ const DesignSectionForm: FC = () => {
             onReorder={(oldIndex, newIndex) => {
               const origin = "semio.sketchpad.app.design.panel.details.authors.reorder";
               startTransaction(origin);
-              handleChange(origin, {
-                ...design,
+              updateDesignField(origin, {
                 authors: arrayMove(design.authors!, oldIndex, newIndex),
               });
               finalizeTransaction(origin);
@@ -282,8 +280,7 @@ const DesignSectionForm: FC = () => {
                     onClick: () => {
                       const origin = "semio.sketchpad.app.design.panel.details.authors.remove";
                       startTransaction(origin);
-                      handleChange(origin, {
-                        ...design,
+                      updateDesignField(origin, {
                         authors: design.authors?.filter((_: any, i: number) => i !== index),
                       });
                       finalizeTransaction(origin);
@@ -303,10 +300,11 @@ const DesignSectionForm: FC = () => {
                           ...author,
                           name: e.target.value,
                         };
-                        handleChange("semio.sketchpad.app.design.panel.details.section.authors.name", { ...design, authors: updatedAuthors });
+                        updateDesignField("semio.sketchpad.app.design.panel.details.section.authors.name", { authors: updatedAuthors });
                       }}
                       onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.name")}
                       onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.name")}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -321,10 +319,11 @@ const DesignSectionForm: FC = () => {
                           ...author,
                           email: e.target.value,
                         };
-                        handleChange("semio.sketchpad.app.design.panel.details.section.authors.email", { ...design, authors: updatedAuthors });
+                        updateDesignField("semio.sketchpad.app.design.panel.details.section.authors.email", { authors: updatedAuthors });
                       }}
                       onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.email")}
                       onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.email")}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -403,6 +402,7 @@ const DesignSectionForm: FC = () => {
                       }}
                       onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.name")}
                       onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.name")}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -422,6 +422,7 @@ const DesignSectionForm: FC = () => {
                       }}
                       onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.value")}
                       onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.value")}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -441,6 +442,7 @@ const DesignSectionForm: FC = () => {
                       }}
                       onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.unit")}
                       onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.unit")}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -460,6 +462,7 @@ const DesignSectionForm: FC = () => {
                       }}
                       onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.definition")}
                       onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.definition")}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -480,6 +483,7 @@ const DesignSectionForm: FC = () => {
                 return "";
               })()}
               disabled
+              showLabel
             />
           </TreeContent>
         </TreeItem>
@@ -496,6 +500,7 @@ const DesignSectionForm: FC = () => {
                 return "";
               })()}
               disabled
+              showLabel
             />
           </TreeContent>
         </TreeItem>
@@ -696,8 +701,10 @@ const PiecesSectionForm: FC = () => {
   const commonPlaneYAxisY = getCommonValue((p) => p.plane?.yAxis.y);
   const commonPlaneYAxisZ = getCommonValue((p) => p.plane?.yAxis.z);
 
-  const hasCenter = pieces.some((p) => p.center);
-  const hasPlane = pieces.some((p) => p.plane);
+  // Only show plane/center for fixed pieces (pieces that have both plane and center)
+  // Linked pieces (without plane) get their position from flatten algorithm
+  const hasCenter = pieces.every((p) => p.center);
+  const hasPlane = pieces.every((p) => p.plane);
   const hasVariant = pieces.some((p) => {
     const type = p.type ? findTypeInKit(kit, p.type) : null;
     return type?.variant;
@@ -1109,7 +1116,7 @@ const ConnectionsSectionForm: FC<{
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
   const { t } = useTranslation();
-  const { /* setConnection, setConnections, */ startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
+  const { updateConnection, startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
   const connectionObjects = connections;
 
   const isSingle = connections.length === 1;
@@ -1122,8 +1129,25 @@ const ConnectionsSectionForm: FC<{
     return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
   };
 
-  // TODO: Implement setConnection and setConnections commands
-  const handleChange = (_updatedConnection: Connection) => {};
+  const handleChange = (updatedConnection: Connection) => {
+    if (!updatedConnection || !updatedConnection.guid) return;
+    const origin = "semio.sketchpad.app.design.panel.details.section.connection.change";
+    
+    // Calculate diff between current and updated connection
+    const diff: ConnectionDiff = {};
+    if (connection) {
+      if (updatedConnection.gap !== connection.gap) diff.gap = updatedConnection.gap;
+      if (updatedConnection.shift !== connection.shift) diff.shift = updatedConnection.shift;
+      if (updatedConnection.rise !== connection.rise) diff.rise = updatedConnection.rise;
+      if (updatedConnection.rotation !== connection.rotation) diff.rotation = updatedConnection.rotation;
+      if (updatedConnection.turn !== connection.turn) diff.turn = updatedConnection.turn;
+      if (updatedConnection.tilt !== connection.tilt) diff.tilt = updatedConnection.tilt;
+      if (updatedConnection.x !== connection.x) diff.x = updatedConnection.x;
+      if (updatedConnection.y !== connection.y) diff.y = updatedConnection.y;
+    }
+    
+    updateConnection(origin, updatedConnection.guid, diff);
+  };
 
   const handleGapChange = (value: number) => {
     if (isSingle) handleChange({ ...connection!, gap: value });
@@ -1360,24 +1384,52 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
 
   if (!piece || !type || !port) {
     return (
-      <TreeItem label={t("semio.sketchpad.app.design.panel.details.port")} defaultOpen={true}>
-        <TreeItem>
-          <TreeContent>
-            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.design.panel.details.section.port.notFound")}</p>
-          </TreeContent>
-        </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.design.panel.details.section.port.notFound")}</p>
+        </TreeContent>
       </TreeItem>
     );
   }
 
   return (
-    <TreeItem label={t("semio.sketchpad.app.design.panel.details.port")} defaultOpen={true}>
-      <Input id="semio.sketchpad.app.design.panel.details.section.port.id" value={port.guid || "~default~"} disabled showLabel />
-      {port.description && <Textarea id="semio.sketchpad.app.design.panel.details.section.port.description" value={port.description} disabled showLabel />}
-      {port.family && <Input id="semio.sketchpad.app.design.panel.details.section.port.family" value={port.family} disabled showLabel />}
-      {port.mandatory !== undefined && <Input id="semio.sketchpad.app.design.panel.details.section.port.mandatory" value={port.mandatory ? t("semio.sketchpad.common.yes") : t("semio.sketchpad.common.no")} disabled showLabel />}
-      <Input id="semio.sketchpad.app.design.panel.details.section.port.position" value={`(${port.point.x.toFixed(2)}, ${port.point.y.toFixed(2)}, ${port.point.z.toFixed(2)})`} disabled showLabel />
-      <Input id="semio.sketchpad.app.design.panel.details.section.port.direction" value={`(${port.direction.x.toFixed(2)}, ${port.direction.y.toFixed(2)}, ${port.direction.z.toFixed(2)})`} disabled showLabel />
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.port.id" value={port.guid || "~default~"} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
+      {port.description && (
+        <TreeItem>
+          <TreeContent>
+            <Textarea id="semio.sketchpad.app.design.panel.details.section.port.description" value={port.description} disabled showLabel />
+          </TreeContent>
+        </TreeItem>
+      )}
+      {port.family && (
+        <TreeItem>
+          <TreeContent>
+            <Input id="semio.sketchpad.app.design.panel.details.section.port.family" value={port.family} disabled showLabel />
+          </TreeContent>
+        </TreeItem>
+      )}
+      {port.mandatory !== undefined && (
+        <TreeItem>
+          <TreeContent>
+            <Input id="semio.sketchpad.app.design.panel.details.section.port.mandatory" value={port.mandatory ? t("semio.sketchpad.common.yes") : t("semio.sketchpad.common.no")} disabled showLabel />
+          </TreeContent>
+        </TreeItem>
+      )}
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.port.position" value={`(${port.point.x.toFixed(2)}, ${port.point.y.toFixed(2)}, ${port.point.z.toFixed(2)})`} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.port.direction" value={`(${port.direction.x.toFixed(2)}, ${port.direction.y.toFixed(2)}, ${port.direction.z.toFixed(2)})`} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
       {port.compatibleFamilies &&
         port.compatibleFamilies.map((family: string, index: number) => (
           <TreeItem key={`compatible-family-${index}`}>
@@ -1394,6 +1446,6 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
             </TreeContent>
           </TreeItem>
         ))}
-    </TreeItem>
+    </>
   );
 };

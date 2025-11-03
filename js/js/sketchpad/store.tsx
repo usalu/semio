@@ -103,21 +103,18 @@ export type { KitCommandContext, KitCommandResult } from "./kits/store";
 
 // #region Constants
 
-export enum Access {
-  USER = "user",
-  GUEST = "guest",
-}
-
 export enum Theme {
   SYSTEM = "system",
   LIGHT = "light",
   DARK = "dark",
 }
 
-export enum Layout {
-  NORMAL = "normal",
-  TOUCH = "touch",
+export interface MobileLayout {
+  isNavbarExpanded: boolean;
+  isFooterExpanded: boolean;
 }
+
+export type Layout = "desktop" | "tablet" | MobileLayout;
 
 export enum Expertise {
   BEGINNER = "beginner",
@@ -899,15 +896,6 @@ function resolveHomeStoreFactory(): HomeStoreFactory {
 type YSketchpadVal = string | number | boolean | YDesignApps;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
-export interface AppSettings {
-  design?: {
-    snappiness?: number;
-    gridSize?: number;
-  };
-  type?: Record<string, any>;
-  kit?: Record<string, any>;
-}
-
 export interface PanelSizes {
   toolbarHeight: number;
   workbenchWidth: number;
@@ -926,15 +914,15 @@ export interface SketchpadChangableState {
   navigationHistoryIndex: number;
   recentSearches: string[];
   recentFocusItems: Record<string, string[]>;
-  access: Access;
   theme: Theme;
   layout: Layout;
   expertise: Expertise;
   mode: Mode;
-  appSettings: AppSettings;
+  settings: {
+    apps: Record<string, any>;
+  };
   panelSizes: PanelSizes;
   isFullscreen: boolean;
-  isNavbarExpanded: boolean;
   isMobile: boolean;
   activeInteraction?: string;
   hotkeyOverrides?: Record<string, string>;
@@ -950,15 +938,15 @@ export interface SketchpadDiff {
   navigationHistoryIndex?: number;
   recentSearches?: string[];
   recentFocusItems?: Record<string, string[]>;
-  access?: Access;
   theme?: Theme;
   layout?: Layout;
   expertise?: Expertise;
   mode?: Mode;
-  appSettings?: AppSettings;
+  settings?: {
+    apps?: Record<string, any>;
+  };
   panelSizes?: Partial<PanelSizes>;
   isFullscreen?: boolean;
-  isNavbarExpanded?: boolean;
   isMobile?: boolean;
   activeInteraction?: string;
   hotkeyOverrides?: Record<string, string>;
@@ -1104,14 +1092,11 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("recentFocusItems")) {
         this.ySketchpad.set("recentFocusItems", JSON.stringify({}));
       }
-      if (!this.ySketchpad.has("access")) {
-        this.ySketchpad.set("access", Access.GUEST);
-      }
       if (!this.ySketchpad.has("theme")) {
         this.ySketchpad.set("theme", Theme.SYSTEM);
       }
       if (!this.ySketchpad.has("layout")) {
-        this.ySketchpad.set("layout", Layout.NORMAL);
+        this.ySketchpad.set("layout", JSON.stringify("desktop"));
       }
       if (!this.ySketchpad.has("expertise")) {
         this.ySketchpad.set("expertise", Expertise.BEGINNER);
@@ -1122,22 +1107,22 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("isFullscreen")) {
         this.ySketchpad.set("isFullscreen", false);
       }
-      if (!this.ySketchpad.has("isNavbarExpanded")) {
-        this.ySketchpad.set("isNavbarExpanded", false);
-      }
       // Always set isMobile based on current window size (not persisted preference)
       const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
       this.ySketchpad.set("isMobile", isMobile);
       if (!this.ySketchpad.has("activeInteraction")) {
         this.ySketchpad.set("activeInteraction", "");
       }
-      if (!this.ySketchpad.has("appSettings")) {
+      if (!this.ySketchpad.has("settings")) {
         this.ySketchpad.set(
-          "appSettings",
+          "settings",
           JSON.stringify({
-            design: { snappiness: 10, gridSize: 24 },
-            type: {},
-            kit: {},
+            apps: {
+              design: {
+                diagram: { proximityConnectDistance: 10 },
+                scene: { gridSize: 24 },
+              },
+            },
           }),
         );
       }
@@ -1176,15 +1161,13 @@ export class SketchpadStore {
         if (initialState.navigationHistoryIndex !== undefined) this.ySketchpad.set("navigationHistoryIndex", initialState.navigationHistoryIndex);
         if (initialState.recentSearches !== undefined) this.ySketchpad.set("recentSearches", JSON.stringify(initialState.recentSearches));
         if (initialState.recentFocusItems !== undefined) this.ySketchpad.set("recentFocusItems", JSON.stringify(initialState.recentFocusItems));
-        if (initialState.access !== undefined) this.ySketchpad.set("access", initialState.access);
         if (initialState.theme !== undefined) this.ySketchpad.set("theme", initialState.theme);
-        if (initialState.layout !== undefined) this.ySketchpad.set("layout", initialState.layout);
+        if (initialState.layout !== undefined) this.ySketchpad.set("layout", JSON.stringify(initialState.layout));
         if (initialState.expertise !== undefined) this.ySketchpad.set("expertise", initialState.expertise);
         if (initialState.mode !== undefined) this.ySketchpad.set("mode", initialState.mode);
-        if (initialState.appSettings !== undefined) this.ySketchpad.set("appSettings", JSON.stringify(initialState.appSettings));
+        if (initialState.settings !== undefined) this.ySketchpad.set("settings", JSON.stringify(initialState.settings));
         if (initialState.panelSizes !== undefined) this.ySketchpad.set("panelSizes", JSON.stringify(initialState.panelSizes));
         if (initialState.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", initialState.isFullscreen);
-        if (initialState.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", initialState.isNavbarExpanded);
         if (initialState.hotkeyOverrides !== undefined) this.ySketchpad.set("hotkeyOverrides", JSON.stringify(initialState.hotkeyOverrides));
         if (initialState.activeHotkeySetting !== undefined) this.ySketchpad.set("activeHotkeySetting", initialState.activeHotkeySetting);
       });
@@ -1203,13 +1186,16 @@ export class SketchpadStore {
   };
 
   snapshot = (): SketchpadState => {
-    const appSettingsStr = this.ySketchpad.get("appSettings") as string;
-    const appSettings = appSettingsStr
-      ? JSON.parse(appSettingsStr)
+    const settingsStr = this.ySketchpad.get("settings") as string;
+    const settings = settingsStr
+      ? JSON.parse(settingsStr)
       : {
-          design: { snappiness: 10, gridSize: 24 },
-          type: {},
-          kit: {},
+          apps: {
+            design: {
+              diagram: { proximityConnectDistance: 10 },
+              scene: { gridSize: 24 },
+            },
+          },
         };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
@@ -1233,21 +1219,21 @@ export class SketchpadStore {
     const recentFocusItems = recentFocusItemsStr ? JSON.parse(recentFocusItemsStr) : {};
     const hotkeyOverridesStr = this.ySketchpad.get("hotkeyOverrides") as string;
     const hotkeyOverrides = hotkeyOverridesStr ? JSON.parse(hotkeyOverridesStr) : {};
+    const layoutStr = this.ySketchpad.get("layout") as string;
+    const layout: Layout = layoutStr ? JSON.parse(layoutStr) : "desktop";
     const currentValues = {
       navigation: migratePath((this.ySketchpad.get("navigation") as string) || "/"),
       navigationHistory: navigationHistory,
       navigationHistoryIndex: (this.ySketchpad.get("navigationHistoryIndex") as number) ?? 0,
       recentSearches: recentSearches,
       recentFocusItems: recentFocusItems,
-      access: this.ySketchpad.get("access") as Access,
       theme: this.ySketchpad.get("theme") as Theme,
-      layout: this.ySketchpad.get("layout") as Layout,
+      layout: layout,
       expertise: (this.ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
       mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.USER,
-      appSettings: appSettings,
+      settings: settings,
       panelSizes: panelSizes,
       isFullscreen: (this.ySketchpad.get("isFullscreen") as boolean) || false,
-      isNavbarExpanded: (this.ySketchpad.get("isNavbarExpanded") as boolean) || false,
       isMobile: (this.ySketchpad.get("isMobile") as boolean) || false,
       activeInteraction: (this.ySketchpad.get("activeInteraction") as string) || undefined,
       hotkeyOverrides: hotkeyOverrides,
@@ -1275,9 +1261,6 @@ export class SketchpadStore {
     });
 
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
-
-    // Try to load kit files from public folder
-    this.loadKitFilesFromPublic(kit.guid, kitStore);
   };
 
   // Load kit files from public/{guid}.zip
@@ -1285,7 +1268,7 @@ export class SketchpadStore {
     try {
       const zipUrl = `/public/${kitGuid}.zip`;
       const response = await fetch(zipUrl);
-      
+
       if (!response.ok) {
         console.log(`[DEBUG] No zip file found for kit ${kitGuid} at ${zipUrl}`);
         return;
@@ -1293,17 +1276,17 @@ export class SketchpadStore {
 
       const blob = await response.blob();
       console.log(`[DEBUG] Loading files from ${zipUrl} for kit ${kitGuid}`);
-      
+
       // Import JSZip dynamically
-      const JSZip = (await import('jszip')).default;
+      const JSZip = (await import("jszip")).default;
       const zip = await JSZip.loadAsync(blob);
-      
+
       // Extract all files from zip
       const filePromises: Promise<void>[] = [];
       zip.forEach((relativePath, zipEntry) => {
         if (!zipEntry.dir) {
           filePromises.push(
-            zipEntry.async('blob').then(async (fileBlob) => {
+            zipEntry.async("blob").then(async (fileBlob) => {
               const file: SemioFile = {
                 guid: guid(),
                 path: relativePath,
@@ -1314,11 +1297,11 @@ export class SketchpadStore {
               };
               await kitStore.execute("semio.kit.addFile", "system.loadKitFiles", file, fileBlob);
               console.log(`[DEBUG] Added file ${relativePath} to kit ${kitGuid}`);
-            })
+            }),
           );
         }
       });
-      
+
       await Promise.all(filePromises);
       console.log(`[DEBUG] Successfully loaded ${filePromises.length} files for kit ${kitGuid}`);
     } catch (error) {
@@ -1402,17 +1385,16 @@ export class SketchpadStore {
         const current = JSON.parse((this.ySketchpad.get("recentFocusItems") as string) || "{}");
         this.ySketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
       }
-      if (diff.access) this.ySketchpad.set("access", diff.access);
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
-      if (diff.layout) this.ySketchpad.set("layout", diff.layout);
+      if (diff.layout) this.ySketchpad.set("layout", JSON.stringify(diff.layout));
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", diff.isFullscreen);
-      if (diff.isNavbarExpanded !== undefined) this.ySketchpad.set("isNavbarExpanded", diff.isNavbarExpanded);
       if (diff.isMobile !== undefined) this.ySketchpad.set("isMobile", diff.isMobile);
       if ("activeInteraction" in diff) this.ySketchpad.set("activeInteraction", diff.activeInteraction || "");
-      if (diff.appSettings) {
-        const current = JSON.parse((this.ySketchpad.get("appSettings") as string) || "{}");
-        this.ySketchpad.set("appSettings", JSON.stringify({ ...current, ...diff.appSettings }));
+      if (diff.settings) {
+        const current = JSON.parse((this.ySketchpad.get("settings") as string) || "{}");
+        const merged = { ...current, apps: { ...current.apps, ...diff.settings.apps } };
+        this.ySketchpad.set("settings", JSON.stringify(merged));
       }
       if (diff.panelSizes) {
         const current = JSON.parse((this.ySketchpad.get("panelSizes") as string) || "{}");
@@ -1723,15 +1705,13 @@ export class SketchpadStore {
       this.ySketchpad.set("navigationHistoryIndex", state.sketchpad.navigationHistoryIndex);
       this.ySketchpad.set("recentSearches", JSON.stringify(state.sketchpad.recentSearches));
       this.ySketchpad.set("recentFocusItems", JSON.stringify(state.sketchpad.recentFocusItems));
-      this.ySketchpad.set("access", state.sketchpad.access);
       this.ySketchpad.set("theme", state.sketchpad.theme);
-      this.ySketchpad.set("layout", state.sketchpad.layout);
+      this.ySketchpad.set("layout", JSON.stringify(state.sketchpad.layout));
       this.ySketchpad.set("expertise", state.sketchpad.expertise);
       this.ySketchpad.set("mode", state.sketchpad.mode);
-      this.ySketchpad.set("appSettings", JSON.stringify(state.sketchpad.appSettings));
+      this.ySketchpad.set("settings", JSON.stringify(state.sketchpad.settings));
       this.ySketchpad.set("panelSizes", JSON.stringify(state.sketchpad.panelSizes));
       this.ySketchpad.set("isFullscreen", state.sketchpad.isFullscreen);
-      this.ySketchpad.set("isNavbarExpanded", state.sketchpad.isNavbarExpanded);
       this.ySketchpad.set("isMobile", state.sketchpad.isMobile);
       if (state.sketchpad.activeInteraction) {
         this.ySketchpad.set("activeInteraction", state.sketchpad.activeInteraction);
@@ -1743,9 +1723,11 @@ export class SketchpadStore {
         this.ySketchpad.set("activeHotkeySetting", state.sketchpad.activeHotkeySetting);
       }
 
-      // Restore kits (createKit will automatically load files from public)
+      // Restore kits and load files from public folder
       state.kits.forEach(({ guid, local, remote, kit }) => {
         this.createKit(kit, local, remote);
+        const kitStore = this.kit(kit.guid);
+        this.loadKitFilesFromPublic(kit.guid, kitStore);
       });
 
       // Restore kit apps
@@ -2179,10 +2161,6 @@ export function getAppTypeFromPath(path: string): AppType {
   return "home";
 }
 
-export function useAccess(): Access {
-  return useSketchpad((s) => s.access) as Access;
-}
-
 export function useTheme(): Theme {
   return useSketchpad((s) => s.theme) as Theme;
 }
@@ -2217,7 +2195,13 @@ export function useIsFullscreen(): boolean {
 }
 
 export function useIsNavbarExpanded(): boolean {
-  return useSketchpad((s) => s.isNavbarExpanded) as boolean;
+  const layout = useLayout();
+  return typeof layout === "object" ? layout.isNavbarExpanded : false;
+}
+
+export function useIsFooterExpanded(): boolean {
+  const layout = useLayout();
+  return typeof layout === "object" ? layout.isFooterExpanded : false;
 }
 
 export function useActiveInteraction(): string | undefined {
@@ -2329,8 +2313,8 @@ export function usePanelSizes(): PanelSizes {
   return useSketchpad((state) => state.panelSizes) as PanelSizes;
 }
 
-export function useAppSettings(): Record<string, any> {
-  return useSketchpad((state) => state.appSettings) as Record<string, any>;
+export function useSettings(): { apps: Record<string, any> } {
+  return useSketchpad((state) => state.settings) as { apps: Record<string, any> };
 }
 
 export function useAppPanelVisibility(): PanelVisibility {
@@ -2484,7 +2468,6 @@ export function useSketchpadCommands() {
   const navigate = useNavigate();
   return useMemo(
     () => ({
-      setAccess: (origin: string, access: Access) => store.execute("semio.sketchpad.setAccess", origin, access),
       setTheme: (origin: string, theme: Theme) => store.execute("semio.sketchpad.setTheme", origin, theme),
       setLayout: (origin: string, layout: Layout) => store.execute("semio.sketchpad.setLayout", origin, layout),
       setExpertise: (origin: string, expertise: Expertise) => store.execute("semio.sketchpad.setExpertise", origin, expertise),
@@ -2493,6 +2476,7 @@ export function useSketchpadCommands() {
       setState: (origin: string, state: Partial<SketchpadState>) => store.execute("semio.sketchpad.setState", origin, state),
       toggleFullscreen: (origin: string) => store.execute("semio.sketchpad.toggleFullscreen", origin),
       toggleNavbarExpanded: (origin: string) => store.execute("semio.sketchpad.toggleNavbarExpanded", origin),
+      toggleFooterExpanded: (origin: string) => store.execute("semio.sketchpad.toggleFooterExpanded", origin),
       setIsMobile: (origin: string, isMobile: boolean) => store.execute("semio.sketchpad.setIsMobile", origin, isMobile),
       setActiveInteraction: (origin: string, interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", origin, interactionId),
       syncNavigation: (origin: string, path: string) => store.execute("semio.sketchpad.syncNavigation", origin, path),
@@ -2519,12 +2503,19 @@ export function useSketchpadCommands() {
           navigate(targetPath);
         }
       },
-      updateAppSettings: (appType: "design" | "type" | "kit", settings: Record<string, any>) => {
-        const current = store.snapshot().appSettings;
+      updateAppSettings: (app: string, path: string[], value: any) => {
+        const current = store.snapshot().settings;
+        const newApps = { ...current.apps };
+        if (!newApps[app]) newApps[app] = {};
+        let target = newApps[app];
+        for (let i = 0; i < path.length - 1; i++) {
+          if (!target[path[i]]) target[path[i]] = {};
+          target = target[path[i]];
+        }
+        target[path[path.length - 1]] = value;
         store.change({
-          appSettings: {
-            ...current,
-            [appType]: { ...current[appType], ...settings },
+          settings: {
+            apps: newApps,
           },
         });
       },

@@ -349,6 +349,98 @@ export const FileSection: FC = () => {
   );
 };
 
+export const FolderSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const kit = useKit() as Kit;
+  const kitStore = useKitStore() as any;
+  const { startTransaction, finalizeTransaction, abortTransaction } = useKitAppCommands();
+  const selection = kitApp?.selection;
+  const selectedFolders = selection?.folders || [];
+
+  if (selectedFolders.length === 0) return null;
+
+  const folders = selectedFolders
+    .map((folderGuid) => {
+      return kit.folders?.find((f) => f.guid === folderGuid);
+    })
+    .filter(Boolean);
+
+  if (folders.length === 0) return null;
+  if (folders.length > 1) return null; // Show only single folder
+
+  const folder = folders[0]!;
+
+  const formatDate = (date?: Date) => {
+    if (!date) return "";
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (isNaN(parsedDate.getTime())) return "";
+    return parsedDate.toLocaleDateString();
+  };
+
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            id="semio.sketchpad.app.kit.panel.details.section.folder.name"
+            value={folder.name}
+            onLazyChange={(value) => {
+              const folderStore = (kitStore as any).folder(folder.guid);
+              folderStore.change({ name: value });
+            }}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+      {folder.description && (
+        <TreeItem>
+          <TreeContent>
+            <Textarea
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.folder.description"
+              value={folder.description || ""}
+              placeholder={t("semio.sketchpad.app.folder.descriptionPlaceholder.label")}
+              onLazyChange={(value) => {
+                const folderStore = (kitStore as any).folder(folder.guid);
+                folderStore.change({ description: value });
+              }}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+      )}
+      {folder.createdAt && (
+        <TreeItem>
+          <TreeContent>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("semio.folder.created")}</label>
+              <p className="text-sm">{formatDate(folder.createdAt)}</p>
+            </div>
+          </TreeContent>
+        </TreeItem>
+      )}
+      {folder.updatedAt && (
+        <TreeItem>
+          <TreeContent>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("semio.folder.updated")}</label>
+              <p className="text-sm">{formatDate(folder.updatedAt)}</p>
+            </div>
+          </TreeContent>
+        </TreeItem>
+      )}
+    </>
+  );
+};
+
 export const MultipleArtifactsSection: FC = () => {
   const { t } = useTranslation();
   const kitApp = useKitApp() as KitAppState;

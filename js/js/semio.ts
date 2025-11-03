@@ -721,6 +721,7 @@ export const FileSchema = z.object({
   path: z.string(),
   // remote: z.url().optional(),
   remote: z.string().optional(),
+  folder: z.string().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
   createdAt: DateProperty(),
@@ -783,6 +784,77 @@ export const FilesDiffSchema = z.object({
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
 // #endregion File
+
+// #region Folder
+
+export const FolderSchema = z.object({
+  guid: z.string(),
+  name: z.string(),
+  parent: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+  createdAt: DateProperty(),
+  createdBy: z.string().optional(),
+  updatedAt: DateProperty(),
+  updatedBy: z.string().optional(),
+});
+export type Folder = z.infer<typeof FolderSchema>;
+export const serializeFolder = (folder: Folder): string => JSON.stringify(FolderSchema.parse(folder));
+export const deserializeFolder = (json: string): Folder => FolderSchema.parse(JSON.parse(json));
+
+export const FolderDiffSchema = FolderSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
+export type FolderDiff = z.infer<typeof FolderDiffSchema>;
+export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
+  const diff: FolderDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.parent !== after.parent) diff.parent = after.parent;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
+  if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
+  if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
+  if (before.updatedBy !== after.updatedBy) diff.updatedBy = after.updatedBy;
+  return diff;
+};
+export const inverseFolderDiff = (original: Folder, appliedDiff: FolderDiff): FolderDiff => {
+  const inverse: FolderDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.parent !== undefined) inverse.parent = original.parent;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  if (appliedDiff.createdAt !== undefined) inverse.createdAt = original.createdAt;
+  if (appliedDiff.createdBy !== undefined) inverse.createdBy = original.createdBy;
+  if (appliedDiff.updatedAt !== undefined) inverse.updatedAt = original.updatedAt;
+  if (appliedDiff.updatedBy !== undefined) inverse.updatedBy = original.updatedBy;
+  return inverse;
+};
+export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+};
+export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
+  return {
+    ...base,
+    name: diff.name ?? base.name,
+    parent: diff.parent ?? base.parent,
+    description: diff.description ?? base.description,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+    createdAt: diff.createdAt ?? base.createdAt,
+    createdBy: diff.createdBy ?? base.createdBy,
+    updatedAt: diff.updatedAt ?? base.updatedAt,
+    updatedBy: diff.updatedBy ?? base.updatedBy,
+  };
+};
+
+export const FoldersDiffSchema = z.object({
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: FolderDiffSchema })).optional(),
+  added: z.array(FolderSchema).optional(),
+});
+export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
+
+// #endregion Folder
 
 // #region Benchmark
 
@@ -922,6 +994,7 @@ export const QualitySchema = z.object({
   description: z.string().optional(),
   uri: z.string().optional(),
   kind: z.number().optional(),
+  folder: z.string().optional(),
   canScale: z.boolean().optional(),
   defaultSiUnit: z.string().optional(),
   defaultImperialUnit: z.string().optional(),
@@ -1496,6 +1569,7 @@ export const TypeSchema = z.object({
   guid: z.string(),
   name: z.string(),
   variant: z.string().optional(),
+  folder: z.string().optional(),
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
   props: z.array(PropSchema).optional(),
@@ -1978,6 +2052,7 @@ export const DesignSchema = z.object({
   guid: z.string(),
   name: z.string(),
   variant: z.string().optional(),
+  folder: z.string().optional(),
   view: z.string().optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
@@ -2351,7 +2426,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
           const targetId = connection.connecting.piece;
           return {
             data: {
-              id: `${sourceId}--${targetId}`,
+              id: connection.guid,
               source: sourceId,
               target: targetId,
               connectionData: connection,
@@ -2411,6 +2486,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     const rootPieceIndex = flatDesign.pieces!.findIndex((p) => p.guid === rootPiece.guid);
     if (rootPieceIndex !== -1) {
       flatDesign.pieces![rootPieceIndex].plane = rootPlane;
+      // Ensure root piece has a center (default to origin if not set)
+      if (!flatDesign.pieces![rootPieceIndex].center) {
+        flatDesign.pieces![rootPieceIndex].center = { x: 0, y: 0 };
+      }
     }
 
     const bfs = cy.elements().bfs({
@@ -2445,14 +2524,13 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         }
         const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
         piecePlanes[childPiece.guid] = childPlane;
-        const direction = vectorToThree({
-          x: connection.x ?? 0,
-          y: connection.y ?? 0,
-          z: 0,
-        }).normalize();
+
+        // Ensure parent has a center (default to origin if not set)
+        const parentCenter = parentPiece.center || { x: 0, y: 0 };
+
         const childCenter = {
-          x: round(parentPiece.center!.x + (connection.x ?? 0) + direction.x),
-          y: round(parentPiece.center!.y + (connection.y ?? 0) + direction.y),
+          x: round(parentCenter.x + (connection.x ?? 0)),
+          y: round(parentCenter.y + (connection.y ?? 0)),
         };
 
         const flatChildPiece: Piece = setAttributes(
@@ -2860,6 +2938,7 @@ export const KitSchema = z.object({
   designs: z.array(DesignSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   files: z.array(FileSchema).optional(),
+  folders: z.array(FolderSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
   remote: z.string().optional(),
   homepage: z.string().optional(),
@@ -2877,21 +2956,23 @@ export type Kit = z.infer<typeof KitSchema>;
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
-export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qualities: true, authors: true }).extend({
+export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qualities: true, folders: true, authors: true }).extend({
   types: z.array(z.string()).optional(),
   designs: z.array(z.string()).optional(),
   qualities: z.array(z.string()).optional(),
+  folders: z.array(z.string()).optional(),
   authors: z.array(z.string()).optional(),
 });
 export type KitShallow = z.infer<typeof KitShallowSchema>;
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
-export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, qualities: true, authors: true, files: true }).extend({
+export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, qualities: true, authors: true, files: true, folders: true }).extend({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
   qualities: QualitiesDiffSchema.optional(),
   authors: AuthorsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
+  folders: FoldersDiffSchema.optional(),
 });
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 export const getKitDiff = (before: Kit, after: Kit): KitDiff => {

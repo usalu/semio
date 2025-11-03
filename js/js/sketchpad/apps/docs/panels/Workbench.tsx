@@ -121,7 +121,6 @@ const Workbench: FC<WorkbenchProps> = ({ currentPath }) => {
             key={section.id}
             label={section.label}
             icon={<span className="text-sm">{sectionIcon}</span>}
-            defaultOpen={true}
             isHighlighted={isCurrentPage}
             onClick={sectionPage ? () => {
               navigate(`/${sectionPath}`);

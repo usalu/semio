@@ -106,6 +106,34 @@ export const commands = {
       diff: { files: { removed: [url] } },
     };
   },
+  "semio.kit.createFolder": (context: KitCommandContext, folder: import("../../semio").Folder): KitCommandResult => {
+    return {
+      diff: { folders: { added: [folder] } },
+    };
+  },
+  "semio.kit.updateFolder": (context: KitCommandContext, guid: Guid, diff: import("../../semio").FolderDiff): KitCommandResult => {
+    return {
+      diff: { folders: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteFolder": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { folders: { removed: [guid] } },
+    };
+  },
+  "semio.kit.moveToFolder": (context: KitCommandContext, artifactGuid: Guid, artifactKind: "type" | "design" | "quality" | "file", folderGuid?: Guid): KitCommandResult => {
+    const folderDiff = { folder: folderGuid };
+    switch (artifactKind) {
+      case "type":
+        return { diff: { types: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+      case "design":
+        return { diff: { designs: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+      case "quality":
+        return { diff: { qualities: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+      case "file":
+        return { diff: { files: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+    }
+  },
   "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
     (async () => {
       try {
@@ -134,7 +162,7 @@ export const commands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -316,7 +344,7 @@ export const commands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.file, fileData);
-                  } catch (error) {}
+                  } catch (error) { }
                 }
               }
             }
@@ -383,13 +411,13 @@ export const commands = {
                     piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid)
                       ? piece
                       : {
-                          ...piece,
-                          plane: {
-                            origin: { x: 0, y: 0, z: 0 },
-                            xAxis: { x: 1, y: 0, z: 0 },
-                            yAxis: { x: 0, y: 1, z: 0 },
-                          },
+                        ...piece,
+                        plane: {
+                          origin: { x: 0, y: 0, z: 0 },
+                          xAxis: { x: 1, y: 0, z: 0 },
+                          yAxis: { x: 0, y: 1, z: 0 },
                         },
+                      },
                   ],
                 },
               },
@@ -413,13 +441,13 @@ export const commands = {
                     candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid)
                       ? candidate
                       : {
-                          ...candidate,
-                          plane: {
-                            origin: { x: 0, y: 0, z: 0 },
-                            xAxis: { x: 1, y: 0, z: 0 },
-                            yAxis: { x: 0, y: 1, z: 0 },
-                          },
+                        ...candidate,
+                        plane: {
+                          origin: { x: 0, y: 0, z: 0 },
+                          xAxis: { x: 1, y: 0, z: 0 },
+                          yAxis: { x: 0, y: 1, z: 0 },
                         },
+                      },
                   ),
                 },
               },

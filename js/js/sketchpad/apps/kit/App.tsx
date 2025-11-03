@@ -21,7 +21,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { ArrowDown, ArrowUp, Award, Box, FileText, Layout, Plus, User } from "lucide-react";
+import { ArrowDown, ArrowUp, Award, Box, FileText, Folder as FolderIcon, Layout, Plus, User } from "lucide-react";
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
@@ -30,15 +30,15 @@ import { Action } from "../../../elements/input/Action";
 import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
 import i18n from "../../../i18n";
-import { Author, buildFileTree, Design, flattenFileTree, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
+import { Author, buildFileTree, Design, flattenFileTree, Folder, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { ConceptFilter } from "../../ConceptFilter";
 import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
 import { useAppType, useHasKit, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands } from "../../store";
-import { DesignSection, FileSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
+import { DesignSection, FileSection, FolderSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
 import { KitAppState, useKitApp, useKitAppCommands } from "./store";
 
-type ArtifactKind = "designs" | "types" | "qualities" | "files" | "authors";
+type ArtifactKind = "designs" | "types" | "qualities" | "files" | "folders" | "authors";
 
 type TableRow = {
   id: string;
@@ -51,7 +51,8 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  data: Design | Type | Quality | SemioFile | Author;
+  data: Design | Type | Quality | SemioFile | Author | Folder;
+  folderId?: string;
 };
 
 const ChevronRight: FC<{ className?: string }> = ({ className }) => (
@@ -84,6 +85,8 @@ const AppContent: FC = () => {
   const isMobile = useIsMobile();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
+  const [draggedRow, setDraggedRow] = React.useState<TableRow | null>(null);
+  const [dragOverFolder, setDragOverFolder] = React.useState<string | null>(null);
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -118,6 +121,7 @@ const AppContent: FC = () => {
     designs: kitApp?.selection?.designs || [],
     qualities: kitApp?.selection?.qualities || [],
     files: kitApp?.selection?.files || [],
+    folders: kitApp?.selection?.folders || [],
     authors: kitApp?.selection?.authors || [],
   };
   const sortColumn = kitApp?.sortColumn;
@@ -184,8 +188,9 @@ const AppContent: FC = () => {
     const designsCount = selection?.designs?.length || 0;
     const qualitiesCount = selection?.qualities?.length || 0;
     const filesCount = selection?.files?.length || 0;
+    const foldersCount = selection?.folders?.length || 0;
     const authorsCount = selection?.authors?.length || 0;
-    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, filesCount > 0, authorsCount > 0].filter(Boolean).length;
+    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
 
     const artifactsMultipleId = "semio.sketchpad.app.kit.artifacts.multiple";
 
@@ -196,6 +201,8 @@ const AppContent: FC = () => {
     removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.file.title");
     removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.kit.folder.title");
+    removeSection("details", "semio.sketchpad.app.kit.folders.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.title");
 
     if (totalSelectedKinds > 1) {
@@ -203,7 +210,6 @@ const AppContent: FC = () => {
         id: artifactsMultipleId,
         translationParams: { count: totalSelectedKinds },
         order: 0,
-        defaultOpen: true,
         content: () => <MultipleArtifactsSection />,
       });
     }
@@ -214,7 +220,6 @@ const AppContent: FC = () => {
         id: designSectionId,
         translationParams: designsCount === 1 ? undefined : { count: designsCount },
         order: 10,
-        defaultOpen: true,
         content: () => <DesignSection />,
       });
     }
@@ -225,7 +230,6 @@ const AppContent: FC = () => {
         id: typeSectionId,
         translationParams: typesCount === 1 ? undefined : { count: typesCount },
         order: 20,
-        defaultOpen: true,
         content: () => <TypeSection />,
       });
     }
@@ -236,15 +240,23 @@ const AppContent: FC = () => {
         id: fileSectionId,
         translationParams: filesCount === 1 ? undefined : { count: filesCount },
         order: 30,
-        defaultOpen: true,
         content: () => <FileSection />,
+      });
+    }
+
+    if (foldersCount > 0 && totalSelectedKinds === 1) {
+      const folderSectionId = foldersCount === 1 ? "semio.sketchpad.app.kit.folder.title" : "semio.sketchpad.app.kit.folders.multipleTitle";
+      addSection("details", {
+        id: folderSectionId,
+        translationParams: foldersCount === 1 ? undefined : { count: foldersCount },
+        order: 40,
+        content: () => <FolderSection />,
       });
     }
 
     addSection("details", {
       id: "semio.sketchpad.app.kit.title",
       order: 100,
-      defaultOpen: true,
       content: () => <KitSection />,
     });
 
@@ -256,6 +268,8 @@ const AppContent: FC = () => {
       removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
       removeSection("details", "semio.sketchpad.app.kit.file.title");
       removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
+      removeSection("details", "semio.sketchpad.app.kit.folder.title");
+      removeSection("details", "semio.sketchpad.app.kit.folders.multipleTitle");
       removeSection("details", "semio.sketchpad.app.kit.title");
     };
   }, [addSection, removeSection, appType, kitApp?.selection]);
@@ -533,6 +547,110 @@ const AppContent: FC = () => {
       });
     }
 
+    if (!selectedKind || selectedKind === "folders") {
+      kit.folders?.forEach((folder: Folder) => {
+        if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+
+        // Get artifacts in this folder
+        const folderedDesigns = kit.designs?.filter((d: Design) => d.folder === folder.guid) || [];
+        const folderedTypes = kit.types?.filter((t: Type) => t.folder === folder.guid) || [];
+        const folderedQualities = kit.qualities?.filter((q: Quality) => q.folder === folder.guid) || [];
+        const folderedFiles = kit.files?.filter((f: SemioFile) => f.folder === folder.guid) || [];
+        const folderedArtifacts = folderedDesigns.length + folderedTypes.length + folderedQualities.length + folderedFiles.length;
+
+        const folderId = `folder-${folder.guid}`;
+        result.push({
+          id: folderId,
+          kind: "folders",
+          artifact: folder.name,
+          authors: `${folderedArtifacts} items`,
+          updatedAt: formatDate(folder.updatedAt),
+          createdAt: formatDate(folder.createdAt),
+          level: 0,
+          hasChildren: folderedArtifacts > 0,
+          isExpanded: expandedRows.has(folderId),
+          data: folder,
+        });
+
+        // Add child artifacts if folder is expanded
+        if (expandedRows.has(folderId)) {
+          // Add designs in folder
+          folderedDesigns.forEach((design: Design) => {
+            if (!design.guid) return;
+            result.push({
+              id: `design-${design.guid}`,
+              kind: "designs",
+              artifact: design.name,
+              authors: (design.authors || []).join(", "),
+              updatedAt: formatDate(design.updatedAt),
+              createdAt: formatDate(design.createdAt),
+              level: 1,
+              hasChildren: false,
+              isExpanded: false,
+              data: design,
+              folderId: folder.guid,
+              parentId: folderId,
+            });
+          });
+
+          // Add types in folder
+          folderedTypes.forEach((type: Type) => {
+            if (!type.guid) return;
+            result.push({
+              id: `type-${type.guid}`,
+              kind: "types",
+              artifact: type.name,
+              authors: (type.authors || []).join(", "),
+              updatedAt: formatDate(type.updatedAt),
+              createdAt: formatDate(type.createdAt),
+              level: 1,
+              hasChildren: false,
+              isExpanded: false,
+              data: type,
+              folderId: folder.guid,
+              parentId: folderId,
+            });
+          });
+
+          // Add qualities in folder
+          folderedQualities.forEach((quality: Quality) => {
+            result.push({
+              id: `quality-${quality.key}`,
+              kind: "qualities",
+              artifact: quality.name,
+              authors: "",
+              updatedAt: "",
+              createdAt: "",
+              level: 1,
+              hasChildren: false,
+              isExpanded: false,
+              data: quality,
+              folderId: folder.guid,
+              parentId: folderId,
+            });
+          });
+
+          // Add files in folder
+          folderedFiles.forEach((file: SemioFile) => {
+            result.push({
+              id: `file-${file.path}`,
+              kind: "files",
+              artifact: file.path.split("/").pop() || file.path,
+              authors: "",
+              updatedAt: "",
+              createdAt: "",
+              level: 1,
+              hasChildren: false,
+              isExpanded: false,
+              data: file,
+              folderId: folder.guid,
+              parentId: folderId,
+            });
+          });
+        }
+      });
+    }
+
     if (!selectedKind || selectedKind === "authors") {
       kit.authors?.forEach((author: Author) => {
         if (searchQuery && !author.name.toLowerCase().includes(searchQuery.toLowerCase()) && !author.email.toLowerCase().includes(searchQuery.toLowerCase())) return;
@@ -681,6 +799,78 @@ const AppContent: FC = () => {
     kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.toggleRow", rowId);
   };
 
+  const handleRowDragStart = (row: TableRow, e: React.DragEvent) => {
+    // Only allow dragging artifacts, not folders themselves (for now)
+    if (row.kind === "folders") {
+      e.preventDefault();
+      return;
+    }
+    setDraggedRow(row);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", row.id);
+  };
+
+  const handleRowDragOver = (row: TableRow, e: React.DragEvent) => {
+    // Only allow dropping into folders
+    if (row.kind !== "folders") {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverFolder(row.id);
+  };
+
+  const handleRowDragLeave = (row: TableRow, e: React.DragEvent) => {
+    if (row.kind !== "folders") {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(null);
+  };
+
+  const handleRowDrop = (row: TableRow, e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(null);
+
+    if (!draggedRow || row.kind !== "folders") {
+      return;
+    }
+
+    const folder = row.data as Folder;
+    const targetFolderId = folder.guid;
+
+    // Don't move if already in this folder
+    if (draggedRow.folderId === targetFolderId) {
+      setDraggedRow(null);
+      return;
+    }
+
+    // Move the artifact to the folder
+    if (draggedRow.kind === "designs" && kitCommands) {
+      const design = draggedRow.data as Design;
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToFolder", "designs", design.guid, targetFolderId);
+    } else if (draggedRow.kind === "types" && kitCommands) {
+      const type = draggedRow.data as Type;
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToFolder", "types", type.guid, targetFolderId);
+    } else if (draggedRow.kind === "qualities" && kitCommands) {
+      const quality = draggedRow.data as Quality;
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveQualityToFolder", "qualities", quality.key, targetFolderId);
+    } else if (draggedRow.kind === "files" && kitCommands) {
+      const file = draggedRow.data as SemioFile;
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFileToFolder", "files", file.path, targetFolderId);
+    }
+
+    setDraggedRow(null);
+  };
+
+  const handleRowDragEnd = () => {
+    setDraggedRow(null);
+    setDragOverFolder(null);
+  };
+
   const handleCreateArtifact = (kind: ArtifactKind) => {
     switch (kind) {
       case "designs": {
@@ -726,10 +916,22 @@ const AppContent: FC = () => {
         break;
       }
       case "files": {
-        // TODO: Implement file creationbreak;
+        // TODO: Implement file creation
+        break;
+      }
+      case "folders": {
+        const existingNames = (kit.folders || []).map((f: Folder) => f.name);
+        const uniqueName = generateUniqueName(t("semio.sketchpad.app.folder.defaultName"), existingNames);
+        const newFolder: Folder = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        if (kitCommands) kitCommands.createFolder("semio.sketchpad.app.kit.canvas.table.createFolder", newFolder);
+        break;
       }
       case "authors": {
-        // TODO: Implement author creationbreak;
+        // TODO: Implement author creation
+        break;
       }
     }
   };
@@ -960,6 +1162,34 @@ const AppContent: FC = () => {
       } else {
         kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", filePath);
       }
+    } else if (row.kind === "folders") {
+      const folderId = (row.data as Folder).guid;
+      if (e.shiftKey) {
+        const currentIndex = rows.findIndex((r) => r.kind === "folders" && (r.data as Folder).guid === folderId);
+        if (selection.folders && selection.folders.length > 0) {
+          const lastSelectedId = selection.folders[selection.folders.length - 1];
+          const lastIndex = rows.findIndex((r) => r.kind === "folders" && (r.data as Folder).guid === lastSelectedId);
+          if (lastIndex !== -1 && currentIndex !== -1) {
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+            const rangeIds = rows
+              .slice(start, end + 1)
+              .filter((r) => r.kind === "folders")
+              .map((r) => (r.data as Folder).guid);
+            kitAppCommands.selectFolders("semio.sketchpad.app.kit.canvas.table.selectFoldersRange", rangeIds);
+          }
+        } else {
+          kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolderShift", folderId);
+        }
+      } else if (e.metaKey || e.ctrlKey) {
+        if (selection.folders && selection.folders.includes(folderId)) {
+          kitAppCommands.removeFolderFromSelection("semio.sketchpad.app.kit.canvas.table.removeFolderCtrl", folderId);
+        } else {
+          kitAppCommands.addFolderToSelection("semio.sketchpad.app.kit.canvas.table.addFolderCtrl", folderId);
+        }
+      } else {
+        kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolder", folderId);
+      }
     } else if (row.kind === "authors") {
       const authorName = (row.data as Author).name;
       if (e.shiftKey) {
@@ -1029,19 +1259,19 @@ const AppContent: FC = () => {
 
     for (const file of files) {
       // Check if file is a zip file
-      if (file.name.toLowerCase().endsWith('.zip')) {
+      if (file.name.toLowerCase().endsWith(".zip")) {
         try {
           console.log(`[DEBUG] Processing zip file: ${file.name}`);
           // Import JSZip dynamically
-          const JSZip = (await import('jszip')).default;
+          const JSZip = (await import("jszip")).default;
           const zip = await JSZip.loadAsync(file);
-          
+
           // Extract all files from zip
           const extractPromises: Promise<void>[] = [];
           zip.forEach((relativePath, zipEntry) => {
             if (!zipEntry.dir) {
               extractPromises.push(
-                zipEntry.async('blob').then(async (fileBlob) => {
+                zipEntry.async("blob").then(async (fileBlob) => {
                   const extractedFile: SemioFile = {
                     guid: guid(),
                     path: relativePath,
@@ -1052,11 +1282,11 @@ const AppContent: FC = () => {
                   };
                   await kitCommands?.addFile("semio.sketchpad.app.kit.dropZip", extractedFile, fileBlob);
                   console.log(`[DEBUG] Extracted and added file ${relativePath} from zip`);
-                })
+                }),
               );
             }
           });
-          
+
           await Promise.all(extractPromises);
           console.log(`[DEBUG] Successfully extracted ${extractPromises.length} files from ${file.name}`);
         } catch (error) {
@@ -1110,6 +1340,7 @@ const AppContent: FC = () => {
               {selectedKind === "types" && <Box className="size-4" />}
               {selectedKind === "qualities" && <Award className="size-4" />}
               {selectedKind === "files" && <FileText className="size-4" />}
+              {selectedKind === "folders" && <FolderIcon className="size-4" />}
               {selectedKind === "authors" && <User className="size-4" />}
             </Toggle>
           )}
@@ -1179,6 +1410,17 @@ const AppContent: FC = () => {
                 actionId="semio.sketchpad.app.kitApp.createFile"
               >
                 <FileText className="size-4" />
+              </Toggle>
+              <Toggle
+                type="withAction"
+                pressed={false}
+                onPressedChange={() => toggleKind("folders")}
+                actionIcon={<Plus className="size-3.5" />}
+                onActionClick={() => handleCreateArtifact("folders")}
+                id="semio.sketchpad.app.kitApp.showFolders"
+                actionId="semio.sketchpad.app.kitApp.createFolder"
+              >
+                <FolderIcon className="size-4" />
               </Toggle>
               <Toggle
                 type="withAction"
@@ -1257,13 +1499,22 @@ const AppContent: FC = () => {
                 (row.kind === "types" && selection.types.includes((row.data as Type).guid)) ||
                 (row.kind === "qualities" && selection.qualities.includes((row.data as Quality).key)) ||
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
+                (row.kind === "folders" && selection.folders.includes((row.data as Folder).guid)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
+              const isDraggedOver = dragOverFolder === row.id;
+              const isDraggable = row.kind !== "folders";
               return (
                 <div
                   key={row.id}
-                  className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isDraggedOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`}
                   onClick={(e) => handleRowClick(row, e)}
                   onDoubleClick={() => handleRowDoubleClick(row)}
+                  draggable={isDraggable}
+                  onDragStart={(e) => handleRowDragStart(row, e)}
+                  onDragOver={(e) => handleRowDragOver(row, e)}
+                  onDragLeave={(e) => handleRowDragLeave(row, e)}
+                  onDrop={(e) => handleRowDrop(row, e)}
+                  onDragEnd={handleRowDragEnd}
                   role="button"
                   tabIndex={0}
                 >
@@ -1287,6 +1538,7 @@ const AppContent: FC = () => {
                         {row.kind === "types" && <Box className="size-4" />}
                         {row.kind === "qualities" && <Award className="size-4" />}
                         {row.kind === "files" && <FileText className="size-4" />}
+                        {row.kind === "folders" && <FolderIcon className="size-4" />}
                         {row.kind === "authors" && <User className="size-4" />}
                       </div>
                       <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
@@ -1596,13 +1848,22 @@ const AppContent: FC = () => {
                 (row.kind === "types" && selection.types.includes((row.data as Type).guid)) ||
                 (row.kind === "qualities" && selection.qualities.includes((row.data as Quality).key)) ||
                 (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
+                (row.kind === "folders" && selection.folders.includes((row.data as Folder).guid)) ||
                 (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
+              const isDraggedOver = dragOverFolder === row.id;
+              const isDraggable = row.kind !== "folders";
               return (
                 <tr
                   key={row.id}
-                  className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isDraggedOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`}
                   onClick={(e) => handleRowClick(row, e)}
                   onDoubleClick={() => handleRowDoubleClick(row)}
+                  draggable={isDraggable}
+                  onDragStart={(e) => handleRowDragStart(row, e)}
+                  onDragOver={(e) => handleRowDragOver(row, e)}
+                  onDragLeave={(e) => handleRowDragLeave(row, e)}
+                  onDrop={(e) => handleRowDrop(row, e)}
+                  onDragEnd={handleRowDragEnd}
                   role="button"
                   tabIndex={0}
                 >
@@ -1682,6 +1943,7 @@ const AppContent: FC = () => {
                       {row.kind === "types" && <Box className="size-4" />}
                       {row.kind === "qualities" && <Award className="size-4" />}
                       {row.kind === "files" && <FileText className="size-4" />}
+                      {row.kind === "folders" && <FolderIcon className="size-4" />}
                       {row.kind === "authors" && <User className="size-4" />}
                     </td>
                   )}
@@ -1707,7 +1969,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {

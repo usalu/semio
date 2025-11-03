@@ -38,10 +38,7 @@ import { useHomeCommands } from "./apps/home/store";
 import { useKitAppCommands } from "./apps/kit/store";
 import { useQualityAppCommands } from "./apps/quality/store";
 import { useTypeAppCommands } from "./apps/type/store";
-import { FreezeButton } from "./panels/FreezeButton";
-import { TimetravelButton } from "./panels/TimetravelButton";
 import {
-  Mode,
   PanelVisibility,
   SketchpadScope,
   useAppCommands,
@@ -2336,13 +2333,6 @@ function NavbarDesktop({ isFullscreen, isNavbarExpanded, id, onWindowEvents }: N
           <ArrowUp size={16} />
         </ButtonGroupItem>
       </ButtonGroup>
-
-      {mode === Mode.DEV && (
-        <ButtonGroup id="semio.sketchpad.navbar.dev">
-          <FreezeButton />
-          <TimetravelButton />
-        </ButtonGroup>
-      )}
 
       <Navigation />
 
