@@ -19,10 +19,13 @@
 
 // #endregion
 
-import { FC, Fragment, memo, useMemo } from "react";
+import { FC, Fragment, memo, ReactNode, useMemo } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../elements/aggregation/Resizable";
 import BaseCanvas, { useCanvasContext as useBaseCanvasContext } from "../elements/Canvas";
 import BaseWindow, { WindowConfig as BaseWindowConfig } from "../elements/windows/Window";
+import GoldenLayoutCanvas from "./GoldenLayoutCanvas";
+
+export { GoldenLayoutCanvas };
 
 export enum WindowLayout {
   SINGLE = "single",
@@ -33,6 +36,18 @@ export enum WindowLayout {
 
 export interface WindowConfig extends BaseWindowConfig {
   defaultSize?: number;
+}
+
+export interface WindowTypeDefinition {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  component: (props: any) => ReactNode;
+}
+
+export interface AppWindowConfig {
+  windowTypes: WindowTypeDefinition[];
+  defaultLayout: any;
 }
 
 export const Canvas = BaseCanvas;

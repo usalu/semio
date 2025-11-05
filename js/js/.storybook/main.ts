@@ -109,6 +109,14 @@ const config: StorybookConfig = {
       }),
     );
 
+    // Configure golden-layout for CommonJS compatibility
+    config.optimizeDeps = config.optimizeDeps || {};
+    config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
+    config.optimizeDeps.esbuildOptions = {
+      ...config.optimizeDeps.esbuildOptions,
+      target: "es2020",
+    };
+
     return config;
   },
 };

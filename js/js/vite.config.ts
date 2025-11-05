@@ -50,14 +50,26 @@ export default defineConfig(async () => {
   return {
     plugins: [
       tailwind.default(),
-      mdx({
-        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
-        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
-        providerImportSource: "@mdx-js/react",
-      }),
+      {
+        ...mdx({
+          remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
+          rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+          providerImportSource: "@mdx-js/react",
+        }),
+        enforce: 'pre',
+      },
       react(),
       wasm(),
       topLevelAwait(),
     ],
+    optimizeDeps: {
+      include: ["golden-layout"],
+      esbuildOptions: {
+        target: "es2020",
+      },
+    },
+    ssr: {
+      noExternal: ["golden-layout"],
+    },
   };
 });

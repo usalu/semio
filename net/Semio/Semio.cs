@@ -2430,12 +2430,11 @@ public class Plane : Model<Plane>
 [Model("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
 public class PortId : Model<PortId>
 {
-    [Id("🆔", "Id?", "Id?", "The local identifier of the port within the type.", isDefaultValid: true)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
-    public static implicit operator PortId(Port port) => new() { Id = port.Id };
-    public static implicit operator PortId(PortDiff diff) => new() { Id = diff.Id };
-    public string ToIdString() => $"{Id}";
+    [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
+    public string Guid { get; set; } = "";
+    public static implicit operator PortId(Port port) => new() { Guid = port.Guid };
+    public static implicit operator PortId(PortDiff diff) => new() { Guid = diff.Guid ?? "" };
+    public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
@@ -2445,45 +2444,44 @@ public class PortId : Model<PortId>
 [Model("📊", "PD", "PDf", "A diff for ports.")]
 public class PortDiff : Model<PortDiff>
 {
-    [Id("🆔", "Id?", "Idn?", "The optional local identifier of the port.", isDefaultValid: true)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the port.")]
+    public string? Guid { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
     [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port.")]
-    public string Family { get; set; } = "";
+    public string? Family { get; set; }
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
     public bool? Mandatory { get; set; }
     [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
     public float? T { get; set; }
     [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port.", PropImportance.OPTIONAL)]
-    public List<string> CompatibleFamilies { get; set; } = new();
+    public List<string>? CompatibleFamilies { get; set; }
     [ModelProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
     public Point? Point { get; set; }
     [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
     public Vector? Direction { get; set; }
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
-    public List<Prop> Props { get; set; } = new();
+    public List<Prop>? Props { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
-    public List<Attribute> Attributes { get; set; } = new();
+    public List<Attribute>? Attributes { get; set; }
 
-    public static implicit operator PortDiff(PortId id) => new() { Id = id.Id };
-    public static implicit operator PortDiff(Port port) => new() { Id = port.Id, Description = port.Description, Family = port.Family, Mandatory = port.Mandatory, T = port.T, CompatibleFamilies = port.CompatibleFamilies, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
+    public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
+    public static implicit operator PortDiff(Port port) => new() { Guid = port.Guid, Description = port.Description, Family = port.Family, Mandatory = port.Mandatory, T = port.T, CompatibleFamilies = port.CompatibleFamilies, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
 
     public PortDiff MergeDiff(PortDiff other)
     {
         return new PortDiff
         {
-            Id = string.IsNullOrEmpty(other.Id) ? Id : other.Id,
-            Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
-            Family = string.IsNullOrEmpty(other.Family) ? Family : other.Family,
+            Guid = other.Guid ?? Guid,
+            Description = other.Description ?? Description,
+            Family = other.Family ?? Family,
             Mandatory = other.Mandatory ?? Mandatory,
             T = other.T ?? T,
-            CompatibleFamilies = other.CompatibleFamilies.Any() ? other.CompatibleFamilies : CompatibleFamilies,
+            CompatibleFamilies = other.CompatibleFamilies ?? CompatibleFamilies,
             Point = other.Point ?? Point,
             Direction = other.Direction ?? Direction,
-            Props = other.Props.Any() ? other.Props : Props,
-            Attributes = other.Attributes.Any() ? other.Attributes : Attributes
+            Props = other.Props ?? Props,
+            Attributes = other.Attributes ?? Attributes
         };
     }
 }
@@ -2507,9 +2505,8 @@ public class PortsDiff : Model<PortsDiff>
 [Model("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
 public class Port : Model<Port>
 {
-    [Id("🆔", "Id?", "Idn?", "The optional local identifier of the port within the type. No id means the default port.", isDefaultValid: true)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
+    public string Guid { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string Description { get; set; } = "";
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
@@ -2528,29 +2525,29 @@ public class Port : Model<Port>
     public List<Prop> Props { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    public string ToIdString() => $"{Id}";
+    public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Por({ToHumanIdString()})";
 
-    public static implicit operator Port(PortId id) => new() { Id = id.Id };
-    public static implicit operator Port(PortDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Family = diff.Family ?? "", Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, CompatibleFamilies = diff.CompatibleFamilies ?? new(), Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
-    public static implicit operator string(Port port) => port.Id;
-    public static implicit operator Port(string id) => new() { Id = id };
+    public static implicit operator Port(PortId id) => new() { Guid = id.Guid };
+    public static implicit operator Port(PortDiff diff) => new() { Guid = diff.Guid ?? "", Description = diff.Description ?? "", Family = diff.Family ?? "", Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, CompatibleFamilies = diff.CompatibleFamilies ?? new(), Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
+    public static implicit operator string(Port port) => port.Guid;
+    public static implicit operator Port(string guid) => new() { Guid = guid };
 
     public Port ApplyDiff(PortDiff diff)
     {
         return new Port
         {
-            Id = string.IsNullOrEmpty(diff.Id) ? Id : diff.Id,
-            Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
-            Family = string.IsNullOrEmpty(diff.Family) ? Family : diff.Family,
+            Guid = diff.Guid ?? Guid,
+            Description = diff.Description ?? Description,
+            Family = diff.Family ?? Family,
             Mandatory = diff.Mandatory ?? Mandatory,
             T = diff.T ?? T,
-            CompatibleFamilies = diff.CompatibleFamilies.Any() ? diff.CompatibleFamilies : CompatibleFamilies,
+            CompatibleFamilies = diff.CompatibleFamilies ?? CompatibleFamilies,
             Point = diff.Point ?? Point,
             Direction = diff.Direction ?? Direction,
-            Props = diff.Props.Any() ? diff.Props : Props,
-            Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes
+            Props = diff.Props ?? Props,
+            Attributes = diff.Attributes ?? Attributes
         };
     }
 
@@ -2558,7 +2555,7 @@ public class Port : Model<Port>
     {
         return new PortDiff
         {
-            Id = Id,
+            Guid = Guid,
             Description = Description,
             Family = Family,
             Mandatory = Mandatory,
@@ -2752,30 +2749,36 @@ public class Location : Model<Location>
 [Model("🧩", "Ty", "Typ", "The identifier of the type within the kit.")]
 public class TypeId : Model<TypeId>
 {
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
-    public string Name { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant.", PropImportance.ID, true)]
-    public string Variant { get; set; } = "";
-    public string ToIdString() => $"{Name}#{Variant}";
-    public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
+    [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Guid}";
     public override string ToString() => $"Typ({ToHumanIdString()})";
-    public static implicit operator TypeId(Type type) => new() { Name = type.Name, Variant = type.Variant };
-    public static implicit operator TypeId(TypeDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "" };
+    public static implicit operator TypeId(Type type) => new() { Guid = type.Guid };
+    public static implicit operator TypeId(TypeDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
 [Model("🧩", "TD", "TDf", "A diff for types.")]
 public class TypeDiff : Model<TypeDiff>
 {
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the type.")]
+    public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
-    public string Name { get; set; } = "";
+    public string? Name { get; set; }
+    [Id("📁", "Pa?", "Par?", "The optional parent type guid.")]
+    public string? Parent { get; set; }
+    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
+    public bool? IsAbstract { get; set; }
+    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
+    public string? Folder { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
     [Url("🪙", "Ic?", "Ico?", "The optional icon of the type.")]
-    public string Icon { get; set; } = "";
+    public string? Icon { get; set; }
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the type.")]
-    public string Image { get; set; } = "";
+    public string? Image { get; set; }
     [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type.")]
-    public string Variant { get; set; } = "";
+    public string? Variant { get; set; };
     [IntProp("📦", "St?", "Stk?", "The optional number of items in stock.")]
     public int? Stock { get; set; }
     [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual.")]
@@ -2800,6 +2803,10 @@ public class TypeDiff : Model<TypeDiff>
     public List<Attribute> Attributes { get; set; } = new();
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
     public List<string> Concepts { get; set; } = new();
+    [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the type.")]
+    public DateTime? CreatedAt { get; set; }
+    [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the type.")]
+    public DateTime? UpdatedAt { get; set; }
 
     public TypeDiff MergeDiff(TypeDiff other)
     {
@@ -2848,8 +2855,16 @@ public class TypesDiff : Model<TypesDiff>
 [Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
 public class Type : Model<Type>
 {
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
+    [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
+    [Id("📁", "Pa?", "Par?", "The optional parent type guid.")]
+    public string? Parent { get; set; }
+    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
+    public bool? IsAbstract { get; set; }
+    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
+    public string? Folder { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
     public string Description { get; set; } = "";
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
@@ -2884,17 +2899,21 @@ public class Type : Model<Type>
     public List<Attribute> Attributes { get; set; } = new();
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
     public List<string> Concepts { get; set; } = new();
+    [Name("📅", "CA", "CrA", "The created at timestamp of the type.", PropImportance.REQUIRED)]
+    public DateTime CreatedAt { get; set; }
+    [Name("📅", "UA", "UpA", "The updated at timestamp of the type.", PropImportance.REQUIRED)]
+    public DateTime UpdatedAt { get; set; }
 
-    public string ToIdString() => $"{Name}#{Variant}";
+    public string ToIdString() => $"{Guid}";
 
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
 
     public override string ToString() => $"Typ({ToHumanIdString()})";
 
-    public static implicit operator Type(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
-    public static implicit operator Type(TypeDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Scalable = diff.Scalable ?? false, Mirrorable = diff.Mirrorable ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new() };
+    public static implicit operator Type(TypeId id) => new() { Guid = id.Guid, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    public static implicit operator Type(TypeDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Scalable = diff.Scalable ?? false, Mirrorable = diff.Mirrorable ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
     public static implicit operator string(Type type) => type.Name;
-    public static implicit operator Type(string name) => new() { Name = name };
+    public static implicit operator Type(string name) => new() { Name = name, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
     public Type ApplyDiff(TypeDiff diff)
     {
@@ -3143,58 +3162,120 @@ public class ConnectionsDiff : Model<ConnectionsDiff>
 [Model("🏙️", "DD", "DDf", "A diff for designs.")]
 public class DesignDiff : Model<DesignDiff>
 {
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the design.")]
+    public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
-    public string Name { get; set; } = "";
+    public string? Name { get; set; }
+    [Id("📁", "Pa?", "Par?", "The optional parent design guid.")]
+    public string? Parent { get; set; }
+    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
+    public bool? IsAbstract { get; set; }
+    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
+    public string? Folder { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
     [Url("🪙", "Ic?", "Ico?", "The optional icon of the design.")]
-    public string Icon { get; set; } = "";
+    public string? Icon { get; set; }
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design.")]
-    public string Image { get; set; } = "";
+    public string? Image { get; set; }
     [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design.")]
-    public string Variant { get; set; } = "";
+    public string? Variant { get; set; }
     [Name("🥽", "Vw?", "Vew?", "The optional view of the design.")]
-    public string View { get; set; } = "";
+    public string? View { get; set; };
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit for the design.")]
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
+    [Name("🎚️", "AL?", "AcL?", "The optional active layer path.")]
+    public string? ActiveLayer { get; set; }
     [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces diff for the design.", PropImportance.OPTIONAL)]
     public PiecesDiff? Pieces { get; set; }
     [ModelProp("🔗", "Co*", "Cons*", "The optional connections diff for the design.", PropImportance.OPTIONAL)]
     public ConnectionsDiff? Connections { get; set; }
-    [ModelProp("�", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
-    public List<Stat> Stats { get; set; } = new();
-    [ModelProp("�🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
-    public List<Attribute> Attributes { get; set; } = new();
+    [ModelProp("🧩", "Pr*", "Prp*", "The optional props of the design.", PropImportance.OPTIONAL)]
+    public List<Prop>? Props { get; set; }
+    [ModelProp("📊", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+    public List<Stat>? Stats { get; set; }
+    [ModelProp("📂", "La*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
+    public List<Layer>? Layers { get; set; }
+    [ModelProp("👥", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
+    public List<Group>? Groups { get; set; }
+    [FalseOrTrue("📏", "CS?", "CnS?", "Whether the design can be scaled.")]
+    public bool? CanScale { get; set; }
+    [FalseOrTrue("🪞", "CM?", "CnM?", "Whether the design can be mirrored.")]
+    public bool? CanMirror { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    public List<Attribute>? Attributes { get; set; }
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
-    public List<AuthorId> Authors { get; set; } = new();
+    public List<AuthorId>? Authors { get; set; }
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
+    public List<string>? Concepts { get; set; }
+    [DateTime("📅", "CA?", "CrA?", "The optional creation date.")]
+    public string? CreatedAt { get; set; }
+    [DateTime("📝", "UA?", "UpA?", "The optional last update date.")]
+    public string? UpdatedAt { get; set; }
 
     public DesignDiff MergeDiff(DesignDiff other)
     {
         return new DesignDiff
         {
-            Name = string.IsNullOrEmpty(other.Name) ? Name : other.Name,
-            Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
-            Icon = string.IsNullOrEmpty(other.Icon) ? Icon : other.Icon,
-            Image = string.IsNullOrEmpty(other.Image) ? Image : other.Image,
-            Variant = string.IsNullOrEmpty(other.Variant) ? Variant : other.Variant,
-            View = string.IsNullOrEmpty(other.View) ? View : other.View,
+            Guid = other.Guid ?? Guid,
+            Name = other.Name ?? Name,
+            Parent = other.Parent ?? Parent,
+            IsAbstract = other.IsAbstract ?? IsAbstract,
+            Folder = other.Folder ?? Folder,
+            Description = other.Description ?? Description,
+            Icon = other.Icon ?? Icon,
+            Image = other.Image ?? Image,
+            Variant = other.Variant ?? Variant,
+            View = other.View ?? View,
             Location = other.Location ?? Location,
-            Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
+            Unit = other.Unit ?? Unit,
+            ActiveLayer = other.ActiveLayer ?? ActiveLayer,
             Pieces = other.Pieces ?? Pieces,
             Connections = other.Connections ?? Connections,
-            Stats = other.Stats.Any() ? other.Stats : Stats,
-            Attributes = other.Attributes.Any() ? other.Attributes : Attributes,
-            Authors = other.Authors.Any() ? other.Authors : Authors,
-            Concepts = other.Concepts.Any() ? other.Concepts : Concepts
+            Props = other.Props ?? Props,
+            Stats = other.Stats ?? Stats,
+            Layers = other.Layers ?? Layers,
+            Groups = other.Groups ?? Groups,
+            CanScale = other.CanScale ?? CanScale,
+            CanMirror = other.CanMirror ?? CanMirror,
+            Attributes = other.Attributes ?? Attributes,
+            Authors = other.Authors ?? Authors,
+            Concepts = other.Concepts ?? Concepts,
+            CreatedAt = other.CreatedAt ?? CreatedAt,
+            UpdatedAt = other.UpdatedAt ?? UpdatedAt
         };
     }
 
-    public static implicit operator DesignDiff(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
-    public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Stats = design.Stats, Attributes = design.Attributes, Authors = design.Authors, Concepts = design.Concepts };
+    public static implicit operator DesignDiff(DesignId id) => new() { Guid = id.Guid };
+    public static implicit operator DesignDiff(Design design) => new() 
+    { 
+        Guid = design.Guid,
+        Name = design.Name,
+        Parent = design.Parent,
+        IsAbstract = design.IsAbstract,
+        Folder = design.Folder,
+        Description = design.Description,
+        Icon = design.Icon,
+        Image = design.Image,
+        Variant = design.Variant,
+        View = design.View,
+        Location = design.Location,
+        Unit = design.Unit,
+        ActiveLayer = design.ActiveLayer,
+        Props = design.Props,
+        Stats = design.Stats,
+        Layers = design.Layers,
+        Groups = design.Groups,
+        CanScale = design.CanScale,
+        CanMirror = design.CanMirror,
+        Attributes = design.Attributes,
+        Authors = design.Authors,
+        Concepts = design.Concepts,
+        CreatedAt = design.CreatedAt,
+        UpdatedAt = design.UpdatedAt
+    };
 }
 
 [Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
@@ -3268,70 +3349,228 @@ public class FilesDiff : Model<FilesDiff>
     public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
 }
 
-[Model("🗃️", "KD", "KDf", "A diff for kits.")]
+[Model("�", "FId", "FolId", "The identifier for a folder.")]
+public class FolderId : Model<FolderId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"FolderId({ToHumanIdString()})";
+
+    public static implicit operator FolderId(Folder folder) => new() { Guid = folder.Guid };
+    public static implicit operator FolderId(FolderDiff diff) => new() { Guid = diff.Guid ?? "" };
+}
+
+[Model("📁", "Fol", "Folder", "A folder is an organizational container.")]
+public class Folder : Model<Folder>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Na", "Nam", "The name of the folder.")]
+    public string Name { get; set; } = "";
+    [Id("📁", "Pa?", "Par?", "The optional parent folder guid.")]
+    public string? Parent { get; set; }
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the folder.")]
+    public string Description { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+    [DateTime("📅", "CA", "CrA", "The creation date of the folder.")]
+    public string CreatedAt { get; set; } = "";
+    [Name("👤", "CB?", "CrB?", "The optional user who created the folder.")]
+    public string? CreatedBy { get; set; }
+    [DateTime("📝", "UA", "UpA", "The last update date of the folder.")]
+    public string UpdatedAt { get; set; } = "";
+    [Name("👤", "UB?", "UpB?", "The optional user who last updated the folder.")]
+    public string? UpdatedBy { get; set; }
+
+    public static implicit operator Folder(FolderDiff diff) => new() 
+    { 
+        Guid = diff.Guid ?? "",
+        Name = diff.Name ?? "",
+        Parent = diff.Parent,
+        Description = diff.Description ?? "",
+        Attributes = diff.Attributes ?? new(),
+        CreatedAt = diff.CreatedAt ?? "",
+        CreatedBy = diff.CreatedBy,
+        UpdatedAt = diff.UpdatedAt ?? "",
+        UpdatedBy = diff.UpdatedBy
+    };
+
+    public Folder ApplyDiff(FolderDiff diff)
+    {
+        return new Folder
+        {
+            Guid = diff.Guid ?? Guid,
+            Name = diff.Name ?? Name,
+            Parent = diff.Parent ?? Parent,
+            Description = diff.Description ?? Description,
+            Attributes = diff.Attributes ?? Attributes,
+            CreatedAt = diff.CreatedAt ?? CreatedAt,
+            CreatedBy = diff.CreatedBy ?? CreatedBy,
+            UpdatedAt = diff.UpdatedAt ?? UpdatedAt,
+            UpdatedBy = diff.UpdatedBy ?? UpdatedBy
+        };
+    }
+}
+
+[Model("📁", "FD", "FolDf", "A diff for folders.")]
+public class FolderDiff : Model<FolderDiff>
+{
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the folder.")]
+    public string? Guid { get; set; }
+    [Name("📛", "Na?", "Nam?", "The optional name of the folder.")]
+    public string? Name { get; set; }
+    [Id("📁", "Pa?", "Par?", "The optional parent folder guid.")]
+    public string? Parent { get; set; }
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the folder.")]
+    public string? Description { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
+    public List<Attribute>? Attributes { get; set; }
+    [DateTime("📅", "CA?", "CrA?", "The optional creation date.")]
+    public string? CreatedAt { get; set; }
+    [Name("👤", "CB?", "CrB?", "The optional user who created the folder.")]
+    public string? CreatedBy { get; set; }
+    [DateTime("📝", "UA?", "UpA?", "The optional last update date.")]
+    public string? UpdatedAt { get; set; }
+    [Name("👤", "UB?", "UpB?", "The optional user who last updated the folder.")]
+    public string? UpdatedBy { get; set; }
+
+    public FolderDiff MergeDiff(FolderDiff other)
+    {
+        return new FolderDiff
+        {
+            Guid = other.Guid ?? Guid,
+            Name = other.Name ?? Name,
+            Parent = other.Parent ?? Parent,
+            Description = other.Description ?? Description,
+            Attributes = other.Attributes ?? Attributes,
+            CreatedAt = other.CreatedAt ?? CreatedAt,
+            CreatedBy = other.CreatedBy ?? CreatedBy,
+            UpdatedAt = other.UpdatedAt ?? UpdatedAt,
+            UpdatedBy = other.UpdatedBy ?? UpdatedBy
+        };
+    }
+
+    public static implicit operator FolderDiff(FolderId id) => new() { Guid = id.Guid };
+    public static implicit operator FolderDiff(Folder folder) => new() 
+    { 
+        Guid = folder.Guid,
+        Name = folder.Name,
+        Parent = folder.Parent,
+        Description = folder.Description,
+        Attributes = folder.Attributes,
+        CreatedAt = folder.CreatedAt,
+        CreatedBy = folder.CreatedBy,
+        UpdatedAt = folder.UpdatedAt,
+        UpdatedBy = folder.UpdatedBy
+    };
+}
+
+[Model("📁", "FsD", "FolsDf", "A diff for multiple folders.")]
+public class FoldersDiff : Model<FoldersDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed folders.", PropImportance.OPTIONAL)]
+    public List<FolderId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated folders.", PropImportance.OPTIONAL)]
+    public List<FolderDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added folders.", PropImportance.OPTIONAL)]
+    public List<Folder> Added { get; set; } = new();
+
+    public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => (FolderDiff)f).ToList() };
+}
+
+[Model("�🗃️", "KD", "KDf", "A diff for kits.")]
 public class KitDiff : Model<KitDiff>
 {
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the kit.")]
+    public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the kit.")]
-    public string Name { get; set; } = "";
+    public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
     [Url("🪙", "Ic?", "Ico?", "The optional icon of the kit.")]
-    public string Icon { get; set; } = "";
+    public string? Icon { get; set; }
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit.")]
-    public string Image { get; set; } = "";
+    public string? Image { get; set; }
     [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit.")]
-    public string Preview { get; set; } = "";
+    public string? Preview { get; set; }
     [Name("🔀", "Vr?", "Ver?", "The optional version of the kit.")]
-    public string Version { get; set; } = "";
+    public string? Version { get; set; }
     [Url("☁️", "Rm?", "Rmt?", "The optional URL where to fetch the kit remotely.")]
-    public string Remote { get; set; } = "";
+    public string? Remote { get; set; }
     [Url("🏠", "Hp?", "Hmp?", "The optional URL of the homepage of the kit.")]
-    public string Homepage { get; set; } = "";
+    public string? Homepage { get; set; }
     [Url("⚖️", "Li?", "Lic?", "The optional license of the kit.")]
-    public string License { get; set; } = "";
+    public string? License { get; set; };
     [ModelProp("🧩", "Ty*", "Typ*", "The optional types diff for the kit.", PropImportance.OPTIONAL)]
     public TypesDiff? Types { get; set; }
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs diff for the kit.", PropImportance.OPTIONAL)]
     public DesignsDiff? Designs { get; set; }
     [ModelProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
     public FilesDiff? Files { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
-    public List<Attribute> Attributes { get; set; } = new();
+    [ModelProp("�", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
+    public FoldersDiff? Folders { get; set; }
+    [ModelProp("�🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+    public List<Attribute>? Attributes { get; set; }
+    [DateTime("📅", "CA?", "CrA?", "The optional creation date.")]
+    public string? CreatedAt { get; set; }
+    [DateTime("📝", "UA?", "UpA?", "The optional last update date.")]
+    public string? UpdatedAt { get; set; }
 
     public KitDiff MergeDiff(KitDiff other)
     {
         return new KitDiff
         {
-            Name = string.IsNullOrEmpty(other.Name) ? Name : other.Name,
-            Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
-            Icon = string.IsNullOrEmpty(other.Icon) ? Icon : other.Icon,
-            Image = string.IsNullOrEmpty(other.Image) ? Image : other.Image,
-            Preview = string.IsNullOrEmpty(other.Preview) ? Preview : other.Preview,
-            Version = string.IsNullOrEmpty(other.Version) ? Version : other.Version,
-            Remote = string.IsNullOrEmpty(other.Remote) ? Remote : other.Remote,
-            Homepage = string.IsNullOrEmpty(other.Homepage) ? Homepage : other.Homepage,
-            License = string.IsNullOrEmpty(other.License) ? License : other.License,
+            Guid = other.Guid ?? Guid,
+            Name = other.Name ?? Name,
+            Description = other.Description ?? Description,
+            Icon = other.Icon ?? Icon,
+            Image = other.Image ?? Image,
+            Preview = other.Preview ?? Preview,
+            Version = other.Version ?? Version,
+            Remote = other.Remote ?? Remote,
+            Homepage = other.Homepage ?? Homepage,
+            License = other.License ?? License,
             Types = other.Types ?? Types,
             Designs = other.Designs ?? Designs,
             Files = other.Files ?? Files,
-            Attributes = other.Attributes.Any() ? other.Attributes : Attributes
+            Folders = other.Folders ?? Folders,
+            Attributes = other.Attributes ?? Attributes,
+            CreatedAt = other.CreatedAt ?? CreatedAt,
+            UpdatedAt = other.UpdatedAt ?? UpdatedAt
         };
     }
 
-    public static implicit operator KitDiff(Kit kit) => new() { Name = kit.Name, Description = kit.Description, Icon = kit.Icon, Image = kit.Image, Preview = kit.Preview, Version = kit.Version, Remote = kit.Remote, Homepage = kit.Homepage, License = kit.License, Attributes = kit.Attributes };
+    public static implicit operator KitDiff(Kit kit) => new() 
+    { 
+        Guid = kit.Guid,
+        Name = kit.Name,
+        Description = kit.Description,
+        Icon = kit.Icon,
+        Image = kit.Image,
+        Preview = kit.Preview,
+        Version = kit.Version,
+        Remote = kit.Remote,
+        Homepage = kit.Homepage,
+        License = kit.License,
+        Attributes = kit.Attributes,
+        CreatedAt = kit.CreatedAt,
+        UpdatedAt = kit.UpdatedAt
+    };
 }
 
 [Model("🗃️", "KId", "KitId", "The local identifier of the kit.")]
 public class KitId : Model<KitId>
 {
-    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
-    public string Name { get; set; } = "";
-    public string ToIdString() => $"{Name}";
+    [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"KitId({ToHumanIdString()})";
 
-    public static implicit operator KitId(Kit kit) => new() { Name = kit.Name };
-    public static implicit operator KitId(KitDiff diff) => new() { Name = diff.Name ?? "" };
+    public static implicit operator KitId(Kit kit) => new() { Guid = kit.Guid };
+    public static implicit operator KitId(KitDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
 [Model("📦", "KsD", "KsDf", "A diff for multiple kits.")]
@@ -3882,17 +4121,13 @@ public class Connection : Model<Connection>
 [Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
 public class DesignId : Model<DesignId>
 {
-    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
-    public string Name { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
-    public string Variant { get; set; } = "";
-    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
-    public string View { get; set; } = "";
-    public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
-    public static implicit operator DesignId(DesignDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "" };
+    [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator DesignId(Design design) => new() { Guid = design.Guid };
+    public static implicit operator DesignId(DesignDiff diff) => new() { Guid = diff.Guid ?? "" };
 
-    public string ToIdString() => $"{Name}#{Variant}#{View}";
-    public string ToHumanIdString() => $"{Name}{(Variant == "" ? "" : ", " + Variant)}{(View == "" ? "" : ", " + View)}";
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Guid}";
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"DsnId({ToHumanIdString()})";
@@ -3904,8 +4139,16 @@ public class DesignId : Model<DesignId>
 [Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
 public class Design : Model<Design>
 {
-    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
+    [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
+    [Id("📁", "Pa?", "Par?", "The optional parent design guid.")]
+    public string? Parent { get; set; }
+    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
+    public bool? IsAbstract { get; set; }
+    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
+    public string? Folder { get; set; }
     [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
     public string Variant { get; set; } = "";
     [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
@@ -3924,12 +4167,14 @@ public class Design : Model<Design>
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
-    [FalseOrTrue("⚖️", "Sc?", "Scl?", "Whether the design can be scaled.")]
-    public bool Scalable { get; set; } = true;
-    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the design can be mirrored.")]
-    public bool Mirrorable { get; set; } = true;
+    [FalseOrTrue("⚖️", "CS?", "CanS?", "Whether the design can be scaled.")]
+    public bool? CanScale { get; set; }
+    [FalseOrTrue("🪞", "CM?", "CanM?", "Whether the design can be mirrored.")]
+    public bool? CanMirror { get; set; }
     [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
     public List<Layer> Layers { get; set; } = new();
+    [Id("🔖", "AL?", "ActL?", "The optional active layer guid.")]
+    public string? ActiveLayer { get; set; }
     [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
     [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
@@ -3942,15 +4187,19 @@ public class Design : Model<Design>
     public List<Stat> Stats { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    [Name("📅", "CA", "CrA", "The created at timestamp of the design.", PropImportance.REQUIRED)]
+    public DateTime CreatedAt { get; set; }
+    [Name("📅", "UA", "UpA", "The updated at timestamp of the design.", PropImportance.REQUIRED)]
+    public DateTime UpdatedAt { get; set; }
 
-    public string ToIdString() => $"{Name}#{Variant}#{View}";
+    public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") + (View.Length == 0 ? "" : $", {View}");
     public override string ToString() => $"Dsn({ToHumanIdString()})";
 
-    public static implicit operator Design(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
-    public static implicit operator Design(DesignDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", Attributes = diff.Attributes ?? new(), Authors = diff.Authors ?? new(), Concepts = diff.Concepts ?? new() };
+    public static implicit operator Design(DesignId id) => new() { Guid = id.Guid, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    public static implicit operator Design(DesignDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", CanScale = diff.CanScale, CanMirror = diff.CanMirror, ActiveLayer = diff.ActiveLayer, Attributes = diff.Attributes ?? new(), Authors = diff.Authors ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
     public static implicit operator string(Design design) => design.Name;
-    public static implicit operator Design(string name) => new() { Name = name };
+    public static implicit operator Design(string name) => new() { Name = name, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
     public Design ApplyDiff(DesignDiff diff)
     {
@@ -3968,21 +4217,32 @@ public class Design : Model<Design>
 
         return new Design
         {
-            Name = string.IsNullOrEmpty(diff.Name) ? Name : diff.Name,
-            Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
-            Icon = string.IsNullOrEmpty(diff.Icon) ? Icon : diff.Icon,
-            Image = string.IsNullOrEmpty(diff.Image) ? Image : diff.Image,
-            Variant = string.IsNullOrEmpty(diff.Variant) ? Variant : diff.Variant,
-            View = string.IsNullOrEmpty(diff.View) ? View : diff.View,
+            Guid = diff.Guid ?? Guid,
+            Name = diff.Name ?? Name,
+            Parent = diff.Parent ?? Parent,
+            IsAbstract = diff.IsAbstract ?? IsAbstract,
+            Folder = diff.Folder ?? Folder,
+            Description = diff.Description ?? Description,
+            Icon = diff.Icon ?? Icon,
+            Image = diff.Image ?? Image,
+            Variant = diff.Variant ?? Variant,
+            View = diff.View ?? View,
             Location = diff.Location ?? Location,
-            Unit = string.IsNullOrEmpty(diff.Unit) ? Unit : diff.Unit,
+            Unit = diff.Unit ?? Unit,
+            ActiveLayer = diff.ActiveLayer ?? ActiveLayer,
             Pieces = pieces,
             Connections = connections,
-            Props = Props,
-            Stats = diff.Stats.Any() ? diff.Stats : Stats,
-            Authors = diff.Authors.Any() ? diff.Authors : Authors,
-            Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes,
-            Concepts = diff.Concepts.Any() ? diff.Concepts : Concepts
+            Props = diff.Props ?? Props,
+            Stats = diff.Stats ?? Stats,
+            Layers = diff.Layers ?? Layers,
+            Groups = diff.Groups ?? Groups,
+            CanScale = diff.CanScale ?? CanScale,
+            CanMirror = diff.CanMirror ?? CanMirror,
+            Attributes = diff.Attributes ?? Attributes,
+            Authors = diff.Authors ?? Authors,
+            Concepts = diff.Concepts ?? Concepts,
+            CreatedAt = diff.CreatedAt ?? CreatedAt,
+            UpdatedAt = diff.UpdatedAt ?? UpdatedAt
         };
     }
 
@@ -4766,6 +5026,8 @@ text {
 [Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
 public class Kit : Model<Kit>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
     [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
     public string Name { get; set; } = "";
     [Name("🔀", "Vr?", "Ver?", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
@@ -4804,10 +5066,16 @@ public class Kit : Model<Kit>
     public List<Quality> Qualities { get; set; } = new();
     [ModelProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
     public List<File> Files { get; set; } = new();
+    [ModelProp("📁", "Fo*", "Fol*", "The optional folders of the kit.", PropImportance.OPTIONAL)]
+    public List<Folder> Folders { get; set; } = new();
     [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
+    [DateTime("📅", "CA", "CrA", "The creation date of the kit.")]
+    public string CreatedAt { get; set; } = "";
+    [DateTime("📝", "UA", "UpA", "The last update date of the kit.")]
+    public string UpdatedAt { get; set; } = "";
 
     public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Files = diff.Files ?? new(), Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Kit kit) => kit.Name;

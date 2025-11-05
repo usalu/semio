@@ -260,6 +260,16 @@ const DraggableRow: FC<{
       role="button"
       tabIndex={0}
     >
+      {!isMobile && !selectedKind && (
+        <td className="p-1">
+          {row.kind === "designs" && <Layout className="size-4" />}
+          {row.kind === "types" && <Box className="size-4" />}
+          {row.kind === "qualities" && <Award className="size-4" />}
+          {row.kind === "files" && <FileText className="size-4" />}
+          {row.kind === "folders" && <FolderIcon className="size-4" />}
+          {row.kind === "authors" && <User className="size-4" />}
+        </td>
+      )}
       <td className="p-1" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
           <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -295,16 +305,6 @@ const DraggableRow: FC<{
           </div>
         </div>
       </td>
-      {!isMobile && !selectedKind && (
-        <td className="p-1">
-          {row.kind === "designs" && <Layout className="size-4" />}
-          {row.kind === "types" && <Box className="size-4" />}
-          {row.kind === "qualities" && <Award className="size-4" />}
-          {row.kind === "files" && <FileText className="size-4" />}
-          {row.kind === "folders" && <FolderIcon className="size-4" />}
-          {row.kind === "authors" && <User className="size-4" />}
-        </td>
-      )}
       {!isMobile && <td className="p-1">{row.updatedAt}</td>}
       {!isMobile && <td className="p-1">{row.createdAt}</td>}
     </tr>
@@ -1958,26 +1958,6 @@ const AppContent: FC = () => {
             <table className="w-full border-collapse">
               <thead className="sticky top-0 border-b">
                 <tr className="h-9">
-                  <th className="text-left p-1 font-medium relative group">
-                    <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.kit.name")}</span>
-                      <Toggle
-                        type="dropdown"
-                        pressed={sortColumn === "artifact"}
-                        value={sortColumn === "artifact" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
-                          kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
-                        ]}
-                        className="px-1 min-w-0"
-                      />
-                    </div>
-                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-                  </th>
                   {!selectedKind && (
                     <th className="text-left p-1 font-medium relative group">
                       <div className="flex items-center justify-between w-full">
@@ -2000,6 +1980,26 @@ const AppContent: FC = () => {
                       <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
                     </th>
                   )}
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("semio.sketchpad.app.kit.name")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "artifact"}
+                        value={sortColumn === "artifact" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
+                          kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
+                    </div>
+                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                  </th>
                   <th className="text-left p-1 font-medium relative group">
                     <div className="flex items-center justify-between w-full">
                       <span>{t("semio.sketchpad.app.kit.lastUpdated")}</span>

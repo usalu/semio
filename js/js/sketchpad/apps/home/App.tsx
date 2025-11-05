@@ -56,6 +56,7 @@ type TableRow = {
   createdAt: string;
   kit?: KitShallow;
   docsPath?: string;
+  icon?: string;
 };
 
 const ChevronRight: FC<{ className?: string }> = ({ className }) => (
@@ -216,6 +217,7 @@ const Home: FC = ({ }) => {
           createdAt: "",
           kit: undefined,
           docsPath: undefined,
+          icon: section.icon,
         });
 
         if (expandedRows.has(sectionId)) {
@@ -232,6 +234,7 @@ const Home: FC = ({ }) => {
               createdAt: "",
               kit: undefined,
               docsPath: page.path,
+              icon: page.icon,
             });
           });
         }
@@ -799,26 +802,6 @@ const Home: FC = ({ }) => {
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 border-b">
                   <tr className="h-9">
-                    <th className="text-left p-1 font-medium relative group">
-                      <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.sketchpad.app.home.name")}</span>
-                        <Toggle
-                          type="dropdown"
-                          pressed={sortColumn === "name"}
-                          value={sortColumn === "name" ? sortDirection : "asc"}
-                          onValueChange={(value) => {
-                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.name.sortColumn", "name");
-                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
-                          }}
-                          items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
-                          ]}
-                          className="px-1 min-w-0"
-                        />
-                      </div>
-                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-                    </th>
                     {!selectedKind && (
                       <th className="text-left p-1 font-medium relative group">
                         <div className="flex items-center justify-between w-full">
@@ -841,6 +824,26 @@ const Home: FC = ({ }) => {
                         <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
                       </th>
                     )}
+                    <th className="text-left p-1 font-medium relative group">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{t("semio.sketchpad.app.home.name")}</span>
+                        <Toggle
+                          type="dropdown"
+                          pressed={sortColumn === "name"}
+                          value={sortColumn === "name" ? sortDirection : "asc"}
+                          onValueChange={(value) => {
+                            homeCommands.setSortColumn("semio.sketchpad.app.home.header.name.sortColumn", "name");
+                            homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
+                          }}
+                          items={[
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                          ]}
+                          className="px-1 min-w-0"
+                        />
+                      </div>
+                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                    </th>
                     <th className="text-left p-1 font-medium relative group">
                       <div className="flex items-center justify-between w-full">
                         <span>{t("semio.sketchpad.app.home.lastUpdated")}</span>
@@ -907,6 +910,14 @@ const Home: FC = ({ }) => {
                         role="button"
                         tabIndex={0}
                       >
+                        {!selectedKind && (
+                          <td className="p-1">
+                            {row.type === "temporary" && <Clock className="size-4" />}
+                            {row.type === "local" && <HardDrive className="size-4" />}
+                            {row.type === "remote" && <Cloud className="size-4" />}
+                            {row.type === "docs" && <FileText className="size-4" />}
+                          </td>
+                        )}
                         <td className="p-1" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
                             <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -923,7 +934,7 @@ const Home: FC = ({ }) => {
                               ) : (
                                 <span className="w-4 h-4 shrink-0" />
                               )}
-                              <TableAvatar name={row.name} icon={row.kit?.icon} />
+                              <TableAvatar name={row.name} icon={row.type === "docs" ? row.icon : row.kit?.icon} />
                               <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                             </div>
                             <div className="flex items-center gap-0.5 shrink-0">
@@ -942,14 +953,6 @@ const Home: FC = ({ }) => {
                             </div>
                           </div>
                         </td>
-                        {!selectedKind && (
-                          <td className="p-1">
-                            {row.type === "temporary" && <Clock className="size-4" />}
-                            {row.type === "local" && <HardDrive className="size-4" />}
-                            {row.type === "remote" && <Cloud className="size-4" />}
-                            {row.type === "docs" && <FileText className="size-4" />}
-                          </td>
-                        )}
                         <td className="p-1">{row.updatedAt}</td>
                         <td className="p-1">{row.createdAt}</td>
                       </tr>

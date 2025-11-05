@@ -601,8 +601,8 @@ interface SceneProps {
 }
 
 const Scene: FC<SceneProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed, orthographic = true, shadows = false, className = "", focusedItemId, onFocusComplete }) => (
-  <div className={`h-full w-full ${className}`} onDoubleClick={onDoubleClickCapture}>
-    <Canvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined}>
+  <div className={`h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
+    <Canvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined} style={{ width: "100%", height: "100%" }}>
       <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
         {children}
       </SceneInner>

@@ -41,7 +41,8 @@ import { useTranslation } from "react-i18next";
 import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import { Design, findConnectionsInDesign, generateUniqueName, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
-import { Canvas, HorizontalWindows, useCanvasContext } from "../../Canvas";
+import { AppWindowConfig, Canvas } from "../../Canvas";
+import GoldenLayoutCanvas from "../../GoldenLayoutCanvas";
 import { useDesign, useKit } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
@@ -52,31 +53,10 @@ import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { DesignAppFooter } from "./Footer";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
-import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppFullscreen, useDesignAppSelection } from "./store";
+import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppSelection, useDesignAppStore } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
 export interface AppProps {}
-
-const CanvasWithSync: FC<{ fullscreenWindow: DesignAppFullscreenWindow; children: ReactNode }> = memo(({ fullscreenWindow, children }) => {
-  const { setFullscreenWindow } = useCanvasContext();
-
-  useEffect(() => {
-    switch (fullscreenWindow) {
-      case DesignAppFullscreenWindow.Diagram:
-        setFullscreenWindow(DesignAppFullscreenWindow.Diagram);
-        break;
-      case DesignAppFullscreenWindow.Accessl:
-        setFullscreenWindow(DesignAppFullscreenWindow.Accessl);
-        break;
-      default:
-        setFullscreenWindow(null);
-    }
-  }, [fullscreenWindow, setFullscreenWindow]);
-
-  return <>{children}</>;
-});
-
-CanvasWithSync.displayName = "CanvasWithSync";
 
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />);
 DiagramWindow.displayName = "DiagramWindow";
@@ -86,7 +66,6 @@ SceneWindow.displayName = "SceneWindow";
 
 const App: FC<AppProps> = () => {
   const { t } = useTranslation();
-  const fullscreenWindow = useDesignAppFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
     useDesignAppCommands();
   const app = useDesignApp((s) => s);
@@ -536,26 +515,70 @@ const App: FC<AppProps> = () => {
     return () => window.removeEventListener("design-drag-end", listener);
   }, [handleDragEnd]);
 
+  const store = useDesignAppStore();
+  const windowLayout = useDesignApp((s) => s.windowLayout);
+
+  const defaultLayout = {
+    settings: {
+      hasHeaders: true,
+    },
+    content: [
+      {
+        type: "row",
+        content: [
+          {
+            type: "stack",
+            content: [
+              {
+                type: "component",
+                componentName: DesignAppFullscreenWindow.Diagram,
+                title: "Diagram",
+              },
+            ],
+            width: 50,
+          },
+          {
+            type: "stack",
+            content: [
+              {
+                type: "component",
+                componentName: DesignAppFullscreenWindow.Accessl,
+                title: "Scene",
+              },
+            ],
+            width: 50,
+          },
+        ],
+      },
+    ],
+  };
+
+  const windowConfig: AppWindowConfig = {
+    windowTypes: [
+      {
+        id: DesignAppFullscreenWindow.Diagram,
+        label: "Diagram",
+        component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
+      },
+      {
+        id: DesignAppFullscreenWindow.Accessl,
+        label: "Scene",
+        component: () => <SceneWindow />,
+      },
+    ],
+    defaultLayout,
+  };
+
+  const handleLayoutChange = (config: any) => {
+    if (store) {
+      store.change({ windowLayout: config });
+    }
+  };
+
   return (
     <ReactFlowProvider>
       <Canvas>
-        <CanvasWithSync fullscreenWindow={fullscreenWindow}>
-          <HorizontalWindows
-            windows={[
-              {
-                id: DesignAppFullscreenWindow.Diagram,
-                children: <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
-                defaultSize: 50,
-                onDoubleClick: toggleDiagramFullscreen,
-              },
-              {
-                id: DesignAppFullscreenWindow.Accessl,
-                children: <SceneWindow />,
-                defaultSize: 50,
-              },
-            ]}
-          />
-        </CanvasWithSync>
+        <GoldenLayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
       </Canvas>
       <DesignAppFooter />
     </ReactFlowProvider>

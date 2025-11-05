@@ -102,6 +102,7 @@ export interface DesignAppDiff {
   diagramScale?: number;
   focusedPieceGuid?: Guid | null;
   selectedRepresentationTags?: Record<Guid, string[]>;
+  windowLayout?: any;
 }
 export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
 export interface DesignAppState {
@@ -118,6 +119,7 @@ export interface DesignAppState {
   focusedPieceGuid?: Guid;
   currentTransactionStackLength?: number;
   selectedRepresentationTags?: Record<Guid, string[]>;
+  windowLayout?: any;
 }
 
 export interface DesignAppCommandContext extends KitCommandContext {
@@ -398,6 +400,18 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
     return result;
   }
 
+  get windowLayout(): any {
+    const layoutStr = this.yMap.get("windowLayout") as string | undefined;
+    return layoutStr ? JSON.parse(layoutStr) : undefined;
+  }
+  set windowLayout(layout: any) {
+    if (layout) {
+      this.yMap.set("windowLayout", JSON.stringify(layout));
+    } else {
+      this.yMap.delete("windowLayout");
+    }
+  }
+
   kit(): KitStore {
     return this.parent.kit(this.kitGuid);
   }
@@ -429,6 +443,7 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
       focusedPieceGuid: this.focusedPieceGuid,
       currentTransactionStackLength: this.currentTransactionStack.length,
       selectedRepresentationTags: this.selectedRepresentationTags,
+      windowLayout: this.windowLayout,
     };
   }
 
@@ -631,6 +646,9 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
             yTags.push(tags);
           }
         });
+      }
+      if (diff.windowLayout !== undefined) {
+        this.windowLayout = diff.windowLayout;
       }
     });
   };

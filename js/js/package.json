@@ -45,6 +45,7 @@
     "dagre": "^0.8.5",
     "date-fns": "^4.1.0",
     "fuse.js": "^7.1.0",
+    "golden-layout": "^2.6.0",
     "gray-matter": "^4.0.3",
     "i18next": "^23.16.8",
     "i18next-browser-languagedetector": "^8.2.0",
