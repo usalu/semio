@@ -816,7 +816,8 @@ class FileStore {
     this.yFile = yFile;
 
     this.guid = file.guid;
-    this.path = file.path;
+    this.name = file.name;
+    this.folder = file.folder;
     this.remote = file.remote;
     this.size = file.size;
     this.fileHash = file.hash;
@@ -833,11 +834,18 @@ class FileStore {
     this.yFile.set("guid", guid);
   }
 
-  get path(): string {
-    return this.yFile.get("path") as string;
+  get name(): string {
+    return this.yFile.get("name") as string;
   }
-  set path(path: string) {
-    this.yFile.set("path", path);
+  set name(name: string) {
+    this.yFile.set("name", name);
+  }
+  get folder(): string | undefined {
+    return this.yFile.get("folder") as string | undefined;
+  }
+  set folder(folder: string | undefined) {
+    if (folder) this.yFile.set("folder", folder);
+    else this.yFile.delete("folder");
   }
   get remote(): string | undefined {
     return this.yFile.get("remote") as string | undefined;
@@ -893,7 +901,8 @@ class FileStore {
   snapshot = (): SemioFile => {
     const currentData = {
       guid: this.guid,
-      path: this.path,
+      name: this.name,
+      folder: this.folder,
       remote: this.remote,
       size: this.size,
       hash: this.fileHash,
@@ -913,7 +922,8 @@ class FileStore {
   };
 
   change = (diff: FileDiff) => {
-    if (diff.path !== undefined) this.path = diff.path;
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.folder !== undefined) this.folder = diff.folder;
     if (diff.remote !== undefined) this.remote = diff.remote;
     if (diff.size !== undefined) this.size = diff.size;
     if (diff.hash !== undefined) this.fileHash = diff.hash;
@@ -976,7 +986,8 @@ class FolderStore {
     return this.yFolder.get("parent") as string | undefined;
   }
   set parent(parent: string | undefined) {
-    this.yFolder.set("parent", parent || "");
+    if (parent) this.yFolder.set("parent", parent);
+    else this.yFolder.delete("parent");
   }
 
   get description(): string | undefined {
@@ -1224,6 +1235,14 @@ export class QualityStore {
     this.yQuality.set("name", name);
   }
 
+  get folder(): string | undefined {
+    return this.yQuality.get("folder") as string | undefined;
+  }
+  set folder(folder: string | undefined) {
+    if (folder) this.yQuality.set("folder", folder);
+    else this.yQuality.delete("folder");
+  }
+
   get unit(): string | undefined {
     return this.yQuality.get("unit") as string | undefined;
   }
@@ -1251,6 +1270,7 @@ export class QualityStore {
       guid: this.guid,
       key: this.key,
       name: this.name,
+      folder: this.folder,
       unit: this.unit,
       description: this.description,
     });
@@ -1263,6 +1283,7 @@ export class QualityStore {
       guid: this.guid,
       key: this.key,
       name: this.name,
+      folder: this.folder,
       unit: this.unit,
       description: this.description,
     };
@@ -1275,6 +1296,7 @@ export class QualityStore {
   change = (diff: QualityDiff) => {
     if (diff.key !== undefined) this.key = diff.key;
     if (diff.name !== undefined) this.name = diff.name;
+    if (diff.folder !== undefined) this.folder = diff.folder;
     if (diff.unit !== undefined) this.unit = diff.unit;
     if (diff.description !== undefined) this.description = diff.description;
   };
@@ -1718,6 +1740,13 @@ export class TypeStore {
     if (parent) this.yType.set("parent", parent);
     else this.yType.delete("parent");
   }
+  get folder(): string | undefined {
+    return this.yType.get("folder") as string | undefined;
+  }
+  set folder(folder: string | undefined) {
+    if (folder) this.yType.set("folder", folder);
+    else this.yType.delete("folder");
+  }
   get abstract(): boolean | undefined {
     return this.yType.get("isAbstract") as boolean | undefined;
   }
@@ -1854,6 +1883,7 @@ export class TypeStore {
       guid: this.guid,
       name: this.name,
       parent: this.parentGuid,
+      folder: this.folder,
       isAbstract: this.abstract,
       stock: this.stock,
       virtual: this.virtual,
@@ -1884,6 +1914,10 @@ export class TypeStore {
       if (diff.parent !== undefined) {
         if (diff.parent) this.yType.set("parent", diff.parent);
         else this.yType.delete("parent");
+      }
+      if (diff.folder !== undefined) {
+        if (diff.folder) this.yType.set("folder", diff.folder);
+        else this.yType.delete("folder");
       }
       if (diff.isAbstract !== undefined) {
         if (diff.isAbstract) this.yType.set("isAbstract", diff.isAbstract);
@@ -3280,6 +3314,13 @@ export class DesignStore {
     if (parent) this.yDesign.set("parent", parent);
     else this.yDesign.delete("parent");
   }
+  get folder(): string | undefined {
+    return this.yDesign.get("folder") as string | undefined;
+  }
+  set folder(folder: string | undefined) {
+    if (folder) this.yDesign.set("folder", folder);
+    else this.yDesign.delete("folder");
+  }
   get abstract(): boolean | undefined {
     return this.yDesign.get("isAbstract") as boolean | undefined;
   }
@@ -3431,6 +3472,7 @@ export class DesignStore {
       guid: this.guid,
       name: this.name,
       parent: this.parentGuid,
+      folder: this.folder,
       isAbstract: this.abstract,
       canScale: this.canScale,
       canMirror: this.canMirror,
@@ -3465,6 +3507,7 @@ export class DesignStore {
   change = (diff: DesignDiff) => {
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.parent !== undefined) this.parentGuid = diff.parent;
+    if (diff.folder !== undefined) this.folder = diff.folder;
     if (diff.isAbstract !== undefined) this.abstract = diff.isAbstract;
     if (diff.canScale !== undefined) this.canScale = diff.canScale;
     if (diff.canMirror !== undefined) this.canMirror = diff.canMirror;
@@ -4006,7 +4049,7 @@ export class KitStore {
   private readonly attributes: Map<string, AttributeStore>;
   private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
-  private readonly regularFiles: Map<Url, string>;
+  private readonly regularFiles: Map<Guid, string>;
   private cache?: Kit;
   private cacheHash?: string;
 
@@ -4093,9 +4136,9 @@ export class KitStore {
     for (const [guid, fileStore] of this.files) {
       try {
         const file = fileStore.snapshot();
-        const blob = await this.fileProvider.download(this.guid, guid, file.path);
+        const blob = await this.fileProvider.download(this.guid, guid, this.getFileStoragePath(file));
         const objectUrl = URL.createObjectURL(blob);
-        this.regularFiles.set(file.path, objectUrl);
+        this.regularFiles.set(file.guid, objectUrl);
       } catch (error) {
         console.error(`[KIT ${this.name}] Failed to sync file ${guid}:`, error);
       }
@@ -4240,7 +4283,7 @@ export class KitStore {
   }
 
   createFile(file: SemioFile): void {
-    if (this.hasFile(file.guid)) throw new Error(`File (${file.path}) already exists.`);
+    if (this.hasFile(file.guid)) throw new Error(`File (${file.name}) already exists.`);
     const yFile = new Y.Map() as YFile;
     this.yFiles.push([yFile]);
     const yFileStore = new FileStore(yFile, file);
@@ -4283,12 +4326,25 @@ export class KitStore {
     return this.folders.get(guid)!;
   }
 
+  private resolveFolderPath(folderGuid?: string): string {
+    if (!folderGuid) return "";
+    const folderStore = this.folders.get(folderGuid);
+    if (!folderStore) return "";
+    const parentPath = this.resolveFolderPath(folderStore.parent);
+    return parentPath ? `${parentPath}/${folderStore.name}` : folderStore.name;
+  }
+
+  private getFileStoragePath(file: SemioFile): string {
+    const folderPath = this.resolveFolderPath(file.folder);
+    return folderPath ? `${folderPath}/${file.name}` : file.name;
+  }
+
   getFileUrl(fileGuid: string): string {
     const fileStore = this.files.get(fileGuid);
     if (!fileStore) return "";
     const file = fileStore.snapshot();
     if (this.fileProvider) {
-      return this.fileProvider.getUrl(this.guid, fileGuid, file.path);
+      return this.fileProvider.getUrl(this.guid, fileGuid, this.getFileStoragePath(file));
     }
     return file.remote ?? "";
   }
@@ -4299,7 +4355,7 @@ export class KitStore {
     const file = fileStore.snapshot();
 
     // First, check if we have it in memory (regularFiles)
-    const memoryUrl = this.regularFiles.get(file.path);
+    const memoryUrl = this.regularFiles.get(file.guid);
     if (memoryUrl) {
       return memoryUrl;
     }
@@ -4312,11 +4368,11 @@ export class KitStore {
     // If we have a file provider, download the blob and create a blob URL
     if (this.fileProvider) {
       try {
-        const blob = await this.fileProvider.download(this.guid, fileGuid, file.path);
+        const blob = await this.fileProvider.download(this.guid, fileGuid, this.getFileStoragePath(file));
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
           // Cache it in memory for future use
-          this.regularFiles.set(file.path, blobUrl);
+          this.regularFiles.set(file.guid, blobUrl);
           return blobUrl;
         }
       } catch (error) {
@@ -4652,19 +4708,18 @@ export class KitStore {
             const file = result.diff.files.added[i];
             const blob = result.files[i];
             if (blob) {
-              // Always store in memory
               const objectUrl = URL.createObjectURL(blob);
-              this.regularFiles.set(file.path, objectUrl);
+              const fileStore = this.files.get(file.guid);
+              const storagePath = fileStore ? this.getFileStoragePath(fileStore.snapshot()) : file.path ?? file.name;
+              this.regularFiles.set(storagePath, objectUrl);
 
-              // Also upload to remote if file provider is available
               if (this.fileProvider) {
                 try {
-                  const remoteUrl = await this.fileProvider.upload(this.guid, file.guid, file.path, blob);
-                  console.log(`[KIT ${this.name}] Uploaded file ${file.path} to ${remoteUrl}`);
-                  // Update file with remote URL
+                  const remoteUrl = await this.fileProvider.upload(this.guid, file.guid, storagePath, blob);
+                  console.log(`[KIT ${this.name}] Uploaded file ${storagePath} to ${remoteUrl}`);
                   this.file(file.guid).change({ remote: remoteUrl });
                 } catch (error) {
-                  console.error(`[KIT ${this.name}] Failed to upload file ${file.path}:`, error);
+                  console.error(`[KIT ${this.name}] Failed to upload file ${storagePath}:`, error);
                 }
               }
             }
@@ -4677,21 +4732,20 @@ export class KitStore {
             const fileStore = this.files.get(fileId);
             if (fileStore) {
               const file = fileStore.snapshot();
+              const storagePath = this.getFileStoragePath(file);
 
-              // Clean up in-memory object URL
-              const objectUrl = this.regularFiles.get(file.path);
+              const objectUrl = this.regularFiles.get(storagePath);
               if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);
-                this.regularFiles.delete(file.path);
+                this.regularFiles.delete(storagePath);
               }
 
-              // Also delete from remote if file provider is available
               if (this.fileProvider) {
                 try {
-                  await this.fileProvider.delete(this.guid, fileId, file.path);
-                  console.log(`[KIT ${this.name}] Deleted file ${file.path}`);
+                  await this.fileProvider.delete(this.guid, fileId, storagePath);
+                  console.log(`[KIT ${this.name}] Deleted file ${storagePath}`);
                 } catch (error) {
-                  console.error(`[KIT ${this.name}] Failed to delete file ${file.path}:`, error);
+                  console.error(`[KIT ${this.name}] Failed to delete file ${storagePath}:`, error);
                 }
               }
             }
@@ -4812,7 +4866,7 @@ export function useKitCommands() {
     createFolder: (origin: string, folder: Folder) => kitStore.execute("semio.kit.createFolder", origin, folder),
     updateFolder: (origin: string, guid: Guid, folderDiff: FolderDiff) => kitStore.execute("semio.kit.updateFolder", origin, guid, folderDiff),
     deleteFolder: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteFolder", origin, guid),
-    moveToFolder: (origin: string, artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("semio.kit.moveToFolder", origin, artifactKind, artifactGuid, folderGuid),
+    moveToFolder: (origin: string, artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("semio.kit.moveToFolder", origin, artifactGuid, artifactKind, folderGuid),
     addPiece: (origin: string, design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", origin, design, piece),
     addPieces: (origin: string, design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", origin, design, pieces),
     removePiece: (origin: string, design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", origin, design, piece),

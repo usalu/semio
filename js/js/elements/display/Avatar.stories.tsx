@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
+import { Avatar, AvatarFallback, AvatarImage, TableAvatar } from "./Avatar";
 
 const meta = {
   title: "Elements/Display/Avatar",
@@ -37,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar className="h-12 w-12">
+      <Avatar>
         <AvatarImage src="https://github.com/shadcn.png" alt="Kisho Kurokawa" />
         <AvatarFallback className="bg-accent text-accent-foreground">KK</AvatarFallback>
       </Avatar>
@@ -87,19 +87,19 @@ export const FallbackOnly: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="flex items-center gap-4">
-      <Avatar className="size-6">
+      <Avatar className="h-6 w-6">
         <AvatarFallback className="text-xs">XS</AvatarFallback>
       </Avatar>
-      <Avatar className="size-8">
+      <Avatar className="h-8 w-8">
         <AvatarFallback className="text-xs">SM</AvatarFallback>
       </Avatar>
-      <Avatar className="size-10">
+      <Avatar>
         <AvatarFallback>MD</AvatarFallback>
       </Avatar>
-      <Avatar className="size-12">
+      <Avatar className="h-12 w-12">
         <AvatarFallback>LG</AvatarFallback>
       </Avatar>
-      <Avatar className="size-16">
+      <Avatar className="h-16 w-16">
         <AvatarFallback className="text-lg">XL</AvatarFallback>
       </Avatar>
     </div>
@@ -173,4 +173,44 @@ export const WithStatus: Story = {
       </div>
     </div>
   ),
+};
+
+export const TableAvatars: Story = {
+  render: () => {
+    const FolderIcon = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+      </svg>
+    );
+    const FileIcon = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+    );
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <TableAvatar name="Kisho Kurokawa" icon="https://github.com/shadcn.png" />
+          <span className="text-sm">With Image Icon</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <TableAvatar name="Documents" icon={<FolderIcon />} />
+          <span className="text-sm">With React Icon (Folder)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <TableAvatar name="README.md" icon={<FileIcon />} />
+          <span className="text-sm">With React Icon (File)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <TableAvatar name="Kenzo Tange" />
+          <span className="text-sm">Fallback Initials</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <TableAvatar name="Metabolism Movement" />
+          <span className="text-sm">Two Word Initials</span>
+        </div>
+      </div>
+    );
+  },
 };

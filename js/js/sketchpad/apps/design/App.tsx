@@ -52,7 +52,6 @@ import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { DesignAppFooter } from "./Footer";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
-import { DesignAvatar, TypeAvatar } from "./panels/Workbench";
 import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppFullscreen, useDesignAppSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
@@ -253,7 +252,10 @@ const App: FC<AppProps> = () => {
 
     const handleCreateChild = (parentType: Type) => {
       const existingChildren = kit.types?.filter((t) => t.parent === parentType.guid) || [];
-      const uniqueName = generateUniqueName(parentType.name, existingChildren.map((t) => t.name));
+      const uniqueName = generateUniqueName(
+        parentType.name,
+        existingChildren.map((t) => t.name),
+      );
       const newType: Type = {
         guid: guid(),
         name: uniqueName,
@@ -269,11 +271,7 @@ const App: FC<AppProps> = () => {
       return types.map((type) => {
         const children = kit.types?.filter((t) => t.parent === type.guid) || [];
         return (
-          <div
-            key={type.guid}
-            onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])}
-            onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}
-          >
+          <div key={type.guid} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
             <TreeItem
               label={type.name}
               onDoubleClick={(event) => {
@@ -292,11 +290,7 @@ const App: FC<AppProps> = () => {
                 },
               ]}
             >
-              {children.length > 0 && (
-                <TreeContent>
-                  <div className="space-y-1">{renderTypeTree(children)}</div>
-                </TreeContent>
-              )}
+              {children.length > 0 && renderTypeTree(children)}
             </TreeItem>
           </div>
         );
@@ -305,17 +299,16 @@ const App: FC<AppProps> = () => {
 
     const rootTypes = kit.types?.filter((t) => !t.parent) || [];
 
-    return (
-      <>
-        {renderTypeTree(rootTypes)}
-      </>
-    );
+    return <>{renderTypeTree(rootTypes)}</>;
   };
 
   const DesignsWorkbenchContent: FC = () => {
     const handleCreateChild = (parentDesign: Design) => {
       const existingChildren = kit.designs?.filter((d) => d.parent === parentDesign.guid) || [];
-      const uniqueName = generateUniqueName(parentDesign.name, existingChildren.map((d) => d.name));
+      const uniqueName = generateUniqueName(
+        parentDesign.name,
+        existingChildren.map((d) => d.name),
+      );
       const newDesign: Design = {
         guid: guid(),
         name: uniqueName,
@@ -331,11 +324,7 @@ const App: FC<AppProps> = () => {
       return designs.map((d) => {
         const children = kit.designs?.filter((child) => child.parent === d.guid) || [];
         return (
-          <div
-            key={d.guid}
-            onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [d.guid])}
-            onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}
-          >
+          <div key={d.guid} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [d.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
             <TreeItem
               label={d.name}
               onDoubleClick={(event) => {
@@ -354,11 +343,7 @@ const App: FC<AppProps> = () => {
                 },
               ]}
             >
-              {children.length > 0 && (
-                <TreeContent>
-                  <div className="space-y-1">{renderDesignTree(children)}</div>
-                </TreeContent>
-              )}
+              {children.length > 0 && renderDesignTree(children)}
             </TreeItem>
           </div>
         );
@@ -367,11 +352,7 @@ const App: FC<AppProps> = () => {
 
     const rootDesigns = kit.designs?.filter((d) => !d.parent) || [];
 
-    return (
-      <>
-        {renderDesignTree(rootDesigns)}
-      </>
-    );
+    return <>{renderDesignTree(rootDesigns)}</>;
   };
 
   // Add toolbar tools

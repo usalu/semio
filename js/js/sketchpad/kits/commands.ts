@@ -88,22 +88,24 @@ export const commands = {
     };
   },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
-    const files: File[] = blob ? [new File([blob], file.path.split("/").pop() || file.path)] : [];
+    const files: File[] = blob ? [new File([blob], file.name)] : [];
     return {
       diff: { files: { added: [file] } },
       files,
     };
   },
-  "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
-    const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
+  "semio.kit.updateFile": (context: KitCommandContext, fileGuid: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
+    const existing = context.kit.files?.find((f) => f.guid === fileGuid);
+    const fileName = fileDiff.name ?? existing?.name ?? "file";
+    const files: File[] = blob ? [new File([blob], fileName)] : [];
     return {
-      diff: { files: { updated: [{ id: url, diff: fileDiff }] } },
+      diff: { files: { updated: [{ id: fileGuid, diff: fileDiff }] } },
       files,
     };
   },
-  "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
+  "semio.kit.removeFile": (context: KitCommandContext, fileGuid: Url): KitCommandResult => {
     return {
-      diff: { files: { removed: [url] } },
+      diff: { files: { removed: [fileGuid] } },
     };
   },
   "semio.kit.createFolder": (context: KitCommandContext, folder: import("../../semio").Folder): KitCommandResult => {
@@ -121,17 +123,34 @@ export const commands = {
       diff: { folders: { removed: [guid] } },
     };
   },
-  "semio.kit.moveToFolder": (context: KitCommandContext, artifactGuid: Guid, artifactKind: "type" | "design" | "quality" | "file", folderGuid?: Guid): KitCommandResult => {
-    const folderDiff = { folder: folderGuid };
+  "semio.kit.moveToFolder": (context: KitCommandContext, artifactGuid: Guid, artifactKind: "type" | "design" | "quality" | "file" | "folder", folderGuid?: Guid): KitCommandResult => {
     switch (artifactKind) {
-      case "type":
+      case "type": {
+        const type = context.kit.types?.find((t) => t.guid === artifactGuid);
+        if (!type) throw new Error(`Type ${artifactGuid} not found`);
+        if (type.parent) throw new Error("Only prototypes (types without parent) can be moved to folders");
+        const folderDiff = { folder: folderGuid };
         return { diff: { types: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
-      case "design":
+      }
+      case "design": {
+        const design = context.kit.designs?.find((d) => d.guid === artifactGuid);
+        if (!design) throw new Error(`Design ${artifactGuid} not found`);
+        if (design.parent) throw new Error("Only protodesigns (designs without parent) can be moved to folders");
+        const folderDiff = { folder: folderGuid };
         return { diff: { designs: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
-      case "quality":
+      }
+      case "quality": {
+        const folderDiff = { folder: folderGuid };
         return { diff: { qualities: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
-      case "file":
+      }
+      case "file": {
+        const folderDiff = { folder: folderGuid };
         return { diff: { files: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+      }
+      case "folder": {
+        const parentDiff = { parent: folderGuid };
+        return { diff: { folders: { updated: [{ id: artifactGuid, diff: parentDiff }] } } };
+      }
     }
   },
   "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {

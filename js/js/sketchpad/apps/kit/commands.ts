@@ -221,7 +221,7 @@ export const commands = {
       },
     };
   },
-  "semio.kitApp.selectFile": (context: KitAppCommandContext, path: string): KitAppCommandResult => {
+  "semio.kitApp.selectFile": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
     const currentSelection = context.kitApp.selection;
     return {
       diff: {
@@ -231,14 +231,14 @@ export const commands = {
           qualities: { removed: currentSelection?.qualities ?? [] },
           files: {
             removed: currentSelection?.files ?? [],
-            added: [path],
+            added: [guid],
           },
           authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
   },
-  "semio.kitApp.selectFiles": (context: KitAppCommandContext, paths: string[]): KitAppCommandResult => {
+  "semio.kitApp.selectFiles": (context: KitAppCommandContext, guids: string[]): KitAppCommandResult => {
     const currentSelection = context.kitApp.selection;
     return {
       diff: {
@@ -248,27 +248,27 @@ export const commands = {
           qualities: { removed: currentSelection?.qualities ?? [] },
           files: {
             removed: currentSelection?.files ?? [],
-            added: paths,
+            added: guids,
           },
           authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
   },
-  "semio.kitApp.addFileToSelection": (context: KitAppCommandContext, path: string): KitAppCommandResult => {
+  "semio.kitApp.addFileToSelection": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
     return {
       diff: {
         selection: {
-          files: { added: [path] },
+          files: { added: [guid] },
         },
       },
     };
   },
-  "semio.kitApp.removeFileFromSelection": (context: KitAppCommandContext, path: string): KitAppCommandResult => {
+  "semio.kitApp.removeFileFromSelection": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
     return {
       diff: {
         selection: {
-          files: { removed: [path] },
+          files: { removed: [guid] },
         },
       },
     };

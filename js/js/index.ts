@@ -36,6 +36,8 @@ export type { FileTreeNode, FileTreeProps } from "./elements/aggregation/FileTre
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./elements/aggregation/Tabs";
 export { Aside } from "./elements/display/Aside";
 export type { AsideProps } from "./elements/display/Aside";
+export { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar } from "./elements/display/Avatar";
+export type { DraggableAvatarProps, TableAvatarProps } from "./elements/display/Avatar";
 export { Card, CardGrid } from "./elements/display/Card";
 export type { CardGridProps, CardProps } from "./elements/display/Card";
 export { default as Section } from "./elements/display/Section";

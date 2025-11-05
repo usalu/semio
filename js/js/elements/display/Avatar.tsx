@@ -19,12 +19,13 @@
 
 // #endregion
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { FC } from "react";
 import * as React from "react";
 
 import { cn } from "../../semio";
 
 const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-8 shrink-0 overflow-hidden rounded-full border", className)} {...props} />
+  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full border", className)} {...props} />
 ));
 Avatar.displayName = "Avatar";
 
@@ -89,5 +90,33 @@ export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarP
   },
 );
 DraggableAvatar.displayName = "DraggableAvatar";
+
+export interface TableAvatarProps {
+  icon?: string | React.ReactNode;
+  name?: string;
+  className?: string;
+}
+
+export const TableAvatar: FC<TableAvatarProps> = ({ icon, name, className }) => {
+  const normalizedName = name?.trim() ?? "";
+  const initials = normalizedName
+    ? normalizedName
+        .split(" ")
+        .slice(0, 2)
+        .map((word) => word.charAt(0))
+        .join("")
+        .toUpperCase()
+        .substring(0, 2)
+    : "";
+  const isImageIcon = typeof icon === "string";
+  const isReactIcon = icon && !isImageIcon;
+  return (
+    <Avatar className={cn("shrink-0", className)}>
+      {isImageIcon ? <AvatarImage src={icon} alt={normalizedName} /> : null}
+      <AvatarFallback className="text-xs">{isReactIcon ? icon : initials}</AvatarFallback>
+    </Avatar>
+  );
+};
+TableAvatar.displayName = "TableAvatar";
 
 export { Avatar, AvatarFallback, AvatarImage };

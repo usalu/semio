@@ -29,7 +29,7 @@ import { ButtonGroup, ButtonGroupItem } from "../elements/input/ButtonGroup";
 import { Toggle } from "../elements/input/Toggle";
 import { ToggleGroup, ToggleGroupItem } from "../elements/input/ToggleGroup";
 import { Breadcrumb, BreadcrumbBreak, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "../elements/navigation/Breadcrumb";
-import { Design, DesignShallow, generateUniqueName, KitShallow, Quality, Type, TypeShallow } from "../semio";
+import { Design, DesignShallow, Folder, generateUniqueName, KitShallow, Quality, Type, TypeShallow } from "../semio";
 import "./apps";
 import { appRegistry } from "./apps";
 import { useDesignAppCommands } from "./apps/design/store";
@@ -299,6 +299,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return (kit.qualities as any[]).filter((q): q is Quality => typeof q === "object" && q.guid !== undefined);
   }, [kit?.qualities]);
 
+  const allFolders: Folder[] = useMemo(() => {
+    if (!kit?.folders) return [];
+    return (kit.folders as any[]).filter((f): f is Folder => typeof f === "object" && f.guid !== undefined);
+  }, [kit?.folders]);
+
   const handleCreateKit = useCallback(
     (origin: string) => {
       const guid = crypto.randomUUID();
@@ -423,19 +428,111 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const type = isTypeApp ? allTypes.find((t) => t.guid === itemGuid) : undefined;
   const quality = isQualityApp ? allQualities.find((q) => q.guid === itemGuid) : undefined;
 
-  // Build breadcrumb items for designs
+  // Build folder chain for design (find root design's folder even if this is a child)
+  const designFolderChain = useMemo(() => {
+    if (!design) return [];
+
+    // Find the root design (traverse up the parent chain)
+    let rootDesign = design;
+    while (rootDesign.parent) {
+      const parent = allDesigns.find((d) => d.guid === rootDesign.parent);
+      if (!parent) break;
+      rootDesign = parent;
+    }
+
+    // If root design has no folder, return empty
+    if (!rootDesign.folder) return [];
+
+    // Build folder chain from root's folder
+    const chain: Folder[] = [];
+    let currentFolderId = rootDesign.folder;
+    while (currentFolderId) {
+      const folder = allFolders.find((f) => f.guid === currentFolderId);
+      if (!folder) break;
+      chain.unshift(folder);
+      currentFolderId = folder.parent;
+    }
+    return chain;
+  }, [design, allDesigns, allFolders]);
+
+  // Build folder chain for type (find root type's folder even if this is a child)
+  const typeFolderChain = useMemo(() => {
+    if (!type) return [];
+
+    // Find the root type (traverse up the parent chain)
+    let rootType = type;
+    while (rootType.parent) {
+      const parent = allTypes.find((t) => t.guid === rootType.parent);
+      if (!parent) break;
+      rootType = parent;
+    }
+
+    // If root type has no folder, return empty
+    if (!rootType.folder) return [];
+
+    // Build folder chain from root's folder
+    const chain: Folder[] = [];
+    let currentFolderId = rootType.folder;
+    while (currentFolderId) {
+      const folder = allFolders.find((f) => f.guid === currentFolderId);
+      if (!folder) break;
+      chain.unshift(folder);
+      currentFolderId = folder.parent;
+    }
+    return chain;
+  }, [type, allTypes, allFolders]);
+
+  // Build parent chain for designs
+  const designParentChain = useMemo(() => {
+    if (!design) return [];
+    const chain: Design[] = [];
+    let current = design;
+    while (current.parent) {
+      const parent = allDesigns.find((d) => d.guid === current.parent);
+      if (!parent) break;
+      chain.unshift(parent);
+      current = parent;
+    }
+    return chain;
+  }, [design, allDesigns]);
+
+  // Build parent chain for types
+  const typeParentChain = useMemo(() => {
+    if (!type) return [];
+    const chain: Type[] = [];
+    let current = type;
+    while (current.parent) {
+      const parent = allTypes.find((t) => t.guid === current.parent);
+      if (!parent) break;
+      chain.unshift(parent);
+      current = parent;
+    }
+    return chain;
+  }, [type, allTypes]);
+
+  // Build breadcrumb items for root designs (no parent)
   const designNameItems = useMemo(() => {
-    const nameMap = new Map<string, Design>();
-    allDesigns.forEach((d) => {
-      if (!nameMap.has(d.name)) nameMap.set(d.name, d);
-    });
-    const items = Array.from(nameMap.entries()).map(([name, d]) => ({
-      label: name,
+    const rootDesigns = allDesigns.filter((d) => !d.parent);
+    const items = rootDesigns.map((d) => ({
+      label: d.name,
       href: `/kits/${kitGuid}/designs/${d.guid}`,
     }));
     items.push({ label: "+ " + t("semio.sketchpad.navbar.createDesign"), href: "#create-design" });
     return items;
   }, [allDesigns, kitGuid, t]);
+
+  // Build sibling items for each parent in the chain
+  const designParentSiblingItems = useMemo(() => {
+    return designParentChain.map((parent) => {
+      const siblings = allDesigns.filter((d) => d.parent === parent.parent);
+      const items = siblings.map((d) => ({
+        label: d.name,
+        href: `/kits/${kitGuid}/designs/${d.guid}`,
+      }));
+      items.push({ label: "+ " + t("semio.sketchpad.navbar.createChild"), href: `#create-sibling-${parent.guid}` });
+      return { parentGuid: parent.guid, items };
+    });
+  }, [designParentChain, allDesigns, kitGuid, t]);
 
   const designChildItems = useMemo(() => {
     if (!design) return [];
@@ -448,19 +545,29 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return items;
   }, [design, allDesigns, kitGuid, t]);
 
-  // Build breadcrumb items for types
+  // Build breadcrumb items for root types (no parent)
   const typeNameItems = useMemo(() => {
-    const nameMap = new Map<string, Type>();
-    allTypes.forEach((t) => {
-      if (!nameMap.has(t.name)) nameMap.set(t.name, t);
-    });
-    const items = Array.from(nameMap.entries()).map(([name, t]) => ({
-      label: name,
+    const rootTypes = allTypes.filter((t) => !t.parent);
+    const items = rootTypes.map((t) => ({
+      label: t.name,
       href: `/kits/${kitGuid}/types/${t.guid}`,
     }));
     items.push({ label: "+ " + t("semio.sketchpad.navbar.createType"), href: "#create-type" });
     return items;
   }, [allTypes, kitGuid, t]);
+
+  // Build sibling items for each parent in the chain
+  const typeParentSiblingItems = useMemo(() => {
+    return typeParentChain.map((parent) => {
+      const siblings = allTypes.filter((t) => t.parent === parent.parent);
+      const items = siblings.map((t) => ({
+        label: t.name,
+        href: `/kits/${kitGuid}/types/${t.guid}`,
+      }));
+      items.push({ label: "+ " + t("semio.sketchpad.navbar.createChild"), href: `#create-sibling-${parent.guid}` });
+      return { parentGuid: parent.guid, items };
+    });
+  }, [typeParentChain, allTypes, kitGuid, t]);
 
   const typeChildItems = useMemo(() => {
     if (!type) return [];
@@ -522,8 +629,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       href: `/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(name)}`,
     }));
   }, [kit, filteredKind, allDesigns, allTypes, kitGuid]);
-
-
 
   // Determine if we're at root or if a kind filter is active
   const isAtRoot = navigation === "/";
@@ -668,6 +773,17 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 <Layout size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
+            {designFolderChain.map((folder, index) => (
+              <Fragment key={folder.guid}>
+                <BreadcrumbBreak />
+                <BreadcrumbSeparator items={[]} id={`semio.sketchpad.navbar.folder.separator.${folder.guid}`} />
+                <BreadcrumbItem id={`semio.sketchpad.navbar.folder.${folder.guid}`}>
+                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }}>
+                    {folder.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </Fragment>
+            ))}
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={designNameItems}
@@ -677,6 +793,37 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 else navigate(href);
               }}
             />
+            {designParentChain.map((parent, index) => {
+              const siblingItems = designParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+              return (
+                <Fragment key={parent.guid}>
+                  <BreadcrumbItem id={`semio.sketchpad.navbar.design.parent.${parent.guid}`}>
+                    <BreadcrumbLink
+                      asChild
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/kits/${kitGuid}/designs/${parent.guid}`);
+                      }}
+                    >
+                      <button type="button">{parent.name}</button>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbBreak />
+                  <BreadcrumbSeparator
+                    items={siblingItems}
+                    id={`semio.sketchpad.navbar.selectDesignSibling.${parent.guid}`}
+                    onNavigate={(href) => {
+                      if (href.startsWith("#create-sibling-")) {
+                        handleCreateChild(`semio.sketchpad.navbar.selectDesignSibling.${parent.guid}`, parent, false);
+                      } else {
+                        navigate(href);
+                      }
+                    }}
+                  />
+                </Fragment>
+              );
+            })}
             <BreadcrumbItem id="semio.sketchpad.navbar.design">
               <BreadcrumbLink
                 asChild
@@ -708,6 +855,17 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 <Box size={16} />
               </BreadcrumbLink>
             </BreadcrumbItem>
+            {typeFolderChain.map((folder, index) => (
+              <Fragment key={folder.guid}>
+                <BreadcrumbBreak />
+                <BreadcrumbSeparator items={[]} id={`semio.sketchpad.navbar.folder.separator.${folder.guid}`} />
+                <BreadcrumbItem id={`semio.sketchpad.navbar.folder.${folder.guid}`}>
+                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }}>
+                    {folder.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </Fragment>
+            ))}
             <BreadcrumbBreak />
             <BreadcrumbSeparator
               items={typeNameItems}
@@ -717,6 +875,37 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 else navigate(href);
               }}
             />
+            {typeParentChain.map((parent, index) => {
+              const siblingItems = typeParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+              return (
+                <Fragment key={parent.guid}>
+                  <BreadcrumbItem id={`semio.sketchpad.navbar.type.parent.${parent.guid}`}>
+                    <BreadcrumbLink
+                      asChild
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/kits/${kitGuid}/types/${parent.guid}`);
+                      }}
+                    >
+                      <button type="button">{parent.name}</button>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbBreak />
+                  <BreadcrumbSeparator
+                    items={siblingItems}
+                    id={`semio.sketchpad.navbar.selectTypeSibling.${parent.guid}`}
+                    onNavigate={(href) => {
+                      if (href.startsWith("#create-sibling-")) {
+                        handleCreateChild(`semio.sketchpad.navbar.selectTypeSibling.${parent.guid}`, parent, true);
+                      } else {
+                        navigate(href);
+                      }
+                    }}
+                  />
+                </Fragment>
+              );
+            })}
             <BreadcrumbItem id="semio.sketchpad.navbar.type">
               <BreadcrumbLink
                 asChild

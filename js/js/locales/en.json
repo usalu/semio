@@ -513,6 +513,54 @@
               "beginner": "Filter kits to this specific version",
               "hotkey": "Ctrl+V"
             }
+          },
+          "panel": {
+            "details": {
+              "kit": {
+                "name": {
+                  "label": "Name",
+                  "beginner": "The name of the kit"
+                },
+                "version": {
+                  "label": "Version",
+                  "beginner": "The version of the kit"
+                },
+                "description": {
+                  "label": "Description",
+                  "beginner": "A description of the kit"
+                },
+                "icon": {
+                  "label": "Icon",
+                  "beginner": "The icon of the kit"
+                },
+                "image": {
+                  "label": "Image",
+                  "beginner": "The preview image of the kit"
+                }
+              },
+              "kits": {
+                "name": {
+                  "label": "Name",
+                  "beginner": "The name of the selected kits"
+                },
+                "version": {
+                  "label": "Version",
+                  "beginner": "The version of the selected kits"
+                },
+                "description": {
+                  "label": "Description",
+                  "beginner": "A description of the selected kits"
+                },
+                "icon": {
+                  "label": "Icon",
+                  "beginner": "The icon of the selected kits"
+                },
+                "image": {
+                  "label": "Image",
+                  "beginner": "The preview image of the selected kits"
+                }
+              }
+            }
           }
         },
         "kit": {
@@ -605,6 +653,18 @@
             "multipleTitle_one": "{{count}} File",
             "multipleTitle_other": "{{count}} Files"
           },
+          "folder": {
+            "title": "Folder",
+            "label": "Folder"
+          },
+          "folders": {
+            "multipleTitle": {
+              "label_one": "{{count}} Folder",
+              "label_other": "{{count}} Folders"
+            },
+            "multipleTitle_one": "{{count}} Folder",
+            "multipleTitle_other": "{{count}} Folders"
+          },
           "qualities": {
             "multipleTitle_one": "{{count}} Quality",
             "multipleTitle_other": "{{count}} Qualities"
@@ -670,6 +730,18 @@
               "manual": "manuals/semio/kit#files",
               "tutorial": "getting-started/intro#files"
             },
+            "showFolders": {
+              "label": "Show Folders",
+              "beginner": "Click to show all folders in this kit",
+              "manual": "manuals/semio/kit#folders",
+              "tutorial": "hello-semio/model-design"
+            },
+            "createFolder": {
+              "label": "Create Folder",
+              "beginner": "Click to create a new folder in this kit",
+              "manual": "manuals/semio/kit#folders",
+              "tutorial": "hello-semio/model-design"
+            },
             "showAuthors": {
               "label": "Show Authors",
               "beginner": "Click to show all authors of this kit",
@@ -689,6 +761,10 @@
             "createArtifact": {
               "label": "Create",
               "beginner": "Click to create a new artifact of this type"
+            },
+            "createChild": {
+              "label": "Create Child",
+              "beginner": "Create a child element"
             },
             "sortByName": {
               "label": "Sort by name",
@@ -765,6 +841,21 @@
                     "manual": "kit#metadata",
                     "tutorial": "hello-semio/save-kit"
                   }
+                },
+                "folder": {
+                  "title": "Folder",
+                  "name": {
+                    "label": "Name",
+                    "beginner": "The display name of the folder.",
+                    "manual": "kit#folders",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "Optional description that explains the purpose of this folder.",
+                    "manual": "kit#folders",
+                    "tutorial": "hello-semio/save-kit"
+                  }
                 }
               }
             },
@@ -799,6 +890,12 @@
                 }
               }
             }
+          }
+        },
+        "folder": {
+          "defaultName": "New Folder",
+          "descriptionPlaceholder": {
+            "label": "Describe this folder..."
           }
         },
         "design": {
@@ -1199,6 +1296,41 @@
                     "label": "Diagram Y Offset"
                   }
                 },
+                "port": {
+                  "title": "Port",
+                  "id": {
+                    "label": "Port ID",
+                    "beginner": "The unique identifier of the port"
+                  },
+                  "position": {
+                    "label": "Position",
+                    "beginner": "The position of the port"
+                  },
+                  "direction": {
+                    "label": "Direction",
+                    "beginner": "The direction vector of the port"
+                  },
+                  "mandatory": {
+                    "label": "Mandatory",
+                    "beginner": "Whether this port must be connected"
+                  },
+                  "family": {
+                    "label": "Family",
+                    "beginner": "The port family for compatibility checking"
+                  },
+                  "compatibleFamily": {
+                    "label": "Compatible Family",
+                    "beginner": "The families this port is compatible with"
+                  },
+                  "description": {
+                    "label": "Description",
+                    "beginner": "A description of the port"
+                  },
+                  "attribute": {
+                    "label": "Attribute",
+                    "beginner": "Custom attributes of the port"
+                  }
+                },
                 "selection": {
                   "multipleTitle": "Multiple Selection"
                 }
@@ -1250,6 +1382,10 @@
           },
           "variantPlaceholder": {
             "label": "e.g., large, small"
+          },
+          "parentPlaceholder": {
+            "label": "Select parent type...",
+            "beginner": "Choose a parent type for inheritance"
           },
           "variant": "Variant",
           "representations": {
@@ -1349,6 +1485,14 @@
                     "beginner": "The unit of measurement used for this type (e.g., mm, m, ft).",
                     "manual": "type#metadata",
                     "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "parent": {
+                    "label": "Parent",
+                    "beginner": "The parent type this type inherits from"
+                  },
+                  "abstract": {
+                    "label": "Abstract",
+                    "beginner": "Whether this is an abstract type"
                   }
                 },
                 "representations": {
@@ -1513,7 +1657,63 @@
           "dataStructures": "Data Structures",
           "list": "List",
           "dictionary": "Dictionary",
-          "noQualities": "No qualities defined"
+          "noQualities": "No qualities defined",
+          "panel": {
+            "details": {
+              "key": {
+                "label": "Key",
+                "beginner": "The unique key identifier of the quality"
+              },
+              "name": {
+                "label": "Name",
+                "beginner": "The display name of the quality"
+              },
+              "description": {
+                "label": "Description",
+                "beginner": "A description of what this quality measures"
+              },
+              "formula": {
+                "label": "Formula",
+                "beginner": "The formula to calculate this quality"
+              },
+              "defaultSiUnit": {
+                "label": "Default SI Unit",
+                "beginner": "The default unit in the SI system"
+              },
+              "defaultImperialUnit": {
+                "label": "Default Imperial Unit",
+                "beginner": "The default unit in the Imperial system"
+              },
+              "kind": {
+                "label": "Kind",
+                "beginner": "The type of entity this quality applies to"
+              },
+              "canScale": {
+                "label": "Can Scale",
+                "beginner": "Whether this quality scales with piece size"
+              },
+              "defaultValue": {
+                "label": "Default Value",
+                "beginner": "The default value for this quality"
+              },
+              "min": {
+                "label": "Minimum",
+                "beginner": "The minimum allowed value"
+              },
+              "max": {
+                "label": "Maximum",
+                "beginner": "The maximum allowed value"
+              },
+              "isMinExcluded": {
+                "label": "Minimum Excluded",
+                "beginner": "Whether the minimum value is exclusive"
+              },
+              "isMaxExcluded": {
+                "label": "Maximum Excluded",
+                "beginner": "Whether the maximum value is exclusive"
+              }
+            }
+          }
         },
         "docs": {
           "title": "Documentation",
@@ -1635,5 +1835,9 @@
       "label": "+ Drop here",
       "beginner": "Drop pieces here to add them to the design."
     }
+  },
+  "folder": {
+    "created": "Created",
+    "updated": "Updated"
   }
 }

@@ -19,13 +19,15 @@
 
 // #endregion
 
+import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { ArrowDown, ArrowUp, Award, Box, FileText, Folder as FolderIcon, Layout, Plus, User } from "lucide-react";
+import { ArrowDown, ArrowUp, Award, Box, FileCode, FileImage, FileJson, FileSpreadsheet, FileText, FileType, FileVideo, Folder as FolderIcon, Layout, Plus, User } from "lucide-react";
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
+import { TableAvatar } from "../../../elements/display/Avatar";
 import { Action } from "../../../elements/input/Action";
 import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
@@ -67,6 +69,248 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const getFileIcon = (fileName: string) => {
+  if (!fileName) return <FileText className="size-4" />;
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  switch (extension) {
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "svg":
+    case "webp":
+    case "bmp":
+      return <FileImage className="size-4" />;
+    case "mp4":
+    case "avi":
+    case "mov":
+    case "mkv":
+    case "webm":
+      return <FileVideo className="size-4" />;
+    case "json":
+      return <FileJson className="size-4" />;
+    case "js":
+    case "ts":
+    case "jsx":
+    case "tsx":
+    case "py":
+    case "java":
+    case "cpp":
+    case "c":
+    case "h":
+    case "cs":
+    case "rb":
+    case "go":
+    case "rs":
+    case "php":
+    case "html":
+    case "css":
+    case "scss":
+    case "xml":
+      return <FileCode className="size-4" />;
+    case "csv":
+    case "xlsx":
+    case "xls":
+      return <FileSpreadsheet className="size-4" />;
+    case "txt":
+    case "md":
+    case "pdf":
+    case "doc":
+    case "docx":
+      return <FileType className="size-4" />;
+    default:
+      return <FileText className="size-4" />;
+  }
+};
+
+const getRowIcon = (row: TableRow): string | React.ReactNode | undefined => {
+  switch (row.kind) {
+    case "designs":
+      return (row.data as Design).icon;
+    case "types":
+      return (row.data as Type).icon;
+    case "qualities":
+      return (row.data as Quality).icon;
+    case "files":
+      return getFileIcon((row.data as SemioFile).name);
+    case "folders":
+      return <FolderIcon className="size-4" />;
+    case "authors":
+      return <User className="size-4" />;
+    default:
+      return undefined;
+  }
+};
+
+const DroppableTableWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { setNodeRef } = useDroppable({
+    id: "canvas-root",
+    data: { isCanvas: true },
+  });
+
+  return (
+    <div ref={setNodeRef} className="w-full min-h-full">
+      {children}
+    </div>
+  );
+};
+
+const DraggableRow: FC<{
+  row: TableRow;
+  isSelected: boolean;
+  isDraggedOver: boolean;
+  isDragging: boolean;
+  onRowClick: (row: TableRow, e: React.MouseEvent) => void;
+  onRowDoubleClick: (row: TableRow) => void;
+  toggleRow: (rowId: string) => void;
+  handleCreateChildForRow: (row: TableRow) => void;
+  isMobile: boolean;
+  selectedKind?: ArtifactKind | null;
+}> = ({ row, isSelected, isDraggedOver, isDragging, onRowClick, onRowDoubleClick, toggleRow, handleCreateChildForRow, isMobile, selectedKind }) => {
+  // Allow dragging all items except authors
+  let canDrag = row.kind !== "authors";
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging: isDraggingHook,
+  } = useDraggable({
+    id: row.id,
+    disabled: !canDrag,
+    data: { row },
+  });
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: row.id,
+    data: { row },
+  });
+
+  const style = transform
+    ? {
+      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      opacity: isDraggingHook ? 0.5 : 1,
+    }
+    : undefined;
+
+  const combinedRef = (node: HTMLElement | null) => {
+    setNodeRef(node);
+    setDroppableRef(node);
+  };
+
+  const isOverHighlight = isOver && (row.kind === "folders" || row.folderId);
+
+  if (isMobile) {
+    return (
+      <div
+        ref={combinedRef}
+        style={style}
+        className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isOverHighlight ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"} ${isDraggingHook ? "opacity-50" : ""}`}
+        onClick={(e) => onRowClick(row, e)}
+        onDoubleClick={() => onRowDoubleClick(row)}
+        {...(canDrag ? { ...attributes, ...listeners } : {})}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {row.hasChildren ? (
+              <Action
+                level="base"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleRow(row.id);
+                }}
+              >
+                {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+              </Action>
+            ) : (
+              <span className="w-5 h-5 shrink-0" />
+            )}
+            <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
+            <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
+          </div>
+          <div className="flex items-center gap-0.5 shrink-0">
+            {(row.kind === "designs" || row.kind === "types") && (
+              <Action
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCreateChildForRow(row);
+                }}
+                id="semio.sketchpad.app.kit.kitApp.createChild"
+                level="base"
+              >
+                <Plus />
+              </Action>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <tr
+      ref={combinedRef}
+      style={style}
+      className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isOverHighlight ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"} ${isDraggingHook ? "opacity-50" : ""}`}
+      onClick={(e) => onRowClick(row, e)}
+      onDoubleClick={() => onRowDoubleClick(row)}
+      {...(canDrag ? { ...attributes, ...listeners } : {})}
+      role="button"
+      tabIndex={0}
+    >
+      <td className="p-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            {row.hasChildren ? (
+              <Action
+                level="base"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleRow(row.id);
+                }}
+              >
+                {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+              </Action>
+            ) : (
+              <span className="w-4 h-4 shrink-0" />
+            )}
+            <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
+            <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
+          </div>
+          <div className="flex items-center gap-0.5 shrink-0">
+            {(row.kind === "designs" || row.kind === "types") && (
+              <Action
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCreateChildForRow(row);
+                }}
+                id="semio.sketchpad.app.kit.kitApp.createChild"
+                level="base"
+              >
+                <Plus />
+              </Action>
+            )}
+          </div>
+        </div>
+      </td>
+      {!isMobile && !selectedKind && (
+        <td className="p-1">
+          {row.kind === "designs" && <Layout className="size-4" />}
+          {row.kind === "types" && <Box className="size-4" />}
+          {row.kind === "qualities" && <Award className="size-4" />}
+          {row.kind === "files" && <FileText className="size-4" />}
+          {row.kind === "folders" && <FolderIcon className="size-4" />}
+          {row.kind === "authors" && <User className="size-4" />}
+        </td>
+      )}
+      {!isMobile && <td className="p-1">{row.updatedAt}</td>}
+      {!isMobile && <td className="p-1">{row.createdAt}</td>}
+    </tr>
+  );
+};
+
 const AppContent: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -77,7 +321,7 @@ const AppContent: FC = () => {
   const kitScope = useKitScope();
   const hasKit = useHasKit(kitScope?.guid || "");
 
-  const kit = useKit() as Kit;
+  const kit = useKit(undefined, undefined, true) as Kit;
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
@@ -85,8 +329,9 @@ const AppContent: FC = () => {
   const isMobile = useIsMobile();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
-  const [draggedRow, setDraggedRow] = React.useState<TableRow | null>(null);
-  const [dragOverFolder, setDragOverFolder] = React.useState<string | null>(null);
+  const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [overId, setOverId] = React.useState<string | null>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -132,18 +377,37 @@ const AppContent: FC = () => {
   }, [kit?.designs]);
 
   // Collect unique names for the selected kind (or unified when no kind selected)
+  // Names are shown hierarchically based on selectedName filter
   const uniqueNames = useMemo(() => {
     const nameSet = new Set<string>();
+
+    // Helper to get visible names from a hierarchy
+    const collectVisibleNames = <T extends { guid: string; name: string; parent?: string }>(entities: T[] | undefined) => {
+      if (!entities) return;
+
+      if (!selectedName) {
+        // No name selected - show all root entity names
+        const rootEntities = entities.filter((e) => !e.parent);
+        rootEntities.forEach((e) => nameSet.add(e.name));
+      } else {
+        // Name is selected - show children names of all entities with that name
+        const matchingEntities = entities.filter((e) => e.name === selectedName);
+        matchingEntities.forEach((parent) => {
+          const children = entities.filter((e) => e.parent === parent.guid);
+          children.forEach((child) => nameSet.add(child.name));
+        });
+      }
+    };
+
     if (!selectedKind || selectedKind === "designs") {
-      kit?.designs?.forEach((d: Design) => nameSet.add(d.name));
+      collectVisibleNames(kit?.designs);
     }
     if (!selectedKind || selectedKind === "types") {
-      kit?.types?.forEach((t: Type) => nameSet.add(t.name));
+      collectVisibleNames(kit?.types);
     }
+
     return Array.from(nameSet).sort();
-  }, [kit?.designs, kit?.types, selectedKind]);
-
-
+  }, [kit?.designs, kit?.types, selectedKind, selectedName]);
 
   useEffect(() => {
     if (appType !== "kit") {
@@ -292,6 +556,9 @@ const AppContent: FC = () => {
         childDesigns.forEach((design) => {
           if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c))) return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+          // Skip root designs that are in folders when not viewing the folders kind
+          // Only filter at root level (parentGuid === undefined), not children
+          if (!selectedKind && parentGuid === undefined && design.folder) return;
 
           const rowId = `design-${design.guid}`;
           const children = designs.filter((d) => d.parent === design.guid);
@@ -317,14 +584,32 @@ const AppContent: FC = () => {
         });
       };
 
-      // Apply name filter
-      const filteredDesigns = kit.designs?.filter((d) => {
-        if (selectedName && d.name !== selectedName) return false;
-        return true;
-      }) || [];
+      // Apply name filter - if selectedName is set, only include designs with that name and their descendants
+      const allDesignsArray = kit.designs || [];
+      if (selectedName) {
+        // Find all designs with the selected name
+        const matchingDesignGuids = new Set(allDesignsArray.filter((d) => d.name === selectedName).map((d) => d.guid));
 
-      // Start with root designs (no parent)
-      buildDesignHierarchy(filteredDesigns, undefined, 0);
+        // Collect all descendants of matching designs
+        const includeGuids = new Set(matchingDesignGuids);
+        const collectDescendants = (parentGuid: string) => {
+          const children = allDesignsArray.filter((d) => d.parent === parentGuid);
+          children.forEach((child) => {
+            includeGuids.add(child.guid);
+            collectDescendants(child.guid);
+          });
+        };
+        matchingDesignGuids.forEach((guid) => collectDescendants(guid));
+
+        // Filter to only included designs
+        const filteredDesigns = allDesignsArray.filter((d) => includeGuids.has(d.guid));
+
+        // Build hierarchy starting from matching designs (as roots)
+        buildDesignHierarchy(filteredDesigns, undefined, 0);
+      } else {
+        // No name filter - start with root designs (no parent)
+        buildDesignHierarchy(allDesignsArray, undefined, 0);
+      }
     }
 
     if (!selectedKind || selectedKind === "types") {
@@ -334,6 +619,9 @@ const AppContent: FC = () => {
 
         childTypes.forEach((type) => {
           if (searchQuery && !type.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+          // Skip root types that are in folders when not viewing the folders kind
+          // Only filter at root level (parentGuid === undefined), not children
+          if (!selectedKind && parentGuid === undefined && type.folder) return;
 
           const rowId = `type-${type.guid}`;
           const children = types.filter((t) => t.parent === type.guid);
@@ -359,19 +647,39 @@ const AppContent: FC = () => {
         });
       };
 
-      // Apply name filter
-      const filteredTypes = kit.types?.filter((t) => {
-        if (selectedName && t.name !== selectedName) return false;
-        return true;
-      }) || [];
+      // Apply name filter - if selectedName is set, only include types with that name and their descendants
+      const allTypesArray = kit.types || [];
+      if (selectedName) {
+        // Find all types with the selected name
+        const matchingTypeGuids = new Set(allTypesArray.filter((t) => t.name === selectedName).map((t) => t.guid));
 
-      // Start with root types (no parent)
-      buildTypeHierarchy(filteredTypes, undefined, 0);
+        // Collect all descendants of matching types
+        const includeGuids = new Set(matchingTypeGuids);
+        const collectDescendants = (parentGuid: string) => {
+          const children = allTypesArray.filter((t) => t.parent === parentGuid);
+          children.forEach((child) => {
+            includeGuids.add(child.guid);
+            collectDescendants(child.guid);
+          });
+        };
+        matchingTypeGuids.forEach((guid) => collectDescendants(guid));
+
+        // Filter to only included types
+        const filteredTypes = allTypesArray.filter((t) => includeGuids.has(t.guid));
+
+        // Build hierarchy starting from matching types (as roots)
+        buildTypeHierarchy(filteredTypes, undefined, 0);
+      } else {
+        // No name filter - start with root types (no parent)
+        buildTypeHierarchy(allTypesArray, undefined, 0);
+      }
     }
 
     if (!selectedKind || selectedKind === "qualities") {
       kit.qualities?.forEach((quality: Quality) => {
         if (searchQuery && !quality.name.toLowerCase().includes(searchQuery.toLowerCase()) && !quality.key.toLowerCase().includes(searchQuery.toLowerCase())) return;
+        // Skip qualities that are in folders when not viewing the folders kind
+        if (!selectedKind && quality.folder) return;
         result.push({
           id: `quality-${quality.guid}`,
           kind: "qualities",
@@ -387,9 +695,9 @@ const AppContent: FC = () => {
       });
     }
 
-    if (!selectedKind || selectedKind === "files") {
-      // Build file tree from files
-      const fileTree = buildFileTree(kit.files || []);
+    if (selectedKind === "files") {
+      // Build file tree from files - only when specifically viewing files kind
+      const fileTree = buildFileTree(kit.folders || [], kit.files || []);
       const flatTree = flattenFileTree(fileTree, 0, expandedRows);
 
       flatTree.forEach((node) => {
@@ -403,116 +711,207 @@ const AppContent: FC = () => {
           updatedAt: node.file ? formatDate(node.file.updatedAt) : "",
           createdAt: node.file ? formatDate(node.file.createdAt) : "",
           level: node.level,
-          parentId: node.level > 0 ? `file-${node.path.split("/").slice(0, -1).join("/")}` : undefined,
+          parentId: node.parentPath ? `file-${node.parentPath}` : undefined,
           hasChildren: node.isDirectory && node.children.length > 0,
           isExpanded: node.isExpanded,
-          data: node.file || ({ guid: node.path, path: node.path } as SemioFile),
+          data: node.file || ({ guid: node.path, name: node.name } as SemioFile),
         });
       });
     }
 
     if (!selectedKind || selectedKind === "folders") {
-      kit.folders?.forEach((folder: Folder) => {
-        if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+      // Helper function to recursively build folder hierarchy
+      const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
+        const parentGuid = parentFolder?.guid;
+        const childFolders = kit.folders?.filter((f: Folder) => f.parent === parentGuid) || [];
 
-        // Get artifacts in this folder
-        const folderedDesigns = kit.designs?.filter((d: Design) => d.folder === folder.guid) || [];
-        const folderedTypes = kit.types?.filter((t: Type) => t.folder === folder.guid) || [];
-        const folderedQualities = kit.qualities?.filter((q: Quality) => q.folder === folder.guid) || [];
-        const folderedFiles = kit.files?.filter((f: SemioFile) => f.folder === folder.guid) || [];
-        const folderedArtifacts = folderedDesigns.length + folderedTypes.length + folderedQualities.length + folderedFiles.length;
+        childFolders.forEach((folder: Folder) => {
+          if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-        const folderId = `folder-${folder.guid}`;
-        result.push({
-          id: folderId,
-          kind: "folders",
-          artifact: folder.name,
-          authors: `${folderedArtifacts} items`,
-          updatedAt: formatDate(folder.updatedAt),
-          createdAt: formatDate(folder.createdAt),
-          level: 0,
-          hasChildren: folderedArtifacts > 0,
-          isExpanded: expandedRows.has(folderId),
-          data: folder,
+          // Get artifacts in this folder
+          const folderedDesigns = kit.designs?.filter((d: Design) => d.folder === folder.guid) || [];
+          const folderedTypes = kit.types?.filter((t: Type) => t.folder === folder.guid) || [];
+          const folderedQualities = kit.qualities?.filter((q: Quality) => q.folder === folder.guid) || [];
+          const folderedFiles = kit.files?.filter((f: SemioFile) => f.folder === folder.guid) || [];
+          const folderedSubFolders = kit.folders?.filter((f: Folder) => f.parent === folder.guid) || [];
+          const folderedArtifacts = folderedDesigns.length + folderedTypes.length + folderedQualities.length + folderedFiles.length + folderedSubFolders.length;
+
+          const folderId = `folder-${folder.guid}`;
+          result.push({
+            id: folderId,
+            kind: "folders",
+            artifact: folder.name,
+            authors: `${folderedArtifacts} items`,
+            updatedAt: formatDate(folder.updatedAt),
+            createdAt: formatDate(folder.createdAt),
+            level,
+            hasChildren: folderedArtifacts > 0,
+            isExpanded: expandedRows.has(folderId),
+            data: folder,
+            folderId: folder.parent,
+            parentId: parentRowId,
+          });
+
+          // Add child artifacts if folder is expanded
+          if (expandedRows.has(folderId)) {
+            // Add designs in folder with their full hierarchy
+            const rootFolderedDesigns = folderedDesigns.filter((d: Design) => !d.parent);
+            rootFolderedDesigns.forEach((design: Design) => {
+              if (!design.guid) return;
+              const rowId = `design-${design.guid}`;
+              const allDesigns = kit.designs || [];
+              const children = allDesigns.filter((d) => d.parent === design.guid);
+              const hasChildren = children.length > 0;
+
+              result.push({
+                id: rowId,
+                kind: "designs",
+                artifact: design.name,
+                authors: (design.authors || []).join(", "),
+                updatedAt: formatDate(design.updatedAt),
+                createdAt: formatDate(design.createdAt),
+                level: level + 1,
+                hasChildren,
+                isExpanded: expandedRows.has(rowId),
+                data: design,
+                folderId: folder.guid,
+                parentId: folderId,
+              });
+
+              // Recursively add design children
+              if (expandedRows.has(rowId) && hasChildren) {
+                const buildDesignChildrenInFolder = (parentDesignGuid: string, childLevel: number, parentRowId: string): void => {
+                  const childDesigns = allDesigns.filter((d) => d.parent === parentDesignGuid);
+                  childDesigns.forEach((childDesign) => {
+                    const childRowId = `design-${childDesign.guid}`;
+                    const grandChildren = allDesigns.filter((d) => d.parent === childDesign.guid);
+                    const hasGrandChildren = grandChildren.length > 0;
+
+                    result.push({
+                      id: childRowId,
+                      kind: "designs",
+                      artifact: childDesign.name,
+                      authors: (childDesign.authors || []).join(", "),
+                      updatedAt: formatDate(childDesign.updatedAt),
+                      createdAt: formatDate(childDesign.createdAt),
+                      level: childLevel,
+                      hasChildren: hasGrandChildren,
+                      isExpanded: expandedRows.has(childRowId),
+                      data: childDesign,
+                      folderId: folder.guid,
+                      parentId: parentRowId,
+                    });
+
+                    if (expandedRows.has(childRowId) && hasGrandChildren) {
+                      buildDesignChildrenInFolder(childDesign.guid, childLevel + 1, childRowId);
+                    }
+                  });
+                };
+                buildDesignChildrenInFolder(design.guid, level + 2, rowId);
+              }
+            });
+
+            // Add types in folder with their full hierarchy
+            const rootFolderedTypes = folderedTypes.filter((t: Type) => !t.parent);
+            rootFolderedTypes.forEach((type: Type) => {
+              if (!type.guid) return;
+              const rowId = `type-${type.guid}`;
+              const allTypes = kit.types || [];
+              const children = allTypes.filter((t) => t.parent === type.guid);
+              const hasChildren = children.length > 0;
+
+              result.push({
+                id: rowId,
+                kind: "types",
+                artifact: type.name,
+                authors: (type.authors || []).join(", "),
+                updatedAt: formatDate(type.updatedAt),
+                createdAt: formatDate(type.createdAt),
+                level: level + 1,
+                hasChildren,
+                isExpanded: expandedRows.has(rowId),
+                data: type,
+                folderId: folder.guid,
+                parentId: folderId,
+              });
+
+              // Recursively add type children
+              if (expandedRows.has(rowId) && hasChildren) {
+                const buildTypeChildrenInFolder = (parentTypeGuid: string, childLevel: number, parentRowId: string): void => {
+                  const childTypes = allTypes.filter((t) => t.parent === parentTypeGuid);
+                  childTypes.forEach((childType) => {
+                    const childRowId = `type-${childType.guid}`;
+                    const grandChildren = allTypes.filter((t) => t.parent === childType.guid);
+                    const hasGrandChildren = grandChildren.length > 0;
+
+                    result.push({
+                      id: childRowId,
+                      kind: "types",
+                      artifact: childType.name,
+                      authors: (childType.authors || []).join(", "),
+                      updatedAt: formatDate(childType.updatedAt),
+                      createdAt: formatDate(childType.createdAt),
+                      level: childLevel,
+                      hasChildren: hasGrandChildren,
+                      isExpanded: expandedRows.has(childRowId),
+                      data: childType,
+                      folderId: folder.guid,
+                      parentId: parentRowId,
+                    });
+
+                    if (expandedRows.has(childRowId) && hasGrandChildren) {
+                      buildTypeChildrenInFolder(childType.guid, childLevel + 1, childRowId);
+                    }
+                  });
+                };
+                buildTypeChildrenInFolder(type.guid, level + 2, rowId);
+              }
+            });
+
+            // Add qualities in folder
+            folderedQualities.forEach((quality: Quality) => {
+              result.push({
+                id: `quality-${quality.guid}`,
+                kind: "qualities",
+                artifact: quality.name,
+                authors: "",
+                updatedAt: "",
+                createdAt: "",
+                level: level + 1,
+                hasChildren: false,
+                isExpanded: false,
+                data: quality,
+                folderId: folder.guid,
+                parentId: folderId,
+              });
+            });
+
+            // Add files in folder
+            folderedFiles.forEach((file: SemioFile) => {
+              result.push({
+                id: `file-${file.guid}`,
+                kind: "files",
+                artifact: file.name,
+                authors: file.size ? `${(file.size / 1024).toFixed(1)} KB` : "",
+                updatedAt: formatDate(file.updatedAt),
+                createdAt: formatDate(file.createdAt),
+                level: level + 1,
+                hasChildren: false,
+                isExpanded: false,
+                data: file,
+                folderId: folder.guid,
+                parentId: folderId,
+              });
+            });
+
+            // Recursively add child folders
+            buildFolderHierarchy(folder, level + 1, folderId);
+          }
         });
+      };
 
-        // Add child artifacts if folder is expanded
-        if (expandedRows.has(folderId)) {
-          // Add designs in folder
-          folderedDesigns.forEach((design: Design) => {
-            if (!design.guid) return;
-            result.push({
-              id: `design-${design.guid}`,
-              kind: "designs",
-              artifact: design.name,
-              authors: (design.authors || []).join(", "),
-              updatedAt: formatDate(design.updatedAt),
-              createdAt: formatDate(design.createdAt),
-              level: 1,
-              hasChildren: false,
-              isExpanded: false,
-              data: design,
-              folderId: folder.guid,
-              parentId: folderId,
-            });
-          });
-
-          // Add types in folder
-          folderedTypes.forEach((type: Type) => {
-            if (!type.guid) return;
-            result.push({
-              id: `type-${type.guid}`,
-              kind: "types",
-              artifact: type.name,
-              authors: (type.authors || []).join(", "),
-              updatedAt: formatDate(type.updatedAt),
-              createdAt: formatDate(type.createdAt),
-              level: 1,
-              hasChildren: false,
-              isExpanded: false,
-              data: type,
-              folderId: folder.guid,
-              parentId: folderId,
-            });
-          });
-
-          // Add qualities in folder
-          folderedQualities.forEach((quality: Quality) => {
-            result.push({
-              id: `quality-${quality.key}`,
-              kind: "qualities",
-              artifact: quality.name,
-              authors: "",
-              updatedAt: "",
-              createdAt: "",
-              level: 1,
-              hasChildren: false,
-              isExpanded: false,
-              data: quality,
-              folderId: folder.guid,
-              parentId: folderId,
-            });
-          });
-
-          // Add files in folder
-          folderedFiles.forEach((file: SemioFile) => {
-            result.push({
-              id: `file-${file.path}`,
-              kind: "files",
-              artifact: file.path.split("/").pop() || file.path,
-              authors: "",
-              updatedAt: "",
-              createdAt: "",
-              level: 1,
-              hasChildren: false,
-              isExpanded: false,
-              data: file,
-              folderId: folder.guid,
-              parentId: folderId,
-            });
-          });
-        }
-      });
+      // Start with root folders (no parent)
+      buildFolderHierarchy(null, 0);
     }
 
     if (!selectedKind || selectedKind === "authors") {
@@ -663,76 +1062,134 @@ const AppContent: FC = () => {
     kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.toggleRow", rowId);
   };
 
-  const handleRowDragStart = (row: TableRow, e: React.DragEvent) => {
-    // Only allow dragging artifacts, not folders themselves (for now)
-    if (row.kind === "folders") {
-      e.preventDefault();
-      return;
-    }
-    setDraggedRow(row);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", row.id);
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
   };
 
-  const handleRowDragOver = (row: TableRow, e: React.DragEvent) => {
-    // Only allow dropping into folders
-    if (row.kind !== "folders") {
-      return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverFolder(row.id);
+  const handleDragOver = (event: DragOverEvent) => {
+    setOverId(event.over?.id as string | null);
   };
 
-  const handleRowDragLeave = (row: TableRow, e: React.DragEvent) => {
-    if (row.kind !== "folders") {
-      return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverFolder(null);
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setOverId(null);
 
-  const handleRowDrop = (row: TableRow, e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverFolder(null);
+    if (!active) return;
 
-    if (!draggedRow || row.kind !== "folders") {
+    const draggedRow = rows.find((r) => r.id === active.id);
+    if (!draggedRow) return;
+
+    // Prevent dropping a folder onto itself
+    if (draggedRow.kind === "folders" && over && over.id === active.id) {
       return;
     }
 
-    const folder = row.data as Folder;
-    const targetFolderId = folder.guid;
+    let targetFolderId: string | undefined = undefined;
+    let shouldExpandFolder = false;
 
-    // Don't move if already in this folder
-    if (draggedRow.folderId === targetFolderId) {
-      setDraggedRow(null);
-      return;
+    if (over) {
+      // Check if dropped on canvas root (empty space in the table)
+      if (over.id === "canvas-root") {
+        // Dropped on canvas background - move to root (unset folder/parent)
+        targetFolderId = undefined;
+      } else {
+        // Dropped on a row
+        const targetRow = rows.find((r) => r.id === over.id);
+        if (targetRow) {
+          if (targetRow.kind === "folders") {
+            // Dropped directly on a folder
+            const folder = targetRow.data as Folder;
+            targetFolderId = folder.guid;
+            shouldExpandFolder = true;
+          } else if (targetRow.folderId) {
+            // Dropped on a non-folder child of a folder - move to parent folder
+            targetFolderId = targetRow.folderId;
+          } else {
+            // Dropped on root-level row that's not a folder - move to root (unset folder/parent)
+            targetFolderId = undefined;
+          }
+        } else {
+          // No target row found - move to root
+          targetFolderId = undefined;
+        }
+      }
+    } else {
+      // Dropped outside all droppable areas - move to root (unset folder/parent)
+      targetFolderId = undefined;
     }
 
-    // Move the artifact to the folder
+    // Don't move if already in the target location
+    // For designs and types, check the actual folder property from the data
+    let currentFolderId: string | undefined = undefined;
+    let hasParent = false;
+
+    if (draggedRow.kind === "designs") {
+      const design = draggedRow.data as Design;
+      currentFolderId = design.folder;
+      hasParent = !!design.parent;
+    } else if (draggedRow.kind === "types") {
+      const type = draggedRow.data as Type;
+      currentFolderId = type.folder;
+      hasParent = !!type.parent;
+    } else if (draggedRow.kind === "qualities") {
+      currentFolderId = (draggedRow.data as Quality).folder;
+    } else if (draggedRow.kind === "files") {
+      currentFolderId = (draggedRow.data as SemioFile).folder;
+    } else if (draggedRow.kind === "folders") {
+      currentFolderId = (draggedRow.data as Folder).parent;
+    }
+
+    // If dropped on root and item has parent, allow (to unparent)
+    // If dropped on root and item has no parent and no folder, skip (already at root)
+    // Otherwise check if target is same as current location
+    if (targetFolderId === undefined && !hasParent && !currentFolderId) return;
+    if (targetFolderId !== undefined && currentFolderId === targetFolderId) return;
+
     if (draggedRow.kind === "designs" && kitCommands) {
       const design = draggedRow.data as Design;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToFolder", "designs", design.guid, targetFolderId);
+
+      if (design.parent) {
+        // Child design (variant) - only allow unparenting when dropped on root
+        if (targetFolderId === undefined) {
+          kitCommands.updateDesign("semio.sketchpad.app.kit.canvas.table.unparentDesign", design.guid, { parent: undefined });
+        }
+        // else: cannot move child designs to folders, do nothing
+      } else {
+        // Root design (protodesign) - can be moved to folders or root
+        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToFolder", "design", design.guid, targetFolderId);
+      }
     } else if (draggedRow.kind === "types" && kitCommands) {
       const type = draggedRow.data as Type;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToFolder", "types", type.guid, targetFolderId);
+
+      if (type.parent) {
+        // Child type (view) - only allow unparenting when dropped on root
+        if (targetFolderId === undefined) {
+          kitCommands.updateType("semio.sketchpad.app.kit.canvas.table.unparentType", type.guid, { parent: undefined });
+        }
+        // else: cannot move child types to folders, do nothing
+      } else {
+        // Root type (prototype) - can be moved to folders or root
+        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToFolder", "type", type.guid, targetFolderId);
+      }
     } else if (draggedRow.kind === "qualities" && kitCommands) {
       const quality = draggedRow.data as Quality;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveQualityToFolder", "qualities", quality.key, targetFolderId);
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveQualityToFolder", "quality", quality.guid, targetFolderId);
     } else if (draggedRow.kind === "files" && kitCommands) {
       const file = draggedRow.data as SemioFile;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFileToFolder", "files", file.path, targetFolderId);
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFileToFolder", "file", file.guid, targetFolderId);
+    } else if (draggedRow.kind === "folders" && kitCommands) {
+      const folder = draggedRow.data as Folder;
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFolderToFolder", "folder", folder.guid, targetFolderId);
     }
 
-    setDraggedRow(null);
-  };
-
-  const handleRowDragEnd = () => {
-    setDraggedRow(null);
-    setDragOverFolder(null);
+    // Expand the target folder if moving into a folder
+    if (shouldExpandFolder && targetFolderId) {
+      const folderId = `folder-${targetFolderId}`;
+      if (!expandedRows.has(folderId)) {
+        kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.expandFolder", folderId);
+      }
+    }
   };
 
   const handleCreateArtifact = (kind: ArtifactKind) => {
@@ -870,8 +1327,6 @@ const AppContent: FC = () => {
     setSearchParams(newParams);
   };
 
-
-
   const handleRowClick = (row: TableRow, e: React.MouseEvent) => {
     if (row.kind === "designs") {
       const designId = (row.data as Design).guid;
@@ -958,32 +1413,32 @@ const AppContent: FC = () => {
         kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", qualityKey);
       }
     } else if (row.kind === "files") {
-      const filePath = (row.data as SemioFile).path;
+      const fileGuid = (row.data as SemioFile).guid;
       if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "files" && (r.data as SemioFile).path === filePath);
+        const currentIndex = rows.findIndex((r) => r.kind === "files" && (r.data as SemioFile).guid === fileGuid);
         if (selection.files.length > 0) {
-          const lastSelectedPath = selection.files[selection.files.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "files" && (r.data as SemioFile).path === lastSelectedPath);
+          const lastSelectedGuid = selection.files[selection.files.length - 1];
+          const lastIndex = rows.findIndex((r) => r.kind === "files" && (r.data as SemioFile).guid === lastSelectedGuid);
           if (lastIndex !== -1 && currentIndex !== -1) {
             const start = Math.min(lastIndex, currentIndex);
             const end = Math.max(lastIndex, currentIndex);
-            const rangePaths = rows
+            const rangeGuids = rows
               .slice(start, end + 1)
               .filter((r) => r.kind === "files")
-              .map((r) => (r.data as SemioFile).path);
-            kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", rangePaths);
+              .map((r) => (r.data as SemioFile).guid);
+            kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", rangeGuids);
           }
         } else {
-          kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFileShift", filePath);
+          kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFileShift", fileGuid);
         }
       } else if (e.metaKey || e.ctrlKey) {
-        if (selection.files.includes(filePath)) {
-          kitAppCommands.removeFileFromSelection("semio.sketchpad.app.kit.canvas.table.removeFileCtrl", filePath);
+        if (selection.files.includes(fileGuid)) {
+          kitAppCommands.removeFileFromSelection("semio.sketchpad.app.kit.canvas.table.removeFileCtrl", fileGuid);
         } else {
-          kitAppCommands.addFileToSelection("semio.sketchpad.app.kit.canvas.table.addFileCtrl", filePath);
+          kitAppCommands.addFileToSelection("semio.sketchpad.app.kit.canvas.table.addFileCtrl", fileGuid);
         }
       } else {
-        kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", filePath);
+        kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", fileGuid);
       }
     } else if (row.kind === "folders") {
       const folderId = (row.data as Folder).guid;
@@ -1058,7 +1513,7 @@ const AppContent: FC = () => {
     kitAppCommands.toggleSort("semio.sketchpad.app.kit.canvas.table.toggleSort", column);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleFileDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.types.includes("Files")) {
@@ -1066,13 +1521,13 @@ const AppContent: FC = () => {
     }
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleFileDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
   };
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleFileDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
@@ -1090,28 +1545,69 @@ const AppContent: FC = () => {
           const zip = await JSZip.loadAsync(file);
 
           // Extract all files from zip
-          const extractPromises: Promise<void>[] = [];
-          zip.forEach((relativePath, zipEntry) => {
-            if (!zipEntry.dir) {
-              extractPromises.push(
-                zipEntry.async("blob").then(async (fileBlob) => {
-                  const extractedFile: SemioFile = {
-                    guid: guid(),
-                    path: relativePath,
-                    size: fileBlob.size,
-                    hash: undefined,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  };
-                  await kitCommands?.addFile("semio.sketchpad.app.kit.dropZip", extractedFile, fileBlob);
-                  console.log(`[DEBUG] Extracted and added file ${relativePath} from zip`);
-                }),
-              );
-            }
+          const folderByGuid = new Map<string, Folder>();
+          (kit.folders || []).forEach((existingFolder) => folderByGuid.set(existingFolder.guid, existingFolder));
+          const folderPathCache = new Map<string, string>();
+          const folderPathMap = new Map<string, string>();
+          const resolvePath = (folder: Folder): string => {
+            const cached = folderPathCache.get(folder.guid);
+            if (cached) return cached;
+            const parentFolder = folder.parent ? folderByGuid.get(folder.parent) : undefined;
+            const path = parentFolder ? `${resolvePath(parentFolder)}/${folder.name}` : folder.name;
+            folderPathCache.set(folder.guid, path);
+            return path;
+          };
+          folderByGuid.forEach((folder) => {
+            const path = resolvePath(folder);
+            folderPathMap.set(path, folder.guid);
           });
-
-          await Promise.all(extractPromises);
-          console.log(`[DEBUG] Successfully extracted ${extractPromises.length} files from ${file.name}`);
+          const ensureFolder = async (parts: string[]): Promise<string | undefined> => {
+            let parentGuid: string | undefined = undefined;
+            let currentPath = "";
+            for (const part of parts) {
+              currentPath = currentPath ? `${currentPath}/${part}` : part;
+              let folderGuid = folderPathMap.get(currentPath);
+              if (!folderGuid) {
+                const newFolder: Folder = {
+                  guid: guid(),
+                  name: part,
+                  parent: parentGuid,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                };
+                folderGuid = newFolder.guid;
+                folderPathMap.set(currentPath, folderGuid);
+                folderByGuid.set(folderGuid, newFolder);
+                if (kitCommands) await kitCommands.createFolder("semio.sketchpad.app.kit.dropZip.createFolder", newFolder);
+              }
+              parentGuid = folderGuid;
+            }
+            return parentGuid;
+          };
+          let processedFiles = 0;
+          for (const zipEntry of Object.values(zip.files)) {
+            if (!zipEntry.dir) {
+              const relativePath = zipEntry.name;
+              const parts = relativePath.split("/").filter((part) => part.length > 0);
+              const directories = parts.slice(0, -1);
+              const parentFolderGuid = directories.length > 0 ? await ensureFolder(directories) : undefined;
+              const fileBlob = await zipEntry.async("blob");
+              const extractedFile: SemioFile = {
+                guid: guid(),
+                name: parts[parts.length - 1] || relativePath,
+                path: relativePath,
+                folder: parentFolderGuid,
+                size: fileBlob.size,
+                hash: undefined,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+              await kitCommands?.addFile("semio.sketchpad.app.kit.dropZip", extractedFile, fileBlob);
+              processedFiles += 1;
+              console.log(`[DEBUG] Extracted and added file ${relativePath} from zip`);
+            }
+          }
+          console.log(`[DEBUG] Successfully extracted ${processedFiles} files from ${file.name}`);
         } catch (error) {
           console.error(`Failed to extract zip file ${file.name}:`, error);
         }
@@ -1119,6 +1615,7 @@ const AppContent: FC = () => {
         // Handle regular file
         const newFile: SemioFile = {
           guid: guid(),
+          name: file.name,
           path: file.name,
           size: file.size,
           hash: undefined,
@@ -1156,8 +1653,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind(selectedKind)}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact(selectedKind)}
-              id="semio.sketchpad.app.kitApp.hideKind"
-              actionId="semio.sketchpad.app.kitApp.createArtifact"
+              id="semio.sketchpad.app.kit.kitApp.hideKind"
+              actionId="semio.sketchpad.app.kit.kitApp.createArtifact"
             >
               {selectedKind === "designs" && <Layout className="size-4" />}
               {selectedKind === "types" && <Box className="size-4" />}
@@ -1186,8 +1683,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("designs")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("designs")}
-                id="semio.sketchpad.app.kitApp.showDesigns"
-                actionId="semio.sketchpad.app.kitApp.createDesign"
+                id="semio.sketchpad.app.kit.kitApp.showDesigns"
+                actionId="semio.sketchpad.app.kit.kitApp.createDesign"
               >
                 <Layout className="size-4" />
               </Toggle>
@@ -1197,8 +1694,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("types")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("types")}
-                id="semio.sketchpad.app.kitApp.showTypes"
-                actionId="semio.sketchpad.app.kitApp.createType"
+                id="semio.sketchpad.app.kit.kitApp.showTypes"
+                actionId="semio.sketchpad.app.kit.kitApp.createType"
               >
                 <Box className="size-4" />
               </Toggle>
@@ -1208,8 +1705,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("qualities")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("qualities")}
-                id="semio.sketchpad.app.kitApp.showQualities"
-                actionId="semio.sketchpad.app.kitApp.createQuality"
+                id="semio.sketchpad.app.kit.kitApp.showQualities"
+                actionId="semio.sketchpad.app.kit.kitApp.createQuality"
               >
                 <Award className="size-4" />
               </Toggle>
@@ -1219,8 +1716,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("files")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("files")}
-                id="semio.sketchpad.app.kitApp.showFiles"
-                actionId="semio.sketchpad.app.kitApp.createFile"
+                id="semio.sketchpad.app.kit.kitApp.showFiles"
+                actionId="semio.sketchpad.app.kit.kitApp.createFile"
               >
                 <FileText className="size-4" />
               </Toggle>
@@ -1230,8 +1727,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("folders")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("folders")}
-                id="semio.sketchpad.app.kitApp.showFolders"
-                actionId="semio.sketchpad.app.kitApp.createFolder"
+                id="semio.sketchpad.app.kit.kitApp.showFolders"
+                actionId="semio.sketchpad.app.kit.kitApp.createFolder"
               >
                 <FolderIcon className="size-4" />
               </Toggle>
@@ -1241,8 +1738,8 @@ const AppContent: FC = () => {
                 onPressedChange={() => toggleKind("authors")}
                 actionIcon={<Plus className="size-3.5" />}
                 onActionClick={() => handleCreateArtifact("authors")}
-                id="semio.sketchpad.app.kitApp.showAuthors"
-                actionId="semio.sketchpad.app.kitApp.createAuthor"
+                id="semio.sketchpad.app.kit.kitApp.showAuthors"
+                actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
               >
                 <User className="size-4" />
               </Toggle>
@@ -1278,84 +1775,46 @@ const AppContent: FC = () => {
                 { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.app.sort.ascending" },
                 { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.app.sort.descending" },
               ]}
-              id="semio.sketchpad.app.kitApp.sortByName"
+              id="semio.sketchpad.app.kit.kitApp.sortByName"
             />
           </div>
         </div>
 
         {/* Simplified table - only name column, no headers */}
-        <ScrollArea className="flex-1">
-          <div className="flex flex-col">
-            {rows.map((row) => {
-              const isSelected =
-                (row.kind === "designs" && selection.designs.includes((row.data as Design).guid)) ||
-                (row.kind === "types" && selection.types.includes((row.data as Type).guid)) ||
-                (row.kind === "qualities" && selection.qualities.includes((row.data as Quality).key)) ||
-                (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
-                (row.kind === "folders" && selection.folders.includes((row.data as Folder).guid)) ||
-                (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
-              const isDraggedOver = dragOverFolder === row.id;
-              const isDraggable = row.kind !== "folders";
-              return (
-                <div
-                  key={row.id}
-                  className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isDraggedOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`}
-                  onClick={(e) => handleRowClick(row, e)}
-                  onDoubleClick={() => handleRowDoubleClick(row)}
-                  draggable={isDraggable}
-                  onDragStart={(e) => handleRowDragStart(row, e)}
-                  onDragOver={(e) => handleRowDragOver(row, e)}
-                  onDragLeave={(e) => handleRowDragLeave(row, e)}
-                  onDrop={(e) => handleRowDrop(row, e)}
-                  onDragEnd={handleRowDragEnd}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {row.hasChildren ? (
-                        <Action
-                          level="base"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleRow(row.id);
-                          }}
-                        >
-                          {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-                        </Action>
-                      ) : (
-                        <span className="w-5 h-5 shrink-0" />
-                      )}
-                      <div className="shrink-0">
-                        {row.kind === "designs" && <Layout className="size-4" />}
-                        {row.kind === "types" && <Box className="size-4" />}
-                        {row.kind === "qualities" && <Award className="size-4" />}
-                        {row.kind === "files" && <FileText className="size-4" />}
-                        {row.kind === "folders" && <FolderIcon className="size-4" />}
-                        {row.kind === "authors" && <User className="size-4" />}
-                      </div>
-                      <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
-                    </div>
-                    <div className="flex items-center gap-0.5 shrink-0">
-                      {(row.kind === "designs" || row.kind === "types") && (
-                        <Action
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCreateChildForRow(row);
-                          }}
-                          id="semio.sketchpad.app.kitApp.createChild"
-                          level="base"
-                        >
-                          <Plus />
-                        </Action>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+          <ScrollArea className="flex-1">
+            <DroppableTableWrapper>
+              <div className="flex flex-col">
+                {rows.map((row) => {
+                  const isSelected =
+                    (row.kind === "designs" && selection.designs.includes((row.data as Design).guid)) ||
+                    (row.kind === "types" && selection.types.includes((row.data as Type).guid)) ||
+                    (row.kind === "qualities" && selection.qualities.includes((row.data as Quality).key)) ||
+                    (row.kind === "files" && selection.files.includes((row.data as SemioFile).guid)) ||
+                    (row.kind === "folders" && selection.folders.includes((row.data as Folder).guid)) ||
+                    (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
+                  const isDraggedOver = overId === row.id && activeId !== row.id;
+                  const isDragging = activeId === row.id;
+                  return (
+                    <DraggableRow
+                      key={row.id}
+                      row={row}
+                      isSelected={isSelected}
+                      isDraggedOver={isDraggedOver}
+                      isDragging={isDragging}
+                      onRowClick={handleRowClick}
+                      onRowDoubleClick={handleRowDoubleClick}
+                      toggleRow={toggleRow}
+                      handleCreateChildForRow={handleCreateChildForRow}
+                      isMobile={true}
+                      selectedKind={selectedKind}
+                    />
+                  );
+                })}
+              </div>
+            </DroppableTableWrapper>
+          </ScrollArea>
+        </DndContext>
       </div>
     );
   }
@@ -1378,8 +1837,8 @@ const AppContent: FC = () => {
             onPressedChange={() => toggleKind(selectedKind)}
             actionIcon={<Plus className="size-3.5" />}
             onActionClick={() => handleCreateArtifact(selectedKind)}
-            id="semio.sketchpad.app.kitApp.hideKind"
-            actionId="semio.sketchpad.app.kitApp.createArtifact"
+            id="semio.sketchpad.app.kit.kitApp.hideKind"
+            actionId="semio.sketchpad.app.kit.kitApp.createArtifact"
           >
             {selectedKind === "designs" && <Layout className="size-4" />}
             {selectedKind === "types" && <Box className="size-4" />}
@@ -1408,8 +1867,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("designs")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("designs")}
-              id="semio.sketchpad.app.kitApp.showDesigns"
-              actionId="semio.sketchpad.app.kitApp.createDesign"
+              id="semio.sketchpad.app.kit.kitApp.showDesigns"
+              actionId="semio.sketchpad.app.kit.kitApp.createDesign"
             >
               <Layout className="size-4" />
             </Toggle>
@@ -1419,8 +1878,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("types")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("types")}
-              id="semio.sketchpad.app.kitApp.showTypes"
-              actionId="semio.sketchpad.app.kitApp.createType"
+              id="semio.sketchpad.app.kit.kitApp.showTypes"
+              actionId="semio.sketchpad.app.kit.kitApp.createType"
             >
               <Box className="size-4" />
             </Toggle>
@@ -1430,8 +1889,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("qualities")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("qualities")}
-              id="semio.sketchpad.app.kitApp.showQualities"
-              actionId="semio.sketchpad.app.kitApp.createQuality"
+              id="semio.sketchpad.app.kit.kitApp.showQualities"
+              actionId="semio.sketchpad.app.kit.kitApp.createQuality"
             >
               <Award className="size-4" />
             </Toggle>
@@ -1441,8 +1900,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("files")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("files")}
-              id="semio.sketchpad.app.kitApp.showFiles"
-              actionId="semio.sketchpad.app.kitApp.createFile"
+              id="semio.sketchpad.app.kit.kitApp.showFiles"
+              actionId="semio.sketchpad.app.kit.kitApp.createFile"
             >
               <FileText className="size-4" />
             </Toggle>
@@ -1452,8 +1911,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("folders")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("folders")}
-              id="semio.sketchpad.app.kitApp.showFolders"
-              actionId="semio.sketchpad.app.kitApp.createFolder"
+              id="semio.sketchpad.app.kit.kitApp.showFolders"
+              actionId="semio.sketchpad.app.kit.kitApp.createFolder"
             >
               <FolderIcon className="size-4" />
             </Toggle>
@@ -1463,8 +1922,8 @@ const AppContent: FC = () => {
               onPressedChange={() => toggleKind("authors")}
               actionIcon={<Plus className="size-3.5" />}
               onActionClick={() => handleCreateArtifact("authors")}
-              id="semio.sketchpad.app.kitApp.showAuthors"
-              actionId="semio.sketchpad.app.kitApp.createAuthor"
+              id="semio.sketchpad.app.kit.kitApp.showAuthors"
+              actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
             >
               <User className="size-4" />
             </Toggle>
@@ -1488,176 +1947,132 @@ const AppContent: FC = () => {
           ))}
         <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)} />
       </div>
-      <ScrollArea ref={scrollAreaRef} className="flex-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-        {isDragOver && (
-          <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-10">
-            <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
-          </div>
-        )}
-        <table className="w-full border-collapse">
-          <thead className="sticky top-0 border-b">
-            <tr className="h-9">
-              <th className="text-left p-1 font-medium relative group">
-                <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.name")}</span>
-                  <Toggle
-                    type="dropdown"
-                    pressed={sortColumn === "artifact"}
-                    value={sortColumn === "artifact" ? sortDirection : "asc"}
-                    onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
-                    }}
-                    items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
-                    ]}
-                    className="px-1 min-w-0"
-                  />
-                </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-              </th>
-              {!selectedKind && (
-                <th className="text-left p-1 font-medium relative group">
-                  <div className="flex items-center justify-between w-full">
-                    <span>{t("semio.sketchpad.app.kit.kind")}</span>
-                    <Toggle
-                      type="dropdown"
-                      pressed={sortColumn === "kind"}
-                      value={sortColumn === "kind" ? sortDirection : "asc"}
-                      onValueChange={(value) => {
-                        kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.kind.sortColumn", "kind");
-                        kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.kind.sortDirection", value as "asc" | "desc");
-                      }}
-                      items={[
-                        { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                        { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
-                      ]}
-                      className="px-1 min-w-0"
-                    />
-                  </div>
-                  <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-                </th>
-              )}
-              <th className="text-left p-1 font-medium relative group">
-                <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.lastUpdated")}</span>
-                  <Toggle
-                    type="dropdown"
-                    pressed={sortColumn === "updatedAt"}
-                    value={sortColumn === "updatedAt" ? sortDirection : "asc"}
-                    onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.updatedAt.sortColumn", "updatedAt");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.updatedAt.sortDirection", value as "asc" | "desc");
-                    }}
-                    items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
-                    ]}
-                    className="px-1 min-w-0"
-                  />
-                </div>
-                <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
-              </th>
-              <th className="text-left p-1 font-medium relative group">
-                <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.created")}</span>
-                  <Toggle
-                    type="dropdown"
-                    pressed={sortColumn === "createdAt"}
-                    value={sortColumn === "createdAt" ? sortDirection : "asc"}
-                    onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.createdAt.sortColumn", "createdAt");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.createdAt.sortDirection", value as "asc" | "desc");
-                    }}
-                    items={[
-                      { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                      { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
-                    ]}
-                    className="px-1 min-w-0"
-                  />
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const isSelected =
-                (row.kind === "designs" && selection.designs.includes((row.data as Design).guid)) ||
-                (row.kind === "types" && selection.types.includes((row.data as Type).guid)) ||
-                (row.kind === "qualities" && selection.qualities.includes((row.data as Quality).key)) ||
-                (row.kind === "files" && selection.files.includes((row.data as SemioFile).path)) ||
-                (row.kind === "folders" && selection.folders.includes((row.data as Folder).guid)) ||
-                (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
-              const isDraggedOver = dragOverFolder === row.id;
-              const isDraggable = row.kind !== "folders";
-              return (
-                <tr
-                  key={row.id}
-                  className={`border-b cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isDraggedOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`}
-                  onClick={(e) => handleRowClick(row, e)}
-                  onDoubleClick={() => handleRowDoubleClick(row)}
-                  draggable={isDraggable}
-                  onDragStart={(e) => handleRowDragStart(row, e)}
-                  onDragOver={(e) => handleRowDragOver(row, e)}
-                  onDragLeave={(e) => handleRowDragLeave(row, e)}
-                  onDrop={(e) => handleRowDrop(row, e)}
-                  onDragEnd={handleRowDragEnd}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <td className="p-1" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
-                      <div className="flex items-center gap-1 flex-1 min-w-0">
-                        {row.hasChildren ? (
-                          <Action
-                            level="base"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleRow(row.id);
-                            }}
-                          >
-                            {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-                          </Action>
-                        ) : (
-                          <span className="w-4 h-4 shrink-0" />
-                        )}
-                        <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
-                      </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        {(row.kind === "designs" || row.kind === "types") && (
-                          <Action
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateChildForRow(row);
-                            }}
-                            id="semio.sketchpad.app.kitApp.createChild"
-                            level="base"
-                          >
-                            <Plus />
-                          </Action>
-                        )}
-                      </div>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+        <ScrollArea ref={scrollAreaRef} className="flex-1" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
+          {isDragOver && (
+            <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-10">
+              <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
+            </div>
+          )}
+          <DroppableTableWrapper>
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 border-b">
+                <tr className="h-9">
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("semio.sketchpad.app.kit.name")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "artifact"}
+                        value={sortColumn === "artifact" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
+                          kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
                     </div>
-                  </td>
+                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                  </th>
                   {!selectedKind && (
-                    <td className="p-1">
-                      {row.kind === "designs" && <Layout className="size-4" />}
-                      {row.kind === "types" && <Box className="size-4" />}
-                      {row.kind === "qualities" && <Award className="size-4" />}
-                      {row.kind === "files" && <FileText className="size-4" />}
-                      {row.kind === "folders" && <FolderIcon className="size-4" />}
-                      {row.kind === "authors" && <User className="size-4" />}
-                    </td>
+                    <th className="text-left p-1 font-medium relative group">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{t("semio.sketchpad.app.kit.kind")}</span>
+                        <Toggle
+                          type="dropdown"
+                          pressed={sortColumn === "kind"}
+                          value={sortColumn === "kind" ? sortDirection : "asc"}
+                          onValueChange={(value) => {
+                            kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.kind.sortColumn", "kind");
+                            kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.kind.sortDirection", value as "asc" | "desc");
+                          }}
+                          items={[
+                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                          ]}
+                          className="px-1 min-w-0"
+                        />
+                      </div>
+                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                    </th>
                   )}
-                  <td className="p-1">{row.updatedAt}</td>
-                  <td className="p-1">{row.createdAt}</td>
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("semio.sketchpad.app.kit.lastUpdated")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "updatedAt"}
+                        value={sortColumn === "updatedAt" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.updatedAt.sortColumn", "updatedAt");
+                          kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.updatedAt.sortDirection", value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
+                    </div>
+                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                  </th>
+                  <th className="text-left p-1 font-medium relative group">
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("semio.sketchpad.app.kit.created")}</span>
+                      <Toggle
+                        type="dropdown"
+                        pressed={sortColumn === "createdAt"}
+                        value={sortColumn === "createdAt" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.createdAt.sortColumn", "createdAt");
+                          kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.createdAt.sortDirection", value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                        ]}
+                        className="px-1 min-w-0"
+                      />
+                    </div>
+                  </th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </ScrollArea>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const isSelected =
+                    (row.kind === "designs" && selection.designs.includes((row.data as Design).guid)) ||
+                    (row.kind === "types" && selection.types.includes((row.data as Type).guid)) ||
+                    (row.kind === "qualities" && selection.qualities.includes((row.data as Quality).key)) ||
+                    (row.kind === "files" && selection.files.includes((row.data as SemioFile).guid)) ||
+                    (row.kind === "folders" && selection.folders.includes((row.data as Folder).guid)) ||
+                    (row.kind === "authors" && selection.authors.includes((row.data as Author).name));
+                  const isDraggedOver = overId === row.id && activeId !== row.id;
+                  const isDragging = activeId === row.id;
+                  return (
+                    <DraggableRow
+                      key={row.id}
+                      row={row}
+                      isSelected={isSelected}
+                      isDraggedOver={isDraggedOver}
+                      isDragging={isDragging}
+                      onRowClick={handleRowClick}
+                      onRowDoubleClick={handleRowDoubleClick}
+                      toggleRow={toggleRow}
+                      handleCreateChildForRow={handleCreateChildForRow}
+                      isMobile={false}
+                      selectedKind={selectedKind}
+                    />
+                  );
+                })}
+              </tbody>
+            </table>
+          </DroppableTableWrapper>
+        </ScrollArea>
+      </DndContext>
     </div>
   );
 };
@@ -1672,7 +2087,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { }
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {

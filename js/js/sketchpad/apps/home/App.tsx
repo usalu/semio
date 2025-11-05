@@ -26,6 +26,7 @@ import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
+import { TableAvatar } from "../../../elements/display/Avatar";
 import { Action } from "../../../elements/input/Action";
 import { Input } from "../../../elements/input/Input";
 import { Toggle } from "../../../elements/input/Toggle";
@@ -69,7 +70,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({}) => {
+const Home: FC = ({ }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -669,12 +670,7 @@ const Home: FC = ({}) => {
                       ) : (
                         <span className="w-5 h-5 shrink-0" />
                       )}
-                      <div className="shrink-0">
-                        {row.type === "temporary" && <Clock className="size-4" />}
-                        {row.type === "local" && <HardDrive className="size-4" />}
-                        {row.type === "remote" && <Cloud className="size-4" />}
-                        {row.type === "docs" && <FileText className="size-4" />}
-                      </div>
+                      <TableAvatar name={row.name} icon={row.kit?.icon} />
                       <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
@@ -927,6 +923,7 @@ const Home: FC = ({}) => {
                               ) : (
                                 <span className="w-4 h-4 shrink-0" />
                               )}
+                              <TableAvatar name={row.name} icon={row.kit?.icon} />
                               <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                             </div>
                             <div className="flex items-center gap-0.5 shrink-0">

@@ -711,9 +711,7 @@ export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 export const FileSchema = z.object({
   guid: z.string(),
-  // path: z.url(),
-  path: z.string(),
-  // remote: z.url().optional(),
+  name: z.string(),
   remote: z.string().optional(),
   folder: z.string().optional(),
   size: z.number().optional(),
@@ -731,7 +729,7 @@ export const FileDiffSchema = FileSchema.partial();
 export type FileDiff = z.infer<typeof FileDiffSchema>;
 export const getFileDiff = (before: File, after: File): FileDiff => {
   const diff: FileDiff = {};
-  if (before.path !== after.path) diff.path = after.path;
+  if (before.name !== after.name) diff.name = after.name;
   if (before.remote !== after.remote) diff.remote = after.remote;
   if (before.size !== after.size) diff.size = after.size;
   if (before.hash !== after.hash) diff.hash = after.hash;
@@ -739,11 +737,12 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
   if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
   if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
   if (before.updatedBy !== after.updatedBy) diff.updatedBy = after.updatedBy;
+  if (before.folder !== after.folder) diff.folder = after.folder;
   return diff;
 };
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
   const inverse: FileDiff = {};
-  if (appliedDiff.path !== undefined) inverse.path = original.path;
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
   if (appliedDiff.size !== undefined) inverse.size = original.size;
   if (appliedDiff.hash !== undefined) inverse.hash = original.hash;
@@ -751,6 +750,7 @@ export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff
   if (appliedDiff.createdBy !== undefined) inverse.createdBy = original.createdBy;
   if (appliedDiff.updatedAt !== undefined) inverse.updatedAt = original.updatedAt;
   if (appliedDiff.updatedBy !== undefined) inverse.updatedBy = original.updatedBy;
+  if (appliedDiff.folder !== undefined) inverse.folder = original.folder;
   return inverse;
 };
 export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
@@ -759,7 +759,7 @@ export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
 export const applyFileDiff = (base: File, diff: FileDiff): File => {
   return {
     ...base,
-    path: diff.path ?? base.path,
+    name: diff.name ?? base.name,
     remote: diff.remote ?? base.remote,
     size: diff.size ?? base.size,
     hash: diff.hash ?? base.hash,
@@ -767,6 +767,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
     createdBy: diff.createdBy ?? base.createdBy,
     updatedAt: diff.updatedAt ?? base.updatedAt,
     updatedBy: diff.updatedBy ?? base.updatedBy,
+    folder: diff.folder ?? base.folder,
   };
 };
 
@@ -3041,16 +3042,16 @@ export const updateDesignInKit = (design: Design): KitDiff => ({
   },
 });
 
-export const findFileInKit = (kit: Kit, filePath: string): File => {
-  const file = (kit.files || []).find((f) => f.path === filePath);
-  if (!file) throw new Error(`File ${filePath} not found in kit`);
+export const findFileInKit = (kit: Kit, fileGuid: string): File => {
+  const file = (kit.files || []).find((f) => f.guid === fileGuid);
+  if (!file) throw new Error(`File ${fileGuid} not found in kit`);
   return file;
 };
 
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
 export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
-export const removeFileFromKit = (filePath: string): KitDiff => ({
-  files: { removed: [filePath] },
+export const removeFileFromKit = (fileGuid: string): KitDiff => ({
+  files: { removed: [fileGuid] },
 });
 
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
@@ -3350,53 +3351,66 @@ export interface FileTreeNode {
   isDirectory: boolean;
   children: FileTreeNode[];
   file?: File;
+  folderGuid?: string;
+  parentPath?: string;
 }
 
-/**
- * Builds a hierarchical tree structure from file paths.
- * @param files - Array of files with paths
- * @returns Root nodes of the file tree
- */
-export const buildFileTree = (files: File[]): FileTreeNode[] => {
-  const root: FileTreeNode[] = [];
-  const nodeMap = new Map<string, FileTreeNode>();
-
-  files.forEach((file) => {
-    const parts = file.path.split("/").filter((p) => p.length > 0);
-    let currentPath = "";
-    let currentLevel = root;
-
-    parts.forEach((part, index) => {
-      const isLast = index === parts.length - 1;
-      currentPath = currentPath ? `${currentPath}/${part}` : part;
-
-      if (!nodeMap.has(currentPath)) {
-        const node: FileTreeNode = {
-          name: part,
-          path: currentPath,
-          isDirectory: !isLast,
-          children: [],
-          file: isLast ? file : undefined,
-        };
-        nodeMap.set(currentPath, node);
-        currentLevel.push(node);
-      }
-
-      if (!isLast) {
-        currentLevel = nodeMap.get(currentPath)!.children;
-      }
-    });
+export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] => {
+  const folderChildren = new Map<string | undefined, Folder[]>();
+  folders.forEach((folder) => {
+    const parent = folder.parent;
+    if (!folderChildren.has(parent)) folderChildren.set(parent, []);
+    folderChildren.get(parent)!.push(folder);
   });
 
-  return root;
+  const filesByFolder = new Map<string | undefined, File[]>();
+  files.forEach((file) => {
+    const folder = file.folder;
+    if (!filesByFolder.has(folder)) filesByFolder.set(folder, []);
+    filesByFolder.get(folder)!.push(file);
+  });
+
+  const sortFolders = (items?: Folder[]): Folder[] => {
+    return (items || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const sortFiles = (items?: File[]): File[] => {
+    return (items || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const buildNodes = (parentGuid?: string, parentPath?: string): FileTreeNode[] => {
+    const children: FileTreeNode[] = [];
+    const childFolders = sortFolders(folderChildren.get(parentGuid));
+    childFolders.forEach((folder) => {
+      const nodePath = folder.guid;
+      children.push({
+        name: folder.name,
+        path: nodePath,
+        parentPath,
+        isDirectory: true,
+        folderGuid: folder.guid,
+        children: buildNodes(folder.guid, nodePath),
+      });
+    });
+    const childFiles = sortFiles(filesByFolder.get(parentGuid));
+    childFiles.forEach((file) => {
+      children.push({
+        name: file.name,
+        path: file.guid,
+        parentPath,
+        isDirectory: false,
+        children: [],
+        file,
+      });
+    });
+    return children;
+  };
+
+  return buildNodes(undefined, undefined);
 };
 
 /**
- * Flattens a file tree into a list with depth information.
- * @param nodes - File tree nodes
- * @param level - Current depth level
- * @param expandedPaths - Set of expanded directory paths
- * @returns Flattened list of nodes with metadata
+ * Flattens the file tree respecting expansion state.
  */
 export const flattenFileTree = (
   nodes: FileTreeNode[],
@@ -3406,7 +3420,7 @@ export const flattenFileTree = (
   const result: Array<FileTreeNode & { level: number; isExpanded: boolean }> = [];
 
   nodes.forEach((node) => {
-    const isExpanded = expandedPaths.has(node.path);
+    const isExpanded = expandedPaths.has(`file-${node.path}`);
     result.push({ ...node, level, isExpanded });
 
     if (node.isDirectory && isExpanded && node.children.length > 0) {
@@ -3420,7 +3434,7 @@ export const flattenFileTree = (
 // #endregion File Tree Utilities
 
 // File utility functions
-export const createFileFromDataUri = (url: string, dataUri: string): File => {
+export const createFileFromDataUri = (name: string, dataUri: string): File => {
   const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
   let size = 0;
   if (sizeMatch) {
@@ -3442,7 +3456,7 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
 
   return {
     guid: guid(),
-    path: url,
+    name,
     size,
     hash: hash.toString(36),
     createdAt: new Date(),

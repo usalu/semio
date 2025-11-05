@@ -513,6 +513,54 @@
               "beginner": "Kits nach dieser spezifischen Version filtern",
               "hotkey": "Ctrl+V"
             }
+          },
+          "panel": {
+            "details": {
+              "kit": {
+                "name": {
+                  "label": "Name",
+                  "beginner": "Der Name des Kits"
+                },
+                "version": {
+                  "label": "Version",
+                  "beginner": "Die Version des Kits"
+                },
+                "description": {
+                  "label": "Beschreibung",
+                  "beginner": "Eine Beschreibung des Kits"
+                },
+                "icon": {
+                  "label": "Symbol",
+                  "beginner": "Das Symbol des Kits"
+                },
+                "image": {
+                  "label": "Bild",
+                  "beginner": "Das Vorschaubild des Kits"
+                }
+              },
+              "kits": {
+                "name": {
+                  "label": "Name",
+                  "beginner": "Der Name der ausgewählten Kits"
+                },
+                "version": {
+                  "label": "Version",
+                  "beginner": "Die Version der ausgewählten Kits"
+                },
+                "description": {
+                  "label": "Beschreibung",
+                  "beginner": "Eine Beschreibung der ausgewählten Kits"
+                },
+                "icon": {
+                  "label": "Symbol",
+                  "beginner": "Das Symbol der ausgewählten Kits"
+                },
+                "image": {
+                  "label": "Bild",
+                  "beginner": "Das Vorschaubild der ausgewählten Kits"
+                }
+              }
+            }
           }
         },
         "kit": {
@@ -609,6 +657,20 @@
             "multipleTitle_one": "{{count}} Datei",
             "multipleTitle_other": "{{count}} Dateien"
           },
+          "folder": {
+            "title": {
+              "label": "Ordner"
+            },
+            "label": "Ordner"
+          },
+          "folders": {
+            "multipleTitle": {
+              "label_one": "{{count}} Ordner",
+              "label_other": "{{count}} Ordner"
+            },
+            "multipleTitle_one": "{{count}} Ordner",
+            "multipleTitle_other": "{{count}} Ordner"
+          },
           "qualities": {
             "multipleTitle_one": "{{count}} Qualitaet",
             "multipleTitle_other": "{{count}} Qualitaeten"
@@ -674,6 +736,18 @@
               "manual": "manuals/semio/kit#files",
               "tutorial": "getting-started/intro#files"
             },
+            "showFolders": {
+              "label": "Ordner anzeigen",
+              "beginner": "Klicken, um alle Ordner in diesem Kit anzuzeigen",
+              "manual": "manuals/semio/kit#folders",
+              "tutorial": "hello-semio/model-design"
+            },
+            "createFolder": {
+              "label": "Ordner erstellen",
+              "beginner": "Klicken, um einen neuen Ordner in diesem Kit zu erstellen",
+              "manual": "manuals/semio/kit#folders",
+              "tutorial": "hello-semio/model-design"
+            },
             "showAuthors": {
               "label": "Autoren anzeigen",
               "beginner": "Klicken, um alle Autoren dieses Kits anzuzeigen",
@@ -693,6 +767,10 @@
             "createArtifact": {
               "label": "Erstellen",
               "beginner": "Klicken, um ein neues Artefakt dieses Typs zu erstellen"
+            },
+            "createChild": {
+              "label": "Kind erstellen",
+              "beginner": "Ein Kindelement erstellen"
             },
             "sortByName": {
               "label": "Nach Name sortieren",
@@ -771,6 +849,23 @@
                     "manual": "kit#metadata",
                     "tutorial": "hello-semio/save-kit"
                   }
+                },
+                "folder": {
+                  "title": {
+                    "label": "Ordner"
+                  },
+                  "name": {
+                    "label": "Name",
+                    "beginner": "Der Anzeigename des Ordners.",
+                    "manual": "kit#folders",
+                    "tutorial": "hello-semio/save-kit"
+                  },
+                  "description": {
+                    "label": "Beschreibung",
+                    "beginner": "Optionale Beschreibung, die den Zweck dieses Ordners erlaeutert.",
+                    "manual": "kit#folders",
+                    "tutorial": "hello-semio/save-kit"
+                  }
                 }
               }
             },
@@ -805,6 +900,12 @@
                 }
               }
             }
+          }
+        },
+        "folder": {
+          "defaultName": "Neuer Ordner",
+          "descriptionPlaceholder": {
+            "label": "Beschreibe diesen Ordner..."
           }
         },
         "design": {
@@ -853,9 +954,7 @@
             "rise": "Rise",
             "rotation": "Rotation",
             "turn": "Turn",
-            "tilt": "Tilt",
-            "x": "Diagram X Offset",
-            "y": "Diagram Y Offset"
+            "tilt": "Tilt"
           },
           "panel": {
             "details": {
@@ -1211,6 +1310,41 @@
                     "label": "Diagram Y Offset"
                   }
                 },
+                "port": {
+                  "title": "Port",
+                  "id": {
+                    "label": "Port-ID",
+                    "beginner": "Die eindeutige Kennung des Ports"
+                  },
+                  "position": {
+                    "label": "Position",
+                    "beginner": "Die Position des Ports"
+                  },
+                  "direction": {
+                    "label": "Richtung",
+                    "beginner": "Der Richtungsvektor des Ports"
+                  },
+                  "mandatory": {
+                    "label": "Erforderlich",
+                    "beginner": "Ob dieser Port verbunden sein muss"
+                  },
+                  "family": {
+                    "label": "Familie",
+                    "beginner": "Die Portfamilie für Kompatibilitätsprüfung"
+                  },
+                  "compatibleFamily": {
+                    "label": "Kompatible Familie",
+                    "beginner": "Die Familien, mit denen dieser Port kompatibel ist"
+                  },
+                  "description": {
+                    "label": "Beschreibung",
+                    "beginner": "Eine Beschreibung des Ports"
+                  },
+                  "attribute": {
+                    "label": "Attribut",
+                    "beginner": "Benutzerdefinierte Attribute des Ports"
+                  }
+                },
                 "selection": {
                   "multipleTitle": "Mehrfachauswahl"
                 }
@@ -1264,6 +1398,10 @@
           },
           "variantPlaceholder": {
             "label": "z.B. gross, klein"
+          },
+          "parentPlaceholder": {
+            "label": "Elterntyp auswählen...",
+            "beginner": "Wählen Sie einen Elterntyp zur Vererbung aus"
           },
           "variant": "Variante",
           "representations": {
@@ -1367,6 +1505,14 @@
                     "beginner": "Die Masseinheit fuer diesen Typ (z.B. mm, m, ft).",
                     "manual": "type#metadata",
                     "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "parent": {
+                    "label": "Elterntyp",
+                    "beginner": "Der Elterntyp, von dem dieser Typ erbt"
+                  },
+                  "abstract": {
+                    "label": "Abstrakt",
+                    "beginner": "Ob dies ein abstrakter Typ ist"
                   }
                 },
                 "representations": {
@@ -1541,7 +1687,63 @@
           "dataStructures": "Datenstrukturen",
           "list": "Liste",
           "dictionary": "Woerterbuch",
-          "noQualities": "Keine Qualitaeten definiert"
+          "noQualities": "Keine Qualitaeten definiert",
+          "panel": {
+            "details": {
+              "key": {
+                "label": "Schlüssel",
+                "beginner": "Die eindeutige Schlüsselkennung der Qualität"
+              },
+              "name": {
+                "label": "Name",
+                "beginner": "Der Anzeigename der Qualität"
+              },
+              "description": {
+                "label": "Beschreibung",
+                "beginner": "Eine Beschreibung dessen, was diese Qualität misst"
+              },
+              "formula": {
+                "label": "Formel",
+                "beginner": "Die Formel zur Berechnung dieser Qualität"
+              },
+              "defaultSiUnit": {
+                "label": "Standard-SI-Einheit",
+                "beginner": "Die Standardeinheit im SI-System"
+              },
+              "defaultImperialUnit": {
+                "label": "Standard-Imperial-Einheit",
+                "beginner": "Die Standardeinheit im imperialen System"
+              },
+              "kind": {
+                "label": "Art",
+                "beginner": "Der Entitätstyp, auf den diese Qualität anwendbar ist"
+              },
+              "canScale": {
+                "label": "Skalierbar",
+                "beginner": "Ob diese Qualität mit der Teilgröße skaliert"
+              },
+              "defaultValue": {
+                "label": "Standardwert",
+                "beginner": "Der Standardwert für diese Qualität"
+              },
+              "min": {
+                "label": "Minimum",
+                "beginner": "Der minimal zulässige Wert"
+              },
+              "max": {
+                "label": "Maximum",
+                "beginner": "Der maximal zulässige Wert"
+              },
+              "isMinExcluded": {
+                "label": "Minimum ausgeschlossen",
+                "beginner": "Ob der Minimalwert exklusiv ist"
+              },
+              "isMaxExcluded": {
+                "label": "Maximum ausgeschlossen",
+                "beginner": "Ob der Maximalwert exklusiv ist"
+              }
+            }
+          }
         },
         "docs": {
           "title": {
@@ -1665,5 +1867,9 @@
       "label": "+ Hier ablegen",
       "beginner": "Teile hier ablegen, um sie dem Entwurf hinzuzufuegen."
     }
+  },
+  "folder": {
+    "created": "Erstellt",
+    "updated": "Aktualisiert"
   }
 }
