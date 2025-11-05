@@ -1245,7 +1245,7 @@ public class FileIdGoo : IdGoo<FileId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Url);
+            target = (Q)(object)new GH_String(Value.Guid);
             return true;
         }
         return false;
@@ -1256,7 +1256,7 @@ public class FileIdGoo : IdGoo<FileId>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new FileId { Url = str };
+            Value = new FileId { Guid = str };
             return true;
         }
         return false;
@@ -1282,7 +1282,7 @@ public class FileDiffGoo : DiffGoo<FileDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Url);
+            target = (Q)(object)new GH_String(Value.Guid ?? "");
             return true;
         }
         return false;
@@ -1388,7 +1388,7 @@ public class FileGoo : ModelGoo<File>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Url);
+            target = (Q)(object)new GH_String(Value.Guid);
             return true;
         }
         return false;
@@ -1399,7 +1399,7 @@ public class FileGoo : ModelGoo<File>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new File { Url = str };
+            Value = new File { Guid = str, Name = str, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
             return true;
         }
         return false;

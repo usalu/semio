@@ -2274,37 +2274,49 @@ public class Representation : Model<Representation>
 [Model("📄", "Fl", "Fil", "The identifier of a file.")]
 public class FileId : Model<FileId>
 {
-    [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
-    public string Url { get; set; } = "";
-    public string ToIdString() => $"{Url}";
+    [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"FilId({ToHumanIdString()})";
 
-    public static implicit operator FileId(File file) => new() { Url = file.Url };
-    public static implicit operator FileId(FileDiff diff) => new() { Url = diff.Url ?? "" };
+    public static implicit operator FileId(File file) => new() { Guid = file.Guid };
+    public static implicit operator FileId(FileDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
 [Model("📄", "Fl", "Fil", "A file with content.")]
 public class File : Model<File>
 {
-    [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
-    public string Url { get; set; } = "";
-    [Url("💾", "Da", "Dat", "The data URI of the file.", PropImportance.REQUIRED)]
-    public string Data { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("�", "Nm", "Nam", "The name of the file.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
+    public string? Remote { get; set; }
+    [Name("📁", "Fo?", "Fol?", "The optional folder path of the file.")]
+    public string? Folder { get; set; }
     [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
     [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
-    public string Hash { get; set; } = "";
-    public string ToIdString() => $"{Url}";
-    public string ToHumanIdString() => $"{ToIdString()}";
+    public string? Hash { get; set; }
+    [Name("📅", "CA", "CrA", "The created at timestamp of the file.", PropImportance.REQUIRED)]
+    public DateTime CreatedAt { get; set; }
+    [Id("👤", "CB?", "CrB?", "The optional created by user guid of the file.")]
+    public string? CreatedBy { get; set; }
+    [Name("📅", "UA", "UpA", "The updated at timestamp of the file.", PropImportance.REQUIRED)]
+    public DateTime UpdatedAt { get; set; }
+    [Id("👤", "UB?", "UpB?", "The optional updated by user guid of the file.")]
+    public string? UpdatedBy { get; set; }
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Name}";
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Fil({ToHumanIdString()})";
 
-    public static implicit operator File(FileId id) => new() { Url = id.Url };
-    public static implicit operator File(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
+    public static implicit operator File(FileId id) => new() { Guid = id.Guid };
+    public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
 }
 
 /// <summary>
@@ -3201,28 +3213,46 @@ public class DesignsDiff : Model<DesignsDiff>
 [Model("📄", "FD", "FDf", "A diff for files.")]
 public class FileDiff : Model<FileDiff>
 {
-    [Url("🔗", "Ur?", "Url?", "The optional url of the file.")]
-    public string Url { get; set; } = "";
-    [Url("💾", "Da?", "Dat?", "The optional data URI of the file.")]
-    public string Data { get; set; } = "";
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the file.")]
+    public string? Guid { get; set; }
+    [Name("📛", "Nm?", "Nam?", "The optional name of the file.")]
+    public string? Name { get; set; }
+    [Url("�", "Rm?", "Rem?", "The optional remote url of the file.")]
+    public string? Remote { get; set; }
+    [Name("📁", "Fo?", "Fol?", "The optional folder path of the file.")]
+    public string? Folder { get; set; }
     [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
     [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
-    public string Hash { get; set; } = "";
+    public string? Hash { get; set; }
+    [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the file.")]
+    public DateTime? CreatedAt { get; set; }
+    [Id("👤", "CB?", "CrB?", "The optional created by user guid of the file.")]
+    public string? CreatedBy { get; set; }
+    [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the file.")]
+    public DateTime? UpdatedAt { get; set; }
+    [Id("👤", "UB?", "UpB?", "The optional updated by user guid of the file.")]
+    public string? UpdatedBy { get; set; }
 
     public FileDiff MergeDiff(FileDiff other)
     {
         return new FileDiff
         {
-            Url = string.IsNullOrEmpty(other.Url) ? Url : other.Url,
-            Data = string.IsNullOrEmpty(other.Data) ? Data : other.Data,
+            Guid = other.Guid ?? Guid,
+            Name = other.Name ?? Name,
+            Remote = other.Remote ?? Remote,
+            Folder = other.Folder ?? Folder,
             Size = other.Size ?? Size,
-            Hash = string.IsNullOrEmpty(other.Hash) ? Hash : other.Hash
+            Hash = other.Hash ?? Hash,
+            CreatedAt = other.CreatedAt ?? CreatedAt,
+            CreatedBy = other.CreatedBy ?? CreatedBy,
+            UpdatedAt = other.UpdatedAt ?? UpdatedAt,
+            UpdatedBy = other.UpdatedBy ?? UpdatedBy
         };
     }
 
-    public static implicit operator FileDiff(FileId id) => new() { Url = id.Url };
-    public static implicit operator FileDiff(File file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
+    public static implicit operator FileDiff(FileId id) => new() { Guid = id.Guid };
+    public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
 
 [Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
@@ -4772,12 +4802,14 @@ public class Kit : Model<Kit>
     public string Preview { get; set; } = "";
     [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
+    public List<File> Files { get; set; } = new();
     [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
 
-    public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Attributes = diff.Attributes ?? new() };
+    public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Files = diff.Files ?? new(), Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Kit kit) => kit.Name;
     public static implicit operator Kit(string name) => new() { Name = name };
 
@@ -4785,6 +4817,7 @@ public class Kit : Model<Kit>
     {
         var types = Types;
         var designs = Designs;
+        var files = Files;
 
         if (diff.Types != null)
         {
@@ -4793,6 +4826,10 @@ public class Kit : Model<Kit>
         if (diff.Designs != null)
         {
             designs = ApplyDesignsDiff(Designs, diff.Designs);
+        }
+        if (diff.Files != null)
+        {
+            files = ApplyFilesDiff(Files, diff.Files);
         }
 
         return new Kit
@@ -4808,6 +4845,7 @@ public class Kit : Model<Kit>
             License = string.IsNullOrEmpty(diff.License) ? License : diff.License,
             Authors = Authors,
             Qualities = Qualities,
+            Files = files,
             Types = types,
             Designs = designs,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes
@@ -4838,6 +4876,12 @@ public class Kit : Model<Kit>
                 Removed = new List<DesignId>(),
                 Updated = Designs.Select(d => d.CreateDiff()).ToList(),
                 Added = new List<Design>()
+            },
+            Files = new FilesDiff
+            {
+                Removed = new List<FileId>(),
+                Updated = Files.Select(f => (FileDiff)f).ToList(),
+                Added = new List<File>()
             },
             Attributes = Attributes
         };
@@ -4939,6 +4983,34 @@ public class Kit : Model<Kit>
                 .ToList(),
             Added = modified.Where(d => !originalKeys.Contains((d.Name, d.Variant, d.View))).ToList()
         };
+    }
+
+    private List<File> ApplyFilesDiff(List<File> original, FilesDiff diff)
+    {
+        var result = original.Where(f => !diff.Removed.Any(r => r.Guid == f.Guid)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(f => f.Guid == (updated.Guid ?? f.Guid));
+            if (index >= 0)
+            {
+                var file = result[index];
+                result[index] = new File
+                {
+                    Guid = updated.Guid ?? file.Guid,
+                    Name = updated.Name ?? file.Name,
+                    Remote = updated.Remote ?? file.Remote,
+                    Folder = updated.Folder ?? file.Folder,
+                    Size = updated.Size ?? file.Size,
+                    Hash = updated.Hash ?? file.Hash,
+                    CreatedAt = updated.CreatedAt ?? file.CreatedAt,
+                    CreatedBy = updated.CreatedBy ?? file.CreatedBy,
+                    UpdatedAt = updated.UpdatedAt ?? file.UpdatedAt,
+                    UpdatedBy = updated.UpdatedBy ?? file.UpdatedBy
+                };
+            }
+        }
+        result.AddRange(diff.Added);
+        return result;
     }
 
     // TODO: Implement reflexive validation for model properties.

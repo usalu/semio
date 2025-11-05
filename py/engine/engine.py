@@ -1472,6 +1472,90 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
 
 # endregion ArtifactAuthor
 
+# region File
+# https://github.com/usalu/semio-file-
+
+
+class FileGuidField(RealField, abc.ABC):
+    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class FileNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class FileRemoteField(RealField, abc.ABC):
+    remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class FileFolderField(RealField, abc.ABC):
+    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class FileSizeField(RealField, abc.ABC):
+    size: typing.Optional[int] = sqlmodel.Field(default=None)
+
+
+class FileHashField(RealField, abc.ABC):
+    hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+
+
+class FileCreatedAtField(RealField, abc.ABC):
+    createdAt: datetime.datetime = sqlmodel.Field()
+
+
+class FileCreatedByField(RealField, abc.ABC):
+    createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FileUpdatedAtField(RealField, abc.ABC):
+    updatedAt: datetime.datetime = sqlmodel.Field()
+
+
+class FileUpdatedByField(RealField, abc.ABC):
+    updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FileId(FileGuidField, Id):
+    pass
+
+
+class FileProps(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Props):
+    pass
+
+
+class FileInput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Input):
+    pass
+
+
+class FileContext(FileNameField, FileGuidField, Context):
+    pass
+
+
+class FileOutput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Output):
+    pass
+
+
+class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, TableEntity, table=True):
+    PLURAL = "files"
+    __tablename__ = "files"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="files_")
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_files_guid_kit_id"),)
+
+    def parent(self) -> "Kit":
+        if self.kit is not None:
+            return self.kit
+        raise NoKitAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return self.guid
+
+
+# endregion File
+
 # region Location
 # https://github.com/usalu/semio-location-
 
@@ -3021,6 +3105,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     concepts_: list[Concept] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    files_: list[File] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
@@ -3065,6 +3150,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         entity = {**KitProps.model_validate(self).model_dump()}
         entity["types"] = [t.dump() for t in self.types]
         entity["designs"] = [d.dump() for d in self.designs]
+        entity["files"] = [f.dump() for f in self.files_]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["concepts"] = self.concepts
         return KitOutput(**entity)
