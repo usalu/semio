@@ -564,6 +564,15 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 </details>
 
+<details>
+<summary><strong>🏷️ Never use `type` for naming enums, interfaces, or types. Always use `kind` instead ✅</strong></summary>
+
+To avoid confusion with the native `type` concept in Semio, always use `kind` for naming enums, interfaces, or types that represent categories or classifications 🏷️
+
+Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc. 🔄
+
+</details>
+
 **🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
 ## 🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
@@ -700,8 +709,6 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 Usually we work on two unrelated tickets at the same time and while one agent works on one task we prepare a new ticket for the other agent 🔀
 
 We usually always start with the free quotas, then move to the hourly quotas, then to the request-based quotas, then to the token-based quotas 🔢
-
-When
 
 ## 🛠️ Uses-Cases [↑](#-ai-)
 
@@ -1028,6 +1035,35 @@ A component is a piece of software which is packaged independently 🏝️
 </details>
 
 The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
+
+### UI System
+
+The UI uses a standardized unit-based sizing system for consistent spacing and sizing across all components. The system is derived from the `--spacing` CSS variable and uses Tailwind utility classes.
+
+#### Size Constants
+
+All size constants are defined in `js/js/globals.css` and derived from `--spacing`:
+
+- **`--spacing-unit`**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
+- **`--size-tiny`**: 3 units (e.g. `h-3`, `w-3`) - height/width of icons within actions, small text size
+- **`--size-small`**: 5 units (e.g. `h-5`, `w-5`) - height/width of actions, avatars, default text size
+- **`--size-medium`**: 7 units (e.g. `h-7`) - height of tree items, toggles/buttons, input
+- **`--size-large`**: 9 units (e.g. `h-9`) - height of navbar
+- **`--size-huge`**: 11 units (e.g. `h-11`) - height of navigation buttons at bottom of docs pages
+
+#### Guidelines
+
+- All spacing between elements uses Tailwind unit classes (e.g. `gap-1`, `p-1`, `m-1`)
+- Icons within buttons/actions use `h-3 w-3` (tiny)
+- Interactive elements (buttons, toggles) use `h-7` (medium)
+- The navbar uses `h-9` (large)
+- Large navigation elements use `h-11` (huge)
+
+The unit system automatically adapts based on the `--spacing` mode (compact vs touch).
+
+### Platform Compatibility
+
+The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in components.
 
 ## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/sketchpad) [↑](#-components-)
 

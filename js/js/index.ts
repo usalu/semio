@@ -20,33 +20,14 @@
 // #endregion
 
 import "./i18n";
-import i18n from "./i18n";
 
-export type { TooltipConfig } from "./elements/display/Tooltip";
-export { createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider } from "./sketchpad/fileProviders";
-export type { CompositeFileProviderConfig, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig } from "./sketchpad/fileProviders";
-export { default as Sketchpad } from "./sketchpad/Sketchpad";
-export type { FileProvider, FileProviderFactory, YProviderFactory } from "./sketchpad/store";
-export { i18n };
+export { createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, default as Sketchpad } from "./sketchpad/App";
+export type { TooltipConfig } from "./sketchpad/elements";
+export type { CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/sketchpad";
 
 // Export docs elements for MDX
-export { FileTree } from "./elements/aggregation/FileTree";
-export type { FileTreeNode, FileTreeProps } from "./elements/aggregation/FileTree";
-
-export { Tabs, TabsContent, TabsList, TabsTrigger } from "./elements/aggregation/Tabs";
-export { Aside } from "./elements/display/Aside";
-export type { AsideProps } from "./elements/display/Aside";
-export { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar } from "./elements/display/Avatar";
-export type { DraggableAvatarProps, TableAvatarProps } from "./elements/display/Avatar";
-export { Card, CardGrid } from "./elements/display/Card";
-export type { CardGridProps, CardProps } from "./elements/display/Card";
-export { default as Section } from "./elements/display/Section";
-export type { SectionProps } from "./elements/display/Section";
-export { Steps } from "./elements/display/Steps";
-export type { StepsProps } from "./elements/display/Steps";
-export { Action, ActionDropdown } from "./elements/input/Action";
-export type { ActionDropdownOption, ActionDropdownProps, ActionProps } from "./elements/input/Action";
-export { ActionGroup, ActionGroupItem } from "./elements/input/ActionGroup";
+export { Action, ActionDropdown, ActionGroup, ActionGroupItem, Aside, Avatar, AvatarFallback, AvatarImage, Card, CardGrid, DraggableAvatar, FileTree, Section, Steps, TableAvatar, Tabs, TabsContent, TabsList, TabsTrigger } from "./sketchpad/elements";
+export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps, CardGridProps, CardProps, DraggableAvatarProps, FileTreeNode, SectionProps, StepsProps, TableAvatarProps } from "./sketchpad/elements";
 
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";

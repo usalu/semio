@@ -4,12 +4,12 @@
 import { appRegistry } from "../js/sketchpad/apps/index";
 
 // Import all app configs
-import { config as designConfig } from "../js/sketchpad/apps/design/config";
-import { config as docsConfig } from "../js/sketchpad/apps/docs/config";
-import { config as homeConfig } from "../js/sketchpad/apps/home/config";
-import { config as kitConfig } from "../js/sketchpad/apps/kit/config";
-import { config as qualityConfig } from "../js/sketchpad/apps/quality/config";
-import { config as typeConfig } from "../js/sketchpad/apps/type/config";
+import { config as designConfig } from "../js/sketchpad/apps/design/App";
+import { config as docsConfig } from "../js/sketchpad/apps/docs/App";
+import { config as homeConfig } from "../js/sketchpad/apps/home/App";
+import { config as kitConfig } from "../js/sketchpad/apps/kit/App";
+import { config as qualityConfig } from "../js/sketchpad/apps/quality/App";
+import { config as typeConfig } from "../js/sketchpad/apps/type/App";
 
 // Register all apps
 appRegistry.register(designConfig);

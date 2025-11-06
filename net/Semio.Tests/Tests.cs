@@ -10,7 +10,8 @@ public class KitTests
     {
         var kitJson = System.IO.File.ReadAllText(kitPath);
         var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-        var kitDeepClone = kit.DeepClone();
+        Assert.NotNull(kit);
+        var kitDeepClone = kit!.DeepClone();
         Assert.Equal(kit, kitDeepClone);
         Assert.Equal(JsonConvert.SerializeObject(kit), JsonConvert.SerializeObject(kitDeepClone));
     }

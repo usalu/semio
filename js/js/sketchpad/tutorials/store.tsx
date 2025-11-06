@@ -508,7 +508,7 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
 
   useEffect(() => {
     const originalExecute = onCommandExecute;
-    return () => { };
+    return () => {};
   }, [store, isRecording, onCommandExecute]);
 
   return useCallback(
@@ -522,7 +522,7 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
       store.checkCommandCompletion(command, origin, args);
       onCommandExecute(command, origin, args);
     },
-    [store, isRecording, onCommandExecute]
+    [store, isRecording, onCommandExecute],
   );
 };
 

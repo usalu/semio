@@ -145,9 +145,7 @@
         "options": {
           "shell": {
             "executable": "powershell.exe",
-            "args": [
-              "-Command"
-            ]
+            "args": ["-Command"]
           }
         }
       },

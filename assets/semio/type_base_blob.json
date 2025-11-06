@@ -12,56 +12,37 @@
     {
       "url": "representations/base_blob.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary"
-      ],
+      "tags": ["model/gltf-binary"],
       "attributes": []
     },
     {
       "url": "representations/base_blob_1to500.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ],
+      "tags": ["model/vnd.3dm", "1to500"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5d9d8631c",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ],
+      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
       "attributes": []
     },
     {
       "url": "representations/base_blob_1to200.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ],
+      "tags": ["model/vnd.3dm", "1to200"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/2069b62658",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ],
+      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
       "attributes": []
     },
     {
       "url": "representations/base_blob_collider.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ],
+      "tags": ["model/gltf-binary", "collider"],
       "attributes": []
     }
   ],
@@ -71,9 +52,7 @@
       "description": "The center of the east round core (an elevator and a staircase around it).",
       "mandatory": false,
       "family": "core circular bottom",
-      "compatibleFamilies": [
-        "core circular top"
-      ],
+      "compatibleFamilies": ["core circular top"],
       "point": {
         "x": -6.75,
         "y": -7.75,
@@ -99,9 +78,7 @@
       "description": "The center of the west round core (an elevator and a staircase around it).",
       "mandatory": false,
       "family": "core circular bottom",
-      "compatibleFamilies": [
-        "core circular top"
-      ],
+      "compatibleFamilies": ["core circular top"],
       "point": {
         "x": -18.85,
         "y": -7.75,

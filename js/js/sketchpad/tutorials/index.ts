@@ -28,9 +28,8 @@ export {
   useTutorialCommandInterceptor,
   useTutorialProgress,
   useTutorialState,
-  useTutorialStore
+  useTutorialStore,
 } from "./store";
 export type { Tutorial, TutorialMilestone, TutorialRecording, TutorialRecordingEvent, TutorialState } from "./store";
 export { RecordingControls, TutorialControls } from "./TutorialControls";
 export { TutorialOverlay } from "./TutorialOverlay";
-

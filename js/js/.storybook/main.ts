@@ -41,8 +41,8 @@ function getAbsolutePath(value: string): any {
 }
 const config: StorybookConfig = {
   stories: [
-    "../elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-    "../sketchpad/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
+    "./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
+    "../sketchpad/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
     "../sketchpad/panels/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
     // Explicitly exclude apps directory
   ],

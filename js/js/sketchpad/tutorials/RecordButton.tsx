@@ -6,11 +6,11 @@
 
 // #endregion
 
-import { Circle } from "lucide-react";
+import { RecordIcon } from "@semio/assets";
 import { FC, useEffect } from "react";
-import { Button } from "../../elements/input/Button";
-import { useAddFooterItem, useRemoveFooterItem } from "../Footer";
-import { Mode, useMode } from "../store";
+import { useAddFooterItem, useMode, useRemoveFooterItem } from "../App";
+import { Button } from "../elements";
+import { Mode } from "../sketchpad";
 import { useIsRecording, useTutorialStore } from "./store";
 
 export const RecordButton: FC = () => {
@@ -39,9 +39,9 @@ export const RecordButton: FC = () => {
               store.startRecording("New Recording", undefined);
             }
           }}
-          className={isRecording ? "text-red-500 h-5 w-8 p-0" : "h-5 w-8 p-0"}
+          className={isRecording ? "text-red-500 h-small w-small p-0" : "h-small w-small p-0"}
         >
-          <Circle className={isRecording ? "fill-current h-3 w-3" : "h-3 w-3"} />
+          <RecordIcon className={isRecording ? "fill-current size-tiny" : "size-tiny"} />
         </Button>
       ),
       order: 0,

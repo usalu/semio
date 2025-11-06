@@ -19,26 +19,1621 @@
 
 // #endregion
 
+// #region Imports
+
 import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
+import { AddIcon, AwardIcon, DocumentIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FolderIcon, LayoutIcon, SortAscendingIcon, SortDescendingIcon, TypeIcon, UserIcon } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { ArrowDown, ArrowUp, Award, Box, FileCode, FileImage, FileJson, FileSpreadsheet, FileText, FileType, FileVideo, Folder as FolderIcon, Layout, Plus, User } from "lucide-react";
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
-import { TableAvatar } from "../../../elements/display/Avatar";
-import { Action } from "../../../elements/input/Action";
-import { Input } from "../../../elements/input/Input";
-import { Toggle } from "../../../elements/input/Toggle";
-import i18n from "../../../i18n";
-import { Author, buildFileTree, Design, flattenFileTree, Folder, generateUniqueName, guid, Kit, Quality, File as SemioFile, Type } from "../../../semio";
-import { Canvas, Window } from "../../Canvas";
-import { ConceptFilter } from "../../ConceptFilter";
-import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useHasKit, useIsMobile, useKit, useKitCommands, useKitScope, useNavigation, useSketchpadCommands } from "../../store";
-import { DesignSection, FileSection, FolderSection, KitSection, MultipleArtifactsSection, TypeSection } from "./panels/Details";
-import { KitAppState, useKitApp, useKitAppCommands } from "./store";
+import { Camera } from "three";
+import * as Y from "yjs";
+import i18n, { useLabel } from "../../../i18n";
+import { areSameKit, Author, buildFileTree, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Quality, File as SemioFile, Type, TypeDiff } from "../../../semio";
+import type { KitStore, SketchpadStore } from "../../App";
+import {
+  Canvas,
+  ConceptFilter,
+  identitySelector,
+  KitDiffAppStore,
+  KitScopeProvider,
+  registerKitAppStoreFactory,
+  useAddFooterItem,
+  useAddPanelSection,
+  useAppType,
+  useFocus,
+  useHasKit,
+  useIsInKitScope,
+  useIsMobile,
+  useKit,
+  useKitCommands,
+  useKitScope,
+  useKitStore,
+  useNavigation,
+  useRemoveFooterItem,
+  useRemovePanelSection,
+  useSketchpadCommands,
+  useSketchpadStore,
+  useSync,
+  useSyncDeep,
+  Window,
+} from "../../App";
+import { Action, Input, ScrollArea, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
+import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, Theme, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
+import { createPanelDefinition, PanelKind } from "../../sketchpad";
+import { AppConfig } from "../index";
+
+// #endregion Imports
+
+// #region Store
+
+type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YKitApp = Y.Map<YKitAppVal>;
+type YKitApps = Y.Map<YKitApp>;
+
+export interface KitAppSelection {
+  types?: Guid[];
+  designs?: Guid[];
+  qualities?: string[];
+  files?: string[];
+  folders?: Guid[];
+  authors?: string[];
+}
+const emptyKitAppSelection: KitAppSelection = {};
+export interface KitAppSelectionTypesDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
+export interface KitAppSelectionDesignsDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
+export interface KitAppSelectionQualitiesDiff {
+  added?: string[];
+  removed?: string[];
+}
+export interface KitAppSelectionFilesDiff {
+  added?: string[];
+  removed?: string[];
+}
+export interface KitAppSelectionFoldersDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
+export interface KitAppSelectionAuthorsDiff {
+  added?: string[];
+  removed?: string[];
+}
+export interface KitAppSelectionDiff {
+  types?: KitAppSelectionTypesDiff;
+  designs?: KitAppSelectionDesignsDiff;
+  qualities?: KitAppSelectionQualitiesDiff;
+  files?: KitAppSelectionFilesDiff;
+  folders?: KitAppSelectionFoldersDiff;
+  authors?: KitAppSelectionAuthorsDiff;
+}
+export enum KitAppFullscreenWindow {
+  None = "none",
+  Types = "types",
+  Designs = "designs",
+}
+export interface KitAppPresence {
+  cursor?: Coord;
+  camera?: Camera;
+}
+export interface KitAppHover {
+  type?: Guid;
+  design?: Guid;
+}
+export interface KitAppPresenceOther extends KitAppPresence {
+  name: string;
+}
+export type KitAppSortColumn = "artifact" | "kind" | "authors" | "updatedAt" | "createdAt";
+export type KitAppSortDirection = "asc" | "desc";
+
+export interface KitAppDiff {
+  selection?: KitAppSelectionDiff;
+  presence?: KitAppPresence;
+  hover?: KitAppHover;
+  fullscreenWindow?: KitAppFullscreenWindow;
+  panelVisibility?: Partial<PanelVisibility>;
+  filterSearch?: string;
+  expandedRows?: string[];
+  sortColumn?: KitAppSortColumn;
+  sortDirection?: KitAppSortDirection;
+}
+export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
+export interface KitAppState {
+  fullscreenWindow: KitAppFullscreenWindow;
+  panelVisibility: PanelVisibility;
+  selection?: KitAppSelection;
+  hover?: KitAppHover;
+  presence?: KitAppPresence;
+  others: KitAppPresenceOther[];
+  filterSearch: string;
+  expandedRows: string[];
+  sortColumn?: KitAppSortColumn;
+  sortDirection?: KitAppSortDirection;
+}
+
+export interface KitAppCommandContext extends KitCommandContext {
+  kitApp: KitAppState;
+}
+export interface KitAppCommandResult {
+  diff?: KitAppDiff;
+  kitDiff?: KitDiff;
+}
+
+export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: KitAppSelectionDiff): KitAppSelectionDiff => {
+  const inverseDiff: KitAppSelectionDiff = {};
+
+  // Inverse types diff
+  if (diff.types) {
+    inverseDiff.types = {};
+    if (diff.types.added) {
+      inverseDiff.types.removed = diff.types.added;
+    }
+    if (diff.types.removed) {
+      inverseDiff.types.added = diff.types.removed;
+    }
+  }
+
+  // Inverse designs diff
+  if (diff.designs) {
+    inverseDiff.designs = {};
+    if (diff.designs.added) {
+      inverseDiff.designs.removed = diff.designs.added;
+    }
+    if (diff.designs.removed) {
+      inverseDiff.designs.added = diff.designs.removed;
+    }
+  }
+
+  // Inverse qualities diff
+  if (diff.qualities) {
+    inverseDiff.qualities = {};
+    if (diff.qualities.added) {
+      inverseDiff.qualities.removed = diff.qualities.added;
+    }
+    if (diff.qualities.removed) {
+      inverseDiff.qualities.added = diff.qualities.removed;
+    }
+  }
+
+  // Inverse files diff
+  if (diff.files) {
+    inverseDiff.files = {};
+    if (diff.files.added) {
+      inverseDiff.files.removed = diff.files.added;
+    }
+    if (diff.files.removed) {
+      inverseDiff.files.added = diff.files.removed;
+    }
+  }
+
+  // Inverse folders diff
+  if (diff.folders) {
+    inverseDiff.folders = {};
+    if (diff.folders.added) {
+      inverseDiff.folders.removed = diff.folders.added;
+    }
+    if (diff.folders.removed) {
+      inverseDiff.folders.added = diff.folders.removed;
+    }
+  }
+
+  // Inverse authors diff
+  if (diff.authors) {
+    inverseDiff.authors = {};
+    if (diff.authors.added) {
+      inverseDiff.authors.removed = diff.authors.added;
+    }
+    if (diff.authors.removed) {
+      inverseDiff.authors.added = diff.authors.removed;
+    }
+  }
+
+  return inverseDiff;
+};
+export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => areSameKit(kitApp.kit, other.kit);
+export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
+
+class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
+  constructor(parent: SketchpadStore, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
+    super(parent, yMap, transact);
+
+    const kit = this.parent.kit(id.kit);
+    yMap.set("kit", kit.guid);
+
+    yMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
+
+    const selection = new Y.Map<any>();
+    const selectedTypes = new Y.Array<string>();
+    if (state?.selection?.types?.length) {
+      selectedTypes.push(state.selection.types);
+    }
+    const selectedDesigns = new Y.Array<string>();
+    if (state?.selection?.designs?.length) {
+      selectedDesigns.push(state.selection.designs);
+    }
+    const selectedQualities = new Y.Array<string>();
+    if (state?.selection?.qualities?.length) {
+      selectedQualities.push(state.selection.qualities);
+    }
+    const selectedFiles = new Y.Array<string>();
+    if (state?.selection?.files?.length) {
+      selectedFiles.push(state.selection.files);
+    }
+    const selectedFolders = new Y.Array<string>();
+    if (state?.selection?.folders?.length) {
+      selectedFolders.push(state.selection.folders);
+    }
+    const selectedAuthors = new Y.Array<string>();
+    if (state?.selection?.authors?.length) {
+      selectedAuthors.push(state.selection.authors);
+    }
+    selection.set("types", selectedTypes);
+    selection.set("designs", selectedDesigns);
+    selection.set("qualities", selectedQualities);
+    selection.set("files", selectedFiles);
+    selection.set("folders", selectedFolders);
+    selection.set("authors", selectedAuthors);
+    yMap.set("selection", selection);
+
+    yMap.set("isTransactionActive", false);
+    yMap.set("presence", new Y.Map<any>());
+    yMap.set("others", new Y.Array<any>());
+    yMap.set("diff", new Y.Map<any>());
+    yMap.set("currentTransactionStack", new Y.Array<any>());
+    yMap.set("pastTransactionsStack", new Y.Array<any>());
+
+    yMap.set("filterSearch", state?.filterSearch || "");
+
+    const expandedRows = new Y.Array<string>();
+    if (state?.expandedRows) {
+      expandedRows.push(state.expandedRows);
+    }
+    yMap.set("expandedRows", expandedRows);
+
+    Object.entries(commands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
+  }
+
+  // KitApp-specific getters
+  get fullscreenWindow(): KitAppFullscreenWindow {
+    return this.yMap.get("fullscreenWindow") as KitAppFullscreenWindow;
+  }
+
+  get panelVisibility(): PanelVisibility {
+    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+    if (!yPanelVisibility) {
+      return {
+        toolbar: false,
+        workbench: false,
+        details: false,
+        chat: false,
+        settings: false,
+      };
+    }
+    return {
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
+      workbench: yPanelVisibility.get("workbench") ?? false,
+      details: yPanelVisibility.get("details") ?? false,
+      chat: yPanelVisibility.get("chat") ?? false,
+      settings: yPanelVisibility.get("settings") ?? false,
+    };
+  }
+
+  get selection(): KitAppSelection {
+    const selection = this.yMap.get("selection") as Y.Map<any>;
+    if (!selection) return {};
+
+    const result: KitAppSelection = {};
+
+    // Get types
+    const types = selection.get("types") as Y.Array<string>;
+    if (types && types.length > 0) {
+      result.types = types.toArray();
+    }
+
+    // Get designs
+    const designs = selection.get("designs") as Y.Array<string>;
+    if (designs && designs.length > 0) {
+      result.designs = designs.toArray();
+    }
+
+    // Get qualities
+    const qualities = selection.get("qualities") as Y.Array<string>;
+    if (qualities && qualities.length > 0) {
+      result.qualities = qualities.toArray();
+    }
+
+    // Get files
+    const files = selection.get("files") as Y.Array<string>;
+    if (files && files.length > 0) {
+      result.files = files.toArray();
+    }
+
+    // Get folders
+    const folders = selection.get("folders") as Y.Array<string>;
+    if (folders && folders.length > 0) {
+      result.folders = folders.toArray();
+    }
+
+    // Get authors
+    const authors = selection.get("authors") as Y.Array<string>;
+    if (authors && authors.length > 0) {
+      result.authors = authors.toArray();
+    }
+
+    return result;
+  }
+
+  get presence(): KitAppPresence {
+    return {
+      cursor: {
+        u: (this.yMap.get("presenceCursorX") as number) || 0,
+        v: (this.yMap.get("presenceCursorY") as number) || 0,
+      },
+    };
+  }
+
+  get others(): KitAppPresenceOther[] {
+    return [];
+  }
+
+  get filterSearch(): string {
+    return (this.yMap.get("filterSearch") as string) || "";
+  }
+
+  get expandedRows(): string[] {
+    const yExpandedRows = this.yMap.get("expandedRows") as Y.Array<string>;
+    return yExpandedRows ? yExpandedRows.toArray() : [];
+  }
+
+  get sortColumn(): KitAppSortColumn | undefined {
+    return this.yMap.get("sortColumn") as KitAppSortColumn | undefined;
+  }
+
+  get sortDirection(): KitAppSortDirection | undefined {
+    return this.yMap.get("sortDirection") as KitAppSortDirection | undefined;
+  }
+
+  kit(): KitStore {
+    return this.parent.kit(this.yMap.get("kit") as string);
+  }
+
+  // Implement abstract methods from App base class
+  protected getSelection(): KitAppSelection {
+    return this.selection;
+  }
+
+  protected hash(state: KitAppState): string {
+    return JSON.stringify(state);
+  }
+
+  protected buildSnapshot(): KitAppState {
+    return {
+      fullscreenWindow: this.fullscreenWindow,
+      panelVisibility: this.panelVisibility,
+      selection: this.selection,
+      isTransactionActive: this.isTransactionActive,
+      canUndo: this.canUndo(),
+      canRedo: this.canRedo(),
+      presence: this.presence,
+      others: this.others,
+      // diff: this.diff, // TODO: KitAppState doesn't have a diff property
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
+      filterSearch: this.filterSearch,
+      expandedRows: this.expandedRows,
+      sortColumn: this.sortColumn,
+      sortDirection: this.sortDirection,
+    } as any;
+  }
+
+  change = (diff: KitAppDiff) => {
+    this.transact(() => {
+      if (diff.fullscreenWindow !== undefined) {
+        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
+      }
+      if (diff.panelVisibility !== undefined) {
+        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+        if (!yPanelVisibility) {
+          yPanelVisibility = new Y.Map<boolean>();
+          this.yMap.set("panelVisibility", yPanelVisibility);
+        }
+        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
+          if (value !== undefined) {
+            yPanelVisibility.set(key, value);
+          }
+        });
+      }
+      if (diff.selection) {
+        this.applySelectionDiff(diff.selection);
+      }
+      if (diff.filterSearch !== undefined) {
+        this.yMap.set("filterSearch", diff.filterSearch);
+      }
+      if (diff.expandedRows !== undefined) {
+        let yExpandedRows = this.yMap.get("expandedRows") as Y.Array<string>;
+        if (!yExpandedRows) {
+          yExpandedRows = new Y.Array<string>();
+          this.yMap.set("expandedRows", yExpandedRows);
+        }
+        yExpandedRows.delete(0, yExpandedRows.length);
+        yExpandedRows.push(diff.expandedRows);
+      }
+      if (diff.sortColumn !== undefined) {
+        this.yMap.set("sortColumn", diff.sortColumn);
+      }
+      if (diff.sortDirection !== undefined) {
+        this.yMap.set("sortDirection", diff.sortDirection);
+      }
+    });
+  };
+
+  protected inverseSelectionDiff(selection: KitAppSelection, diff: KitAppSelectionDiff): KitAppSelectionDiff {
+    return inverseKitAppSelectionDiff(selection, diff);
+  }
+
+  protected applySelectionDiff(selectionDiff: KitAppSelectionDiff): void {
+    let selection = this.yMap.get("selection") as Y.Map<any>;
+    if (!selection) {
+      selection = new Y.Map();
+      this.yMap.set("selection", selection);
+    }
+
+    // Apply types diff
+    if (selectionDiff.types) {
+      let types = (selection.get("types") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("types")) {
+        selection.set("types", types);
+      }
+
+      if (selectionDiff.types.added) {
+        for (const type of selectionDiff.types.added) {
+          if (!types.toArray().includes(type)) {
+            types.push([type]);
+          }
+        }
+      }
+      if (selectionDiff.types.removed) {
+        for (const type of selectionDiff.types.removed) {
+          const index = types.toArray().indexOf(type);
+          if (index !== -1) {
+            types.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply designs diff
+    if (selectionDiff.designs) {
+      let designs = (selection.get("designs") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("designs")) {
+        selection.set("designs", designs);
+      }
+
+      if (selectionDiff.designs.added) {
+        for (const design of selectionDiff.designs.added) {
+          if (!designs.toArray().includes(design)) {
+            designs.push([design]);
+          }
+        }
+      }
+      if (selectionDiff.designs.removed) {
+        for (const design of selectionDiff.designs.removed) {
+          const index = designs.toArray().indexOf(design);
+          if (index !== -1) {
+            designs.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply qualities diff
+    if (selectionDiff.qualities) {
+      let qualities = (selection.get("qualities") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("qualities")) {
+        selection.set("qualities", qualities);
+      }
+
+      if (selectionDiff.qualities.added) {
+        for (const quality of selectionDiff.qualities.added) {
+          if (!qualities.toArray().includes(quality)) {
+            qualities.push([quality]);
+          }
+        }
+      }
+      if (selectionDiff.qualities.removed) {
+        for (const quality of selectionDiff.qualities.removed) {
+          const index = qualities.toArray().indexOf(quality);
+          if (index !== -1) {
+            qualities.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply files diff
+    if (selectionDiff.files) {
+      let files = (selection.get("files") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("files")) {
+        selection.set("files", files);
+      }
+
+      if (selectionDiff.files.added) {
+        for (const file of selectionDiff.files.added) {
+          if (!files.toArray().includes(file)) {
+            files.push([file]);
+          }
+        }
+      }
+      if (selectionDiff.files.removed) {
+        for (const file of selectionDiff.files.removed) {
+          const index = files.toArray().indexOf(file);
+          if (index !== -1) {
+            files.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply folders diff
+    if (selectionDiff.folders) {
+      let folders = (selection.get("folders") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("folders")) {
+        selection.set("folders", folders);
+      }
+
+      if (selectionDiff.folders.added) {
+        for (const folder of selectionDiff.folders.added) {
+          if (!folders.toArray().includes(folder)) {
+            folders.push([folder]);
+          }
+        }
+      }
+      if (selectionDiff.folders.removed) {
+        for (const folder of selectionDiff.folders.removed) {
+          const index = folders.toArray().indexOf(folder);
+          if (index !== -1) {
+            folders.delete(index, 1);
+          }
+        }
+      }
+    }
+
+    // Apply authors diff
+    if (selectionDiff.authors) {
+      let authors = (selection.get("authors") as Y.Array<string>) || new Y.Array<string>();
+      if (!selection.has("authors")) {
+        selection.set("authors", authors);
+      }
+
+      if (selectionDiff.authors.added) {
+        for (const author of selectionDiff.authors.added) {
+          if (!authors.toArray().includes(author)) {
+            authors.push([author]);
+          }
+        }
+      }
+      if (selectionDiff.authors.removed) {
+        for (const author of selectionDiff.authors.removed) {
+          const index = authors.toArray().indexOf(author);
+          if (index !== -1) {
+            authors.delete(index, 1);
+          }
+        }
+      }
+    }
+  }
+
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    // Origins are strings like "semio.sketchpad.app.kit.panel.details.name" (starts with semio.sketchpad)
+    // Commands are strings like "semio.kitApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
+    if (command === "semio.kitApp.startTransaction") {
+      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
+      this.startTransaction();
+      return {} as T;
+    }
+    if (command === "semio.kitApp.finalizeTransaction") {
+      this.finalizeTransaction();
+      console.groupEnd();
+      return {} as T;
+    }
+    if (command === "semio.kitApp.abortTransaction") {
+      this.abortTransaction();
+      console.groupEnd();
+      return {} as T;
+    }
+    if (command === "semio.kitApp.undo") {
+      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
+      this.undo();
+      return {} as T;
+    }
+    if (command === "semio.kitApp.redo") {
+      console.group(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
+      this.redo();
+      console.groupEnd();
+      return {} as T;
+    }
+
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in kit app store`);
+
+    const kitStore = this.kit();
+    const state = this.snapshot();
+
+    const context: KitAppCommandContext = {
+      kitApp: state,
+      kit: kitStore.snapshot(),
+      fileUrls: kitStore.fileUrls,
+      origin,
+    };
+    const result = callback(context, ...rest);
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.kitDiff) {
+      kitStore.change(result.kitDiff);
+    }
+    this.recordEdit(result);
+    console.groupEnd();
+    return result as T;
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+}
+
+if (typeof window !== "undefined") {
+  registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
+}
+
+function useKitAppStore<T>(selector?: (store: KitAppStore) => T, id?: KitAppId): T | KitAppStore | null {
+  const store = useSketchpadStore();
+  const kitScope = useKitScope();
+  const resolvedKitId = kitScope?.guid ?? id?.kit;
+  if (!resolvedKitId) {
+    return null;
+  }
+  try {
+    if (!store.hasKit(resolvedKitId)) {
+      return null;
+    }
+    const kitAppStore = store.kitApp(resolvedKitId);
+    const result = selector ? selector(kitAppStore) : kitAppStore;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState | null {
+  const store = useKitAppStore(undefined, id);
+  if (!store) {
+    return null;
+  }
+  const result = useSyncDeep<KitAppState>(store as KitAppStore, selector ? (state: KitAppState) => selector(state) as any : identitySelector);
+  return result;
+}
+
+export function useKitAppSelection(id?: KitAppId): KitAppSelection {
+  const store = useKitAppStore(identitySelector, id) as KitAppStore | null;
+  if (!store) return emptyKitAppSelection;
+  return (useSync<KitAppState>(store, (state) => (state.selection ?? emptyKitAppSelection) as any as KitAppState) as unknown as KitAppSelection) ?? emptyKitAppSelection;
+}
+
+export function useKitAppFullscreen(): KitAppFullscreenWindow {
+  return useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
+}
+
+export function useKitAppOthers(): KitAppPresenceOther[] {
+  return useKitApp((s) => s.others) as KitAppPresenceOther[];
+}
+
+export function useKitAppCommands(id?: KitAppId) {
+  const store = useKitAppStore(undefined, id) as KitAppStore | null;
+  const noOp = () => {};
+  if (!store) {
+    return {
+      startTransaction: noOp,
+      finalizeTransaction: noOp,
+      abortTransaction: noOp,
+      undo: noOp,
+      redo: noOp,
+      selectAll: noOp,
+      deselectAll: noOp,
+      selectType: noOp,
+      selectTypes: noOp,
+      addTypeToSelection: noOp,
+      removeTypeFromSelection: noOp,
+      selectDesign: noOp,
+      selectDesigns: noOp,
+      addDesignToSelection: noOp,
+      removeDesignFromSelection: noOp,
+      selectQuality: noOp,
+      selectQualities: noOp,
+      addQualityToSelection: noOp,
+      removeQualityFromSelection: noOp,
+      selectFile: noOp,
+      selectFiles: noOp,
+      addFileToSelection: noOp,
+      removeFileFromSelection: noOp,
+      selectFolder: noOp,
+      selectFolders: noOp,
+      addFolderToSelection: noOp,
+      removeFolderFromSelection: noOp,
+      selectAuthor: noOp,
+      selectAuthors: noOp,
+      addAuthorToSelection: noOp,
+      removeAuthorFromSelection: noOp,
+      deleteSelected: noOp,
+      toggleTypesFullscreen: noOp,
+      toggleDesignsFullscreen: noOp,
+      addType: noOp,
+      addTypes: noOp,
+      removeType: noOp,
+      removeTypes: noOp,
+      addDesign: noOp,
+      addDesigns: noOp,
+      removeDesign: noOp,
+      removeDesigns: noOp,
+      updateType: noOp,
+      updateTypes: noOp,
+      updateDesign: noOp,
+      updateDesigns: noOp,
+      togglePanel: noOp,
+      setFilterSearch: noOp,
+      setExpandedRows: noOp,
+      toggleExpandedRow: noOp,
+      setSortColumn: noOp,
+      setSortDirection: noOp,
+      toggleSort: noOp,
+      execute: noOp,
+    };
+  }
+  return {
+    startTransaction: (origin: string) => store.execute("semio.kitApp.startTransaction", origin),
+    finalizeTransaction: (origin: string) => store.execute("semio.kitApp.finalizeTransaction", origin),
+    abortTransaction: (origin: string) => store.execute("semio.kitApp.abortTransaction", origin),
+    undo: (origin: string) => store.execute("semio.kitApp.undo", origin),
+    redo: (origin: string) => store.execute("semio.kitApp.redo", origin),
+    selectAll: (origin: string) => store.execute("semio.kitApp.selectAll", origin),
+    deselectAll: (origin: string) => store.execute("semio.kitApp.deselectAll", origin),
+    selectType: (origin: string, Guid: Guid) => store.execute("semio.kitApp.selectType", origin, Guid),
+    selectTypes: (origin: string, typeIds: Guid[]) => store.execute("semio.kitApp.selectTypes", origin, typeIds),
+    addTypeToSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.addTypeToSelection", origin, Guid),
+    removeTypeFromSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeTypeFromSelection", origin, Guid),
+    selectDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.selectDesign", origin, Guid),
+    selectDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.selectDesigns", origin, designIds),
+    addDesignToSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.addDesignToSelection", origin, Guid),
+    removeDesignFromSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesignFromSelection", origin, Guid),
+    selectQuality: (origin: string, key: string) => store.execute("semio.kitApp.selectQuality", origin, key),
+    selectQualities: (origin: string, keys: string[]) => store.execute("semio.kitApp.selectQualities", origin, keys),
+    addQualityToSelection: (origin: string, key: string) => store.execute("semio.kitApp.addQualityToSelection", origin, key),
+    removeQualityFromSelection: (origin: string, key: string) => store.execute("semio.kitApp.removeQualityFromSelection", origin, key),
+    selectFile: (origin: string, path: string) => store.execute("semio.kitApp.selectFile", origin, path),
+    selectFiles: (origin: string, paths: string[]) => store.execute("semio.kitApp.selectFiles", origin, paths),
+    addFileToSelection: (origin: string, path: string) => store.execute("semio.kitApp.addFileToSelection", origin, path),
+    removeFileFromSelection: (origin: string, path: string) => store.execute("semio.kitApp.removeFileFromSelection", origin, path),
+    selectFolder: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectFolder", origin, guid),
+    selectFolders: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectFolders", origin, guids),
+    addFolderToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addFolderToSelection", origin, guid),
+    removeFolderFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeFolderFromSelection", origin, guid),
+    selectAuthor: (origin: string, name: string) => store.execute("semio.kitApp.selectAuthor", origin, name),
+    selectAuthors: (origin: string, names: string[]) => store.execute("semio.kitApp.selectAuthors", origin, names),
+    addAuthorToSelection: (origin: string, name: string) => store.execute("semio.kitApp.addAuthorToSelection", origin, name),
+    removeAuthorFromSelection: (origin: string, name: string) => store.execute("semio.kitApp.removeAuthorFromSelection", origin, name),
+    deleteSelected: (origin: string) => store.execute("semio.kitApp.deleteSelected", origin),
+    toggleTypesFullscreen: (origin: string) => store.execute("semio.kitApp.toggleTypesFullscreen", origin),
+    toggleDesignsFullscreen: (origin: string) => store.execute("semio.kitApp.toggleDesignsFullscreen", origin),
+    addType: (origin: string, type: Type) => store.execute("semio.kitApp.addType", origin, type),
+    addTypes: (origin: string, types: Type[]) => store.execute("semio.kitApp.addTypes", origin, types),
+    removeType: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeType", origin, Guid),
+    removeTypes: (origin: string, typeIds: Guid[]) => store.execute("semio.kitApp.removeTypes", origin, typeIds),
+    addDesign: (origin: string, design: Design) => store.execute("semio.kitApp.addDesign", origin, design),
+    addDesigns: (origin: string, designs: Design[]) => store.execute("semio.kitApp.addDesigns", origin, designs),
+    removeDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesign", origin, Guid),
+    removeDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.removeDesigns", origin, designIds),
+    updateType: (origin: string, Guid: Guid, typeDiff: TypeDiff) => store.execute("semio.kitApp.updateType", origin, Guid, typeDiff),
+    updateTypes: (origin: string, updates: { id: Guid; diff: TypeDiff }[]) => store.execute("semio.kitApp.updateTypes", origin, updates),
+    updateDesign: (origin: string, Guid: Guid, designDiff: DesignDiff) => store.execute("semio.kitApp.updateDesign", origin, Guid, designDiff),
+    updateDesigns: (origin: string, updates: { id: Guid; diff: DesignDiff }[]) => store.execute("semio.kitApp.updateDesigns", origin, updates),
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
+      const current = store.snapshot().panelVisibility;
+      store.change({
+        panelVisibility: {
+          [panelKey]: !current[panelKey],
+        },
+      });
+    },
+    setFilterSearch: (origin: string, search: string) => store.execute("semio.kitApp.setFilterSearch", origin, search),
+    setExpandedRows: (origin: string, rows: string[]) => store.execute("semio.kitApp.setExpandedRows", origin, rows),
+    toggleExpandedRow: (origin: string, rowId: string) => store.execute("semio.kitApp.toggleExpandedRow", origin, rowId),
+    setSortColumn: (origin: string, column: KitAppSortColumn) => store.execute("semio.kitApp.setSortColumn", origin, column),
+    setSortDirection: (origin: string, direction: KitAppSortDirection) => store.execute("semio.kitApp.setSortDirection", origin, direction),
+    toggleSort: (origin: string, column: KitAppSortColumn) => store.execute("semio.kitApp.toggleSort", origin, column),
+    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
+  };
+}
+
+// #endregion Kit App
+
+// #region Types
+
+/**
+ * Check if a specific type is directly hovered in Kit App
+ */
+export function useKitAppIsTypeHovered(typeId: string, id?: KitAppId): boolean {
+  return (useKitApp((state) => state.hover?.type === typeId, id) as boolean) ?? false;
+}
+
+/**
+ * Get the diff status of a type from the current kit diff
+ */
+export function useKitAppTypeStatus(typeId: string, id?: KitAppId): DiffStatus {
+  const store = useKitAppStore(identitySelector, id) as KitAppStore;
+  if (!store) return DiffStatus.Unchanged;
+
+  const state = useSync<KitAppState>(store, identitySelector);
+  const currentStack = store?.currentTransactionStack;
+
+  if (currentStack && currentStack.length > 0) {
+    for (const edit of currentStack) {
+      if (edit.do?.kitDiff?.types) {
+        // Check added types
+        if (edit.do.kitDiff.types.added) {
+          for (const type of edit.do.kitDiff.types.added) {
+            if (type.guid === typeId) {
+              return DiffStatus.Added;
+            }
+          }
+        }
+        // Check removed types
+        if (edit.do.kitDiff.types.removed) {
+          for (const removedId of edit.do.kitDiff.types.removed) {
+            if (removedId === typeId) {
+              return DiffStatus.Removed;
+            }
+          }
+        }
+        // Check modified types
+        if (edit.do.kitDiff.types.updated) {
+          for (const typeUpdate of edit.do.kitDiff.types.updated) {
+            if (typeUpdate.id === typeId) {
+              return DiffStatus.Modified;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return DiffStatus.Unchanged;
+}
+
+/**
+ * Get the color for a type based on its state
+ */
+export function useKitAppTypeColor(typeId: string, isSelected: boolean, id?: KitAppId): { fill: string; stroke: string; opacity: number } {
+  const isHovered = useKitAppIsTypeHovered(typeId, id);
+  const status = useKitAppTypeStatus(typeId, id);
+
+  let fill = "var(--foreground)";
+  let stroke = "var(--foreground)";
+  let opacity = 1;
+
+  // Base state colors
+  if (status === DiffStatus.Added) {
+    fill = "var(--color-success)";
+    stroke = "var(--color-success)";
+  } else if (status === DiffStatus.Removed) {
+    fill = "var(--color-danger)";
+    stroke = "var(--color-danger)";
+    opacity = 0.2;
+  } else if (status === DiffStatus.Modified) {
+    fill = "var(--color-warning)";
+    stroke = "var(--color-warning)";
+  } else {
+    fill = "transparent";
+    stroke = "var(--foreground)";
+  }
+
+  // Hover state
+  if (isHovered && !isSelected) {
+    fill = "var(--hover-base)";
+    stroke = "var(--foreground)";
+    opacity = 1;
+  }
+
+  // Selected state
+  if (isSelected) {
+    if (status === DiffStatus.Added) {
+      fill = "var(--color-selected-added)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Removed) {
+      fill = "var(--color-selected-removed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Modified) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else {
+      fill = "var(--active-base)";
+      stroke = "var(--foreground)";
+    }
+    opacity = 1;
+  }
+
+  return { fill, stroke, opacity };
+}
+
+// #endregion Types
+
+// #region Designs
+
+/**
+ * Check if a specific design is directly hovered in Kit App
+ */
+export function useKitAppIsDesignHovered(designId: string, id?: KitAppId): boolean {
+  return (useKitApp((state) => state.hover?.design === designId, id) as boolean) ?? false;
+}
+
+/**
+ * Get the diff status of a design from the current kit diff
+ */
+export function useKitAppDesignStatus(designId: string, id?: KitAppId): DiffStatus {
+  const store = useKitAppStore(identitySelector, id) as KitAppStore;
+  if (!store) return DiffStatus.Unchanged;
+
+  const state = useSync<KitAppState>(store, identitySelector);
+  const currentStack = store?.currentTransactionStack;
+
+  if (currentStack && currentStack.length > 0) {
+    for (const edit of currentStack) {
+      if (edit.do?.kitDiff?.designs) {
+        // Check added designs
+        if (edit.do.kitDiff.designs.added) {
+          for (const design of edit.do.kitDiff.designs.added) {
+            if (design.guid === designId) {
+              return DiffStatus.Added;
+            }
+          }
+        }
+        // Check removed designs
+        if (edit.do.kitDiff.designs.removed) {
+          for (const removedId of edit.do.kitDiff.designs.removed) {
+            if (removedId === designId) {
+              return DiffStatus.Removed;
+            }
+          }
+        }
+        // Check modified designs
+        if (edit.do.kitDiff.designs.updated) {
+          for (const designUpdate of edit.do.kitDiff.designs.updated) {
+            if (designUpdate.id === designId) {
+              return DiffStatus.Modified;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return DiffStatus.Unchanged;
+}
+
+/**
+ * Get the color for a design based on its state
+ */
+export function useKitAppDesignColor(designId: string, isSelected: boolean, id?: KitAppId): { fill: string; stroke: string; opacity: number } {
+  const isHovered = useKitAppIsDesignHovered(designId, id);
+  const status = useKitAppDesignStatus(designId, id);
+
+  let fill = "var(--foreground)";
+  let stroke = "var(--foreground)";
+  let opacity = 1;
+
+  // Base state colors
+  if (status === DiffStatus.Added) {
+    fill = "var(--color-success)";
+    stroke = "var(--color-success)";
+  } else if (status === DiffStatus.Removed) {
+    fill = "var(--color-danger)";
+    stroke = "var(--color-danger)";
+    opacity = 0.2;
+  } else if (status === DiffStatus.Modified) {
+    fill = "var(--color-warning)";
+    stroke = "var(--color-warning)";
+  } else {
+    fill = "transparent";
+    stroke = "var(--foreground)";
+  }
+
+  // Hover state
+  if (isHovered && !isSelected) {
+    fill = "var(--hover-base)";
+    stroke = "var(--foreground)";
+    opacity = 1;
+  }
+
+  // Selected state
+  if (isSelected) {
+    if (status === DiffStatus.Added) {
+      fill = "var(--color-selected-added)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Removed) {
+      fill = "var(--color-selected-removed)";
+      stroke = "var(--foreground)";
+    } else if (status === DiffStatus.Modified) {
+      fill = "var(--color-selected-changed)";
+      stroke = "var(--foreground)";
+    } else {
+      fill = "var(--active-base)";
+      stroke = "var(--foreground)";
+    }
+    opacity = 1;
+  }
+
+  return { fill, stroke, opacity };
+}
+
+// #endregion Designs
+
+// #endregion Store
+
+// #region Commands
+
+export const commands = {
+  "semio.kitApp.setTheme": (context: KitAppCommandContext, theme: Theme): KitAppCommandResult => {
+    return { diff: {} };
+  },
+  "semio.kitApp.setLayout": (context: KitAppCommandContext, layout: Layout): KitAppCommandResult => {
+    return { diff: {} };
+  },
+  "semio.kitApp.toggleTypesFullscreen": (context: KitAppCommandContext): KitAppCommandResult => {
+    const currentPanel = context.kitApp.fullscreenWindow;
+    const newPanel = currentPanel === KitAppFullscreenWindow.Types ? KitAppFullscreenWindow.None : KitAppFullscreenWindow.Types;
+    return {
+      diff: {
+        fullscreenWindow: newPanel,
+      },
+    };
+  },
+  "semio.kitApp.toggleDesignsFullscreen": (context: KitAppCommandContext): KitAppCommandResult => {
+    const currentPanel = context.kitApp.fullscreenWindow;
+    const newPanel = currentPanel === KitAppFullscreenWindow.Designs ? KitAppFullscreenWindow.None : KitAppFullscreenWindow.Designs;
+    return {
+      diff: {
+        fullscreenWindow: newPanel,
+      },
+    };
+  },
+  "semio.kitApp.selectAll": (context: KitAppCommandContext): KitAppCommandResult => {
+    const kit = context.kit;
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: {
+            removed: currentSelection?.types ?? [],
+            added: kit.types?.map((t) => t.guid) ?? [],
+          },
+          designs: {
+            removed: currentSelection?.designs ?? [],
+            added: kit.designs?.map((d) => d.guid) ?? [],
+          },
+        },
+      },
+    };
+  },
+  "semio.kitApp.deselectAll": (context: KitAppCommandContext): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectType": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: {
+            removed: currentSelection?.types ?? [],
+            added: [Guid],
+          },
+          designs: { removed: currentSelection?.designs ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectTypes": (context: KitAppCommandContext, typeIds: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: {
+            removed: currentSelection?.types ?? [],
+            added: typeIds,
+          },
+          designs: { removed: currentSelection?.designs ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addTypeToSelection": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          types: { added: [Guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeTypeFromSelection": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          types: { removed: [Guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectDesign": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: {
+            removed: currentSelection?.designs ?? [],
+            added: [Guid],
+          },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectDesigns": (context: KitAppCommandContext, designIds: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: {
+            removed: currentSelection?.designs ?? [],
+            added: designIds,
+          },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addDesignToSelection": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          designs: { added: [Guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeDesignFromSelection": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          designs: { removed: [Guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectQuality": (context: KitAppCommandContext, key: string): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: {
+            removed: currentSelection?.qualities ?? [],
+            added: [key],
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectQualities": (context: KitAppCommandContext, keys: string[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: {
+            removed: currentSelection?.qualities ?? [],
+            added: keys,
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addQualityToSelection": (context: KitAppCommandContext, key: string): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          qualities: { added: [key] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeQualityFromSelection": (context: KitAppCommandContext, key: string): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          qualities: { removed: [key] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectFile": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: {
+            removed: currentSelection?.files ?? [],
+            added: [guid],
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectFiles": (context: KitAppCommandContext, guids: string[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: {
+            removed: currentSelection?.files ?? [],
+            added: guids,
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addFileToSelection": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          files: { added: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeFileFromSelection": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          files: { removed: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectFolder": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: {
+            removed: currentSelection?.folders ?? [],
+            added: [guid],
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectFolders": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: {
+            removed: currentSelection?.folders ?? [],
+            added: guids,
+          },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addFolderToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          folders: { added: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeFolderFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          folders: { removed: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectAuthor": (context: KitAppCommandContext, name: string): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: {
+            removed: currentSelection?.authors ?? [],
+            added: [name],
+          },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectAuthors": (context: KitAppCommandContext, names: string[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          authors: {
+            removed: currentSelection?.authors ?? [],
+            added: names,
+          },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addAuthorToSelection": (context: KitAppCommandContext, name: string): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          authors: { added: [name] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeAuthorFromSelection": (context: KitAppCommandContext, name: string): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          authors: { removed: [name] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.deleteSelected": (context: KitAppCommandContext): KitAppCommandResult => {
+    const selection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: selection?.types ?? [] },
+          designs: { removed: selection?.designs ?? [] },
+        },
+      },
+      kitDiff: {
+        types: { removed: selection?.types },
+        designs: { removed: selection?.designs },
+      },
+    };
+  },
+  "semio.kitApp.addType": (context: KitAppCommandContext, type: Type): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { added: [type] },
+      },
+    };
+  },
+  "semio.kitApp.addTypes": (context: KitAppCommandContext, types: Type[]): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { added: types },
+      },
+    };
+  },
+  "semio.kitApp.removeType": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { removed: [Guid] },
+      },
+    };
+  },
+  "semio.kitApp.removeTypes": (context: KitAppCommandContext, typeIds: Guid[]): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { removed: typeIds },
+      },
+    };
+  },
+  "semio.kitApp.addDesign": (context: KitAppCommandContext, design: Design): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { added: [design] },
+      },
+    };
+  },
+  "semio.kitApp.addDesigns": (context: KitAppCommandContext, designs: Design[]): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { added: designs },
+      },
+    };
+  },
+  "semio.kitApp.removeDesign": (context: KitAppCommandContext, Guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { removed: [Guid] },
+      },
+    };
+  },
+  "semio.kitApp.removeDesigns": (context: KitAppCommandContext, designIds: Guid[]): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { removed: designIds },
+      },
+    };
+  },
+  "semio.kitApp.updateType": (context: KitAppCommandContext, Guid: Guid, typeDiff: TypeDiff): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { updated: [{ id: Guid, diff: typeDiff }] },
+      },
+    };
+  },
+  "semio.kitApp.updateTypes": (context: KitAppCommandContext, updates: { id: Guid; diff: TypeDiff }[]): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        types: { updated: updates },
+      },
+    };
+  },
+  "semio.kitApp.updateDesign": (context: KitAppCommandContext, Guid: Guid, designDiff: DesignDiff): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { updated: [{ id: Guid, diff: designDiff }] },
+      },
+    };
+  },
+  "semio.kitApp.updateDesigns": (context: KitAppCommandContext, updates: { id: Guid; diff: DesignDiff }[]): KitAppCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: { updated: updates },
+      },
+    };
+  },
+  "semio.kitApp.setFilterSearch": (context: KitAppCommandContext, search: string): KitAppCommandResult => {
+    return {
+      diff: {
+        filterSearch: search,
+      },
+    };
+  },
+  "semio.kitApp.setExpandedRows": (context: KitAppCommandContext, rows: string[]): KitAppCommandResult => {
+    return {
+      diff: {
+        expandedRows: rows,
+      },
+    };
+  },
+  "semio.kitApp.toggleExpandedRow": (context: KitAppCommandContext, rowId: string): KitAppCommandResult => {
+    const currentRows = context.kitApp.expandedRows || [];
+    const newRows = currentRows.includes(rowId) ? currentRows.filter((r) => r !== rowId) : [...currentRows, rowId];
+    return {
+      diff: {
+        expandedRows: newRows,
+      },
+    };
+  },
+  "semio.kitApp.setSortColumn": (context: KitAppCommandContext, column: KitAppSortColumn): KitAppCommandResult => {
+    return {
+      diff: {
+        sortColumn: column,
+      },
+    };
+  },
+  "semio.kitApp.setSortDirection": (context: KitAppCommandContext, direction: KitAppSortDirection): KitAppCommandResult => {
+    return {
+      diff: {
+        sortDirection: direction,
+      },
+    };
+  },
+  "semio.kitApp.toggleSort": (context: KitAppCommandContext, column: KitAppSortColumn): KitAppCommandResult => {
+    const current = context.kitApp;
+    if (current.sortColumn === column) {
+      return {
+        diff: {
+          sortDirection: current.sortDirection === "asc" ? "desc" : "asc",
+        },
+      };
+    }
+    return {
+      diff: {
+        sortColumn: column,
+        sortDirection: "asc",
+      },
+    };
+  },
+};
+
+// #endregion Commands
+
+// #region Navbar
+
+// #endregion Navbar
+
+// #region Canvas
+
+// #region Windows
+
+// #region Table
 
 type ArtifactKind = "designs" | "types" | "qualities" | "files" | "folders" | "authors";
 
@@ -70,7 +1665,7 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
 );
 
 const getFileIcon = (fileName: string) => {
-  if (!fileName) return <FileText className="size-4" />;
+  if (!fileName) return <DocumentIcon className="size-tiny" />;
   const extension = fileName.split(".").pop()?.toLowerCase();
   switch (extension) {
     case "jpg":
@@ -80,15 +1675,15 @@ const getFileIcon = (fileName: string) => {
     case "svg":
     case "webp":
     case "bmp":
-      return <FileImage className="size-4" />;
+      return <FileImageIcon className="size-tiny" />;
     case "mp4":
     case "avi":
     case "mov":
     case "mkv":
     case "webm":
-      return <FileVideo className="size-4" />;
+      return <FileVideoIcon className="size-tiny" />;
     case "json":
-      return <FileJson className="size-4" />;
+      return <FileJsonIcon className="size-tiny" />;
     case "js":
     case "ts":
     case "jsx":
@@ -107,19 +1702,19 @@ const getFileIcon = (fileName: string) => {
     case "css":
     case "scss":
     case "xml":
-      return <FileCode className="size-4" />;
+      return <FileCodeIcon className="size-tiny" />;
     case "csv":
     case "xlsx":
     case "xls":
-      return <FileSpreadsheet className="size-4" />;
+      return <FileSpreadsheetIcon className="size-tiny" />;
     case "txt":
     case "md":
     case "pdf":
     case "doc":
     case "docx":
-      return <FileType className="size-4" />;
+      return <FileTypeIcon className="size-tiny" />;
     default:
-      return <FileText className="size-4" />;
+      return <DocumentIcon className="size-tiny" />;
   }
 };
 
@@ -134,9 +1729,9 @@ const getRowIcon = (row: TableRow): string | React.ReactNode | undefined => {
     case "files":
       return getFileIcon((row.data as SemioFile).name);
     case "folders":
-      return <FolderIcon className="size-4" />;
+      return <FolderIcon className="size-tiny" />;
     case "authors":
-      return <User className="size-4" />;
+      return <UserIcon className="size-tiny" />;
     default:
       return undefined;
   }
@@ -188,9 +1783,9 @@ const DraggableRow: FC<{
 
   const style = transform
     ? {
-      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      opacity: isDraggingHook ? 0.5 : 1,
-    }
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDraggingHook ? 0.5 : 1,
+      }
     : undefined;
 
   const combinedRef = (node: HTMLElement | null) => {
@@ -205,15 +1800,15 @@ const DraggableRow: FC<{
       <div
         ref={combinedRef}
         style={style}
-        className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isOverHighlight ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"} ${isDraggingHook ? "opacity-50" : ""}`}
+        className={`border-b p-double cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isOverHighlight ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"} ${isDraggingHook ? "opacity-50" : ""}`}
         onClick={(e) => onRowClick(row, e)}
         onDoubleClick={() => onRowDoubleClick(row)}
         {...(canDrag ? { ...attributes, ...listeners } : {})}
         role="button"
         tabIndex={0}
       >
-        <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex items-center gap-double justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-double flex-1 min-w-0">
             {row.hasChildren ? (
               <Action
                 level="base"
@@ -221,16 +1816,15 @@ const DraggableRow: FC<{
                   e.stopPropagation();
                   toggleRow(row.id);
                 }}
-              >
-                {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-              </Action>
+                icon={row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+              />
             ) : (
-              <span className="w-5 h-5 shrink-0" />
+              <span className="size-small shrink-0" />
             )}
             <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
             <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
           </div>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-half shrink-0">
             {(row.kind === "designs" || row.kind === "types") && (
               <Action
                 onClick={(e) => {
@@ -239,9 +1833,8 @@ const DraggableRow: FC<{
                 }}
                 id="semio.sketchpad.app.kit.kitApp.createChild"
                 level="base"
-              >
-                <Plus />
-              </Action>
+                icon={<AddIcon />}
+              />
             )}
           </div>
         </div>
@@ -261,18 +1854,18 @@ const DraggableRow: FC<{
       tabIndex={0}
     >
       {!isMobile && !selectedKind && (
-        <td className="p-1">
-          {row.kind === "designs" && <Layout className="size-4" />}
-          {row.kind === "types" && <Box className="size-4" />}
-          {row.kind === "qualities" && <Award className="size-4" />}
-          {row.kind === "files" && <FileText className="size-4" />}
-          {row.kind === "folders" && <FolderIcon className="size-4" />}
-          {row.kind === "authors" && <User className="size-4" />}
+        <td className="p-unit">
+          {row.kind === "designs" && <LayoutIcon className="size-tiny" />}
+          {row.kind === "types" && <TypeIcon className="size-tiny" />}
+          {row.kind === "qualities" && <AwardIcon className="size-tiny" />}
+          {row.kind === "files" && <DocumentIcon className="size-tiny" />}
+          {row.kind === "folders" && <FolderIcon className="size-tiny" />}
+          {row.kind === "authors" && <UserIcon className="size-tiny" />}
         </td>
       )}
-      <td className="p-1" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
-          <div className="flex items-center gap-1 flex-1 min-w-0">
+      <td className="p-unit" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-unit justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }}>
+          <div className="flex items-center gap-unit flex-1 min-w-0">
             {row.hasChildren ? (
               <Action
                 level="base"
@@ -280,16 +1873,15 @@ const DraggableRow: FC<{
                   e.stopPropagation();
                   toggleRow(row.id);
                 }}
-              >
-                {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-              </Action>
+                icon={row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+              />
             ) : (
-              <span className="w-4 h-4 shrink-0" />
+              <span className="size-tiny shrink-0" />
             )}
             <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
             <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
           </div>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-half shrink-0">
             {(row.kind === "designs" || row.kind === "types") && (
               <Action
                 onClick={(e) => {
@@ -298,15 +1890,14 @@ const DraggableRow: FC<{
                 }}
                 id="semio.sketchpad.app.kit.kitApp.createChild"
                 level="base"
-              >
-                <Plus />
-              </Action>
+                icon={<AddIcon />}
+              />
             )}
           </div>
         </div>
       </td>
-      {!isMobile && <td className="p-1">{row.updatedAt}</td>}
-      {!isMobile && <td className="p-1">{row.createdAt}</td>}
+      {!isMobile && <td className="p-unit">{row.updatedAt}</td>}
+      {!isMobile && <td className="p-unit">{row.createdAt}</td>}
     </tr>
   );
 };
@@ -321,12 +1912,13 @@ const AppContent: FC = () => {
   const kitScope = useKitScope();
   const hasKit = useHasKit(kitScope?.guid || "");
 
-  const kit = useKit(undefined, undefined, true) as Kit;
+  const kit = useKit(undefined, kitScope?.guid, true) as Kit;
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
   const kitApp = useKitApp() as KitAppState;
   const isMobile = useIsMobile();
+  const store = useSketchpadStore();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -338,10 +1930,19 @@ const AppContent: FC = () => {
   const appType = useAppType();
 
   // Early return if no kit is loaded
-  if (!hasKit) {
+  if (!hasKit || !kit) {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.noKitLoaded")}</p>
+      </div>
+    );
+  }
+
+  // Early return if kit app is not initialized yet
+  if (!kitApp) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.loading")}</p>
       </div>
     );
   }
@@ -410,6 +2011,15 @@ const AppContent: FC = () => {
   }, [kit?.designs, kit?.types, selectedKind, selectedName]);
 
   useEffect(() => {
+    if (appType !== "kit" || !kitScope?.guid || !hasKit) {
+      return;
+    }
+    if (!store.hasKitApp({ kit: kitScope.guid })) {
+      sketchpadCommands.createKitApp("semio.sketchpad.app.kit.autoCreate", { kit: kitScope.guid });
+    }
+  }, [appType, kitScope?.guid, hasKit, sketchpadCommands, store]);
+
+  useEffect(() => {
     if (appType !== "kit") {
       return;
     }
@@ -439,7 +2049,6 @@ const AppContent: FC = () => {
     if (totalSelectedKinds > 1) {
       addSection("details", {
         id: artifactsMultipleId,
-        translationParams: { count: totalSelectedKinds },
         order: 0,
         content: () => <MultipleArtifactsSection />,
       });
@@ -449,7 +2058,6 @@ const AppContent: FC = () => {
       const designSectionId = designsCount === 1 ? "semio.sketchpad.app.design.title" : "semio.sketchpad.app.kit.designs.multipleTitle";
       addSection("details", {
         id: designSectionId,
-        translationParams: designsCount === 1 ? undefined : { count: designsCount },
         order: 10,
         content: () => <DesignSection />,
       });
@@ -459,7 +2067,6 @@ const AppContent: FC = () => {
       const typeSectionId = typesCount === 1 ? "semio.sketchpad.app.type.title" : "semio.sketchpad.app.kit.types.multipleTitle";
       addSection("details", {
         id: typeSectionId,
-        translationParams: typesCount === 1 ? undefined : { count: typesCount },
         order: 20,
         content: () => <TypeSection />,
       });
@@ -469,7 +2076,6 @@ const AppContent: FC = () => {
       const fileSectionId = filesCount === 1 ? "semio.sketchpad.app.kit.file.title" : "semio.sketchpad.app.kit.files.multipleTitle";
       addSection("details", {
         id: fileSectionId,
-        translationParams: filesCount === 1 ? undefined : { count: filesCount },
         order: 30,
         content: () => <FileSection />,
       });
@@ -479,7 +2085,6 @@ const AppContent: FC = () => {
       const folderSectionId = foldersCount === 1 ? "semio.sketchpad.app.kit.folder.title" : "semio.sketchpad.app.kit.folders.multipleTitle";
       addSection("details", {
         id: folderSectionId,
-        translationParams: foldersCount === 1 ? undefined : { count: foldersCount },
         order: 40,
         content: () => <FolderSection />,
       });
@@ -1157,7 +2762,7 @@ const AppContent: FC = () => {
         // else: cannot move child designs to folders, do nothing
       } else {
         // Root design (protodesign) - can be moved to folders or root
-        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToFolder", "design", design.guid, targetFolderId);
+        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToFolder", "design", design.guid, targetFolderId ?? null);
       }
     } else if (draggedRow.kind === "types" && kitCommands) {
       const type = draggedRow.data as Type;
@@ -1170,17 +2775,17 @@ const AppContent: FC = () => {
         // else: cannot move child types to folders, do nothing
       } else {
         // Root type (prototype) - can be moved to folders or root
-        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToFolder", "type", type.guid, targetFolderId);
+        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToFolder", "type", type.guid, targetFolderId ?? null);
       }
     } else if (draggedRow.kind === "qualities" && kitCommands) {
       const quality = draggedRow.data as Quality;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveQualityToFolder", "quality", quality.guid, targetFolderId);
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveQualityToFolder", "quality", quality.guid, targetFolderId ?? null);
     } else if (draggedRow.kind === "files" && kitCommands) {
       const file = draggedRow.data as SemioFile;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFileToFolder", "file", file.guid, targetFolderId);
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFileToFolder", "file", file.guid, targetFolderId ?? null);
     } else if (draggedRow.kind === "folders" && kitCommands) {
       const folder = draggedRow.data as Folder;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFolderToFolder", "folder", folder.guid, targetFolderId);
+      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFolderToFolder", "folder", folder.guid, targetFolderId ?? null);
     }
 
     // Expand the target folder if moving into a folder
@@ -1539,7 +3144,6 @@ const AppContent: FC = () => {
       // Check if file is a zip file
       if (file.name.toLowerCase().endsWith(".zip")) {
         try {
-          console.log(`[DEBUG] Processing zip file: ${file.name}`);
           // Import JSZip dynamically
           const JSZip = (await import("jszip")).default;
           const zip = await JSZip.loadAsync(file);
@@ -1595,7 +3199,6 @@ const AppContent: FC = () => {
               const extractedFile: SemioFile = {
                 guid: guid(),
                 name: parts[parts.length - 1] || relativePath,
-                path: relativePath,
                 folder: parentFolderGuid,
                 size: fileBlob.size,
                 hash: undefined,
@@ -1604,10 +3207,8 @@ const AppContent: FC = () => {
               };
               await kitCommands?.addFile("semio.sketchpad.app.kit.dropZip", extractedFile, fileBlob);
               processedFiles += 1;
-              console.log(`[DEBUG] Extracted and added file ${relativePath} from zip`);
             }
           }
-          console.log(`[DEBUG] Successfully extracted ${processedFiles} files from ${file.name}`);
         } catch (error) {
           console.error(`Failed to extract zip file ${file.name}:`, error);
         }
@@ -1616,7 +3217,6 @@ const AppContent: FC = () => {
         const newFile: SemioFile = {
           guid: guid(),
           name: file.name,
-          path: file.name,
           size: file.size,
           hash: undefined,
           createdAt: new Date(),
@@ -1645,27 +3245,27 @@ const AppContent: FC = () => {
         {/* Concept Filter */}
         <ConceptFilter allConcepts={allConcepts} paramName="c" />
         {/* Flexible filter layout with automatic wrapping for mobile */}
-        <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+        <div className="flex flex-wrap items-center gap-unit p-unit border-b">
           {selectedKind && (
             <Toggle
               type="withAction"
               pressed={true}
               onPressedChange={() => toggleKind(selectedKind)}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact(selectedKind)}
               id="semio.sketchpad.app.kit.kitApp.hideKind"
               actionId="semio.sketchpad.app.kit.kitApp.createArtifact"
             >
-              {selectedKind === "designs" && <Layout className="size-4" />}
-              {selectedKind === "types" && <Box className="size-4" />}
-              {selectedKind === "qualities" && <Award className="size-4" />}
-              {selectedKind === "files" && <FileText className="size-4" />}
-              {selectedKind === "folders" && <FolderIcon className="size-4" />}
-              {selectedKind === "authors" && <User className="size-4" />}
+              {selectedKind === "designs" && <LayoutIcon className="size-tiny" />}
+              {selectedKind === "types" && <TypeIcon className="size-tiny" />}
+              {selectedKind === "qualities" && <AwardIcon className="size-tiny" />}
+              {selectedKind === "files" && <DocumentIcon className="size-tiny" />}
+              {selectedKind === "folders" && <FolderIcon className="size-tiny" />}
+              {selectedKind === "authors" && <UserIcon className="size-tiny" />}
             </Toggle>
           )}
           {selectedName && (
-            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
+            <Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)}>
               {selectedName}
             </Toggle>
           )}
@@ -1681,67 +3281,67 @@ const AppContent: FC = () => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("designs")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateArtifact("designs")}
                 id="semio.sketchpad.app.kit.kitApp.showDesigns"
                 actionId="semio.sketchpad.app.kit.kitApp.createDesign"
               >
-                <Layout className="size-4" />
+                <LayoutIcon className="size-tiny" />
               </Toggle>
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("types")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateArtifact("types")}
                 id="semio.sketchpad.app.kit.kitApp.showTypes"
                 actionId="semio.sketchpad.app.kit.kitApp.createType"
               >
-                <Box className="size-4" />
+                <TypeIcon className="size-tiny" />
               </Toggle>
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("qualities")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateArtifact("qualities")}
                 id="semio.sketchpad.app.kit.kitApp.showQualities"
                 actionId="semio.sketchpad.app.kit.kitApp.createQuality"
               >
-                <Award className="size-4" />
+                <AwardIcon className="size-tiny" />
               </Toggle>
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("files")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateArtifact("files")}
                 id="semio.sketchpad.app.kit.kitApp.showFiles"
                 actionId="semio.sketchpad.app.kit.kitApp.createFile"
               >
-                <FileText className="size-4" />
+                <DocumentIcon className="size-tiny" />
               </Toggle>
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("folders")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateArtifact("folders")}
                 id="semio.sketchpad.app.kit.kitApp.showFolders"
                 actionId="semio.sketchpad.app.kit.kitApp.createFolder"
               >
-                <FolderIcon className="size-4" />
+                <FolderIcon className="size-tiny" />
               </Toggle>
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("authors")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateArtifact("authors")}
                 id="semio.sketchpad.app.kit.kitApp.showAuthors"
                 actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
               >
-                <User className="size-4" />
+                <UserIcon className="size-tiny" />
               </Toggle>
             </>
           )}
@@ -1761,8 +3361,14 @@ const AppContent: FC = () => {
                 {name}
               </Toggle>
             ))}
-          <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)} />
+          <div className="flex items-center gap-unit flex-1 min-w-[160px]">
+            <Input
+              id="semio.sketchpad.app.kit.filter.search"
+              className="flex-1 min-w-0"
+              placeholder={t("semio.sketchpad.common.search")}
+              value={searchQuery}
+              onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)}
+            />
             <Toggle
               type="dropdown"
               pressed={sortColumn === "artifact"}
@@ -1772,8 +3378,8 @@ const AppContent: FC = () => {
                 kitAppCommands.setSortDirection("semio.sketchpad.app.kit.filter.artifact.sortDirection", value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.app.sort.ascending" },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.app.sort.descending" },
+                { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.app.sort.ascending" },
+                { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.app.sort.descending" },
               ]}
               id="semio.sketchpad.app.kit.kitApp.sortByName"
             />
@@ -1829,35 +3435,34 @@ const AppContent: FC = () => {
       }}
     >
       {/* Flexible filter layout with automatic wrapping */}
-      <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+      <div className="flex flex-wrap items-center gap-unit p-unit border-b">
         {selectedKind && (
           <Toggle
             type="withAction"
             pressed={true}
             onPressedChange={() => toggleKind(selectedKind)}
-            actionIcon={<Plus className="size-3.5" />}
+            actionIcon={<AddIcon className="size-tiny" />}
             onActionClick={() => handleCreateArtifact(selectedKind)}
             id="semio.sketchpad.app.kit.kitApp.hideKind"
             actionId="semio.sketchpad.app.kit.kitApp.createArtifact"
-          >
-            {selectedKind === "designs" && <Layout className="size-4" />}
-            {selectedKind === "types" && <Box className="size-4" />}
-            {selectedKind === "qualities" && <Award className="size-4" />}
-            {selectedKind === "files" && <FileText className="size-4" />}
-            {selectedKind === "folders" && <FolderIcon className="size-4" />}
-            {selectedKind === "authors" && <User className="size-4" />}
-          </Toggle>
+            icon={
+              <>
+                {selectedKind === "designs" && <LayoutIcon className="size-tiny" />}
+                {selectedKind === "types" && <TypeIcon className="size-tiny" />}
+                {selectedKind === "qualities" && <AwardIcon className="size-tiny" />}
+                {selectedKind === "files" && <DocumentIcon className="size-tiny" />}
+                {selectedKind === "folders" && <FolderIcon className="size-tiny" />}
+                {selectedKind === "authors" && <UserIcon className="size-tiny" />}
+              </>
+            }
+          />
         )}
         {selectedName && (
-          <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-            {selectedName}
-          </Toggle>
+          <Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="text-xs">{selectedName}</span>} />
         )}
         {selectedConcepts.length > 0 &&
           selectedConcepts.map((concept) => (
-            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide">
-              {concept}
-            </Toggle>
+            <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide" icon={<span className="text-xs">{concept}</span>} />
           ))}
         {!selectedKind && (
           <>
@@ -1865,87 +3470,83 @@ const AppContent: FC = () => {
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("designs")}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact("designs")}
               id="semio.sketchpad.app.kit.kitApp.showDesigns"
               actionId="semio.sketchpad.app.kit.kitApp.createDesign"
-            >
-              <Layout className="size-4" />
-            </Toggle>
+              icon={<LayoutIcon className="size-tiny" />}
+            />
             <Toggle
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("types")}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact("types")}
               id="semio.sketchpad.app.kit.kitApp.showTypes"
               actionId="semio.sketchpad.app.kit.kitApp.createType"
-            >
-              <Box className="size-4" />
-            </Toggle>
+              icon={<TypeIcon className="size-tiny" />}
+            />
             <Toggle
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("qualities")}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact("qualities")}
               id="semio.sketchpad.app.kit.kitApp.showQualities"
               actionId="semio.sketchpad.app.kit.kitApp.createQuality"
-            >
-              <Award className="size-4" />
-            </Toggle>
+              icon={<AwardIcon className="size-tiny" />}
+            />
             <Toggle
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("files")}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact("files")}
               id="semio.sketchpad.app.kit.kitApp.showFiles"
               actionId="semio.sketchpad.app.kit.kitApp.createFile"
-            >
-              <FileText className="size-4" />
-            </Toggle>
+              icon={<DocumentIcon className="size-tiny" />}
+            />
             <Toggle
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("folders")}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact("folders")}
               id="semio.sketchpad.app.kit.kitApp.showFolders"
               actionId="semio.sketchpad.app.kit.kitApp.createFolder"
-            >
-              <FolderIcon className="size-4" />
-            </Toggle>
+              icon={<FolderIcon className="size-tiny" />}
+            />
             <Toggle
               type="withAction"
               pressed={false}
               onPressedChange={() => toggleKind("authors")}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateArtifact("authors")}
               id="semio.sketchpad.app.kit.kitApp.showAuthors"
               actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
-            >
-              <User className="size-4" />
-            </Toggle>
+              icon={<UserIcon className="size-tiny" />}
+            />
           </>
         )}
         {allConcepts.length > 0 &&
           allConcepts
             .filter((c) => !selectedConcepts.includes(c))
             .map((concept) => (
-              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.show">
-                {concept}
-              </Toggle>
+              <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.show" icon={<span className="text-xs">{concept}</span>} />
             ))}
         {selectedKind &&
           !selectedName &&
           uniqueNames.length > 0 &&
           uniqueNames.map((name) => (
-            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name">
-              {name}
-            </Toggle>
+            <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="text-xs">{name}</span>} />
           ))}
-        <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.common.search")} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)} />
+        <Input
+          id="semio.sketchpad.app.kit.canvas.table.search"
+          className="flex-1 min-w-[200px]"
+          placeholder={t("semio.sketchpad.common.search")}
+          value={searchQuery}
+          onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
+        />
       </div>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <ScrollArea ref={scrollAreaRef} className="flex-1" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
@@ -1957,12 +3558,13 @@ const AppContent: FC = () => {
           <DroppableTableWrapper>
             <table className="w-full border-collapse">
               <thead className="sticky top-0 border-b">
-                <tr className="h-9">
+                <tr className="h-large">
                   {!selectedKind && (
-                    <th className="text-left p-1 font-medium relative group">
+                    <th className="text-left p-unit font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.sketchpad.app.kit.kind")}</span>
+                        <span>{useLabel("semio.sketchpad.app.kit.kind")}</span>
                         <Toggle
+                          id="semio.sketchpad.app.kit.header.kind.sort"
                           type="dropdown"
                           pressed={sortColumn === "kind"}
                           value={sortColumn === "kind" ? sortDirection : "asc"}
@@ -1971,19 +3573,20 @@ const AppContent: FC = () => {
                             kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.kind.sortDirection", value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                            { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
+                            { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                           ]}
-                          className="px-1 min-w-0"
+                          className="px-unit min-w-0"
                         />
                       </div>
-                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                      <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
                     </th>
                   )}
-                  <th className="text-left p-1 font-medium relative group">
+                  <th className="text-left p-unit font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.kit.name")}</span>
+                      <span>{useLabel("semio.sketchpad.app.kit.name")}</span>
                       <Toggle
+                        id="semio.sketchpad.app.kit.header.artifact.sort"
                         type="dropdown"
                         pressed={sortColumn === "artifact"}
                         value={sortColumn === "artifact" ? sortDirection : "asc"}
@@ -1992,18 +3595,19 @@ const AppContent: FC = () => {
                           kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                          { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                         ]}
-                        className="px-1 min-w-0"
+                        className="px-unit min-w-0"
                       />
                     </div>
-                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                    <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
                   </th>
-                  <th className="text-left p-1 font-medium relative group">
+                  <th className="text-left p-unit font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.kit.lastUpdated")}</span>
+                      <span>{useLabel("semio.sketchpad.app.kit.lastUpdated")}</span>
                       <Toggle
+                        id="semio.sketchpad.app.kit.header.updatedAt.sort"
                         type="dropdown"
                         pressed={sortColumn === "updatedAt"}
                         value={sortColumn === "updatedAt" ? sortDirection : "asc"}
@@ -2012,18 +3616,19 @@ const AppContent: FC = () => {
                           kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.updatedAt.sortDirection", value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                          { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                         ]}
-                        className="px-1 min-w-0"
+                        className="px-unit min-w-0"
                       />
                     </div>
-                    <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                    <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
                   </th>
-                  <th className="text-left p-1 font-medium relative group">
+                  <th className="text-left p-unit font-medium relative group">
                     <div className="flex items-center justify-between w-full">
-                      <span>{t("semio.sketchpad.app.kit.created")}</span>
+                      <span>{useLabel("semio.sketchpad.app.kit.created")}</span>
                       <Toggle
+                        id="semio.sketchpad.app.kit.header.createdAt.sort"
                         type="dropdown"
                         pressed={sortColumn === "createdAt"}
                         value={sortColumn === "createdAt" ? sortDirection : "asc"}
@@ -2032,10 +3637,10 @@ const AppContent: FC = () => {
                           kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.createdAt.sortDirection", value as "asc" | "desc");
                         }}
                         items={[
-                          { value: "asc", label: <ArrowUp className="size-3.5" />, id: "semio.sketchpad.common.sort.ascending" },
-                          { value: "desc", label: <ArrowDown className="size-3.5" />, id: "semio.sketchpad.common.sort.descending" },
+                          { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
+                          { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                         ]}
-                        className="px-1 min-w-0"
+                        className="px-unit min-w-0"
                       />
                     </div>
                   </th>
@@ -2087,7 +3692,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {
@@ -2122,3 +3727,523 @@ const App: FC = () => {
 };
 
 export default App;
+
+// #endregion Table
+
+// #endregion Windows
+
+// #region Panels
+
+// #region Right
+
+// #region Details
+
+export const KitSection: FC = () => {
+  const isInKitScope = useIsInKitScope();
+  if (!isInKitScope) return null;
+  return <KitSectionForm />;
+};
+
+const KitSectionForm: FC = () => {
+  const { t } = useTranslation();
+  try {
+    const kit = useKit() as Kit;
+    if (!kit) {
+      return (
+        <TreeItem>
+          <TreeContent>
+            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.notAvailable")}</p>
+          </TreeContent>
+        </TreeItem>
+      );
+    }
+    const kitStore = useKitStore() as any;
+    const { startTransaction, finalizeTransaction, abortTransaction } = useKitAppCommands();
+    return (
+      <>
+        <TreeItem>
+          <TreeContent>
+            <Input
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.name"
+              value={kit.name}
+              onLazyChange={(value) => kitStore.change({ name: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Input
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.version"
+              value={kit.version || ""}
+              placeholder={t("semio.sketchpad.app.kit.versionPlaceholder.label")}
+              onLazyChange={(value) => kitStore.change({ version: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Textarea
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.description"
+              value={kit.description || ""}
+              placeholder={t("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
+              onLazyChange={(value) => kitStore.change({ description: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Input
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
+              value={kit.icon || ""}
+              placeholder={t("semio.sketchpad.app.kit.iconPlaceholder.label")}
+              onLazyChange={(value) => kitStore.change({ icon: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Input
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.image"
+              value={kit.image || ""}
+              placeholder={t("semio.sketchpad.app.kit.imagePlaceholder.label")}
+              onLazyChange={(value) => kitStore.change({ image: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Input
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
+              value={kit.homepage || ""}
+              placeholder={t("semio.sketchpad.app.kit.homepagePlaceholder.label")}
+              onLazyChange={(value) => kitStore.change({ homepage: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem>
+          <TreeContent>
+            <Input
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.kit.license"
+              value={kit.license || ""}
+              placeholder={t("semio.sketchpad.app.kit.licensePlaceholder.label")}
+              onLazyChange={(value) => kitStore.change({ license: value })}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+      </>
+    );
+  } catch (error) {
+    return (
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.notFound")}</p>
+        </TreeContent>
+      </TreeItem>
+    );
+  }
+};
+
+export const TypeSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const selection = kitApp?.selection;
+  const selectedTypes = selection?.types || [];
+  if (selectedTypes.length === 0) return null;
+  if (selectedTypes.length === 1) return <SingleTypeSection typeGuid={selectedTypes[0]} />;
+  return <MultipleTypesSection typeGuids={selectedTypes} />;
+};
+
+const SingleTypeSection: FC<{ typeGuid: string }> = ({ typeGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const type = kit?.types?.find((t) => t.guid === typeGuid);
+  if (!type) return null;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea id="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholder={t("semio.sketchpad.app.type.descriptionPlaceholder.label")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const types = typeGuids.map((guid) => kit?.types?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Type[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.types.multipleSelected", { count: types.length })}</p>
+        </TreeContent>
+      </TreeItem>
+      {types.map((type) => (
+        <TreeItem key={type.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{type.name}</p>
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const DesignSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const selection = kitApp?.selection;
+  const selectedDesigns = selection?.designs || [];
+  if (selectedDesigns.length === 0) return null;
+  if (selectedDesigns.length === 1) return <SingleDesignSection designGuid={selectedDesigns[0]} />;
+  return <MultipleDesignsSection designGuids={selectedDesigns} />;
+};
+
+const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const design = kit?.designs?.find((d) => d.guid === designGuid);
+  if (!design) return null;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea id="semio.sketchpad.app.design.panel.details.section.design.description" value={design.description || ""} placeholder={t("semio.sketchpad.app.design.descriptionPlaceholder")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const designs = designGuids.map((guid) => kit?.designs?.find((d) => d.guid === guid)).filter((d) => d !== undefined) as Design[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.designs.multipleSelected", { count: designs.length })}</p>
+        </TreeContent>
+      </TreeItem>
+      {designs.map((design) => (
+        <TreeItem key={design.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{design.name}</p>
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const FileSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const kit = useKit() as Kit;
+  const selection = kitApp?.selection;
+  const selectedFiles = selection?.files || [];
+
+  if (selectedFiles.length === 0) return null;
+
+  const files = selectedFiles
+    .map((fileGuid) => {
+      return kit.files?.find((f) => f.guid === fileGuid);
+    })
+    .filter(Boolean);
+
+  if (files.length === 0) return null;
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return "0 KB";
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  };
+
+  const formatDate = (date?: Date) => {
+    if (!date) return "";
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (isNaN(parsedDate.getTime())) return "";
+    return parsedDate.toLocaleDateString();
+  };
+
+  return (
+    <>
+      {files.map((file) => (
+        <TreeItem key={file!.guid}>
+          <TreeContent>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs text-muted-foreground">{t("semio.file.name")}</label>
+                <p className="text-sm">{file!.name}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">{t("semio.file.size")}</label>
+                <p className="text-sm">{formatFileSize(file!.size)}</p>
+              </div>
+              {file!.createdAt && (
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("semio.file.created")}</label>
+                  <p className="text-sm">{formatDate(file!.createdAt)}</p>
+                </div>
+              )}
+              {file!.updatedAt && (
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("semio.file.updated")}</label>
+                  <p className="text-sm">{formatDate(file!.updatedAt)}</p>
+                </div>
+              )}
+            </div>
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const FolderSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const kit = useKit() as Kit;
+  const kitStore = useKitStore() as any;
+  const { startTransaction, finalizeTransaction, abortTransaction } = useKitAppCommands();
+  const selection = kitApp?.selection;
+  const selectedFolders = selection?.folders || [];
+
+  if (selectedFolders.length === 0) return null;
+
+  const folders = selectedFolders
+    .map((folderGuid) => {
+      return kit.folders?.find((f) => f.guid === folderGuid);
+    })
+    .filter(Boolean);
+
+  if (folders.length === 0) return null;
+  if (folders.length > 1) return null; // Show only single folder
+
+  const folder = folders[0]!;
+
+  const formatDate = (date?: Date) => {
+    if (!date) return "";
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (isNaN(parsedDate.getTime())) return "";
+    return parsedDate.toLocaleDateString();
+  };
+
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            lazy
+            id="semio.sketchpad.app.kit.panel.details.section.folder.name"
+            value={folder.name}
+            onLazyChange={(value) => {
+              const folderStore = (kitStore as any).folder(folder.guid);
+              folderStore.change({ name: value });
+            }}
+            startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+      {folder.description && (
+        <TreeItem>
+          <TreeContent>
+            <Textarea
+              lazy
+              id="semio.sketchpad.app.kit.panel.details.section.folder.description"
+              value={folder.description || ""}
+              placeholder={t("semio.sketchpad.app.folder.descriptionPlaceholder.label")}
+              onLazyChange={(value) => {
+                const folderStore = (kitStore as any).folder(folder.guid);
+                folderStore.change({ description: value });
+              }}
+              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              showLabel
+            />
+          </TreeContent>
+        </TreeItem>
+      )}
+      {folder.createdAt && (
+        <TreeItem>
+          <TreeContent>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("semio.folder.created")}</label>
+              <p className="text-sm">{formatDate(folder.createdAt)}</p>
+            </div>
+          </TreeContent>
+        </TreeItem>
+      )}
+      {folder.updatedAt && (
+        <TreeItem>
+          <TreeContent>
+            <div>
+              <label className="text-xs text-muted-foreground">{t("semio.folder.updated")}</label>
+              <p className="text-sm">{formatDate(folder.updatedAt)}</p>
+            </div>
+          </TreeContent>
+        </TreeItem>
+      )}
+    </>
+  );
+};
+
+export const MultipleArtifactsSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const selection = kitApp?.selection;
+  const typesCount = selection?.types?.length || 0;
+  const designsCount = selection?.designs?.length || 0;
+  const qualitiesCount = selection?.qualities?.length || 0;
+  const filesCount = selection?.files?.length || 0;
+  const authorsCount = selection?.authors?.length || 0;
+  const kinds: string[] = [];
+  if (typesCount > 0) kinds.push(t("semio.sketchpad.app.kit.types.multipleTitle", { count: typesCount }));
+  if (designsCount > 0) kinds.push(t("semio.sketchpad.app.kit.designs.multipleTitle", { count: designsCount }));
+  if (qualitiesCount > 0) kinds.push(t("semio.sketchpad.app.kit.qualities.multipleTitle", { count: qualitiesCount }));
+  if (filesCount > 0) kinds.push(t("semio.sketchpad.app.kit.files.multipleTitle", { count: filesCount }));
+  if (authorsCount > 0) kinds.push(t("semio.sketchpad.app.kit.authors.multipleTitle", { count: authorsCount }));
+  if (kinds.length <= 1) return null;
+  return (
+    <TreeItem>
+      <TreeContent>
+        <p className="text-sm text-muted-foreground">{kinds.join(", ")}</p>
+      </TreeContent>
+    </TreeItem>
+  );
+};
+
+// #endregion Details
+
+// #region Chat
+
+// #endregion Chat
+
+// #region Settings
+
+// #endregion Settings
+
+// #endregion Right
+
+// #endregion Panels
+
+// #region Tools
+
+// #endregion Tools
+
+// #endregion Canvas
+
+// #region Footer
+
+export const KitAppFooter: FC = () => {
+  const addFooterItem = useAddFooterItem();
+  const removeFooterItem = useRemoveFooterItem();
+  const appType = useAppType();
+
+  useEffect(() => {
+    if (appType !== "kit") return;
+
+    // TODO: Add kit-specific footer items here
+
+    return () => {
+      // Cleanup
+    };
+  }, [appType, addFooterItem, removeFooterItem]);
+
+  return null;
+};
+
+// #endregion Footer
+
+// #region App
+
+// Main app export is in the Table section above
+
+// #endregion App
+
+// #region Config
+
+export const config: AppConfig = {
+  id: "kit",
+  component: App,
+  routeSegments: [
+    {
+      path: "kits/:kit",
+      paramName: "kit",
+      scopeProvider: KitScopeProvider,
+    },
+  ],
+  getPanels: (): PanelDefinition[] => [
+    createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
+  ],
+  matchesPath: (pathParts) => {
+    const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+    return pathParts.length === 2 && pathParts[0] === "kits" && isUuidPattern(pathParts[1]);
+  },
+  order: 10,
+};
+
+// #endregion Config

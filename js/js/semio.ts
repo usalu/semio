@@ -485,7 +485,7 @@ export const averagePlane = (planes: Plane[]): Plane | null => {
       y: acc.y + plane.origin.y / planes.length,
       z: acc.z + plane.origin.z / planes.length,
     }),
-    { x: 0, y: 0, z: 0 }
+    { x: 0, y: 0, z: 0 },
   );
 
   // For orientation, use the first plane's axes as the base
@@ -2382,14 +2382,20 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   });
 
   console.log(`[ORIGIN] flattenDesign: Starting with ${flatDesign.pieces?.length || 0} pieces and ${flatDesign.connections?.length || 0} connections`);
-  console.log(`[ORIGIN] flattenDesign: Piece GUIDs in array:`, flatDesign.pieces?.map(p => p.guid));
+  console.log(
+    `[ORIGIN] flattenDesign: Piece GUIDs in array:`,
+    flatDesign.pieces?.map((p) => p.guid),
+  );
   console.log(`[ORIGIN] flattenDesign: Piece GUIDs in map:`, Object.keys(pieceMap));
   if (flatDesign.connections && flatDesign.connections.length > 0) {
-    console.log(`[ORIGIN] flattenDesign: Connection details:`, flatDesign.connections.map(c => ({
-      guid: c.guid,
-      connected: c.connected.piece,
-      connecting: c.connecting.piece
-    })));
+    console.log(
+      `[ORIGIN] flattenDesign: Connection details:`,
+      flatDesign.connections.map((c) => ({
+        guid: c.guid,
+        connected: c.connected.piece,
+        connecting: c.connecting.piece,
+      })),
+    );
   }
 
   const cy = cytoscape({
@@ -3412,11 +3418,7 @@ export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] 
 /**
  * Flattens the file tree respecting expansion state.
  */
-export const flattenFileTree = (
-  nodes: FileTreeNode[],
-  level: number = 0,
-  expandedPaths: Set<string> = new Set()
-): Array<FileTreeNode & { level: number; isExpanded: boolean }> => {
+export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expandedPaths: Set<string> = new Set()): Array<FileTreeNode & { level: number; isExpanded: boolean }> => {
   const result: Array<FileTreeNode & { level: number; isExpanded: boolean }> = [];
 
   nodes.forEach((node) => {

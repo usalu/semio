@@ -125,7 +125,7 @@ const AnimatedCursor: FC<AnimatedCursorProps> = ({ position, action }) => {
       </svg>
       {action === "click" && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-8 h-8 rounded-full bg-primary/30 animate-ping" />
+          <div className="w-8 h-small rounded-full bg-primary/30 animate-ping" />
         </div>
       )}
     </div>
@@ -141,7 +141,7 @@ interface MilestoneTooltipProps {
 
 const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10001] bg-panel border rounded-lg shadow-lg p-4 max-w-md pointer-events-none">
+    <div className="fixed top-[1rem] left-1/2 -translate-x-1/2 z-[10001] bg-panel border rounded-lg shadow-lg p-[1rem] max-w-md pointer-events-none">
       <h3 className="font-medium text-sm mb-1">{milestone.title}</h3>
       {milestone.description && <p className="text-xs text-muted">{milestone.description}</p>}
     </div>

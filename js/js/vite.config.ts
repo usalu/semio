@@ -56,7 +56,7 @@ export default defineConfig(async () => {
           rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
           providerImportSource: "@mdx-js/react",
         }),
-        enforce: 'pre',
+        enforce: "pre",
       },
       react(),
       wasm(),

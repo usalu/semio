@@ -47,7 +47,6 @@ import datetime
 import difflib
 import enum
 import functools
-import inspect
 import io
 import json
 import logging
@@ -285,148 +284,26 @@ class NotFound(ClientError, abc.ABC):
     """🔍 The base for not found errors."""
 
 
-class PortNotFound(NotFound):
-    def __init__(self, parent: "Type", id: "PortId") -> None:
-        self.parent = parent
-        self.id = id
-
-    def __str__(self):
-        variant = f", {self.parent.variant}" if self.parent.variant else ""
-        return f"🔍 Couldn't find the port ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
-
-
-class TypeNotFound(NotFound):
-    def __init__(self, id: "TypeId") -> None:
-        self.id = id
-
-    def __str__(self):
-        variant = f", {self.id.variant}" if self.id.variant else ""
-        return f"🔍 Couldn't find the type ({self.id.name}{variant})."
-
-
-# class DesignNotFound(NotFound):
-
-#     def __init__(self, name: str, variant: str = "") -> None:
-#         self.name = name
-#         self.variant = variant
-
-#     def __str__(self):
-#         variant = f", {self.variant}" if self.variant else ""
-#         return f"🔍 Couldn't find the design ({self.name}{variant})."
-
-
-class KitNotFound(NotFound):
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
-
-
-class NoKitToDelete(KitNotFound):
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
-
-
-class KitZipDoesNotContainSemioFolder(KitNotFound):
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
-
-
-class OnlyRemoteKitsCanBeCached(ClientError):
-    def __init__(self, nonRemoteUri: str) -> None:
-        self.nonRemoteUri = nonRemoteUri
-
-    def __str__(self):
-        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
-
-
-class KitUriNotValid(ClientError, abc.ABC):
-    """🆔 The base for all kit uri not valid errors."""
-
-
-class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
-    """📂 The base for all local kit uri not valid errors."""
-
-
-class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
-
-
-class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is not a directory."
-
-
 class SpecificationError(ClientError, abc.ABC):
-    """🚫 The base for all specification errors."""
+    """📋 The base for all specification errors."""
 
 
 class NoParentAssigned(SpecificationError, abc.ABC):
     """👪 The base for all no parent assigned errors."""
 
 
-class NoRepresentationAssigned(NoParentAssigned):
-    def __str__(self):
-        return "👪 The entity has no parent representation assigned."
-
-
-class NoTypeAssigned(NoParentAssigned):
-    def __str__(self):
-        return "👪 The entity has no parent type assigned."
-
-
-class NoDesignAssigned(NoParentAssigned):
-    def __str__(self):
-        return "👪 The entity has no parent design assigned."
-
-
-class NoTypeOrDesignAssigned(NoTypeAssigned, NoDesignAssigned):
+class NoTypeOrDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent type or design assigned."
 
 
-class NoKitAssigned(NoParentAssigned):
+class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
     def __str__(self):
-        return "👪 The entity has no parent kit assigned."
-
-
-class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoRepresentationAssigned, NoTypeAssigned, NoDesignAssigned, NoKitAssigned):
-    def __str__(self):
-        return "👪 The entity has no parent representation, port, type, piece, connection, design or kit assigned."
+        return "👪 The entity has no parent representation, port, type, piece, connection, design, kit or folder assigned."
 
 
 class AlreadyExists(SpecificationError, abc.ABC):
     """♊ The entity already exists in the store."""
-
-
-class KitAlreadyExists(AlreadyExists, abc.ABC):
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self) -> str:
-        return f"♊ A kit under uri ({self.uri}) already exists."
-
-
-class TypeHasNotAllUsedPorts(SpecificationError):
-    def __init__(self, missingPorts: set[str]) -> None:
-        self.missingPorts = missingPorts
-
-    def __str__(self) -> str:
-        return f"🚫 A design is using some ports of the type. The new type is missing the following ports: {', '.join(self.missingPorts)}."
 
 
 class Semio(sqlmodel.SQLModel, table=True):
@@ -550,7 +427,6 @@ class Entity(Model, abc.ABC):
     def update(self, other: "Entity") -> "Entity":
         """🔄 Update the props of the entity."""
         return self
-        return self
 
 
 class Table(Model, abc.ABC):
@@ -565,6 +441,86 @@ class TableEntity(Entity, Table, abc.ABC):
 
 
 # endregion Primitives
+
+# region Graphql
+
+
+class Node(graphene_pydantic.PydanticObjectType):
+    """A base class for all nodes that are not a table in the database."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def __init_subclass_with_meta__(cls, model=None, **options):
+        if "name" not in options:
+            options["name"] = model.__name__
+
+        super().__init_subclass_with_meta__(model=model, **options)
+
+
+class InputNode(graphene_pydantic.PydanticInputObjectType):
+    """A base class for all input nodes."""
+
+    class Meta:
+        abstract = True
+
+
+class RelayNode(graphene.relay.Node):
+    class Meta:
+        name = "Node"
+
+    @staticmethod
+    def to_global_id(type_, id):
+        return id
+
+    @staticmethod
+    def get_node_from_global_id(info, global_id, only_type=None):
+        entity = get(global_id)
+        return entity
+
+
+class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
+    """A base class for all nodes that are a table in the database.
+    It automatically excludes the fields that are defined in the table.
+    Resolvers to all @properties are added.
+    Child relationships are by default included."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def __init_subclass_with_meta__(cls, model=None, **options):
+        excludedFields = tuple(k for k, v in model.model_fields.items() if v.exclude)
+        if "exclude_fields" in options:
+            options["exclude_fields"] += excludedFields
+        else:
+            options["exclude_fields"] = excludedFields
+
+        super().__init_subclass_with_meta__(model=model, **options)
+
+
+class TableEntityNode(TableNode):
+    """A base class for all nodes that are a table in the database and are entities.
+    It automatically complies to the Relay Node interface."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def __init_subclass_with_meta__(cls, model=None, **options):
+        if "interfaces" not in options:
+            options["interfaces"] = (RelayNode,)
+
+        def resolve_id(self, info):
+            return self.guid()
+
+        setattr(cls, "resolve_id", resolve_id)
+
+        super().__init_subclass_with_meta__(model=model, **options)
+
+
+# endregion Graphql
 
 # region Domain
 
@@ -632,34 +588,38 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     location: typing.Optional["Location"] = sqlmodel.Relationship(back_populates="attributes")
     benchmarkPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmarks.id")), default=None, exclude=True)
     benchmark: typing.Optional["Benchmark"] = sqlmodel.Relationship(back_populates="attributes")
+    folderPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folders.id")), default=None, exclude=True)
+    folder: typing.Optional["Folder"] = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
             """
         (
-            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL AND folder_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NOT NULL)
         )
         """,
             name="ck_attributes_parent_set",
@@ -667,7 +627,7 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
     )
 
-    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", None]:
+    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", "Folder", None]:
         if self.representation is not None:
             return self.representation
         if self.port is not None:
@@ -692,10 +652,22 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
             return self.location
         if self.benchmark is not None:
             return self.benchmark
+        if self.folder is not None:
+            return self.folder
         raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         return self.name
+
+
+class AttributeNode(TableEntityNode):
+    class Meta:
+        model = Attribute
+
+
+class AttributeInputNode(InputNode):
+    class Meta:
+        model = AttributeInput
 
 
 # endregion Attribute
@@ -736,98 +708,6 @@ class Concept(TagOrderField, TagNameField, Table, table=True):
 
 
 # endregion Concept
-
-# region Representation
-# https://github.com/usalu/semio-representation-
-
-
-class RepresentationUrlField(RealField, abc.ABC):
-    url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
-
-
-class RepresentationDescriptionField(RealField, abc.ABC):
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class RepresentationTagsField(MaskedField, abc.ABC):
-    tags: list[str] = sqlmodel.Field(default_factory=list)
-
-
-class RepresentationId(RepresentationTagsField, Id):
-    pass
-
-
-class RepresentationProps(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Props):
-    pass
-
-
-class RepresentationInput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Input):
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
-
-
-class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, Context):
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
-
-
-class RepresentationOutput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Output):
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
-
-class Representation(RepresentationDescriptionField, RepresentationUrlField, TableEntity, table=True):
-    PLURAL = "representations"
-    __tablename__ = "representations"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    tags_: list[Tag] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
-    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="representations")
-
-    @property
-    def tags(self: "Representation") -> list[str]:
-        return [tag.name for tag in sorted(self.tags_, key=lambda x: x.order)]
-
-    @tags.setter
-    def tags(self: "Representation", tags: list[str]):
-        self.tags_ = [Tag(name=tag, order=i) for i, tag in enumerate(tags)]
-
-    def parent(self: "Representation") -> "Type":
-        if self.type is None:
-            raise NoTypeAssigned()
-        return self.type
-
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
-    @classmethod
-    def parse(cls, input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
-        if input is None:
-            return cls(url="")
-        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = RepresentationProps.model_validate(obj)
-        entity = cls(**props.model_dump())
-        try:
-            entity.tags = obj["tags"]
-        except KeyError:
-            pass
-        try:
-            entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
-        except KeyError:
-            pass
-        return entity
-
-    def dump(self) -> "RepresentationOutput":
-        entity = {**RepresentationProps.model_validate(self).model_dump()}
-        #  TODO: Fix bug with tags not being dumped correctly.
-        # Probably some sqlmodel issue with transient objects that are never written to the database.
-        # 'str' object has no attribute 'order'
-        # entity["tags"] = self.tags
-        entity["attributes"] = [q.dump() for q in self.attributes]
-        return RepresentationOutput(**entity)
-
-    # TODO: Automatic derive from Id model.
-    def idMembers(self) -> RecursiveAnyList:
-        return [self.tags]
-
-
-# endregion Representation
 
 # region Coord
 # https://github.com/usalu/semio-coord-
@@ -875,6 +755,16 @@ class CoordOutput(Coord, Output):
 
 class CoordPrediction(Coord, Prediction):
     pass
+
+
+class CoordNode(Node):
+    class Meta:
+        model = Coord
+
+
+class CoordInputNode(InputNode):
+    class Meta:
+        model = CoordInput
 
 
 # endregion Coord
@@ -937,6 +827,20 @@ class PointContext(Point, Context):
 
 class PointOutput(Point, Output):
     pass
+
+
+class PointPrediction(Point, Prediction):
+    pass
+
+
+class PointNode(Node):
+    class Meta:
+        model = Point
+
+
+class PointInputNode(InputNode):
+    class Meta:
+        model = PointInput
 
 
 # endregion Point
@@ -1037,6 +941,20 @@ class VectorContext(Vector, Context):
 
 class VectorOutput(Vector, Output):
     pass
+
+
+class VectorPrediction(Vector, Prediction):
+    pass
+
+
+class VectorNode(Node):
+    class Meta:
+        model = Vector
+
+
+class VectorInputNode(InputNode):
+    class Meta:
+        model = VectorInput
 
 
 # endregion Vector
@@ -1204,7 +1122,804 @@ class Plane(Table, table=True):
         return PlaneOutput(**entity)
 
 
+class PlaneNode(TableNode):
+    class Meta:
+        model = Plane
+
+
+class PlaneInputNode(InputNode):
+    class Meta:
+        model = PlaneInput
+
+
 # endregion Plane
+
+# region Location
+# https://github.com/usalu/semio-location-
+
+
+class LocationLongitudeField(RealField, abc.ABC):
+    longitude: float = sqlmodel.Field()
+
+
+class LocationLatitudeField(RealField, abc.ABC):
+    latitude: float = sqlmodel.Field()
+
+
+class Location(LocationLatitudeField, LocationLongitudeField, TableEntity, table=True):
+    PLURAL = "locations"
+    __tablename__ = "locations"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
+
+
+class LocationInput(Location, Input):
+    pass
+
+
+class LocationOutput(Location, Output):
+    pass
+
+
+class LocationContext(Location, Context):
+    pass
+
+
+class LocationPrediction(Location, Prediction):
+    pass
+
+
+class LocationNode(Node):
+    class Meta:
+        model = Location
+
+
+class LocationInputNode(InputNode):
+    class Meta:
+        model = LocationInput
+
+
+# endregion Location
+
+# region Author
+# https://github.com/usalu/semio-author-
+
+
+class AuthorNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class AuthorEmailField(RealField, abc.ABC):
+    email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class AuthorRankField(RealField, abc.ABC):
+    rank: int = sqlmodel.Field(default=0)
+
+
+class AuthorId(AuthorEmailField, Id):
+    pass
+
+
+class AuthorProps(AuthorEmailField, AuthorNameField, Props):
+    pass
+
+
+class AuthorInput(AuthorEmailField, AuthorNameField, Input):
+    pass
+
+
+class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
+    pass
+
+
+class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, table=True):
+    PLURAL = "authors"
+    __tablename__ = "authors"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),)
+
+    def parent(self) -> "Kit":
+        if self.kit is not None:
+            return self.kit
+        raise NoKitAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return self.email
+
+
+class AuthorNode(TableEntityNode):
+    class Meta:
+        model = Author
+
+
+class AuthorInputNode(InputNode):
+    class Meta:
+        model = AuthorInput
+
+
+# endregion Author
+
+# region ArtifactAuthor
+
+
+class ArtifactAuthorEmailField(RealField, abc.ABC):
+    author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
+    PLURAL = "artifact_authors"
+    __tablename__ = "artifact_authors"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="artifact_authors")
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="artifact_authors")
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)", name="ck_artifact_authors_parent_set"),
+        sqlalchemy.UniqueConstraint("author_email", "type_id", "design_id", name="uq_artifact_authors_email_type_id_design_id"),
+    )
+
+    def parent(self) -> typing.Union["Type", "Design", None]:
+        if self.type is not None:
+            return self.type
+        if self.design is not None:
+            return self.design
+        raise NoTypeOrDesignAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return [self.author_email, self.type.idMembers() if self.type else self.design.idMembers()]
+
+
+# endregion ArtifactAuthor
+
+# region File
+# https://github.com/usalu/semio-file-
+
+
+class FileGuidField(RealField, abc.ABC):
+    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class FileNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class FileRemoteField(RealField, abc.ABC):
+    remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class FileFolderField(RealField, abc.ABC):
+    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class FileSizeField(RealField, abc.ABC):
+    size: typing.Optional[int] = sqlmodel.Field(default=None)
+
+
+class FileHashField(RealField, abc.ABC):
+    hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+
+
+class FileCreatedAtField(RealField, abc.ABC):
+    createdAt: datetime.datetime = sqlmodel.Field()
+
+
+class FileCreatedByField(RealField, abc.ABC):
+    createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FileUpdatedAtField(RealField, abc.ABC):
+    updatedAt: datetime.datetime = sqlmodel.Field()
+
+
+class FileUpdatedByField(RealField, abc.ABC):
+    updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FileId(FileGuidField, Id):
+    pass
+
+
+class FileProps(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Props):
+    pass
+
+
+class FileInput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Input):
+    pass
+
+
+class FileContext(FileNameField, FileGuidField, Context):
+    pass
+
+
+class FileOutput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Output):
+    pass
+
+
+class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, TableEntity, table=True):
+    PLURAL = "files"
+    __tablename__ = "files"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="files_")
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_files_guid_kit_id"),)
+
+    def parent(self) -> "Kit":
+        if self.kit is not None:
+            return self.kit
+        raise NoKitAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return self.guid
+
+
+# endregion File
+
+# region Folder
+
+
+class FolderGuidField(RealField, abc.ABC):
+    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class FolderNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class FolderParentField(RealField, abc.ABC):
+    parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FolderDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class FolderCreatedAtField(RealField, abc.ABC):
+    createdAt: datetime.datetime = sqlmodel.Field()
+
+
+class FolderCreatedByField(RealField, abc.ABC):
+    createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FolderUpdatedAtField(RealField, abc.ABC):
+    updatedAt: datetime.datetime = sqlmodel.Field()
+
+
+class FolderUpdatedByField(RealField, abc.ABC):
+    updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class FolderId(FolderGuidField, Id):
+    pass
+
+
+class FolderProps(FolderUpdatedByField, FolderUpdatedAtField, FolderCreatedByField, FolderCreatedAtField, FolderDescriptionField, FolderParentField, FolderNameField, FolderGuidField, Props):
+    pass
+
+
+class FolderInput(FolderUpdatedByField, FolderUpdatedAtField, FolderCreatedByField, FolderCreatedAtField, FolderDescriptionField, FolderParentField, FolderNameField, FolderGuidField, Input):
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+
+
+class FolderContext(FolderNameField, FolderGuidField, Context):
+    pass
+
+
+class FolderOutput(FolderUpdatedByField, FolderUpdatedAtField, FolderCreatedByField, FolderCreatedAtField, FolderDescriptionField, FolderParentField, FolderNameField, FolderGuidField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Folder(FolderUpdatedByField, FolderUpdatedAtField, FolderCreatedByField, FolderCreatedAtField, FolderDescriptionField, FolderParentField, FolderNameField, FolderGuidField, TableEntity, table=True):
+    PLURAL = "folders"
+    __tablename__ = "folders"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="folders_")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="folder", cascade_delete=True)
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_folders_guid_kit_id"),)
+
+    def parent(self) -> "Kit":
+        if self.kit is not None:
+            return self.kit
+        raise NoKitAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return self.guid
+
+    @classmethod
+    def parse(cls, input: str | dict | FolderInput | typing.Any | None) -> "Folder":
+        if input is None:
+            return cls()
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
+        props = FolderProps.model_validate(obj)
+        entity = cls(**props.model_dump())
+        try:
+            entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
+        except KeyError:
+            pass
+        return entity
+
+    def dump(self) -> "FolderOutput":
+        entity = {**FolderProps.model_validate(self).model_dump()}
+        entity["attributes"] = [q.dump() for q in self.attributes]
+        return FolderOutput(**entity)
+
+    def empty(self) -> "Folder":
+        props = FolderProps()
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        self.attributes = []
+        return self
+
+    def update(self, other: "Folder", empty: bool = False) -> "Folder":
+        if empty:
+            self.empty()
+        props = FolderProps.model_validate(other)
+        for key, value in props.model_dump().items():
+            setattr(self, key, value)
+        return self
+
+
+# endregion Folder
+
+# region Benchmark
+
+
+class BenchmarkNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class BenchmarkIconField(RealField, abc.ABC):
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class BenchmarkMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class BenchmarkMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=False)
+
+
+class BenchmarkMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class BenchmarkMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=False)
+
+
+class BenchmarkId(BenchmarkNameField, Id):
+    pass
+
+
+class BenchmarkProps(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Props):
+    pass
+
+
+class BenchmarkInput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Input):
+    pass
+
+
+class BenchmarkOutput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Output):
+    pass
+
+
+class Benchmark(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, TableEntity, table=True):
+    PLURAL = "benchmarks"
+    __tablename__ = "benchmarks"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
+    quality: typing.Optional[Quality] = sqlmodel.Relationship(back_populates="benchmarks")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
+
+
+# endregion Benchmark
+
+# region Quality
+
+
+class QualityKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
+
+
+class QualityNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class QualityUriField(RealField, abc.ABC):
+    uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
+
+
+class QualityScalableField(RealField, abc.ABC):
+    scalable: bool = sqlmodel.Field(default=False)
+
+
+class QualityKindField(RealField, abc.ABC):
+    kind: int = sqlmodel.Field(default=0)
+
+
+class QualitySiField(RealField, abc.ABC):
+    si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityImperialField(RealField, abc.ABC):
+    imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class QualityMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=True)
+
+
+class QualityMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class QualityMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=True)
+
+
+class QualityDefaultField(RealField, abc.ABC):
+    default: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class QualityFormulaField(RealField, abc.ABC):
+    formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
+
+
+class QualityCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class QualityUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class QualityId(QualityKeyField, Id):
+    pass
+
+
+class QualityProps(
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    Props,
+):
+    pass
+
+
+class QualityInput(
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    Input,
+):
+    pass
+
+
+class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
+    pass
+
+
+class QualityOutput(
+    QualityUpdatedField,
+    QualityCreatedField,
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    Output,
+):
+    benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Quality(
+    QualityUpdatedField,
+    QualityCreatedField,
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    TableEntity,
+    table=True,
+):
+    PLURAL = "qualities"
+    __tablename__ = "qualities"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
+
+    benchmarks: list["Benchmark"] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("kind >= 0 AND kind <= 63", name="ck_qualities_kind_range"),
+        sqlalchemy.UniqueConstraint("key", "kit_id", name="uq_qualities_key_kit_id"),
+    )
+
+
+# endregion Quality
+
+# region Prop
+
+
+class PropKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class PropValueField(RealField, abc.ABC):
+    value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
+
+
+class PropUnitField(RealField, abc.ABC):
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class PropCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class PropUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class PropId(PropKeyField, Id):
+    pass
+
+
+class PropProps(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Props):
+    pass
+
+
+class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
+    pass
+
+
+class PropOutput(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, TableEntity, table=True):
+    PLURAL = "props"
+    __tablename__ = "props"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="props")
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="props")
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="props")
+
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="prop", cascade_delete=True)
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint(
+            """
+        (
+            (port_id IS NOT NULL AND type_id IS NULL AND design_id IS NULL)
+        OR
+            (port_id IS NULL AND type_id IS NOT NULL AND design_id IS NULL)
+        OR
+            (port_id IS NULL AND type_id IS NULL AND design_id IS NOT NULL)
+        )
+        """,
+            name="ck_props_parent_set",
+        ),
+    )
+
+    def parent(self) -> typing.Union["Port", "Type", "Design"]:
+        if self.port is not None:
+            return self.port
+        if self.type is not None:
+            return self.type
+        if self.design is not None:
+            return self.design
+        raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return self.key
+
+    @classmethod
+    def parse(cls, input: str | dict | PropInput | typing.Any | None) -> "Prop":
+        if input is None:
+            return cls()
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
+        props = PropProps.model_validate(obj)
+        entity = cls(**props.model_dump())
+        try:
+            entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
+        except KeyError:
+            pass
+        return entity
+
+    def dump(self) -> "PropOutput":
+        entity = {**PropProps.model_validate(self).model_dump()}
+        entity["attributes"] = [q.dump() for q in self.attributes]
+        return PropOutput(**entity)
+
+
+# endregion Prop
+
+# region Representation
+# https://github.com/usalu/semio-representation-
+
+
+class RepresentationUrlField(RealField, abc.ABC):
+    url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
+
+
+class RepresentationFileField(RealField, abc.ABC):
+    file: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class RepresentationDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class RepresentationTagsField(MaskedField, abc.ABC):
+    tags: list[str] = sqlmodel.Field(default_factory=list)
+
+
+class RepresentationId(RepresentationTagsField, Id):
+    pass
+
+
+class RepresentationProps(RepresentationTagsField, RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, Props):
+    pass
+
+
+class RepresentationInput(RepresentationTagsField, RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, Input):
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+
+
+class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, Context):
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+
+
+class RepresentationOutput(RepresentationTagsField, RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Representation(RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, TableEntity, table=True):
+    PLURAL = "representations"
+    __tablename__ = "representations"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    tags_: list[Tag] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="representations")
+
+    @property
+    def tags(self: "Representation") -> list[str]:
+        return [tag.name for tag in sorted(self.tags_, key=lambda x: x.order)]
+
+    @tags.setter
+    def tags(self: "Representation", tags: list[str]):
+        self.tags_ = [Tag(name=tag, order=i) for i, tag in enumerate(tags)]
+
+    def parent(self: "Representation") -> "Type":
+        if self.type is None:
+            raise NoTypeAssigned()
+        return self.type
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(cls, input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
+        if input is None:
+            return cls(url="", file="")
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
+        props = RepresentationProps.model_validate(obj)
+        entity = cls(**props.model_dump())
+        try:
+            entity.tags = obj["tags"]
+        except KeyError:
+            pass
+        try:
+            entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
+        except KeyError:
+            pass
+        return entity
+
+    def dump(self) -> "RepresentationOutput":
+        entity = {**RepresentationProps.model_validate(self).model_dump()}
+        #  TODO: Fix bug with tags not being dumped correctly.
+        # Probably some sqlmodel issue with transient objects that are never written to the database.
+        # 'str' object has no attribute 'order'
+        # entity["tags"] = self.tags
+        entity["attributes"] = [q.dump() for q in self.attributes]
+        return RepresentationOutput(**entity)
+
+    # TODO: Automatic derive from Id model.
+    def idMembers(self) -> RecursiveAnyList:
+        return [self.tags]
+
+
+class NoRepresentationAssigned(NoParentAssigned):
+    def __str__(self):
+        return "👪 The entity has no parent representation assigned."
+
+
+class RepresentationNode(TableEntityNode):
+    class Meta:
+        model = Representation
+        excludedFields = ("tags_",)
+
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+
+    # def resolve_attributes(self, info):
+    #     return self.attributes
+
+
+class RepresentationInputNode(InputNode):
+    class Meta:
+        model = RepresentationInput
+
+
+# endregion Representation
+
+# region Port
+# https://github.com/usalu/semio-port-
+
 
 # region CompatibleFamily
 # https://github.com/usalu/semio-compatiblefamily-
@@ -1226,9 +1941,6 @@ class CompatibleFamily(CompatibleFamilyOrderField, CompatibleFamilyNameField, Ta
 
 
 # endregion CompatibleFamily
-
-# region Port
-# https://github.com/usalu/semio-port-
 
 
 class PortIdField(MaskedField, abc.ABC):
@@ -1383,215 +2095,44 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
         return self.id_
 
 
+class PortNotFound(NotFound):
+    def __init__(self, parent: "Type", id: "PortId") -> None:
+        self.parent = parent
+        self.id = id
+
+    def __str__(self):
+        variant = f", {self.parent.variant}" if self.parent.variant else ""
+        return f"🔍 Couldn't find the port ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
+
+
+class PortNode(TableEntityNode):
+    class Meta:
+        model = Port
+        exclude_fields = ("connecteds", "connectings")
+
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+
+    # def resolve_attributes(self, info):
+    #     return self.attributes
+
+
+class PortInputNode(InputNode):
+    class Meta:
+        model = PortInput
+
+
+class PortIdInputNode(InputNode):
+    class Meta:
+        model = PortId
+
+
 # endregion Port
-
-# region Author
-# https://github.com/usalu/semio-author-
-
-
-class AuthorNameField(RealField, abc.ABC):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class AuthorEmailField(RealField, abc.ABC):
-    email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
-
-class AuthorRankField(RealField, abc.ABC):
-    rank: int = sqlmodel.Field(default=0)
-
-
-class AuthorId(AuthorEmailField, Id):
-    pass
-
-
-class AuthorProps(AuthorEmailField, AuthorNameField, Props):
-    pass
-
-
-class AuthorInput(AuthorEmailField, AuthorNameField, Input):
-    pass
-
-
-class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
-    pass
-
-
-class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, table=True):
-    PLURAL = "authors"
-    __tablename__ = "authors"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
-
-    __table_args__ = (sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),)
-
-    def parent(self) -> "Kit":
-        if self.kit is not None:
-            return self.kit
-        raise NoKitAssigned()
-
-    def idMembers(self) -> RecursiveAnyList:
-        return self.email
-
-
-# endregion Author
-
-# region ArtifactAuthor
-
-
-class ArtifactAuthorEmailField(RealField, abc.ABC):
-    author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
-
-class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
-    PLURAL = "artifact_authors"
-    __tablename__ = "artifact_authors"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="artifact_authors")
-    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="artifact_authors")
-
-    __table_args__ = (
-        sqlalchemy.CheckConstraint("(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)", name="ck_artifact_authors_parent_set"),
-        sqlalchemy.UniqueConstraint("author_email", "type_id", "design_id", name="uq_artifact_authors_email_type_id_design_id"),
-    )
-
-    def parent(self) -> typing.Union["Type", "Design", None]:
-        if self.type is not None:
-            return self.type
-        if self.design is not None:
-            return self.design
-        raise NoTypeOrDesignAssigned()
-
-    def idMembers(self) -> RecursiveAnyList:
-        return [self.author_email, self.type.idMembers() if self.type else self.design.idMembers()]
-
-
-# endregion ArtifactAuthor
-
-# region File
-# https://github.com/usalu/semio-file-
-
-
-class FileGuidField(RealField, abc.ABC):
-    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
-
-class FileNameField(RealField, abc.ABC):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class FileRemoteField(RealField, abc.ABC):
-    remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
-
-class FileFolderField(RealField, abc.ABC):
-    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
-
-class FileSizeField(RealField, abc.ABC):
-    size: typing.Optional[int] = sqlmodel.Field(default=None)
-
-
-class FileHashField(RealField, abc.ABC):
-    hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
-
-
-class FileCreatedAtField(RealField, abc.ABC):
-    createdAt: datetime.datetime = sqlmodel.Field()
-
-
-class FileCreatedByField(RealField, abc.ABC):
-    createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
-
-
-class FileUpdatedAtField(RealField, abc.ABC):
-    updatedAt: datetime.datetime = sqlmodel.Field()
-
-
-class FileUpdatedByField(RealField, abc.ABC):
-    updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
-
-
-class FileId(FileGuidField, Id):
-    pass
-
-
-class FileProps(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Props):
-    pass
-
-
-class FileInput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Input):
-    pass
-
-
-class FileContext(FileNameField, FileGuidField, Context):
-    pass
-
-
-class FileOutput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Output):
-    pass
-
-
-class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, TableEntity, table=True):
-    PLURAL = "files"
-    __tablename__ = "files"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="files_")
-
-    __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_files_guid_kit_id"),)
-
-    def parent(self) -> "Kit":
-        if self.kit is not None:
-            return self.kit
-        raise NoKitAssigned()
-
-    def idMembers(self) -> RecursiveAnyList:
-        return self.guid
-
-
-# endregion File
-
-# region Location
-# https://github.com/usalu/semio-location-
-
-
-class LocationLongitudeField(RealField, abc.ABC):
-    longitude: float = sqlmodel.Field()
-
-
-class LocationLatitudeField(RealField, abc.ABC):
-    latitude: float = sqlmodel.Field()
-
-
-class Location(LocationLatitudeField, LocationLongitudeField, TableEntity, table=True):
-    PLURAL = "locations"
-    __tablename__ = "locations"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
-
-
-class LocationInput(Location, Input):
-    pass
-
-
-class LocationOutput(Location, Output):
-    pass
-
-
-class LocationContext(Location, Context):
-    pass
-
-
-class LocationPrediction(Location, Prediction):
-    pass
-
-
-# endregion Location
 
 # region Type
 # https://github.com/usalu/semio-type-
@@ -1615,6 +2156,18 @@ class TypeImageField(RealField, abc.ABC):
 
 class TypeVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class TypeParentField(RealField, abc.ABC):
+    parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class TypeIsAbstractField(RealField, abc.ABC):
+    is_abstract: bool = sqlmodel.Field(default=False)
+
+
+class TypeFolderField(RealField, abc.ABC):
+    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class TypeStockField(RealField, abc.ABC):
@@ -1653,23 +2206,31 @@ class TypeId(TypeVariantField, TypeNameField, Id):
     pass
 
 
-class TypeProps(TypeUnitField, TypeLocationField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Props):
+class TypeProps(TypeUnitField, TypeLocationField, TypeFolderField, TypeIsAbstractField, TypeParentField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Props):
     pass
 
 
 class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Input):
+    parent: typing.Optional[str] = sqlmodel.Field(default=None)
+    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
+    folder: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
+    props: list[PropInput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Output):
+    parent: typing.Optional[str] = sqlmodel.Field(default=None)
+    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
+    folder: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
+    props: list[PropOutput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
@@ -1682,7 +2243,25 @@ class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFi
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableField, TypeScalableField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
+class Type(
+    TypeUpdatedField,
+    TypeCreatedField,
+    TypeUnitField,
+    TypeMirrborableField,
+    TypeScalableField,
+    TypeVirtualField,
+    TypeStockField,
+    TypeVariantField,
+    TypeImageField,
+    TypeIconField,
+    TypeDescriptionField,
+    TypeNameField,
+    TypeFolderField,
+    TypeIsAbstractField,
+    TypeParentField,
+    TableEntity,
+    table=True,
+):
     PLURAL = "types"
     __tablename__ = "types"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -1694,6 +2273,8 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
     representations: list[Representation] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     ports: list[Port] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+
+    props: list["Prop"] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     artifact_authors: list[ArtifactAuthor] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
@@ -1780,6 +2361,11 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         except KeyError:
             pass
         try:
+            props = [Prop.parse(p) for p in obj["props"]]
+            entity.props = props
+        except KeyError:
+            pass
+        try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
         except KeyError:
             pass
@@ -1800,6 +2386,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         entity = {**TypeProps.model_validate(self).model_dump()}
         entity["representations"] = [r.dump() for r in self.representations]
         entity["ports"] = [p.dump() for p in self.ports]
+        entity["props"] = [p.dump() for p in self.props]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = self.authors
         entity["concepts"] = self.concepts
@@ -1827,7 +2414,85 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         return [self.name, self.variant]
 
 
+class TypeNotFound(NotFound):
+    def __init__(self, id: "TypeId") -> None:
+        self.id = id
+
+    def __str__(self):
+        variant = f", {self.id.variant}" if self.id.variant else ""
+        return f"🔍 Couldn't find the type ({self.id.name}{variant})."
+
+
+class NoTypeAssigned(NoParentAssigned):
+    def __str__(self):
+        return "👪 The entity has no parent type assigned."
+
+
+class TypeHasNotAllUsedPorts(SpecificationError):
+    def __init__(self, missingPorts: set[str]) -> None:
+        self.missingPorts = missingPorts
+
+    def __str__(self) -> str:
+        return f"🚫 A design is using some ports of the type. The new type is missing the following ports: {', '.join(self.missingPorts)}."
+
+
+class TypeNode(TableEntityNode):
+    class Meta:
+        model = Type
+
+
+class TypeInputNode(InputNode):
+    class Meta:
+        model = TypeInput
+
+
+class TypeIdInputNode(InputNode):
+    class Meta:
+        model = TypeId
+
+
 # endregion Type
+
+# region Layer
+
+
+class LayerNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class LayerDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class LayerColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
+class LayerId(LayerNameField, Id):
+    pass
+
+
+class LayerProps(LayerColorField, LayerDescriptionField, LayerNameField, Props):
+    pass
+
+
+class LayerInput(LayerColorField, LayerDescriptionField, LayerNameField, Input):
+    pass
+
+
+class LayerOutput(LayerColorField, LayerDescriptionField, LayerNameField, Output):
+    pass
+
+
+class Layer(LayerColorField, LayerDescriptionField, LayerNameField, TableEntity, table=True):
+    PLURAL = "layers"
+    __tablename__ = "layers"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="layers")
+
+
+# endregion Layer
 
 # region Piece
 # https://github.com/usalu/semio-piece-
@@ -2030,7 +2695,74 @@ class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, Pie
         return self.id_
 
 
+class PieceNode(TableEntityNode):
+    class Meta:
+        model = Piece
+        exclude_fields = ("connecteds", "connectings")
+
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+
+class PieceInputNode(InputNode):
+    class Meta:
+        model = PieceInput
+
+    type = TypeIdInputNode()
+    designPiece = graphene.Field(lambda: DesignIdInputNode)
+
+
+class PieceIdInputNode(InputNode):
+    class Meta:
+        model = PieceId
+
+
 # endregion Piece
+
+# region Group
+
+
+class GroupNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class GroupDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class GroupColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
+class GroupId(GroupNameField, Id):
+    pass
+
+
+class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
+    pass
+
+
+class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
+    pass
+
+
+class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
+    pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
+    PLURAL = "groups"
+    __tablename__ = "groups"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="groups")
+
+
+# endregion Group
 
 # region Side
 # https://github.com/usalu/semio-side-
@@ -2071,6 +2803,37 @@ class SideOutput(Side, Output):
 
 class SidePrediction(Side, Prediction):
     pass
+
+
+class SideNode(Node):
+    class Meta:
+        model = Side
+
+    exclude_fields = ("piece", "port")
+
+    piece = graphene.NonNull(PieceNode)
+    designPiece = graphene.Field(PieceNode)
+    port = graphene.NonNull(PortNode)
+
+    def resolve_piece(self, info):
+        return self.piece
+
+    def resolve_designPiece(self, info):
+        return self.designPiece
+
+    def resolve_port(self, info):
+        return self.port
+
+
+class SideInputNode(InputNode):
+    class Meta:
+        model = SideInput
+
+    exclude_fields = ("piece", "port")
+
+    piece = graphene.NonNull(PieceIdInputNode)
+    designPiece = PieceIdInputNode()
+    port = graphene.NonNull(PortIdInputNode)
 
 
 # endregion Side
@@ -2349,7 +3112,93 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
         ]
 
 
+class ConnectionNode(TableEntityNode):
+    class Meta:
+        model = Connection
+        exclude_fields = (
+            "connectedPiece",
+            "connectedPort",
+            "connectingPiece",
+            "connectingPort",
+        )
+
+    connected = graphene.NonNull(lambda: SideNode)
+    connecting = graphene.NonNull(lambda: SideNode)
+
+    def resolve_connected(self, info):
+        return self.connected
+
+    def resolve_connecting(self, info):
+        return self.connecting
+
+
+class ConnectionInputNode(InputNode):
+    class Meta:
+        model = ConnectionInput
+
+
 # endregion Connection
+
+# region Stat
+
+
+class StatKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class StatUnitField(RealField, abc.ABC):
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class StatMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class StatMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=False)
+
+
+class StatMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class StatMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=False)
+
+
+class StatCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class StatUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class StatId(StatKeyField, Id):
+    pass
+
+
+class StatProps(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Props):
+    pass
+
+
+class StatInput(StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Input):
+    pass
+
+
+class StatOutput(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Output):
+    pass
+
+
+class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, TableEntity, table=True):
+    PLURAL = "stats"
+    __tablename__ = "stats"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="stats")
+
+
+# endregion Stat
 
 # region Design
 # https://github.com/usalu/semio-design-
@@ -2377,6 +3226,22 @@ class DesignVariantField(RealField, abc.ABC):
 
 class DesignViewField(RealField, abc.ABC):
     view: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class DesignParentField(RealField, abc.ABC):
+    parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class DesignIsAbstractField(RealField, abc.ABC):
+    is_abstract: bool = sqlmodel.Field(default=False)
+
+
+class DesignFolderField(RealField, abc.ABC):
+    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+
+
+class DesignActiveLayerField(RealField, abc.ABC):
+    activeLayer: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class DesignLocationField(MaskedField, abc.ABC):
@@ -2407,16 +3272,21 @@ class DesignId(DesignNameField, DesignVariantField, Id):
     pass
 
 
-class DesignProps(DesignUnitField, DesignViewField, DesignLocationField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Props):
+class DesignProps(
+    DesignUnitField, DesignViewField, DesignActiveLayerField, DesignFolderField, DesignIsAbstractField, DesignParentField, DesignLocationField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Props
+):
     pass
 
 
 class DesignInput(DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Input):
-    pass
-
+    parent: typing.Optional[str] = sqlmodel.Field(default=None)
+    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
+    folder: typing.Optional[str] = sqlmodel.Field(default=None)
+    activeLayer: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
+    props: list[PropInput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
@@ -2435,9 +3305,14 @@ class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, Design
 class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Output):
     pass
 
+    parent: typing.Optional[str] = sqlmodel.Field(default=None)
+    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
+    folder: typing.Optional[str] = sqlmodel.Field(default=None)
+    activeLayer: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
+    props: list[PropOutput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
@@ -2451,7 +3326,23 @@ class DesignPrediction(DesignDescriptionField, Prediction):
 
 
 class Design(
-    DesignNameField, DesignVariantField, DesignViewField, DesignDescriptionField, DesignIconField, DesignImageField, DesignUnitField, DesignScalableField, DesignMirrorableField, DesignUpdatedField, DesignCreatedField, TableEntity, table=True
+    DesignNameField,
+    DesignVariantField,
+    DesignViewField,
+    DesignDescriptionField,
+    DesignIconField,
+    DesignImageField,
+    DesignUnitField,
+    DesignScalableField,
+    DesignMirrorableField,
+    DesignUpdatedField,
+    DesignCreatedField,
+    DesignActiveLayerField,
+    DesignFolderField,
+    DesignIsAbstractField,
+    DesignParentField,
+    TableEntity,
+    table=True,
 ):
     PLURAL = "designs"
     __tablename__ = "designs"
@@ -2465,6 +3356,7 @@ class Design(
     groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    props: list["Prop"] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
@@ -2540,6 +3432,11 @@ class Design(
         except KeyError:
             pass
         try:
+            props = [Prop.parse(p) for p in obj["props"]]
+            entity.props = props
+        except KeyError:
+            pass
+        try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
         except KeyError:
@@ -2560,6 +3457,7 @@ class Design(
         entity = {**DesignProps.model_validate(self).model_dump()}
         entity["pieces"] = [p.dump() for p in self.pieces]
         entity["connections"] = [c.dump() for c in self.connections]
+        entity["props"] = [p.dump() for p in self.props]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = self.authors
         entity["concepts"] = self.concepts
@@ -2587,431 +3485,27 @@ class Design(
         return [self.name, self.variant]
 
 
+class NoDesignAssigned(NoParentAssigned):
+    def __str__(self):
+        return "👪 The entity has no parent design assigned."
+
+
+class DesignInputNode(InputNode):
+    class Meta:
+        model = DesignInput
+
+
+class DesignNode(TableEntityNode):
+    class Meta:
+        model = Design
+
+
+class DesignIdInputNode(InputNode):
+    class Meta:
+        model = DesignId
+
+
 # endregion Design
-
-# region Quality
-
-
-class QualityKeyField(RealField, abc.ABC):
-    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
-
-
-class QualityNameField(RealField, abc.ABC):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class QualityDescriptionField(RealField, abc.ABC):
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class QualityUriField(RealField, abc.ABC):
-    uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
-
-
-class QualityScalableField(RealField, abc.ABC):
-    scalable: bool = sqlmodel.Field(default=False)
-
-
-class QualityKindField(RealField, abc.ABC):
-    kind: int = sqlmodel.Field(default=0)
-
-
-class QualitySiField(RealField, abc.ABC):
-    si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
-class QualityImperialField(RealField, abc.ABC):
-    imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
-class QualityMinField(RealField, abc.ABC):
-    min: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class QualityMinExcludedField(RealField, abc.ABC):
-    min_excluded: bool = sqlmodel.Field(default=True)
-
-
-class QualityMaxField(RealField, abc.ABC):
-    max: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class QualityMaxExcludedField(RealField, abc.ABC):
-    max_excluded: bool = sqlmodel.Field(default=True)
-
-
-class QualityDefaultField(RealField, abc.ABC):
-    default: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class QualityFormulaField(RealField, abc.ABC):
-    formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
-
-
-class QualityCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
-
-class QualityUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
-
-class QualityId(QualityKeyField, Id):
-    pass
-
-
-class QualityProps(
-    QualityFormulaField,
-    QualityDefaultField,
-    QualityMaxExcludedField,
-    QualityMaxField,
-    QualityMinExcludedField,
-    QualityMinField,
-    QualityImperialField,
-    QualitySiField,
-    QualityKindField,
-    QualityScalableField,
-    QualityUriField,
-    QualityDescriptionField,
-    QualityNameField,
-    QualityKeyField,
-    Props,
-):
-    pass
-
-
-class QualityInput(
-    QualityFormulaField,
-    QualityDefaultField,
-    QualityMaxExcludedField,
-    QualityMaxField,
-    QualityMinExcludedField,
-    QualityMinField,
-    QualityImperialField,
-    QualitySiField,
-    QualityKindField,
-    QualityScalableField,
-    QualityUriField,
-    QualityDescriptionField,
-    QualityNameField,
-    QualityKeyField,
-    Input,
-):
-    pass
-
-
-class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
-    pass
-
-
-class QualityOutput(
-    QualityUpdatedField,
-    QualityCreatedField,
-    QualityFormulaField,
-    QualityDefaultField,
-    QualityMaxExcludedField,
-    QualityMaxField,
-    QualityMinExcludedField,
-    QualityMinField,
-    QualityImperialField,
-    QualitySiField,
-    QualityKindField,
-    QualityScalableField,
-    QualityUriField,
-    QualityDescriptionField,
-    QualityNameField,
-    QualityKeyField,
-    Output,
-):
-    benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
-
-class Quality(
-    QualityUpdatedField,
-    QualityCreatedField,
-    QualityFormulaField,
-    QualityDefaultField,
-    QualityMaxExcludedField,
-    QualityMaxField,
-    QualityMinExcludedField,
-    QualityMinField,
-    QualityImperialField,
-    QualitySiField,
-    QualityKindField,
-    QualityScalableField,
-    QualityUriField,
-    QualityDescriptionField,
-    QualityNameField,
-    QualityKeyField,
-    TableEntity,
-    table=True,
-):
-    PLURAL = "qualities"
-    __tablename__ = "qualities"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
-
-    benchmarks: list["Benchmark"] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
-
-    __table_args__ = (
-        sqlalchemy.CheckConstraint("kind >= 0 AND kind <= 63", name="ck_qualities_kind_range"),
-        sqlalchemy.UniqueConstraint("key", "kit_id", name="uq_qualities_key_kit_id"),
-    )
-
-
-# endregion Quality
-
-# region Benchmark
-
-
-class BenchmarkNameField(RealField, abc.ABC):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class BenchmarkIconField(RealField, abc.ABC):
-    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
-
-
-class BenchmarkMinField(RealField, abc.ABC):
-    min: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class BenchmarkMinExcludedField(RealField, abc.ABC):
-    min_excluded: bool = sqlmodel.Field(default=False)
-
-
-class BenchmarkMaxField(RealField, abc.ABC):
-    max: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class BenchmarkMaxExcludedField(RealField, abc.ABC):
-    max_excluded: bool = sqlmodel.Field(default=False)
-
-
-class BenchmarkId(BenchmarkNameField, Id):
-    pass
-
-
-class BenchmarkProps(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Props):
-    pass
-
-
-class BenchmarkInput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Input):
-    pass
-
-
-class BenchmarkOutput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Output):
-    pass
-
-
-class Benchmark(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, TableEntity, table=True):
-    PLURAL = "benchmarks"
-    __tablename__ = "benchmarks"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
-    quality: typing.Optional[Quality] = sqlmodel.Relationship(back_populates="benchmarks")
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
-
-
-# endregion Benchmark
-
-# region Prop
-
-
-class PropKeyField(RealField, abc.ABC):
-    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class PropValueField(RealField, abc.ABC):
-    value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
-
-
-class PropUnitField(RealField, abc.ABC):
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
-class PropCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
-
-class PropUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
-
-class PropId(PropKeyField, Id):
-    pass
-
-
-class PropProps(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Props):
-    pass
-
-
-class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
-    pass
-
-
-class PropOutput(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Output):
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
-
-class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, TableEntity, table=True):
-    PLURAL = "props"
-    __tablename__ = "props"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="props")
-
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="prop", cascade_delete=True)
-
-
-# endregion Prop
-
-# region Stat
-
-
-class StatKeyField(RealField, abc.ABC):
-    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class StatUnitField(RealField, abc.ABC):
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
-class StatMinField(RealField, abc.ABC):
-    min: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class StatMinExcludedField(RealField, abc.ABC):
-    min_excluded: bool = sqlmodel.Field(default=False)
-
-
-class StatMaxField(RealField, abc.ABC):
-    max: typing.Optional[float] = sqlmodel.Field(default=None)
-
-
-class StatMaxExcludedField(RealField, abc.ABC):
-    max_excluded: bool = sqlmodel.Field(default=False)
-
-
-class StatCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
-
-class StatUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
-
-class StatId(StatKeyField, Id):
-    pass
-
-
-class StatProps(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Props):
-    pass
-
-
-class StatInput(StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Input):
-    pass
-
-
-class StatOutput(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Output):
-    pass
-
-
-class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, TableEntity, table=True):
-    PLURAL = "stats"
-    __tablename__ = "stats"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="stats")
-
-
-# endregion Stat
-
-# region Layer
-
-
-class LayerNameField(RealField, abc.ABC):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class LayerDescriptionField(RealField, abc.ABC):
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class LayerColorField(RealField, abc.ABC):
-    color: str = sqlmodel.Field(default="", max_length=7)
-
-
-class LayerId(LayerNameField, Id):
-    pass
-
-
-class LayerProps(LayerColorField, LayerDescriptionField, LayerNameField, Props):
-    pass
-
-
-class LayerInput(LayerColorField, LayerDescriptionField, LayerNameField, Input):
-    pass
-
-
-class LayerOutput(LayerColorField, LayerDescriptionField, LayerNameField, Output):
-    pass
-
-
-class Layer(LayerColorField, LayerDescriptionField, LayerNameField, TableEntity, table=True):
-    PLURAL = "layers"
-    __tablename__ = "layers"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="layers")
-
-
-# endregion Layer
-
-# region Group
-
-
-class GroupNameField(RealField, abc.ABC):
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class GroupDescriptionField(RealField, abc.ABC):
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class GroupColorField(RealField, abc.ABC):
-    color: str = sqlmodel.Field(default="", max_length=7)
-
-
-class GroupId(GroupNameField, Id):
-    pass
-
-
-class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
-    pass
-
-
-class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
-    pass
-
-
-class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
-    pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
-
-class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
-    PLURAL = "groups"
-    __tablename__ = "groups"
-    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="groups")
-
-
-# endregion Group
 
 # region Kit
 # https://github.com/usalu/semio-kit-
@@ -3078,6 +3572,7 @@ class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, Ki
 
     types: list[TypeInput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
+    folders: list[FolderInput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -3095,6 +3590,7 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
 
     types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
+    folders: list[FolderOutput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -3106,6 +3602,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
     concepts_: list[Concept] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     files_: list[File] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    folders_: list[Folder] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
@@ -3118,6 +3615,14 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
     @concepts.setter
     def concepts(self: "Kit", concepts: list[str]):
         self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
+
+    @property
+    def folders(self: "Kit") -> list[Folder]:
+        return self.folders_
+
+    @folders.setter
+    def folders(self: "Kit", folders: list[Folder]):
+        self.folders_ = folders
 
     __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="uq_kits_uri"),)
 
@@ -3140,6 +3645,11 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         except KeyError:
             pass
         try:
+            folders = [Folder.parse(f) for f in obj["folders"]]
+            entity.folders = folders
+        except KeyError:
+            pass
+        try:
             concepts = obj["concepts"]
             entity.concepts = concepts
         except KeyError:
@@ -3151,6 +3661,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         entity["types"] = [t.dump() for t in self.types]
         entity["designs"] = [d.dump() for d in self.designs]
         entity["files"] = [f.dump() for f in self.files_]
+        entity["folders"] = [f.dump() for f in self.folders_]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["concepts"] = self.concepts
         return KitOutput(**entity)
@@ -3180,11 +3691,86 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         return self.id()
 
 
-# endregion Models
+class KitNotFound(NotFound):
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
 
-# endregion Domain
+    def __str__(self):
+        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
 
-# endregion Modeling
+
+class NoKitToDelete(KitNotFound):
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
+
+
+class KitZipDoesNotContainSemioFolder(KitNotFound):
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
+
+
+class OnlyRemoteKitsCanBeCached(ClientError):
+    def __init__(self, nonRemoteUri: str) -> None:
+        self.nonRemoteUri = nonRemoteUri
+
+    def __str__(self):
+        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
+
+
+class KitUriNotValid(ClientError, abc.ABC):
+    """🆔 The base for all kit uri not valid errors."""
+
+
+class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
+    """📂 The base for all local kit uri not valid errors."""
+
+
+class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
+
+
+class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"📂 The local kit uri ({self.uri}) is not a directory."
+
+
+class NoKitAssigned(NoParentAssigned):
+    def __str__(self):
+        return "👪 The entity has no parent kit assigned."
+
+
+class KitAlreadyExists(AlreadyExists, abc.ABC):
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self) -> str:
+        return f"♊ A kit under uri ({self.uri}) already exists."
+
+
+class KitInputNode(InputNode):
+    class Meta:
+        model = KitInput
+
+
+class KitNode(TableEntityNode):
+    class Meta:
+        model = Kit
+
+
+# endregion Kit
 
 # region Store
 
@@ -4234,343 +4820,6 @@ GRAPHQLTYPES = {
     "Design": graphene.NonNull(lambda: DesignNode),
     "Kit": graphene.NonNull(lambda: KitNode),
 }
-
-
-class Node(graphene_pydantic.PydanticObjectType):
-    """A base class for all nodes that are not a table in the database."""
-
-    class Meta:
-        abstract = True
-
-    @classmethod
-    def __init_subclass_with_meta__(cls, model=None, **options):
-        if "name" not in options:
-            options["name"] = model.__name__
-
-        super().__init_subclass_with_meta__(model=model, **options)
-
-
-class InputNode(graphene_pydantic.PydanticInputObjectType):
-    """A base class for all input nodes."""
-
-    class Meta:
-        abstract = True
-
-
-class RelayNode(graphene.relay.Node):
-    class Meta:
-        name = "Node"
-
-    @staticmethod
-    def to_global_id(type_, id):
-        return id
-
-    @staticmethod
-    def get_node_from_global_id(info, global_id, only_type=None):
-        entity = get(global_id)
-        return entity
-
-
-class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
-    """A base class for all nodes that are a table in the database.
-    It automatically excludes the fields that are defined in the table.
-    Resolvers to all @properties are added.
-    Child relationships are by default included."""
-
-    class Meta:
-        abstract = True
-
-    @classmethod
-    def __init_subclass_with_meta__(cls, model=None, **options):
-        excludedFields = tuple(k for k, v in model.model_fields.items() if v.exclude)
-        if "exclude_fields" in options:
-            options["exclude_fields"] += excludedFields
-        else:
-            options["exclude_fields"] = excludedFields
-        if "name" not in options:
-            options["name"] = model.__name__
-
-        own_properties = [name for name, value in model.__dict__.items() if isinstance(value, property)]
-
-        def make_resolve(name):
-            def resolve(self, info):
-                return getattr(self, name)
-
-            return resolve
-
-        # Dynamically add resolvers for all properties
-        for name in own_properties:
-            prop = getattr(model, name)
-            prop_getter = prop.fget
-            prop_return_type = inspect.signature(prop_getter).return_annotation
-            if prop_return_type.__name__.startswith("Optional"):
-                graphqlTypeName = prop_return_type.__args__[0].__name__
-            elif prop_return_type.__name__.startswith("list"):
-                graphqlTypeName = str(prop_return_type)
-            else:
-                graphqlTypeName = prop_return_type.__name__
-            setattr(
-                cls,
-                name,
-                GRAPHQLTYPES[graphqlTypeName],
-            )
-            setattr(cls, f"resolve_{name}", make_resolve(name))
-
-        super().__init_subclass_with_meta__(model=model, **options)
-
-
-class TableEntityNode(TableNode):
-    """A base class for all nodes that are a table in the database and are entities.
-    It automatically complies to the Relay Node interface."""
-
-    class Meta:
-        abstract = True
-
-    @classmethod
-    def __init_subclass_with_meta__(cls, model=None, **options):
-        if "interfaces" not in options:
-            options["interfaces"] = (RelayNode,)
-
-        def resolve_id(self, info):
-            return self.guid()
-
-        setattr(cls, "resolve_id", resolve_id)
-
-        super().__init_subclass_with_meta__(model=model, **options)
-
-
-class AttributeNode(TableEntityNode):
-    class Meta:
-        model = Attribute
-
-
-class AttributeInputNode(InputNode):
-    class Meta:
-        model = AttributeInput
-
-
-class LocationNode(Node):
-    class Meta:
-        model = Location
-
-
-class LocationInputNode(InputNode):
-    class Meta:
-        model = LocationInput
-
-
-class RepresentationNode(TableEntityNode):
-    class Meta:
-        model = Representation
-        excludedFields = ("tags_",)
-
-    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
-
-    # def resolve_attributes(self, info):
-    #     return self.attributes
-
-
-class RepresentationInputNode(InputNode):
-    class Meta:
-        model = RepresentationInput
-
-
-class CoordNode(Node):
-    class Meta:
-        model = Coord
-
-
-class CoordInputNode(InputNode):
-    class Meta:
-        model = CoordInput
-
-
-class PointNode(Node):
-    class Meta:
-        model = Point
-
-
-class PointInputNode(InputNode):
-    class Meta:
-        model = PointInput
-
-
-class VectorNode(Node):
-    class Meta:
-        model = Vector
-
-
-class VectorInputNode(InputNode):
-    class Meta:
-        model = VectorInput
-
-
-class PlaneNode(TableNode):
-    class Meta:
-        model = Plane
-
-
-class PlaneInputNode(InputNode):
-    class Meta:
-        model = PlaneInput
-
-
-class PortNode(TableEntityNode):
-    class Meta:
-        model = Port
-        exclude_fields = ("connecteds", "connectings")
-
-    # Add localId field to follow GraphQL naming conventions instead of id_
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
-
-    # def resolve_attributes(self, info):
-    #     return self.attributes
-
-
-class PortInputNode(InputNode):
-    class Meta:
-        model = PortInput
-
-
-class PortIdInputNode(InputNode):
-    class Meta:
-        model = PortId
-
-
-class AuthorNode(TableEntityNode):
-    class Meta:
-        model = Author
-
-
-class AuthorInputNode(InputNode):
-    class Meta:
-        model = AuthorInput
-
-
-class TypeNode(TableEntityNode):
-    class Meta:
-        model = Type
-
-
-class TypeInputNode(InputNode):
-    class Meta:
-        model = TypeInput
-
-
-class TypeIdInputNode(InputNode):
-    class Meta:
-        model = TypeId
-
-
-class PieceNode(TableEntityNode):
-    class Meta:
-        model = Piece
-        exclude_fields = ("connecteds", "connectings")
-
-    # Add localId field to follow GraphQL naming conventions instead of id_
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-
-class PieceInputNode(InputNode):
-    class Meta:
-        model = PieceInput
-
-    type = TypeIdInputNode()
-    designPiece = graphene.Field(lambda: DesignIdInputNode)
-
-
-class PieceIdInputNode(InputNode):
-    class Meta:
-        model = PieceId
-
-
-class SideNode(Node):
-    class Meta:
-        model = Side
-
-    exclude_fields = ("piece", "port")
-
-    piece = graphene.NonNull(PieceNode)
-    designPiece = graphene.Field(PieceNode)
-    port = graphene.NonNull(PortNode)
-
-    def resolve_piece(self, info):
-        return self.piece
-
-    def resolve_designPiece(self, info):
-        return self.designPiece
-
-    def resolve_port(self, info):
-        return self.port
-
-
-class SideInputNode(InputNode):
-    class Meta:
-        model = SideInput
-
-    exclude_fields = ("piece", "port")
-
-    piece = graphene.NonNull(PieceIdInputNode)
-    designPiece = PieceIdInputNode()
-    port = graphene.NonNull(PortIdInputNode)
-
-
-class ConnectionNode(TableEntityNode):
-    class Meta:
-        model = Connection
-        exclude_fields = (
-            "connectedPiece",
-            "connectedPort",
-            "connectingPiece",
-            "connectingPort",
-        )
-
-    connected = graphene.NonNull(lambda: SideNode)
-    connecting = graphene.NonNull(lambda: SideNode)
-
-    def resolve_connected(self, info):
-        return self.connected
-
-    def resolve_connecting(self, info):
-        return self.connecting
-
-
-class ConnectionInputNode(InputNode):
-    class Meta:
-        model = ConnectionInput
-
-
-class DesignInputNode(InputNode):
-    class Meta:
-        model = DesignInput
-
-
-class DesignNode(TableEntityNode):
-    class Meta:
-        model = Design
-
-
-class DesignIdInputNode(InputNode):
-    class Meta:
-        model = DesignId
-
-
-class KitInputNode(InputNode):
-    class Meta:
-        model = KitInput
-
-
-class KitNode(TableEntityNode):
-    class Meta:
-        model = Kit
 
 
 # # Can't use SQLAlchemyConnectionField because only supports one database.

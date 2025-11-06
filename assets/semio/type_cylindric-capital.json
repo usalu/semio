@@ -12,56 +12,37 @@
     {
       "url": "representations/cylindric-capital.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary"
-      ],
+      "tags": ["model/gltf-binary"],
       "attributes": []
     },
     {
       "url": "representations/cylindric-capital_1to500.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ],
+      "tags": ["model/vnd.3dm", "1to500"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ],
+      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
       "attributes": []
     },
     {
       "url": "representations/cylindric-capital_1to200.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ],
+      "tags": ["model/vnd.3dm", "1to200"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ],
+      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
       "attributes": []
     },
     {
       "url": "representations/cylindric-capital_collider.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ],
+      "tags": ["model/gltf-binary", "collider"],
       "attributes": []
     }
   ],
@@ -71,9 +52,7 @@
       "description": "The center of the bottom.",
       "mandatory": false,
       "family": "roof circular top",
-      "compatibleFamilies": [
-        "roof circular bottom"
-      ],
+      "compatibleFamilies": ["roof circular bottom"],
       "point": {
         "x": 0.0,
         "y": 0.0,

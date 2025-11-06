@@ -73,10 +73,7 @@
           "description": "\ud83e\uddf2 The connecting side of the connection."
         }
       },
-      "required": [
-        "connected",
-        "connecting"
-      ],
+      "required": ["connected", "connecting"],
       "title": "Connection",
       "type": "object"
     },
@@ -94,10 +91,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "u",
-        "v"
-      ],
+      "required": ["u", "v"],
       "title": "Coord",
       "type": "object"
     },
@@ -115,10 +109,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "longitude",
-        "latitude"
-      ],
+      "required": ["longitude", "latitude"],
       "title": "Location",
       "type": "object"
     },
@@ -176,9 +167,7 @@
           "type": "array"
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "title": "Piece",
       "type": "object"
     },
@@ -212,11 +201,7 @@
           "description": "\u27a1\ufe0f The y-axis of the plane."
         }
       },
-      "required": [
-        "origin",
-        "xAxis",
-        "yAxis"
-      ],
+      "required": ["origin", "xAxis", "yAxis"],
       "title": "Plane",
       "type": "object"
     },
@@ -239,11 +224,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
+      "required": ["x", "y", "z"],
       "title": "Point",
       "type": "object"
     },
@@ -285,9 +266,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "title": "Attribute",
       "type": "object"
     },
@@ -301,10 +280,7 @@
           "$ref": "#/$defs/PortId"
         }
       },
-      "required": [
-        "piece",
-        "port"
-      ],
+      "required": ["piece", "port"],
       "title": "Side",
       "type": "object"
     },
@@ -325,9 +301,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "title": "TypeId",
       "type": "object"
     },
@@ -350,11 +324,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
+      "required": ["x", "y", "z"],
       "title": "Vector",
       "type": "object"
     }
@@ -428,9 +398,7 @@
       "type": "array"
     }
   },
-  "required": [
-    "name"
-  ],
+  "required": ["name"],
   "title": "Design",
   "type": "object"
 }

@@ -190,7 +190,7 @@ Stats provide computed or measured performance data for entire designs using the
 - ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
-- NEVER create new files unless for temporary purposes.
+- NEVER create new files. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new folders unless for temporary purposes.
 - NEVER worry about breaking compatiblity.
 - NEVER create additional example files and implement it directly in the dependent parts.
@@ -208,13 +208,51 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER add raw to ui elements. ALWAYS use i18n setups and provide translations for the existing languages. Every ui element has an i18n key which has information about
 - ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - NEVER build or run the code.
+- NEVER care about backwards compatibility. ALWAYS refactor to clean code.
+- NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
+
+### Internationalization (i18n)
+
+All user-facing text must be internationalized using i18next. The system supports English (`en`) and German (`de`) by default.
+
+#### i18n Key Convention
+
+Every UI element with an `id` prop automatically gets i18n keys based on that ID:
+
+- `{id}.label` - Standard label text
+- `{id}.beginner` - Beginner-friendly description (optional)
+- `{id}.manual` - Manual page path (optional)
+- `{id}.tutorial` - Tutorial path (optional)
+- `{id}.hotkey` - Hotkey display string (optional)
+
+#### Using i18n in Components
+
+NEVER use `useTranslation` directly or hardcode strings. Instead:
+
+1. Assign an `id` prop to the UI element matching the i18n key path
+2. Use `<IdTooltipContent>` or let tooltips automatically resolve content
+3. For custom text, use `t(id)` where `id` matches the element's `id` prop
+
+#### Translation Files
+
+Translations live in `js/js/locales/{lang}.json`. Keys follow dot-notation paths matching UI element IDs.
+
+#### Tooltip Integration
+
+The tooltip system automatically resolves i18n content from element IDs, adapting to expertise level (beginner/normal/expert).
 
 ### Styling
 
 - NEVER use hardcoded (hex, rgb, …) or standard colors. All theme colors are explicitly defined.
 - ALWAYS use colors for light mode. Dark mode is automatically derived. There are scales for the following number of colors: 2 (dark, light), 3 (dark, gray, light), 4 (dark, dark-gray-gray, light-gray-gray, light), 5 (dark, dark-gray, gray, light-gray, light), 6 (dark, dark-gray-gray, gray, light-gray-gray, light), 7 (dark, dark-6-7, dark-5-7, gray, light-5-7, light-6-7, light), 8 (dark, d-d-d-g, dark-gray, d-g-g-g, light-gray, l-g-g-g, l-l-l-g, light), 9 (dark, dark-8-9, dark-7-9, dark-gray, gray, light-gray, light-7-9, light-8-9, light), 10 (gray-100, gray-200, gray-300, gray-400, gray, gray-600, gray-700, gray-800, gray-900, light), 11 (dark, gray-100, dark-gray-gray, dark-gray, gray, light-gray, light-gray-gray, light-light-gray, l-l-l-g, gray-900, light). ALWAYS pick the one with the highest contrast.
 - All closed ui elements ALWAYS have a border.
-- NEVER use hardcoded pixels. ALWAYS use the existing ui frameworks with relative units.
+- NEVER use hardcoded pixels. ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
+  - `--spacing-unit`: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
+  - `--size-tiny`: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
+  - `--size-small`: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
+  - `--size-medium`: 7 units - height of tree items, toggles/buttons, input (e.g. `h-7`)
+  - `--size-large`: 9 units - height of navbar (e.g. `h-9`)
+  - `--size-huge`: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
@@ -366,187 +404,47 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── de.json
 │ │ │ └── en.json
 │ │ ├── sketchpad
+│ │ │ ├── App.tsx # central barrel (Canvas, Navbar, Footer, store, kits, panels)
 │ │ │ ├── apps
 │ │ │ │ ├── index.tsx
-│ │ │ │ ├── panels.ts
-│ │ │ │ ├── registry.tsx
 │ │ │ │ ├── design
-│ │ │ │ │ ├── canvas
-│ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ ├── Scene.tsx
-│ │ │ │ │ │ ├── SharedTransformControls.tsx
-│ │ │ │ │ │ └── TransformableModel.ts
-│ │ │ │ │ ├── panels
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── tools_registry
-│ │ │ │ │ │ ├── index.tsx
-│ │ │ │ │ │ ├── LassoTool.tsx
-│ │ │ │ │ │ └── SelectionTool.tsx
-│ │ │ │ │ ├── App.tsx
-│ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts
-│ │ │ │ │ ├── store.tsx
-│ │ │ │ │ └── Tools.tsx
+│ │ │ │ │ └── App.tsx
 │ │ │ │ ├── docs
-│ │ │ │ │ ├── canvas
-│ │ │ │ │ │ └── Page.tsx
-│ │ │ │ │ ├── pages
+│ │ │ │ │ ├── App.tsx
+│ │ │ │ │ └── pages
+│ │ │ │ │ ├── index.mdx
+│ │ │ │ │ ├── getting-started
 │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ ├── getting-started
-│ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ ├── installation.mdx
-│ │ │ │ │ │ │ ├── intro
-│ │ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ │ ├── think-in-semio.mdx
-│ │ │ │ │ │ │ │ └── why-semio.mdx
-│ │ │ │ │ │ │ └── starter.mdx
-│ │ │ │ │ │ ├── integrations
-│ │ │ │ │ │ │ ├── cloud.mdx
-│ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ ├── ladybug.mdx
-│ │ │ │ │ │ │ ├── rhino.mdx
-│ │ │ │ │ │ │ ├── speckle.mdx
-│ │ │ │ │ │ │ └── wasp.mdx
-│ │ │ │ │ │ ├── manuals
-│ │ │ │ │ │ │ ├── grasshopper.mdx
-│ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ ├── semio
-│ │ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ │ └── kit.mdx
-│ │ │ │ │ │ │ └── sketchpad.mdx
-│ │ │ │ │ │ ├── showcases
-│ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ └── metabolism.mdx
-│ │ │ │ │ │ ├── theory
-│ │ │ │ │ │ │ ├── design-information-modeling.mdx
-│ │ │ │ │ │ │ ├── graphs.mdx
-│ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ └── kit-of-parts-architecture.mdx
-│ │ │ │ │ │ └── tutorials
-│ │ │ │ │ │ │ ├── hello-semio
-│ │ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ │ ├── model-brick-set.mdx
-│ │ │ │ │ │ │ │ ├── model-design.mdx
-│ │ │ │ │ │ │ │ ├── save-kit.mdx
-│ │ │ │ │ │ │ │ ├── show-design.mdx
-│ │ │ │ │ │ │ │ └── sketch-setup.mdx
-│ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ ├── metabolism
-│ │ │ │ │ │ │ │ └── index.mdx
-│ │ │ │ │ │ │ └── serial-conversion
-│ │ │ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ │ │ └── sketchpad
-│ │ │ │ │ │ │ │ └── index.mdx
-│ │ │ │ │ ├── panels
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts
-│ │ │ │ │ ├── App.tsx
-│ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ ├── mdx-loader.ts
-│ │ │ │ │ ├── mdx-provider.tsx
-│ │ │ │ │ ├── registry.ts
-│ │ │ │ │ └── store.tsx
+│ │ │ │ │ │ └── installation.mdx
+│ │ │ │ │ ├── integrations
+│ │ │ │ │ │ └── index.mdx
+│ │ │ │ │ ├── manuals
+│ │ │ │ │ │ └── kit.mdx
+│ │ │ │ │ ├── showcases
+│ │ │ │ │ │ └── metabolism.mdx
+│ │ │ │ │ └── tutorials
+│ │ │ │ │ ├── hello-semio
+│ │ │ │ │ │ └── index.mdx
+│ │ │ │ │ └── serial-conversion
+│ │ │ │ │ └── index.mdx
 │ │ │ │ ├── home
-│ │ │ │ │ ├── canvas
-│ │ │ │ │ │ └── Table.tsx
-│ │ │ │ │ ├── panels
-│ │ │ │ │ │ └── Details.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts
-│ │ │ │ │ ├── App.tsx
-│ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ └── store.tsx
+│ │ │ │ │ └── App.tsx
 │ │ │ │ ├── kit
-│ │ │ │ │ ├── canvas
-│ │ │ │ │ │ └── Table.tsx
-│ │ │ │ │ ├── panels
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ └── Settings.tsx
-│ │ │ │ │ ├── App.tsx
-│ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts
-│ │ │ │ │ └── store.tsx
+│ │ │ │ │ └── App.tsx
 │ │ │ │ ├── quality
-│ │ │ │ │ ├── canvas
-│ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ └── Formula.tsx
-│ │ │ │ │ ├── panels
-│ │ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-│ │ │ │ │ ├── tools_registry
-│ │ │ │ │ │ └── index.tsx
-│ │ │ │ │ ├── App.tsx
-│ │ │ │ │ ├── Footer.tsx
-│ │ │ │ │ ├── commands.ts
-│ │ │ │ │ ├── config.ts
-│ │ │ │ │ ├── functions.ts
-│ │ │ │ │ ├── store.tsx
-│ │ │ │ │ └── Tools.tsx
+│ │ │ │ │ └── App.tsx
 │ │ │ │ └── type
-│ │ │ │ ├── canvas
-│ │ │ │ │ └── Scene.tsx
-│ │ │ │ ├── panels
-│ │ │ │ │ ├── Details.tsx
-│ │ │ │ │ ├── Settings.tsx
-│ │ │ │ │ └── Workbench.tsx
-│ │ │ │ ├── tools_registry
-│ │ │ │ │ ├── index.tsx
-│ │ │ │ │ ├── PortTool.tsx
-│ │ │ │ │ └── SelectionTool.tsx
-│ │ │ │ ├── App.tsx
-│ │ │ │ ├── Footer.tsx
-│ │ │ │ ├── commands.ts
-│ │ │ │ ├── config.ts
-│ │ │ │ ├── store.tsx
-│ │ │ │ └── Tools.tsx
-│ │ ├── tutorials
+│ │ │ │ └── App.tsx
+│ │ │ └── tutorials
 │ │ │ ├── commands.ts
 │ │ │ ├── exampleTutorial.ts
 │ │ │ ├── index.ts
-│ │ │ ├── README.md
 │ │ │ ├── RecordButton.tsx
 │ │ │ ├── sketchpadTour.ts
 │ │ │ ├── store.tsx
 │ │ │ ├── TutorialControls.tsx
 │ │ │ ├── TutorialOverlay.tsx
 │ │ │ └── types.ts
-│ │ │ ├── fileProviders
-│ │ │ │ ├── IMPLEMENTATION.md
-│ │ │ │ ├── README.md
-│ │ │ │ ├── SUMMARY.md
-│ │ │ │ ├── example.tsx
-│ │ │ │ ├── index.ts
-│ │ │ │ ├── providers.ts
-│ │ │ │ └── s3-example.ts
-│ │ │ ├── kits
-│ │ │ │ ├── commands.ts
-│ │ │ │ └── store.tsx
-│ │ │ ├── panels
-│ │ │ │ ├── Chat.tsx
-│ │ │ │ ├── Details.tsx
-│ │ │ │ ├── Hud.tsx
-│ │ │ │ ├── Settings.tsx
-│ │ │ │ ├── Stats.tsx
-│ │ │ │ ├── Toolbar.tsx
-│ │ │ │ ├── Tools.tsx
-│ │ │ │ └── Workbench.tsx
-│ │ │ ├── Canvas.tsx
-│ │ │ ├── commands.ts
-│ │ │ ├── App.tsx
-│ │ │ ├── Footer.tsx
-│ │ │ ├── Navbar.tsx
-│ │ │ ├── Panel.tsx
-│ │ │ ├── Sketchpad.stories.tsx
-│ │ │ ├── Sketchpad.tsx # main component of @semio/js
-│ │ │ └── store.tsx
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts
@@ -568,12 +466,12 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── net
 │ ├── Semio
 │ │ ├── Semio.cs # @semio/net: all .NET code
-│ │ ├── UserObjects
-│ │ │ ├── github
-│ │ │ ├── gitlab
-│ │ │ ├── monoceros
-│ │ │ ├── semio
-│ │ │ └── wasp
+│ │ └── UserObjects
+│ │ ├── github
+│ │ ├── gitlab
+│ │ ├── monoceros
+│ │ ├── semio
+│ │ └── wasp
 │ ├── Semio.Grasshopper
 │ │ └── Semio.Grasshopper.cs # @semio/gh: all grasshopper code
 │ ├── Semio.Grasshopper.Tests
@@ -634,47 +532,71 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 - Commands ALWAYS have an origin. ALWAYS add the id of the ui element as origin when calling commands.
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.
+- The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in components.
+
+The former `Canvas`, `Navbar`, `Footer`, `Panel`, and `store` modules now live inside `js/js/sketchpad/App.tsx`. Keep the region order intact when modifying this file so downstream imports continue to work.
 
 #### Architecture - Open-Closed Principle
 
 The codebase follows the Open-Closed Principle (OCP): closed for modification, open for extension. Adding new features ONLY requires adding new files/folders, NEVER modifying existing ones.
 
+##### App Structure Standards
+
+All apps in `js/js/sketchpad/apps/*/App.tsx` MUST follow this structure:
+
+1. **Region Order:** Header → Imports → Types → Store → Commands → Components → App → Config
+2. **Store Base Class:** MUST extend either `AppStore` or `KitDiffAppStore` (no custom base classes)
+3. **Store Registration:** MUST use inline registration pattern (no wrapper functions)
+4. **Component Regions:** MUST nest under Components region (Navbar, Canvas, Panels, Tools, Footer)
+5. **Tools:** MUST have Tools region if app has multiple interaction modes
+6. **Scope Providers:** MUST be defined in app file (not App.tsx)
+7. **Commands:** MUST define all commands in Commands region
+
+See `REFACTOR.md` for detailed rationale and migration guide.
+
 ##### Adding a New App
 
 To add a new app:
 
-1. Create a folder under `js/js/sketchpad/apps/{appname}/`
-2. Add `config.ts` exporting `AppConfig`
-3. Add `App.tsx` with default export FC
-4. Add `store.tsx` with app state
-5. Optionally add `canvas/`, `panels/`, `tools/`, `commands.ts`
+1. Create a folder under `js/js/sketchpad/apps/{appname}/`.
+2. Add a single `App.tsx` that:
+   - exports the default React component,
+   - declares and exports `config: AppConfig`,
+   - wires any local state, commands, or helpers needed by the app.
+3. Keep optional helpers (pages, panels, tools) alongside the file and import them from the same module.
 
-The app is automatically discovered via `import.meta.glob('./*/config.ts')`.
+The app registry auto-discovers `App.tsx` files via `import.meta.glob('./*/App.tsx')`.
 
-Example `config.ts`:
+Example section inside `App.tsx`:
 
 ```typescript
+import { FC } from "react";
 import { AppConfig } from "../registry";
-import MyApp from "./App";
+
+const App: FC = () => {
+  // ...
+};
 
 export const config: AppConfig = {
   id: "myapp",
-  component: MyApp,
+  component: App,
   routeSegments: [{ path: "my/:id", paramName: "id" }],
   getPanels: (t) => [{ key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }],
   matchesPath: (pathParts) => pathParts[0] === "my",
   order: 50,
 };
+
+export default App;
 ```
 
 ##### Adding a New Tool
 
 To add a new tool to an app:
 
-1. Create a file `apps/{app}/tools/*Tool.tsx`
-2. Export tool objects with `id` and `render` properties
+1. Create a `*Tool.tsx` file directly inside `js/js/sketchpad/apps/{app}/`.
+2. Export a `Tool<AppState>` object with a unique `id` and `render` implementation.
 
-Tools are automatically discovered via `import.meta.glob('./*Tool.tsx')`.
+Each app loads sibling `*Tool.tsx` modules via `import.meta.glob('./*Tool.tsx', { eager: true })`, so simply dropping the file in place registers it.
 
 Example:
 
@@ -715,13 +637,20 @@ Tutorial commands live in `commands.ts` under the `semio.tutorial.*` and `semio.
 
 `FooterItemProvider` wraps `Sketchpad` so apps can register footer entries with `useAddFooterItem` and remove them via `useRemoveFooterItem`; the provider keeps items ordered by the optional `order` field.
 
-Register items inside effects and always call the remove helper in the cleanup; default contributions live under each app's `Footer.tsx` module.
+Register items inside effects and always call the remove helper in the cleanup; default contributions now live inside each app's `App.tsx`, next to the `config` export.
 
 Providing an `id` shows the translated `IdTooltipContent`, and the base footer auto-hides in fullscreen until the cursor nears the bottom edge, so interactive elements must tolerate that visibility change.
 
 #### Styling
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from global.css. Only global.css uses colors and pixels directly.
+- ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
+  - `--spacing-unit`: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
+  - `--size-tiny`: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
+  - `--size-small`: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
+  - `--size-medium`: 7 units - height of tree items, toggles/buttons, input (e.g. `h-7`)
+  - `--size-large`: 9 units - height of navbar (e.g. `h-9`)
+  - `--size-huge`: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
 
 ### Store Architecture
 
@@ -799,6 +728,12 @@ Every app supports transactions:
 4. **Abort Transaction**: `abortTransaction()`
    - Undoes all edits in current transaction
    - Clears current transaction stack
+
+##### Hooks and Helpers
+
+- **`useSync` / `useSyncDeep`** (from `js/js/sketchpad/App.tsx`) wrap `useSyncExternalStore` against a store's `onChanged` / `onChangedDeep` events. Pass a selector (defaults to `identitySelector`) to scope renders to the slice you need.
+- **`createObserver`** bridges a Y.js map or array into the store by registering either shallow or deep observers; always dispose the returned cleanup in `useEffect` finalizers.
+- **`RemoteProviders`** bundles the `yProvider` and `fileProvider` factories needed when constructing `SketchpadStore` so persistence and external file access stay aligned.
 
 ##### Edit Structure
 
@@ -961,11 +896,342 @@ executeCommand<T>(command: string, ...args): Promise<T>
 
 #### Files
 
-- `js/js/sketchpad/store.tsx` - Base Store, AppStore, KitDiffAppStore
-- `js/js/sketchpad/apps/design/store.tsx` - DesignAppStore
-- `js/js/sketchpad/apps/type/store.tsx` - TypeAppStore
-- `js/js/sketchpad/apps/kit/store.tsx` - KitAppStore
-- `js/js/sketchpad/apps/home/store.tsx` - HomeStore
+- `js/js/sketchpad/App.tsx` - Base Store, AppStore, KitDiffAppStore, SketchpadStore, KitStore
+- `js/js/sketchpad/apps/design/App.tsx` - DesignAppStore and design app state
+- `js/js/sketchpad/apps/type/App.tsx` - TypeAppStore and type toolchain
+- `js/js/sketchpad/apps/quality/App.tsx` - QualityAppStore and quality workflows
+- `js/js/sketchpad/apps/kit/App.tsx` - KitAppStore and kit command wiring
+- `js/js/sketchpad/apps/home/App.tsx` - HomeStore and home experience
+
+### Command System
+
+All state mutations are executed through commands. Commands provide a consistent interface for operations and enable undo/redo, logging, and origin tracking.
+
+#### Command Registry
+
+Each store maintains a `commandRegistry` that maps command strings to handler functions. Commands are registered using `registerCommand` and unregistered using `unregisterCommand`.
+
+#### Command Execution
+
+Commands are executed via `executeCommand(command: string, ...args: any[])`:
+
+1. **Origin Extraction**: If the first argument is a string starting with `semio.sketchpad.`, it's treated as the origin (UI element ID). Otherwise, origin is undefined.
+2. **Command Lookup**: The command registry is searched for the handler.
+3. **Context Building**: A command context is built with current state snapshot.
+4. **Handler Execution**: The handler receives context and remaining arguments.
+5. **Diff Application**: Result diffs are applied to the store.
+6. **Edit Recording**: For AppStore/KitDiffAppStore, edits are recorded for undo/redo.
+
+#### Command Naming Convention
+
+Commands follow the pattern `semio.{scope}.{action}`:
+
+- `semio.sketchpad.*` - Sketchpad-level commands
+- `semio.kitApp.*` - Kit app commands
+- `semio.designApp.*` - Design app commands
+- `semio.typeApp.*` - Type app commands
+- `semio.home.*` - Home app commands
+
+Special commands:
+
+- `semio.{app}.startTransaction` - Start a transaction
+- `semio.{app}.finalizeTransaction` - Finalize current transaction
+- `semio.{app}.abortTransaction` - Abort current transaction
+- `semio.{app}.undo` - Undo last edit
+- `semio.{app}.redo` - Redo last undone edit
+
+#### Command Origin
+
+Every command execution should include an origin string identifying the UI element that triggered it. Origins follow the pattern `semio.sketchpad.{path}` matching the element's `id` prop. This enables:
+
+- Debugging and logging
+- Tutorial recording
+- Analytics tracking
+
+### Diff System
+
+The diff system tracks changes to models for undo/redo, synchronization, and persistence.
+
+#### Diff Types
+
+Every model has an associated `Diff` type that represents partial changes:
+
+- **ModelDiff**: Partial update to a single model instance
+- **ModelsDiff**: Collection diffs with `removed`, `updated`, and `added` arrays
+
+#### Diff Operations
+
+Each model type supports four diff operations:
+
+1. **`getDiff(before, after): Diff`** - Calculate diff between two states
+2. **`inverseDiff(original, appliedDiff): Diff`** - Calculate inverse diff for undo
+3. **`mergeDiff(diff1, diff2): Diff`** - Merge two diffs (later takes precedence)
+4. **`applyDiff(base, diff): Model`** - Apply diff to base state
+
+#### Diff Status
+
+Diffs track status using `DiffStatus` enum:
+
+- `Unchanged` - No change
+- `Added` - Newly added item
+- `Removed` - Deleted item
+- `Modified` - Updated item
+
+#### Collection Diffs
+
+Collection diffs (`*sDiff`) track changes to arrays/lists:
+
+```typescript
+interface CollectionDiff<T> {
+  removed?: TId[]; // IDs of removed items
+  updated?: { id: TId; diff: TDiff }[]; // Updated items with their diffs
+  added?: T[]; // Newly added items
+}
+```
+
+#### Inverse Diffs
+
+Inverse diffs enable undo by reversing operations:
+
+- `removed` → `added` (restore removed items)
+- `added` → `removed` (remove added items)
+- `updated` → inverse of the update diff
+
+### Routing & App Registration
+
+Apps are registered via the `AppRegistry` which auto-discovers apps using `import.meta.glob('./*/App.tsx')`.
+
+#### AppConfig
+
+Each app exports a `config: AppConfig`:
+
+```typescript
+interface AppConfig {
+  id: string; // Unique app identifier
+  component: ComponentType; // React component
+  routeSegments: RouteSegment[]; // Route path segments
+  getPanels: (t: TFunction) => PanelDefinition[]; // Panel definitions
+  matchesPath: (pathParts: string[]) => boolean; // Path matcher
+  order?: number; // Display order
+}
+```
+
+#### Route Segments
+
+Route segments define the app's URL structure:
+
+```typescript
+interface RouteSegment {
+  path: string; // React Router path pattern
+  paramName?: string; // Parameter name (e.g., "id")
+  scopeProvider?: ComponentType<{ guid: string; children: ReactNode }>; // Scope wrapper
+}
+```
+
+#### Path Matching
+
+Apps can match paths using `matchesPath(pathParts: string[])`. The registry searches apps in order and returns the first match.
+
+#### Scope Providers
+
+Scope providers wrap app components to provide context (e.g., kit/design/type GUIDs) via React Router params.
+
+### Hotkeys
+
+Hotkeys are configurable keyboard shortcuts stored in the SketchpadStore with user overrides.
+
+#### Hotkey Paths
+
+Hotkey paths follow the pattern `semio.sketchpad.{element.path}` matching UI element IDs. This enables:
+
+- Automatic tooltip display
+- Settings UI integration
+- Tutorial highlighting
+
+#### Hotkey Values
+
+Hotkeys use the format from `react-hotkeys-hook`:
+
+- `mod+k` - Meta/Ctrl + K
+- `shift+alt+d` - Shift + Alt + D
+- `escape` - Escape key
+
+#### Hotkey Overrides
+
+Users can override default hotkeys via `hotkeyOverrides` in SketchpadStore. Overrides take precedence over defaults.
+
+#### Hotkey Hooks
+
+- `useHotkey(path, callback, deps)` - Register hotkey handler
+- `useSetHotkey()` - Set hotkey override
+- `useResetHotkey()` - Reset hotkey to default
+- `useResetAllHotkeys()` - Reset all overrides
+
+### File Providers
+
+File providers abstract file storage for kits, supporting multiple backends.
+
+#### FileProvider Interface
+
+```typescript
+interface FileProvider {
+  upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
+  download: (kitId: string, fileId: string, path: string) => Promise<Blob>;
+  delete: (kitId: string, fileId: string, path: string) => Promise<void>;
+  getUrl: (kitId: string, fileId: string, path: string) => string;
+}
+```
+
+#### Provider Types
+
+1. **MemoryFileProvider**: In-memory storage using Map (temporary kits)
+2. **LocalFileProvider**: IndexedDB storage (browser persistence)
+3. **RemoteFileProvider**: HTTP-based storage (server backend)
+4. **CompositeFileProvider**: Combines multiple providers with fallback order
+
+#### File Operations
+
+File operations are handled automatically when kit diffs include file changes:
+
+- **Added files**: Uploaded via provider, `remoteUrl` updated in kit
+- **Removed files**: Deleted via provider
+- **Updated files**: Re-uploaded if blob changed
+
+### Y.js Integration
+
+Y.js provides CRDT-based state synchronization and persistence.
+
+#### Y.js Types
+
+Stores use Y.js types for reactive state:
+
+- `Y.Map` - Key-value maps (state objects)
+- `Y.Array` - Arrays (lists, selections)
+- `Y.Text` - Text (rarely used)
+
+#### Persistence
+
+- **IndexeddbPersistence**: Local browser persistence for kits
+- **YProvider**: Remote synchronization (WebSocket, HTTP)
+
+#### Observers
+
+Y.js observers bridge Y.js changes to store updates:
+
+- **Shallow observers**: Watch top-level map keys
+- **Deep observers**: Watch nested changes
+
+Use `createObserver` helper and dispose in `useEffect` cleanup.
+
+#### Transactions
+
+Y.js transactions batch operations:
+
+- All Y.js mutations happen within transactions
+- Store `transact` function wraps Y.js transactions
+- Origin strings propagate to Y.js for debugging
+
+### Coordinate System
+
+Semio uses a left-handed coordinate system that differs from Three.js.
+
+#### Semio Coordinate System
+
+- **X-axis**: Right (thumb points right)
+- **Y-axis**: Forward (index finger forward)
+- **Z-axis**: Up (middle finger up)
+
+#### Three.js Coordinate System
+
+- **X-axis**: Right
+- **Y-axis**: Up
+- **Z-axis**: Backward (negative)
+
+#### Conversion Functions
+
+- `toThreeRotation()` - Matrix4 for Semio → Three.js rotation
+- `toSemioRotation()` - Matrix4 for Three.js → Semio rotation
+- `toThreeQuaternion()` - Quaternion for Semio → Three.js
+- `toSemioQuaternion()` - Quaternion for Three.js → Semio
+- `vectorToThree(v)` - Convert Point/Vector to THREE.Vector3
+
+### Expertise & Tooltips
+
+The UI adapts to user expertise level, showing different tooltip content.
+
+#### Expertise Levels
+
+```typescript
+enum Expertise {
+  BEGINNER = "beginner", // Full tooltips with tutorials
+  NORMAL = "normal", // Standard tooltips
+  EXPERT = "expert", // No tooltips
+}
+```
+
+#### Tooltip Content
+
+Tooltips automatically adapt based on expertise:
+
+- **BEGINNER**: Shows `.beginner` i18n key, tutorials, manuals, hotkeys
+- **NORMAL**: Shows standard `.label` i18n key, manuals, hotkeys
+- **EXPERT**: No tooltips shown
+
+#### i18n Keys for Tooltips
+
+Each UI element with an `id` prop automatically gets tooltip content from i18n:
+
+- `{id}.label` - Standard label
+- `{id}.beginner` - Beginner-friendly description
+- `{id}.manual` - Manual page path
+- `{id}.tutorial` - Tutorial path
+- `{id}.hotkey` - Hotkey display string
+
+#### Tooltip Components
+
+- `<Tooltip>` - Base tooltip wrapper
+- `<IdTooltipContent>` - Automatic content from element ID
+- `<EnhancedTooltipContent>` - Manual configuration
+
+### Windows
+
+Windows are the primary content areas within the canvas, supporting multiple types.
+
+#### Window Types
+
+```typescript
+enum WindowType {
+  TABLE = "table", // Tabular data view
+  SCENE = "scene", // 3D scene view
+  DIAGRAM = "diagram", // 2D diagram view
+  CUSTOM = "custom", // Custom app-defined view
+}
+```
+
+#### Window Configuration
+
+Windows are configured per app via `AppWindowConfig`:
+
+```typescript
+interface AppWindowConfig {
+  type: WindowType;
+  component?: ComponentType<AppWindowProps>;
+  defaultVisible?: boolean;
+}
+```
+
+#### Window Layout
+
+Window layouts are managed per app and stored in app state. Apps can define custom layouts or use defaults.
+
+#### Window Events
+
+Windows can emit events via `onWindowEvents` callback:
+
+- Window creation/destruction
+- Window focus changes
+- Window resize
+- Custom app events
 
 # Hierarchies
 

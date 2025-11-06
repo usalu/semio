@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import { JSDOM } from 'jsdom';
-import * as path from 'path';
+import * as fs from "fs";
+import { JSDOM } from "jsdom";
+import * as path from "path";
 
 interface TransformData {
   translate: { x: number; y: number };
@@ -28,17 +28,22 @@ interface KeyframeData {
 /**
  * Convert transform values to a 2D matrix
  */
-function transformToMatrix(translate: { x: number, y: number }, rotate: { angle: number, cx: number, cy: number }, scale: { x: number, y: number }): string {
+function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
   const tx = translate.x;
   const ty = translate.y;
-  const angle = rotate.angle * Math.PI / 180; // Convert to radians
+  const angle = (rotate.angle * Math.PI) / 180; // Convert to radians
   const cx = rotate.cx;
   const cy = rotate.cy;
   const sx = scale.x === 0 ? 1 : scale.x;
   const sy = scale.y === 0 ? 1 : scale.y;
 
   // Start with identity matrix
-  let a = 1, b = 0, c = 0, d = 1, e = 0, f = 0;
+  let a = 1,
+    b = 0,
+    c = 0,
+    d = 1,
+    e = 0,
+    f = 0;
 
   // Apply translation
   e += tx;
@@ -60,7 +65,12 @@ function transformToMatrix(translate: { x: number, y: number }, rotate: { angle:
     const new_e = e * cos_a - f * sin_a;
     const new_f = e * sin_a + f * cos_a;
 
-    a = new_a; b = new_b; c = new_c; d = new_d; e = new_e; f = new_f;
+    a = new_a;
+    b = new_b;
+    c = new_c;
+    d = new_d;
+    e = new_e;
+    f = new_f;
 
     // Translate back from rotation center
     e += cx;
@@ -83,7 +93,7 @@ function parseTransform(transformStr: string): TransformData {
   const result: TransformData = {
     translate: { x: 0, y: 0 },
     rotate: { angle: 0, cx: 0, cy: 0 },
-    scale: { x: 1, y: 1 }
+    scale: { x: 1, y: 1 },
   };
 
   if (!transformStr) return result;
@@ -126,7 +136,7 @@ function parseTransform(transformStr: string): TransformData {
         // matrix(0,b,c,0) where b and c can be positive or negative
         if (bSign === -1 && cSign === -1) {
           // matrix(0,-scale,-scale,0,tx,ty) = 90° rotation + reflection
-          result.scale.x = -scaleValueB;  // Include the reflection
+          result.scale.x = -scaleValueB; // Include the reflection
           result.scale.y = scaleValueC;
           result.rotate.angle = 90;
         } else if (bSign === 1 && cSign === -1) {
@@ -203,17 +213,17 @@ function parseTransform(transformStr: string): TransformData {
  * Parse SVG file and extract groups with transforms and paths
  */
 function parseSVGFile(filePath: string): KeyframeData {
-  const svgContent = fs.readFileSync(filePath, 'utf-8');
-  const dom = new JSDOM(svgContent, { contentType: 'text/xml' });
+  const svgContent = fs.readFileSync(filePath, "utf-8");
+  const dom = new JSDOM(svgContent, { contentType: "text/xml" });
   const document = dom.window.document;
 
   const groups: GroupData[] = [];
-  const gElements = document.querySelectorAll('g[id]');
+  const gElements = document.querySelectorAll("g[id]");
 
-  gElements.forEach(g => {
-    const id = g.getAttribute('id')!;
-    const transformStr = g.getAttribute('transform') || '';
-    const pathElement = g.querySelector('path');
+  gElements.forEach((g) => {
+    const id = g.getAttribute("id")!;
+    const transformStr = g.getAttribute("transform") || "";
+    const pathElement = g.querySelector("path");
 
     if (pathElement) {
       const transform = parseTransform(transformStr);
@@ -221,11 +231,11 @@ function parseSVGFile(filePath: string): KeyframeData {
         id,
         transform,
         path: {
-          d: pathElement.getAttribute('d') || '',
-          fill: pathElement.getAttribute('fill') || '#000000',
-          stroke: pathElement.getAttribute('stroke') || 'none',
-          strokeWidth: pathElement.getAttribute('stroke-width') || '0'
-        }
+          d: pathElement.getAttribute("d") || "",
+          fill: pathElement.getAttribute("fill") || "#000000",
+          stroke: pathElement.getAttribute("stroke") || "none",
+          strokeWidth: pathElement.getAttribute("stroke-width") || "0",
+        },
       };
 
       groups.push(groupData);
@@ -271,7 +281,7 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
   // Calculate duration: Keep fast transitions but longer holds
   const transitionDuration = 0.5; // Fast transition between keyframes
   const holdDuration = 1.5; // Longer hold on each keyframe
-  const totalDuration = (keyframes.length * (transitionDuration + holdDuration) * 2); // *2 for back and forth
+  const totalDuration = keyframes.length * (transitionDuration + holdDuration) * 2; // *2 for back and forth
 
   // Create keyTimes array with proper timing for transitions and holds
   const keyTimes: string[] = [];
@@ -281,7 +291,7 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
   for (let i = 0; i < totalFrames; i++) {
     keyTimes.push((i * timeStep).toFixed(3));
   }
-  const keyTimesStr = keyTimes.join(';');
+  const keyTimesStr = keyTimes.join(";");
 
   // For smooth in/out easing with longer holds, we'll use calcMode="spline" with keySplines
   // Each transition gets different easing depending on whether it's a transition or hold
@@ -294,17 +304,17 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
 
     if (isSameFrame) {
       // Hold frame - linear (no easing)
-      keySplines.push('0 0 1 1');
+      keySplines.push("0 0 1 1");
     } else {
       // Transition frame - smooth ease-in-out
-      keySplines.push('0.25 0.1 0.75 0.9');
+      keySplines.push("0.25 0.1 0.75 0.9");
     }
   }
-  const keySplinesStr = keySplines.join(';');
+  const keySplinesStr = keySplines.join(";");
 
   // Group all unique group IDs
   const allGroupIds = new Set<string>();
-  keyframes.forEach(kf => kf.groups.forEach(g => allGroupIds.add(g.id)));
+  keyframes.forEach((kf) => kf.groups.forEach((g) => allGroupIds.add(g.id)));
 
   let svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg viewBox="0 0 410 140" style="background: #001117;" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -313,75 +323,87 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
 `;
 
   // Create animated groups
-  Array.from(allGroupIds).forEach(groupId => {
+  Array.from(allGroupIds).forEach((groupId) => {
     // Find this group in all keyframes
-    const groupFrames = sequence.map(kf => {
-      const group = kf.groups.find(g => g.id === groupId);
+    const groupFrames = sequence.map((kf) => {
+      const group = kf.groups.find((g) => g.id === groupId);
       return group || null;
     });
 
     // Skip if group doesn't exist in any frame
-    if (groupFrames.every(gf => gf === null)) return;
+    if (groupFrames.every((gf) => gf === null)) return;
 
     // Use first non-null group for path data
-    const firstGroup = groupFrames.find(gf => gf !== null);
+    const firstGroup = groupFrames.find((gf) => gf !== null);
     if (!firstGroup) return;
 
     svgContent += `    <g id="${groupId}">
 `;
 
     // Generate translate animation
-    const translateValues = groupFrames.map(gf => {
-      if (gf) {
-        return `${gf.transform.translate.x} ${gf.transform.translate.y}`;
-      }
-      return `${firstGroup.transform.translate.x} ${firstGroup.transform.translate.y}`;
-    }).join(';');
+    const translateValues = groupFrames
+      .map((gf) => {
+        if (gf) {
+          return `${gf.transform.translate.x} ${gf.transform.translate.y}`;
+        }
+        return `${firstGroup.transform.translate.x} ${firstGroup.transform.translate.y}`;
+      })
+      .join(";");
 
     svgContent += `        <animateTransform attributeName="transform" type="translate" dur="${totalDuration}s" repeatCount="indefinite"
             keyTimes="${keyTimesStr}" values="${translateValues}" calcMode="spline" keySplines="${keySplinesStr}" />
 `;
 
     // Generate rotation animation
-    const rotateValues = groupFrames.map(gf => {
-      if (gf) {
-        return `${gf.transform.rotate.angle} ${gf.transform.rotate.cx} ${gf.transform.rotate.cy}`;
-      }
-      return `${firstGroup.transform.rotate.angle} ${firstGroup.transform.rotate.cx} ${firstGroup.transform.rotate.cy}`;
-    }).join(';');
+    const rotateValues = groupFrames
+      .map((gf) => {
+        if (gf) {
+          return `${gf.transform.rotate.angle} ${gf.transform.rotate.cx} ${gf.transform.rotate.cy}`;
+        }
+        return `${firstGroup.transform.rotate.angle} ${firstGroup.transform.rotate.cx} ${firstGroup.transform.rotate.cy}`;
+      })
+      .join(";");
 
     svgContent += `        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="${totalDuration}s" repeatCount="indefinite"
             keyTimes="${keyTimesStr}" values="${rotateValues}" calcMode="spline" keySplines="${keySplinesStr}" />
 `;
 
     // Generate scale animation (ensure scale never goes to 0 0, default to 1 1)
-    const scaleValues = groupFrames.map(gf => {
-      if (gf) {
-        // Ensure scale values are never 0, default to 1
-        const scaleX = gf.transform.scale.x === 0 ? 1 : gf.transform.scale.x;
-        const scaleY = gf.transform.scale.y === 0 ? 1 : gf.transform.scale.y;
-        return `${scaleX} ${scaleY}`;
-      }
-      // Use 1 1 as default scale when group doesn't exist in this frame
-      return `1 1`;
-    }).join(';');
+    const scaleValues = groupFrames
+      .map((gf) => {
+        if (gf) {
+          // Ensure scale values are never 0, default to 1
+          const scaleX = gf.transform.scale.x === 0 ? 1 : gf.transform.scale.x;
+          const scaleY = gf.transform.scale.y === 0 ? 1 : gf.transform.scale.y;
+          return `${scaleX} ${scaleY}`;
+        }
+        // Use 1 1 as default scale when group doesn't exist in this frame
+        return `1 1`;
+      })
+      .join(";");
 
     svgContent += `        <animateTransform attributeName="transform" type="scale" additive="sum" dur="${totalDuration}s" repeatCount="indefinite"
             keyTimes="${keyTimesStr}" values="${scaleValues}" calcMode="spline" keySplines="${keySplinesStr}" />
 `;
 
     // Add path with fill and stroke animations
-    const fillValues = groupFrames.map(gf => {
-      return gf ? gf.path.fill : firstGroup.path.fill;
-    }).join(';');
+    const fillValues = groupFrames
+      .map((gf) => {
+        return gf ? gf.path.fill : firstGroup.path.fill;
+      })
+      .join(";");
 
-    const strokeValues = groupFrames.map(gf => {
-      return gf ? gf.path.stroke : firstGroup.path.stroke;
-    }).join(';');
+    const strokeValues = groupFrames
+      .map((gf) => {
+        return gf ? gf.path.stroke : firstGroup.path.stroke;
+      })
+      .join(";");
 
-    const strokeWidthValues = groupFrames.map(gf => {
-      return gf ? gf.path.strokeWidth : firstGroup.path.strokeWidth;
-    }).join(';');
+    const strokeWidthValues = groupFrames
+      .map((gf) => {
+        return gf ? gf.path.strokeWidth : firstGroup.path.strokeWidth;
+      })
+      .join(";");
 
     svgContent += `        <path d="${firstGroup.path.d}">
             <animate attributeName="fill" dur="${totalDuration}s" repeatCount="indefinite" keyTimes="${keyTimesStr}"
@@ -420,7 +442,7 @@ function main(): void {
   }
 
   if (keyframes.length === 0) {
-    console.error('No keyframe files found!');
+    console.error("No keyframe files found!");
     process.exit(1);
   }
 
@@ -428,7 +450,7 @@ function main(): void {
   console.log(`Will generate ${generateKeyframeSequence(keyframes).length} animation frames`);
 
   // Create animated SVG
-  const outputPath = path.join(logoDir, 'logo_generated.svg');
+  const outputPath = path.join(logoDir, "logo_generated.svg");
   createAnimatedSVG(keyframes, outputPath);
 }
 
@@ -438,4 +460,3 @@ if (require.main === module) {
 }
 
 export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
-

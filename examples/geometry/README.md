@@ -1,5 +1,5 @@
 # The most colorful kit
-Text 
- 
- XYZ
- 
+
+Text
+
+XYZ

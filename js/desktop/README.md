@@ -8,12 +8,12 @@
 - Mac OS @electron/notarize
 
 ```ts
-import { defineConfig } from 'vite'
-import baseConfig from '@semio/js/vite.config'
+import { defineConfig } from "vite";
+import baseConfig from "@semio/js/vite.config";
 
 export default defineConfig({
-  ...baseConfig
-})
+  ...baseConfig,
+});
 ```
 
 See: https://stackoverflow.com/questions/75132236/how-to-share-vite-config-in-monorepo

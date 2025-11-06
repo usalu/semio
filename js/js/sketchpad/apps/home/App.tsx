@@ -19,28 +19,621 @@
 
 // #endregion
 
+// #region Imports
+
+import { AddIcon, DocumentIcon, LocalKitIcon, RemoteKitIcon, SortAscendingIcon, SortDescendingIcon, TemporaryKitIcon } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { ArrowDown, ArrowUp, Clock, Cloud, FileText, HardDrive, Plus } from "lucide-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
-import { ScrollArea } from "../../../elements/aggregation/ScrollArea";
-import { TableAvatar } from "../../../elements/display/Avatar";
-import { Action } from "../../../elements/input/Action";
-import { Input } from "../../../elements/input/Input";
-import { Toggle } from "../../../elements/input/Toggle";
-import i18n from "../../../i18n";
-import { generateUniqueName, guid, Kit, KitShallow } from "../../../semio";
-import { Canvas, Window } from "../../Canvas";
-import { ConceptFilter } from "../../ConceptFilter";
-import { useHotkeys } from "../../hotkeys";
-import { useAddPanelSection, useFocus, useRemovePanelSection } from "../../Navbar";
-import { useAppType, useGetKitKind, useIsMobile, useKits, useNavigation, useSketchpadCommands, useTooltip } from "../../store";
-import { docsRegistry } from "../docs/registry";
-import { HomeAppFooter } from "./Footer";
-import { KitSection } from "./panels/Details";
-import { useHome, useHomeCommands } from "./store";
+import * as Y from "yjs";
+import i18n, { useLabel } from "../../../i18n";
+import { generateUniqueName, guid, Guid, Kit, KitShallow } from "../../../semio";
+import type { SketchpadStore } from "../../App";
+import {
+  AppStore,
+  Canvas,
+  ConceptFilter,
+  identitySelector,
+  registerHomeStoreFactory,
+  useAddFooterItem,
+  useAddPanelSection,
+  useAppType,
+  useExpertise,
+  useFocus,
+  useGetKitKind,
+  useHotkeys,
+  useIsMobile,
+  useKits,
+  useKitShallows,
+  useMode,
+  useNavigation,
+  useRemoveFooterItem,
+  useRemovePanelSection,
+  useSketchpadCommands,
+  useSketchpadStore,
+  useSyncDeep,
+  useTheme,
+  useTooltip,
+  Window,
+} from "../../App";
+import { Action, Input, ScrollArea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
+import type { AppEdit, PanelDefinition, PanelVisibility } from "../../sketchpad";
+import { createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "../../sketchpad";
+import { docsRegistry } from "../docs/App";
+import { AppConfig } from "../index";
+
+// #endregion Imports
+
+// #region Types
+
+export interface HomeSelection {
+  kits?: Guid[];
+}
+
+export interface HomeSelectionDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
+
+export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
+export type HomeSortDirection = "asc" | "desc";
+
+export interface HomeState {
+  panelVisibility: PanelVisibility;
+  selection?: HomeSelection;
+  sortColumn?: HomeSortColumn;
+  sortDirection?: HomeSortDirection;
+}
+
+export interface HomeDiff {
+  panelVisibility?: Partial<PanelVisibility>;
+  selection?: HomeSelectionDiff;
+  sortColumn?: HomeSortColumn;
+  sortDirection?: HomeSortDirection;
+}
+
+export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
+
+export interface HomeCommandContext {
+  home: HomeState;
+  origin?: string;
+}
+
+export interface HomeCommandResult {
+  diff?: HomeDiff;
+}
+
+// #endregion Types
+
+// #region Store
+
+export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, HomeEdit, HomeCommandContext, HomeCommandResult> {
+  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
+    super(parent, yMap, transact);
+
+    transact(() => {
+      if (!yMap.has("panelVisibility")) {
+        const yPanelVisibility = new Y.Map<boolean>();
+        yPanelVisibility.set("toolbar", false);
+        yPanelVisibility.set("workbench", false);
+        yPanelVisibility.set("details", false);
+        yPanelVisibility.set("chat", false);
+        yPanelVisibility.set("settings", false);
+        yMap.set("panelVisibility", yPanelVisibility);
+      }
+      if (!yMap.has("isTransactionActive")) {
+        yMap.set("isTransactionActive", false);
+      }
+      if (!yMap.has("currentTransactionStack")) {
+        yMap.set("currentTransactionStack", new Y.Array<any>());
+      }
+      if (!yMap.has("pastTransactionsStack")) {
+        yMap.set("pastTransactionsStack", new Y.Array<any>());
+      }
+      if (!yMap.has("redoStack")) {
+        yMap.set("redoStack", new Y.Array<any>());
+      }
+    });
+  }
+
+  get panelVisibility(): PanelVisibility {
+    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
+    if (!yPanelVisibility) {
+      return {
+        toolbar: false,
+        workbench: false,
+        details: false,
+        chat: false,
+        settings: false,
+      };
+    }
+    return {
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
+      workbench: yPanelVisibility.get("workbench") ?? false,
+      details: yPanelVisibility.get("details") ?? false,
+      chat: yPanelVisibility.get("chat") ?? false,
+      settings: yPanelVisibility.get("settings") ?? false,
+    };
+  }
+
+  get selection(): HomeSelection | undefined {
+    const yKits = this.yMap.get("selectedKits") as Y.Array<string>;
+    if (!yKits || yKits.length === 0) return undefined;
+    return {
+      kits: yKits.toArray(),
+    };
+  }
+
+  get sortColumn(): HomeSortColumn | undefined {
+    return this.yMap.get("sortColumn") as HomeSortColumn | undefined;
+  }
+
+  get sortDirection(): HomeSortDirection | undefined {
+    return this.yMap.get("sortDirection") as HomeSortDirection | undefined;
+  }
+
+  protected hash(state: HomeState): string {
+    return JSON.stringify(state);
+  }
+
+  protected buildSnapshot(): HomeState {
+    return {
+      panelVisibility: this.panelVisibility,
+      selection: this.selection,
+      sortColumn: this.sortColumn,
+      sortDirection: this.sortDirection,
+    };
+  }
+
+  protected applySelectionDiff(selectionDiff: HomeSelectionDiff): void {
+    let yKits = this.yMap.get("selectedKits") as Y.Array<string>;
+    if (!yKits) {
+      yKits = new Y.Array<string>();
+      this.yMap.set("selectedKits", yKits);
+    }
+    if (selectionDiff.removed) {
+      selectionDiff.removed.forEach((guid) => {
+        const index = yKits.toArray().indexOf(guid);
+        if (index !== -1) {
+          yKits.delete(index, 1);
+        }
+      });
+    }
+    if (selectionDiff.added) {
+      selectionDiff.added.forEach((guid) => {
+        if (!yKits.toArray().includes(guid)) {
+          yKits.push([guid]);
+        }
+      });
+    }
+  }
+
+  protected inverseSelectionDiff(selection: HomeSelection, diff: HomeSelectionDiff): HomeSelectionDiff {
+    const inverseDiff: HomeSelectionDiff = {};
+    if (diff.added) {
+      inverseDiff.removed = diff.added;
+    }
+    if (diff.removed) {
+      inverseDiff.added = diff.removed;
+    }
+    return inverseDiff;
+  }
+
+  protected getSelection(): HomeSelection | undefined {
+    return this.selection;
+  }
+
+  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
+    let origin: string | undefined;
+    let rest: any[];
+
+    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
+      origin = args[0];
+      rest = args.slice(1);
+    } else {
+      origin = undefined;
+      rest = args;
+    }
+
+    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
+    const callback = this.commandRegistry.get(command);
+    if (!callback) {
+      console.groupEnd();
+      throw new Error(`Command "${command}" not found in home store`);
+    }
+    const state = this.snapshot();
+    const context: HomeCommandContext = { home: state, origin };
+    const result = await callback(context, ...rest);
+    if (result.diff) {
+      this.change(result.diff);
+      this.recordEdit(result);
+    }
+    console.groupEnd();
+    return result as T;
+  }
+
+  change(diff: HomeDiff): void {
+    super.change({
+      panelVisibility: diff.panelVisibility,
+      selection: diff.selection,
+    });
+    this.transact(() => {
+      if (diff.sortColumn !== undefined) {
+        this.yMap.set("sortColumn", diff.sortColumn);
+      }
+      if (diff.sortDirection !== undefined) {
+        this.yMap.set("sortDirection", diff.sortDirection);
+      }
+    });
+  }
+}
+
+registerHomeStoreFactory((parent, yMap, transact) => new HomeStore(parent, yMap, transact));
+
+function useHomeStore<T>(selector?: (store: HomeStore) => T): T | HomeStore {
+  const store = useSketchpadStore();
+  const homeStore = store.home();
+  return selector ? selector(homeStore) : homeStore;
+}
+
+export function useHome<T>(selector?: (state: HomeState) => T): T | HomeState {
+  const store = useHomeStore(identitySelector) as HomeStore;
+  if (selector) {
+    return useSyncDeep<HomeState>(store, selector as (value: HomeState) => HomeState) as T;
+  }
+  return useSyncDeep<HomeState>(store, identitySelector);
+}
+
+export function useHomePanelVisibility(): PanelVisibility {
+  return useHome((s) => s.panelVisibility) as PanelVisibility;
+}
+
+export function useHomeCommands() {
+  const store = useHomeStore() as HomeStore;
+  return {
+    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
+      const current = store.snapshot().panelVisibility;
+      store.change({
+        panelVisibility: {
+          [panelKey]: !current[panelKey],
+        },
+      });
+    },
+    selectKit: (origin: string, Guid: Guid) => {
+      const current = store.snapshot();
+      store.change({
+        selection: {
+          removed: current.selection?.kits ?? [],
+          added: [Guid],
+        },
+      });
+    },
+    addKitToSelection: (origin: string, Guid: Guid) => {
+      store.change({
+        selection: {
+          added: [Guid],
+        },
+      });
+    },
+    removeKitFromSelection: (origin: string, Guid: Guid) => {
+      store.change({
+        selection: {
+          removed: [Guid],
+        },
+      });
+    },
+    selectKits: (origin: string, kitIds: Guid[]) => {
+      const current = store.snapshot();
+      store.change({
+        selection: {
+          removed: current.selection?.kits ?? [],
+          added: kitIds,
+        },
+      });
+    },
+    deselectAll: (origin: string) => {
+      const current = store.snapshot();
+      store.change({
+        selection: {
+          removed: current.selection?.kits ?? [],
+        },
+      });
+    },
+    setSortColumn: (origin: string, column: HomeSortColumn) => {
+      store.change({
+        sortColumn: column,
+      });
+    },
+    setSortDirection: (origin: string, direction: HomeSortDirection) => {
+      store.change({
+        sortDirection: direction,
+      });
+    },
+    toggleSort: (origin: string, column: HomeSortColumn) => {
+      const current = store.snapshot();
+      if (current.sortColumn === column) {
+        store.change({
+          sortDirection: current.sortDirection === "asc" ? "desc" : "asc",
+        });
+      } else {
+        store.change({
+          sortColumn: column,
+          sortDirection: "asc",
+        });
+      }
+    },
+    execute: (origin: string, command: string, ...args: any[]) => store.executeCommand(command, origin, ...args),
+  };
+}
+
+// #endregion Home Store
+
+// #endregion Store
+
+// #region Commands
+
+// #endregion Commands
+
+// #region Navbar
+
+// #endregion Navbar
+
+// #region Canvas
+
+// #region Windows
+
+// #region Table
+
+export {};
+
+// #endregion Table
+
+// #endregion Windows
+
+// #region Panels
+
+// #region Right
+
+// #region Details
+
+export const KitSection: FC = () => {
+  const home = useHome() as HomeState;
+  const selection = home?.selection;
+  const selectedKits = selection?.kits || [];
+  if (selectedKits.length === 0) return null;
+  if (selectedKits.length === 1) return <SingleKitSection kitId={selectedKits[0]} />;
+  return <MultipleKitsSection kitIds={selectedKits} />;
+};
+
+const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
+  const kitShallows = useKitShallows();
+  const kitShallow = kitShallows.find((k) => k.guid === kitId);
+  if (!kitShallow) {
+    return (
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
+        </TreeContent>
+      </TreeItem>
+    );
+  }
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
+  const kitShallows = useKitShallows();
+  const kits = kitIds.map((id) => kitShallows.find((k) => k.guid === id)).filter((k) => k !== undefined) as KitShallow[];
+
+  // Helper function to get common value or undefined if different
+  const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
+    if (kits.length === 0) return undefined;
+    const firstValue = getter(kits[0]);
+    const allSame = kits.every((kit) => getter(kit) === firstValue);
+    return allSame ? firstValue : undefined;
+  };
+
+  const commonName = getCommonValue((k) => k.name);
+  const commonVersion = getCommonValue((k) => k.version);
+  const commonDescription = getCommonValue((k) => k.description);
+  const commonIcon = getCommonValue((k) => k.icon);
+  const commonImage = getCommonValue((k) => k.image);
+
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : undefined} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            id="semio.sketchpad.app.home.panel.details.kits.version"
+            value={commonVersion || ""}
+            placeholder={commonVersion === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.versionPlaceholder")}
+            readOnly
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea
+            id="semio.sketchpad.app.home.panel.details.kits.description"
+            value={commonDescription || ""}
+            placeholder={commonDescription === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.descriptionPlaceholder")}
+            readOnly
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            id="semio.sketchpad.app.home.panel.details.kits.icon"
+            value={commonIcon || ""}
+            placeholder={commonIcon === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.iconPlaceholder")}
+            readOnly
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input
+            id="semio.sketchpad.app.home.panel.details.kits.image"
+            value={commonImage || ""}
+            placeholder={commonImage === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.imagePlaceholder")}
+            readOnly
+            showLabel
+          />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+// #endregion Details
+
+// #region Chat
+
+const ChatPlaceholder: FC = () => {
+  return (
+    <TreeItem>
+      <TreeContent>
+        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
+      </TreeContent>
+    </TreeItem>
+  );
+};
+
+// #endregion Chat
+
+// #region Settings
+
+const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; setExpertise: (origin: string, expertise: Expertise) => void; setMode: (origin: string, mode: Mode) => void }> = ({ setTheme, setExpertise, setMode }) => {
+  const theme = useTheme();
+  const expertise = useExpertise();
+  const mode = useMode();
+  const themeSystemLabel = useLabel("semio.sketchpad.settings.theme.system.label");
+  const themeLightLabel = useLabel("semio.sketchpad.settings.theme.light.label");
+  const themeDarkLabel = useLabel("semio.sketchpad.settings.theme.dark.label");
+  const expertiseBeginnerLabel = useLabel("semio.sketchpad.settings.mode.beginner.label");
+  const expertiseNormalLabel = useLabel("semio.sketchpad.settings.mode.normal.label");
+  const expertiseExpertLabel = useLabel("semio.sketchpad.settings.mode.expert.label");
+  const modeUserLabel = useLabel("semio.sketchpad.settings.mode.user.label", "User");
+  const modeDevLabel = useLabel("semio.sketchpad.settings.mode.dev.label", "Dev");
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Select id="semio.sketchpad.app.home.settings.theme" value={theme} onValueChange={(value) => setTheme("semio.sketchpad.app.home.settings.theme", value as Theme)} showLabel>
+            <SelectTrigger id="semio.sketchpad.app.home.settings.theme">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={Theme.SYSTEM}>{themeSystemLabel}</SelectItem>
+              <SelectItem value={Theme.LIGHT}>{themeLightLabel}</SelectItem>
+              <SelectItem value={Theme.DARK}>{themeDarkLabel}</SelectItem>
+            </SelectContent>
+          </Select>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Select id="semio.sketchpad.app.home.settings.expertise" value={expertise} onValueChange={(value) => setExpertise("semio.sketchpad.app.home.settings.expertise", value as Expertise)} showLabel>
+            <SelectTrigger id="semio.sketchpad.app.home.settings.expertise">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={Expertise.BEGINNER}>{expertiseBeginnerLabel}</SelectItem>
+              <SelectItem value={Expertise.NORMAL}>{expertiseNormalLabel}</SelectItem>
+              <SelectItem value={Expertise.EXPERT}>{expertiseExpertLabel}</SelectItem>
+            </SelectContent>
+          </Select>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Select id="semio.sketchpad.app.home.settings.mode" value={mode} onValueChange={(value) => setMode("semio.sketchpad.app.home.settings.mode", value as Mode)} showLabel>
+            <SelectTrigger id="semio.sketchpad.app.home.settings.mode">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={Mode.USER}>{modeUserLabel}</SelectItem>
+              <SelectItem value={Mode.DEV}>{modeDevLabel}</SelectItem>
+            </SelectContent>
+          </Select>
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+// #endregion Settings
+
+// #endregion Right
+
+// #endregion Panels
+
+// #region Tools
+
+// #endregion Tools
+
+// #endregion Canvas
+
+// #region Footer
+
+const HomeAppFooter: FC = () => {
+  const addFooterItem = useAddFooterItem();
+  const removeFooterItem = useRemoveFooterItem();
+  const appType = useAppType();
+
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    // TODO: Add home-specific footer items here
+
+    return () => {
+      // Cleanup
+    };
+  }, [appType, addFooterItem, removeFooterItem]);
+
+  return null;
+};
+
+// #endregion Footer
+
+// #region App
 
 type KitStoreKind = "temporary" | "local" | "remote";
 
@@ -71,14 +664,13 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Home: FC = ({ }) => {
-  const { t } = useTranslation();
+const Home: FC = ({}) => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
   const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit } = useSketchpadCommands();
+  const { createKit, navigateToKit, setTheme, setExpertise, setMode } = useSketchpadCommands();
 
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
@@ -89,6 +681,9 @@ const Home: FC = ({ }) => {
   const tooltip = useTooltip();
 
   const selection = homeState?.selection?.kits || [];
+
+  const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
+  const newVersionLabel = useLabel("semio.sketchpad.app.kit.newVersion");
 
   // Dynamic details panel based on selection
   useEffect(() => {
@@ -104,11 +699,13 @@ const Home: FC = ({ }) => {
 
     // Only show section if something is selected
     if (hasKits) {
+      const sectionId = hasSingleKit ? "semio.sketchpad.app.kit.title" : "semio.sketchpad.app.home.kits.multiple";
       addSection("details", {
-        id: hasSingleKit ? "semio.sketchpad.app.kit.title" : "semio.sketchpad.app.home.kits.multiple",
-        translationParams: hasSingleKit ? undefined : { count: selection.length },
+        id: sectionId,
         order: 0,
-        content: () => <KitSection />,
+        content: () => {
+          return <KitSection />;
+        },
       });
     }
 
@@ -117,6 +714,40 @@ const Home: FC = ({ }) => {
       removeSection("details", "semio.sketchpad.app.home.kits.multiple");
     };
   }, [appType, addSection, removeSection, selection.length]);
+
+  // Add chat panel section
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    addSection("chat", {
+      id: "semio.sketchpad.app.home.chat",
+      order: 0,
+      content: () => {
+        return <ChatPlaceholder />;
+      },
+    });
+
+    return () => {
+      removeSection("chat", "semio.sketchpad.app.home.chat");
+    };
+  }, [appType, addSection, removeSection]);
+
+  // Add settings panel section
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    addSection("settings", {
+      id: "semio.sketchpad.app.home.settings",
+      order: 0,
+      content: () => {
+        return <SettingsContent setTheme={setTheme} setExpertise={setExpertise} setMode={setMode} />;
+      },
+    });
+
+    return () => {
+      removeSection("settings", "semio.sketchpad.app.home.settings");
+    };
+  }, [appType, addSection, removeSection, setTheme, setExpertise, setMode]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitStoreKind | null;
@@ -395,7 +1026,7 @@ const Home: FC = ({ }) => {
 
   const handleCreateKit = (type: KitStoreKind) => {
     const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(t("semio.sketchpad.app.kit.defaultName"), existingNames);
+    const uniqueName = generateUniqueName(defaultKitName, existingNames);
     const newKit: Kit = {
       guid: guid(),
       name: uniqueName,
@@ -411,7 +1042,7 @@ const Home: FC = ({ }) => {
 
   const handleCreateVersion = (kitName: string, type: KitStoreKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(t("semio.sketchpad.app.kit.newVersion"), existingVersions);
+    const uniqueVersion = generateUniqueName(newVersionLabel, existingVersions);
     const newKit: Kit = {
       guid: guid(),
       name: kitName,
@@ -440,9 +1071,9 @@ const Home: FC = ({ }) => {
   };
 
   // Register hotkeys for filter toggles
-  useHotkeys("semio.sketchpad.app.home.filter.kind.temporary.hotkey", () => toggleKind("temporary"));
-  useHotkeys("semio.sketchpad.app.home.filter.kind.local.hotkey", () => toggleKind("local"));
-  useHotkeys("semio.sketchpad.app.home.filter.kind.remote.hotkey", () => toggleKind("remote"));
+  useHotkeys("semio.sketchpad.app.home.filter.kind.temporary", () => toggleKind("temporary"));
+  useHotkeys("semio.sketchpad.app.home.filter.kind.local", () => toggleKind("local"));
+  useHotkeys("semio.sketchpad.app.home.filter.kind.remote", () => toggleKind("remote"));
 
   const toggleName = (name: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -494,14 +1125,17 @@ const Home: FC = ({ }) => {
 
   const handleRowClick = (kitId: string, e: React.MouseEvent) => {
     if (e.shiftKey) {
-      const currentIndex = rows.findIndex((r) => r.kit.guid === kitId);
+      const currentIndex = rows.findIndex((r) => r.kit?.guid === kitId);
       if (selection.length > 0) {
         const lastSelectedId = selection[selection.length - 1];
-        const lastIndex = rows.findIndex((r) => r.kit.guid === lastSelectedId);
+        const lastIndex = rows.findIndex((r) => r.kit?.guid === lastSelectedId);
         if (lastIndex !== -1 && currentIndex !== -1) {
           const start = Math.min(lastIndex, currentIndex);
           const end = Math.max(lastIndex, currentIndex);
-          const rangeIds = rows.slice(start, end + 1).map((r) => r.kit.guid);
+          const rangeIds = rows
+            .slice(start, end + 1)
+            .map((r) => r.kit?.guid)
+            .filter((id): id is string => id !== undefined);
           homeCommands.selectKits("semio.sketchpad.app.home.canvas.table.selectKitsRange", rangeIds);
         }
       } else {
@@ -533,31 +1167,33 @@ const Home: FC = ({ }) => {
         }}
       >
         {/* Flexible filter layout with automatic wrapping for mobile */}
-        <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+        <div className="flex flex-wrap items-center gap-unit p-unit border-b">
           {selectedKind && (
             <Toggle
               type="withAction"
               pressed={true}
               onPressedChange={() => toggleKind(selectedKind)}
-              actionIcon={<Plus className="size-3.5" />}
+              actionIcon={<AddIcon className="size-tiny" />}
               onActionClick={() => handleCreateKit(selectedKind)}
               id="semio.sketchpad.app.home.filter.kind.show"
               actionId="semio.sketchpad.app.home.filter.kind.create"
-            >
-              {selectedKind === "temporary" && <Clock className="size-4" />}
-              {selectedKind === "local" && <HardDrive className="size-4" />}
-              {selectedKind === "remote" && <Cloud className="size-4" />}
-            </Toggle>
+              icon={
+                <>
+                  {selectedKind === "temporary" && <TemporaryKitIcon className="size-tiny" />}
+                  {selectedKind === "local" && <LocalKitIcon className="size-tiny" />}
+                  {selectedKind === "remote" && <RemoteKitIcon className="size-tiny" />}
+                </>
+              }
+            />
           )}
-          {selectedName && (
-            <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name">
-              {selectedName}
-            </Toggle>
-          )}
+          {selectedName && <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={<span className="text-xs">{selectedName}</span>} />}
           {selectedVersion !== null && (
-            <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} id="semio.sketchpad.app.home.filter.version">
-              {selectedVersion || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
-            </Toggle>
+            <Toggle
+              pressed={true}
+              onPressedChange={() => toggleVersion(selectedVersion)}
+              id="semio.sketchpad.app.home.filter.version"
+              icon={<span className="text-xs">{selectedVersion || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}</span>}
+            />
           )}
           {!selectedKind && (
             <>
@@ -565,42 +1201,39 @@ const Home: FC = ({ }) => {
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("temporary")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateKit("temporary")}
                 id="semio.sketchpad.app.home.filter.kind.temporary"
                 actionId="semio.sketchpad.app.home.filter.kind.createTemporary"
-              >
-                <Clock className="size-4" />
-              </Toggle>
+                icon={<TemporaryKitIcon className="size-tiny" />}
+              />
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("local")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateKit("local")}
                 id="semio.sketchpad.app.home.filter.kind.local"
                 actionId="semio.sketchpad.app.home.filter.kind.createLocal"
-              >
-                <HardDrive className="size-4" />
-              </Toggle>
+                icon={<LocalKitIcon className="size-tiny" />}
+              />
               <Toggle
                 type="withAction"
                 pressed={false}
                 onPressedChange={() => toggleKind("remote")}
-                actionIcon={<Plus className="size-3.5" />}
+                actionIcon={<AddIcon className="size-tiny" />}
                 onActionClick={() => handleCreateKit("remote")}
                 id="semio.sketchpad.app.home.filter.kind.remote"
                 actionId="semio.sketchpad.app.home.filter.kind.createRemote"
-              >
-                <Cloud className="size-4" />
-              </Toggle>
+                icon={<RemoteKitIcon className="size-tiny" />}
+              />
             </>
           )}
           {selectedKind &&
             !selectedName &&
             uniqueNames.length > 0 &&
             uniqueNames.map((name) => (
-              <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
+              <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)}>
                 {name}
               </Toggle>
             ))}
@@ -609,12 +1242,12 @@ const Home: FC = ({ }) => {
             selectedVersion === null &&
             uniqueVersions.length > 0 &&
             uniqueVersions.map((version) => (
-              <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                {version || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
+              <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)}>
+                {version || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}
               </Toggle>
             ))}
-          <div className="flex items-center gap-1 flex-1 min-w-[160px]">
-            <Input className="flex-1 min-w-0" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+          <div className="flex items-center gap-unit flex-1 min-w-[160px]">
+            <Input id="semio.sketchpad.app.home.search" className="flex-1 min-w-0" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
             <Toggle
               type="dropdown"
               value={sortColumn === "name" ? sortDirection : "asc"}
@@ -623,10 +1256,10 @@ const Home: FC = ({ }) => {
                 homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
               }}
               items={[
-                { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
+                { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
               ]}
-              id={tooltip("home.sortByName")}
+              id={tooltip("home.sortByName") || "semio.sketchpad.app.home.sortByName"}
             />
           </div>
         </div>
@@ -640,7 +1273,7 @@ const Home: FC = ({ }) => {
               return (
                 <div
                   key={row.id}
-                  className={`border-b p-2 cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  className={`border-b p-double cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
                   role="button"
                   tabIndex={0}
                   onClick={(e) => {
@@ -658,8 +1291,8 @@ const Home: FC = ({ }) => {
                     }
                   }}
                 >
-                  <div className="flex items-center gap-2 justify-between" style={{ paddingLeft: `${row.level * 16}px` }} onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-double justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-double flex-1 min-w-0">
                       {row.hasChildren ? (
                         <Action
                           level="base"
@@ -667,16 +1300,15 @@ const Home: FC = ({ }) => {
                             e.stopPropagation();
                             toggleRow(row.id);
                           }}
-                        >
-                          {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-                        </Action>
+                          icon={row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                        />
                       ) : (
-                        <span className="w-5 h-5 shrink-0" />
+                        <span className="size-small shrink-0" />
                       )}
                       <TableAvatar name={row.name} icon={row.kit?.icon} />
                       <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                     </div>
-                    <div className="flex items-center gap-0.5 shrink-0">
+                    <div className="flex items-center gap-half shrink-0">
                       {row.level === 0 && row.type !== "docs" && (
                         <Action
                           level="base"
@@ -685,9 +1317,8 @@ const Home: FC = ({ }) => {
                             handleCreateVersion(row.name, row.type as KitStoreKind);
                           }}
                           id={tooltip("home.createVersion")}
-                        >
-                          <Plus />
-                        </Action>
+                          icon={<AddIcon />}
+                        />
                       )}
                     </div>
                   </div>
@@ -714,31 +1345,33 @@ const Home: FC = ({ }) => {
             }}
           >
             {/* Flexible filter layout with automatic wrapping */}
-            <div className="flex flex-wrap items-center gap-1 p-1 border-b">
+            <div className="flex flex-wrap items-center gap-unit p-unit border-b">
               {selectedKind && (
                 <Toggle
                   type="withAction"
                   pressed={true}
                   onPressedChange={() => toggleKind(selectedKind)}
-                  actionIcon={<Plus className="size-3.5" />}
+                  actionIcon={<AddIcon className="size-tiny" />}
                   onActionClick={() => handleCreateKit(selectedKind)}
-                  id={tooltip("home.hideKind")}
-                  actionId={tooltip("home.createKit")}
-                >
-                  {selectedKind === "temporary" && <Clock className="size-4" />}
-                  {selectedKind === "local" && <HardDrive className="size-4" />}
-                  {selectedKind === "remote" && <Cloud className="size-4" />}
-                </Toggle>
+                  id={tooltip("home.hideKind") || "semio.sketchpad.app.home.hideKind"}
+                  actionId={tooltip("home.createKit") || "semio.sketchpad.app.home.createKit"}
+                  icon={
+                    <>
+                      {selectedKind === "temporary" && <TemporaryKitIcon className="size-tiny" />}
+                      {selectedKind === "local" && <LocalKitIcon className="size-tiny" />}
+                      {selectedKind === "remote" && <RemoteKitIcon className="size-tiny" />}
+                    </>
+                  }
+                />
               )}
-              {selectedName && (
-                <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)}>
-                  {selectedName}
-                </Toggle>
-              )}
+              {selectedName && <Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="text-xs">{selectedName}</span>} />}
               {selectedVersion !== null && (
-                <Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)}>
-                  {selectedVersion || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
-                </Toggle>
+                <Toggle
+                  id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`}
+                  pressed={true}
+                  onPressedChange={() => toggleVersion(selectedVersion)}
+                  icon={<span className="text-xs">{selectedVersion || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}</span>}
+                />
               )}
               {!selectedKind && (
                 <>
@@ -746,66 +1379,63 @@ const Home: FC = ({ }) => {
                     type="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("temporary")}
-                    actionIcon={<Plus className="size-3.5" />}
+                    actionIcon={<AddIcon className="size-tiny" />}
                     onActionClick={() => handleCreateKit("temporary")}
-                    id={tooltip("home.showTemporary")}
-                    actionId={tooltip("home.createTemporary")}
-                  >
-                    <Clock className="size-4" />
-                  </Toggle>
+                    id={tooltip("home.showTemporary") || "semio.sketchpad.app.home.showTemporary"}
+                    actionId={tooltip("home.createTemporary") || "semio.sketchpad.app.home.createTemporary"}
+                    icon={<TemporaryKitIcon className="size-tiny" />}
+                  />
                   <Toggle
                     type="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("local")}
-                    actionIcon={<Plus className="size-3.5" />}
+                    actionIcon={<AddIcon className="size-tiny" />}
                     onActionClick={() => handleCreateKit("local")}
-                    id={tooltip("home.showLocal")}
-                    actionId={tooltip("home.createLocal")}
-                  >
-                    <HardDrive className="size-4" />
-                  </Toggle>
+                    id={tooltip("home.showLocal") || "semio.sketchpad.app.home.showLocal"}
+                    actionId={tooltip("home.createLocal") || "semio.sketchpad.app.home.createLocal"}
+                    icon={<LocalKitIcon className="size-tiny" />}
+                  />
                   <Toggle
                     type="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("remote")}
-                    actionIcon={<Plus className="size-3.5" />}
+                    actionIcon={<AddIcon className="size-tiny" />}
                     onActionClick={() => handleCreateKit("remote")}
-                    id={tooltip("home.showRemote")}
-                    actionId={tooltip("home.createRemote")}
-                  >
-                    <Cloud className="size-4" />
-                  </Toggle>
+                    id={tooltip("home.showRemote") || "semio.sketchpad.app.home.showRemote"}
+                    actionId={tooltip("home.createRemote") || "semio.sketchpad.app.home.createRemote"}
+                    icon={<RemoteKitIcon className="size-tiny" />}
+                  />
                 </>
               )}
               {selectedKind &&
                 !selectedName &&
                 uniqueNames.length > 0 &&
-                uniqueNames.map((name) => (
-                  <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)}>
-                    {name}
-                  </Toggle>
-                ))}
+                uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={<span className="text-xs">{name}</span>} />)}
               {selectedKind &&
                 selectedName &&
                 selectedVersion === null &&
                 uniqueVersions.length > 0 &&
                 uniqueVersions.map((version) => (
-                  <Toggle key={version} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                    {version || <span className="italic opacity-50">{t("semio.sketchpad.app.kit.defaultVersion")}</span>}
-                  </Toggle>
+                  <Toggle
+                    key={version}
+                    id={`semio.sketchpad.app.home.filter.version.${version}`}
+                    pressed={false}
+                    onPressedChange={() => toggleVersion(version)}
+                    icon={<span className="text-xs">{version || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}</span>}
+                  />
                 ))}
-              <Input className="flex-1 min-w-[200px]" placeholder={t("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
+              <Input id="semio.sketchpad.app.home.search" className="flex-1 min-w-[200px]" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
             </div>
             {/* Concept Filter */}
             <ConceptFilter allConcepts={allConcepts} />
             <ScrollArea ref={scrollAreaRef} className="flex-1">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 border-b">
-                  <tr className="h-9">
+                  <tr className="h-large">
                     {!selectedKind && (
-                      <th className="text-left p-1 font-medium relative group">
+                      <th className="text-left p-unit font-medium relative group">
                         <div className="flex items-center justify-between w-full">
-                          <span>{t("semio.sketchpad.app.home.kind")}</span>
+                          <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
                           <Toggle
                             type="dropdown"
                             pressed={sortColumn === "type"}
@@ -815,18 +1445,19 @@ const Home: FC = ({ }) => {
                               homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
                             }}
                             items={[
-                              { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                              { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                              { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
+                              { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                             ]}
-                            className="px-1 min-w-0"
+                            id={tooltip("home.sortByType") || "semio.sketchpad.app.home.sortByType"}
+                            className="px-unit min-w-0"
                           />
                         </div>
-                        <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                        <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
                       </th>
                     )}
-                    <th className="text-left p-1 font-medium relative group">
+                    <th className="text-left p-unit font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.sketchpad.app.home.name")}</span>
+                        <span>{useLabel("semio.sketchpad.app.home.name")}</span>
                         <Toggle
                           type="dropdown"
                           pressed={sortColumn === "name"}
@@ -836,17 +1467,18 @@ const Home: FC = ({ }) => {
                             homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                            { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
+                            { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                           ]}
-                          className="px-1 min-w-0"
+                          id={tooltip("home.sortByName") || "semio.sketchpad.app.home.sortByName"}
+                          className="px-unit min-w-0"
                         />
                       </div>
-                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                      <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
                     </th>
-                    <th className="text-left p-1 font-medium relative group">
+                    <th className="text-left p-unit font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.sketchpad.app.home.lastUpdated")}</span>
+                        <span>{useLabel("semio.sketchpad.app.home.lastUpdated")}</span>
                         <Toggle
                           type="dropdown"
                           pressed={sortColumn === "updatedAt"}
@@ -856,17 +1488,18 @@ const Home: FC = ({ }) => {
                             homeCommands.setSortDirection("semio.sketchpad.app.home.header.updatedAt.sortDirection", value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                            { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
+                            { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                           ]}
-                          className="px-1 min-w-0"
+                          id={tooltip("home.sortByUpdatedAt") || "semio.sketchpad.app.home.sortByUpdatedAt"}
+                          className="px-unit min-w-0"
                         />
                       </div>
-                      <div className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-accent" />
+                      <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
                     </th>
-                    <th className="text-left p-1 font-medium relative group">
+                    <th className="text-left p-unit font-medium relative group">
                       <div className="flex items-center justify-between w-full">
-                        <span>{t("semio.sketchpad.app.home.created")}</span>
+                        <span>{useLabel("semio.sketchpad.app.home.created")}</span>
                         <Toggle
                           type="dropdown"
                           pressed={sortColumn === "createdAt"}
@@ -876,10 +1509,11 @@ const Home: FC = ({ }) => {
                             homeCommands.setSortDirection("semio.sketchpad.app.home.header.createdAt.sortDirection", value as "asc" | "desc");
                           }}
                           items={[
-                            { value: "asc", label: <ArrowUp className="size-3.5" />, id: tooltip("sort.ascending") },
-                            { value: "desc", label: <ArrowDown className="size-3.5" />, id: tooltip("sort.descending") },
+                            { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
+                            { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                           ]}
-                          className="px-1 min-w-0"
+                          id={tooltip("home.sortByCreatedAt") || "semio.sketchpad.app.home.sortByCreatedAt"}
+                          className="px-unit min-w-0"
                         />
                       </div>
                     </th>
@@ -911,16 +1545,16 @@ const Home: FC = ({ }) => {
                         tabIndex={0}
                       >
                         {!selectedKind && (
-                          <td className="p-1">
-                            {row.type === "temporary" && <Clock className="size-4" />}
-                            {row.type === "local" && <HardDrive className="size-4" />}
-                            {row.type === "remote" && <Cloud className="size-4" />}
-                            {row.type === "docs" && <FileText className="size-4" />}
+                          <td className="p-unit">
+                            {row.type === "temporary" && <TemporaryKitIcon className="size-tiny" />}
+                            {row.type === "local" && <LocalKitIcon className="size-tiny" />}
+                            {row.type === "remote" && <RemoteKitIcon className="size-tiny" />}
+                            {row.type === "docs" && <DocumentIcon className="size-tiny" />}
                           </td>
                         )}
-                        <td className="p-1" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-1 justify-between" style={{ paddingLeft: `${row.level * 24}px` }}>
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <td className="p-unit" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-unit justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }}>
+                            <div className="flex items-center gap-unit flex-1 min-w-0">
                               {row.hasChildren ? (
                                 <Action
                                   level="base"
@@ -928,16 +1562,15 @@ const Home: FC = ({ }) => {
                                     e.stopPropagation();
                                     toggleRow(row.id);
                                   }}
-                                >
-                                  {row.isExpanded ? <ChevronDown /> : <ChevronRight />}
-                                </Action>
+                                  icon={row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                                />
                               ) : (
-                                <span className="w-4 h-4 shrink-0" />
+                                <span className="size-tiny shrink-0" />
                               )}
                               <TableAvatar name={row.name} icon={row.type === "docs" ? row.icon : row.kit?.icon} />
                               <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                             </div>
-                            <div className="flex items-center gap-0.5 shrink-0">
+                            <div className="flex items-center gap-half shrink-0">
                               {row.level === 0 && row.type !== "docs" && (
                                 <Action
                                   level="base"
@@ -946,15 +1579,14 @@ const Home: FC = ({ }) => {
                                     handleCreateVersion(row.name, row.type as KitStoreKind);
                                   }}
                                   id={tooltip("home.createVersion")}
-                                >
-                                  <Plus />
-                                </Action>
+                                  icon={<AddIcon />}
+                                />
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="p-1">{row.updatedAt}</td>
-                        <td className="p-1">{row.createdAt}</td>
+                        <td className="p-unit">{row.updatedAt}</td>
+                        <td className="p-unit">{row.createdAt}</td>
                       </tr>
                     );
                   })}
@@ -969,3 +1601,23 @@ const Home: FC = ({ }) => {
 };
 
 export default Home;
+
+// #endregion App
+
+// #region Config
+
+export const config: AppConfig = {
+  id: "home",
+  component: Home,
+  routeSegments: [],
+  additionalPaths: ["kits"],
+  getPanels: (): PanelDefinition[] => [
+    createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
+  ],
+  matchesPath: (pathParts) => pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === "kits"),
+  order: 0,
+};
+
+// #endregion Config

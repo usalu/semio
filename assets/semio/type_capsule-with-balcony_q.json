@@ -12,56 +12,37 @@
     {
       "url": "representations/capsule-with-balcony_q.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary"
-      ],
+      "tags": ["model/gltf-binary"],
       "attributes": []
     },
     {
       "url": "representations/capsule-with-balcony_q_1to500.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ],
+      "tags": ["model/vnd.3dm", "1to500"],
       "attributes": []
     },
     {
       "url": "representations/capsule-with-balcony_q_1to200.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ],
+      "tags": ["model/vnd.3dm", "1to200"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ],
+      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ],
+      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
       "attributes": []
     },
     {
       "url": "representations/capsule-with-balcony_q_collider.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ],
+      "tags": ["model/gltf-binary", "collider"],
       "attributes": []
     }
   ],
@@ -71,9 +52,7 @@
       "description": "The middle of the main entrance door of the upper entrance floor.",
       "mandatory": false,
       "family": "door capsule east",
-      "compatibleFamilies": [
-        "door tambour east"
-      ],
+      "compatibleFamilies": ["door tambour east"],
       "point": {
         "x": 0.45,
         "y": -2.1,

@@ -14,10 +14,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "longitude",
-        "latitude"
-      ],
+      "required": ["longitude", "latitude"],
       "title": "Location",
       "type": "object"
     },
@@ -40,11 +37,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
+      "required": ["x", "y", "z"],
       "title": "Point",
       "type": "object"
     },
@@ -109,10 +102,7 @@
           "type": "array"
         }
       },
-      "required": [
-        "point",
-        "direction"
-      ],
+      "required": ["point", "direction"],
       "title": "Port",
       "type": "object"
     },
@@ -140,9 +130,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "title": "Attribute",
       "type": "object"
     },
@@ -165,11 +153,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
+      "required": ["x", "y", "z"],
       "title": "Vector",
       "type": "object"
     }
@@ -241,9 +225,7 @@
       "type": "array"
     }
   },
-  "required": [
-    "name"
-  ],
+  "required": ["name"],
   "title": "Type",
   "type": "object"
 }

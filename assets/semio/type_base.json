@@ -12,58 +12,37 @@
     {
       "url": "representations/base.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary"
-      ],
+      "tags": ["model/gltf-binary"],
       "attributes": []
     },
     {
       "url": "representations/base_1to500.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ],
+      "tags": ["model/vnd.3dm", "1to500"],
       "attributes": []
     },
     {
       "url": "representations/base_1to200.3dm",
       "description": "",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ],
+      "tags": ["model/vnd.3dm", "1to200"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5267da44d",
       "description": "",
-      "tags": [
-        "application/octet-stream",
-        "model/vnd.speckle+json",
-        "model/vnd.3dm",
-        "1to500"
-      ],
+      "tags": ["application/octet-stream", "model/vnd.speckle+json", "model/vnd.3dm", "1to500"],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b394acfd5c",
       "description": "",
-      "tags": [
-        "application/octet-stream",
-        "model/vnd.speckle+json",
-        "model/vnd.3dm",
-        "1to200"
-      ],
+      "tags": ["application/octet-stream", "model/vnd.speckle+json", "model/vnd.3dm", "1to200"],
       "attributes": []
     },
     {
       "url": "representations/base_collider.glb",
       "description": "",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ],
+      "tags": ["model/gltf-binary", "collider"],
       "attributes": []
     }
   ],
@@ -73,9 +52,7 @@
       "description": "The center of the east rectangular core (an elevator and a staircase around it).",
       "mandatory": false,
       "family": "core rectangular bottom",
-      "compatibleFamilies": [
-        "core rectangular top"
-      ],
+      "compatibleFamilies": ["core rectangular top"],
       "point": {
         "x": -7.5,
         "y": -7.7,
@@ -101,9 +78,7 @@
       "description": "The center of the west rectangular core (an elevator and a staircase around it).",
       "mandatory": false,
       "family": "core rectangular bottom",
-      "compatibleFamilies": [
-        "core rectangular top"
-      ],
+      "compatibleFamilies": ["core rectangular top"],
       "point": {
         "x": -18.6,
         "y": -7.7,
