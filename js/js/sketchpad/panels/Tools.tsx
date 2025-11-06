@@ -20,16 +20,13 @@
 // #endregion
 
 import { FC } from "react";
-import { useTranslation } from "react-i18next";
 import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
 
 interface ToolsProps extends ResizablePanelProps {}
 
 const Tools: FC<ToolsProps> = ({ visible, onWidthChange, width }) => {
-  const { t } = useTranslation();
-
-  return <Panel panelId="tools" visible={visible} onWidthChange={onWidthChange} width={width} resizeSide="right" emptyMessage={t("panels.tools.noSections")} />;
+  return <Panel panelId="tools" visible={visible} onWidthChange={onWidthChange} width={width} resizeSide="right" emptyMessageId="panels.tools.noSections" />;
 };
 
 export default Tools;

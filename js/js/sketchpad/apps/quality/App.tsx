@@ -23,7 +23,6 @@ import { DragEndEvent } from "@dnd-kit/core";
 import { ReactFlowInstance } from "@xyflow/react";
 import { FC, memo, ReactNode, useEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useTranslation } from "react-i18next";
 import { guid, Quality } from "../../../semio";
 import { Canvas, useCanvasContext, VerticalWindows } from "../../Canvas";
 import { useQuality } from "../../kits/store";
@@ -65,7 +64,6 @@ const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInst
 DiagramWindow.displayName = "DiagramWindow";
 
 const App: FC<AppProps> = () => {
-  const { t } = useTranslation();
   const fullscreenWindow = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
   const { undo, redo, toggleFormulaFullscreen, toggleDiagramFullscreen, deselectAll, togglePanel, addFormulaNode, connectNodes, startTransaction, finalizeTransaction } = useQualityAppCommands();
   const quality = useQuality() as Quality | undefined;

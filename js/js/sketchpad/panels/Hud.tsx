@@ -20,16 +20,13 @@
 // #endregion
 
 import { FC } from "react";
-import { useTranslation } from "react-i18next";
 import Panel from "../Panel.js";
 import { ResizablePanelProps } from "../Sketchpad";
 
 interface HudProps extends ResizablePanelProps {}
 
 const Hud: FC<HudProps> = ({ visible, onWidthChange, width }) => {
-  const { t } = useTranslation();
-
-  return <Panel panelId="hud" visible={visible} onWidthChange={onWidthChange} width={width} resizeSide="right" zIndex={30} showBackground={false} emptyMessage={t("panels.hud.noSections")} />;
+  return <Panel panelId="hud" visible={visible} onWidthChange={onWidthChange} width={width} resizeSide="right" zIndex={30} showBackground={false} emptyMessageId="panels.hud.noSections" />;
 };
 
 export default Hud;

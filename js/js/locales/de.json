@@ -1364,6 +1364,11 @@
                   "manual": "design#nested-designs",
                   "tutorial": "hello-semio/model-design#nested-designs"
                 }
+              },
+              "windowLibrary": {
+                "scene": "Szenen-Fenster",
+                "diagram": "Diagramm-Fenster",
+                "table": "Tabellen-Fenster"
               }
             }
           }

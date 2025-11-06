@@ -7,7 +7,6 @@
 // #endregion
 
 import { FC } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { TreeItem } from "../../../../elements/aggregation/Tree";
 import { DocsPage, docsRegistry } from "../registry";

@@ -90,7 +90,7 @@ const DesignSectionForm: FC = () => {
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.description"
             value={design.description || ""}
-            placeholder={t("semio.sketchpad.app.design.descriptionPlaceholder")}
+            placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.description", { description: value })}
             startTransaction={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.description")}
             finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.description")}
@@ -105,7 +105,7 @@ const DesignSectionForm: FC = () => {
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.icon"
             value={design.icon || ""}
-            placeholder={t("semio.sketchpad.app.design.iconPlaceholder")}
+            placeholderId="semio.sketchpad.app.design.iconPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.icon", { icon: value })}
             startTransaction={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.icon")}
             finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.icon")}
@@ -120,7 +120,7 @@ const DesignSectionForm: FC = () => {
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.image"
             value={design.image || ""}
-            placeholder={t("semio.sketchpad.app.design.imagePlaceholder")}
+            placeholderId="semio.sketchpad.app.design.imagePlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.image", { image: value })}
             startTransaction={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.image")}
             finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.image")}
@@ -135,7 +135,7 @@ const DesignSectionForm: FC = () => {
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.variant"
             value={design.variant || ""}
-            placeholder={t("semio.sketchpad.app.design.variantPlaceholder")}
+            placeholderId="semio.sketchpad.app.design.variantPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.variant", { variant: value })}
             startTransaction={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.variant")}
             finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.variant")}
@@ -150,7 +150,7 @@ const DesignSectionForm: FC = () => {
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.view"
             value={design.view || ""}
-            placeholder={t("semio.sketchpad.app.design.viewPlaceholder")}
+            placeholderId="semio.sketchpad.app.design.viewPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.view", { view: value })}
             startTransaction={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.view")}
             finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.view")}
@@ -410,7 +410,7 @@ const DesignSectionForm: FC = () => {
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.value"
                       value={attribute.value || ""}
-                      placeholder={t("semio.sketchpad.app.design.attributeValuePlaceholder")}
+                      placeholderId="semio.sketchpad.app.design.attributeValuePlaceholder"
                       onChange={(e) => {
                         const updatedAttributes = [...(design.attributes || [])];
                         updatedAttributes[index] = {
@@ -430,7 +430,7 @@ const DesignSectionForm: FC = () => {
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.unit"
                       value={attribute.unit || ""}
-                      placeholder={t("semio.sketchpad.app.design.attributeUnitPlaceholder")}
+                      placeholderId="semio.sketchpad.app.design.attributeUnitPlaceholder"
                       onChange={(e) => {
                         const updatedAttributes = [...(design.attributes || [])];
                         updatedAttributes[index] = {
@@ -450,7 +450,7 @@ const DesignSectionForm: FC = () => {
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.definition"
                       value={attribute.definition || ""}
-                      placeholder={t("semio.sketchpad.app.design.attributeDefinitionPlaceholder")}
+                      placeholderId="semio.sketchpad.app.design.attributeDefinitionPlaceholder"
                       onChange={(e) => {
                         const updatedAttributes = [...(design.attributes || [])];
                         updatedAttributes[index] = {
@@ -826,14 +826,15 @@ const PiecesSectionForm: FC = () => {
               <TreeItem>
                 <TreeContent>
                   <Combobox
-                    label={t("semio.sketchpad.app.design.name")}
+                    id="semio.sketchpad.app.design.name"
                     options={availableDesignNames.map((name) => ({
                       value: name,
                       label: name,
                     }))}
                     value={pieceDesign?.name || pieceType?.name || ""}
-                    placeholder={t("semio.sketchpad.common.selectDesign")}
+                    placeholderId="semio.sketchpad.common.selectDesign"
                     onValueChange={handleDesignNameChange}
+                    showLabel
                   />
                 </TreeContent>
               </TreeItem>
@@ -841,15 +842,16 @@ const PiecesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Combobox
-                      label={t("semio.sketchpad.app.design.variant")}
+                      id="semio.sketchpad.app.design.variant"
                       options={availableDesignVariants.map((variant) => ({
                         value: variant,
                         label: variant,
                       }))}
                       value={pieceDesign?.variant || pieceType?.variant || ""}
-                      placeholder={t("semio.sketchpad.common.selectVariant")}
+                      placeholderId="semio.sketchpad.common.selectVariant"
                       onValueChange={handleDesignVariantChange}
                       allowClear={true}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>
@@ -858,15 +860,16 @@ const PiecesSectionForm: FC = () => {
                 <TreeItem>
                   <TreeContent>
                     <Combobox
-                      label={t("semio.sketchpad.app.design.view")}
+                      id="semio.sketchpad.app.design.view"
                       options={availableDesignViews.map((view) => ({
                         value: view,
                         label: view,
                       }))}
                       value={pieceDesign?.view || ""}
-                      placeholder={t("semio.sketchpad.common.selectView")}
+                      placeholderId="semio.sketchpad.common.selectView"
                       onValueChange={handleDesignViewChange}
                       allowClear={true}
+                      showLabel
                     />
                   </TreeContent>
                 </TreeItem>

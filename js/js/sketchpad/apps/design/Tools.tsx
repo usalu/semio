@@ -20,20 +20,19 @@
 // #endregion
 
 import { FC } from "react";
-import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
 import { useDesignApp, useDesignAppCommands } from "./store";
 import { DesignAppTools } from "./tools_registry";
 
-const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
+const getDesignTools = (): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolType.SELECTION_NORMAL,
     modes: DesignAppTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
       id: tool.id,
-      label: t(tool.label),
+      label: tool.label,
       icon: tool.icon,
       tooltipId: tool.tooltipId,
       hotkey: tool.hotkey,
@@ -44,7 +43,7 @@ const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
     defaultMode: ToolType.LASSO_RECTANGULAR,
     modes: DesignAppTools.filter((tool) => tool.id.startsWith("lasso")).map((tool) => ({
       id: tool.id,
-      label: t(tool.label),
+      label: tool.label,
       icon: tool.icon,
       tooltipId: tool.tooltipId,
       hotkey: tool.hotkey,
@@ -53,7 +52,6 @@ const getDesignTools = (t: (key: string) => string): ToolDefinition[] => [
 ];
 
 export const ToolsToggleGroup: FC = () => {
-  const { t } = useTranslation();
   const { kit, design } = useParams();
   const app = useDesignApp((s) => s, { kit, design });
   const { setActiveTool } = useDesignAppCommands({ kit, design });
@@ -62,5 +60,5 @@ export const ToolsToggleGroup: FC = () => {
 
   const activeTool = app?.activeTool || ToolType.SELECTION_NORMAL;
 
-  return <ToolGroup tools={getDesignTools(t)} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool)} level="panel" />;
+  return <ToolGroup tools={getDesignTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool)} level="panel" />;
 };

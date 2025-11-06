@@ -20,6 +20,7 @@
 // #endregion
 
 import { FC, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import BasePanel from "../elements/panels/Panel";
 import { PanelKey, usePanelSections } from "./Navbar";
 import { ResizablePanelProps } from "./Sketchpad";
@@ -36,6 +37,7 @@ interface PanelProps extends ResizablePanelProps {
   maxWidth?: number;
   scopeWrapper?: FC<{ children: ReactNode }>;
   emptyMessage?: string;
+  emptyMessageId?: string;
   additionalSections?: ReactNode;
   footer?: ReactNode;
   hideActiveInteractionOpacity?: (activeInteraction: string | null) => boolean;
@@ -53,14 +55,17 @@ const Panel: FC<PanelProps> = ({
   maxWidth = 500,
   scopeWrapper: ScopeWrapper,
   emptyMessage,
+  emptyMessageId,
   additionalSections,
   footer,
   hideActiveInteractionOpacity,
 }) => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const activeInteraction = useActiveInteraction();
   const sections = usePanelSections(panelId);
   const shouldHideOpacity = hideActiveInteractionOpacity ? hideActiveInteractionOpacity(activeInteraction ?? null) : activeInteraction && !activeInteraction.startsWith(`${panelId}-`);
+  const translatedEmptyMessage = emptyMessageId ? t(emptyMessageId) : emptyMessage;
   const wrappedSections = ScopeWrapper
     ? sections.map((section) => ({
         ...section,
@@ -86,7 +91,7 @@ const Panel: FC<PanelProps> = ({
       minSize={minWidth}
       maxSize={maxWidth}
       sections={wrappedSections}
-      emptyMessage={emptyMessage}
+      emptyMessage={translatedEmptyMessage}
       additionalContent={additionalSections}
       footer={footer}
       opacity={shouldHideOpacity ? 0.1 : 1}

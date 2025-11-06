@@ -7,7 +7,6 @@
 // #endregion
 
 import { FC, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { Canvas, Window } from "../../Canvas";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
@@ -19,7 +18,6 @@ import DocsSettings from "./panels/Settings";
 import DocsWorkbench from "./panels/Workbench";
 
 const DocsApp: FC = () => {
-  const { t } = useTranslation();
   const params = useParams();
   const pathParts = params["*"]?.split("/").filter(Boolean) || [];
   const fullPath = pathParts.join("/") || "index";

@@ -523,6 +523,10 @@ class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, Desi
   };
 
   change = (diff: DesignAppDiff) => {
+    console.log("[DEBUG] DesignAppStore.change called", {
+      diffKeys: Object.keys(diff),
+      hasWindowLayout: !!diff.windowLayout
+    });
     this.transact(() => {
       if (diff.fullscreenWindow) this.fullscreenWindow = diff.fullscreenWindow;
       if (diff.activeTool) this.activeTool = diff.activeTool;

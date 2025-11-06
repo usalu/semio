@@ -1249,6 +1249,7 @@ interface DiagramProps {
 }
 
 const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
+  console.log("[DEBUG] Diagram component RENDER");
   const {
     deselectAll,
     selectPiece,

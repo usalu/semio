@@ -20,20 +20,19 @@
 // #endregion
 
 import { FC } from "react";
-import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { ToolDefinition, ToolGroup } from "../../Tool";
 import { ToolType } from "../../store";
 import { useTypeApp, useTypeAppCommands } from "./store";
 import { TypeAppTools } from "./tools_registry";
 
-const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
+const getTypeTools = (): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolType.SELECTION_NORMAL,
     modes: TypeAppTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
       id: tool.id,
-      label: t(tool.label),
+      label: tool.label,
       icon: tool.icon,
       tooltipId: tool.tooltipId,
       hotkey: tool.hotkey,
@@ -44,7 +43,7 @@ const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
     defaultMode: ToolType.PORT,
     modes: TypeAppTools.filter((tool) => tool.id === ToolType.PORT).map((tool) => ({
       id: tool.id,
-      label: t(tool.label),
+      label: tool.label,
       icon: tool.icon,
       tooltipId: tool.tooltipId,
       hotkey: tool.hotkey,
@@ -53,7 +52,6 @@ const getTypeTools = (t: (key: string) => string): ToolDefinition[] => [
 ];
 
 export const ToolsToggleGroup: FC = () => {
-  const { t } = useTranslation();
   const { kit, type } = useParams();
   const app = useTypeApp((s) => s, { kit, type });
   const { setActiveTool } = useTypeAppCommands({ kit, type });
@@ -62,5 +60,5 @@ export const ToolsToggleGroup: FC = () => {
 
   const activeTool = app?.activeTool ?? ToolType.SELECTION_NORMAL;
 
-  return <ToolGroup tools={getTypeTools(t)} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool)} level="panel" />;
+  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool)} level="panel" />;
 };

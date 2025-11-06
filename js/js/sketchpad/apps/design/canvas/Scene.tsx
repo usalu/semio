@@ -513,6 +513,7 @@ const ModelDesign: FC = () => {
 };
 
 const DesignAppScene: FC = () => {
+  console.log("[DEBUG] DesignAppScene component RENDER");
   const { deselectAll, toggleAccesslFullscreen, setCamera, clearFocus } = useDesignAppCommands();
   const fullscreen = useDesignAppFullscreen() === DesignAppFullscreenWindow.Accessl;
   const camera = useDesignAppCamera();

@@ -155,7 +155,7 @@ export const QualityWorkbench: FC = () => {
 
   return (
     <>
-      <TreeItem label={t("semio.sketchpad.app.quality.numericFunctions")}>
+      <TreeItem id="semio.sketchpad.app.quality.numericFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
             <FunctionNode name="Add" type="function" label={t("semio.sketchpad.app.quality.add")} />
@@ -165,7 +165,7 @@ export const QualityWorkbench: FC = () => {
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("semio.sketchpad.app.quality.branchingFunctions")}>
+      <TreeItem id="semio.sketchpad.app.quality.branchingFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
             <FunctionNode name="If" type="function" label={t("semio.sketchpad.app.quality.if")} />
@@ -173,7 +173,7 @@ export const QualityWorkbench: FC = () => {
           </div>
         </TreeContent>
       </TreeItem>
-      <TreeItem label={t("semio.sketchpad.app.quality.dataStructures")}>
+      <TreeItem id="semio.sketchpad.app.quality.dataStructures">
         <TreeContent>
           <div className="flex flex-wrap gap-1 p-1">
             <FunctionNode name="List" type="function" label={t("semio.sketchpad.app.quality.list")} />

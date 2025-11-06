@@ -31,9 +31,9 @@ import { Expertise, type Layout, Mode, Theme, useExpertise, useIsMobile, useLayo
 import { HotkeySettings } from "./HotkeySettings";
 
 const LanguageSwitcher: FC = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   return (
-    <Select label={t("semio.sketchpad.panel.settings.language.label")} value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
+    <Select id="semio.sketchpad.panel.settings.language" value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
       <SelectTrigger className="w-32" level="panel">
         <SelectValue />
       </SelectTrigger>
@@ -48,7 +48,6 @@ const LanguageSwitcher: FC = () => {
 interface SettingsProps extends ResizablePanelProps {}
 
 const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
-  const { t } = useTranslation();
   const tooltip = useTooltip();
   const theme = useTheme();
   const layout = useLayout();
@@ -65,10 +64,10 @@ const Settings: FC<SettingsProps> = ({ visible, onWidthChange, width }) => {
       width={width}
       resizeSide="left"
       additionalSections={
-        <TreeSection label={t("semio.sketchpad.panel.settings.general.label")} defaultOpen={true}>
+        <TreeSection id="semio.sketchpad.panel.settings.general" defaultOpen={true}>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup label={t("semio.sketchpad.panel.settings.theme.label")} type="single" value={theme} onValueChange={(value: string) => setTheme("semio.sketchpad.panel.settings.theme", value as Theme)} level="panel">
+              <ToggleGroup id="semio.sketchpad.panel.settings.theme" type="single" value={theme} onValueChange={(value: string) => setTheme("semio.sketchpad.panel.settings.theme", value as Theme)} level="panel">
                 <ToggleGroupItem id="semio.sketchpad.panel.settings.theme.system" value={Theme.SYSTEM}>
                   <Laptop />
                 </ToggleGroupItem>

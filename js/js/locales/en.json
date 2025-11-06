@@ -1350,6 +1350,11 @@
                   "manual": "design#nested-designs",
                   "tutorial": "hello-semio/model-design#nested-designs"
                 }
+              },
+              "windowLibrary": {
+                "scene": "Scene Windows",
+                "diagram": "Diagram Windows",
+                "table": "Table Windows"
               }
             }
           }

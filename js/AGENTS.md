@@ -621,10 +621,11 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
 - ALWAYS use colors defined in `@theme inline {…}` from `js/js/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/js/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
 - ALWAYS add tooltips (normal and extensive) to all ui elements.
+- NEVER use `const {t} = useTranslation()` outside of `js/js/elements` and ALWAYS use `id` prop of the ui element and make sure that the i18n key exists in `js/js/locales/*`.
 
 ### Styling
 
-- The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
+- The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. Over the canvas are floating panels which can toggled on and off.
 
 # Packages
 

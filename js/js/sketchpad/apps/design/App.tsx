@@ -34,15 +34,14 @@
 
 import { DragEndEvent } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
-import { FC, memo, ReactNode, useEffect, useRef } from "react";
+import { FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 
 import { ReactFlowInstance, ReactFlowProvider } from "@xyflow/react";
 import { TreeContent, TreeItem } from "../../../elements/aggregation/Tree";
 import { Design, findConnectionsInDesign, generateUniqueName, guid, ICON_WIDTH, Kit, Type } from "../../../semio";
-import { AppWindowConfig, Canvas } from "../../Canvas";
-import GoldenLayoutCanvas from "../../GoldenLayoutCanvas";
+import { AppWindowConfig, Canvas, LayoutCanvas } from "../../Canvas";
 import { useDesign, useKit } from "../../kits/store";
 import { useAddPanelSection, useRemovePanelSection } from "../../Navbar";
 import { useDragDrop } from "../../Sketchpad";
@@ -53,30 +52,48 @@ import Diagram from "./canvas/Diagram";
 import DesignScene from "./canvas/Scene";
 import { DesignAppFooter } from "./Footer";
 import { ConnectionsSection, DesignSection, PiecesSection, PortSection } from "./panels/Details";
+import { WindowLibrary } from "./panels/WindowLibrary";
 import { DesignAppFullscreenWindow, useDesignApp, useDesignAppCommands, useDesignAppSelection, useDesignAppStore } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
 export interface AppProps {}
 
-const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />);
+const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
+  console.log("[DEBUG] DiagramWindow RENDER");
+  return <Diagram reactFlowInstanceRef={reactFlowInstanceRef} />;
+});
 DiagramWindow.displayName = "DiagramWindow";
 
-const SceneWindow = memo(() => <DesignScene />);
+const SceneWindow = memo(() => {
+  console.log("[DEBUG] SceneWindow RENDER");
+  return <DesignScene />;
+});
 SceneWindow.displayName = "SceneWindow";
 
+const renderCountRef = { current: 0 };
+
 const App: FC<AppProps> = () => {
+  renderCountRef.current++;
+  console.log("[DEBUG] App.tsx RENDER #" + renderCountRef.current);
   const { t } = useTranslation();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
     useDesignAppCommands();
   const app = useDesignApp((s) => s);
+  console.log("[DEBUG] App.tsx after useDesignApp");
   const activeTool = app?.activeTool ?? ToolType.SELECTION_NORMAL;
 
   const selection = useDesignAppSelection();
+  console.log("[DEBUG] App.tsx after useDesignAppSelection");
   const design = useDesign() as Design | undefined;
+  console.log("[DEBUG] App.tsx after useDesign");
   const kit = useKit() as Kit;
+  console.log("[DEBUG] App.tsx after useKit");
   const appSettings = useSketchpad((s) => s.settings?.apps) as any;
+  console.log("[DEBUG] App.tsx after useSketchpad");
   const panelVisibility = useAppPanelVisibility();
+  console.log("[DEBUG] App.tsx after useAppPanelVisibility");
   const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
+  console.log("[DEBUG] App.tsx after useDragDrop");
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
@@ -121,6 +138,12 @@ const App: FC<AppProps> = () => {
 
   // Add/remove details panel sections based on selection
   useEffect(() => {
+    console.log("[DEBUG] App.tsx selection useEffect triggered", {
+      appType,
+      selectionPiecesCount: selection.pieces?.length || 0,
+      selectionConnectionsCount: selection.connections?.length || 0,
+      hasPort: !!selection.port,
+    });
     if (appType !== "design") return;
 
     const hasPieces = (selection.pieces || []).length > 0;
@@ -350,6 +373,12 @@ const App: FC<AppProps> = () => {
   }, [appType, addSection, removeSection]);
 
   useEffect(() => {
+    console.log("[DEBUG] App.tsx workbench sections useEffect triggered", {
+      appType,
+      kitGuid: kit.guid,
+      typesLength: kit.types?.length,
+      designsLength: kit.designs?.length,
+    });
     if (appType !== "design") return;
     const handleCreateType = () => {
       const existingTypes = kit.types || [];
@@ -426,11 +455,20 @@ const App: FC<AppProps> = () => {
         navigateToKit(kit.guid, "kind=designs");
       },
     });
+
+    addSection("workbench", {
+      id: "semio.sketchpad.app.design.windows",
+      order: 2,
+      content: () => <WindowLibrary />,
+    });
+
     return () => {
       removeSection("workbench", "semio.sketchpad.app.kit.types");
       removeSection("workbench", "semio.sketchpad.app.kit.designs");
+      removeSection("workbench", "semio.sketchpad.app.design.windows");
     };
-  }, [appType, kit.types, kit.designs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appType, kit.guid, kit.types?.length, kit.designs?.length]);
 
   // Add settings section
   useEffect(() => {
@@ -466,6 +504,15 @@ const App: FC<AppProps> = () => {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;
+
+    // Handle window template drops on the canvas
+    if (active.data.current?.type === "window-template" && over && over.id === "layout-canvas-drop-zone") {
+      const windowTemplate = active.data.current.windowTemplate;
+      // TODO: Implement adding window to layout
+      // This will require extending the layout API to add windows dynamically
+      console.log("[DEBUG] Window template dropped:", windowTemplate);
+      return;
+    }
 
     if (over && over.id === "diagram-drop-zone" && reactFlowInstanceRef.current) {
       if (!(event.activatorEvent instanceof PointerEvent)) {
@@ -518,67 +565,77 @@ const App: FC<AppProps> = () => {
   const store = useDesignAppStore();
   const windowLayout = useDesignApp((s) => s.windowLayout);
 
-  const defaultLayout = {
-    settings: {
-      hasHeaders: true,
+  const defaultLayout = useMemo(() => {
+    console.log("[DEBUG] App.tsx defaultLayout useMemo recomputed - THIS SHOULD ONLY RUN ONCE!");
+    return {
+      settings: {
+        hasHeaders: true,
+      },
+      content: [
+        {
+          type: "row",
+          content: [
+            {
+              type: "stack",
+              content: [
+                {
+                  type: "component",
+                  componentName: DesignAppFullscreenWindow.Diagram,
+                  title: "Diagram",
+                },
+              ],
+              width: 50,
+            },
+            {
+              type: "stack",
+              content: [
+                {
+                  type: "component",
+                  componentName: DesignAppFullscreenWindow.Accessl,
+                  title: "Scene",
+                },
+              ],
+              width: 50,
+            },
+          ],
+        },
+      ],
+    };
+  }, []);
+
+  const windowConfig: AppWindowConfig = useMemo(() => {
+    console.log("[DEBUG] App.tsx windowConfig useMemo recomputed");
+    return {
+      windowTypes: [
+        {
+          id: DesignAppFullscreenWindow.Diagram,
+          label: "Diagram",
+          component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
+        },
+        {
+          id: DesignAppFullscreenWindow.Accessl,
+          label: "Scene",
+          component: () => <SceneWindow />,
+        },
+      ],
+      defaultLayout,
+    };
+  }, [defaultLayout]);
+
+  const handleLayoutChange = useCallback(
+    (config: any) => {
+      console.log("[DEBUG] App.tsx handleLayoutChange called", { hasStore: !!store, configKeys: Object.keys(config || {}) });
+      if (store) {
+        store.change({ windowLayout: config });
+      }
     },
-    content: [
-      {
-        type: "row",
-        content: [
-          {
-            type: "stack",
-            content: [
-              {
-                type: "component",
-                componentName: DesignAppFullscreenWindow.Diagram,
-                title: "Diagram",
-              },
-            ],
-            width: 50,
-          },
-          {
-            type: "stack",
-            content: [
-              {
-                type: "component",
-                componentName: DesignAppFullscreenWindow.Accessl,
-                title: "Scene",
-              },
-            ],
-            width: 50,
-          },
-        ],
-      },
-    ],
-  };
-
-  const windowConfig: AppWindowConfig = {
-    windowTypes: [
-      {
-        id: DesignAppFullscreenWindow.Diagram,
-        label: "Diagram",
-        component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
-      },
-      {
-        id: DesignAppFullscreenWindow.Accessl,
-        label: "Scene",
-        component: () => <SceneWindow />,
-      },
-    ],
-    defaultLayout,
-  };
-
-  const handleLayoutChange = (config: any) => {
-    if (store) {
-      store.change({ windowLayout: config });
-    }
-  };
+    [store],
+  );
 
   return (
     <ReactFlowProvider>
       <Canvas>
-        <GoldenLayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
+        <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
       </Canvas>
       <DesignAppFooter />
     </ReactFlowProvider>

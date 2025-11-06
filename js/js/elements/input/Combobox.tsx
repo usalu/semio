@@ -16,6 +16,7 @@ interface ComboboxProps {
   options: ComboboxOption[];
   value?: string;
   placeholder?: string;
+  placeholderId?: string;
   emptyMessage?: string;
   onValueChange?: (value: string) => void;
   startTransaction?: () => void;
@@ -26,10 +27,11 @@ interface ComboboxProps {
   id: string;
 }
 
-const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, showLabel, id }) => {
+const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, startTransaction, finalizeTransaction, className, allowClear = false, showLabel, id }) => {
   const [open, setOpen] = useState(false);
   const mode = useTooltipMode();
   const { t } = useTranslation();
+  const computedPlaceholder = placeholderId ? t(placeholderId) : placeholder;
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -55,7 +57,7 @@ const Combobox: FC<ComboboxProps> = ({ options, value = "", placeholder = "Selec
   const popoverTrigger = (
     <PopoverTrigger asChild>
       <Button variant="default" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
-        {selectedOption ? selectedOption.label : placeholder}
+        {selectedOption ? selectedOption.label : computedPlaceholder}
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
     </PopoverTrigger>

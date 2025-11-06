@@ -20,7 +20,6 @@
 // #endregion
 
 import { FC, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { guid, Representation, Type } from "../../../semio";
 import { Canvas, Window } from "../../Canvas";
 import { useKitCommands, useType } from "../../kits/store";
@@ -34,7 +33,6 @@ import { useTypeApp, useTypeAppCommands, useTypeAppSelection } from "./store";
 import { ToolsToggleGroup } from "./Tools";
 
 const App: FC = () => {
-  const { t } = useTranslation();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const appType = useAppType();
