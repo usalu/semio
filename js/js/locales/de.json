@@ -1188,14 +1188,14 @@
                     "manual": "design#diagram",
                     "tutorial": "metabolism/thinking-about-the-diagram",
                     "x": {
-                      "label": "X",
-                      "beginner": "X-Diagrammkoordinate des Zentrums des Bauteils im 2D-Layoutraum.",
+                      "label": "U",
+                      "beginner": "U-Diagrammkoordinate des Zentrums des Bauteils im 2D-Layoutraum.",
                       "manual": "design#diagram",
                       "tutorial": "metabolism/thinking-about-the-diagram"
                     },
                     "y": {
-                      "label": "Y",
-                      "beginner": "Y-Diagrammkoordinate des Zentrums des Bauteils im 2D-Layoutraum.",
+                      "label": "V",
+                      "beginner": "V-Diagrammkoordinate des Zentrums des Bauteils im 2D-Layoutraum.",
                       "manual": "design#diagram",
                       "tutorial": "metabolism/thinking-about-the-diagram"
                     }
@@ -1871,5 +1871,114 @@
   "folder": {
     "created": "Erstellt",
     "updated": "Aktualisiert"
+  },
+  "action-group-default": {
+    "label": "Aktionen"
+  },
+  "action-group-default-copy": {
+    "label": "Kopieren",
+    "beginner": "Ausgewaehlte Elemente in die Zwischenablage kopieren"
+  },
+  "action-group-default-download": {
+    "label": "Herunterladen",
+    "beginner": "Den aktuellen Inhalt herunterladen"
+  },
+  "action-group-default-external": {
+    "label": "In neuem Fenster oeffnen",
+    "beginner": "Diesen Inhalt in einem neuen Fenster oeffnen"
+  },
+  "action-group-window-controls": {
+    "label": "Fenstersteuerung"
+  },
+  "action-group-window-controls-external": {
+    "label": "In neuem Fenster oeffnen",
+    "beginner": "Dieses Fenster in einem separaten Browserfenster oeffnen"
+  },
+  "action-group-window-controls-maximize": {
+    "label": "Maximieren/Minimieren",
+    "beginner": "Vollbild fuer dieses Fenster umschalten"
+  },
+  "action-group-window-controls-close": {
+    "label": "Schliessen",
+    "beginner": "Dieses Fenster schliessen"
+  },
+  "action-group-destructive": {
+    "label": "Aktionen"
+  },
+  "action-group-destructive-copy": {
+    "label": "Kopieren",
+    "beginner": "Ausgewaehlte Elemente kopieren"
+  },
+  "action-group-destructive-download": {
+    "label": "Herunterladen",
+    "beginner": "Den Inhalt herunterladen"
+  },
+  "action-group-destructive-delete": {
+    "label": "Loeschen",
+    "beginner": "Ausgewaehlte Elemente loeschen"
+  },
+  "action-group-with-label": {
+    "label": "Aktionen"
+  },
+  "action-group-with-label-copy": {
+    "label": "Kopieren",
+    "beginner": "Ausgewaehlte Elemente kopieren"
+  },
+  "action-group-with-label-download": {
+    "label": "Herunterladen",
+    "beginner": "Den Inhalt herunterladen"
+  },
+  "action-group-with-label-external": {
+    "label": "Extern oeffnen",
+    "beginner": "In einem neuen Fenster oeffnen"
+  },
+  "action-group-level-base": {
+    "label": "Basis-Aktionen"
+  },
+  "action-group-level-base-copy": {
+    "label": "Kopieren",
+    "beginner": "In die Zwischenablage kopieren"
+  },
+  "action-group-level-base-download": {
+    "label": "Herunterladen",
+    "beginner": "Inhalt herunterladen"
+  },
+  "action-group-level-base-external": {
+    "label": "Extern oeffnen",
+    "beginner": "In neuem Fenster oeffnen"
+  },
+  "action-group-level-panel": {
+    "label": "Panel-Aktionen"
+  },
+  "action-group-level-panel-copy": {
+    "label": "Kopieren",
+    "beginner": "In die Zwischenablage kopieren"
+  },
+  "action-group-level-panel-download": {
+    "label": "Herunterladen",
+    "beginner": "Inhalt herunterladen"
+  },
+  "action-group-level-panel-external": {
+    "label": "Extern oeffnen",
+    "beginner": "In neuem Fenster oeffnen"
+  },
+  "action-group-level-temporary": {
+    "label": "Temporaere Aktionen"
+  },
+  "action-group-level-temporary-copy": {
+    "label": "Kopieren",
+    "beginner": "In die Zwischenablage kopieren"
+  },
+  "action-group-level-temporary-download": {
+    "label": "Herunterladen",
+    "beginner": "Inhalt herunterladen"
+  },
+  "action-group-level-temporary-external": {
+    "label": "Extern oeffnen",
+    "beginner": "In neuem Fenster oeffnen"
+  },
+  "scene-projection": {
+    "label": "Projektionsmodus",
+    "beginner": "Zwischen Kamera- und orthographischer Projektion wechseln"
   }
 }

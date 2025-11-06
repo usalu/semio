@@ -64,7 +64,7 @@
   opacity: 1 !important;
   z-index: 1 !important;
   position: relative !important;
-  background-color: var(--panel) !important;
+  background-color: var(--base) !important;
   border-bottom: 1px solid var(--border-color) !important;
 }
 
@@ -79,7 +79,7 @@
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
-  background-color: var(--panel) !important;
+  background-color: var(--base) !important;
   color: var(--foreground) !important;
   padding: 2px 8px !important;
   cursor: var(--cursor-pointer) !important;
@@ -87,12 +87,12 @@
 }
 
 .lm_tab:hover {
-  background-color: var(--hover-panel) !important;
+  background-color: var(--hover-base) !important;
 }
 
 .lm_tab.lm_active {
-  background-color: var(--active-base) !important;
-  color: var(--active-foreground) !important;
+  background-color: var(--base) !important;
+  color: var(--foreground) !important;
 }
 
 .lm_title {
@@ -110,10 +110,14 @@
   flex-shrink: 0 !important;
 }
 
+.lm_close_tab {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 .lm_popout,
 .lm_maximise,
-.lm_close,
-.lm_close_tab {
+.lm_close {
   display: inline-block !important;
   visibility: visible !important;
   opacity: 1 !important;
@@ -122,7 +126,7 @@
   height: 20px !important;
   min-width: 20px !important;
   min-height: 20px !important;
-  background-color: var(--muted) !important;
+  background-color: var(--base) !important;
   border: 1px solid var(--border-color) !important;
   position: relative !important;
   margin: 0 2px !important;
@@ -132,9 +136,8 @@
 
 .lm_popout:hover,
 .lm_maximise:hover,
-.lm_close:hover,
-.lm_close_tab:hover {
-  background-color: var(--hover-panel) !important;
+.lm_close:hover {
+  background-color: var(--hover-base) !important;
   border-color: var(--border-color) !important;
 }
 
@@ -162,8 +165,7 @@
   line-height: 1 !important;
 }
 
-.lm_close::before,
-.lm_close_tab::before {
+.lm_close::before {
   content: "×" !important;
   display: block !important;
   position: absolute !important;

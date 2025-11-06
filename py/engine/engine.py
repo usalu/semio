@@ -834,31 +834,31 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
 
 
 class Coord(Model):
-    x: float = sqlmodel.Field()
-    y: float = sqlmodel.Field()
+    u: float = sqlmodel.Field()
+    v: float = sqlmodel.Field()
 
     def __str__(self) -> str:
-        return f"[{pretty(self.x)}, {pretty(self.y)}]"
+        return f"[{pretty(self.u)}, {pretty(self.v)}]"
 
     def __repr__(self) -> str:
-        return f"[{pretty(self.x)}, {pretty(self.y)}]"
+        return f"[{pretty(self.u)}, {pretty(self.v)}]"
 
-    # def __init__(self, x: int = 0, y: int = 0):
-    #     super().__init__(x=x, y=y)
+    # def __init__(self, u: int = 0, v: int = 0):
+    #     super().__init__(u=u, v=v)
 
     # def __len__(self):
     #     return 2
 
     # def __getitem__(self, key):
     #     if key == 0:
-    #         return self.x
+    #         return self.u
     #     elif key == 1:
-    #         return self.y
+    #         return self.v
     #     else:
     #         raise IndexError("Index out of range")
 
     # def __iter__(self):
-    #     return iter((self.x, self.y))
+    #     return iter((self.u, self.v))
 
 
 class CoordInput(Coord, Input):
@@ -1929,8 +1929,8 @@ class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, Pie
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
     planePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("plane_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("planes.id"), nullable=True), default=None, exclude=True)
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
-    centerX: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
-    centerY: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
+    centerU: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
+    centerV: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"})
     connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"})
@@ -1939,18 +1939,18 @@ class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, Pie
 
     @property
     def center(self) -> typing.Optional[Coord]:
-        if self.centerX is None or self.centerY is None:
+        if self.centerU is None or self.centerV is None:
             return None
-        return Coord(x=self.centerX, y=self.centerY)
+        return Coord(u=self.centerU, v=self.centerV)
 
     @center.setter
     def center(self, center: typing.Optional[Coord]):
         if center is None:
-            self.centerX = None
-            self.centerY = None
+            self.centerU = None
+            self.centerV = None
             return
-        self.centerX = center.x
-        self.centerY = center.y
+        self.centerU = center.u
+        self.centerV = center.v
 
     @property
     def connections(self) -> list["Connection"]:

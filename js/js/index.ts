@@ -44,6 +44,9 @@ export { default as Section } from "./elements/display/Section";
 export type { SectionProps } from "./elements/display/Section";
 export { Steps } from "./elements/display/Steps";
 export type { StepsProps } from "./elements/display/Steps";
+export { Action, ActionDropdown } from "./elements/input/Action";
+export type { ActionDropdownOption, ActionDropdownProps, ActionProps } from "./elements/input/Action";
+export { ActionGroup, ActionGroupItem } from "./elements/input/ActionGroup";
 
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";

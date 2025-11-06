@@ -169,7 +169,7 @@ const App: FC = () => {
         const newFileGuid = guid();
         const newFile = {
           guid: newFileGuid,
-          path: file.name,
+          name: file.name,
           size: file.size,
           createdAt: new Date(),
           updatedAt: new Date(),

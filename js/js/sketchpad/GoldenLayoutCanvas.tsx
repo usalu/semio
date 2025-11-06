@@ -19,7 +19,8 @@
 
 // #endregion
 
-import { FC, ReactNode, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createRoot, Root } from "react-dom/client";
 import { useLocation, useNavigate, MemoryRouter, Router, Navigation } from "react-router";
 import { ReactFlowProvider } from "@xyflow/react";
@@ -27,6 +28,8 @@ import { AppWindowConfig, WindowTypeDefinition } from "./Canvas";
 import { useCanvasContext } from "./Canvas";
 import { SketchpadScopeProvider, useSketchpadScope } from "./store";
 import { DesignScopeProvider, KitScopeProvider, useDesignScope, useKitScope } from "./kits/store";
+import { Action } from "../elements/input/Action";
+import * as React from "react";
 
 interface GoldenLayoutCanvasProps {
   windowConfig: AppWindowConfig;
@@ -35,9 +38,32 @@ interface GoldenLayoutCanvasProps {
   className?: string;
 }
 
+function normalizeDimensions(dimensions: any): any {
+  if (!dimensions || typeof dimensions !== "object") return dimensions;
+
+  const normalized = { ...dimensions };
+
+  // Convert numeric dimension values with units to string format
+  const dimensionFields = [
+    { value: "defaultMinItemHeight", unit: "defaultMinItemHeightUnit" },
+    { value: "defaultMinItemWidth", unit: "defaultMinItemWidthUnit" },
+  ];
+
+  dimensionFields.forEach(({ value, unit }) => {
+    if (normalized[value] !== undefined && normalized[unit]) {
+      // Convert to string format that golden-layout expects
+      normalized[value] = `${normalized[value]}${normalized[unit]}`;
+      // Remove the separate unit field
+      delete normalized[unit];
+    }
+  });
+
+  return normalized;
+}
+
 function normalizeGoldenLayoutConfig(config: any, isTopLevel: boolean = false): any {
   if (!config || typeof config !== "object") return config;
-  
+
   // Handle top-level config with root property (full config from toConfig())
   if (config.root) {
     const normalized = normalizeGoldenLayoutConfig(config.root, false);
@@ -47,11 +73,11 @@ function normalizeGoldenLayoutConfig(config: any, isTopLevel: boolean = false): 
         ...config.settings,
         hasHeaders: true,
       },
-      dimensions: config.dimensions,
+      dimensions: normalizeDimensions(config.dimensions),
       header: config.header,
     };
   }
-  
+
   // Handle top-level config with settings/dimensions/header but no root
   if (isTopLevel && (config.settings || config.dimensions || config.header)) {
     // If it has content, normalize the content structure
@@ -63,6 +89,7 @@ function normalizeGoldenLayoutConfig(config: any, isTopLevel: boolean = false): 
           ...config.settings,
           hasHeaders: true,
         },
+        dimensions: normalizeDimensions(config.dimensions),
       };
     }
     // Otherwise just add settings
@@ -72,6 +99,7 @@ function normalizeGoldenLayoutConfig(config: any, isTopLevel: boolean = false): 
         ...config.settings,
         hasHeaders: true,
       },
+      dimensions: normalizeDimensions(config.dimensions),
     };
   }
   
@@ -126,15 +154,36 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
   const layoutRef = useRef<any | null>(null);
   const componentRootsRef = useRef<Map<string, Root>>(new Map());
   const componentPropsRef = useRef<Map<string, any>>(new Map());
+  const controlRootsRef = useRef<Map<HTMLElement, Root>>(new Map());
+  const observerRef = useRef<MutationObserver | null>(null);
   const { setWindowError, setWindowLoading } = useCanvasContext();
   const [hoveredSplitter, setHoveredSplitter] = useState<{ element: HTMLElement; direction: "horizontal" | "vertical" } | null>(null);
   const [goldenLayoutLoaded, setGoldenLayoutLoaded] = useState(false);
+  const hoveredSplitterElementRef = useRef<HTMLElement | null>(null);
   const sketchpadScope = useSketchpadScope();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const location = useLocation();
   const navigate = useNavigate();
   const contextRef = useRef({ sketchpadScope, kitScope, designScope, location, navigate });
+  const setActiveSplitter = useCallback(
+    (element: HTMLElement, direction: "horizontal" | "vertical") => {
+      if (hoveredSplitterElementRef.current && hoveredSplitterElementRef.current !== element) {
+        hoveredSplitterElementRef.current.classList.remove("relative", "overflow-visible");
+      }
+      hoveredSplitterElementRef.current = element;
+      element.classList.add("relative", "overflow-visible");
+      setHoveredSplitter({ element, direction });
+    },
+    [setHoveredSplitter],
+  );
+  const clearHoveredSplitter = useCallback(() => {
+    if (hoveredSplitterElementRef.current) {
+      hoveredSplitterElementRef.current.classList.remove("relative", "overflow-visible");
+      hoveredSplitterElementRef.current = null;
+    }
+    setHoveredSplitter(null);
+  }, [setHoveredSplitter]);
   
   useEffect(() => {
     contextRef.current = { sketchpadScope, kitScope, designScope, location, navigate };
@@ -302,6 +351,116 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
           layout.init();
 
           layoutRef.current = layout;
+
+          const customizeHeaders = () => {
+            if (!containerRef.current || !layoutRef.current) return;
+            const headers = containerRef.current.querySelectorAll(".lm_header");
+            headers.forEach((header) => {
+              const controls = header.querySelector(".lm_controls") as HTMLElement;
+              if (!controls) return;
+              
+              const closeTab = controls.querySelector(".lm_close_tab");
+              if (closeTab) {
+                closeTab.remove();
+              }
+              
+              const existingPopout = controls.querySelector(".lm_popout");
+              const existingMaximise = controls.querySelector(".lm_maximise");
+              const existingClose = controls.querySelector(".lm_close");
+              
+              if (existingPopout || existingMaximise || existingClose) {
+                if (controlRootsRef.current.has(controls)) {
+                  return;
+                }
+                
+                const findLayoutItem = (element: Element): any => {
+                  const stackEl = element.closest(".lm_stack");
+                  const componentEl = element.closest(".lm_component");
+                  const targetEl = stackEl || componentEl;
+                  if (!targetEl) return null;
+                  
+                  const findAllItems = (item: any): any[] => {
+                    const items = [item];
+                    if (item.contentItems && Array.isArray(item.contentItems)) {
+                      item.contentItems.forEach((child: any) => {
+                        items.push(...findAllItems(child));
+                      });
+                    }
+                    return items;
+                  };
+                  
+                  const allItems = findAllItems(layoutRef.current.root);
+                  return allItems.find((item: any) => {
+                    const itemEl = item.element?.[0] || item.element;
+                    return itemEl && (itemEl === targetEl || itemEl.contains(targetEl));
+                  });
+                };
+                
+                const layoutItem = findLayoutItem(header);
+                if (!layoutItem) return;
+                
+                controls.innerHTML = "";
+                const root = createRoot(controls);
+                controlRootsRef.current.set(controls, root);
+                
+                root.render(
+                  <React.Fragment>
+                    <Action
+                      as="div"
+                      className="lm_popout"
+                      title="open in new window"
+                      level="base"
+                      onClick={() => {
+                        if (layoutItem.popout) {
+                          layoutItem.popout();
+                        }
+                      }}
+                    />
+                    <Action
+                      as="div"
+                      className="lm_maximise"
+                      title="maximise"
+                      level="base"
+                      onClick={() => {
+                        if (layoutItem.toggleMaximise) {
+                          layoutItem.toggleMaximise();
+                        }
+                      }}
+                    />
+                    <Action
+                      as="div"
+                      className="lm_close"
+                      title="close"
+                      level="base"
+                      onClick={() => {
+                        if (layoutItem.close) {
+                          layoutItem.close();
+                        }
+                      }}
+                    />
+                  </React.Fragment>
+                );
+              }
+            });
+          };
+          
+          setTimeout(customizeHeaders, 0);
+          
+          const observer = new MutationObserver(() => {
+            customizeHeaders();
+          });
+          observerRef.current = observer;
+          
+          if (containerRef.current) {
+            observer.observe(containerRef.current, {
+              childList: true,
+              subtree: true,
+            });
+          }
+          
+          layout.on("stateChanged", () => {
+            setTimeout(customizeHeaders, 0);
+          });
         } catch (error) {
           console.error("[DEBUG] Error initializing golden-layout:", error);
           if (error instanceof Error && error.message.includes("trimStart")) {
@@ -312,21 +471,23 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
 
         handleSplitterHover = (e: MouseEvent) => {
           const target = e.target as HTMLElement;
-          const splitter = target.closest(".lm_splitter") as HTMLElement;
+          const splitter = target.closest(".lm_splitter") as HTMLElement | null;
           if (splitter) {
             const isHorizontal = splitter.classList.contains("lm_splitter_horizontal");
-            setHoveredSplitter({ element: splitter, direction: isHorizontal ? "horizontal" : "vertical" });
+            setActiveSplitter(splitter, isHorizontal ? "horizontal" : "vertical");
           } else {
-            setHoveredSplitter(null);
+            clearHoveredSplitter();
           }
         };
 
         handleSplitterLeave = (e: MouseEvent) => {
           const target = e.target as HTMLElement;
-          const splitter = target.closest(".lm_splitter");
-          if (!splitter || !splitter.contains(e.relatedTarget as Node)) {
-            setHoveredSplitter(null);
+          const relatedTarget = e.relatedTarget as Node | null;
+          const splitter = target.closest(".lm_splitter") as HTMLElement | null;
+          if (splitter && relatedTarget && splitter.contains(relatedTarget)) {
+            return;
           }
+          clearHoveredSplitter();
         };
 
         if (containerRef.current) {
@@ -340,12 +501,19 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
 
     return () => {
       isMounted = false;
+      clearHoveredSplitter();
       if (containerRef.current && handleSplitterHover && handleSplitterLeave) {
         containerRef.current.removeEventListener("mouseover", handleSplitterHover);
         containerRef.current.removeEventListener("mouseout", handleSplitterLeave);
       }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
       const rootsToUnmount = Array.from(componentRootsRef.current.values());
+      const controlRootsToUnmount = Array.from(controlRootsRef.current.values());
       componentRootsRef.current.clear();
+      controlRootsRef.current.clear();
       if (layoutRef.current) {
         layoutRef.current.destroy();
       }
@@ -355,6 +523,13 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
             root.unmount();
           } catch (error) {
             console.error("[DEBUG] Error unmounting root in cleanup:", error);
+          }
+        });
+        controlRootsToUnmount.forEach((root) => {
+          try {
+            root.unmount();
+          } catch (error) {
+            console.error("[DEBUG] Error unmounting control root in cleanup:", error);
           }
         });
       }, 0);
@@ -541,6 +716,119 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
           });
             layout.init();
             layoutRef.current = layout;
+
+            const customizeHeaders = () => {
+              if (!containerRef.current || !layoutRef.current) return;
+              const headers = containerRef.current.querySelectorAll(".lm_header");
+              headers.forEach((header) => {
+                const controls = header.querySelector(".lm_controls") as HTMLElement;
+                if (!controls) return;
+                
+                const closeTab = controls.querySelector(".lm_close_tab");
+                if (closeTab) {
+                  closeTab.remove();
+                }
+                
+                const existingPopout = controls.querySelector(".lm_popout");
+                const existingMaximise = controls.querySelector(".lm_maximise");
+                const existingClose = controls.querySelector(".lm_close");
+                
+                if (existingPopout || existingMaximise || existingClose) {
+                  if (controlRootsRef.current.has(controls)) {
+                    return;
+                  }
+                  
+                  const findLayoutItem = (element: Element): any => {
+                    const stackEl = element.closest(".lm_stack");
+                    const componentEl = element.closest(".lm_component");
+                    const targetEl = stackEl || componentEl;
+                    if (!targetEl) return null;
+                    
+                    const findAllItems = (item: any): any[] => {
+                      const items = [item];
+                      if (item.contentItems && Array.isArray(item.contentItems)) {
+                        item.contentItems.forEach((child: any) => {
+                          items.push(...findAllItems(child));
+                        });
+                      }
+                      return items;
+                    };
+                    
+                    const allItems = findAllItems(layoutRef.current.root);
+                    return allItems.find((item: any) => {
+                      const itemEl = item.element?.[0] || item.element;
+                      return itemEl && (itemEl === targetEl || itemEl.contains(targetEl));
+                    });
+                  };
+                  
+                  const layoutItem = findLayoutItem(header);
+                  if (!layoutItem) return;
+                  
+                  controls.innerHTML = "";
+                  const root = createRoot(controls);
+                  controlRootsRef.current.set(controls, root);
+                  
+                  root.render(
+                    <React.Fragment>
+                      <Action
+                        as="div"
+                        className="lm_popout"
+                        title="open in new window"
+                        level="base"
+                        onClick={() => {
+                          if (layoutItem.popout) {
+                            layoutItem.popout();
+                          }
+                        }}
+                      />
+                      <Action
+                        as="div"
+                        className="lm_maximise"
+                        title="maximise"
+                        level="base"
+                        onClick={() => {
+                          if (layoutItem.toggleMaximise) {
+                            layoutItem.toggleMaximise();
+                          }
+                        }}
+                      />
+                      <Action
+                        as="div"
+                        className="lm_close"
+                        title="close"
+                        level="base"
+                        onClick={() => {
+                          if (layoutItem.close) {
+                            layoutItem.close();
+                          }
+                        }}
+                      />
+                    </React.Fragment>
+                  );
+                }
+              });
+            };
+            
+            setTimeout(customizeHeaders, 0);
+            
+            if (observerRef.current) {
+              observerRef.current.disconnect();
+            }
+            const observer = new MutationObserver(() => {
+              customizeHeaders();
+            });
+            observerRef.current = observer;
+            
+            if (containerRef.current) {
+              observer.observe(containerRef.current, {
+                childList: true,
+                subtree: true,
+              });
+            }
+            
+            layout.on("stateChanged", () => {
+              setTimeout(customizeHeaders, 0);
+            });
           } catch (error) {
             console.error("[DEBUG] Error reloading golden-layout:", error);
             if (error instanceof Error && error.message.includes("trimStart")) {
@@ -615,10 +903,16 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
   }, [location, goldenLayoutLoaded, windowConfig.windowTypes]);
 
   const handleAddWindow = (windowTypeId: string, direction: "horizontal" | "vertical") => {
-    if (!layoutRef.current || !hoveredSplitter) return;
+    if (!layoutRef.current || !hoveredSplitterElementRef.current) {
+      console.log("[DEBUG] Cannot add window: no layout or hovered splitter");
+      return;
+    }
 
     const windowType = windowConfig.windowTypes.find((wt) => wt.id === windowTypeId);
-    if (!windowType) return;
+    if (!windowType) {
+      console.log("[DEBUG] Cannot add window: window type not found", windowTypeId);
+      return;
+    }
 
     const newItemConfig = {
       type: "component",
@@ -626,120 +920,139 @@ const GoldenLayoutCanvas: FC<GoldenLayoutCanvasProps> = ({ windowConfig, layoutS
       title: windowType.label,
     };
 
+    const splitter = hoveredSplitterElementRef.current;
+
     try {
-      const splitter = hoveredSplitter.element;
-      const splitterParent = splitter.parentElement;
-      if (!splitterParent) return;
+      console.log("[DEBUG] Adding window next to splitter", { direction, windowTypeId });
 
-      const splitterParentParent = splitterParent.parentElement;
-      if (!splitterParentParent) return;
-
-      const contentItems = layoutRef.current.root.getItemsByFilter((item) => {
-        const itemEl = item.element[0];
-        return itemEl && (splitterParentParent.contains(itemEl) || itemEl === splitterParentParent);
-      });
-
-      const adjacentItem = contentItems.find((item) => {
-        const itemEl = item.element[0];
-        return itemEl && splitterParentParent.contains(itemEl) && (itemEl.nextElementSibling === splitter || itemEl.previousElementSibling === splitter);
-      });
-
-      if (adjacentItem && adjacentItem.parent) {
-        const parent = adjacentItem.parent;
-        const isRow = parent.type === "row";
-        const itemIndex = parent.contentItems.indexOf(adjacentItem);
-
-        if (direction === "horizontal" && !isRow) {
-          const newRow = layoutRef.current.createContentItem(
-            {
-              type: "row",
-              content: [adjacentItem.config, newItemConfig],
-            },
-            parent
-          );
-          parent.replaceChild(adjacentItem, newRow);
-        } else if (direction === "vertical" && isRow) {
-          const newColumn = layoutRef.current.createContentItem(
-            {
-              type: "column",
-              content: [adjacentItem.config, newItemConfig],
-            },
-            parent
-          );
-          parent.replaceChild(adjacentItem, newColumn);
-        } else {
-          parent.addChild(newItemConfig, itemIndex + 1);
+      // Recursively find all items in the layout tree
+      const findAllItems = (item: any): any[] => {
+        const items = [item];
+        if (item.contentItems && Array.isArray(item.contentItems)) {
+          item.contentItems.forEach((child: any) => {
+            items.push(...findAllItems(child));
+          });
         }
+        return items;
+      };
+
+      // Recursively serialize an item to a config
+      const itemToConfig = (item: any): any => {
+        if (!item) return null;
+
+        console.log("[DEBUG] Serializing item:", {
+          type: item.type,
+          componentName: item.componentName,
+          componentType: item.componentType,
+          title: item.title,
+          hasConfig: !!item.config,
+          configKeys: item.config ? Object.keys(item.config) : []
+        });
+
+        // If the item already has a valid config, use it
+        if (item.config && typeof item.config === 'object' && item.config.type) {
+          console.log("[DEBUG] Using existing config:", item.config);
+          return item.config;
+        }
+
+        // Build config from the item
+        const config: any = {
+          type: item.type,
+        };
+
+        // Add type-specific properties
+        if (item.type === 'component') {
+          const componentName = item.componentName || item.componentType || item.config?.componentName || item.config?.componentType;
+          const title = item.title || item.config?.title || 'Untitled';
+
+          if (!componentName) {
+            console.error("[DEBUG] Component missing componentName:", item);
+            return null;
+          }
+
+          config.componentName = componentName;
+          config.title = title;
+          // Include componentState - golden-layout expects this property
+          config.componentState = item.config?.componentState || item.componentState || {};
+
+          console.log("[DEBUG] Created component config:", config);
+        } else if (item.type === 'stack') {
+          config.content = [];
+          config.activeItemIndex = item.activeItemIndex || 0;
+          // Serialize all children in the stack
+          if (item.contentItems && Array.isArray(item.contentItems)) {
+            config.content = item.contentItems.map((child: any) => itemToConfig(child)).filter((c: any) => c !== null);
+          }
+          console.log("[DEBUG] Created stack config with", config.content.length, "children");
+        } else if (item.type === 'row' || item.type === 'column') {
+          config.content = [];
+          // Serialize all children in the row/column
+          if (item.contentItems && Array.isArray(item.contentItems)) {
+            config.content = item.contentItems.map((child: any) => itemToConfig(child)).filter((c: any) => c !== null);
+          }
+          console.log("[DEBUG] Created", item.type, "config with", config.content.length, "children");
+        }
+
+        // Add width/height if present
+        if (item.width !== undefined) config.width = item.width;
+        if (item.height !== undefined) config.height = item.height;
+
+        return config;
+      };
+
+      // Find the parent container that contains this splitter
+      // Splitters exist between items in a row or column container
+      let parent = null;
+      const allItems = findAllItems(layoutRef.current.root);
+
+      // Look for a row or column that could be the parent of this splitter
+      for (const item of allItems) {
+        if (item.type === "row" || item.type === "column") {
+          const itemEl = item.element?.[0] || item.element;
+          if (itemEl && itemEl.contains && itemEl.contains(splitter)) {
+            parent = item;
+            break;
+          }
+        }
+      }
+
+      if (parent) {
+        console.log("[DEBUG] Found parent container", { type: parent.type, numChildren: parent.contentItems?.length });
+
+        // Simply add the config - let GoldenLayout handle item creation
+        parent.addChild(newItemConfig);
+        console.log("[DEBUG] Added window as sibling in container");
       } else {
+        // Fallback: add to root
+        console.log("[DEBUG] No parent found, adding to root");
         const rootContent = layoutRef.current.root.contentItems[0];
         if (rootContent) {
-          if (direction === "horizontal" && rootContent.type !== "row") {
-            const newRow = layoutRef.current.createContentItem(
-              {
-                type: "row",
-                content: [rootContent.config, newItemConfig],
-              },
-              layoutRef.current.root
-            );
-            layoutRef.current.root.replaceChild(rootContent, newRow);
-          } else if (direction === "vertical" && rootContent.type === "row") {
-            const newColumn = layoutRef.current.createContentItem(
-              {
-                type: "column",
-                content: [rootContent.config, newItemConfig],
-              },
-              layoutRef.current.root
-            );
-            layoutRef.current.root.replaceChild(rootContent, newColumn);
-          } else {
-            rootContent.addChild(newItemConfig);
-          }
+          rootContent.addChild(newItemConfig);
+        } else {
+          console.log("[DEBUG] No root content, cannot add window");
         }
       }
     } catch (error) {
       console.error("[DEBUG] Error adding window:", error);
     }
 
-    setHoveredSplitter(null);
+    clearHoveredSplitter();
   };
 
   return (
-    <div className={`relative h-full w-full ${className}`} style={{ zIndex: 0 }}>
-      <div ref={containerRef} className="h-full w-full" style={{ zIndex: 0 }} />
-      {hoveredSplitter && (
-        <div
-          className="absolute flex gap-1 p-1 border"
-          style={{
-            left: hoveredSplitter.element.getBoundingClientRect().left + hoveredSplitter.element.getBoundingClientRect().width / 2 - 60,
-            top: hoveredSplitter.element.getBoundingClientRect().top + hoveredSplitter.element.getBoundingClientRect().height / 2 - 20,
-            zIndex: 100,
-            backgroundColor: "var(--temporary)",
-            borderColor: "var(--border-color)",
-          }}
-        >
-          {windowConfig.windowTypes.map((windowType) => (
-            <button
-              key={windowType.id}
-              className="px-2 py-1 text-xs border cursor-pointer"
-              style={{
-                backgroundColor: "var(--active-base)",
-                color: "var(--active-foreground)",
-                borderColor: "var(--border-color)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = "var(--hover-temporary)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = "var(--active-base)";
-              }}
-              onClick={() => handleAddWindow(windowType.id, hoveredSplitter.direction)}
-              title={windowType.label}
-            >
-              {windowType.icon || windowType.label}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className={`relative z-0 h-full w-full ${className}`}>
+      <div ref={containerRef} className="h-full w-full" />
+      {hoveredSplitter &&
+        createPortal(
+          <div className="pointer-events-auto absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 gap-1 border border-border bg-temporary p-1">
+            {windowConfig.windowTypes.map((windowType) => (
+              <Action key={windowType.id} level="temporary" onClick={() => handleAddWindow(windowType.id, hoveredSplitter.direction)} id={windowType.id}>
+                {windowType.icon ?? windowType.label}
+              </Action>
+            ))}
+          </div>,
+          hoveredSplitter.element,
+        )}
     </div>
   );
 };

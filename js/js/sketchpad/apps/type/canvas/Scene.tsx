@@ -245,7 +245,7 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    const ext = file.path.split(".").pop() || "";
+    const ext = file.name?.split(".").pop() || "";
 
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {

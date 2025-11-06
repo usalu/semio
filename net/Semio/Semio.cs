@@ -2322,19 +2322,19 @@ public class File : Model<File>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-diagram-point-"/>
 /// </summary>
-[Model("📺", "DP", "DPt", "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.")]
+[Model("📺", "DP", "DPt", "A 2d-point (uv) of floats in the diagram. One unit is equal the width of a piece icon.")]
 public class Coord : Model<Coord>
 {
-    [NumberProp("🎚️", "X", "X", "The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
-    public float X { get; set; }
+    [NumberProp("🎚️", "U", "U", "The u-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
+    public float U { get; set; }
 
-    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
-    public float Y { get; set; }
+    [NumberProp("🎚️", "V", "V", "The v-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
+    public float V { get; set; }
 
     public Coord Normalize()
     {
-        var length = (float)Math.Sqrt(X * X + Y * Y);
-        return new Coord { X = X / length, Y = Y / length };
+        var length = (float)Math.Sqrt(U * U + V * V);
+        return new Coord { U = U / length, V = V / length };
     }
 }
 
@@ -3249,8 +3249,8 @@ public class DesignDiff : Model<DesignDiff>
     }
 
     public static implicit operator DesignDiff(DesignId id) => new() { Guid = id.Guid };
-    public static implicit operator DesignDiff(Design design) => new() 
-    { 
+    public static implicit operator DesignDiff(Design design) => new()
+    {
         Guid = design.Guid,
         Name = design.Name,
         Parent = design.Parent,
@@ -3384,8 +3384,8 @@ public class Folder : Model<Folder>
     [Name("👤", "UB?", "UpB?", "The optional user who last updated the folder.")]
     public string? UpdatedBy { get; set; }
 
-    public static implicit operator Folder(FolderDiff diff) => new() 
-    { 
+    public static implicit operator Folder(FolderDiff diff) => new()
+    {
         Guid = diff.Guid ?? "",
         Name = diff.Name ?? "",
         Parent = diff.Parent,
@@ -3453,8 +3453,8 @@ public class FolderDiff : Model<FolderDiff>
     }
 
     public static implicit operator FolderDiff(FolderId id) => new() { Guid = id.Guid };
-    public static implicit operator FolderDiff(Folder folder) => new() 
-    { 
+    public static implicit operator FolderDiff(Folder folder) => new()
+    {
         Guid = folder.Guid,
         Name = folder.Name,
         Parent = folder.Parent,
@@ -3542,8 +3542,8 @@ public class KitDiff : Model<KitDiff>
         };
     }
 
-    public static implicit operator KitDiff(Kit kit) => new() 
-    { 
+    public static implicit operator KitDiff(Kit kit) => new()
+    {
         Guid = kit.Guid,
         Name = kit.Name,
         Description = kit.Description,

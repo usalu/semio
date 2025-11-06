@@ -1176,14 +1176,14 @@
                     "manual": "design#diagram",
                     "tutorial": "metabolism/thinking-about-the-diagram",
                     "x": {
-                      "label": "X",
-                      "beginner": "X diagram coordinate of the center of the piece in 2D layout space.",
+                      "label": "U",
+                      "beginner": "U diagram coordinate of the center of the piece in 2D layout space.",
                       "manual": "design#diagram",
                       "tutorial": "metabolism/thinking-about-the-diagram"
                     },
                     "y": {
-                      "label": "Y",
-                      "beginner": "Y diagram coordinate of the center of the piece in 2D layout space.",
+                      "label": "V",
+                      "beginner": "V diagram coordinate of the center of the piece in 2D layout space.",
                       "manual": "design#diagram",
                       "tutorial": "metabolism/thinking-about-the-diagram"
                     }
@@ -1839,5 +1839,114 @@
   "folder": {
     "created": "Created",
     "updated": "Updated"
+  },
+  "action-group-default": {
+    "label": "Actions"
+  },
+  "action-group-default-copy": {
+    "label": "Copy",
+    "beginner": "Copy selected items to clipboard"
+  },
+  "action-group-default-download": {
+    "label": "Download",
+    "beginner": "Download the current content"
+  },
+  "action-group-default-external": {
+    "label": "Open in new window",
+    "beginner": "Open this content in a new window"
+  },
+  "action-group-window-controls": {
+    "label": "Window controls"
+  },
+  "action-group-window-controls-external": {
+    "label": "Open in new window",
+    "beginner": "Open this window in a separate browser window"
+  },
+  "action-group-window-controls-maximize": {
+    "label": "Maximize/Minimize",
+    "beginner": "Toggle fullscreen for this window"
+  },
+  "action-group-window-controls-close": {
+    "label": "Close",
+    "beginner": "Close this window"
+  },
+  "action-group-destructive": {
+    "label": "Actions"
+  },
+  "action-group-destructive-copy": {
+    "label": "Copy",
+    "beginner": "Copy selected items"
+  },
+  "action-group-destructive-download": {
+    "label": "Download",
+    "beginner": "Download the content"
+  },
+  "action-group-destructive-delete": {
+    "label": "Delete",
+    "beginner": "Delete the selected items"
+  },
+  "action-group-with-label": {
+    "label": "Actions"
+  },
+  "action-group-with-label-copy": {
+    "label": "Copy",
+    "beginner": "Copy selected items"
+  },
+  "action-group-with-label-download": {
+    "label": "Download",
+    "beginner": "Download the content"
+  },
+  "action-group-with-label-external": {
+    "label": "Open externally",
+    "beginner": "Open in a new window"
+  },
+  "action-group-level-base": {
+    "label": "Base actions"
+  },
+  "action-group-level-base-copy": {
+    "label": "Copy",
+    "beginner": "Copy to clipboard"
+  },
+  "action-group-level-base-download": {
+    "label": "Download",
+    "beginner": "Download content"
+  },
+  "action-group-level-base-external": {
+    "label": "Open externally",
+    "beginner": "Open in new window"
+  },
+  "action-group-level-panel": {
+    "label": "Panel actions"
+  },
+  "action-group-level-panel-copy": {
+    "label": "Copy",
+    "beginner": "Copy to clipboard"
+  },
+  "action-group-level-panel-download": {
+    "label": "Download",
+    "beginner": "Download content"
+  },
+  "action-group-level-panel-external": {
+    "label": "Open externally",
+    "beginner": "Open in new window"
+  },
+  "action-group-level-temporary": {
+    "label": "Temporary actions"
+  },
+  "action-group-level-temporary-copy": {
+    "label": "Copy",
+    "beginner": "Copy to clipboard"
+  },
+  "action-group-level-temporary-download": {
+    "label": "Download",
+    "beginner": "Download content"
+  },
+  "action-group-level-temporary-external": {
+    "label": "Open externally",
+    "beginner": "Open in new window"
+  },
+  "scene-projection": {
+    "label": "Projection mode",
+    "beginner": "Switch between camera and orthographic projection"
   }
 }

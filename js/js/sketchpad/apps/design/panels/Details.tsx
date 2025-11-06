@@ -31,7 +31,6 @@ import { Slider } from "../../../../elements/input/Slider";
 import Stepper from "../../../../elements/input/Stepper";
 import { Textarea } from "../../../../elements/input/Textarea";
 import { Connection, ConnectionDiff, Design, Guid, Kit, Piece, findDesignInKit, findPieceInDesign, findTypeInKit, guid } from "../../../../semio";
-import { useFlatPieceCenter, useFlatPiecePlane, useIsConnectedPiece, usePieceParentConnection, usePiecesMetadata } from "../../../kits";
 import { useDesign, useIsInDesignScope, useKit, useKitCommands, usePiecesFromIds, useReplacableDesigns, useReplacableTypes, useTooltip } from "../../../store";
 import { useDesignAppCommands, useDesignAppSelection } from "../store";
 
@@ -574,9 +573,9 @@ const PiecesSectionForm: FC = () => {
   const handleCenterXChange = (value: number) => {
     const origin = "semio.sketchpad.app.design.panel.details.section.piece.center.x";
     if (isSingle && piece) {
-      updatePiece(origin, piece.guid, { center: { x: value, y: piece.center?.y ?? 0 } });
+      updatePiece(origin, piece.guid, { center: { u: value, v: piece.center?.v ?? 0 } });
     } else {
-      const updates = pieces.map((p) => ({ id: p.guid, diff: { center: { x: value, y: p.center?.y ?? 0 } } }));
+      const updates = pieces.map((p) => ({ id: p.guid, diff: { center: { u: value, v: p.center?.v ?? 0 } } }));
       updatePieces(origin, updates);
     }
   };
@@ -584,9 +583,9 @@ const PiecesSectionForm: FC = () => {
   const handleCenterYChange = (value: number) => {
     const origin = "semio.sketchpad.app.design.panel.details.section.piece.center.y";
     if (isSingle && piece) {
-      updatePiece(origin, piece.guid, { center: { x: piece.center?.x ?? 0, y: value } });
+      updatePiece(origin, piece.guid, { center: { u: piece.center?.u ?? 0, v: value } });
     } else {
-      const updates = pieces.map((p) => ({ id: p.guid, diff: { center: { x: p.center?.x ?? 0, y: value } } }));
+      const updates = pieces.map((p) => ({ id: p.guid, diff: { center: { u: p.center?.u ?? 0, v: value } } }));
       updatePieces(origin, updates);
     }
   };
@@ -733,13 +732,13 @@ const PiecesSectionForm: FC = () => {
     () =>
       commonTypeName && !isDesignPiece
         ? [
-          ...new Set(
-            allReplacableTypes
-              .filter((t) => t.name === commonTypeName)
-              .map((t) => t.variant)
-              .filter((v): v is string => Boolean(v)),
-          ),
-        ]
+            ...new Set(
+              allReplacableTypes
+                .filter((t) => t.name === commonTypeName)
+                .map((t) => t.variant)
+                .filter((v): v is string => Boolean(v)),
+            ),
+          ]
         : [],
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
@@ -755,24 +754,24 @@ const PiecesSectionForm: FC = () => {
   // Get available design variants and views
   const availableDesignVariants = pieceDesign
     ? [
-      ...new Set(
-        availableDesigns
-          .filter((d) => d.name === pieceDesign.name)
-          .map((d) => d.variant)
-          .filter((v): v is string => Boolean(v)),
-      ),
-    ]
+        ...new Set(
+          availableDesigns
+            .filter((d) => d.name === pieceDesign.name)
+            .map((d) => d.variant)
+            .filter((v): v is string => Boolean(v)),
+        ),
+      ]
     : [];
 
   const availableDesignViews = pieceDesign
     ? [
-      ...new Set(
-        availableDesigns
-          .filter((d) => d.name === pieceDesign.name && (d.variant || "") === (pieceDesign.variant || ""))
-          .map((d) => d.view)
-          .filter((v): v is string => Boolean(v)),
-      ),
-    ]
+        ...new Set(
+          availableDesigns
+            .filter((d) => d.name === pieceDesign.name && (d.variant || "") === (pieceDesign.variant || ""))
+            .map((d) => d.view)
+            .filter((v): v is string => Boolean(v)),
+        ),
+      ]
     : [];
 
   let parentConnection: Connection | null = null;
@@ -945,9 +944,7 @@ const PiecesSectionForm: FC = () => {
         <TreeItem>
           <TreeContent>
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-muted-foreground">
-                {t("semio.sketchpad.app.design.piece.connectedPieceInfo")}
-              </p>
+              <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.design.piece.connectedPieceInfo")}</p>
               <Button
                 variant="secondary"
                 onClick={() => {

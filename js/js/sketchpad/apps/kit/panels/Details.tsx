@@ -296,8 +296,8 @@ export const FileSection: FC = () => {
   if (selectedFiles.length === 0) return null;
 
   const files = selectedFiles
-    .map((filePath) => {
-      return kit.files?.find((f) => f.path === filePath);
+    .map((fileGuid) => {
+      return kit.files?.find((f) => f.guid === fileGuid);
     })
     .filter(Boolean);
 
@@ -322,8 +322,8 @@ export const FileSection: FC = () => {
           <TreeContent>
             <div className="space-y-2">
               <div>
-                <label className="text-xs text-muted-foreground">{t("semio.file.path")}</label>
-                <p className="text-sm">{file!.path}</p>
+                <label className="text-xs text-muted-foreground">{t("semio.file.name")}</label>
+                <p className="text-sm">{file!.name}</p>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">{t("semio.file.size")}</label>

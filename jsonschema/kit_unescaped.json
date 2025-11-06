@@ -202,22 +202,22 @@
       "type": "object"
     },
     "Coord": {
-      "description": "📺 A 2d-point (xy) of integers in screen coordinate system.",
+      "description": "📺 A 2d-point (uv) of integers in screen coordinate system.",
       "properties": {
-        "x": {
-          "description": "🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-          "title": "X",
+        "u": {
+          "description": "🏁 The u-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "U",
           "type": "number"
         },
-        "y": {
-          "description": "🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-          "title": "Y",
+        "v": {
+          "description": "🏁 The v-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "V",
           "type": "number"
         }
       },
       "required": [
-        "x",
-        "y"
+        "u",
+        "v"
       ],
       "title": "Coord",
       "type": "object"

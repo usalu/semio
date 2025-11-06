@@ -190,22 +190,22 @@ class YCoordStore {
 
   constructor(yCoord: YCoord, coord: Coord) {
     this.yCoord = yCoord;
-    this.x = coord.x;
-    this.y = coord.y;
+    this.u = coord.u;
+    this.v = coord.v;
   }
 
-  get x(): number {
-    return this.yCoord.get("x") as number;
+  get u(): number {
+    return this.yCoord.get("u") as number;
   }
-  set x(x: number) {
-    this.yCoord.set("x", x);
+  set u(u: number) {
+    this.yCoord.set("u", u);
   }
 
-  get y(): number {
-    return this.yCoord.get("y") as number;
+  get v(): number {
+    return this.yCoord.get("v") as number;
   }
-  set y(y: number) {
-    this.yCoord.set("y", y);
+  set v(v: number) {
+    this.yCoord.set("v", v);
   }
 
   hash = (coord: Coord): string => {
@@ -214,8 +214,8 @@ class YCoordStore {
 
   snapshot = (): Coord => {
     const currentData = {
-      x: this.x,
-      y: this.y,
+      u: this.u,
+      v: this.v,
     };
     const currentHash = this.hash(currentData);
 
@@ -228,8 +228,8 @@ class YCoordStore {
   };
 
   change = (diff: CoordDiff) => {
-    if (diff.x !== undefined) this.x = diff.x;
-    if (diff.y !== undefined) this.y = diff.y;
+    if (diff.u !== undefined) this.u = diff.u;
+    if (diff.v !== undefined) this.v = diff.v;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -871,15 +871,27 @@ class FileStore {
     const date = this.yFile.get("createdAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
-  set createdAt(createdAt: Date | undefined) {
-    this.yFile.set("createdAt", createdAt?.toISOString() || "");
+  set createdAt(createdAt: Date | string | undefined) {
+    if (!createdAt) {
+      this.yFile.set("createdAt", "");
+    } else if (typeof createdAt === "string") {
+      this.yFile.set("createdAt", createdAt);
+    } else {
+      this.yFile.set("createdAt", createdAt.toISOString());
+    }
   }
   get updatedAt(): Date | undefined {
     const date = this.yFile.get("updatedAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
-  set updatedAt(updatedAt: Date | undefined) {
-    this.yFile.set("updatedAt", updatedAt?.toISOString() || "");
+  set updatedAt(updatedAt: Date | string | undefined) {
+    if (!updatedAt) {
+      this.yFile.set("updatedAt", "");
+    } else if (typeof updatedAt === "string") {
+      this.yFile.set("updatedAt", updatedAt);
+    } else {
+      this.yFile.set("updatedAt", updatedAt.toISOString());
+    }
   }
   get createdBy(): Guid | undefined {
     return this.yFile.get("createdBy") as string | undefined;
@@ -2541,7 +2553,7 @@ export function useFlatPieceCenter(id?: Guid): Coord {
   const center = useFlatPiece((p) => p.center, id) as Coord | undefined;
 
   if (!center) {
-    return { x: 0, y: 0 };
+    return { u: 0, v: 0 };
   }
 
   return center;
@@ -4136,9 +4148,10 @@ export class KitStore {
     for (const [guid, fileStore] of this.files) {
       try {
         const file = fileStore.snapshot();
-        const blob = await this.fileProvider.download(this.guid, guid, this.getFileStoragePath(file));
+        const storagePath = this.getFileStoragePath(file);
+        const blob = await this.fileProvider.download(this.guid, guid, storagePath);
         const objectUrl = URL.createObjectURL(blob);
-        this.regularFiles.set(file.guid, objectUrl);
+        this.regularFiles.set(storagePath, objectUrl);
       } catch (error) {
         console.error(`[KIT ${this.name}] Failed to sync file ${guid}:`, error);
       }
@@ -4355,7 +4368,9 @@ export class KitStore {
     const file = fileStore.snapshot();
 
     // First, check if we have it in memory (regularFiles)
-    const memoryUrl = this.regularFiles.get(file.guid);
+    // regularFiles uses storage path as key, not guid
+    const storagePath = this.getFileStoragePath(file);
+    const memoryUrl = this.regularFiles.get(storagePath);
     if (memoryUrl) {
       return memoryUrl;
     }
@@ -4368,11 +4383,11 @@ export class KitStore {
     // If we have a file provider, download the blob and create a blob URL
     if (this.fileProvider) {
       try {
-        const blob = await this.fileProvider.download(this.guid, fileGuid, this.getFileStoragePath(file));
+        const blob = await this.fileProvider.download(this.guid, fileGuid, storagePath);
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
-          // Cache it in memory for future use
-          this.regularFiles.set(file.guid, blobUrl);
+          // Cache it in memory for future use (using storage path as key)
+          this.regularFiles.set(storagePath, blobUrl);
           return blobUrl;
         }
       } catch (error) {
@@ -4710,7 +4725,7 @@ export class KitStore {
             if (blob) {
               const objectUrl = URL.createObjectURL(blob);
               const fileStore = this.files.get(file.guid);
-              const storagePath = fileStore ? this.getFileStoragePath(fileStore.snapshot()) : file.path ?? file.name;
+              const storagePath = fileStore ? this.getFileStoragePath(fileStore.snapshot()) : file.name;
               this.regularFiles.set(storagePath, objectUrl);
 
               if (this.fileProvider) {

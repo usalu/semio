@@ -9,8 +9,8 @@ module Semio
   # ➡️ A 3D vector (xyz) with floating-point coordinates.
   Vector = Struct.new(:x, :y, :z, keyword_init: true)
 
-  # 📺 A 2D point (xy) in the diagram coordinate system.
-  Coord = Struct.new(:x, :y, keyword_init: true)
+  # 📺 A 2D point (uv) in the diagram coordinate system.
+  Coord = Struct.new(:u, :v, keyword_init: true)
 
   # 🗺️ The optional location of the type
   Location = Struct.new(:longitude, :latitude, keyword_init: true)

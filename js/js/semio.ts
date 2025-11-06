@@ -255,7 +255,7 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 // #region Coord (weak entity)
 // https://github.com/usalu/semio#-coord-
 
-export const CoordSchema = z.object({ x: z.number(), y: z.number() });
+export const CoordSchema = z.object({ u: z.number(), v: z.number() });
 export type Coord = z.infer<typeof CoordSchema>;
 export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
 export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
@@ -264,30 +264,30 @@ export const CoordDiffSchema = CoordSchema.partial();
 export type CoordDiff = z.infer<typeof CoordDiffSchema>;
 export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
   return {
-    x: after.x - before.x,
-    y: after.y - before.y,
+    u: after.u - before.u,
+    v: after.v - before.v,
   };
 };
 export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
+  const u = appliedDiff.u ?? 0;
+  const v = appliedDiff.v ?? 0;
   return {
-    x: original.x - x,
-    y: original.y - y,
+    u: original.u - u,
+    v: original.v - v,
   };
 };
 export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
   return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    u: (diff1.u ?? 0) + (diff2.u ?? 0),
+    v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
 };
 export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
+  const u = diff.u ?? 0;
+  const v = diff.v ?? 0;
   return {
-    x: base.x + x,
-    y: base.y + y,
+    u: base.u + u,
+    v: base.v + v,
   };
 };
 
@@ -2480,7 +2480,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
       flatDesign.pieces![rootPieceIndex].plane = rootPlane;
       // Ensure root piece has a center (default to origin if not set)
       if (!flatDesign.pieces![rootPieceIndex].center) {
-        flatDesign.pieces![rootPieceIndex].center = { x: 0, y: 0 };
+        flatDesign.pieces![rootPieceIndex].center = { u: 0, v: 0 };
       }
     }
 
@@ -2518,11 +2518,11 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         piecePlanes[childPiece.guid] = childPlane;
 
         // Ensure parent has a center (default to origin if not set)
-        const parentCenter = parentPiece.center || { x: 0, y: 0 };
+        const parentCenter = parentPiece.center || { u: 0, v: 0 };
 
         const childCenter = {
-          x: round(parentCenter.x + (connection.x ?? 0)),
-          y: round(parentCenter.y + (connection.y ?? 0)),
+          u: round(parentCenter.u + (connection.x ?? 0)),
+          v: round(parentCenter.v + (connection.y ?? 0)),
         };
 
         const flatChildPiece: Piece = setAttributes(
@@ -2788,7 +2788,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
     // For design connections, use the original pieces and connections without namespacing
     const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
       ...piece,
-      center: piece.center || { x: 0, y: 0 },
+      center: piece.center || { u: 0, v: 0 },
     }));
 
     const transformedConnections = expandedReferencedDesign.connections || [];

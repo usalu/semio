@@ -1453,7 +1453,7 @@ public class CoordGoo : ModelGoo<Coord>
         Point3d point = new Point3d();
         if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
         {
-            Value = new Coord { X = (float)point.X, Y = (float)point.Y };
+            Value = new Coord { U = (float)point.X, V = (float)point.Y };
             return true;
         }
         return false;

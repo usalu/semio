@@ -180,7 +180,9 @@ export const commands = {
             try {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
-              files.push(new File([fileBlob], file.path));
+              // Extract filename from path (handles both "file.glb" and "folder/file.glb")
+              const fileName = file.path.split("/").pop() || file.path;
+              files.push(new File([fileBlob], fileName));
             } catch (error) { }
           }
           return {

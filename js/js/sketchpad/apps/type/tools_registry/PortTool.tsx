@@ -193,7 +193,7 @@ const TypeMesh: FC<{ onPortPreview: (position: THREE.Vector3, normal: THREE.Vect
     }
 
     // Extract file extension
-    const ext = file.path.split(".").pop() || "";
+    const ext = file.name?.split(".").pop() || "";
 
     // Use kitStore to get the file URL through the file provider
     const url = kitStore.getFileUrl(file.guid);

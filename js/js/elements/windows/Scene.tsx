@@ -22,9 +22,12 @@
 
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent, useThree } from "@react-three/fiber";
+import { Box, Camera as CameraIcon } from "lucide-react";
 import React, { FC, ReactNode, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Camera, Plane, Point, Vector } from "../../semio";
+import type { ActionDropdownOption } from "../input/Action";
+import { ActionDropdown } from "../input/Action";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -598,17 +601,54 @@ interface SceneProps {
   className?: string;
   focusedItemId?: string;
   onFocusComplete?: () => void;
+  projection?: "camera" | "orthographic";
+  onProjectionChange?: (projection: "camera" | "orthographic") => void;
 }
 
-const Scene: FC<SceneProps> = ({ children, showGrid = true, showGizmo = true, camera, onCameraChange, onDoubleClickCapture, onPointerMissed, orthographic = true, shadows = false, className = "", focusedItemId, onFocusComplete }) => (
-  <div className={`h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
-    <Canvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined} style={{ width: "100%", height: "100%" }}>
-      <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
-        {children}
-      </SceneInner>
-    </Canvas>
-  </div>
-);
+const Scene: FC<SceneProps> = ({
+  children,
+  showGrid = true,
+  showGizmo = true,
+  camera,
+  onCameraChange,
+  onDoubleClickCapture,
+  onPointerMissed,
+  orthographic = true,
+  shadows = false,
+  className = "",
+  focusedItemId,
+  onFocusComplete,
+  projection = "orthographic",
+  onProjectionChange,
+}) => {
+  const projectionOptions: ActionDropdownOption[] = [
+    {
+      value: "camera",
+      icon: <CameraIcon className="size-3" />,
+      label: "Camera",
+    },
+    {
+      value: "orthographic",
+      icon: <Box className="size-3" />,
+      label: "Orthographic",
+    },
+  ];
+
+  return (
+    <div className={`relative h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
+      {onProjectionChange && (
+        <div className="absolute top-1 right-1 z-10">
+          <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} level="base" />
+        </div>
+      )}
+      <Canvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined} style={{ width: "100%", height: "100%" }}>
+        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
+          {children}
+        </SceneInner>
+      </Canvas>
+    </div>
+  );
+};
 
 export const SceneSkeleton: FC = () => (
   <div className="h-full w-full bg-background flex items-center justify-center">

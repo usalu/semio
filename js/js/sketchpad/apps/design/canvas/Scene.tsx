@@ -27,10 +27,21 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import Scene, { Model, TransformableModel } from "../../../../elements/windows/Scene";
 import { Camera, Design, DiffStatus, Kit, Piece, Plane, planeToMatrix, Representation, selectBestRepresentation, toThreeRotation, Type } from "../../../../semio";
-import { KitStore, PieceScopeProvider, useDesign, useFlatPiecePlane, useKit, useKitStore, usePiece, useType } from "../../../kits/store";
 import { useDiffedPiece, useIsPieceSelected, useIsPieceTransitiveHovered, usePieceStatus } from "../../../kits/designAppIntegration";
+import { KitStore, PieceScopeProvider, useDesign, useFlatPiecePlane, useKit, useKitStore, usePiece, useType } from "../../../kits/store";
 import { useAppPanelVisibility } from "../../../store";
-import { DesignAppFullscreenWindow, DesignAppPresenceOther, useDesignAppCamera, useDesignAppCommands, useDesignAppFocusedPieceGuid, useDesignAppFullscreen, useDesignAppOthers, useDesignAppPieceColor, useDesignAppSelectedRepresentationTags, useDesignAppSelection } from "../store";
+import {
+  DesignAppFullscreenWindow,
+  DesignAppPresenceOther,
+  useDesignAppCamera,
+  useDesignAppCommands,
+  useDesignAppFocusedPieceGuid,
+  useDesignAppFullscreen,
+  useDesignAppOthers,
+  useDesignAppPieceColor,
+  useDesignAppSelectedRepresentationTags,
+  useDesignAppSelection,
+} from "../store";
 import { SharedTransformControls } from "./SharedTransformControls";
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -145,7 +156,7 @@ const PieceMesh: FC = () => {
     if (!file) {
       return { representationUrl: null, fileExtension: "", fileGuid: null };
     }
-    const ext = file.path.split(".").pop() || "";
+    const ext = file.name?.split(".").pop() || "";
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
       return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
@@ -507,6 +518,7 @@ const DesignAppScene: FC = () => {
   const camera = useDesignAppCamera();
   const focusedPieceGuid = useDesignAppFocusedPieceGuid();
   const panelVisibility = useAppPanelVisibility();
+  const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
 
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
@@ -527,14 +539,24 @@ const DesignAppScene: FC = () => {
     [setCamera],
   );
   const onFocusComplete = useCallback(() => {
-    // Small delay to ensure focus has completed before clearing
     setTimeout(() => {
       clearFocus("semio.sketchpad.app.design.canvas.scene.focusComplete");
     }, 100);
   }, [clearFocus]);
 
   return (
-    <Scene showGizmo={fullscreen && !!panelVisibility.toolbar} camera={camera} onCameraChange={onCameraChange} onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed} focusedItemId={focusedPieceGuid} onFocusComplete={onFocusComplete}>
+    <Scene
+      showGizmo={fullscreen && !!panelVisibility.toolbar}
+      camera={camera}
+      onCameraChange={onCameraChange}
+      onDoubleClickCapture={onDoubleClickCapture}
+      onPointerMissed={onPointerMissed}
+      focusedItemId={focusedPieceGuid}
+      onFocusComplete={onFocusComplete}
+      orthographic={projection === "orthographic"}
+      projection={projection}
+      onProjectionChange={setProjection}
+    >
       <ModelDesign />
     </Scene>
   );

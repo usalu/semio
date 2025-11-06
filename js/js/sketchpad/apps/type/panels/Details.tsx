@@ -194,6 +194,7 @@ const RepresentationsSectionForm: FC = () => {
               const isHovered = hover?.representation === representation.guid;
               return (
                 <div
+                  key={`representation-${index}`}
                   onPointerEnter={() => hoverRepresentation("semio.sketchpad.app.type.panel.details.representation.hover", representation.guid)}
                   onPointerLeave={() => clearHover("semio.sketchpad.app.type.panel.details.representation.leave")}
                   onClick={() =>

@@ -46,8 +46,8 @@ import {
 
 import { Avatar, AvatarFallback } from "../../../../elements/display/Avatar";
 import { Button } from "../../../../elements/input/Button";
-import { ConnectionScopeProvider, PieceScopeProvider, useDesign, useExplodeableDesignNodes, useFlatDesign, useKit, useKitCommands, usePiecesMetadata } from "../../../kits/store";
 import { useClusterableGroups, useDiffedPiece, useIsConnectionHovered, useIsPieceHovered } from "../../../kits/designAppIntegration";
+import { ConnectionScopeProvider, PieceScopeProvider, useDesign, useExplodeableDesignNodes, useFlatDesign, useKit, useKitCommands, usePiecesMetadata } from "../../../kits/store";
 import { useFocusSafe } from "../../../Navbar";
 import { ToolType, useAppPanelVisibility, useSketchpadCommands } from "../../../store";
 import {
@@ -325,9 +325,12 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isDesignPiece = !!piece.design;
 
-  const selectPiecePort = useCallback((piece: Guid, port: Guid) => {
-    commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode", piece, port);
-  }, [commands]);
+  const selectPiecePort = useCallback(
+    (piece: Guid, port: Guid) => {
+      commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode", piece, port);
+    },
+    [commands],
+  );
 
   const deselectPiecePort = useCallback(() => {
     commands.deselectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode");
@@ -335,21 +338,24 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 
   const design = useDesign() as Design | undefined;
 
-  const addConnection = useCallback((connection: SemioConnection) => {
-    // Extract x and y from piece centers
-    // connected is parent, connecting is child
-    // child.center = parent.center + connection.x/y
-    // so connection.x/y = child.center - parent.center
-    const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
-    const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
+  const addConnection = useCallback(
+    (connection: SemioConnection) => {
+      // Extract x and y from piece centers
+      // connected is parent, connecting is child
+      // child.center = parent.center + connection.x/y
+      // so connection.x/y = child.center - parent.center
+      const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
+      const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
 
-    if (parentPiece?.center && childPiece?.center) {
-      connection.x = childPiece.center.x - parentPiece.center.x;
-      connection.y = childPiece.center.y - parentPiece.center.y;
-    }
+      if (parentPiece?.center && childPiece?.center) {
+        connection.x = childPiece.center.u - parentPiece.center.u;
+        connection.y = childPiece.center.v - parentPiece.center.v;
+      }
 
-    commands.addConnection("semio.sketchpad.app.design.canvas.diagram.pieceNode", connection);
-  }, [commands, design]);
+      commands.addConnection("semio.sketchpad.app.design.canvas.diagram.pieceNode", connection);
+    },
+    [commands, design],
+  );
 
   const handleMouseEnter = useCallback(() => {
     // Clear any global pending clear hover
@@ -428,7 +434,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   const diffedPiece = useDiffedPiece() as Piece;
 
   // Check if piece has a center diff - only show ghost if there's an actual position change
-  const hasCenterDiff = diff === DiffStatus.Modified && piece.center && diffedPiece.center && (piece.center.x !== diffedPiece.center.x || piece.center.y !== diffedPiece.center.y);
+  const hasCenterDiff = diff === DiffStatus.Modified && piece.center && diffedPiece.center && (piece.center.u !== diffedPiece.center.u || piece.center.v !== diffedPiece.center.v);
 
   const typeName = type.name || "";
   const typeVariant = type.variant || "";
@@ -453,7 +459,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
       if (!currentSelectedPort.piece || !currentSelectedPort.port) {
         console.error("[ORIGIN] Selected port has undefined piece or port guid", {
           selectedPiece: currentSelectedPort.piece,
-          selectedPort: currentSelectedPort.port
+          selectedPort: currentSelectedPort.port,
         });
         return;
       }
@@ -479,9 +485,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   // Calculate original position in pixels for the ghost node
   const originalPixelPos = hasCenterDiff
     ? {
-      x: (piece.center?.x ?? 0) * ICON_WIDTH,
-      y: -(piece.center?.y ?? 0) * ICON_WIDTH,
-    }
+        x: (piece.center?.x ?? 0) * ICON_WIDTH,
+        y: -(piece.center?.y ?? 0) * ICON_WIDTH,
+      }
     : null;
 
   return (
@@ -548,29 +554,35 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
   const design = useDesign() as Design | undefined;
 
-  const selectPiecePort = useCallback((piece: Guid, port: Guid) => {
-    commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.designNode", piece, port);
-  }, [commands]);
+  const selectPiecePort = useCallback(
+    (piece: Guid, port: Guid) => {
+      commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.designNode", piece, port);
+    },
+    [commands],
+  );
 
   const deselectPiecePort = useCallback(() => {
     commands.deselectPiecePort("semio.sketchpad.app.design.canvas.diagram.designNode");
   }, [commands]);
 
-  const addConnection = useCallback((connection: SemioConnection) => {
-    // Extract x and y from piece centers
-    // connected is parent, connecting is child
-    // child.center = parent.center + connection.x/y
-    // so connection.x/y = child.center - parent.center
-    const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
-    const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
+  const addConnection = useCallback(
+    (connection: SemioConnection) => {
+      // Extract x and y from piece centers
+      // connected is parent, connecting is child
+      // child.center = parent.center + connection.x/y
+      // so connection.x/y = child.center - parent.center
+      const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
+      const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
 
-    if (parentPiece?.center && childPiece?.center) {
-      connection.x = childPiece.center.x - parentPiece.center.x;
-      connection.y = childPiece.center.y - parentPiece.center.y;
-    }
+      if (parentPiece?.center && childPiece?.center) {
+        connection.x = childPiece.center.u - parentPiece.center.u;
+        connection.y = childPiece.center.v - parentPiece.center.v;
+      }
 
-    commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
-  }, [commands, design]);
+      commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
+    },
+    [commands, design],
+  );
 
   const handleMouseEnter = useCallback(() => {
     // Clear any global pending clear hover
@@ -706,7 +718,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
       if (!currentSelectedPort.piece || !currentSelectedPort.port) {
         console.error("[ORIGIN] Selected port has undefined piece or port guid in DesignNode", {
           selectedPiece: currentSelectedPort.piece,
-          selectedPort: currentSelectedPort.port
+          selectedPort: currentSelectedPort.port,
         });
         return;
       }
@@ -967,8 +979,8 @@ const pieceToNode = (piece: Piece, type: Type, center: Coord, selected: boolean,
   type: "piece",
   id: `piece-${index}-${piece.guid}`,
   position: {
-    x: center.x * ICON_WIDTH || 0,
-    y: -center.y * ICON_WIDTH || 0,
+    x: center.u * ICON_WIDTH || 0,
+    y: -center.v * ICON_WIDTH || 0,
   },
   selected,
   draggable: true,
@@ -980,8 +992,8 @@ const designToNode = (piece: Piece, externalConnections: SemioConnection[], cent
   type: "design",
   id: `piece-${index}-${piece.guid}`,
   position: {
-    x: center.x * ICON_WIDTH || 0,
-    y: -center.y * ICON_WIDTH || 0,
+    x: center.u * ICON_WIDTH || 0,
+    y: -center.v * ICON_WIDTH || 0,
   },
   selected,
   draggable: true,
@@ -1151,12 +1163,12 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
         });
 
         if (connectedPieceCenters.length > 0) {
-          const avgX = connectedPieceCenters.reduce((sum, center) => sum + center.x, 0) / connectedPieceCenters.length;
-          const avgY = connectedPieceCenters.reduce((sum, center) => sum + center.y, 0) / connectedPieceCenters.length;
+          const avgU = connectedPieceCenters.reduce((sum, center) => sum + center.u, 0) / connectedPieceCenters.length;
+          const avgV = connectedPieceCenters.reduce((sum, center) => sum + center.v, 0) / connectedPieceCenters.length;
 
           calculatedCenter = {
-            x: Math.round(avgX),
-            y: Math.round(avgY),
+            u: Math.round(avgU),
+            v: Math.round(avgV),
           };
         }
       }
@@ -1209,16 +1221,16 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
   const parentConnectionGuid =
     selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-        const selectedPieceGuid = selection.pieces[0];
-        const pieceMetadata = metadata.get(selectedPieceGuid);
-        if (pieceMetadata?.parentPieceId) {
-          const parentConnection = design.connections?.find(
-            (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
-          );
-          return parentConnection?.guid ?? null;
-        }
-        return null;
-      })()
+          const selectedPieceGuid = selection.pieces[0];
+          const pieceMetadata = metadata.get(selectedPieceGuid);
+          if (pieceMetadata?.parentPieceId) {
+            const parentConnection = design.connections?.find(
+              (c) => (c.connected.piece === selectedPieceGuid && c.connecting.piece === pieceMetadata.parentPieceId) || (c.connecting.piece === selectedPieceGuid && c.connected.piece === pieceMetadata.parentPieceId),
+            );
+            return parentConnection?.guid ?? null;
+          }
+          return null;
+        })()
       : null;
 
   const connectionEdges =
@@ -1426,14 +1438,14 @@ const Diagram: FC<DiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => { });
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
     },
     [execute],
   );
 
   const onExpand = useCallback(
     (target: string) => {
-      execute?.("explode", { designId: target }).catch(() => { });
+      execute?.("explode", { designId: target }).catch(() => {});
     },
     [execute],
   );

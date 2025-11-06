@@ -21,10 +21,12 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { Check } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "../../semio";
 import { IdTooltipContent, Tooltip, TooltipContent, TooltipTrigger, useTooltipMode } from "../display/Tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "../Popover";
 
 const actionVariants = cva(
   "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-3 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border size-5 p-0.5",
@@ -84,5 +86,72 @@ function Action({ className, variant, level, id, children, as: Component = "butt
   return buttonElement;
 }
 
-export { Action, actionVariants };
-export type { ActionProps };
+interface ActionDropdownOption {
+  value: string;
+  icon: React.ReactNode;
+  label?: string;
+}
+
+interface ActionDropdownProps extends Omit<VariantProps<typeof actionVariants>, "variant">, Omit<React.ComponentProps<"button">, "children"> {
+  options: ActionDropdownOption[];
+  value: string;
+  onValueChange?: (value: string) => void;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  id: string;
+}
+
+function ActionDropdown({ className, level, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
+  const [open, setOpen] = React.useState(false);
+  const mode = useTooltipMode();
+
+  const selectedOption = options.find((option) => option.value === value);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen && startTransaction) startTransaction();
+    setOpen(isOpen);
+    if (!isOpen && finalizeTransaction) finalizeTransaction();
+  };
+
+  const handleSelect = (optionValue: string) => {
+    if (onValueChange) onValueChange(optionValue);
+    setOpen(false);
+  };
+
+  const buttonElement = (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button data-slot="action-dropdown" type="button" className={cn(actionVariants({ variant: "default", level }), className)} {...props}>
+          {selectedOption?.icon}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-1 min-w-[120px]" align="start">
+        <div className="flex flex-col">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => handleSelect(option.value)}
+              className={cn("flex items-center gap-2 px-2 py-1.5 text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
+            >
+              <span className="flex items-center justify-center size-3">{option.icon}</span>
+              {option.label && <span className="flex-1 text-left">{option.label}</span>}
+              {value === option.value && <Check className="size-3 ml-auto" />}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+      <TooltipContent>
+        <IdTooltipContent id={id} mode={mode} />
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+export { Action, ActionDropdown, actionVariants };
+export type { ActionDropdownOption, ActionDropdownProps, ActionProps };

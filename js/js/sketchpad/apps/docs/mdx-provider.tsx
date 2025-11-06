@@ -1,5 +1,5 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { FC, ReactNode, createContext, lazy, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, createContext, lazy, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Tabs as BaseTabs, TabsContent, TabsList, TabsTrigger } from "../../../elements/aggregation/Tabs";
 import { Aside } from "../../../elements/display/Aside";
 import { HeadingNode } from "./panels/Details";
@@ -257,8 +257,12 @@ export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
   const headingsRef = useRef<Map<string, HeadingNode>>(new Map());
 
   const registerHeading = useCallback((heading: HeadingNode) => {
-    headingsRef.current.set(heading.id, heading);
-    setHeadings(Array.from(headingsRef.current.values()));
+    const existingHeading = headingsRef.current.get(heading.id);
+    // Only update if heading doesn't exist or has changed
+    if (!existingHeading || existingHeading.text !== heading.text || existingHeading.level !== heading.level) {
+      headingsRef.current.set(heading.id, heading);
+      setHeadings(Array.from(headingsRef.current.values()));
+    }
   }, []);
 
   const clearHeadings = useCallback(() => {
@@ -276,6 +280,6 @@ interface MDXProviderProps {
 export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
   const context = useHeadings();
   const registerHeading = "registerHeading" in context ? context.registerHeading : () => {};
-  const components = createComponents(registerHeading);
+  const components = useMemo(() => createComponents(registerHeading), [registerHeading]);
   return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
 };
