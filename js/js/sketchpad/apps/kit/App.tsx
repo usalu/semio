@@ -1800,15 +1800,15 @@ const DraggableRow: FC<{
       <div
         ref={combinedRef}
         style={style}
-        className={`border-b p-double cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isOverHighlight ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"} ${isDraggingHook ? "opacity-50" : ""}`}
+        className={`border-b p-single cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : isOverHighlight ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"} ${isDraggingHook ? "opacity-50" : ""}`}
         onClick={(e) => onRowClick(row, e)}
         onDoubleClick={() => onRowDoubleClick(row)}
         {...(canDrag ? { ...attributes, ...listeners } : {})}
         role="button"
         tabIndex={0}
       >
-        <div className="flex items-center gap-double justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-double flex-1 min-w-0">
+        <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-single flex-1 min-w-0">
             {row.hasChildren ? (
               <Action
                 level="base"
@@ -1824,7 +1824,7 @@ const DraggableRow: FC<{
             <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
             <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
           </div>
-          <div className="flex items-center gap-half shrink-0">
+          <div className="flex items-center gap-single shrink-0">
             {(row.kind === "designs" || row.kind === "types") && (
               <Action
                 onClick={(e) => {
@@ -1854,7 +1854,7 @@ const DraggableRow: FC<{
       tabIndex={0}
     >
       {!isMobile && !selectedKind && (
-        <td className="p-unit">
+        <td className="p-single">
           {row.kind === "designs" && <LayoutIcon className="size-tiny" />}
           {row.kind === "types" && <TypeIcon className="size-tiny" />}
           {row.kind === "qualities" && <AwardIcon className="size-tiny" />}
@@ -1863,9 +1863,9 @@ const DraggableRow: FC<{
           {row.kind === "authors" && <UserIcon className="size-tiny" />}
         </td>
       )}
-      <td className="p-unit" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-unit justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }}>
-          <div className="flex items-center gap-unit flex-1 min-w-0">
+      <td className="p-single" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }}>
+          <div className="flex items-center gap-single flex-1 min-w-0">
             {row.hasChildren ? (
               <Action
                 level="base"
@@ -1881,7 +1881,7 @@ const DraggableRow: FC<{
             <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
             <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
           </div>
-          <div className="flex items-center gap-half shrink-0">
+          <div className="flex items-center gap-single shrink-0">
             {(row.kind === "designs" || row.kind === "types") && (
               <Action
                 onClick={(e) => {
@@ -1896,8 +1896,8 @@ const DraggableRow: FC<{
           </div>
         </div>
       </td>
-      {!isMobile && <td className="p-unit">{row.updatedAt}</td>}
-      {!isMobile && <td className="p-unit">{row.createdAt}</td>}
+      {!isMobile && <td className="p-single">{row.updatedAt}</td>}
+      {!isMobile && <td className="p-single">{row.createdAt}</td>}
     </tr>
   );
 };
@@ -3245,7 +3245,7 @@ const AppContent: FC = () => {
         {/* Concept Filter */}
         <ConceptFilter allConcepts={allConcepts} paramName="c" />
         {/* Flexible filter layout with automatic wrapping for mobile */}
-        <div className="flex flex-wrap items-center gap-unit p-unit border-b">
+        <div className="flex flex-wrap items-center gap-single p-single border-b">
           {selectedKind && (
             <Toggle
               type="withAction"
@@ -3361,7 +3361,7 @@ const AppContent: FC = () => {
                 {name}
               </Toggle>
             ))}
-          <div className="flex items-center gap-unit flex-1 min-w-[160px]">
+          <div className="flex items-center gap-single flex-1 min-w-[160px]">
             <Input
               id="semio.sketchpad.app.kit.filter.search"
               className="flex-1 min-w-0"
@@ -3435,7 +3435,7 @@ const AppContent: FC = () => {
       }}
     >
       {/* Flexible filter layout with automatic wrapping */}
-      <div className="flex flex-wrap items-center gap-unit p-unit border-b">
+      <div className="flex flex-wrap items-center gap-single p-single border-b">
         {selectedKind && (
           <Toggle
             type="withAction"
@@ -3560,7 +3560,7 @@ const AppContent: FC = () => {
               <thead className="sticky top-0 border-b">
                 <tr className="h-large">
                   {!selectedKind && (
-                    <th className="text-left p-unit font-medium relative group">
+                    <th className="text-left p-single font-medium relative group">
                       <div className="flex items-center justify-between w-full">
                         <span>{useLabel("semio.sketchpad.app.kit.kind")}</span>
                         <Toggle
@@ -3576,13 +3576,13 @@ const AppContent: FC = () => {
                             { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
                             { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                           ]}
-                          className="px-unit min-w-0"
+                          className="px-single min-w-0"
                         />
                       </div>
-                      <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
+                      <div className="absolute top-0 right-0 w-single h-full cursor-col-resize hover:bg-accent" />
                     </th>
                   )}
-                  <th className="text-left p-unit font-medium relative group">
+                  <th className="text-left p-single font-medium relative group">
                     <div className="flex items-center justify-between w-full">
                       <span>{useLabel("semio.sketchpad.app.kit.name")}</span>
                       <Toggle
@@ -3598,12 +3598,12 @@ const AppContent: FC = () => {
                           { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
                           { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                         ]}
-                        className="px-unit min-w-0"
+                        className="px-single min-w-0"
                       />
                     </div>
-                    <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
+                    <div className="absolute top-0 right-0 w-single h-full cursor-col-resize hover:bg-accent" />
                   </th>
-                  <th className="text-left p-unit font-medium relative group">
+                  <th className="text-left p-single font-medium relative group">
                     <div className="flex items-center justify-between w-full">
                       <span>{useLabel("semio.sketchpad.app.kit.lastUpdated")}</span>
                       <Toggle
@@ -3619,12 +3619,12 @@ const AppContent: FC = () => {
                           { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
                           { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                         ]}
-                        className="px-unit min-w-0"
+                        className="px-single min-w-0"
                       />
                     </div>
-                    <div className="absolute top-0 right-0 w-unit h-full cursor-col-resize hover:bg-accent" />
+                    <div className="absolute top-0 right-0 w-single h-full cursor-col-resize hover:bg-accent" />
                   </th>
-                  <th className="text-left p-unit font-medium relative group">
+                  <th className="text-left p-single font-medium relative group">
                     <div className="flex items-center justify-between w-full">
                       <span>{useLabel("semio.sketchpad.app.kit.created")}</span>
                       <Toggle
@@ -3640,7 +3640,7 @@ const AppContent: FC = () => {
                           { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.ascending" },
                           { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.common.sort.descending" },
                         ]}
-                        className="px-unit min-w-0"
+                        className="px-single min-w-0"
                       />
                     </div>
                   </th>

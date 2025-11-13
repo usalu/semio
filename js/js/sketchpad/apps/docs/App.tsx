@@ -371,7 +371,7 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
     const inline = !className;
     if (inline) {
       return (
-        <code className="bg-gray-100 dark:bg-gray-800 px-unit.5 py-0.5 rounded text-sm font-mono" {...props}>
+        <code className="bg-gray-100 dark:bg-gray-800 px-single.5 py-0.5 rounded text-sm font-mono" {...props}>
           {children}
         </code>
       );
@@ -1103,7 +1103,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
             <TreeStateProvider>
               <div className="not-prose my-8 p-6 rounded-lg border border-border bg-card">
                 <h3 className="text-lg font-semibold mb-4">In this section</h3>
-                <div className="flex flex-col gap-half">{renderTreeNode(treeData)}</div>
+                <div className="flex flex-col gap-single">{renderTreeNode(treeData)}</div>
               </div>
             </TreeStateProvider>
           )}
@@ -1268,7 +1268,7 @@ const Overview: FC<OverviewProps> = () => {
 
   if (flatHeadings.length === 0) {
     return (
-      <div className="p-double">
+      <div className="p-single">
         <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.docs.noHeadings")}</p>
       </div>
     );
@@ -1277,7 +1277,7 @@ const Overview: FC<OverviewProps> = () => {
   const hierarchicalHeadings = buildHeadingHierarchy(flatHeadings);
 
   return (
-    <div className="p-double">
+    <div className="p-single">
       <HeadingTree headings={hierarchicalHeadings} onNavigate={undefined} triggerFocus={focusContext?.triggerFocusItem} />
     </div>
   );
@@ -1354,7 +1354,7 @@ const Details: FC = () => {
 
   if (flatHeadings.length === 0) {
     return (
-      <div className="p-double">
+      <div className="p-single">
         <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.docs.noHeadings")}</p>
       </div>
     );
@@ -1364,7 +1364,7 @@ const Details: FC = () => {
   const hierarchicalHeadings = buildHeadingHierarchy(flatHeadings);
 
   return (
-    <div className="p-double">
+    <div className="p-single">
       <HeadingTree headings={hierarchicalHeadings} onNavigate={undefined} triggerFocus={focusContext?.triggerFocusItem} />
     </div>
   );

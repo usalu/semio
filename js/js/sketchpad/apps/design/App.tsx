@@ -2083,7 +2083,7 @@ const DraggableWindowItem: FC<DraggableWindowItemProps> = ({ template }) => {
     <div ref={setNodeRef} {...listeners} {...attributes} className={`cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50" : ""}`}>
       <TreeItem>
         <TreeContent>
-          <div className="flex items-center gap-double">
+          <div className="flex items-center gap-single">
             {template.icon}
             <span className="text-sm">{template.label}</span>
           </div>
@@ -2999,7 +2999,7 @@ const PiecesSectionForm: FC = () => {
       {isSingle && piece && !piece.plane && (
         <TreeItem>
           <TreeContent>
-            <div className="flex flex-col gap-double">
+            <div className="flex flex-col gap-single">
               <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.piece.connectedPieceInfo")}</p>
               <Button
                 variant="secondary"
@@ -3328,7 +3328,7 @@ const ConnectionsSectionForm: FC<{
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <div className="flex flex-col gap-unit">
+          <div className="flex flex-col gap-single">
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.rotation")}</label>
             <Slider
               id="semio.sketchpad.app.design.panel.details.section.connection.rotation"
@@ -3346,7 +3346,7 @@ const ConnectionsSectionForm: FC<{
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <div className="flex flex-col gap-unit">
+          <div className="flex flex-col gap-single">
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.turn")}</label>
             <Slider
               id="semio.sketchpad.app.design.panel.details.section.connection.turn"
@@ -3364,7 +3364,7 @@ const ConnectionsSectionForm: FC<{
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <div className="flex flex-col gap-unit">
+          <div className="flex flex-col gap-single">
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.tilt")}</label>
             <Slider
               id="semio.sketchpad.app.design.panel.details.section.connection.tilt"
@@ -3580,7 +3580,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button level="temporary" className="px-3 py-unit text-sm" onClick={() => onCluster(groupPieceIds)}>
+              <Button level="temporary" className="px-3 py-single text-sm" onClick={() => onCluster(groupPieceIds)}>
                 Cluster
               </Button>
             </div>
@@ -3642,7 +3642,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button level="temporary" className="px-3 py-unit text-sm" onClick={() => onExpand(designName)}>
+              <Button level="temporary" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
                 Expand
               </Button>
             </div>
@@ -3665,7 +3665,7 @@ const PresenceDiagram: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) =
           zIndex: 1000,
         }}
       >
-        <div className="flex items-center gap-unit bg-accent text-accent-foreground px-double py-unit rounded-full text-xs">
+        <div className="flex items-center gap-single bg-accent text-accent-foreground px-single py-single rounded-full text-xs">
           <div className="size-dot bg-accent-foreground rounded-full"></div>
           {name}
         </div>
@@ -6455,7 +6455,7 @@ const App: FC<AppProps> = () => {
         <>
           <TreeItem>
             <TreeContent>
-              <div className="flex flex-col gap-unit">
+              <div className="flex flex-col gap-single">
                 <label>
                   {useLabel("semio.sketchpad.app.design.proximityConnectDistance")}: {appSettings.design?.proximityConnectDistance}
                 </label>

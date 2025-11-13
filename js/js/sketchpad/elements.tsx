@@ -82,79 +82,13 @@ import { Link, useLocation, useNavigate } from "react-router";
 import * as THREE from "three";
 import { Expertise, setExpertiseProvider, useLabel } from "../i18n";
 import { Camera, cn, Plane, Point, Vector } from "../semio";
+import { useActiveInteraction as useActiveInteractionImpl, useSketchpadCommands as useSketchpadCommandsImpl } from "./App";
 
-let useActiveInteractionImpl: (() => string | undefined) | null = null;
-let useSketchpadCommandsImpl: (() => any) | null = null;
-let appHooksPromise: Promise<void> | null = null;
-
-// Fallback implementations until real hooks load
-const fallbackUseActiveInteraction = (): string | undefined => undefined;
-
-const fallbackUseSketchpadCommands = () => ({
-  setTheme: () => {},
-  setLayout: () => {},
-  setExpertise: () => {},
-  setMode: () => {},
-  exportState: () => {},
-  setState: () => {},
-  toggleFullscreen: () => {},
-  toggleNavbarExpanded: () => {},
-  toggleFooterExpanded: () => {},
-  setIsMobile: () => {},
-  setActiveInteraction: () => {},
-  syncNavigation: () => {},
-  createKit: () => {},
-  createKitApp: () => {},
-  createDesignApp: () => {},
-  navigateToKit: () => {},
-  navigateToDesign: () => {},
-  navigateToType: () => {},
-  navigateToQuality: () => {},
-  navigateBack: () => {},
-  navigateForward: () => {},
-  setPanelSize: () => {},
-});
-
-function ensureAppHooksLoaded() {
-  if (!useActiveInteractionImpl || !useSketchpadCommandsImpl) {
-    if (!appHooksPromise) {
-      appHooksPromise = import("./App").then((AppModule) => {
-        useActiveInteractionImpl = AppModule.useActiveInteraction;
-        useSketchpadCommandsImpl = AppModule.useSketchpadCommands;
-      });
-    }
-  }
-}
-
-function useActiveInteraction(): string | undefined {
-  ensureAppHooksLoaded();
-  // Return fallback if not loaded yet
-  if (!useActiveInteractionImpl) {
-    return fallbackUseActiveInteraction();
-  }
-  return useActiveInteractionImpl();
-}
-
-function useSketchpadCommands() {
-  ensureAppHooksLoaded();
-  // Return fallback if not loaded yet
-  if (!useSketchpadCommandsImpl) {
-    return fallbackUseSketchpadCommands();
-  }
-  return useSketchpadCommandsImpl();
-}
-
-// Preload App hooks immediately after module loads
-if (typeof window !== "undefined") {
-  appHooksPromise = import("./App")
-    .then((AppModule) => {
-      useActiveInteractionImpl = AppModule.useActiveInteraction;
-      useSketchpadCommandsImpl = AppModule.useSketchpadCommands;
-    })
-    .catch((err) => {
-      console.error("Failed to preload App hooks:", err);
-    });
-}
+// Re-export hooks from App - direct import to avoid hook order violations
+// This creates a circular dependency (App imports from elements, elements imports from App)
+// but ES modules handle this correctly since we're only importing function references
+const useActiveInteraction = useActiveInteractionImpl;
+const useSketchpadCommands = useSketchpadCommandsImpl;
 
 // #endregion Imports
 
@@ -193,7 +127,7 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent className={cn("overflow-hidden p-0", className)} showCloseButton={showCloseButton}>
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [&_[cmdk-group-heading]]:px-double [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:px-double [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-small [&_[cmdk-input-wrapper]_svg]:w-small [&_[cmdk-input]]:h-large [&_[cmdk-item]]:px-double [&_[cmdk-item]]:py-[0.75rem] [&_[cmdk-item]_svg]:h-small [&_[cmdk-item]_svg]:w-small">
+        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:px-single [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-small [&_[cmdk-input-wrapper]_svg]:w-small [&_[cmdk-input]]:h-large [&_[cmdk-item]]:px-single [&_[cmdk-item]]:py-[0.75rem] [&_[cmdk-item]_svg]:h-small [&_[cmdk-item]_svg]:w-small">
           {children}
         </Command>
       </DialogContent>
@@ -203,7 +137,7 @@ function CommandDialog({
 
 function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-double border-b px-tiny">
+    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b px-tiny">
       <SearchIcon className="size-small shrink-0 opacity-50" />
       <CommandPrimitive.Input
         data-slot="command-input"
@@ -215,7 +149,7 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
 }
 
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
-  return <CommandPrimitive.List data-slot="command-list" className={cn("max-h-[300px] scroll-py-unit overflow-x-hidden overflow-y-auto", className)} {...props} />;
+  return <CommandPrimitive.List data-slot="command-list" className={cn("max-h-[300px] scroll-py-single overflow-x-hidden overflow-y-auto", className)} {...props} />;
 }
 
 function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
@@ -227,7 +161,7 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-unit [&_[cmdk-group-heading]]:px-double [&_[cmdk-group-heading]]:py-unit [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
+        "text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-single [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:py-single [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
         className,
       )}
       {...props}
@@ -236,7 +170,7 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
 }
 
 function CommandSeparator({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
-  return <CommandPrimitive.Separator data-slot="command-separator" className={cn("bg-border -mx-unit h-px", className)} {...props} />;
+  return <CommandPrimitive.Separator data-slot="command-separator" className={cn("bg-border -mx-single h-px", className)} {...props} />;
 }
 
 function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
@@ -244,7 +178,7 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-double px-double py-unit text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
+        "data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single px-single py-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
         className,
       )}
       {...props}
@@ -289,14 +223,14 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", height = 20
           {item.id ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={`flex items-center h-full px-double text-xs cursor-pointer ${item.className || ""}`} onClick={item.onClick}>
+                <div className={`flex items-center h-full px-single text-xs cursor-pointer ${item.className || ""}`} onClick={item.onClick}>
                   {item.content}
                 </div>
               </TooltipTrigger>
               <TooltipContent>{item.id}</TooltipContent>
             </Tooltip>
           ) : (
-            <div className={`flex items-center h-full px-double text-xs ${item.onClick ? "cursor-pointer" : ""} ${item.className || ""}`} onClick={item.onClick}>
+            <div className={`flex items-center h-full px-single text-xs ${item.onClick ? "cursor-pointer" : ""} ${item.className || ""}`} onClick={item.onClick}>
               {item.content}
             </div>
           )}
@@ -369,24 +303,24 @@ const Navbar: React.FC<NavbarProps> = ({ leftItems = [], centerItems = [], right
   const sortedCenter = [...centerItems].sort((a, b) => (a.order || 0) - (b.order || 0));
   const sortedRight = [...rightItems].sort((a, b) => (a.order || 0) - (b.order || 0));
   return (
-    <nav id="navbar" className={`bg-base border-b flex items-center justify-between px-double h-large ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
-      <div className="flex items-center gap-unit min-w-0">
+    <nav id="navbar" className={`bg-base border-b flex items-center justify-between px-single h-large ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
+      <div className="flex items-center gap-single min-w-0">
         {sortedLeft.map((item) => (
-          <div key={item.id} className={`flex items-center m-unit ${item.className || ""}`} onClick={item.onClick}>
+          <div key={item.id} className={`flex items-center m-single ${item.className || ""}`} onClick={item.onClick}>
             {item.content}
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-unit min-w-0 flex-1">
+      <div className="flex items-center gap-single min-w-0 flex-1">
         {sortedCenter.map((item) => (
-          <div key={item.id} className={`flex items-center m-unit ${item.className || ""}`} onClick={item.onClick}>
+          <div key={item.id} className={`flex items-center m-single ${item.className || ""}`} onClick={item.onClick}>
             {item.content}
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-unit min-w-0">
+      <div className="flex items-center gap-single min-w-0">
         {sortedRight.map((item) => (
-          <div key={item.id} className={`flex items-center m-unit ${item.className || ""}`} onClick={item.onClick}>
+          <div key={item.id} className={`flex items-center m-single ${item.className || ""}`} onClick={item.onClick}>
             {item.content}
           </div>
         ))}
@@ -491,7 +425,7 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) px-tiny py-unit text-xs text-balance",
+          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) px-tiny py-single text-xs text-balance",
           className,
         )}
         {...props}
@@ -532,12 +466,12 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
   };
 
   return (
-    <div className="flex flex-col gap-double">
+    <div className="flex flex-col gap-single">
       <span>{label}</span>
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
-        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-double gap-double">
+        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath ? (
-            <Link to={fullManualPath} className="flex items-center gap-unit cursor-pointer text-foreground transition-colors px-unit py-half hover:bg-hover-temporary">
+            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
               <BookIcon className="size-tiny" />
               <span>{useLabel("tooltip.manual")}</span>
             </Link>
@@ -545,7 +479,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
             <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
-            <Link to={fullTutorialPath} className="flex items-center gap-unit cursor-pointer text-foreground transition-colors px-unit py-half hover:bg-hover-temporary">
+            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
               <TutorialIcon className="size-tiny" />
               <span className="block text-center">{useLabel("tooltip.tutorial")}</span>
             </Link>
@@ -553,7 +487,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
             <span className="block" />
           )}
           {hotkey ? (
-            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-unit py-half text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-single py-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
               {hotkey}
             </kbd>
           ) : (
@@ -609,12 +543,12 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
   };
 
   return (
-    <div className="flex flex-col gap-double">
+    <div className="flex flex-col gap-single">
       <span>{displayText}</span>
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
-        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-double gap-double">
+        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath ? (
-            <Link to={fullManualPath} className="flex items-center gap-unit cursor-pointer text-foreground transition-colors px-unit py-half hover:bg-hover-temporary">
+            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
               <BookIcon className="size-3" />
               <span>{useLabel("tooltip.manual")}</span>
             </Link>
@@ -622,7 +556,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
             <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
-            <Link to={fullTutorialPath} className="flex items-center gap-unit cursor-pointer text-foreground transition-colors px-unit py-half hover:bg-hover-temporary">
+            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
               <TutorialIcon className="size-3" />
               <span className="block text-center">{useLabel("tooltip.tutorial")}</span>
             </Link>
@@ -630,7 +564,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
             <span className="block" />
           )}
           {hotkey ? (
-            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-unit py-half text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-single py-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
               {hotkey}
             </kbd>
           ) : (
@@ -694,7 +628,7 @@ function BaseInput({ id, showLabel, interactionId, children, labelClassName, con
   }
 
   return (
-    <div className={cn("group flex items-center gap-double min-w-0 w-full", containerClassName)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+    <div className={cn("group flex items-center gap-single min-w-0 w-full", containerClassName)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       <InputLabel id={id} className={labelClassName} labelElementId={labelElementId} />
       {children}
     </div>
@@ -773,7 +707,7 @@ export const Aside: React.FC<AsideProps> = ({ type = "note", title, children }) 
 
   return (
     <aside className={`my-small p-[1rem] border ${colorClass}`}>
-      <div className="flex items-start gap-double">
+      <div className="flex items-start gap-single">
         <Icon className="size-small mt-0.5 flex-shrink-0" />
         <div className="flex-1">
           {title && <div className="font-semibold mb-1">{title}</div>}
@@ -886,7 +820,7 @@ export const Card: React.FC<CardProps> = ({ title, icon, children, className = "
   const IconComponent = typeof icon === "string" ? null : icon;
   return (
     <div className={`border p-[1rem] ${className}`}>
-      <div className="flex items-start gap-tiny mb-double">
+      <div className="flex items-start gap-tiny mb-single">
         {IconComponent && <IconComponent className="size-small flex-shrink-0 mt-0.5" />}
         {typeof icon === "string" && <span className="text-xl flex-shrink-0">{icon}</span>}
         <h3 className="font-semibold text-base">{title}</h3>
@@ -943,7 +877,7 @@ export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = fa
     >
       {showTopHandle && <Handle type="target" position={Position.Top as any} className="size-dot !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
 
-      <div className="text-sm font-medium text-[color:var(--foreground-panel)] truncate px-double">{content}</div>
+      <div className="text-sm font-medium text-[color:var(--foreground-panel)] truncate px-single">{content}</div>
 
       {showBottomHandle && <Handle type="source" position={Position.Bottom as any} className="size-dot !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
     </div>
@@ -1065,7 +999,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 // #region Action
 
 const actionVariants = cva(
-  "text-foreground inline-flex items-center justify-center shrink-0 box-border w-tiny h-tiny min-w-tiny transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:block [&_svg]:w-full [&_svg]:h-full [&_svg]:shrink outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border p-half overflow-hidden",
+  "text-foreground inline-flex items-center justify-center shrink-0 box-border size-small transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border p-single overflow-hidden",
   {
     variants: {
       variant: {
@@ -1095,6 +1029,7 @@ interface ActionProps extends VariantProps<typeof actionVariants>, Omit<React.Co
 
 function Action({ className, variant, level, id, icon, as: Component = "button", ...props }: ActionProps) {
   const mode = useTooltipMode();
+  const iconElement = React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { className: cn("size-tiny", (icon as React.ReactElement<any>).props?.className) }) : icon;
   const buttonElement = (
     <Component
       data-slot="action"
@@ -1104,7 +1039,7 @@ function Action({ className, variant, level, id, icon, as: Component = "button",
       className={cn(actionVariants({ variant, level }), className)}
       {...(props as any)}
     >
-      {icon}
+      {iconElement}
     </Component>
   );
 
@@ -1161,13 +1096,13 @@ function ActionDropdown({ className, level, id, options, value, onValueChange, s
           {selectedOption?.icon}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-unit min-w-[120px]" align="start">
+      <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
         <div className="flex flex-col">
           {options.map((option) => (
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className={cn("flex items-center gap-double px-double py-unit text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
+              className={cn("flex items-center gap-single px-single py-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
             >
               <span className="flex items-center justify-center size-3">{option.icon}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
@@ -1197,7 +1132,7 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
 // #region ActionGroup
 
 const actionGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center shrink-0 box-border transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:block [&_svg]:w-full [&_svg]:h-full [&_svg]:shrink outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden",
+  "text-foreground inline-flex items-center justify-center shrink-0 box-border transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden",
   {
     variants: {
       variant: {
@@ -1244,10 +1179,10 @@ function ActionGroup({ className, variant, level = "base", id, showLabel, childr
   if (showLabel) {
     const label = useLabel(id);
     return (
-      <div className="group flex items-center gap-double min-w-0 w-full">
+      <div className="group flex items-center gap-single min-w-0 w-full">
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="inline-flex h-small items-center px-double text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
+            <span className="inline-flex h-small items-center px-single text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
           </TooltipTrigger>
           <TooltipContent>
             <IdTooltipContent id={id} />
@@ -1285,7 +1220,7 @@ function ActionGroupItem({
           variant: context.variant || variant,
           level: context.level || level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 border-0 !h-full size-small p-half",
+        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 border-0 !h-full size-small p-single",
         className,
       )}
       {...props}
@@ -1317,7 +1252,7 @@ export { ActionGroup, ActionGroupItem };
 // #region Button
 
 const buttonVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-double whitespace-nowrap text-sm font-medium transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 [&_svg]:max-w-full [&_svg]:max-h-full outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-medium overflow-hidden",
+  "text-foreground inline-flex items-center justify-center gap-single whitespace-nowrap text-sm font-medium transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 [&_svg]:max-w-full [&_svg]:max-h-full outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-medium overflow-hidden",
   {
     variants: {
       variant: {
@@ -1380,7 +1315,7 @@ export type { ButtonProps };
 // #region ButtonGroup
 
 const buttonGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-double text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 [&_svg]:max-w-full [&_svg]:max-h-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap size-medium overflow-hidden",
+  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 [&_svg]:max-w-full [&_svg]:max-h-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap size-medium overflow-hidden",
   {
     variants: {
       variant: {
@@ -1409,7 +1344,7 @@ function ButtonGroup({ className, variant, level = "base", id, showLabel, childr
   const mode = useTooltipMode();
 
   const buttonGroupElement = (
-    <div data-slot="button-group" data-variant={variant} data-level={level} className={cn("group/button-group flex w-fit items-center border overflow-hidden h-medium gap-unit", className)} {...props}>
+    <div data-slot="button-group" data-variant={variant} data-level={level} className={cn("group/button-group flex w-fit items-center border overflow-hidden h-medium gap-single", className)} {...props}>
       <ButtonGroupContext.Provider value={{ variant, level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -1417,7 +1352,7 @@ function ButtonGroup({ className, variant, level = "base", id, showLabel, childr
   if (showLabel) {
     const label = useLabel(id);
     return (
-      <div className="group flex items-center gap-double min-w-0 w-full">
+      <div className="group flex items-center gap-single min-w-0 w-full">
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="inline-flex h-medium items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
@@ -1684,7 +1619,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent px-tiny py-double text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent px-tiny py-single text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-accent",
         "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
         type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
@@ -1802,7 +1737,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex w-fit items-center justify-between gap-double border bg-transparent px-tiny py-double text-sm whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-double [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable",
+        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable",
         hoverClass,
         className,
       )}
@@ -1843,7 +1778,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
         {...props}
       >
         <SelectScrollUpButton />
-        <SelectPrimitive.Viewport className={cn("p-unit", position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-unit")}>{children}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport className={cn("p-single", position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-single")}>{children}</SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
@@ -1851,7 +1786,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
 }
 
 function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
-  return <SelectPrimitive.Label data-slot="select-label" className={cn("text-muted-foreground px-double py-unit text-xs", className)} {...props} />;
+  return <SelectPrimitive.Label data-slot="select-label" className={cn("text-muted-foreground px-single py-single text-xs", className)} {...props} />;
 }
 
 function SelectItem({ className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
@@ -1859,7 +1794,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-hover-temporary focus:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-double rounded-sm py-unit pr-medium pl-double text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-double",
+        "focus:bg-hover-temporary focus:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
         "cursor-selectable",
         className,
       )}
@@ -1876,12 +1811,12 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
 }
 
 function SelectSeparator({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
-  return <SelectPrimitive.Separator data-slot="select-separator" className={cn("bg-border pointer-events-none -mx-unit my-unit h-px", className)} {...props} />;
+  return <SelectPrimitive.Separator data-slot="select-separator" className={cn("bg-border pointer-events-none -mx-single my-single h-px", className)} {...props} />;
 }
 
 function SelectScrollUpButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
   return (
-    <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-unit", className)} {...props}>
+    <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-single", className)} {...props}>
       <ChevronUpIcon className="size-tiny" />
     </SelectPrimitive.ScrollUpButton>
   );
@@ -1889,7 +1824,7 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
 
 function SelectScrollDownButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
   return (
-    <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-unit", className)} {...props}>
+    <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-single", className)} {...props}>
       <ChevronDownIconAlt className="size-tiny" />
     </SelectPrimitive.ScrollDownButton>
   );
@@ -2067,7 +2002,7 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-unit data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-unit")}
+        className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
       >
         <SliderPrimitive.Range data-slot="slider-range" className={cn("bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full")} />
       </SliderPrimitive.Track>
@@ -2091,12 +2026,12 @@ function Slider({
   );
 
   const sliderContent = (
-    <div className="flex items-center gap-double flex-1 min-w-0 h-large">
+    <div className="flex items-center gap-single flex-1 min-w-0 h-large">
       {wrappedSlider}
       {isEditing ? (
         <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus id={id} />
       ) : (
-        <span className="text-sm w-20 text-right px-unit select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
+        <span className="text-sm w-20 text-right px-single select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
           {displayValue}
         </span>
       )}
@@ -2413,7 +2348,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     <textarea
       data-slot="textarea"
       className={cn(
-        "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-huge w-full border bg-transparent px-tiny py-double text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-huge w-full border bg-transparent px-tiny py-single text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-accent",
         "aria-invalid:border-destructive flex-1",
         className,
@@ -2429,7 +2364,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   );
 
   return (
-    <BaseInput id={id} showLabel={showLabel} containerClassName="items-start" labelClassName="items-start h-large py-double">
+    <BaseInput id={id} showLabel={showLabel} containerClassName="items-start" labelClassName="items-start h-large py-single">
       {textareaElement}
     </BaseInput>
   );
@@ -2442,7 +2377,7 @@ export { Textarea };
 // #region Toggle
 
 const toggleVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-double text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 [&_svg]:max-w-full [&_svg]:max-h-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground size-medium leading-none overflow-hidden",
+  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 [&_svg]:max-w-full [&_svg]:max-h-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground size-medium leading-none overflow-hidden",
   {
     variants: {
       variant: {
@@ -2532,7 +2467,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       <TogglePrimitive.Root
         data-slot="toggle"
         data-state={pressed ? "on" : "off"}
-        className={cn(toggleVariants({ level }), "border", className)}
+        className={cn(toggleVariants({ level }), "border h-medium", className)}
         pressed={pressed}
         onPressedChange={(newPressed) => {
           onPressedChange?.(newPressed);
@@ -2576,7 +2511,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const mainContent = (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="flex items-center gap-double flex-1 min-w-0">{icon}</span>
+          <span className="flex items-center justify-center">{icon}</span>
         </TooltipTrigger>
         <TooltipContent>
           <IdTooltipContent id={id} />
@@ -2585,7 +2520,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     );
 
     const toggleElement = (
-      <TogglePrimitive.Root data-slot="toggle" data-state={pressed ? "on" : "off"} className={cn(toggleVariants({ level }), "border gap-unit pr-1 flex-shrink-0", className)} {...restProps}>
+      <TogglePrimitive.Root data-slot="toggle" data-state={pressed ? "on" : "off"} className={cn(toggleVariants({ level }), "border gap-single px-single flex-shrink-0 h-medium w-mega", className)} {...restProps}>
         {mainContent}
         <Action
           as="div"
@@ -2646,7 +2581,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       <TogglePrimitive.Root
         data-slot="toggle"
         data-state={pressed ? "on" : "off"}
-        className={cn(toggleVariants({ level }), "border gap-unit pr-1 flex-shrink-0", className)}
+        className={cn(toggleVariants({ level }), "border gap-single px-single flex-shrink-0 h-medium w-mega", className)}
         pressed={pressed}
         aria-label={ariaLabel || undefined}
         onPressedChange={(newPressed) => {
@@ -2794,11 +2729,11 @@ function ToggleGroup({ className, id, showLabel, level = "base", children, type 
 
   const toggleGroupElement =
     type === "multiple" ? (
-      <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} type="multiple" className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium gap-unit", className)} {...(restProps as any)}>
+      <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} type="multiple" className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium gap-single", className)} {...(restProps as any)}>
         <ToggleGroupContext.Provider value={{ variant, level }}>{children}</ToggleGroupContext.Provider>
       </ToggleGroupPrimitive.Root>
     ) : (
-      <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} type="single" className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium gap-unit", className)} {...(restProps as any)}>
+      <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} type="single" className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium gap-single", className)} {...(restProps as any)}>
         <ToggleGroupContext.Provider value={{ variant, level }}>{children}</ToggleGroupContext.Provider>
       </ToggleGroupPrimitive.Root>
     );
@@ -2806,7 +2741,7 @@ function ToggleGroup({ className, id, showLabel, level = "base", children, type 
   if (showLabel) {
     const label = useLabel(id);
     return (
-      <div className="group flex items-center gap-double min-w-0 w-full">
+      <div className="group flex items-center gap-single min-w-0 w-full">
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="inline-flex h-medium items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
@@ -2995,11 +2930,11 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="dialog-header" className={cn("flex flex-col gap-double text-center sm:text-left", className)} {...props} />;
+  return <div data-slot="dialog-header" className={cn("flex flex-col gap-single text-center sm:text-left", className)} {...props} />;
 }
 
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="dialog-footer" className={cn("flex flex-col-reverse gap-double sm:flex-row sm:justify-end", className)} {...props} />;
+  return <div data-slot="dialog-footer" className={cn("flex flex-col-reverse gap-single sm:flex-row sm:justify-end", className)} {...props} />;
 }
 
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
@@ -3061,11 +2996,11 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
         isDragging || isHovered ? "bg-accent border-accent" : "hover:border-accent",
         "before:absolute before:inset-y-0 before:-left-2 before:w-tiny before:cursor-ew-resize",
         "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
-        "after:absolute after:inset-y-0 after:left-1/2 after:w-unit after:-translate-x-1/2",
+        "after:absolute after:inset-y-0 after:left-1/2 after:w-single after:-translate-x-1/2",
         "data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full",
         "data-[panel-group-direction=vertical]:border-r-0 data-[panel-group-direction=vertical]:border-t",
         isDragging || isHovered ? "data-[panel-group-direction=vertical]:bg-accent data-[panel-group-direction=vertical]:border-accent" : "data-[panel-group-direction=vertical]:hover:border-accent",
-        "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-unit data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
+        "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-single data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
         "data-[panel-group-direction=vertical]:before:inset-x-0 data-[panel-group-direction=vertical]:before:-top-2 data-[panel-group-direction=vertical]:before:h-4 data-[panel-group-direction=vertical]:before:w-full data-[panel-group-direction=vertical]:before:cursor-ns-resize",
         className,
       )}
@@ -3116,7 +3051,7 @@ export { ScrollArea, ScrollBar };
 // #region Tabs
 
 function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
-  return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-double", className)} {...props} />;
+  return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-single", className)} {...props} />;
 }
 
 function TabsList({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: "base" | "panel" | "temporary" }) {
@@ -3131,7 +3066,7 @@ function TabsTrigger({ className, level = "base", ...props }: React.ComponentPro
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-unit border border-transparent px-double py-unit text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-single border border-transparent px-single py-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         activeHoverClass,
         hoverClass,
         className,
@@ -3212,7 +3147,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
   return (
-    <div className="relative py-half" style={{ paddingLeft: `${level * 0.75}rem` }}>
+    <div className="relative py-single" style={{ paddingLeft: `${level * 0.75}rem` }}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {children}
     </div>
@@ -3304,7 +3239,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
   if (!hasChildren) {
     return (
       <div
-        className={`relative flex items-center gap-unit py-unit hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
+        className={`relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
         style={{ paddingLeft: `${level * 0.75}rem` }}
         onPointerEnter={() => {
           setIsHovered(true);
@@ -3337,7 +3272,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
           <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
         )}
         {actions.length > 0 && (
-          <div className="flex items-center gap-half">
+          <div className="flex items-center gap-single">
             {actions.map((action, index) => (
               <Action
                 key={index}
@@ -3362,7 +3297,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
-          className={`relative flex items-center gap-unit py-unit hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
+          className={`relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           role="button"
           onPointerEnter={() => {
@@ -3396,7 +3331,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
             <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
           )}
           {actions.length > 0 && (
-            <div className="flex items-center gap-half">
+            <div className="flex items-center gap-single">
               {actions.map((action, index) => (
                 <Action
                   key={index}
@@ -3455,7 +3390,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     paddingLeft: `${level * 0.75}rem`,
   };
 
-  const baseClasses = `relative flex items-center gap-unit py-half hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
+  const baseClasses = `relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -3504,7 +3439,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             {displayLabel as React.ReactNode}
           </span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-half">
+            <div className="flex items-center gap-single">
               {actions.map((action, index) => (
                 <Action
                   key={index}
@@ -3558,7 +3493,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as React.ReactNode}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-half">
+        <div className="flex items-center gap-single">
           {actions.map((action, index) => (
             <Action
               key={index}
@@ -3647,7 +3582,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
-  const baseClasses = `relative flex items-center gap-unit py-half hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
+  const baseClasses = `relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -3690,7 +3625,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             {resolvedLabel as React.ReactNode}
           </span>
           {actions.length > 0 && (
-            <div className="flex items-center gap-half">
+            <div className="flex items-center gap-single">
               {actions.map((action, index) => (
                 <Action
                   key={index}
@@ -3723,7 +3658,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
       {actions.length > 0 && (
-        <div className="flex items-center gap-half">
+        <div className="flex items-center gap-single">
           {actions.map((action, index) => (
             <Action
               key={index}
@@ -3786,7 +3721,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? FolderIcon : DocumentIcon;
 
-  const baseClasses = "relative flex items-center gap-double py-unit px-tiny rounded-md hover:bg-accent transition-colors cursor-selectable select-none";
+  const baseClasses = "relative flex items-center gap-single py-single px-tiny rounded-md hover:bg-accent transition-colors cursor-selectable select-none";
   const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
   const itemClasses = `${baseClasses} ${stateClasses}`;
 
@@ -3859,7 +3794,7 @@ Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = 
       <div className={`not-prose my-medium p-medium rounded-lg border border-border bg-card ${className}`}>
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
-          <div className="flex flex-col gap-half">
+          <div className="flex flex-col gap-single">
             {nodes.map((node, idx) => (
               <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
             ))}
@@ -3923,7 +3858,7 @@ function BreadcrumbLink({
   const Comp = asChild ? Slot : "a";
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
-  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground transition-colors px-unit flex items-center gap-unit h-full", hoverClass, className)} {...(props as any)} />;
+  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground transition-colors px-single flex items-center gap-single h-full", hoverClass, className)} {...(props as any)} />;
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
@@ -3949,7 +3884,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode 
 
   if (!items?.length) {
     const separatorElement = (
-      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-tiny px-unit flex items-center self-stretch", className)} {...props}>
+      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-tiny px-single flex items-center self-stretch", className)} {...props}>
         {children ?? <ChevronRightIcon />}
       </li>
     );
@@ -3974,7 +3909,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode 
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuPrimitive.Trigger asChild>
-              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-tiny px-unit flex items-center transition-colors self-stretch", hoverClass, className)} {...props} role="button">
+              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch", hoverClass, className)} {...props} role="button">
                 {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
               </li>
             </DropdownMenuPrimitive.Trigger>
@@ -3985,18 +3920,18 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode 
         </Tooltip>
       ) : (
         <DropdownMenuPrimitive.Trigger asChild>
-          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-tiny px-unit flex items-center transition-colors self-stretch", hoverClass, className)} {...props} role="button">
+          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch", hoverClass, className)} {...props} role="button">
             {open ? <ChevronDown /> : <ChevronRight />}
           </li>
         </DropdownMenuPrimitive.Trigger>
       )}
       <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-unit">
+        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single">
           {items.map((item, index) => {
             const menuItem = (
               <DropdownMenuPrimitive.Item
                 key={index}
-                className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center px-unit py-unit text-sm outline-none whitespace-nowrap"
+                className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center px-single py-single text-sm outline-none whitespace-nowrap"
                 onClick={() => handleSelect(item.href)}
                 role="button"
               >
@@ -4019,7 +3954,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode 
               return (
                 <React.Fragment key={index}>
                   {wrappedItem}
-                  <DropdownMenuPrimitive.Separator className="h-px bg-border my-unit" />
+                  <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />
                 </React.Fragment>
               );
             }
@@ -4069,7 +4004,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   return (
     <div className="flex items-center justify-between border-t border-border pt-4 mt-8">
       {prev ? (
-        <Button variant="ghost" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-double">
+        <Button variant="ghost" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
           <ChevronLeftIcon className="size-tiny" />
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
@@ -4080,7 +4015,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
         <div />
       )}
       {next ? (
-        <Button variant="ghost" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-double">
+        <Button variant="ghost" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
@@ -4252,11 +4187,11 @@ const Panel: React.FC<PanelProps> = ({
     : resizeSide === "top"
       ? { top: 0, height: `${size}px`, zIndex }
       : { bottom: 0, height: `${size}px`, zIndex };
-  const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-unit cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-unit cursor-ns-resize`;
+  const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
   return (
     <div className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
       <ScrollArea className={`h-full ${showBackground ? "bg-panel" : ""}`}>
-        <div className={`${className || "p-unit"} overflow-hidden min-w-0`}>
+        <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
           <TreeStateProvider>
             <Tree className="min-w-0 overflow-hidden">
               {additionalContent}
@@ -5399,9 +5334,9 @@ const Table = <T,>({
   }, [focusedItemId, data, getRowId, rowKey, onFocusComplete]);
 
   const rowHeightClass = {
-    compact: "py-unit",
-    normal: "py-unit",
-    comfortable: "py-double",
+    compact: "py-single",
+    normal: "py-single",
+    comfortable: "py-single",
   }[rowHeight];
 
   const visibleColumns = columns.filter((col) => {
@@ -5416,7 +5351,7 @@ const Table = <T,>({
         <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
           <tr>
             {visibleColumns.map((column) => (
-              <th key={column.id} className={`text-left p-unit font-medium ${rowHeightClass} ${column.className || ""}`} style={{ width: column.width }}>
+              <th key={column.id} className={`text-left p-single font-medium ${rowHeightClass} ${column.className || ""}`} style={{ width: column.width }}>
                 {column.header}
               </th>
             ))}
@@ -5447,7 +5382,7 @@ const Table = <T,>({
                   tabIndex={onRowClick ? 0 : undefined}
                 >
                   {visibleColumns.map((column) => (
-                    <td key={column.id} className={`p-unit ${column.className || ""}`}>
+                    <td key={column.id} className={`p-single ${column.className || ""}`}>
                       {column.accessor(row)}
                     </td>
                   ))}
@@ -5475,7 +5410,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       <thead className="bg-panel border-b sticky top-0 z-10">
         <tr>
           {columns.map((column) => (
-            <th key={column.id} className={`text-left p-double text-sm font-medium ${column.className || ""}`} style={{ width: column.width }}>
+            <th key={column.id} className={`text-left p-single text-sm font-medium ${column.className || ""}`} style={{ width: column.width }}>
               {column.header}
             </th>
           ))}
@@ -5485,7 +5420,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
         {Array.from({ length: rowCount }).map((_, index) => (
           <tr key={index} className="border-b">
             {columns.map((column) => (
-              <td key={column.id} className={`p-double text-sm ${column.className || ""}`}>
+              <td key={column.id} className={`p-single text-sm ${column.className || ""}`}>
                 <div className="h-small bg-muted-foreground/20 rounded animate-pulse" />
               </td>
             ))}

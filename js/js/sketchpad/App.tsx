@@ -8492,6 +8492,7 @@ export function useNavigate() {
   const reactNavigate = useReactNavigate();
   return useCallback(
     (to: string | number, options?: { replace?: boolean; state?: any }) => {
+      if (!reactNavigate) return;
       if (typeof to === "number") {
         reactNavigate(to);
         return;
@@ -9088,7 +9089,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   if (allConcepts.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-unit p-unit border-b">
+    <div className="flex flex-wrap items-center gap-single p-single border-b">
       {allConcepts
         .filter((c) => !selectedConcepts.includes(c))
         .map((concept) => (
@@ -10085,7 +10086,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 <BreadcrumbSeparator
                   items={docsSectionsList.map((s) => ({
                     label: (
-                      <span className="flex items-center gap-unit">
+                      <span className="flex items-center gap-single">
                         {s.icon && <span aria-hidden="true">{s.icon}</span>}
                         <span>{s.label}</span>
                       </span>
@@ -10101,7 +10102,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                       const sectionInfo = docsSectionsList.find((s) => s.id === docsSection);
                       if (!sectionInfo) return docsSection;
                       return (
-                        <span className="flex items-center gap-unit">
+                        <span className="flex items-center gap-single">
                           {sectionInfo.icon && <span aria-hidden="true">{sectionInfo.icon}</span>}
                           <span>{sectionInfo.label}</span>
                         </span>
@@ -10359,7 +10360,7 @@ const Search: FC = ({}) => {
                 <CommandGroup heading={kitsLabel}>
                   {groupedSearchResults.kits.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`kit-${(r.item.item as KitShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-double">
+                      <div className="flex items-center gap-single">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
                       </div>
@@ -10371,7 +10372,7 @@ const Search: FC = ({}) => {
                 <CommandGroup heading={designsLabel}>
                   {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`design-${(r.item.item as DesignShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-double">
+                      <div className="flex items-center gap-single">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
                       </div>
@@ -10383,7 +10384,7 @@ const Search: FC = ({}) => {
                 <CommandGroup heading={typesLabel}>
                   {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`type-${(r.item.item as TypeShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-double">
+                      <div className="flex items-center gap-single">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
                       </div>
@@ -10395,7 +10396,7 @@ const Search: FC = ({}) => {
                 <CommandGroup heading={qualitiesLabel}>
                   {groupedSearchResults.qualities.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-double">
+                      <div className="flex items-center gap-single">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
                       </div>
@@ -10407,7 +10408,7 @@ const Search: FC = ({}) => {
                 <CommandGroup heading={docsLabel}>
                   {groupedSearchResults.docs.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`docs-${(r.item.item as { path: string }).path}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-double">
+                      <div className="flex items-center gap-single">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
                       </div>
@@ -10419,7 +10420,7 @@ const Search: FC = ({}) => {
                 <CommandGroup heading={tutorialsLabel}>
                   {groupedSearchResults.tutorials.map((r: FuseResult<SearchResult>, idx: number) => (
                     <CommandItem key={`tutorial-${(r.item.item as Tutorial).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-double">
+                      <div className="flex items-center gap-single">
                         {getIcon(r.item.type)}
                         <span>{getDisplayName(r.item)}</span>
                       </div>
@@ -11436,7 +11437,7 @@ export const LayoutCanvas: FC<{
         {hoveredSplitter &&
           hoveredSplitter.element &&
           createPortal(
-            <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 flex flex-row -translate-x-1/2 -translate-y-1/2 gap-unit border border-border bg-temporary p-unit">
+            <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 flex flex-row -translate-x-1/2 -translate-y-1/2 gap-single border border-border bg-temporary p-single">
               {windowConfig.windowTypes.map((windowType) => {
                 const typeId = windowType.id;
                 const direction = hoveredSplitter.direction;
@@ -11449,7 +11450,7 @@ export const LayoutCanvas: FC<{
                     key={typeId}
                     type="button"
                     disabled={!layoutLoaded}
-                    className="border border-border bg-panel p-unit text-xs hover:bg-hover-panel disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="border border-border bg-panel p-single text-xs hover:bg-hover-panel disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       if (!splitterElement) {

@@ -247,12 +247,14 @@ The tooltip system automatically resolves i18n content from element IDs, adaptin
 - ALWAYS use colors for light mode. Dark mode is automatically derived. There are scales for the following number of colors: 2 (dark, light), 3 (dark, gray, light), 4 (dark, dark-gray-gray, light-gray-gray, light), 5 (dark, dark-gray, gray, light-gray, light), 6 (dark, dark-gray-gray, gray, light-gray-gray, light), 7 (dark, dark-6-7, dark-5-7, gray, light-5-7, light-6-7, light), 8 (dark, d-d-d-g, dark-gray, d-g-g-g, light-gray, l-g-g-g, l-l-l-g, light), 9 (dark, dark-8-9, dark-7-9, dark-gray, gray, light-gray, light-7-9, light-8-9, light), 10 (gray-100, gray-200, gray-300, gray-400, gray, gray-600, gray-700, gray-800, gray-900, light), 11 (dark, gray-100, dark-gray-gray, dark-gray, gray, light-gray, light-gray-gray, light-light-gray, l-l-l-g, gray-900, light). ALWAYS pick the one with the highest contrast.
 - All closed ui elements ALWAYS have a border.
 - NEVER use hardcoded pixels. ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
-  - `--spacing-unit`: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
-  - `--size-tiny`: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
-  - `--size-small`: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
-  - `--size-medium`: 7 units - height of tree items, toggles/buttons, input (e.g. `h-7`)
-  - `--size-large`: 9 units - height of navbar (e.g. `h-9`)
-  - `--size-huge`: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
+  - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
+  - Tiny: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
+  - Small: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
+  - Medium: 7 units - height of tree items, height of buttons and simple toggles, height of input (e.g. `h-7`)
+  - Large: 9 units - height of navbar, height of table row, height of table header (e.g. `h-9`)
+  - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
+  - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-13`)
+  - Giga: 15 units - reserved for future use (e.g. `w-15`)
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
@@ -645,12 +647,14 @@ Providing an `id` shows the translated `IdTooltipContent`, and the base footer a
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from global.css. Only global.css uses colors and pixels directly.
 - ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
-  - `--spacing-unit`: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
-  - `--size-tiny`: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
-  - `--size-small`: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
-  - `--size-medium`: 7 units - height of tree items, toggles/buttons, input (e.g. `h-7`)
-  - `--size-large`: 9 units - height of navbar (e.g. `h-9`)
-  - `--size-huge`: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
+  - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
+  - Tiny: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
+  - Small: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
+  - Medium: 7 units - height of tree items, height of buttons and simple toggles, height of input (e.g. `h-7`)
+  - Large: 9 units - height of navbar, height of table row, height of table header (e.g. `h-9`)
+  - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
+  - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-13`)
+  - Giga: 15 units - reserved for future use (e.g. `w-15`)
 
 ### Store Architecture
 

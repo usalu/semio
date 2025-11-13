@@ -1044,19 +1044,23 @@ The UI uses a standardized unit-based sizing system for consistent spacing and s
 
 All size constants are defined in `js/js/globals.css` and derived from `--spacing`:
 
-- **`--spacing-unit`**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
-- **`--size-tiny`**: 3 units (e.g. `h-3`, `w-3`) - height/width of icons within actions, small text size
-- **`--size-small`**: 5 units (e.g. `h-5`, `w-5`) - height/width of actions, avatars, default text size
-- **`--size-medium`**: 7 units (e.g. `h-7`) - height of tree items, toggles/buttons, input
-- **`--size-large`**: 9 units (e.g. `h-9`) - height of navbar
-- **`--size-huge`**: 11 units (e.g. `h-11`) - height of navigation buttons at bottom of docs pages
+- **Single**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
+- **Tiny**: 3 units (e.g. `h-3`, `w-3`) - height/width of icons within actions, small text size
+- **Small**: 5 units (e.g. `h-5`, `w-5`) - height/width of actions, avatars, default text size
+- **Medium**: 7 units (e.g. `h-7`) - height of tree items, height of buttons and simple toggles, height of input
+- **Large**: 9 units (e.g. `h-9`) - height of navbar, height of table row, height of table header
+- **Huge**: 11 units (e.g. `h-11`) - height of navigation buttons at bottom of docs pages
+- **Mega**: 13 units (e.g. `w-13`) - width of toggles with actions (toggles with dropdown or action buttons)
+- **Giga**: 15 units (e.g. `w-15`) - reserved for future use
 
 #### Guidelines
 
 - All spacing between elements uses Tailwind unit classes (e.g. `gap-1`, `p-1`, `m-1`)
 - Icons within buttons/actions use `h-3 w-3` (tiny)
-- Interactive elements (buttons, toggles) use `h-7` (medium)
+- Interactive elements (buttons, simple toggles) use `h-7` (medium height)
+- Toggles with actions (dropdown or action button) use `h-7 w-13` (medium height, mega width)
 - The navbar uses `h-9` (large)
+- Table rows and headers use `h-9` (large)
 - Large navigation elements use `h-11` (huge)
 
 The unit system automatically adapts based on the `--spacing` mode (compact vs touch).

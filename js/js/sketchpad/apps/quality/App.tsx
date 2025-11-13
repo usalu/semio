@@ -1402,7 +1402,7 @@ export const QualityWorkbench: FC = () => {
     <>
       <TreeItem id="semio.sketchpad.app.quality.numericFunctions">
         <TreeContent>
-          <div className="flex flex-wrap gap-unit p-unit">
+          <div className="flex flex-wrap gap-single p-single">
             <FunctionNode name="Add" type="function" label={t("semio.sketchpad.app.quality.add")} />
             <FunctionNode name="Subtract" type="function" label={t("semio.sketchpad.app.quality.subtract")} />
             <FunctionNode name="Multiply" type="function" label={t("semio.sketchpad.app.quality.multiply")} />
@@ -1412,7 +1412,7 @@ export const QualityWorkbench: FC = () => {
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.branchingFunctions">
         <TreeContent>
-          <div className="flex flex-wrap gap-unit p-unit">
+          <div className="flex flex-wrap gap-single p-single">
             <FunctionNode name="If" type="function" label={t("semio.sketchpad.app.quality.if")} />
             <FunctionNode name="Switch" type="function" label={t("semio.sketchpad.app.quality.switch")} />
           </div>
@@ -1420,7 +1420,7 @@ export const QualityWorkbench: FC = () => {
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.dataStructures">
         <TreeContent>
-          <div className="flex flex-wrap gap-unit p-unit">
+          <div className="flex flex-wrap gap-single p-single">
             <FunctionNode name="List" type="function" label={t("semio.sketchpad.app.quality.list")} />
             <FunctionNode name="Dictionary" type="function" label={t("semio.sketchpad.app.quality.dictionary")} />
           </div>
@@ -1479,7 +1479,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
         <TreeItem key={key} label={key}>
           <TreeContent>
             {hasQualities && (
-              <div className="flex flex-wrap gap-unit p-unit">
+              <div className="flex flex-wrap gap-single p-single">
                 {node.qualities.map((quality) => (
                   <QualityAvatar key={quality.guid} quality={quality} showHoverCard={true} />
                 ))}
@@ -1492,7 +1492,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
     } else if (hasQualities) {
       return (
         <TreeContent key={key}>
-          <div className="flex flex-wrap gap-unit p-unit">
+          <div className="flex flex-wrap gap-single p-single">
             {node.qualities.map((quality) => (
               <QualityAvatar key={quality.guid} quality={quality} showHoverCard={true} />
             ))}
@@ -1515,7 +1515,7 @@ const QualityWorkbenchQualities: FC = () => {
   if (qualities.length === 0) {
     return (
       <TreeContent>
-        <div className="text-sm text-muted-foreground p-double">{t("semio.sketchpad.app.quality.noQualities")}</div>
+        <div className="text-sm text-muted-foreground p-single">{t("semio.sketchpad.app.quality.noQualities")}</div>
       </TreeContent>
     );
   }
