@@ -2137,6 +2137,8 @@ const DesignSectionForm: FC = () => {
   const kitCommands = useKitCommands();
   const design = useDesign() as Design;
 
+  if (!design) return null;
+
   const updateDesignField = (origin: string, diff: any) => {
     if (!kitCommands) return;
     kitCommands.updateDesign(origin, design.guid, diff);

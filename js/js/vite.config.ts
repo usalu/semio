@@ -63,10 +63,13 @@ export default defineConfig(async () => {
       topLevelAwait(),
     ],
     optimizeDeps: {
-      include: ["golden-layout"],
+      include: ["golden-layout", "three"],
       esbuildOptions: {
         target: "es2020",
       },
+    },
+    resolve: {
+      dedupe: ["three"],
     },
     ssr: {
       noExternal: ["golden-layout"],

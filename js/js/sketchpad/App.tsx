@@ -8361,10 +8361,6 @@ export function useAppPanelVisibility(): PanelVisibility {
     }
   }, [store, appType, kitGuid, itemGuid]);
 
-  if (appType === "docs") {
-    return docsPanelVisibility;
-  }
-
   const yPanelVisibilityMap = useMemo(() => {
     if (!app) return null;
     const yMap = (app as any).yMap;
@@ -8397,6 +8393,11 @@ export function useAppPanelVisibility(): PanelVisibility {
   }, [app]);
 
   const panelVisibility = useSyncExternalStore(subscribe, getSnapshot);
+
+  // Return docs panel visibility for docs app, otherwise return app panel visibility
+  if (appType === "docs") {
+    return docsPanelVisibility;
+  }
 
   return panelVisibility;
 }
@@ -10354,81 +10355,77 @@ const Search: FC = ({}) => {
         <CommandInput id="semio.sketchpad.navbar.searchInput" placeholder={searchPlaceholder} value={query} onValueChange={setQuery} />
         <CommandList>
           <CommandEmpty>{searchNoResults}</CommandEmpty>
-          {searchResults.length > 0 && (
-            <>
-              {groupedSearchResults.kits.length > 0 && (
-                <CommandGroup heading={kitsLabel}>
-                  {groupedSearchResults.kits.map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`kit-${(r.item.item as KitShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-single">
-                        {getIcon(r.item.type)}
-                        <span>{getDisplayName(r.item)}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-              {groupedSearchResults.designs.length > 0 && (
-                <CommandGroup heading={designsLabel}>
-                  {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`design-${(r.item.item as DesignShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-single">
-                        {getIcon(r.item.type)}
-                        <span>{getDisplayName(r.item)}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-              {groupedSearchResults.types.length > 0 && (
-                <CommandGroup heading={typesLabel}>
-                  {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`type-${(r.item.item as TypeShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-single">
-                        {getIcon(r.item.type)}
-                        <span>{getDisplayName(r.item)}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-              {groupedSearchResults.qualities.length > 0 && (
-                <CommandGroup heading={qualitiesLabel}>
-                  {groupedSearchResults.qualities.map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-single">
-                        {getIcon(r.item.type)}
-                        <span>{getDisplayName(r.item)}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-              {groupedSearchResults.docs.length > 0 && (
-                <CommandGroup heading={docsLabel}>
-                  {groupedSearchResults.docs.map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`docs-${(r.item.item as { path: string }).path}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-single">
-                        {getIcon(r.item.type)}
-                        <span>{getDisplayName(r.item)}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-              {groupedSearchResults.tutorials.length > 0 && (
-                <CommandGroup heading={tutorialsLabel}>
-                  {groupedSearchResults.tutorials.map((r: FuseResult<SearchResult>, idx: number) => (
-                    <CommandItem key={`tutorial-${(r.item.item as Tutorial).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                      <div className="flex items-center gap-single">
-                        {getIcon(r.item.type)}
-                        <span>{getDisplayName(r.item)}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-            </>
+          {groupedSearchResults.kits.length > 0 && (
+            <CommandGroup heading={kitsLabel}>
+              {groupedSearchResults.kits.map((r: FuseResult<SearchResult>, idx: number) => (
+                <CommandItem key={`kit-${(r.item.item as KitShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                  <div className="flex items-center gap-single">
+                    {getIcon(r.item.type)}
+                    <span>{getDisplayName(r.item)}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {groupedSearchResults.designs.length > 0 && (
+            <CommandGroup heading={designsLabel}>
+              {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
+                <CommandItem key={`design-${(r.item.item as DesignShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                  <div className="flex items-center gap-single">
+                    {getIcon(r.item.type)}
+                    <span>{getDisplayName(r.item)}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {groupedSearchResults.types.length > 0 && (
+            <CommandGroup heading={typesLabel}>
+              {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
+                <CommandItem key={`type-${(r.item.item as TypeShallow).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                  <div className="flex items-center gap-single">
+                    {getIcon(r.item.type)}
+                    <span>{getDisplayName(r.item)}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {groupedSearchResults.qualities.length > 0 && (
+            <CommandGroup heading={qualitiesLabel}>
+              {groupedSearchResults.qualities.map((r: FuseResult<SearchResult>, idx: number) => (
+                <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                  <div className="flex items-center gap-single">
+                    {getIcon(r.item.type)}
+                    <span>{getDisplayName(r.item)}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {groupedSearchResults.docs.length > 0 && (
+            <CommandGroup heading={docsLabel}>
+              {groupedSearchResults.docs.map((r: FuseResult<SearchResult>, idx: number) => (
+                <CommandItem key={`docs-${(r.item.item as { path: string }).path}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                  <div className="flex items-center gap-single">
+                    {getIcon(r.item.type)}
+                    <span>{getDisplayName(r.item)}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {groupedSearchResults.tutorials.length > 0 && (
+            <CommandGroup heading={tutorialsLabel}>
+              {groupedSearchResults.tutorials.map((r: FuseResult<SearchResult>, idx: number) => (
+                <CommandItem key={`tutorial-${(r.item.item as Tutorial).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                  <div className="flex items-center gap-single">
+                    {getIcon(r.item.type)}
+                    <span>{getDisplayName(r.item)}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
           )}
         </CommandList>
       </CommandDialog>
@@ -10874,6 +10871,7 @@ export interface WindowControl {
 
 export interface WindowTypeDefinition {
   id: string;
+  label?: string | any;
   icon?: ReactNode;
   component: (props: any) => ReactNode;
   controls?: WindowControl[];
@@ -11084,7 +11082,7 @@ export const LayoutCanvas: FC<{
           {
             type: "component",
             componentName: windowTypeId,
-            title: windowType.label,
+            title: typeof windowType.label === "string" ? windowType.label : windowTypeId,
           },
         ],
       };
@@ -11181,17 +11179,42 @@ export const LayoutCanvas: FC<{
           }
           const normalized: any = {};
           for (const [key, value] of Object.entries(config)) {
-            if (key === "size") {
-              if (typeof value === "number") {
-                normalized[key] = `${value}%`;
-              } else if (typeof value === "string") {
-                normalized[key] = value;
-              } else {
-                normalized[key] = String(value || "");
+            // Handle all fields that GoldenLayout expects to be strings
+            if (key === "size" || key === "width" || key === "height" || key === "title" || key === "componentName" || key === "type" || key === "id") {
+              if (typeof value === "string") {
+                // For size, ensure it has proper format
+                if (key === "size" && value.trim() === "") {
+                  normalized[key] = "50%";
+                } else if (value.trim() === "") {
+                  // Skip empty strings for other fields
+                  continue;
+                } else {
+                  normalized[key] = value;
+                }
+              } else if (typeof value === "number") {
+                // Convert numbers to strings with appropriate format
+                if (key === "size") {
+                  normalized[key] = `${value}%`;
+                } else {
+                  normalized[key] = String(value);
+                }
+              } else if (value !== null && value !== undefined) {
+                // Convert other types to strings
+                const strValue = String(value);
+                if (key === "size") {
+                  normalized[key] = strValue || "50%";
+                } else {
+                  normalized[key] = strValue;
+                }
               }
+              // If value is null or undefined, skip it (don't add to normalized)
             } else if (key === "content" && Array.isArray(value)) {
               normalized[key] = value.map(normalizeLayoutConfig);
+            } else if (key === "componentState") {
+              // componentState should be passed through as-is (it's data, not layout config)
+              normalized[key] = value;
             } else if (typeof value === "object" && value !== null) {
+              // Recursively normalize other objects
               normalized[key] = normalizeLayoutConfig(value);
             } else {
               normalized[key] = value;
@@ -11202,6 +11225,8 @@ export const LayoutCanvas: FC<{
 
         const rawConfig = layoutState || windowConfig.defaultLayout || createDefaultLayout(windowConfig.windowTypes.map((wt) => wt.id));
         const config = normalizeLayoutConfig(rawConfig);
+
+        console.log("[GoldenLayout] Normalized config:", JSON.stringify(config, null, 2));
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
@@ -11317,8 +11342,14 @@ export const LayoutCanvas: FC<{
           setLayoutLoaded(true);
         });
 
-        layout.init();
-        layoutRef.current = layout;
+        try {
+          layout.init();
+          layoutRef.current = layout;
+        } catch (error: any) {
+          console.error("[GoldenLayout] Failed to initialize:", error);
+          console.error("[GoldenLayout] Config that failed:", JSON.stringify(config, null, 2));
+          throw error;
+        }
 
         handleSplitterHoverRef.current = (e: MouseEvent) => {
           const target = e.target as HTMLElement;
@@ -11464,9 +11495,9 @@ export const LayoutCanvas: FC<{
                     onMouseEnter={() => {
                       hoveredSplitterElementRef.current = splitterElement;
                     }}
-                    title={windowType.label}
+                    title={typeof windowType.label === "string" ? windowType.label : typeId}
                   >
-                    {windowType.label}
+                    {typeof windowType.label === "string" ? windowType.label : typeId}
                   </button>
                 );
               })}

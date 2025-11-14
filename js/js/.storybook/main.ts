@@ -117,6 +117,13 @@ const config: StorybookConfig = {
       target: "es2020",
     };
 
+    // Ensure React runs in development mode for Storybook
+    config.mode = "development";
+    config.define = {
+      ...config.define,
+      "process.env.NODE_ENV": JSON.stringify("development"),
+    };
+
     return config;
   },
 };
