@@ -20,7 +20,8 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Canvas, HorizontalWindows, Window } from "../../../sketchpad/elements";
+import { Canvas, HorizontalWindows } from "../../../sketchpad/App";
+import { Window } from "../../../sketchpad/elements";
 
 // #region Canvas
 const meta = {

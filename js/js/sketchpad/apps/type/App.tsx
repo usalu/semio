@@ -61,7 +61,7 @@ import {
 } from "../../App";
 import { Input, Model, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
 import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, Transact, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolType } from "../../sketchpad";
+import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 import { AppConfig } from "../index";
 
 let kitAppModuleCache: any = null;
@@ -125,7 +125,7 @@ export enum TypeAppFullscreenWindow {
   Representations = "representations",
 }
 
-export enum TypeAppWindowType {
+export enum TypeAppWindowKind {
   Scene = "scene",
 }
 export interface TypeAppPresence {
@@ -145,7 +145,7 @@ export interface TypeAppDiff {
   hover?: TypeAppHover;
   fullscreenWindow?: TypeAppFullscreenWindow;
   panelVisibility?: Partial<PanelVisibility>;
-  activeTool?: ToolType;
+  activeTool?: ToolKind;
   camera?: Camera;
   focusedPortGuid?: Guid | null;
   selectedRepresentationGuid?: Guid | null;
@@ -156,7 +156,7 @@ export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
 export interface TypeAppState {
   fullscreenWindow: TypeAppFullscreenWindow;
   panelVisibility: PanelVisibility;
-  activeTool: ToolType;
+  activeTool: ToolKind;
   selection?: TypeAppSelection;
   hover?: TypeAppHover;
   presence?: TypeAppPresence;
@@ -206,7 +206,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
         yMap.set("fullscreenWindow", TypeAppFullscreenWindow.None);
       }
       if (!yMap.has("activeTool")) {
-        yMap.set("activeTool", ToolType.SELECTION_NORMAL);
+        yMap.set("activeTool", ToolKind.SELECTION_NORMAL);
       }
       if (!yMap.has("panelVisibility")) {
         const yPanelVisibility = new Y.Map<boolean>();
@@ -243,13 +243,13 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     return this.yMap.get("fullscreenWindow") as TypeAppFullscreenWindow;
   }
 
-  get activeTool(): ToolType {
-    const value = this.yMap.get("activeTool") as ToolType;
+  get activeTool(): ToolKind {
+    const value = this.yMap.get("activeTool") as ToolKind;
     if (value === undefined) {
       this.transact(() => {
-        this.yMap.set("activeTool", ToolType.SELECTION_NORMAL);
+        this.yMap.set("activeTool", ToolKind.SELECTION_NORMAL);
       });
-      return ToolType.SELECTION_NORMAL;
+      return ToolKind.SELECTION_NORMAL;
     }
     return value;
   }
@@ -693,7 +693,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
     },
     focusPort: (origin: string, portGuid: Guid) => store.execute("semio.typeApp.focusPort", origin, portGuid),
     clearFocus: (origin: string) => store.execute("semio.typeApp.clearFocus", origin),
-    setActiveTool: (origin: string, tool: ToolType) => {
+    setActiveTool: (origin: string, tool: ToolKind) => {
       store.change({ activeTool: tool });
     },
     selectPort: (origin: string, portId: Guid) => {
@@ -807,8 +807,8 @@ export function useTypeAppHover(): TypeAppHover | undefined {
   return useTypeApp((s) => s.hover) as TypeAppHover | undefined;
 }
 
-export function useTypeAppActiveTool(): ToolType {
-  return useTypeApp((s) => s.activeTool) as ToolType;
+export function useTypeAppActiveTool(): ToolKind {
+  return useTypeApp((s) => s.activeTool) as ToolKind;
 }
 
 export function useTypeAppIsPortSelected(id: TypeAppId | undefined, portId: string): boolean {
@@ -918,7 +918,7 @@ export const commands = {
       },
     };
   },
-  "semio.typeApp.setActiveTool": (context: TypeAppCommandContext, tool: ToolType): TypeAppCommandResult => {
+  "semio.typeApp.setActiveTool": (context: TypeAppCommandContext, tool: ToolKind): TypeAppCommandResult => {
     return {
       diff: {
         activeTool: tool,
@@ -1167,7 +1167,7 @@ const LoadedTypeMesh: FC<{
   }
 };
 
-const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
+const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
   activeTool,
   onPortPreview,
   onPortCreate,
@@ -1252,7 +1252,7 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
 
   const handlePointerDown = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT) {
+      if (activeTool === ToolKind.PORT) {
         setIsPointerDown(true);
         pointerDownTimeRef.current = Date.now();
         pointerDownPositionRef.current = { x: event.clientX, y: event.clientY };
@@ -1263,7 +1263,7 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
 
   const handlePointerUp = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT && isPointerDown) {
+      if (activeTool === ToolKind.PORT && isPointerDown) {
         const timeDiff = Date.now() - pointerDownTimeRef.current;
         const distance = Math.sqrt(Math.pow(event.clientX - pointerDownPositionRef.current.x, 2) + Math.pow(event.clientY - pointerDownPositionRef.current.y, 2));
 
@@ -1283,7 +1283,7 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
 
   const handlePointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT && event.face && !isPointerDown) {
+      if (activeTool === ToolKind.PORT && event.face && !isPointerDown) {
         event.stopPropagation();
         const position = new THREE.Vector3().copy(event.point);
         const normal = event.face.normal.clone();
@@ -1297,7 +1297,7 @@ const TypeMesh: FC<{ activeTool: ToolType; onPortPreview: (position: THREE.Vecto
 
   const handlePointerOut = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolType.PORT) {
+      if (activeTool === ToolKind.PORT) {
         onClearPreview();
         setIsPointerDown(false);
       }
@@ -1408,9 +1408,9 @@ const SceneContent: FC = () => {
   const handlePortClick = useCallback(
     (portId: string) => {
       const isSelected = selection?.ports?.includes(portId) || false;
-      if (activeTool === ToolType.SELECTION_ADDITIVE) {
+      if (activeTool === ToolKind.SELECTION_ADDITIVE) {
         if (!isSelected) selectPort(portId, "");
-      } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) {
+      } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) {
         if (isSelected) deselectPort(portId);
       } else {
         const currentPorts = selection?.ports ?? [];
@@ -2748,7 +2748,7 @@ const PortToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
 };
 
 export const PortTool: Tool<TypeAppState> = {
-  id: ToolType.PORT,
+  id: ToolKind.PORT,
   icon: <PortIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({
     scene: <PortToolContent {...context} />,
@@ -2757,19 +2757,19 @@ export const PortTool: Tool<TypeAppState> = {
 
 // Selection Tool
 export const SelectionNormalTool: Tool<TypeAppState> = {
-  id: ToolType.SELECTION_NORMAL,
+  id: ToolKind.SELECTION_NORMAL,
   icon: <SelectToolIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
 export const SelectionAdditiveTool: Tool<TypeAppState> = {
-  id: ToolType.SELECTION_ADDITIVE,
+  id: ToolKind.SELECTION_ADDITIVE,
   icon: <AddIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
 export const SelectionSubtractiveTool: Tool<TypeAppState> = {
-  id: ToolType.SELECTION_SUBTRACTIVE,
+  id: ToolKind.SELECTION_SUBTRACTIVE,
   icon: <RemoveIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
@@ -2780,7 +2780,7 @@ export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, Selectio
 const getTypeTools = (): ToolDefinition[] => [
   {
     id: "selection",
-    defaultMode: ToolType.SELECTION_NORMAL,
+    defaultMode: ToolKind.SELECTION_NORMAL,
     modes: TypeAppTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
       id: tool.id,
       icon: tool.icon,
@@ -2788,8 +2788,8 @@ const getTypeTools = (): ToolDefinition[] => [
   },
   {
     id: "port",
-    defaultMode: ToolType.PORT,
-    modes: TypeAppTools.filter((tool) => tool.id === ToolType.PORT).map((tool) => ({
+    defaultMode: ToolKind.PORT,
+    modes: TypeAppTools.filter((tool) => tool.id === ToolKind.PORT).map((tool) => ({
       id: tool.id,
       icon: tool.icon,
     })),
@@ -2804,9 +2804,9 @@ export const ToolsToggleGroup: FC = () => {
 
   if (!kit || !type || !app) return null;
 
-  const activeTool = (app as TypeAppState).activeTool ?? ToolType.SELECTION_NORMAL;
+  const activeTool = (app as TypeAppState).activeTool ?? ToolKind.SELECTION_NORMAL;
 
-  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool as ToolType)} level="panel" />;
+  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool as ToolKind)} level="panel" />;
 };
 
 // #endregion Tools
@@ -2821,25 +2821,25 @@ const App: FC = () => {
   const appType = useAppType();
   const { setActiveTool } = useTypeAppCommands();
   const app = useTypeApp((s) => s);
-  const activeTool = app?.activeTool ?? ToolType.SELECTION_NORMAL;
+  const activeTool = app?.activeTool ?? ToolKind.SELECTION_NORMAL;
   const selection = useTypeAppSelection();
   const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (activeTool === ToolType.SELECTION_NORMAL) {
+      if (activeTool === ToolKind.SELECTION_NORMAL) {
         if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          setActiveTool("semio.sketchpad.app.type.keydown.shift", ToolType.SELECTION_ADDITIVE);
+          setActiveTool("semio.sketchpad.app.type.keydown.shift", ToolKind.SELECTION_ADDITIVE);
         } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-          setActiveTool("semio.sketchpad.app.type.keydown.ctrl", ToolType.SELECTION_SUBTRACTIVE);
+          setActiveTool("semio.sketchpad.app.type.keydown.ctrl", ToolKind.SELECTION_SUBTRACTIVE);
         }
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (activeTool === ToolType.SELECTION_ADDITIVE && !e.shiftKey) {
-        setActiveTool("semio.sketchpad.app.type.keyup.shift", ToolType.SELECTION_NORMAL);
-      } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
-        setActiveTool("semio.sketchpad.app.type.keyup.ctrl", ToolType.SELECTION_NORMAL);
+      if (activeTool === ToolKind.SELECTION_ADDITIVE && !e.shiftKey) {
+        setActiveTool("semio.sketchpad.app.type.keyup.shift", ToolKind.SELECTION_NORMAL);
+      } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
+        setActiveTool("semio.sketchpad.app.type.keyup.ctrl", ToolKind.SELECTION_NORMAL);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -3014,14 +3014,14 @@ const App: FC = () => {
   const windowLayout = useTypeApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([TypeAppWindowType.Scene]);
+    return createDefaultLayout([TypeAppWindowKind.Scene]);
   }, []);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
-      windowTypes: [
+      windowKinds: [
         {
-          id: TypeAppWindowType.Scene,
+          id: TypeAppWindowKind.Scene,
           label: "Scene",
           component: (props: any) => <Scene isDragOver={isDragOver} />,
         },

@@ -20,9 +20,8 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, List, Network } from "lucide-react";
-import { useState } from "react";
-import { ToggleGroup, ToggleGroupItem } from "../../../../sketchpad/elements";
+import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
+import { Action, ToggleGroup, ToggleGroupItem } from "../../../../sketchpad/elements";
 
 // #region ToggleGroup
 const meta = {
@@ -39,16 +38,59 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    const [value, setValue] = useState("model");
-    return (
-      <ToggleGroup id="toggle-group-default" type="single" value={value} onValueChange={setValue} level="base">
-        <ToggleGroupItem id="toggle-group-default-model" value="model" icon={<Box />} />
-        <ToggleGroupItem id="toggle-group-default-diagram" value="diagram" icon={<Network />} />
-        <ToggleGroupItem id="toggle-group-default-list" value="list" icon={<List />} />
-      </ToggleGroup>
-    );
+  args: {
+    id: "toggle-group-default",
+    kind: "single",
+    defaultValue: "standard",
+    level: "base",
+    showLabel: true,
+    noDivider: true,
+    children: (
+      <>
+        <ToggleGroupItem id="toggle-default-standard" value="standard" icon={<Lock />} />
+        <ToggleGroupItem 
+          id="toggle-action-settings" 
+          value="settings" 
+          icon={<Settings />} 
+          action={<Action id="toggle-action-settings-add" icon={<Plus />} level="base" />}
+        />
+        <ToggleGroupItem 
+          id="toggle-dropdown-box" 
+          value="box" 
+          icon={<Box />} 
+          action={
+            <Action 
+              id="toggle-dropdown-box-action" 
+              icon={<Network />} 
+              level="base" 
+            />
+          }
+        />
+      </>
+    ),
   },
 };
+
+export const Multiple: Story = {
+  args: {
+    id: "toggle-group-multiple",
+    kind: "single",
+    defaultValue: "box",
+    level: "base",
+    showLabel: true,
+    children: (
+      <>
+        <ToggleGroupItem id="toggle-multiple-standard" value="standard" icon={<Lock />} />
+        <ToggleGroupItem id="toggle-multiple-box" value="box" icon={<Box />} />
+        <ToggleGroupItem id="toggle-multiple-network" value="network" icon={<Network />} />
+        <ToggleGroupItem id="toggle-multiple-list" value="list" icon={<List />} />
+        <ToggleGroupItem id="toggle-multiple-settings" value="settings" icon={<Settings />} />
+        <ToggleGroupItem id="toggle-multiple-plus" value="plus" icon={<Plus />} />
+      </>
+    ),
+  },
+};
+
+
 
 // #endregion ToggleGroup

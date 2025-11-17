@@ -45,7 +45,7 @@ export const Default: Story = {
         <TabsTrigger value="statistics">Statistics</TabsTrigger>
       </TabsList>
       <TabsContent value="properties" className="space-y-4">
-        <div className="border p-[1rem] space-y-2">
+        <div className="border p-small space-y-2">
           <div className="flex justify-between">
             <span className="text-sm font-medium">Volume</span>
             <span className="text-sm">25.0 m³</span>
@@ -61,7 +61,7 @@ export const Default: Story = {
         </div>
       </TabsContent>
       <TabsContent value="connections" className="space-y-4">
-        <div className="border p-[1rem] space-y-2">
+        <div className="border p-small space-y-2">
           <p className="text-sm">3 active connections</p>
           <p className="text-sm text-muted-foreground">Base → Capsule J (Standard)</p>
           <p className="text-sm text-muted-foreground">Capsule J → Tambour A</p>
@@ -69,7 +69,7 @@ export const Default: Story = {
         </div>
       </TabsContent>
       <TabsContent value="statistics" className="space-y-4">
-        <div className="border p-[1rem] space-y-2">
+        <div className="border p-small space-y-2">
           <p className="text-sm">Total pieces: 140</p>
           <p className="text-sm">Capsule count: 132</p>
           <p className="text-sm">Total height: 52.4m</p>

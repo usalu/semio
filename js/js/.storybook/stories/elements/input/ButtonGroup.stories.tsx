@@ -39,7 +39,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <ButtonGroup id="button-group-default" variant="default" level="base" defaultValue="model">
+    <ButtonGroup id="button-group-default" variant="default" level="base" defaultValue="model" showLabel>
       <ButtonGroupItem id="button-group-default-model" value="model" icon={<Box />} />
       <ButtonGroupItem id="button-group-default-diagram" value="diagram" icon={<Network />} />
       <ButtonGroupItem id="button-group-default-details" value="details" icon={<List />} />

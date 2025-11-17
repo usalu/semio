@@ -141,7 +141,7 @@ interface MilestoneTooltipProps {
 
 const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
   return (
-    <div className="fixed top-[1rem] left-1/2 -translate-x-1/2 z-[10001] bg-panel border rounded-lg shadow-lg p-[1rem] max-w-md pointer-events-none">
+    <div className="fixed top-small left-1/2 -translate-x-1/2 z-[10001] bg-panel border rounded-lg shadow-lg p-small max-w-md pointer-events-none">
       <h3 className="font-medium text-sm mb-1">{milestone.title}</h3>
       {milestone.description && <p className="text-xs text-muted">{milestone.description}</p>}
     </div>

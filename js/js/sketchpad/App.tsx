@@ -132,6 +132,7 @@ import {
   NavbarItem,
   Toggle,
   Window,
+  InteractionProvider,
 } from "./elements";
 import {
   AppCommandResult,
@@ -140,7 +141,7 @@ import {
   AppEdit,
   AppRegistration,
   AppStep,
-  AppType,
+  AppKind,
   CompleteState,
   CompositeFileProviderConfig,
   DesignAppId,
@@ -8128,7 +8129,7 @@ export function migratePath(path: string): string {
   return path;
 }
 
-export function useAppType(): AppType {
+export function useAppType(): AppKind {
   const navigation = useNavigation();
   return useMemo(() => {
     const pathParts = navigation.split("/").filter((p: string) => p);
@@ -8145,7 +8146,7 @@ export function useAppType(): AppType {
   }, [navigation]);
 }
 
-export function getAppTypeFromPath(path: string): AppType {
+export function getAppTypeFromPath(path: string): AppKind {
   const pathParts = path.split("/").filter((p) => p);
   if (pathParts.length === 0) return "home";
 
@@ -9147,9 +9148,9 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
           return (
             <Toggle
               key={tool.id}
-              type="dropdown"
+              kind="dropdown"
               id={`semio.sketchpad.tool.${tool.id}`}
-              items={tool.modes.map((mode) => ({
+              options={tool.modes.map((mode) => ({
                 value: mode.id,
                 label: mode.label || mode.id,
                 id: mode.tooltipId || `semio.sketchpad.tool.${mode.id}`,
@@ -10815,7 +10816,7 @@ const PanelToggles: FC = ({}) => {
         <Toggle
           type="dropdown"
           id="semio.sketchpad.navbar.panelToggle.workbench"
-          items={workbenchItems}
+          options={workbenchItems}
           value={activeWorkbenchPanel}
           onValueChange={(value) => handleWorkbenchValueChange("semio.sketchpad.navbar.panelToggle.workbench", value)}
           pressed={isAnyWorkbenchPanelOpen}
@@ -10828,7 +10829,7 @@ const PanelToggles: FC = ({}) => {
         <Toggle
           type="dropdown"
           id="semio.sketchpad.navbar.panelToggle.hud"
-          items={hudItems}
+          options={hudItems}
           value={activeHudPanel}
           onValueChange={(value) => handleHudValueChange("semio.sketchpad.navbar.panelToggle.hud", value)}
           pressed={isAnyHudPanelOpen}
@@ -10841,7 +10842,7 @@ const PanelToggles: FC = ({}) => {
         <Toggle
           type="dropdown"
           id="semio.sketchpad.navbar.panelToggle.right"
-          items={rightItems}
+          options={rightItems}
           value={activeRightPanel}
           onValueChange={(value) => handleRightValueChange("semio.sketchpad.navbar.panelToggle.right", value)}
           pressed={isAnyRightPanelOpen}
@@ -10857,7 +10858,7 @@ const PanelToggles: FC = ({}) => {
 // #region Canvas
 
 export interface WindowControl {
-  type: "toggle" | "dropdown";
+  kind: "toggle" | "dropdown";
   id: string;
   icon?: ReactNode;
   value?: string;
@@ -10869,7 +10870,7 @@ export interface WindowControl {
   onChange?: (value: string) => void;
 }
 
-export interface WindowTypeDefinition {
+export interface WindowKindDefinition {
   id: string;
   label?: string | any;
   icon?: ReactNode;
@@ -10883,7 +10884,7 @@ export interface WindowTypeDefinition {
 }
 
 export interface AppWindowConfig {
-  windowTypes: WindowTypeDefinition[];
+  windowKinds: WindowKindDefinition[];
   defaultLayout?: any;
 }
 
@@ -10941,7 +10942,7 @@ const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) =>
   return (
     <div className="flex items-stretch border overflow-hidden h-large">
       {controls.map((control) => {
-        if (control.type === "toggle") {
+        if (control.kind === "toggle") {
           return (
             <Toggle
               key={control.id}
@@ -10953,14 +10954,14 @@ const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) =>
                 }
               }}
             >
-              {control.icon || <span className="flex-1 flex items-center justify-center">{control.label}</span>}
+              {control.icon}
             </Toggle>
           );
-        } else if (control.type === "dropdown" && control.options) {
+        } else if (control.kind === "dropdown" && control.options) {
           return (
             <Toggle
               key={control.id}
-              type="dropdown"
+              kind="dropdown"
               id={control.id}
               value={control.value || control.options[0]?.value}
               onValueChange={(value) => {
@@ -10968,14 +10969,14 @@ const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) =>
                   control.onChange(value);
                 }
               }}
-              items={control.options.map((opt) => ({
+              options={control.options.map((opt) => ({
                 value: opt.value,
-                label: opt.icon || opt.label,
+                label: opt.icon,
                 id: `${control.id}.${opt.value}`,
               }))}
               pressed={!!control.value}
             >
-              {control.icon || <span className="flex-1 flex items-center justify-center">{control.label}</span>}
+              {control.icon}
             </Toggle>
           );
         }
@@ -11071,7 +11072,7 @@ export const LayoutCanvas: FC<{
         return;
       }
 
-      const windowType = windowConfig.windowTypes.find((wt) => wt.id === windowTypeId);
+      const windowType = windowConfig.windowKinds.find((wt) => wt.id === windowTypeId);
       if (!windowType) {
         return;
       }
@@ -11156,7 +11157,7 @@ export const LayoutCanvas: FC<{
 
       clearHoveredSplitter();
     },
-    [windowConfig.windowTypes, clearHoveredSplitter],
+    [windowConfig.windowKinds, clearHoveredSplitter],
   );
 
   useEffect(() => {
@@ -11177,10 +11178,17 @@ export const LayoutCanvas: FC<{
           if (Array.isArray(config)) {
             return config.map(normalizeLayoutConfig);
           }
+
+          // If this is a resolved config from GoldenLayout's toConfig(), skip normalization
+          // as it's already been processed by GoldenLayout
+          if (config.resolved === true) {
+            return config;
+          }
+
           const normalized: any = {};
           for (const [key, value] of Object.entries(config)) {
             // Handle all fields that GoldenLayout expects to be strings
-            if (key === "size" || key === "width" || key === "height" || key === "title" || key === "componentName" || key === "type" || key === "id") {
+            if (key === "size" || key === "width" || key === "height" || key === "title" || key === "componentName" || key === "componentType" || key === "type" || key === "id") {
               if (typeof value === "string") {
                 // For size, ensure it has proper format
                 if (key === "size" && value.trim() === "") {
@@ -11209,7 +11217,10 @@ export const LayoutCanvas: FC<{
               }
               // If value is null or undefined, skip it (don't add to normalized)
             } else if (key === "content" && Array.isArray(value)) {
-              normalized[key] = value.map(normalizeLayoutConfig);
+              // Only include content if it's not empty, or if this is not a component type
+              if (value.length > 0 || config.type !== "component") {
+                normalized[key] = value.map(normalizeLayoutConfig);
+              }
             } else if (key === "componentState") {
               // componentState should be passed through as-is (it's data, not layout config)
               normalized[key] = value;
@@ -11223,7 +11234,7 @@ export const LayoutCanvas: FC<{
           return normalized;
         };
 
-        const rawConfig = layoutState || windowConfig.defaultLayout || createDefaultLayout(windowConfig.windowTypes.map((wt) => wt.id));
+        const rawConfig = layoutState || windowConfig.defaultLayout || createDefaultLayout(windowConfig.windowKinds.map((wt) => wt.id));
         const config = normalizeLayoutConfig(rawConfig);
 
         console.log("[GoldenLayout] Normalized config:", JSON.stringify(config, null, 2));
@@ -11231,7 +11242,7 @@ export const LayoutCanvas: FC<{
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
 
-        windowConfig.windowTypes.forEach((windowType) => {
+        windowConfig.windowKinds.forEach((windowType) => {
           layout.registerComponent(windowType.id, (container: any, componentState: any) => {
             const element = container.getElement();
             let domElement: HTMLElement;
@@ -11469,7 +11480,7 @@ export const LayoutCanvas: FC<{
           hoveredSplitter.element &&
           createPortal(
             <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 flex flex-row -translate-x-1/2 -translate-y-1/2 gap-single border border-border bg-temporary p-single">
-              {windowConfig.windowTypes.map((windowType) => {
+              {windowConfig.windowKinds.map((windowType) => {
                 const typeId = windowType.id;
                 const direction = hoveredSplitter.direction;
                 const splitterElement = hoveredSplitter.element;
@@ -11882,6 +11893,21 @@ const LayoutWrapper: FC = () => {
   );
 };
 
+// Bridge component that connects Sketchpad interaction system to generic InteractionProvider
+const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const commands = useSketchpadCommands();
+  const activeInteraction = useActiveInteraction();
+
+  return (
+    <InteractionProvider
+      commands={commands}
+      activeInteraction={activeInteraction}
+    >
+      {children}
+    </InteractionProvider>
+  );
+};
+
 const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
@@ -11897,15 +11923,17 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
 
   const routerContent = (
     <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState}>
-      <FocusProvider>
-        <PanelSectionProvider>
-          <FooterItemProvider>
-            <DragDropProvider>
-              <SketchpadContent />
-            </DragDropProvider>
-          </FooterItemProvider>
-        </PanelSectionProvider>
-      </FocusProvider>
+      <SketchpadInteractionBridge>
+        <FocusProvider>
+          <PanelSectionProvider>
+            <FooterItemProvider>
+              <DragDropProvider>
+                <SketchpadContent />
+              </DragDropProvider>
+            </FooterItemProvider>
+          </PanelSectionProvider>
+        </FocusProvider>
+      </SketchpadInteractionBridge>
     </SketchpadScopeProvider>
   );
 

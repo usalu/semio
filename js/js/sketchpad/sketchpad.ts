@@ -42,7 +42,7 @@ export type Unsubscribe = () => void;
 
 export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
-export type AppType = string;
+export type AppKind = string;
 
 export type Layout = "desktop" | "tablet" | MobileLayout;
 
@@ -100,7 +100,7 @@ export enum StoreStatus {
     READY = "ready",
 }
 
-export enum ToolType {
+export enum ToolKind {
     SELECTION_NORMAL = "selection-normal",
     SELECTION_ADDITIVE = "selection-additive",
     SELECTION_SUBTRACTIVE = "selection-subtractive",
@@ -109,7 +109,7 @@ export enum ToolType {
     PORT = "port",
 }
 
-export enum WindowType {
+export enum WindowKind {
     TABLE = "table",
     SCENE = "scene",
     DIAGRAM = "diagram",
@@ -601,7 +601,7 @@ export interface WindowConfig {
 }
 
 export interface WindowControl {
-    type: "toggle" | "dropdown";
+    kind: "toggle" | "dropdown";
     id: string;
     icon?: ReactNode;
     value?: string;
@@ -613,7 +613,7 @@ export interface WindowControl {
     onChange?: (value: string) => void;
 }
 
-export interface WindowTypeDefinition {
+export interface WindowKindDefinition {
     id: string;
     icon?: ReactNode;
     component: (props: any) => ReactNode;
@@ -626,12 +626,12 @@ export interface WindowTypeDefinition {
 }
 
 export interface AppWindowConfig {
-    windowTypes: WindowTypeDefinition[];
+    windowKinds: WindowKindDefinition[];
     defaultLayout: any;
 }
 
 export interface AppWindowProps {
-    type: WindowType;
+    kind: WindowKind;
     children: ReactNode;
     className?: string;
 }
@@ -641,7 +641,7 @@ export interface AppWindowProps {
 // #region Tool
 
 export interface Tool<TState = any> {
-    id: ToolType | string;
+    id: ToolKind | string;
     icon?: ReactNode;
     render: (context: ToolRenderContext<TState>) => { scene?: ReactNode; diagram?: ReactNode | null; table?: ReactNode | null };
 }
@@ -653,7 +653,7 @@ export interface ToolMode {
 
 export interface ToolDefinition {
     id: string;
-    defaultMode: ToolType | string;
+    defaultMode: ToolKind | string;
     modes: ToolMode[];
 }
 
@@ -663,8 +663,8 @@ export interface ToolRenderContext<TState = any> {
 
 export interface ToolGroupProps {
     tools: ToolDefinition[];
-    activeTool: ToolType | string;
-    onToolChange: (tool: ToolType | string) => void;
+    activeTool: ToolKind | string;
+    onToolChange: (tool: ToolKind | string) => void;
     level?: "panel" | "toolbar";
 }
 

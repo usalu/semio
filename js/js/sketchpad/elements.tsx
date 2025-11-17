@@ -82,36 +82,37 @@ import { Link, useLocation, useNavigate } from "react-router";
 import * as THREE from "three";
 import { Expertise, setExpertiseProvider, useLabel } from "../i18n";
 import { Camera, cn, Plane, Point, Vector } from "../semio";
-import { useActiveInteraction as useActiveInteractionImpl, useSketchpadCommands as useSketchpadCommandsImpl, useSketchpadScope } from "./App";
+// #region Interaction Context
+// Generic interaction tracking system for UI elements
+// This allows elements to track focus/active states without coupling to specific app logic
 
-// Re-export hooks from App - direct import to avoid hook order violations
-// This creates a circular dependency (App imports from elements, elements imports from App)
-// but ES modules handle this correctly since we're only importing function references
-// Optional versions of Sketchpad hooks that return undefined if not in Sketchpad context
-const useSketchpadCommandsOptional = () => {
-  const scope = useSketchpadScope();
-  if (!scope) return undefined;
-  return useSketchpadCommandsImpl();
+interface InteractionCommands {
+  setActiveInteraction: (elementId?: string, interactionId?: string) => void;
+}
+
+const InteractionContext = React.createContext<InteractionCommands | undefined>(undefined);
+const ActiveInteractionContext = React.createContext<string | undefined>(undefined);
+
+export const InteractionProvider: React.FC<{
+  commands?: InteractionCommands;
+  activeInteraction?: string;
+  children: React.ReactNode;
+}> = ({ commands, activeInteraction, children }) => {
+  return (
+    <InteractionContext.Provider value={commands}>
+      <ActiveInteractionContext.Provider value={activeInteraction}>{children}</ActiveInteractionContext.Provider>
+    </InteractionContext.Provider>
+  );
 };
 
-const useActiveInteractionOptional = () => {
-  const scope = useSketchpadScope();
-  if (!scope) return undefined;
-  return useActiveInteractionImpl();
-};
+const useInteractionCommands = () => React.useContext(InteractionContext);
+const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 
-// Required versions (throw error if not in context)
-const useActiveInteraction = useActiveInteractionImpl;
-const useSketchpadCommands = useSketchpadCommandsImpl;
+// #endregion Interaction Context
 
 // #endregion Imports
 
 // #region Root Components
-
-// #region Canvas
-
-export { Canvas, HorizontalWindows, LayoutCanvas, useCanvasContext, VerticalWindows } from "./App";
-export type { AppWindowConfig, WindowControl, WindowTypeDefinition } from "./App";
 
 // #endregion Canvas
 
@@ -141,7 +142,7 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent className={cn("overflow-hidden p-0", className)} showCloseButton={showCloseButton}>
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:px-single [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-small [&_[cmdk-input-wrapper]_svg]:w-small [&_[cmdk-input]]:h-large [&_[cmdk-item]]:px-single [&_[cmdk-item]]:py-[0.75rem] [&_[cmdk-item]_svg]:h-small [&_[cmdk-item]_svg]:w-small">
+        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:px-single [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-small [&_[cmdk-input-wrapper]_svg]:w-small [&_[cmdk-input]]:h-large [&_[cmdk-item]]:px-single [&_[cmdk-item]]:py-tiny [&_[cmdk-item]_svg]:h-small [&_[cmdk-item]_svg]:w-small">
           {children}
         </Command>
       </DialogContent>
@@ -153,11 +154,7 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
   return (
     <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b px-tiny">
       <SearchIcon className="size-small shrink-0 opacity-50" />
-      <CommandPrimitive.Input
-        data-slot="command-input"
-        className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent py-[0.75rem] text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)}
-        {...props}
-      />
+      <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />
     </div>
   );
 }
@@ -192,7 +189,7 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single px-single py-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
+        "data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single p-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
         className,
       )}
       {...props}
@@ -365,7 +362,7 @@ function PopoverContent({ className, align = "center", sideOffset = 4, ...props 
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[100] w-[18rem] origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[100] w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
           className,
         )}
         {...props}
@@ -439,7 +436,7 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) px-tiny py-single text-xs text-balance",
+          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-w-[300px] origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance",
           className,
         )}
         {...props}
@@ -485,7 +482,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
         <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath ? (
-            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
+            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <BookIcon className="size-tiny" />
               <span>{useLabel("tooltip.manual")}</span>
             </Link>
@@ -493,7 +490,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
             <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
-            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
+            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <TutorialIcon className="size-tiny" />
               <span className="block text-center">{useLabel("tooltip.tutorial")}</span>
             </Link>
@@ -501,7 +498,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
             <span className="block" />
           )}
           {hotkey ? (
-            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-single py-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground p-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
               {hotkey}
             </kbd>
           ) : (
@@ -562,7 +559,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
         <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath ? (
-            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
+            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <BookIcon className="size-3" />
               <span>{useLabel("tooltip.manual")}</span>
             </Link>
@@ -570,7 +567,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
             <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
-            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors px-single py-single hover:bg-hover-temporary">
+            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <TutorialIcon className="size-3" />
               <span className="block text-center">{useLabel("tooltip.tutorial")}</span>
             </Link>
@@ -578,7 +575,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
             <span className="block" />
           )}
           {hotkey ? (
-            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground px-single py-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground p-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
               {hotkey}
             </kbd>
           ) : (
@@ -594,57 +591,38 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
 
 // #region Base Components
 
-interface ElementProps {
-  id: string;
+interface Transaction {
+  start?: () => void;
+  finalize?: () => void;
+  abort?: () => void;
 }
 
-interface InputLabelProps {
+interface ElementProps {
   id: string;
+  transaction?: Transaction;
+}
+
+interface LabelProps {
+  id: string;
+  children: React.ReactNode;
   className?: string;
   labelElementId?: string;
 }
 
-function InputLabel({ id, className, labelElementId }: InputLabelProps) {
+function Label({ id, children, className, labelElementId }: LabelProps) {
   const label = useLabel(id);
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span id={labelElementId} className={cn("inline-flex h-full items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel", className)}>
-          {label}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>
-        <IdTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
-interface BaseInputProps extends ElementProps {
-  showLabel?: boolean;
-  interactionId?: string;
-  children: React.ReactNode;
-  labelClassName?: string;
-  containerClassName?: string;
-  labelElementId?: string;
-}
-
-function BaseInput({ id, showLabel, interactionId, children, labelClassName, containerClassName, labelElementId }: BaseInputProps) {
-  const commands = useSketchpadCommandsOptional();
-  const setActiveInteraction = commands?.setActiveInteraction;
-  const activeInteraction = useActiveInteractionOptional();
-  const isInteracting = interactionId && activeInteraction === interactionId;
-  const shouldFade = activeInteraction && !isInteracting;
-
-  const content = <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>{children}</div>;
-
-  if (!showLabel) {
-    return content;
-  }
-
-  return (
-    <div className={cn("group flex items-center gap-single min-w-0 w-full", containerClassName)} style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
-      <InputLabel id={id} className={labelClassName} labelElementId={labelElementId} />
+    <div className={cn("group flex items-stretch min-w-0 w-full", className)}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span id={labelElementId} className="inline-flex items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">
+            {label}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <IdTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
       {children}
     </div>
   );
@@ -697,7 +675,7 @@ export { EnhancedTooltipContent, IdSemioTooltip, IdTooltipContent, SemioTooltip,
 // #region Aside
 
 export interface AsideProps {
-  type?: "note" | "tip" | "caution" | "danger";
+  kind?: "note" | "tip" | "caution" | "danger";
   title?: string;
   children: React.ReactNode;
 }
@@ -716,9 +694,9 @@ const colorMap = {
   danger: "border-destructive-border bg-destructive-bg text-destructive-foreground",
 };
 
-export const Aside: React.FC<AsideProps> = ({ type = "note", title, children }) => {
-  const Icon = iconMap[type];
-  const colorClass = colorMap[type];
+export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) => {
+  const Icon = iconMap[kind];
+  const colorClass = colorMap[kind];
 
   return (
     <aside className={`my-small p-single border ${colorClass}`}>
@@ -853,7 +831,7 @@ export interface CardGridProps {
 }
 
 export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, className = "" }) => {
-  return <div className={`grid grid-cols-1 md:grid-cols-2 gap-[1rem] my-medium ${className}`}>{children}</div>;
+  return <div className={`grid grid-cols-1 md:grid-cols-2 gap-medium my-medium ${className}`}>{children}</div>;
 };
 
 // #endregion Card
@@ -924,7 +902,7 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-[16rem] origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
           className,
         )}
         {...props}
@@ -1015,7 +993,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 // #region ActionGroup
 
 const actionGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:!w-[0.6rem] [&_svg]:!h-[0.6rem] [&_svg]:!max-w-[0.6rem] [&_svg]:!max-h-[0.6rem] [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
+  "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:!size-[tiny] [&_svg]:!max-w-tiny [&_svg]:!max-h-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
   {
     variants: {
       level: {
@@ -1144,7 +1122,7 @@ function ActionDropdown({ className, level, id, options, value, onValueChange, s
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className={cn("flex items-center gap-single px-single py-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
+              className={cn("flex items-center gap-single p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
             >
               <span className="flex items-center justify-center size-3">{option.icon}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
@@ -1182,7 +1160,7 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
 // #endregion ActionGroupup
 
 const buttonGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square overflow-hidden",
+  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square p-single overflow-hidden",
   {
     variants: {
       level: {
@@ -1209,20 +1187,7 @@ function ButtonGroup({ className, level = "base", id, showLabel, children, ...pr
   );
 
   if (showLabel) {
-    const label = useLabel(id);
-    return (
-      <div className="group flex items-center gap-single min-w-0 w-full">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex h-medium items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <IdTooltipContent id={id} />
-          </TooltipContent>
-        </Tooltip>
-        {buttonGroupElement}
-      </div>
-    );
+    return <Label id={id}>{buttonGroupElement}</Label>;
   }
 
   return buttonGroupElement;
@@ -1287,6 +1252,20 @@ type ButtonProps = React.ComponentProps<"button"> &
     children?: React.ReactNode;
   };
 
+interface ButtonCycleItem<T extends string> {
+  value: T;
+  label: React.ReactNode;
+  id?: string;
+}
+
+interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"button">, "children" | "id">, ElementProps {
+  value?: T;
+  onValueChange?: (value: T) => void;
+  items: ButtonCycleItem<T>[];
+  showLabel?: boolean;
+  level?: "base" | "panel" | "temporary";
+}
+
 function Button({ className, level = "base", asChild = false, id, icon, children, ...props }: ButtonProps) {
   return (
     <ButtonGroup id={id || "button"} level={level || undefined} className={className}>
@@ -1297,8 +1276,24 @@ function Button({ className, level = "base", asChild = false, id, icon, children
   );
 }
 
-export { Button, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
-export type { ButtonProps };
+function ButtonCycle<T extends string = string>({ className, level = "base", id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
+  const currentIndex = items.findIndex((item) => item.value === value);
+  const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
+  
+  const handleCycle = () => {
+    const nextIndex = (currentIndex + 1) % items.length;
+    if (onValueChange) onValueChange(items[nextIndex].value);
+  };
+
+  return (
+    <ButtonGroup id={id || "button-cycle"} showLabel={showLabel} level={level} className={className}>
+      <ButtonGroupItem onClick={handleCycle} icon={currentItem.label} {...props} />
+    </ButtonGroup>
+  );
+}
+
+export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
+export type { ButtonCycleProps, ButtonProps };
 
 // #endregion ButtonGroup
 
@@ -1316,8 +1311,6 @@ interface ComboboxProps extends ElementProps {
   placeholderId?: string;
   emptyMessage?: string;
   onValueChange?: (value: string) => void;
-  startTransaction?: () => void;
-  finalizeTransaction?: () => void;
   className?: string;
   allowClear?: boolean;
   showLabel?: boolean;
@@ -1330,12 +1323,11 @@ export const Combobox: React.FC<ComboboxProps> = ({
   placeholderId,
   emptyMessage = "No options found.",
   onValueChange,
-  startTransaction,
-  finalizeTransaction,
   className,
   allowClear = false,
   showLabel,
   id,
+  transaction,
 }) => {
   const [open, setOpen] = React.useState(false);
   const mode = useTooltipMode();
@@ -1347,9 +1339,9 @@ export const Combobox: React.FC<ComboboxProps> = ({
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
-      startTransaction?.();
+      transaction?.start?.();
     } else {
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
   };
 
@@ -1360,12 +1352,12 @@ export const Combobox: React.FC<ComboboxProps> = ({
       onValueChange?.(optionValue);
     }
     setOpen(false);
-    finalizeTransaction?.();
+    transaction?.finalize?.();
   };
 
   const popoverTrigger = (
     <PopoverTrigger asChild>
-      <Button variant="default" role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
+      <Button role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
         {selectedOption ? selectedOption.label : computedPlaceholder}
         <ChevronsUpDownIcon className="ml-2 size-tiny shrink-0 opacity-50" />
       </Button>
@@ -1409,11 +1401,15 @@ export const Combobox: React.FC<ComboboxProps> = ({
     </Popover>
   );
 
-  return (
-    <BaseInput id={id} showLabel={showLabel} labelClassName="h-medium" containerClassName={className}>
-      {comboboxElement}
-    </BaseInput>
-  );
+  if (showLabel) {
+    return (
+      <Label id={id} className={cn("h-medium", className)}>
+        {comboboxElement}
+      </Label>
+    );
+  }
+
+  return comboboxElement;
 };
 
 // #endregion Combobox
@@ -1425,18 +1421,15 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   value?: string | number | readonly string[];
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLazyChange?: (value: string) => void;
-  startTransaction?: () => void;
-  finalizeTransaction?: () => void;
-  abortTransaction?: () => void;
   interactionId?: string;
   placeholderId?: string;
   showLabel?: boolean;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, interactionId, id, placeholderId, placeholder, showLabel, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
-  const commands = useSketchpadCommandsOptional();
+  const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const placeholderLabel = useLabel(placeholderId || "");
   const computedPlaceholder = placeholderId ? placeholderLabel : placeholder;
@@ -1457,7 +1450,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (lazy) {
       setIsEditing(true);
-      startTransaction?.();
+      transaction?.start?.();
     }
     props.onFocus?.(e);
   };
@@ -1467,7 +1460,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
     props.onBlur?.(e);
   };
@@ -1478,13 +1471,13 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         onLazyChange?.(localValue);
-        finalizeTransaction?.();
+        transaction?.finalize?.();
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        abortTransaction?.();
+        transaction?.abort?.();
         (e.target as HTMLInputElement).blur();
       }
     }
@@ -1493,32 +1486,38 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
 
   const inputValue = lazy ? localValue : externalValue;
 
+  const activeInteraction = useActiveInteraction();
+  const isInteracting = interactionId && activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
+
   const inputElement = (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(
-        "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent px-tiny py-single text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-accent",
-        "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
-        type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
-        className,
-      )}
-      value={inputValue}
-      onChange={handleChange}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      placeholder={computedPlaceholder}
-      {...props}
-    />
+    <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+      <input
+        type={type}
+        data-slot="input"
+        className={cn(
+          "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent p-single text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "focus-visible:border-accent",
+          "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
+          type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
+          className,
+        )}
+        value={inputValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder={computedPlaceholder}
+        {...props}
+      />
+    </div>
   );
 
-  return (
-    <BaseInput id={id} showLabel={showLabel} interactionId={interactionId} containerClassName="h-medium">
-      {inputElement}
-    </BaseInput>
-  );
+  if (showLabel) {
+    return <Label id={id}>{inputElement}</Label>;
+  }
+
+  return inputElement;
 }
 
 export { Input };
@@ -1534,10 +1533,9 @@ function Select({
   value,
   defaultValue,
   onOpenChange,
-  startTransaction,
-  finalizeTransaction,
+  transaction,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean; startTransaction?: () => void; finalizeTransaction?: () => void }) {
+}: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -1563,9 +1561,9 @@ function Select({
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      startTransaction?.();
+      transaction?.start?.();
     } else {
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
     onOpenChange?.(open);
   };
@@ -1581,11 +1579,11 @@ function Select({
     </SelectPrimitive.Root>
   );
 
-  return (
-    <BaseInput id={id} showLabel={showLabel} labelClassName="h-medium">
-      {selectElement}
-    </BaseInput>
-  );
+  if (showLabel) {
+    return <Label id={id}>{selectElement}</Label>;
+  }
+
+  return selectElement;
 }
 
 function SelectGroup({ ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {
@@ -1649,7 +1647,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
           position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
         )}
@@ -1665,7 +1663,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
 }
 
 function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
-  return <SelectPrimitive.Label data-slot="select-label" className={cn("text-muted-foreground px-single py-single text-xs", className)} {...props} />;
+  return <SelectPrimitive.Label data-slot="select-label" className={cn("text-muted-foreground p-single text-xs", className)} {...props} />;
 }
 
 function SelectItem({ className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
@@ -1728,12 +1726,10 @@ function Slider({
   onPointerDown,
   onPointerUp,
   onPointerCancel,
-  startTransaction,
-  finalizeTransaction,
-  abortTransaction,
   interactionId,
   id,
   snapValues,
+  transaction,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
@@ -1741,18 +1737,17 @@ function Slider({
     onPointerDown?: () => void;
     onPointerUp?: () => void;
     onPointerCancel?: () => void;
-    startTransaction?: () => void;
-    finalizeTransaction?: () => void;
-    abortTransaction?: () => void;
     interactionId?: string;
     snapValues?: number[];
   }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
-  const commands = useSketchpadCommandsOptional();
+  const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const activeInteraction = useActiveInteractionOptional();
+  const activeInteraction = useActiveInteraction();
+  const isInteracting = interactionId && activeInteraction === interactionId;
+  const shouldFade = activeInteraction && !isInteracting;
 
   const _values = React.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
@@ -1790,7 +1785,7 @@ function Slider({
   const handleValueClick = () => {
     setEditValue(displayValue.toString());
     setIsEditing(true);
-    startTransaction?.();
+    transaction?.start?.();
   };
 
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
@@ -1800,23 +1795,23 @@ function Slider({
         handleValueChange([newValue]);
       }
       setIsEditing(false);
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      abortTransaction?.();
+      transaction?.abort?.();
     }
   };
 
   const handleEditBlur = () => {
     setIsEditing(false);
-    finalizeTransaction?.();
+    transaction?.finalize?.();
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (!isSliding) {
       setIsSliding(true);
-      startTransaction?.();
+      transaction?.start?.();
     }
     onPointerDown?.();
   };
@@ -1825,7 +1820,7 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
     onPointerUp?.();
   };
@@ -1834,7 +1829,7 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
-      abortTransaction?.();
+      transaction?.abort?.();
     }
     onPointerCancel?.();
   };
@@ -1843,7 +1838,7 @@ function Slider({
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (!isSliding) {
         setIsSliding(true);
-        startTransaction?.();
+        transaction?.start?.();
       }
     }
   };
@@ -1852,12 +1847,12 @@ function Slider({
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (isSliding) {
         setIsSliding(false);
-        finalizeTransaction?.();
+        transaction?.finalize?.();
       }
     } else if (e.key === "Escape") {
       if (isSliding) {
         setIsSliding(false);
-        abortTransaction?.();
+        transaction?.abort?.();
       }
     }
   };
@@ -1906,23 +1901,29 @@ function Slider({
   );
 
   const sliderContent = (
-    <div className="flex items-center gap-single flex-1 min-w-0 h-large">
-      {wrappedSlider}
-      {isEditing ? (
-        <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus id={id} />
-      ) : (
-        <span className="text-sm w-20 text-right px-single select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
-          {displayValue}
-        </span>
-      )}
+    <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
+      <div className="flex items-center gap-single h-large">
+        <div className="flex-1 min-w-0">{wrappedSlider}</div>
+        {isEditing ? (
+          <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus id={id} />
+        ) : (
+          <span className="text-sm w-20 text-right px-single select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
+            {displayValue}
+          </span>
+        )}
+      </div>
     </div>
   );
 
-  return (
-    <BaseInput id={id} showLabel={showLabel} interactionId={interactionId} containerClassName={cn("h-medium", className)}>
-      {sliderContent}
-    </BaseInput>
-  );
+  if (showLabel) {
+    return (
+      <Label id={id} className={className}>
+        {sliderContent}
+      </Label>
+    );
+  }
+
+  return sliderContent;
 }
 
 export { Slider };
@@ -1941,20 +1942,17 @@ interface StepperProps extends ElementProps {
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
-  startTransaction?: () => void;
-  finalizeTransaction?: () => void;
-  abortTransaction?: () => void;
   interactionId?: string;
 }
 
-export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, startTransaction, finalizeTransaction, abortTransaction, interactionId, id }) => {
+export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, transaction }) => {
   const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const commands = useSketchpadCommandsOptional();
+  const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const activeInteraction = useActiveInteractionOptional();
+  const activeInteraction = useActiveInteraction();
 
   React.useEffect(() => {
     if (value !== undefined) {
@@ -2036,7 +2034,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
       if (!isEditing) {
         setIsEditing(true);
-        startTransaction?.();
+        transaction?.start?.();
       }
       onPointerDown?.();
       if (increment > 0) {
@@ -2053,7 +2051,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isEditing) {
       setIsEditing(false);
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
     onPointerUp?.();
   };
@@ -2063,7 +2061,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isEditing) {
       setIsEditing(false);
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
     onPointerCancel?.();
   };
@@ -2094,14 +2092,14 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onFocus={() => {
           if (!isEditing) {
             setIsEditing(true);
-            startTransaction?.();
+            transaction?.start?.();
           }
           onPointerDown?.();
         }}
         onBlur={() => {
           if (isEditing) {
             setIsEditing(false);
-            finalizeTransaction?.();
+            transaction?.finalize?.();
           }
           onPointerUp?.();
         }}
@@ -2110,7 +2108,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             e.preventDefault();
             if (!isEditing) {
               setIsEditing(true);
-              startTransaction?.();
+              transaction?.start?.();
             }
             if (e.key === "ArrowUp") {
               handleStepUp();
@@ -2121,13 +2119,13 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             if (isEditing) {
               setIsEditing(false);
               setInternalValue(value ?? defaultValue);
-              abortTransaction?.();
+              transaction?.abort?.();
               (e.target as HTMLInputElement).blur();
             }
           } else if (e.key === "Enter") {
             if (isEditing) {
               setIsEditing(false);
-              finalizeTransaction?.();
+              transaction?.finalize?.();
               (e.target as HTMLInputElement).blur();
             }
           }
@@ -2155,9 +2153,9 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   );
 
   return (
-    <BaseInput id={id} showLabel={true} interactionId={interactionId} labelElementId={labelElementId} containerClassName="h-medium">
+    <Label id={id}>
       {stepperElement}
-    </BaseInput>
+    </Label>
   );
 };
 
@@ -2170,14 +2168,11 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   value?: string | number | readonly string[];
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onLazyChange?: (value: string) => void;
-  startTransaction?: () => void;
-  finalizeTransaction?: () => void;
-  abortTransaction?: () => void;
   showLabel?: boolean;
   placeholderId?: string;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, startTransaction, finalizeTransaction, abortTransaction, id, showLabel, placeholderId, placeholder, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
@@ -2197,7 +2192,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     if (lazy) {
       setIsEditing(true);
-      startTransaction?.();
+      transaction?.start?.();
     }
     props.onFocus?.(e);
   };
@@ -2206,7 +2201,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      finalizeTransaction?.();
+      transaction?.finalize?.();
     }
     props.onBlur?.(e);
   };
@@ -2216,7 +2211,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       if (e.key === "Escape") {
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        abortTransaction?.();
+        transaction?.abort?.();
         (e.target as HTMLTextAreaElement).blur();
       }
     }
@@ -2244,11 +2239,15 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     />
   );
 
-  return (
-    <BaseInput id={id} showLabel={showLabel} containerClassName="items-start" labelClassName="items-start h-large py-single">
-      {textareaElement}
-    </BaseInput>
-  );
+  if (showLabel) {
+    return (
+      <Label id={id} className="items-start">
+        {textareaElement}
+      </Label>
+    );
+  }
+
+  return textareaElement;
 }
 
 export { Textarea };
@@ -2258,12 +2257,9 @@ export { Textarea };
 // #region Toggle
 
 const toggleVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square leading-none overflow-hidden",
+  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden",
   {
     variants: {
-      variant: {
-        default: "bg-transparent",
-      },
       level: {
         base: "hover:bg-hover-base",
         panel: "hover:bg-hover-panel",
@@ -2271,7 +2267,6 @@ const toggleVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
       level: "base",
     },
   },
@@ -2284,24 +2279,25 @@ export interface ToggleItem<T extends string> {
 }
 
 interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
-  type?: "default";
+  kind?: "default";
   i18nPressed?: string;
   showLabel?: boolean;
   level?: "base" | "panel" | "temporary";
   icon: React.ReactNode;
 }
 
-interface ToggleCycleProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
-  type: "cycle";
-  value?: T;
-  onValueChange?: (value: T) => void;
-  items: ToggleItem<T>[];
+interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
+  kind: "withAction";
+  actionIcon: React.ReactNode;
+  onActionClick: () => void;
   showLabel?: boolean;
+  actionId?: string;
   level?: "base" | "panel" | "temporary";
+  icon: React.ReactNode;
 }
 
 interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
-  type: "dropdown";
+  kind: "dropdown";
   value?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
@@ -2311,17 +2307,7 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   level?: "base" | "panel" | "temporary";
 }
 
-interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
-  type: "withAction";
-  actionIcon: React.ReactNode;
-  onActionClick: () => void;
-  showLabel?: boolean;
-  actionId?: string;
-  level?: "base" | "panel" | "temporary";
-  icon: React.ReactNode;
-}
-
-type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleCycleProps<T> | ToggleDropdownProps<T> | ToggleWithActionProps;
+type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithActionProps | ToggleDropdownProps<T>;
 
 export type { ToggleProps };
 
@@ -2330,7 +2316,6 @@ export type { ToggleProps };
 // #region ToggleGroup
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
-  variant: "default",
   level: "base",
 });
 
@@ -2339,38 +2324,19 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
   showLabel?: boolean;
   children: React.ReactNode;
   level?: "base" | "panel" | "temporary";
-  type?: "single" | "multiple";
+  kind?: "single" | "multiple";
+  noDivider?: boolean;
 }
 
-function ToggleGroup({ className, id, showLabel, level = "base", children, type = "single", ...restProps }: ToggleGroupProps) {
-  const variant = "default";
-
-  const toggleGroupElement =
-    type === "multiple" ? (
-      <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} type="multiple" className={cn("group/toggle-group flex w-fit items-center border divide-x overflow-hidden h-medium", className)} {...(restProps as any)}>
-        <ToggleGroupContext.Provider value={{ variant, level }}>{children}</ToggleGroupContext.Provider>
-      </ToggleGroupPrimitive.Root>
-    ) : (
-      <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} type="single" className={cn("group/toggle-group flex w-fit items-center border divide-x overflow-hidden h-medium", className)} {...(restProps as any)}>
-        <ToggleGroupContext.Provider value={{ variant, level }}>{children}</ToggleGroupContext.Provider>
-      </ToggleGroupPrimitive.Root>
-    );
+function ToggleGroup({ className, id, showLabel, level = "base", children, kind = "single", noDivider, ...restProps }: ToggleGroupProps) {
+  const toggleGroupElement = (
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium", !noDivider && "divide-x", className)} {...(restProps as any)}>
+      <ToggleGroupContext.Provider value={{ level }}>{children}</ToggleGroupContext.Provider>
+    </ToggleGroupPrimitive.Root>
+  );
 
   if (showLabel) {
-    const label = useLabel(id);
-    return (
-      <div className="group flex items-center gap-single min-w-0 w-full">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex h-medium items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">{label}</span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <IdTooltipContent id={id} />
-          </TooltipContent>
-        </Tooltip>
-        {toggleGroupElement}
-      </div>
-    );
+    return <Label id={id}>{toggleGroupElement}</Label>;
   }
 
   return toggleGroupElement;
@@ -2381,28 +2347,35 @@ function ToggleGroupItem({
   children,
   id,
   icon,
+  action,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
   id?: string;
   icon?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   const context = React.useContext(ToggleGroupContext);
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
-      data-variant={context.variant}
       className={cn(
         toggleVariants({
-          variant: context.variant,
           level: context.level,
         }),
         "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
+        action && "relative pl-single pr-[calc(var(--spacing)*5+var(--spacing)*2)]",
+        !action && "px-single",
         className,
       )}
       {...props}
     >
-      {icon || children}
+      {(icon || children) as React.ReactNode}
+      {action && (
+        <div className={cn("absolute top-0 right-single h-full w-small flex items-center justify-center bg-base", context.level === "panel" && "bg-panel", context.level === "temporary" && "bg-temporary")}>
+          {action}
+        </div>
+      )}
     </ToggleGroupPrimitive.Item>
   );
 
@@ -2423,73 +2396,58 @@ function ToggleGroupItem({
 }
 
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
-  if ("items" in props && props.items) {
-    const { items, value, onValueChange, id, showLabel, level, className } = props;
-    const currentIndex = items.findIndex((item) => item.value === value);
-    const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
-
+  if ("kind" in props && props.kind === "withAction") {
+    const { actionIcon, onActionClick, icon, pressed, onPressedChange, id, showLabel, level, className, actionId } = props as ToggleWithActionProps;
     return (
-      <ToggleGroup id={id} showLabel={showLabel} level={level} type="single" value={value} onValueChange={(val: string) => onValueChange?.(val as T)} className={className}>
-        <ToggleGroupItem value={currentItem.value}>{currentItem.label}</ToggleGroupItem>
+      <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className} noDivider>
+        <ToggleGroupItem value="on" action={<Action id={actionId} icon={actionIcon} onClick={onActionClick} level={level} />}>{icon}</ToggleGroupItem>
       </ToggleGroup>
     );
   }
 
-  if ("options" in props && props.options) {
-    const dropdownProps = props as any;
-    const { options, value, onValueChange, id, showLabel, level, className } = dropdownProps;
+  if ("kind" in props && props.kind === "dropdown" && "items" in props) {
+    const dropdownProps = props as ToggleDropdownProps<T>;
+    const { items, value, onValueChange, id, showLabel, level, className, dropdownId } = dropdownProps;
     const [open, setOpen] = React.useState(false);
-    const selectedOption = options.find((option: any) => option.value === value) || options[0];
+    const selectedItem = items.find((item) => item.value === value) || items[0];
 
-    const handleOpenChange = (isOpen: boolean) => {
-      if (isOpen && dropdownProps.startTransaction) dropdownProps.startTransaction();
-      setOpen(isOpen);
-      if (!isOpen && dropdownProps.finalizeTransaction) dropdownProps.finalizeTransaction();
-    };
-
-    const handleSelect = (optionValue: string) => {
-      if (onValueChange) onValueChange(optionValue as T);
+    const handleSelect = (itemValue: string) => {
+      if (onValueChange) onValueChange(itemValue as T);
       setOpen(false);
     };
 
-    return (
-      <Popover open={open} onOpenChange={handleOpenChange}>
+    const dropdownAction = (
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <ToggleGroup id={id} showLabel={showLabel} level={level} type="single" value={value as string} className={className}>
-            <ToggleGroupItem value={selectedOption.value}>{selectedOption.label}</ToggleGroupItem>
-          </ToggleGroup>
+          <Action id={dropdownId} icon={<ChevronDownIcon />} level={level} />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
           <div className="flex flex-col">
-            {options.map((option: any) => (
+            {items.map((item) => (
               <button
-                key={option.value}
-                onClick={() => handleSelect(option.value)}
-                className={cn("flex items-center gap-single px-single py-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
+                key={item.value}
+                onClick={() => handleSelect(item.value)}
+                className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === item.value && "bg-active-temporary")}
               >
-                <span className="flex-1 text-left">{option.label}</span>
-                {value === option.value && <CheckIcon className="size-tiny ml-auto" />}
+                <span className="flex-1 text-left">{item.label}</span>
+                {value === item.value && <CheckIcon className="size-tiny" />}
               </button>
             ))}
           </div>
         </PopoverContent>
       </Popover>
     );
-  }
 
-  if ("actionIcon" in props) {
-    const { actionIcon, onActionClick, icon, pressed, onPressedChange, id, showLabel, level, className } = props;
     return (
-      <ToggleGroup id={id} showLabel={showLabel} level={level} type="single" value={pressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className}>
-        <ToggleGroupItem value="on">{icon}</ToggleGroupItem>
-        <ActionGroupItem onClick={onActionClick}>{actionIcon}</ActionGroupItem>
+      <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={value as string} className={className} noDivider>
+        <ToggleGroupItem value={selectedItem.value} action={dropdownAction}>{selectedItem.label}</ToggleGroupItem>
       </ToggleGroup>
     );
   }
 
   const { id, showLabel, level, className, icon, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
   return (
-    <ToggleGroup id={id} showLabel={showLabel} level={level} type="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className}>
+    <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className}>
       <ToggleGroupItem value="on">{icon}</ToggleGroupItem>
     </ToggleGroup>
   );
@@ -2519,7 +2477,7 @@ function AccordionTrigger({ className, children, ...props }: React.ComponentProp
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-[1rem] py-small text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
+          "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-medium py-small text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
           className,
         )}
         {...props}
@@ -2599,7 +2557,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-temporary data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-[1rem] border p-medium duration-200 sm:max-w-lg",
+          "bg-temporary data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2*var(--spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
           className,
         )}
         {...props}
@@ -2608,7 +2566,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-[1rem] right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small"
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small"
           >
             <CloseIconAlt />
             <span className="sr-only">Close</span>
@@ -2756,7 +2714,7 @@ function TabsTrigger({ className, level = "base", ...props }: React.ComponentPro
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-single border border-transparent px-single py-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         activeHoverClass,
         hoverClass,
         className,
@@ -3609,7 +3567,7 @@ function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode 
             const menuItem = (
               <DropdownMenuPrimitive.Item
                 key={index}
-                className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center px-single py-single text-sm outline-none whitespace-nowrap"
+                className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center p-single text-sm outline-none whitespace-nowrap"
                 onClick={() => handleSelect(item.href)}
                 role="button"
               >
@@ -3682,7 +3640,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   return (
     <div className="flex items-center justify-between border-t border-border pt-4 mt-8">
       {prev ? (
-        <Button variant="ghost" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
+        <Button onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
           <ChevronLeftIcon className="size-tiny" />
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
@@ -3693,7 +3651,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
         <div />
       )}
       {next ? (
-        <Button variant="ghost" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
+        <Button onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>

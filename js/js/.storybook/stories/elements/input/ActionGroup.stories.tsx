@@ -53,35 +53,4 @@ export const Default: Story = {
   ),
 };
 
-export const Variants: Story = {
-  render: () => (
-    <div className="flex flex-col gap-4">
-      <ActionGroup id="action-group-variant-default" variant="default">
-        <ActionGroupItem id="action-group-variant-default-item-1">
-          <Copy />
-        </ActionGroupItem>
-        <ActionGroupItem id="action-group-variant-default-item-2">
-          <Download />
-        </ActionGroupItem>
-      </ActionGroup>
-      <ActionGroup id="action-group-variant-primary" variant="primary">
-        <ActionGroupItem id="action-group-variant-primary-item-1">
-          <Copy />
-        </ActionGroupItem>
-        <ActionGroupItem id="action-group-variant-primary-item-2">
-          <Download />
-        </ActionGroupItem>
-      </ActionGroup>
-      <ActionGroup id="action-group-variant-destructive" variant="destructive">
-        <ActionGroupItem id="action-group-variant-destructive-item-1">
-          <X />
-        </ActionGroupItem>
-        <ActionGroupItem id="action-group-variant-destructive-item-2" variant="destructive">
-          <Trash2 />
-        </ActionGroupItem>
-      </ActionGroup>
-    </div>
-  ),
-};
-
 // #endregion ActionGroup

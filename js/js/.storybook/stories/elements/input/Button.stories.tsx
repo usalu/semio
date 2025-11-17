@@ -20,8 +20,8 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Plus } from "lucide-react";
-import { Button } from "../../../../sketchpad/elements";
+import { Box, List, Network, Plus } from "lucide-react";
+import { Button, ButtonCycle } from "../../../../sketchpad/elements";
 
 // #region Button
 const meta = {
@@ -38,20 +38,40 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => <Button id="button-default" variant="primary" level="base" icon={<Plus />} />,
-};
-
-export const Variants: Story = {
-  render: () => (
-    <div className="flex flex-wrap gap-4">
-      <Button variant="default" icon={<Plus />} />
-      <Button variant="primary" icon={<Plus />} />
-      <Button variant="secondary" icon={<Plus />} />
-      <Button variant="destructive" icon={<Plus />} />
-      <Button variant="ghost" icon={<Plus />} />
-      <Button variant="link" icon={<Plus />} />
-    </div>
-  ),
+  args: {
+    id: "button-default",
+    icon: <Plus />,
+    level: "base",
+  },
 };
 
 // #endregion Button
+
+// #region ButtonCycle
+
+const cycleMeta = {
+  title: "Elements/Input/Button",
+  component: ButtonCycle,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+} satisfies Meta<typeof ButtonCycle>;
+
+type CycleStory = StoryObj<typeof cycleMeta>;
+
+export const Cycle: CycleStory = {
+  args: {
+    id: "button-cycle",
+    value: "view1",
+    items: [
+      { value: "view1", label: <Box /> },
+      { value: "view2", label: <Network /> },
+      { value: "view3", label: <List /> },
+    ],
+    showLabel: true,
+    level: "base",
+  },
+};
+
+// #endregion ButtonCycle

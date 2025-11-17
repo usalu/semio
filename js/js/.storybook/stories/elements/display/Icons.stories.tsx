@@ -47,7 +47,7 @@ export const Default: Story = {
         <Cursor color="var(--status-success)" x={200} y={150} />
         <div className="absolute left-48 top-36 ml-6 mt-1 bg-status-success text-active-foreground border px-double py-1 text-xs">Bob</div>
         <Cursor color="var(--status-warning)" x={280} y={200} />
-        <div className="absolute left-68 top-[1rem]8 ml-6 mt-1 bg-status-warning text-active-foreground border px-double py-1 text-xs">Charlie</div>
+        <div className="absolute left-68 top-small ml-6 mt-1 bg-status-warning text-active-foreground border px-double py-1 text-xs">Charlie</div>
         <Cursor color="var(--status-danger)" x={100} y={250} />
         <Cursor color="var(--accent-secondary)" x={250} y={300} />
       </div>

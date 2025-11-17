@@ -53,7 +53,7 @@ import {
 } from "../../App";
 import { Diagram as BaseDiagram, calculateDiagramLayout, DiagramNode, DraggableAvatar, HoverCard, HoverCardContent, HoverCardTrigger, Input, PlaceholderDiagramNode, Textarea, TreeContent, TreeItem } from "../../elements";
 import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolType } from "../../sketchpad";
+import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 import { AppConfig } from "../index";
 
 // #endregion
@@ -66,7 +66,7 @@ type YQualityApps = Y.Map<YQualityApp>;
 
 export interface FormulaNode {
   id: Guid;
-  type: "function" | "quality" | "variable" | "unit" | "value";
+  kind: "function" | "quality" | "variable" | "unit" | "value";
   name: string;
   children?: Guid[];
   x?: number;
@@ -92,7 +92,7 @@ export enum QualityAppFullscreenWindow {
   Diagram = "diagram",
 }
 
-export enum QualityAppWindowType {
+export enum QualityAppWindowKind {
   Formula = "formula",
   Diagram = "diagram",
 }
@@ -589,7 +589,7 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
         yMap.set("fullscreenWindow", QualityAppFullscreenWindow.None);
       }
       if (!yMap.has("activeTool")) {
-        yMap.set("activeTool", ToolType.SELECTION_NORMAL);
+        yMap.set("activeTool", ToolKind.SELECTION_NORMAL);
       }
       if (!yMap.has("panelVisibility")) {
         const yPanelVisibility = new Y.Map<boolean>();
@@ -622,13 +622,13 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
     return this.yMap.get("fullscreenWindow") as QualityAppFullscreenWindow;
   }
 
-  get activeTool(): ToolType {
-    const value = this.yMap.get("activeTool") as ToolType;
+  get activeTool(): ToolKind {
+    const value = this.yMap.get("activeTool") as ToolKind;
     if (value === undefined) {
       this.transact(() => {
-        this.yMap.set("activeTool", ToolType.SELECTION_NORMAL);
+        this.yMap.set("activeTool", ToolKind.SELECTION_NORMAL);
       });
-      return ToolType.SELECTION_NORMAL;
+      return ToolKind.SELECTION_NORMAL;
     }
     return value;
   }
@@ -678,7 +678,7 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
     if (!yFormulaNodes) return [];
     return yFormulaNodes.toArray().map((yNode: any) => ({
       id: yNode.get("id"),
-      type: yNode.get("type"),
+      kind: yNode.get("kind"),
       name: yNode.get("name"),
       children: yNode.get("children") ? (yNode.get("children") as Y.Array<Guid>).toArray() : undefined,
       x: yNode.get("x"),
@@ -794,7 +794,7 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
         diff.formulaNodes.forEach((node) => {
           const yNode = new Y.Map<any>();
           yNode.set("id", node.id);
-          yNode.set("type", node.type);
+          yNode.set("kind", node.kind);
           yNode.set("name", node.name);
           if (node.children) {
             const yChildren = new Y.Array<Guid>();
@@ -1053,7 +1053,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
     formulaNodes.forEach((node) => {
       nodes.push({
         id: node.id,
-        type: node.type,
+        type: node.kind,
         position: { x: node.x ?? 0, y: node.y ?? 0 },
         data: { label: node.name },
       });
@@ -1068,7 +1068,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
         });
       }
 
-      if (node.type === "function") {
+      if (node.kind === "function") {
         const fn = formulaFunctions[node.name];
         const arity = fn?.arity;
         const currentChildCount = node.children?.length || 0;
@@ -1186,7 +1186,7 @@ const Formula: FC = () => {
 
   return (
     <div className="h-full w-full border-b border-foreground bg-base flex items-center justify-center overflow-auto">
-      <div ref={mathRef} className="text-foreground p-4" style={{ fontSize: "1.5rem" }}></div>
+      <div ref={mathRef} className="text-foreground p-4" style={{ fontSize: "var(--size-medium)" }}></div>
     </div>
   );
 };
@@ -1278,18 +1278,18 @@ export const QualityDetails: FC = () => {
 
 interface FunctionNodeProps {
   name: string;
-  type: "function" | "quality" | "variable" | "unit" | "value";
+  kind: "function" | "quality" | "variable" | "unit" | "value";
   label: string;
 }
 
-const FunctionNode: FC<FunctionNodeProps> = ({ name, type, label }) => {
+const FunctionNode: FC<FunctionNodeProps> = ({ name, kind, label }) => {
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
-  const interactionId = `formula-${type}-${name}`;
+  const interactionId = `formula-${kind}-${name}`;
 
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: interactionId,
-    data: { name, type },
+    data: { name, kind },
   });
 
   const isInteracting = activeInteraction === interactionId;
@@ -1338,7 +1338,7 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
   const interactionId = quality ? `quality-${quality.key}` : "quality-unknown";
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: interactionId,
-    data: { quality, type: "quality" },
+    data: { quality, kind: "quality" },
   });
 
   const isInteracting = activeInteraction === interactionId;
@@ -1403,26 +1403,26 @@ export const QualityWorkbench: FC = () => {
       <TreeItem id="semio.sketchpad.app.quality.numericFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="Add" type="function" label={t("semio.sketchpad.app.quality.add")} />
-            <FunctionNode name="Subtract" type="function" label={t("semio.sketchpad.app.quality.subtract")} />
-            <FunctionNode name="Multiply" type="function" label={t("semio.sketchpad.app.quality.multiply")} />
-            <FunctionNode name="Divide" type="function" label={t("semio.sketchpad.app.quality.divide")} />
+            <FunctionNode name="Add" kind="function" label={t("semio.sketchpad.app.quality.add")} />
+            <FunctionNode name="Subtract" kind="function" label={t("semio.sketchpad.app.quality.subtract")} />
+            <FunctionNode name="Multiply" kind="function" label={t("semio.sketchpad.app.quality.multiply")} />
+            <FunctionNode name="Divide" kind="function" label={t("semio.sketchpad.app.quality.divide")} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.branchingFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="If" type="function" label={t("semio.sketchpad.app.quality.if")} />
-            <FunctionNode name="Switch" type="function" label={t("semio.sketchpad.app.quality.switch")} />
+            <FunctionNode name="If" kind="function" label={t("semio.sketchpad.app.quality.if")} />
+            <FunctionNode name="Switch" kind="function" label={t("semio.sketchpad.app.quality.switch")} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.dataStructures">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="List" type="function" label={t("semio.sketchpad.app.quality.list")} />
-            <FunctionNode name="Dictionary" type="function" label={t("semio.sketchpad.app.quality.dictionary")} />
+            <FunctionNode name="List" kind="function" label={t("semio.sketchpad.app.quality.list")} />
+            <FunctionNode name="Dictionary" kind="function" label={t("semio.sketchpad.app.quality.dictionary")} />
           </div>
         </TreeContent>
       </TreeItem>
@@ -1622,15 +1622,15 @@ const App: FC<AppProps> = () => {
         if (dragData.quality) {
           node = {
             id: guid(),
-            type: "quality",
+            kind: "quality",
             name: dragData.quality.key,
             x: isPlaceholder ? 0 : x,
             y: isPlaceholder ? 0 : y,
           };
-        } else if (dragData.type && dragData.name) {
+        } else if (dragData.kind && dragData.name) {
           node = {
             id: guid(),
-            type: dragData.type,
+            kind: dragData.kind,
             name: dragData.name,
             x: isPlaceholder ? 0 : x,
             y: isPlaceholder ? 0 : y,
@@ -1664,19 +1664,19 @@ const App: FC<AppProps> = () => {
   const windowLayout = useQualityApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([QualityAppWindowType.Formula, QualityAppWindowType.Diagram], "row", [20, 80]);
+    return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80]);
   }, []);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
       windowTypes: [
         {
-          id: QualityAppWindowType.Formula,
+          id: QualityAppWindowKind.Formula,
           label: "Formula",
           component: (props: any) => <FormulaWindow />,
         },
         {
-          id: QualityAppWindowType.Diagram,
+          id: QualityAppWindowKind.Diagram,
           label: "Diagram",
           component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
         },

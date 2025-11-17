@@ -377,13 +377,13 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
       );
     }
     return (
-      <code className={`block bg-gray-100 dark:bg-gray-800 p-[1rem] rounded overflow-x-auto font-mono text-sm ${className}`} {...props}>
+      <code className={`block bg-gray-100 dark:bg-gray-800 p-small rounded overflow-x-auto font-mono text-sm ${className}`} {...props}>
         {children}
       </code>
     );
   },
   pre: ({ children, ...props }: any) => (
-    <pre className="bg-gray-100 dark:bg-gray-800 p-[1rem] rounded overflow-x-auto mb-4" {...props}>
+    <pre className="bg-gray-100 dark:bg-gray-800 p-small rounded overflow-x-auto mb-4" {...props}>
       {children}
     </pre>
   ),

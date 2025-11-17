@@ -44,8 +44,8 @@ import * as Y from "yjs";
 import { areSameKit, Guid, KitDiff, PieceDiff } from "../../../semio";
 import type { DesignStore, KitStore, SketchpadStore } from "../../App";
 import { identitySelector, KitDiffAppStore, registerDesignAppStoreFactory, useDesignScope, useKitScope, useSketchpadStore, useSync, useSyncDeep } from "../../App";
-import type { DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolType } from "../../sketchpad";
+import type { AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
+import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 
 // #endregion Store
 
@@ -139,7 +139,6 @@ import {
   useTooltip,
   useType,
 } from "../../App";
-import type { AppWindowConfig } from "../../elements";
 import { Avatar, AvatarFallback, Button, Combobox, Diagram, Input, Model, Scene, Slider, SortableTreeItems, Stepper, Textarea, TransformableModel, TreeContent, TreeItem, TreeSection } from "../../elements";
 import { AppConfig } from "../index";
 
@@ -232,7 +231,7 @@ export interface DesignAppDiff {
   hover?: DesignAppHover;
   fullscreenWindow?: DesignAppFullscreenWindow;
   panelVisibility?: Partial<PanelVisibility>;
-  activeTool?: ToolType;
+  activeTool?: ToolKind;
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
@@ -244,7 +243,7 @@ export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
 export interface DesignAppState {
   fullscreenWindow: DesignAppFullscreenWindow;
   panelVisibility: PanelVisibility;
-  activeTool?: ToolType;
+  activeTool?: ToolKind;
   selection?: DesignAppSelection;
   hover?: DesignAppHover;
   presence?: DesignAppPresence;
@@ -477,7 +476,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.setActiveTool": (context: DesignAppCommandContext, tool: ToolType): DesignAppCommandResult => {
+  "semio.designApp.setActiveTool": (context: DesignAppCommandContext, tool: ToolKind): DesignAppCommandResult => {
     return {
       diff: {
         activeTool: tool,
@@ -999,10 +998,10 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
   set fullscreenWindow(panel: DesignAppFullscreenWindow) {
     this.yMap.set("fullscreenWindow", panel);
   }
-  get activeTool(): ToolType {
-    return (this.yMap.get("activeTool") as ToolType) ?? ToolType.SELECTION_NORMAL;
+  get activeTool(): ToolKind {
+    return (this.yMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
   }
-  set activeTool(tool: ToolType) {
+  set activeTool(tool: ToolKind) {
     this.yMap.set("activeTool", tool);
   }
   get panelVisibility(): PanelVisibility {
@@ -1558,7 +1557,7 @@ export function useDesignAppCommands(id?: DesignAppId) {
     deleteSelected: (origin: string) => store.execute("semio.designApp.deleteSelected", origin),
     toggleDiagramFullscreen: (origin: string) => store.execute("semio.designApp.toggleDiagramFullscreen", origin),
     toggleAccesslFullscreen: (origin: string) => store.execute("semio.designApp.toggleAccesslFullscreen", origin),
-    setActiveTool: (origin: string, tool: ToolType) => store.execute("semio.designApp.setActiveTool", origin, tool),
+    setActiveTool: (origin: string, tool: ToolKind) => store.execute("semio.designApp.setActiveTool", origin, tool),
     addPiece: (origin: string, piece: Piece) => store.execute("semio.designApp.addPiece", origin, piece),
     addPieces: (origin: string, pieces: Piece[]) => store.execute("semio.designApp.addPieces", origin, pieces),
     removePiece: (origin: string, piece: Guid) => store.execute("semio.designApp.removePiece", origin, piece),
@@ -1957,7 +1956,7 @@ const DesignAppTools: any[] = [];
 const getDesignTools = (): any[] => [
   {
     id: "selection",
-    defaultMode: ToolType.SELECTION_NORMAL,
+    defaultMode: ToolKind.SELECTION_NORMAL,
     modes: DesignAppTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
       id: tool.id,
       icon: tool.icon,
@@ -1965,7 +1964,7 @@ const getDesignTools = (): any[] => [
   },
   {
     id: "lasso",
-    defaultMode: ToolType.LASSO_RECTANGULAR,
+    defaultMode: ToolKind.LASSO_RECTANGULAR,
     modes: DesignAppTools.filter((tool) => tool.id.startsWith("lasso")).map((tool) => ({
       id: tool.id,
       icon: tool.icon,
@@ -1980,9 +1979,9 @@ export const ToolsToggleGroup: FC = () => {
 
   if (!kit || !design || !app) return null;
 
-  const activeTool = (app as any)?.activeTool || ToolType.SELECTION_NORMAL;
+  const activeTool = (app as any)?.activeTool || ToolKind.SELECTION_NORMAL;
 
-  return <ToolGroup tools={getDesignTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool as ToolType)} level="panel" />;
+  return <ToolGroup tools={getDesignTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool as ToolKind)} level="panel" />;
 };
 
 // #endregion Tools
@@ -3145,7 +3144,7 @@ const PiecesSectionForm: FC = () => {
         </TreeItem>
       )}
       {(parentConnection || parentConnections.length > 0) && (
-        <div style={{ marginTop: "0.5rem" }}>
+        <div style={{ marginTop: "var(--size-tiny)" }}>
           <ConnectionsSection connections={isSingle && parentConnection ? [parentConnection] : parentConnections} isSingle={isSingle} count={parentConnections.length} />
         </div>
       )}
@@ -3677,7 +3676,7 @@ const PresenceDiagram: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) =
 };
 
 type HelperLine = {
-  type: "horizontal" | "vertical" | "equalDistance";
+  kind: "horizontal" | "vertical" | "equalDistance";
   position?: number;
   relatedPieceId: string;
   x1?: number;
@@ -4394,13 +4393,13 @@ const HelperLines: React.FC<{
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-none z-[1000] overflow-hidden">
       {lines.map((line, index) => {
-        if (line.type === "horizontal" && line.position !== undefined) {
+        if (line.kind === "horizontal" && line.position !== undefined) {
           const screenY = line.position * viewport.zoom + viewport.y;
           return <div key={`h-${line.relatedPieceId}-${index}`} className="absolute left-0 w-full h-px border-t border-dashed border-accent opacity-60" style={{ top: screenY }} />;
-        } else if (line.type === "vertical" && line.position !== undefined) {
+        } else if (line.kind === "vertical" && line.position !== undefined) {
           const screenX = line.position * viewport.zoom + viewport.x;
           return <div key={`v-${line.relatedPieceId}-${index}`} className="absolute top-0 w-px h-full border-l border-dashed border-accent opacity-60" style={{ left: screenX }} />;
-        } else if (line.type === "equalDistance" && line.x1 !== undefined && line.y1 !== undefined && line.x2 !== undefined && line.y2 !== undefined) {
+        } else if (line.kind === "equalDistance" && line.x1 !== undefined && line.y1 !== undefined && line.x2 !== undefined && line.y2 !== undefined) {
           const screenX1 = line.x1 * viewport.zoom + viewport.x;
           const screenY1 = line.y1 * viewport.zoom + viewport.y;
           const screenX2 = line.x2 * viewport.zoom + viewport.x;
@@ -4721,7 +4720,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kit = useKit();
-  const activeTool = (useDesignApp((s) => s.activeTool) as ToolType | undefined) ?? ToolType.SELECTION_NORMAL;
+  const activeTool = (useDesignApp((s) => s.activeTool) as ToolKind | undefined) ?? ToolKind.SELECTION_NORMAL;
 
   const selection = useDesignAppSelection();
   const fullscreenWindow = useDesignAppFullscreen();
@@ -4845,8 +4844,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     const pieceId = getPieceIdFromNode(node);
     if (e.ctrlKey || e.metaKey) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
     else if (e.shiftKey) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
-    else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
-    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
+    else if (activeTool === ToolKind.SELECTION_ADDITIVE) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
+    else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
     else selectPiece("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
   };
 
@@ -4864,8 +4863,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     const connectionId = edge.data!.SemioConnection.guid;
     if (e.ctrlKey || e.metaKey) removeConnectionFromSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
     else if (e.shiftKey) addConnectionToSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
-    else if (activeTool === ToolType.SELECTION_ADDITIVE) addConnectionToSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
-    else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removeConnectionFromSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
+    else if (activeTool === ToolKind.SELECTION_ADDITIVE) addConnectionToSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
+    else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) removeConnectionFromSelection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
     else selectConnection("semio.sketchpad.app.design.canvas.diagram.onEdgeClick", connectionId);
   };
 
@@ -4900,8 +4899,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
       if (ctrlKey) isNodeSelected ? removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId) : addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
       else if (shiftKey) !isNodeSelected ? addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId) : selectPiece("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
-      else if (activeTool === ToolType.SELECTION_ADDITIVE) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
-      else if (activeTool === ToolType.SELECTION_SUBTRACTIVE) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
+      else if (activeTool === ToolKind.SELECTION_ADDITIVE) addPieceToSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
+      else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
       else if (!isNodeSelected) selectPiece("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart", pieceId);
 
       startTransaction("semio.sketchpad.app.design.canvas.diagram.onNodeDragStart");
@@ -5004,7 +5003,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `upper-${node1.id}-${node2.id}`,
                         x1: center1.x - 50,
                         y1: minY,
@@ -5013,7 +5012,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `lower-${node1.id}-${node2.id}`,
                         x1: center1.x - 50,
                         y1: maxY,
@@ -5022,7 +5021,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `mid-${node1.id}-${node2.id}`,
                         x1: center1.x - 30,
                         y1: midY,
@@ -5041,7 +5040,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
                         x1: center1.x - 30,
                         y1: extendedMinY,
@@ -5050,7 +5049,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref1-${node1.id}-${node2.id}`,
                         x1: center1.x - 50,
                         y1: minY,
@@ -5059,7 +5058,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref2-${node1.id}-${node2.id}`,
                         x1: center1.x - 50,
                         y1: maxY,
@@ -5075,7 +5074,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
                         x1: center1.x - 30,
                         y1: extendedMaxY,
@@ -5084,7 +5083,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref1-${node1.id}-${node2.id}`,
                         x1: center1.x - 50,
                         y1: minY,
@@ -5093,7 +5092,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref2-${node1.id}-${node2.id}`,
                         x1: center1.x - 50,
                         y1: maxY,
@@ -5112,7 +5111,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-left-${node1.id}-${node2.id}`,
                         x1: extendedLeftX,
                         y1: midY - 30,
@@ -5121,7 +5120,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
                         x1: center1.x,
                         y1: midY - 50,
@@ -5137,7 +5136,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-right-${node1.id}-${node2.id}`,
                         x1: extendedRightX,
                         y1: midY - 30,
@@ -5146,7 +5145,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
                         x1: center1.x,
                         y1: midY - 50,
@@ -5175,7 +5174,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `left-${node1.id}-${node2.id}`,
                         x1: minX,
                         y1: center1.y - 50,
@@ -5184,7 +5183,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `right-${node1.id}-${node2.id}`,
                         x1: maxX,
                         y1: center1.y - 50,
@@ -5193,7 +5192,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `mid-${node1.id}-${node2.id}`,
                         x1: midX,
                         y1: center1.y - 30,
@@ -5212,7 +5211,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
                         x1: extendedMinX,
                         y1: center1.y - 30,
@@ -5221,7 +5220,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref1-${node1.id}-${node2.id}`,
                         x1: minX,
                         y1: center1.y - 50,
@@ -5230,7 +5229,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref2-${node1.id}-${node2.id}`,
                         x1: maxX,
                         y1: center1.y - 50,
@@ -5246,7 +5245,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
                         x1: extendedMaxX,
                         y1: center1.y - 30,
@@ -5255,7 +5254,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref1-${node1.id}-${node2.id}`,
                         x1: minX,
                         y1: center1.y - 50,
@@ -5264,7 +5263,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `ref2-${node1.id}-${node2.id}`,
                         x1: maxX,
                         y1: center1.y - 50,
@@ -5283,7 +5282,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-up-${node1.id}-${node2.id}`,
                         x1: midX - 30,
                         y1: extendedUpY,
@@ -5292,7 +5291,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
                         x1: midX - 50,
                         y1: center1.y,
@@ -5308,7 +5307,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
                     equalDistanceHelperLines.push(
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-down-${node1.id}-${node2.id}`,
                         x1: midX - 30,
                         y1: extendedDownY,
@@ -5317,7 +5316,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                         referencePieceIds: [node1.id, node2.id],
                       },
                       {
-                        type: "equalDistance",
+                        kind: "equalDistance",
                         relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
                         x1: midX - 50,
                         y1: center1.y,
@@ -5341,7 +5340,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             if (distance < SNAP_THRESHOLD) {
               draggedY = centerY - ICON_WIDTH / 2;
               currentHelperLines.push({
-                type: "horizontal",
+                kind: "horizontal",
                 position: centerY,
                 relatedPieceId: otherNode.id,
               });
@@ -5355,7 +5354,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             if (distance < SNAP_THRESHOLD) {
               draggedX = centerX - ICON_WIDTH / 2;
               currentHelperLines.push({
-                type: "vertical",
+                kind: "vertical",
                 position: centerX,
                 relatedPieceId: otherNode.id,
               });
@@ -6055,7 +6054,7 @@ const App: FC<AppProps> = () => {
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
     useDesignAppCommands();
   const app = useDesignApp((s) => s);
-  const activeTool = (app && "activeTool" in app ? app.activeTool : undefined) ?? ToolType.SELECTION_NORMAL;
+  const activeTool = (app && "activeTool" in app ? app.activeTool : undefined) ?? ToolKind.SELECTION_NORMAL;
 
   const selection = useDesignAppSelection();
   const design = useDesign() as Design | undefined;
@@ -6083,19 +6082,19 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (activeTool === ToolType.SELECTION_NORMAL) {
+      if (activeTool === ToolKind.SELECTION_NORMAL) {
         if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          setActiveTool("semio.sketchpad.app.design.keyboard.shift", ToolType.SELECTION_ADDITIVE);
+          setActiveTool("semio.sketchpad.app.design.keyboard.shift", ToolKind.SELECTION_ADDITIVE);
         } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-          setActiveTool("semio.sketchpad.app.design.keyboard.ctrl", ToolType.SELECTION_SUBTRACTIVE);
+          setActiveTool("semio.sketchpad.app.design.keyboard.ctrl", ToolKind.SELECTION_SUBTRACTIVE);
         }
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (activeTool === ToolType.SELECTION_ADDITIVE && !e.shiftKey) {
-        setActiveTool("semio.sketchpad.app.design.keyboard.shiftUp", ToolType.SELECTION_NORMAL);
-      } else if (activeTool === ToolType.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
-        setActiveTool("semio.sketchpad.app.design.keyboard.ctrlUp", ToolType.SELECTION_NORMAL);
+      if (activeTool === ToolKind.SELECTION_ADDITIVE && !e.shiftKey) {
+        setActiveTool("semio.sketchpad.app.design.keyboard.shiftUp", ToolKind.SELECTION_NORMAL);
+      } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
+        setActiveTool("semio.sketchpad.app.design.keyboard.ctrlUp", ToolKind.SELECTION_NORMAL);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -6603,7 +6602,7 @@ const App: FC<AppProps> = () => {
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
-      windowTypes: [
+      windowKinds: [
         {
           id: DesignAppFullscreenWindow.Diagram,
           label: "Diagram",

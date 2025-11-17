@@ -22,7 +22,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Window } from "../../../sketchpad/elements";
+import { Canvas, HorizontalWindows } from "../../../sketchpad/App";
+import { Footer, Layout, Navbar, Window } from "../../../sketchpad/elements";
 
 // #region Layout
 const meta = {

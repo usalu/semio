@@ -20,9 +20,8 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Lock } from "lucide-react";
-import { useState } from "react";
-import { Toggle } from "../../../../sketchpad/elements";
+import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
+import { Action, Toggle } from "../../../../sketchpad/elements";
 
 // #region Toggle
 const meta = {
@@ -39,9 +38,42 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    const [pressed, setPressed] = useState(true);
-    return <Toggle id="toggle-default" type="default" pressed={pressed} onPressedChange={setPressed} i18nPressed="toggle.pressed" level="base" disabled={false} icon={<Lock />} />;
+  args: {
+    id: "toggle-default",
+    pressed: true,
+    icon: <Lock />,
+    showLabel: true,
+    level: "base",
+  },
+};
+
+export const WithAction: Story = {
+  args: {
+    id: "toggle-action",
+    kind: "withAction",
+    pressed: false,
+    icon: <Settings />,
+    actionIcon: <Plus />,
+    onActionClick: () => console.log("Action clicked"),
+    actionId: "toggle-action-button",
+    showLabel: true,
+    level: "base",
+  },
+};
+
+export const Dropdown: Story = {
+  args: {
+    id: "toggle-dropdown",
+    kind: "dropdown",
+    value: "option1",
+    items: [
+      { value: "option1", label: <Box /> },
+      { value: "option2", label: <Network /> },
+      { value: "option3", label: <List /> },
+    ],
+    dropdownId: "toggle-dropdown-action",
+    showLabel: true,
+    level: "base",
   },
 };
 
