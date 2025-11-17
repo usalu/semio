@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Copy, Download, ExternalLink, Trash2, X } from "lucide-react";
+import { Copy, Download, ExternalLink } from "lucide-react";
 import { ActionGroup, ActionGroupItem } from "../../../../sketchpad/elements";
 
 // #region ActionGroup

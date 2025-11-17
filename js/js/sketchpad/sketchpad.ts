@@ -21,10 +21,10 @@
 
 // #region Imports
 
+import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
 import * as Y from "yjs";
 import { Guid, Kit, KitDiff } from "../semio";
-import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 
 // #endregion
 

@@ -3742,6 +3742,10 @@
       "label": "Version erstellen",
       "beginner": "Eine neue Version fuer dieses Kit erstellen."
     },
+    "toggleRow": {
+      "label": "Auf- oder zuklappen",
+      "beginner": "Versionen dieses Kits ein- oder ausblenden."
+    },
     "hideKind": {
       "label": "Art-Filter ausblenden",
       "beginner": "Alle Kits unabhaengig vom Speichertyp anzeigen."

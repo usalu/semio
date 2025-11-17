@@ -21,7 +21,7 @@
 
 // #region Imports
 
-import { AddIcon, DocumentIcon, LocalKitIcon, RemoteKitIcon, SortAscendingIcon, SortDescendingIcon, TemporaryKitIcon } from "@semio/assets";
+import { AddIcon, ChevronDownIcon, ChevronRightIcon, DocumentIcon, LocalKitIcon, RemoteKitIcon, SortAscendingIcon, SortDescendingIcon, TemporaryKitIcon } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
@@ -57,7 +57,7 @@ import {
   useTooltip,
   Window,
 } from "../../App";
-import { Action, Input, ScrollArea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
 import type { AppEdit, PanelDefinition, PanelVisibility } from "../../sketchpad";
 import { createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "../../sketchpad";
 import { docsRegistry } from "../docs/App";
@@ -652,18 +652,6 @@ type TableRow = {
   icon?: string;
 };
 
-const ChevronRight: FC<{ className?: string }> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="m9 18 6-6-6-6" />
-  </svg>
-);
-
-const ChevronDown: FC<{ className?: string }> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="m6 9 6 6 6-6" />
-  </svg>
-);
-
 const Home: FC = ({}) => {
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -1166,90 +1154,83 @@ const Home: FC = ({}) => {
           }
         }}
       >
-        {/* Flexible filter layout with automatic wrapping for mobile */}
-        <div className="flex flex-wrap items-center gap-single p-single border-b">
-          {selectedKind && (
+        <Strip
+          direction="horizontal"
+          id="semio.sketchpad.app.home.filter.strip"
+          items={[
+            ...(selectedKind
+              ? [
+                  <Toggle
+                    kind="withAction"
+                    pressed={true}
+                    onPressedChange={() => toggleKind(selectedKind)}
+                    actionIcon={<AddIcon className="size-tiny" />}
+                    onActionClick={() => handleCreateKit(selectedKind)}
+                    id="semio.sketchpad.app.home.filter.kind.show"
+                    actionId="semio.sketchpad.app.home.filter.kind.create"
+                    icon={
+                      <>
+                        {selectedKind === "temporary" && <TemporaryKitIcon className="size-tiny" />}
+                        {selectedKind === "local" && <LocalKitIcon className="size-tiny" />}
+                        {selectedKind === "remote" && <RemoteKitIcon className="size-tiny" />}
+                      </>
+                    }
+                  />,
+                ]
+              : [
+                  <Toggle
+                    kind="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("temporary")}
+                    actionIcon={<AddIcon className="size-tiny" />}
+                    onActionClick={() => handleCreateKit("temporary")}
+                    id="semio.sketchpad.app.home.filter.kind.temporary"
+                    actionId="semio.sketchpad.app.home.filter.kind.createTemporary"
+                    icon={<TemporaryKitIcon className="size-tiny" />}
+                  />,
+                  <Toggle
+                    kind="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("local")}
+                    actionIcon={<AddIcon className="size-tiny" />}
+                    onActionClick={() => handleCreateKit("local")}
+                    id="semio.sketchpad.app.home.filter.kind.local"
+                    actionId="semio.sketchpad.app.home.filter.kind.createLocal"
+                    icon={<LocalKitIcon className="size-tiny" />}
+                  />,
+                  <Toggle
+                    kind="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("remote")}
+                    actionIcon={<AddIcon className="size-tiny" />}
+                    onActionClick={() => handleCreateKit("remote")}
+                    id="semio.sketchpad.app.home.filter.kind.remote"
+                    actionId="semio.sketchpad.app.home.filter.kind.createRemote"
+                    icon={<RemoteKitIcon className="size-tiny" />}
+                  />,
+                ]),
+            ...(selectedName ? [<Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={selectedName} />] : []),
+            ...(selectedVersion !== null
+              ? [<Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} id="semio.sketchpad.app.home.filter.version" icon={selectedVersion || useLabel("semio.sketchpad.app.kit.defaultVersion")} />]
+              : []),
+            ...(selectedKind && !selectedName && uniqueNames.length > 0
+              ? uniqueNames.map((name) => (
+                  <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)}>
+                    {name}
+                  </Toggle>
+                ))
+              : []),
+            ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
+              ? uniqueVersions.map((version) => (
+                  <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)}>
+                    {version || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}
+                  </Toggle>
+                ))
+              : []),
+            <Input key="search" id="semio.sketchpad.app.home.search" className="flex-1 min-w-[160px]" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />,
             <Toggle
-              type="withAction"
-              pressed={true}
-              onPressedChange={() => toggleKind(selectedKind)}
-              actionIcon={<AddIcon className="size-tiny" />}
-              onActionClick={() => handleCreateKit(selectedKind)}
-              id="semio.sketchpad.app.home.filter.kind.show"
-              actionId="semio.sketchpad.app.home.filter.kind.create"
-              icon={
-                <>
-                  {selectedKind === "temporary" && <TemporaryKitIcon className="size-tiny" />}
-                  {selectedKind === "local" && <LocalKitIcon className="size-tiny" />}
-                  {selectedKind === "remote" && <RemoteKitIcon className="size-tiny" />}
-                </>
-              }
-            />
-          )}
-          {selectedName && <Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={<span className="text-xs">{selectedName}</span>} />}
-          {selectedVersion !== null && (
-            <Toggle
-              pressed={true}
-              onPressedChange={() => toggleVersion(selectedVersion)}
-              id="semio.sketchpad.app.home.filter.version"
-              icon={<span className="text-xs">{selectedVersion || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}</span>}
-            />
-          )}
-          {!selectedKind && (
-            <>
-              <Toggle
-                type="withAction"
-                pressed={false}
-                onPressedChange={() => toggleKind("temporary")}
-                actionIcon={<AddIcon className="size-tiny" />}
-                onActionClick={() => handleCreateKit("temporary")}
-                id="semio.sketchpad.app.home.filter.kind.temporary"
-                actionId="semio.sketchpad.app.home.filter.kind.createTemporary"
-                icon={<TemporaryKitIcon className="size-tiny" />}
-              />
-              <Toggle
-                type="withAction"
-                pressed={false}
-                onPressedChange={() => toggleKind("local")}
-                actionIcon={<AddIcon className="size-tiny" />}
-                onActionClick={() => handleCreateKit("local")}
-                id="semio.sketchpad.app.home.filter.kind.local"
-                actionId="semio.sketchpad.app.home.filter.kind.createLocal"
-                icon={<LocalKitIcon className="size-tiny" />}
-              />
-              <Toggle
-                type="withAction"
-                pressed={false}
-                onPressedChange={() => toggleKind("remote")}
-                actionIcon={<AddIcon className="size-tiny" />}
-                onActionClick={() => handleCreateKit("remote")}
-                id="semio.sketchpad.app.home.filter.kind.remote"
-                actionId="semio.sketchpad.app.home.filter.kind.createRemote"
-                icon={<RemoteKitIcon className="size-tiny" />}
-              />
-            </>
-          )}
-          {selectedKind &&
-            !selectedName &&
-            uniqueNames.length > 0 &&
-            uniqueNames.map((name) => (
-              <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)}>
-                {name}
-              </Toggle>
-            ))}
-          {selectedKind &&
-            selectedName &&
-            selectedVersion === null &&
-            uniqueVersions.length > 0 &&
-            uniqueVersions.map((version) => (
-              <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)}>
-                {version || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}
-              </Toggle>
-            ))}
-          <div className="flex items-center gap-single flex-1 min-w-[160px]">
-            <Input id="semio.sketchpad.app.home.search" className="flex-1 min-w-0" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
-            <Toggle
-              type="dropdown"
+              key="sort"
+              kind="dropdown"
               value={sortColumn === "name" ? sortDirection : "asc"}
               onValueChange={(value) => {
                 homeCommands.setSortColumn("semio.sketchpad.app.home.filter.name.sortColumn", "name");
@@ -1260,12 +1241,12 @@ const Home: FC = ({}) => {
                 { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
               ]}
               id={tooltip("home.sortByName") || "semio.sketchpad.app.home.sortByName"}
-            />
-          </div>
-        </div>
+            />,
+          ]}
+        />
 
         {/* Simplified table - only name column, no headers */}
-        <ScrollArea className="flex-1">
+        <Scrollable className="flex-1">
           <div className="flex flex-col">
             {rows.map((row) => {
               const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
@@ -1296,11 +1277,12 @@ const Home: FC = ({}) => {
                       {row.hasChildren ? (
                         <Action
                           level="base"
+                          id={"semio.sketchpad.app.home.toggleRow"}
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleRow(row.id);
                           }}
-                          icon={row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                          icon={row.isExpanded ? <ChevronDownIcon className="size-tiny" /> : <ChevronRightIcon className="size-tiny" />}
                         />
                       ) : (
                         <span className="size-small shrink-0" />
@@ -1316,7 +1298,7 @@ const Home: FC = ({}) => {
                             e.stopPropagation();
                             handleCreateVersion(row.name, row.type as KitStoreKind);
                           }}
-                          id={tooltip("home.createVersion")}
+                          id={"semio.sketchpad.app.home.createVersion"}
                           icon={<AddIcon />}
                         />
                       )}
@@ -1326,7 +1308,7 @@ const Home: FC = ({}) => {
               );
             })}
           </div>
-        </ScrollArea>
+        </Scrollable>
       </div>
     );
   }
@@ -1344,100 +1326,95 @@ const Home: FC = ({}) => {
               }
             }}
           >
-            {/* Flexible filter layout with automatic wrapping */}
-            <div className="flex flex-wrap items-center gap-single p-single border-b">
-              {selectedKind && (
-                <Toggle
-                  type="withAction"
-                  pressed={true}
-                  onPressedChange={() => toggleKind(selectedKind)}
-                  actionIcon={<AddIcon className="size-tiny" />}
-                  onActionClick={() => handleCreateKit(selectedKind)}
-                  id={tooltip("home.hideKind") || "semio.sketchpad.app.home.hideKind"}
-                  actionId={tooltip("home.createKit") || "semio.sketchpad.app.home.createKit"}
-                  icon={
-                    <>
-                      {selectedKind === "temporary" && <TemporaryKitIcon className="size-tiny" />}
-                      {selectedKind === "local" && <LocalKitIcon className="size-tiny" />}
-                      {selectedKind === "remote" && <RemoteKitIcon className="size-tiny" />}
-                    </>
-                  }
-                />
-              )}
-              {selectedName && <Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="text-xs">{selectedName}</span>} />}
-              {selectedVersion !== null && (
-                <Toggle
-                  id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`}
-                  pressed={true}
-                  onPressedChange={() => toggleVersion(selectedVersion)}
-                  icon={<span className="text-xs">{selectedVersion || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}</span>}
-                />
-              )}
-              {!selectedKind && (
-                <>
-                  <Toggle
-                    type="withAction"
-                    pressed={false}
-                    onPressedChange={() => toggleKind("temporary")}
-                    actionIcon={<AddIcon className="size-tiny" />}
-                    onActionClick={() => handleCreateKit("temporary")}
-                    id={tooltip("home.showTemporary") || "semio.sketchpad.app.home.showTemporary"}
-                    actionId={tooltip("home.createTemporary") || "semio.sketchpad.app.home.createTemporary"}
-                    icon={<TemporaryKitIcon className="size-tiny" />}
-                  />
-                  <Toggle
-                    type="withAction"
-                    pressed={false}
-                    onPressedChange={() => toggleKind("local")}
-                    actionIcon={<AddIcon className="size-tiny" />}
-                    onActionClick={() => handleCreateKit("local")}
-                    id={tooltip("home.showLocal") || "semio.sketchpad.app.home.showLocal"}
-                    actionId={tooltip("home.createLocal") || "semio.sketchpad.app.home.createLocal"}
-                    icon={<LocalKitIcon className="size-tiny" />}
-                  />
-                  <Toggle
-                    type="withAction"
-                    pressed={false}
-                    onPressedChange={() => toggleKind("remote")}
-                    actionIcon={<AddIcon className="size-tiny" />}
-                    onActionClick={() => handleCreateKit("remote")}
-                    id={tooltip("home.showRemote") || "semio.sketchpad.app.home.showRemote"}
-                    actionId={tooltip("home.createRemote") || "semio.sketchpad.app.home.createRemote"}
-                    icon={<RemoteKitIcon className="size-tiny" />}
-                  />
-                </>
-              )}
-              {selectedKind &&
-                !selectedName &&
-                uniqueNames.length > 0 &&
-                uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={<span className="text-xs">{name}</span>} />)}
-              {selectedKind &&
-                selectedName &&
-                selectedVersion === null &&
-                uniqueVersions.length > 0 &&
-                uniqueVersions.map((version) => (
-                  <Toggle
-                    key={version}
-                    id={`semio.sketchpad.app.home.filter.version.${version}`}
-                    pressed={false}
-                    onPressedChange={() => toggleVersion(version)}
-                    icon={<span className="text-xs">{version || <span className="italic opacity-50">{useLabel("semio.sketchpad.app.kit.defaultVersion")}</span>}</span>}
-                  />
-                ))}
-              <Input id="semio.sketchpad.app.home.search" className="flex-1 min-w-[200px]" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />
-            </div>
+            <Strip
+              direction="horizontal"
+              id="semio.sketchpad.app.home.filter.strip"
+              items={[
+                ...(selectedKind
+                  ? [
+                      <Toggle
+                        kind="withAction"
+                        pressed={true}
+                        onPressedChange={() => toggleKind(selectedKind)}
+                        actionIcon={<AddIcon className="size-tiny" />}
+                        onActionClick={() => handleCreateKit(selectedKind)}
+                        id={"semio.sketchpad.app.home.hideKind"}
+                        actionId={"semio.sketchpad.app.home.createKit"}
+                        icon={
+                          <>
+                            {selectedKind === "temporary" && <TemporaryKitIcon className="size-tiny" />}
+                            {selectedKind === "local" && <LocalKitIcon className="size-tiny" />}
+                            {selectedKind === "remote" && <RemoteKitIcon className="size-tiny" />}
+                          </>
+                        }
+                      />,
+                    ]
+                  : [
+                      <Toggle
+                        kind="withAction"
+                        pressed={false}
+                        onPressedChange={() => toggleKind("temporary")}
+                        actionIcon={<AddIcon className="size-tiny" />}
+                        onActionClick={() => handleCreateKit("temporary")}
+                        id={"semio.sketchpad.app.home.showTemporary"}
+                        actionId={"semio.sketchpad.app.home.createTemporary"}
+                        icon={<TemporaryKitIcon className="size-tiny" />}
+                      />,
+                      <Toggle
+                        kind="withAction"
+                        pressed={false}
+                        onPressedChange={() => toggleKind("local")}
+                        actionIcon={<AddIcon className="size-tiny" />}
+                        onActionClick={() => handleCreateKit("local")}
+                        id={"semio.sketchpad.app.home.showLocal"}
+                        actionId={"semio.sketchpad.app.home.createLocal"}
+                        icon={<LocalKitIcon className="size-tiny" />}
+                      />,
+                      <Toggle
+                        kind="withAction"
+                        pressed={false}
+                        onPressedChange={() => toggleKind("remote")}
+                        actionIcon={<AddIcon className="size-tiny" />}
+                        onActionClick={() => handleCreateKit("remote")}
+                        id={"semio.sketchpad.app.home.showRemote"}
+                        actionId={"semio.sketchpad.app.home.createRemote"}
+                        icon={<RemoteKitIcon className="size-tiny" />}
+                      />,
+                    ]),
+                ...(selectedName ? [<Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
+                ...(selectedVersion !== null
+                  ? [<Toggle id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`} pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} icon={selectedVersion || useLabel("semio.sketchpad.app.kit.defaultVersion")} />]
+                  : []),
+                ...(selectedKind && !selectedName && uniqueNames.length > 0
+                  ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={name} />)
+                  : []),
+                ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
+                  ? uniqueVersions.map((version) => (
+                      <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || useLabel("semio.sketchpad.app.kit.defaultVersion")} />
+                    ))
+                  : []),
+                <Input
+                  key="search"
+                  id="semio.sketchpad.app.home.search"
+                  className="flex-1 min-w-[200px]"
+                  placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")}
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />,
+              ]}
+            />
             {/* Concept Filter */}
             <ConceptFilter allConcepts={allConcepts} />
-            <ScrollArea ref={scrollAreaRef} className="flex-1">
+            <Scrollable ref={scrollAreaRef} className="flex-1">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 border-b">
                   <tr className="h-large">
                     {!selectedKind && (
-                      <th className="text-left p-single font-medium relative group">
-                        <div className="flex items-center justify-between w-full">
+                      <th className="text-left p-single font-medium relative group w-0 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-single">
                           <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
                           <Toggle
-                            type="dropdown"
+                            kind="dropdown"
                             pressed={sortColumn === "type"}
                             value={sortColumn === "type" ? sortDirection : "asc"}
                             onValueChange={(value) => {
@@ -1448,8 +1425,7 @@ const Home: FC = ({}) => {
                               { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
                               { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                             ]}
-                            id={tooltip("home.sortByType") || "semio.sketchpad.app.home.sortByType"}
-                            className="px-single min-w-0"
+                            id={"semio.sketchpad.app.home.sortByType"}
                           />
                         </div>
                         <div className="absolute top-0 right-0 w-single h-full cursor-col-resize hover:bg-accent" />
@@ -1459,7 +1435,7 @@ const Home: FC = ({}) => {
                       <div className="flex items-center justify-between w-full">
                         <span>{useLabel("semio.sketchpad.app.home.name")}</span>
                         <Toggle
-                          type="dropdown"
+                          kind="dropdown"
                           pressed={sortColumn === "name"}
                           value={sortColumn === "name" ? sortDirection : "asc"}
                           onValueChange={(value) => {
@@ -1470,8 +1446,7 @@ const Home: FC = ({}) => {
                             { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
                             { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                           ]}
-                          id={tooltip("home.sortByName") || "semio.sketchpad.app.home.sortByName"}
-                          className="px-single min-w-0"
+                          id={"semio.sketchpad.app.home.sortByName"}
                         />
                       </div>
                       <div className="absolute top-0 right-0 w-single h-full cursor-col-resize hover:bg-accent" />
@@ -1480,7 +1455,7 @@ const Home: FC = ({}) => {
                       <div className="flex items-center justify-between w-full">
                         <span>{useLabel("semio.sketchpad.app.home.lastUpdated")}</span>
                         <Toggle
-                          type="dropdown"
+                          kind="dropdown"
                           pressed={sortColumn === "updatedAt"}
                           value={sortColumn === "updatedAt" ? sortDirection : "asc"}
                           onValueChange={(value) => {
@@ -1491,8 +1466,7 @@ const Home: FC = ({}) => {
                             { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
                             { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                           ]}
-                          id={tooltip("home.sortByUpdatedAt") || "semio.sketchpad.app.home.sortByUpdatedAt"}
-                          className="px-single min-w-0"
+                          id={"semio.sketchpad.app.home.sortByUpdatedAt"}
                         />
                       </div>
                       <div className="absolute top-0 right-0 w-single h-full cursor-col-resize hover:bg-accent" />
@@ -1501,7 +1475,7 @@ const Home: FC = ({}) => {
                       <div className="flex items-center justify-between w-full">
                         <span>{useLabel("semio.sketchpad.app.home.created")}</span>
                         <Toggle
-                          type="dropdown"
+                          kind="dropdown"
                           pressed={sortColumn === "createdAt"}
                           value={sortColumn === "createdAt" ? sortDirection : "asc"}
                           onValueChange={(value) => {
@@ -1512,8 +1486,7 @@ const Home: FC = ({}) => {
                             { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: tooltip("sort.ascending") || "semio.sketchpad.sort.ascending" },
                             { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: tooltip("sort.descending") || "semio.sketchpad.sort.descending" },
                           ]}
-                          id={tooltip("home.sortByCreatedAt") || "semio.sketchpad.app.home.sortByCreatedAt"}
-                          className="px-single min-w-0"
+                          id={"semio.sketchpad.app.home.sortByCreatedAt"}
                         />
                       </div>
                     </th>
@@ -1545,7 +1518,7 @@ const Home: FC = ({}) => {
                         tabIndex={0}
                       >
                         {!selectedKind && (
-                          <td className="p-single">
+                          <td className="p-single w-0 whitespace-nowrap">
                             {row.type === "temporary" && <TemporaryKitIcon className="size-tiny" />}
                             {row.type === "local" && <LocalKitIcon className="size-tiny" />}
                             {row.type === "remote" && <RemoteKitIcon className="size-tiny" />}
@@ -1558,11 +1531,12 @@ const Home: FC = ({}) => {
                               {row.hasChildren ? (
                                 <Action
                                   level="base"
+                                  id={"semio.sketchpad.app.home.toggleRow"}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     toggleRow(row.id);
                                   }}
-                                  icon={row.isExpanded ? <ChevronDown /> : <ChevronRight />}
+                                  icon={row.isExpanded ? <ChevronDownIcon className="size-tiny" /> : <ChevronRightIcon className="size-tiny" />}
                                 />
                               ) : (
                                 <span className="size-tiny shrink-0" />
@@ -1592,7 +1566,7 @@ const Home: FC = ({}) => {
                   })}
                 </tbody>
               </table>
-            </ScrollArea>
+            </Scrollable>
           </div>
         </Window>
       </Canvas>

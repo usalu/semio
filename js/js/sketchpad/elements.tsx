@@ -82,6 +82,9 @@ import { Link, useLocation, useNavigate } from "react-router";
 import * as THREE from "three";
 import { Expertise, setExpertiseProvider, useLabel } from "../i18n";
 import { Camera, cn, Plane, Point, Vector } from "../semio";
+
+// #endregion Imports
+
 // #region Interaction Context
 // Generic interaction tracking system for UI elements
 // This allows elements to track focus/active states without coupling to specific app logic
@@ -110,7 +113,46 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 
 // #endregion Interaction Context
 
-// #endregion Imports
+// #region Level Context
+
+export type Level = "base" | "panel" | "temporary";
+
+const LevelContext = React.createContext<Level>("base");
+
+export const LevelProvider: React.FC<{
+  level: Level;
+  children: React.ReactNode;
+}> = ({ level, children }) => {
+  return <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
+};
+
+export const useLevel = () => React.useContext(LevelContext);
+
+// #endregion Level Context
+
+// #region Element
+
+export interface Transaction {
+  start?: () => void;
+  finalize?: () => void;
+  abort?: () => void;
+}
+
+export interface ElementBaseProps {
+  id: string;
+  level?: Level;
+}
+
+export interface ElementProps extends ElementBaseProps {
+  transaction?: Transaction;
+}
+
+export const useElementLevel = (propLevel?: Level): Level => {
+  const contextLevel = useLevel();
+  return propLevel ?? contextLevel;
+};
+
+// #endregion Element
 
 // #region Root Components
 
@@ -314,28 +356,26 @@ const Navbar: React.FC<NavbarProps> = ({ leftItems = [], centerItems = [], right
   const sortedCenter = [...centerItems].sort((a, b) => (a.order || 0) - (b.order || 0));
   const sortedRight = [...rightItems].sort((a, b) => (a.order || 0) - (b.order || 0));
   return (
-    <nav id="navbar" className={`bg-base border-b flex items-center justify-between px-single h-large z-[100] ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
-      <div className="flex items-center gap-single min-w-0">
-        {sortedLeft.map((item) => (
-          <div key={item.id} className={`flex items-center m-single ${item.className || ""}`} onClick={item.onClick}>
-            {item.content}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-single min-w-0 flex-1">
-        {sortedCenter.map((item) => (
-          <div key={item.id} className={`flex items-center m-single ${item.className || ""}`} onClick={item.onClick}>
-            {item.content}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-single min-w-0">
-        {sortedRight.map((item) => (
-          <div key={item.id} className={`flex items-center m-single ${item.className || ""}`} onClick={item.onClick}>
-            {item.content}
-          </div>
-        ))}
-      </div>
+    <nav id="navbar" className={`bg-base border-b flex items-center gap-single px-single h-large z-[100] ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
+      {sortedLeft.map((item) => (
+        <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
+          {item.content}
+        </div>
+      ))}
+      {sortedCenter.map((item) => (
+        <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
+          {item.content}
+        </div>
+      ))}
+      {sortedRight.length > 0 && (
+        <div className="ml-auto flex items-center gap-single">
+          {sortedRight.map((item) => (
+            <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
+              {item.content}
+            </div>
+          ))}
+        </div>
+      )}
     </nav>
   );
 };
@@ -591,17 +631,6 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
 
 // #region Base Components
 
-interface Transaction {
-  start?: () => void;
-  finalize?: () => void;
-  abort?: () => void;
-}
-
-interface ElementProps {
-  id: string;
-  transaction?: Transaction;
-}
-
 interface LabelProps {
   id: string;
   children: React.ReactNode;
@@ -615,7 +644,7 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
     <div className={cn("group flex items-stretch min-w-0 w-full", className)}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span id={labelElementId} className="inline-flex items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors group-hover:bg-hover-panel">
+          <span id={labelElementId} className="inline-flex items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:bg-hover-panel">
             {label}
           </span>
         </TooltipTrigger>
@@ -1008,17 +1037,18 @@ const actionGroupItemVariants = cva(
   },
 );
 
-const ActionGroupContext = React.createContext<VariantProps<typeof actionGroupItemVariants>>({
+const ActionGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
-interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children"> {
+interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children" | "id"> {
   id: string;
   children: React.ReactNode;
-  level?: "base" | "panel" | "temporary";
+  level?: Level;
 }
 
-function ActionGroup({ className, level = "base", id, children, ...props }: ActionGroupProps) {
+function ActionGroup({ className, level: propLevel, id, children, ...props }: ActionGroupProps) {
+  const level = useElementLevel(propLevel);
   return (
     <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", className)} {...props}>
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
@@ -1029,16 +1059,15 @@ function ActionGroup({ className, level = "base", id, children, ...props }: Acti
 function ActionGroupItem({
   className,
   children,
-  level,
   id,
   as: Component = "button",
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof actionGroupItemVariants> & {
-    id?: string;
-    as?: "button" | "div";
-  }) {
+}: React.ComponentProps<"button"> & {
+  id?: string;
+  as?: "button" | "div";
+}) {
   const context = React.useContext(ActionGroupContext);
+  const level = context.level ?? "base";
 
   const actionGroupItemElement = (
     <Component
@@ -1083,18 +1112,19 @@ interface ActionDropdownOption {
   label?: string;
 }
 
-interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "children"> {
+interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "children" | "id"> {
+  id: string;
   options: ActionDropdownOption[];
   value: string;
   onValueChange?: (value: string) => void;
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
-  id: string;
-  level?: "base" | "panel" | "temporary";
+  level?: Level;
 }
 
-function ActionDropdown({ className, level, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
+function ActionDropdown({ className, level: propLevel, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
   const [open, setOpen] = React.useState(false);
+  const level = useElementLevel(propLevel);
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -1112,7 +1142,7 @@ function ActionDropdown({ className, level, id, options, value, onValueChange, s
   const buttonElement = (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <ActionGroup id={id} level={level || undefined} className={className}>
+        <ActionGroup id={id} level={level} className={className}>
           <ActionGroupItem {...props}>{selectedOption?.icon}</ActionGroupItem>
         </ActionGroup>
       </PopoverTrigger>
@@ -1137,16 +1167,18 @@ function ActionDropdown({ className, level, id, options, value, onValueChange, s
   return buttonElement;
 }
 
-interface ActionProps extends VariantProps<typeof actionGroupItemVariants>, Omit<React.ComponentProps<"button">, "children"> {
+interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   as?: "button" | "div";
   loading?: boolean;
   icon: React.ReactNode;
   id?: string;
+  level?: Level;
 }
 
-function Action({ className, level, id, icon, as = "button", ...props }: ActionProps) {
+function Action({ className, level: propLevel, id, icon, as = "button", ...props }: ActionProps) {
+  const level = useElementLevel(propLevel);
   return (
-    <ActionGroup id={id || "action"} level={level || undefined} className={className}>
+    <ActionGroup id={id || "action"} level={level} className={className}>
       <ActionGroupItem as={as} {...props}>
         {icon}
       </ActionGroupItem>
@@ -1175,19 +1207,31 @@ const buttonGroupItemVariants = cva(
   },
 );
 
-const ButtonGroupContext = React.createContext<VariantProps<typeof buttonGroupItemVariants>>({
+const ButtonGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
-function ButtonGroup({ className, level = "base", id, showLabel, children, ...props }: React.ComponentProps<"div"> & Omit<VariantProps<typeof buttonGroupItemVariants>, "size"> & { id: string; showLabel?: boolean }) {
+interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
+  id: string;
+  level?: Level;
+  showLabel?: boolean;
+  children: React.ReactNode;
+}
+
+function ButtonGroup({ className, level: propLevel, id, showLabel, children, ...props }: ButtonGroupProps) {
+  const level = useElementLevel(propLevel);
   const buttonGroupElement = (
     <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x overflow-hidden h-medium", className)} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
 
-  if (showLabel) {
-    return <Label id={id}>{buttonGroupElement}</Label>;
+  if (showLabel && id) {
+    return (
+      <Label id={id} labelElementId={`${id}-label`}>
+        {buttonGroupElement}
+      </Label>
+    );
   }
 
   return buttonGroupElement;
@@ -1196,21 +1240,20 @@ function ButtonGroup({ className, level = "base", id, showLabel, children, ...pr
 function ButtonGroupItem({
   className,
   children,
-  level,
   id,
   icon,
   asChild = false,
   ...props
-}: React.ComponentProps<"button"> &
-  Omit<VariantProps<typeof buttonGroupItemVariants>, "size"> & {
-    id?: string;
-    icon?: React.ReactNode;
-    asChild?: boolean;
-  }) {
+}: React.ComponentProps<"button"> & {
+  id?: string;
+  icon?: React.ReactNode;
+  asChild?: boolean;
+}) {
   const context = React.useContext(ButtonGroupContext);
+  const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
 
-  const buttonGroupItemElement = (
+  return (
     <Comp
       data-slot="button-group-item"
       data-level={context.level || level}
@@ -1226,26 +1269,11 @@ function ButtonGroupItem({
       {icon || children}
     </Comp>
   );
-
-  if (id) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span>{buttonGroupItemElement}</span>
-        </TooltipTrigger>
-        <TooltipContent>
-          <IdTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return buttonGroupItemElement;
 }
 
 type ButtonProps = React.ComponentProps<"button"> &
   Omit<VariantProps<typeof buttonGroupItemVariants>, "level"> & {
-    level?: "base" | "panel" | "temporary";
+    level?: Level;
     asChild?: boolean;
     id?: string;
     icon?: React.ReactNode;
@@ -1263,12 +1291,12 @@ interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"
   onValueChange?: (value: T) => void;
   items: ButtonCycleItem<T>[];
   showLabel?: boolean;
-  level?: "base" | "panel" | "temporary";
 }
 
-function Button({ className, level = "base", asChild = false, id, icon, children, ...props }: ButtonProps) {
+function Button({ className, level: propLevel, asChild = false, id, icon, children, ...props }: ButtonProps) {
+  const level = useElementLevel(propLevel);
   return (
-    <ButtonGroup id={id || "button"} level={level || undefined} className={className}>
+    <ButtonGroup id={id || "button"} level={level} className={className}>
       <ButtonGroupItem asChild={asChild} {...props}>
         {icon || children}
       </ButtonGroupItem>
@@ -1276,10 +1304,11 @@ function Button({ className, level = "base", asChild = false, id, icon, children
   );
 }
 
-function ButtonCycle<T extends string = string>({ className, level = "base", id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
+function ButtonCycle<T extends string = string>({ className, level: propLevel, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
+  const level = useElementLevel(propLevel);
   const currentIndex = items.findIndex((item) => item.value === value);
   const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
-  
+
   const handleCycle = () => {
     const nextIndex = (currentIndex + 1) % items.length;
     if (onValueChange) onValueChange(items[nextIndex].value);
@@ -1316,21 +1345,8 @@ interface ComboboxProps extends ElementProps {
   showLabel?: boolean;
 }
 
-export const Combobox: React.FC<ComboboxProps> = ({
-  options,
-  value = "",
-  placeholder = "Select option...",
-  placeholderId,
-  emptyMessage = "No options found.",
-  onValueChange,
-  className,
-  allowClear = false,
-  showLabel,
-  id,
-  transaction,
-}) => {
+export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id, transaction }) => {
   const [open, setOpen] = React.useState(false);
-  const mode = useTooltipMode();
   const { t } = useTranslation();
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
 
@@ -1355,27 +1371,14 @@ export const Combobox: React.FC<ComboboxProps> = ({
     transaction?.finalize?.();
   };
 
-  const popoverTrigger = (
-    <PopoverTrigger asChild>
-      <Button role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
-        {selectedOption ? selectedOption.label : computedPlaceholder}
-        <ChevronsUpDownIcon className="ml-2 size-tiny shrink-0 opacity-50" />
-      </Button>
-    </PopoverTrigger>
-  );
-
-  const wrappedTrigger = (
-    <Tooltip>
-      <TooltipTrigger asChild>{popoverTrigger}</TooltipTrigger>
-      <TooltipContent>
-        <IdTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
-  );
-
   const comboboxElement = (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      {wrappedTrigger}
+      <PopoverTrigger asChild>
+        <Button role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
+          {selectedOption ? selectedOption.label : computedPlaceholder}
+          <ChevronsUpDownIcon className="ml-2 size-tiny shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
       <PopoverContent className="w-full" align="start">
         <Command>
           <CommandInput placeholder="Search..." />
@@ -1401,9 +1404,9 @@ export const Combobox: React.FC<ComboboxProps> = ({
     </Popover>
   );
 
-  if (showLabel) {
+  if (showLabel && id) {
     return (
-      <Label id={id} className={cn("h-medium", className)}>
+      <Label id={id} labelElementId={`${id}-label`} className={cn("h-medium", className)}>
         {comboboxElement}
       </Label>
     );
@@ -1513,8 +1516,12 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     </div>
   );
 
-  if (showLabel) {
-    return <Label id={id}>{inputElement}</Label>;
+  if (showLabel && id) {
+    return (
+      <Label id={id} labelElementId={`${id}-label`}>
+        {inputElement}
+      </Label>
+    );
   }
 
   return inputElement;
@@ -1526,16 +1533,7 @@ export { Input };
 
 // #region Select
 
-function Select({
-  id,
-  showLabel,
-  children,
-  value,
-  defaultValue,
-  onOpenChange,
-  transaction,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
+function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -1579,8 +1577,12 @@ function Select({
     </SelectPrimitive.Root>
   );
 
-  if (showLabel) {
-    return <Label id={id}>{selectElement}</Label>;
+  if (showLabel && id) {
+    return (
+      <Label id={id} labelElementId={`${id}-label`}>
+        {selectElement}
+      </Label>
+    );
   }
 
   return selectElement;
@@ -1597,19 +1599,19 @@ function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.V
 function SelectTrigger({
   className,
   size = "default",
-  level = "base",
+  level: propLevel,
   children,
   id,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
-  level?: "base" | "panel" | "temporary";
+  level?: Level;
   id?: string;
 }) {
+  const level = useElementLevel(propLevel);
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-  const mode = useTooltipMode();
 
-  const triggerElement = (
+  return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
@@ -1626,19 +1628,6 @@ function SelectTrigger({
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
-
-  if (id) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{triggerElement}</TooltipTrigger>
-        <TooltipContent>
-          <IdTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return triggerElement;
 }
 
 function SelectContent({ className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
@@ -1917,7 +1906,7 @@ function Slider({
 
   if (showLabel) {
     return (
-      <Label id={id} className={className}>
+      <Label id={id} labelElementId={`${id}-label`} className={className}>
         {sliderContent}
       </Label>
     );
@@ -2152,11 +2141,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     </div>
   );
 
-  return (
-    <Label id={id}>
-      {stepperElement}
-    </Label>
-  );
+  return <Label id={id}>{stepperElement}</Label>;
 };
 
 // #endregion Stepper
@@ -2239,9 +2224,9 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     />
   );
 
-  if (showLabel) {
+  if (showLabel && id) {
     return (
-      <Label id={id} className="items-start">
+      <Label id={id} labelElementId={`${id}-label`} className="items-start">
         {textareaElement}
       </Label>
     );
@@ -2282,7 +2267,6 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
   kind?: "default";
   i18nPressed?: string;
   showLabel?: boolean;
-  level?: "base" | "panel" | "temporary";
   icon: React.ReactNode;
 }
 
@@ -2292,19 +2276,18 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   onActionClick: () => void;
   showLabel?: boolean;
   actionId?: string;
-  level?: "base" | "panel" | "temporary";
   icon: React.ReactNode;
 }
 
 interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
   kind: "dropdown";
   value?: T;
+  defaultValue?: T;
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
   showLabel?: boolean;
   placeholder?: string;
   dropdownId?: string;
-  level?: "base" | "panel" | "temporary";
 }
 
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithActionProps | ToggleDropdownProps<T>;
@@ -2315,28 +2298,33 @@ export type { ToggleProps };
 
 // #region ToggleGroup
 
-const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
+const ToggleGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
-interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children" | "type"> {
+interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children" | "type" | "id"> {
   id: string;
   showLabel?: boolean;
   children: React.ReactNode;
-  level?: "base" | "panel" | "temporary";
+  level?: Level;
   kind?: "single" | "multiple";
   noDivider?: boolean;
 }
 
-function ToggleGroup({ className, id, showLabel, level = "base", children, kind = "single", noDivider, ...restProps }: ToggleGroupProps) {
+function ToggleGroup({ className, id, showLabel, level: propLevel, children, kind = "single", noDivider, ...restProps }: ToggleGroupProps) {
+  const level = useElementLevel(propLevel);
   const toggleGroupElement = (
     <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium", !noDivider && "divide-x", className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
 
-  if (showLabel) {
-    return <Label id={id}>{toggleGroupElement}</Label>;
+  if (showLabel && id) {
+    return (
+      <Label id={id} labelElementId={`${id}-label`}>
+        {toggleGroupElement}
+      </Label>
+    );
   }
 
   return toggleGroupElement;
@@ -2355,24 +2343,29 @@ function ToggleGroupItem({
   action?: React.ReactNode;
 }) {
   const context = React.useContext(ToggleGroupContext);
+  const level = context.level ?? "base";
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
       className={cn(
         toggleVariants({
-          level: context.level,
+          level,
         }),
         "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
-        action && "relative pl-single pr-[calc(var(--spacing)*5+var(--spacing)*2)]",
-        !action && "px-single",
+        action && "flex items-center gap-0 p-single w-mega aspect-auto",
         className,
       )}
       {...props}
     >
       {(icon || children) as React.ReactNode}
       {action && (
-        <div className={cn("absolute top-0 right-single h-full w-small flex items-center justify-center bg-base", context.level === "panel" && "bg-panel", context.level === "temporary" && "bg-temporary")}>
+        <div
+          className={cn("flex items-center justify-center w-small h-small bg-base", level === "panel" && "bg-panel", level === "temporary" && "bg-temporary")}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           {action}
         </div>
       )}
@@ -2397,40 +2390,59 @@ function ToggleGroupItem({
 
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {
-    const { actionIcon, onActionClick, icon, pressed, onPressedChange, id, showLabel, level, className, actionId } = props as ToggleWithActionProps;
+    const { actionIcon, onActionClick, icon, pressed, defaultPressed, onPressedChange, id, showLabel, level, className, actionId } = props as ToggleWithActionProps;
     return (
-      <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className} noDivider>
-        <ToggleGroupItem value="on" action={<Action id={actionId} icon={actionIcon} onClick={onActionClick} level={level} />}>{icon}</ToggleGroupItem>
+      <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className} noDivider>
+        <ToggleGroupItem value="on" action={<Action id={actionId} icon={actionIcon} onClick={onActionClick} level={level} />}>
+          {icon}
+        </ToggleGroupItem>
       </ToggleGroup>
     );
   }
 
   if ("kind" in props && props.kind === "dropdown" && "items" in props) {
     const dropdownProps = props as ToggleDropdownProps<T>;
-    const { items, value, onValueChange, id, showLabel, level, className, dropdownId } = dropdownProps;
+    const { items, value: controlledValue, defaultValue, onValueChange, pressed, defaultPressed, onPressedChange, id, showLabel, level, className, dropdownId } = dropdownProps;
+    const [internalValue, setInternalValue] = React.useState<T | undefined>(defaultValue);
     const [open, setOpen] = React.useState(false);
+
+    const isControlled = controlledValue !== undefined;
+    const value = isControlled ? controlledValue : internalValue;
     const selectedItem = items.find((item) => item.value === value) || items[0];
 
     const handleSelect = (itemValue: string) => {
+      if (!isControlled) {
+        setInternalValue(itemValue as T);
+      }
       if (onValueChange) onValueChange(itemValue as T);
       setOpen(false);
     };
 
+    const handleToggleGroupValueChange = (toggleValue: string) => {
+      // If the value is the selectedItem.value, it means the toggle is being pressed "on"
+      // If the value is empty/undefined, it means the toggle is being pressed "off"
+      const isPressed = toggleValue === selectedItem.value;
+      if (onPressedChange) {
+        onPressedChange(isPressed);
+      }
+    };
+
+    const availableItems = items.filter((item) => item.value !== value);
+
     const dropdownAction = (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Action id={dropdownId} icon={<ChevronDownIcon />} level={level} />
+          <Action id={dropdownId} icon={<ChevronDownIcon className="size-small" />} level={level} />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
           <div className="flex flex-col">
-            {items.map((item) => (
+            {availableItems.map((item) => (
               <button
                 key={item.value}
                 onClick={() => handleSelect(item.value)}
-                className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === item.value && "bg-active-temporary")}
+                className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}
               >
                 <span className="flex-1 text-left">{item.label}</span>
-                {value === item.value && <CheckIcon className="size-tiny" />}
               </button>
             ))}
           </div>
@@ -2438,16 +2450,37 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       </Popover>
     );
 
+    // Determine if the toggle pressed state is controlled
+    const isPressedControlled = pressed !== undefined;
+    const toggleGroupProps: any = {
+      id,
+      showLabel,
+      level,
+      kind: "single" as const,
+      onValueChange: handleToggleGroupValueChange,
+      className,
+      noDivider: true,
+    };
+
+    // Only pass value OR defaultValue, never both
+    if (isPressedControlled) {
+      toggleGroupProps.value = pressed ? selectedItem.value : undefined;
+    } else if (defaultPressed !== undefined) {
+      toggleGroupProps.defaultValue = defaultPressed ? selectedItem.value : undefined;
+    }
+
     return (
-      <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={value as string} className={className} noDivider>
-        <ToggleGroupItem value={selectedItem.value} action={dropdownAction}>{selectedItem.label}</ToggleGroupItem>
+      <ToggleGroup {...toggleGroupProps}>
+        <ToggleGroupItem value={selectedItem.value} action={dropdownAction}>
+          {selectedItem.label}
+        </ToggleGroupItem>
       </ToggleGroup>
     );
   }
 
   const { id, showLabel, level, className, icon, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
   return (
-    <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className}>
+    <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className} noDivider>
       <ToggleGroupItem value="on">{icon}</ToggleGroupItem>
     </ToggleGroup>
   );
@@ -2664,9 +2697,9 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
 // #endregion Resizable
 
-// #region ScrollArea
+// #region Scrollable
 
-const ScrollArea = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root>>(({ className, children, ...props }, ref) => {
+const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root>>(({ className, children, ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
       <ScrollAreaPrimitive.Viewport ref={ref} data-slot="scroll-area-viewport" className="focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0 overflow-hidden">
@@ -2677,7 +2710,7 @@ const ScrollArea = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof 
     </ScrollAreaPrimitive.Root>
   );
 });
-ScrollArea.displayName = "ScrollArea";
+Scrollable.displayName = "Scrollable";
 
 function ScrollBar({ className, orientation = "vertical", ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
   return (
@@ -2692,9 +2725,37 @@ function ScrollBar({ className, orientation = "vertical", ...props }: React.Comp
   );
 }
 
-export { ScrollArea, ScrollBar };
+export { Scrollable, ScrollBar };
 
-// #endregion ScrollArea
+// #endregion Scrollable
+
+// #region Strip
+
+export interface StripProps extends ElementProps {
+  direction?: "horizontal" | "vertical";
+  items: React.ReactNode[];
+  className?: string;
+}
+
+function Strip({ direction = "horizontal", items, className, level: propLevel, id }: StripProps) {
+  const level = useElementLevel(propLevel);
+
+  return (
+    <Scrollable className={cn("border-b", direction === "horizontal" ? "h-large" : "w-large", className)}>
+      <div className={cn("p-single flex gap-single", direction === "horizontal" ? "flex-row h-full items-center" : "flex-col w-full")}>
+        {items.map((item, index) => (
+          <div key={index} className={cn(direction === "horizontal" ? "h-medium" : "w-medium", "shrink-0")}>
+            {item}
+          </div>
+        ))}
+      </div>
+    </Scrollable>
+  );
+}
+
+export { Strip };
+
+// #endregion Strip
 
 // #region Tabs
 
@@ -2702,12 +2763,14 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
   return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-single", className)} {...props} />;
 }
 
-function TabsList({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: "base" | "panel" | "temporary" }) {
+function TabsList({ className, level: propLevel, ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: Level }) {
+  const level = useElementLevel(propLevel);
   const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-background";
   return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single", bgClass, className)} {...props} />;
 }
 
-function TabsTrigger({ className, level = "base", ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: "base" | "panel" | "temporary" }) {
+function TabsTrigger({ className, level: propLevel, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: Level }) {
+  const level = useElementLevel(propLevel);
   const activeHoverClass = level === "panel" ? "data-[state=active]:bg-hover-panel" : level === "temporary" ? "data-[state=active]:bg-hover-temporary" : "data-[state=active]:bg-hover-base";
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
   return (
@@ -3453,44 +3516,165 @@ export const FileTree = Tree.Files;
 
 // #region Breadcrumb
 
-function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
-  return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
+function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
+  return <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-border bg-base", className)} {...props} />;
 }
 
-function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
-  return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words border overflow-hidden h-auto min-h-large", className)} {...props} />;
-}
+function BreadcrumbList({ className, children, ...props }: React.ComponentProps<"ol">) {
+  const childArray = React.Children.toArray(children as React.ReactNode);
+  const nonBreakChildren = childArray.filter((child) => {
+    if (React.isValidElement(child) && typeof child.props === "object" && child.props !== null && "data-slot" in child.props) {
+      return (child.props as any)["data-slot"] !== "breadcrumb-break";
+    }
+    return true;
+  });
 
-function BreadcrumbItem({ className, id, mode = Expertise.BEGINNER, children, ...props }: React.ComponentProps<"li"> & { id?: string; mode?: Expertise }) {
-  const itemElement = (
-    <li data-slot="breadcrumb-item" className={cn("flex items-stretch", className)} {...props}>
-      {children}
-    </li>
-  );
+  const childrenWithSeparators = childArray.map((child, index) => {
+    const isLastChild = index === childArray.length - 1;
+    const isBreak = React.isValidElement(child) && typeof child.props === "object" && child.props !== null && "data-slot" in child.props && (child.props as any)["data-slot"] === "breadcrumb-break";
 
-  if (id) {
+    if (isBreak) {
+      return child;
+    }
+
+    const nonBreakIndex = nonBreakChildren.indexOf(child);
+    const isLastNonBreak = nonBreakIndex === nonBreakChildren.length - 1;
+    const hasDropdown = React.isValidElement(child) && typeof child.props === "object" && child.props !== null && "items" in child.props && Array.isArray((child.props as any).items) && (child.props as any).items.length > 0;
+
+    if (isLastNonBreak || hasDropdown) {
+      return child;
+    }
+
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
-        <TooltipContent>
-          <IdTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
+      <React.Fragment key={index}>
+        {child}
+        <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className="[&>svg]:size-tiny px-single flex items-center self-stretch border-l">
+          <ChevronRightIcon />
+        </li>
+      </React.Fragment>
     );
+  });
+
+  return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full", className)} {...props}>{childrenWithSeparators}</ol>;
+}
+
+interface BreadcrumbItemProps extends React.ComponentProps<"li"> {
+  id?: string;
+  mode?: Expertise;
+  items?: { label: React.ReactNode; href: string; id?: string }[];
+  onNavigate?: (href: string) => void;
+  level?: Level;
+}
+
+function BreadcrumbItem({ className, id, mode = Expertise.BEGINNER, children, items, onNavigate, level: propLevel, ...props }: BreadcrumbItemProps) {
+  const [open, setOpen] = React.useState(false);
+  const level = useElementLevel(propLevel);
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
+
+  const handleSelect = (href: string) => {
+    setOpen(false);
+    onNavigate?.(href);
+  };
+
+  if (!items?.length) {
+    const itemElement = (
+      <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0", className)} {...props}>
+        {children}
+      </li>
+    );
+
+    if (id) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
+          <TooltipContent>
+            <IdTooltipContent id={id} />
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return itemElement;
   }
 
-  return itemElement;
+  return (
+    <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0", className)} {...props}>
+      <DropdownMenuPrimitive.Root open={open} onOpenChange={setOpen}>
+        {id ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-stretch">
+                <div className="flex items-center">{children}</div>
+                <DropdownMenuPrimitive.Trigger asChild>
+                  <button className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch border-l", hoverClass)}>{open ? <ChevronDownIcon /> : <ChevronRightIcon />}</button>
+                </DropdownMenuPrimitive.Trigger>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <IdTooltipContent id={id} />
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <div className="flex items-stretch">
+            <div className="flex items-center">{children}</div>
+            <DropdownMenuPrimitive.Trigger asChild>
+              <button className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch border-l", hoverClass)}>{open ? <ChevronDownIcon /> : <ChevronRightIcon />}</button>
+            </DropdownMenuPrimitive.Trigger>
+          </div>
+        )}
+        <DropdownMenuPrimitive.Portal>
+          <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single">
+            {items.map((item, index) => {
+              const menuItem = (
+                <DropdownMenuPrimitive.Item
+                  key={index}
+                  className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center p-single text-sm outline-none whitespace-nowrap"
+                  onClick={() => handleSelect(item.href)}
+                  role="button"
+                >
+                  {item.label}
+                </DropdownMenuPrimitive.Item>
+              );
+
+              const wrappedItem = item.id ? (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
+                  <TooltipContent>
+                    <IdTooltipContent id={item.id} />
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                menuItem
+              );
+
+              if (index < items.length - 1) {
+                return (
+                  <React.Fragment key={index}>
+                    {wrappedItem}
+                    <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />
+                  </React.Fragment>
+                );
+              }
+
+              return wrappedItem;
+            })}
+          </DropdownMenuPrimitive.Content>
+        </DropdownMenuPrimitive.Portal>
+      </DropdownMenuPrimitive.Root>
+    </li>
+  );
 }
 
 function BreadcrumbLink({
   asChild,
   className,
-  level = "base",
+  level: propLevel,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean;
-  level?: "base" | "panel" | "temporary";
+  level?: Level;
 }) {
+  const level = useElementLevel(propLevel);
   const Comp = asChild ? Slot : "a";
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
@@ -3506,10 +3690,13 @@ interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
   onNavigate?: (href: string) => void;
   id?: string;
   mode?: Expertise;
-  level?: "base" | "panel" | "temporary";
+  level?: Level;
 }
 
-function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode = Expertise.BEGINNER, level = "base", ...props }: BreadcrumbSeparatorProps) {
+function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode = Expertise.BEGINNER, level: propLevel, ...props }: BreadcrumbSeparatorProps) {
+  const level = useElementLevel(propLevel);
+  console.warn("BreadcrumbSeparator is deprecated. Use BreadcrumbItem with items prop instead. Separators are now automatically added between items.");
+
   const [open, setOpen] = React.useState(false);
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
@@ -3616,7 +3803,7 @@ function BreadcrumbBreak({ className, ...props }: React.ComponentProps<"li">) {
   return <li data-slot="breadcrumb-break" role="presentation" aria-hidden="true" className={cn("basis-full h-0 hidden", className)} {...props} />;
 }
 
-export { Breadcrumb, BreadcrumbBreak, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator };
+export { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage };
 
 // #region PageNavigation
 
@@ -3826,7 +4013,7 @@ const Panel: React.FC<PanelProps> = ({
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
   return (
     <div className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
-      <ScrollArea className={`h-full ${showBackground ? "bg-panel" : ""}`}>
+      <Scrollable className={`h-full ${showBackground ? "bg-panel" : ""}`}>
         <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
           <TreeStateProvider>
             <Tree className="min-w-0 overflow-hidden">
@@ -3844,7 +4031,7 @@ const Panel: React.FC<PanelProps> = ({
           </TreeStateProvider>
         </div>
         {footer}
-      </ScrollArea>
+      </Scrollable>
       {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
     </div>
   );
@@ -4039,14 +4226,14 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
   }, [focusedItemId, onFocusComplete]);
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="h-full w-full">
+    <Scrollable ref={scrollAreaRef} className="h-full w-full">
       <div className="prose prose-sm max-w-none dark:prose-invert p-medium">
         {frontmatter?.title && <h1>{frontmatter.title}</h1>}
         {frontmatter?.description && <p className="text-muted-foreground">{frontmatter.description}</p>}
         {children}
         {footer}
       </div>
-    </ScrollArea>
+    </Scrollable>
   );
 };
 
@@ -4981,7 +5168,7 @@ const Table = <T,>({
   });
 
   return (
-    <ScrollArea ref={scrollAreaRef} className={`h-full w-full ${className}`}>
+    <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
       <table className="w-full border-collapse">
         <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
           <tr>
@@ -5027,7 +5214,7 @@ const Table = <T,>({
           )}
         </tbody>
       </table>
-    </ScrollArea>
+    </Scrollable>
   );
 };
 
@@ -5040,7 +5227,7 @@ export interface TableSkeletonProps {
 }
 
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
-  <ScrollArea className={`h-full w-full ${className}`}>
+  <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
       <thead className="bg-panel border-b sticky top-0 z-10">
         <tr>
@@ -5063,7 +5250,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
         ))}
       </tbody>
     </table>
-  </ScrollArea>
+  </Scrollable>
 );
 
 // #endregion Table

@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
-import { Action, Toggle } from "../../../../sketchpad/elements";
+import { Toggle } from "../../../../sketchpad/elements";
 
 // #region Toggle
 const meta = {
@@ -40,7 +40,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     id: "toggle-default",
-    pressed: true,
+    defaultPressed: true,
     icon: <Lock />,
     showLabel: true,
     level: "base",
@@ -51,7 +51,7 @@ export const WithAction: Story = {
   args: {
     id: "toggle-action",
     kind: "withAction",
-    pressed: false,
+    defaultPressed: false,
     icon: <Settings />,
     actionIcon: <Plus />,
     onActionClick: () => console.log("Action clicked"),
@@ -65,7 +65,7 @@ export const Dropdown: Story = {
   args: {
     id: "toggle-dropdown",
     kind: "dropdown",
-    value: "option1",
+    defaultValue: "option1",
     items: [
       { value: "option1", label: <Box /> },
       { value: "option2", label: <Network /> },

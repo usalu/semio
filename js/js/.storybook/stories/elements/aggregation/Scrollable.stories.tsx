@@ -1,6 +1,6 @@
 // #region Header
 
-// ScrollArea.stories.tsx
+// Scrollable.stories.tsx
 
 // 2025 Ueli Saluz
 
@@ -20,17 +20,17 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { ScrollArea } from "../../../../sketchpad/elements";
+import { Scrollable } from "../../../../sketchpad/elements";
 
-// #region ScrollArea
+// #region Scrollable
 const meta = {
-  title: "Elements/Aggregation/ScrollArea",
-  component: ScrollArea,
+  title: "Elements/Aggregation/Scrollable",
+  component: Scrollable,
   parameters: {
     layout: "centered",
   },
   tags: ["autodocs"],
-} satisfies Meta<typeof ScrollArea>;
+} satisfies Meta<typeof Scrollable>;
 
 export default meta;
 
@@ -38,7 +38,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <ScrollArea className="h-96 w-[600px] border">
+    <Scrollable className="h-96 w-[600px] border">
       <div className="p-4 space-y-4">
         <div>
           <h4 className="text-sm font-semibold mb-2">Nakagin Capsule Tower</h4>
@@ -69,8 +69,8 @@ export const Default: Story = {
           </p>
         </div>
       </div>
-    </ScrollArea>
+    </Scrollable>
   ),
 };
 
-// #endregion ScrollArea
+// #endregion Scrollable

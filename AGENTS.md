@@ -326,8 +326,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ │ ├── Dialog.tsx
 │ │ │ │ ├── Resizable.stories.tsx
 │ │ │ │ ├── Resizable.tsx
-│ │ │ │ ├── ScrollArea.stories.tsx
-│ │ │ │ ├── ScrollArea.tsx
+│ │ │ │ ├── Scrollable.stories.tsx
+│ │ │ │ ├── Scrollable.tsx
 │ │ │ │ ├── Tabs.stories.tsx
 │ │ │ │ ├── Tabs.tsx
 │ │ │ │ ├── Tree.stories.tsx

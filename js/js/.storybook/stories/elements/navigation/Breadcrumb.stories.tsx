@@ -41,21 +41,33 @@ export const Default: Story = {
   render: () => (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink href="/" id="breadcrumb-link-home">
+        <BreadcrumbItem
+          id="breadcrumb-link-home"
+          items={[
+            { label: "Temporary Kits", href: "/?kind=temporary" },
+            { label: "Local Kits", href: "/?kind=local" },
+            { label: "Remote Kits", href: "/?kind=remote" },
+          ]}
+          onNavigate={(href) => console.log("Navigate to:", href)}
+        >
+          <BreadcrumbLink href="/">
             <Home className="size-tiny" />
             Kits
           </BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator>/</BreadcrumbSeparator>
-        <BreadcrumbItem>
+        <BreadcrumbItem
+          items={[
+            { label: "Types", href: "/metabolism/types" },
+            { label: "Designs", href: "/metabolism/designs" },
+            { label: "Qualities", href: "/metabolism/qualities" },
+          ]}
+          onNavigate={(href) => console.log("Navigate to:", href)}
+        >
           <BreadcrumbLink href="/metabolism/types">Types</BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>Capsule J</BreadcrumbPage>
         </BreadcrumbItem>

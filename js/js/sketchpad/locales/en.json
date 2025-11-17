@@ -3754,6 +3754,10 @@
       "label": "Create version",
       "beginner": "Create a new version for this kit."
     },
+    "toggleRow": {
+      "label": "Expand or collapse",
+      "beginner": "Show or hide the versions nested under this kit."
+    },
     "hideKind": {
       "label": "Hide kind filter",
       "beginner": "Show all kits regardless of storage type."

@@ -44,28 +44,11 @@ export const Default: Story = {
     defaultValue: "standard",
     level: "base",
     showLabel: true,
-    noDivider: true,
     children: (
       <>
         <ToggleGroupItem id="toggle-default-standard" value="standard" icon={<Lock />} />
-        <ToggleGroupItem 
-          id="toggle-action-settings" 
-          value="settings" 
-          icon={<Settings />} 
-          action={<Action id="toggle-action-settings-add" icon={<Plus />} level="base" />}
-        />
-        <ToggleGroupItem 
-          id="toggle-dropdown-box" 
-          value="box" 
-          icon={<Box />} 
-          action={
-            <Action 
-              id="toggle-dropdown-box-action" 
-              icon={<Network />} 
-              level="base" 
-            />
-          }
-        />
+        <ToggleGroupItem id="toggle-action-settings" value="settings" icon={<Settings />} action={<Action id="toggle-action-settings-add" icon={<Plus />} level="base" />} />
+        <ToggleGroupItem id="toggle-dropdown-box" value="box" icon={<Box />} action={<Action id="toggle-dropdown-box-action" icon={<Network />} level="base" />} />
       </>
     ),
   },
@@ -74,8 +57,8 @@ export const Default: Story = {
 export const Multiple: Story = {
   args: {
     id: "toggle-group-multiple",
-    kind: "single",
-    defaultValue: "box",
+    kind: "multiple",
+    defaultValue: ["box"],
     level: "base",
     showLabel: true,
     children: (
@@ -90,7 +73,5 @@ export const Multiple: Story = {
     ),
   },
 };
-
-
 
 // #endregion ToggleGroup
