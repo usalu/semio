@@ -9755,15 +9755,17 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         </BreadcrumbItem>
 
         {/* If viewing a kit (or we have a selected home kind), show the kind breadcrumb */}
-        {(kitGuid && kitKind) || homeKind ? (
+        {kitGuid || homeKind ? (
           <>
-            <BreadcrumbItem id={`semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`} items={!kitGuid ? homeKitsForKind : undefined} onNavigate={!kitGuid ? (href) => navigate(href) : undefined}>
-              <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
-                {(kitKind === "temporary" || homeKind === "temporary") && <TemporaryKitIcon size={16} />}
-                {(kitKind === "local" || homeKind === "local") && <LocalKitIcon size={16} />}
-                {(kitKind === "remote" || homeKind === "remote") && <RemoteKitIcon size={16} />}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
+            {(kitKind || homeKind) && (
+              <BreadcrumbItem id={`semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`} items={!kitGuid ? homeKitsForKind : undefined} onNavigate={!kitGuid ? (href) => navigate(href) : undefined}>
+                <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
+                  {(kitKind === "temporary" || homeKind === "temporary") && <TemporaryKitIcon size={16} />}
+                  {(kitKind === "local" || homeKind === "local") && <LocalKitIcon size={16} />}
+                  {(kitKind === "remote" || homeKind === "remote") && <RemoteKitIcon size={16} />}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            )}
 
             {homeName && (
               <>
@@ -9929,17 +9931,19 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 </Fragment>
               );
             })}
-            <BreadcrumbItem
-              id="semio.sketchpad.navbar.selectChild"
-              items={designChildItems}
-              onNavigate={(href) => {
-                if (href === "#create-child" && design && typeof design === "object" && "guid" in design) {
-                  handleCreateChild("semio.sketchpad.navbar.selectChild", design as Design, false);
-                } else navigate(href);
-              }}
-            >
-              <BreadcrumbLink style={{ cursor: "default" }}>{/* Empty for dropdown trigger */}</BreadcrumbLink>
-            </BreadcrumbItem>
+            {designChildItems.length > 1 && (
+              <BreadcrumbItem
+                id="semio.sketchpad.navbar.selectChild"
+                items={designChildItems}
+                onNavigate={(href) => {
+                  if (href === "#create-child" && design && typeof design === "object" && "guid" in design) {
+                    handleCreateChild("semio.sketchpad.navbar.selectChild", design as Design, false);
+                  } else navigate(href);
+                }}
+              >
+                <BreadcrumbLink style={{ cursor: "default" }}>{/* Empty for dropdown trigger */}</BreadcrumbLink>
+              </BreadcrumbItem>
+            )}
           </>
         )}
         {isTypeApp && type && (

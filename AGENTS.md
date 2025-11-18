@@ -205,11 +205,26 @@ Stats provide computed or measured performance data for entire designs using the
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
-- NEVER add raw to ui elements. ALWAYS use i18n setups and provide translations for the existing languages. Every ui element has an i18n key which has information about
+- NEVER add raw text to ui elements. ALWAYS use i18n setups and provide translations for the existing languages.
 - ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - NEVER build or run the code.
 - NEVER care about backwards compatibility. ALWAYS refactor to clean code.
 - NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
+
+### Keywords
+
+- `PLAN`: Create a markdown document to plan a new feature.
+
+- `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[DIAGNOSESLUG] ` (replace DIAGNOSESLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis.
+
+1. Analyis [DIAGNOSESLUG]
+   1.1. Problem description
+   1.2. Codebase analysis
+2. Possible causes/solutions
+
+- `IMPLEMENT`: Implement a markdown document (such as created by `PLAN` or `DIAGNOSE`). When implementing a `DIAGNOSE` you receive the logs from the user and if the logs are enough to verify your hypothesis, ALWAYs directly implement the solution. When the `DIAGNOSE` is not enough, update the document with the new information, add new logs and continue the process.
+
+- `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, temporary code, …
 
 ### Internationalization (i18n)
 
@@ -646,7 +661,8 @@ Providing an `id` shows the translated `IdTooltipContent`, and the base footer a
 
 #### Styling
 
-- NEVER use colors and spacing directly. ALWAYS use semantic variables from global.css. Only global.css uses colors and pixels directly.
+- NEVER use colors and spacing directly. ALWAYS use semantic variables from `global.css`. Only `global.css` uses colors and pixels directly.
+- NEVER add semantic values and ALWAYS use hardcoded values in `theme.css`. NEVER use `theme.css` outside of `global.css`.
 - ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
   - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
   - Tiny: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)

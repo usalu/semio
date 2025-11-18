@@ -1750,6 +1750,28 @@
               }
             }
           },
+          "canvas": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "table": {
+              "label": {
+                "normal": "",
+                "beginner": ""
+              },
+              "header": {
+                "label": {
+                  "normal": "",
+                  "beginner": ""
+                },
+                "kind": "Art",
+                "artifact": "Artefakt",
+                "updatedAt": "Aktualisiert",
+                "createdAt": "Erstellt"
+              }
+            }
+          },
           "panel": {
             "label": {
               "normal": "",

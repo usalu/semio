@@ -21,7 +21,7 @@
 
 // #region Imports
 
-import { closestCenter, DndContext, DragEndEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
@@ -745,7 +745,7 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // #region Avatar
 
 const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-large shrink-0 overflow-hidden rounded-full border", className)} {...props} />
+  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-small shrink-0 overflow-hidden rounded-full border", className)} {...props} />
 ));
 Avatar.displayName = "Avatar";
 
@@ -2302,20 +2302,30 @@ const ToggleGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
+type ToggleGroupItemProps = Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
+  id?: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  value: string;
+};
+
 interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children" | "type" | "id"> {
-  id: string;
+  id?: string;
   showLabel?: boolean;
-  children: React.ReactNode;
   level?: Level;
   kind?: "single" | "multiple";
-  noDivider?: boolean;
+  items: ToggleGroupItemProps[];
 }
 
-function ToggleGroup({ className, id, showLabel, level: propLevel, children, kind = "single", noDivider, ...restProps }: ToggleGroupProps) {
+function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useElementLevel(propLevel);
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium", !noDivider && "divide-x", className)} {...(restProps as any)}>
-      <ToggleGroupContext.Provider value={{ level }}>{children}</ToggleGroupContext.Provider>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x", className)} {...(restProps as any)}>
+      <ToggleGroupContext.Provider value={{ level }}>
+        {items.map((item) => (
+          <ToggleGroupItem key={item.value} {...item} />
+        ))}
+      </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   );
 
@@ -2336,11 +2346,7 @@ function ToggleGroupItem({
   icon,
   action,
   ...props
-}: Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
-  id?: string;
-  icon: React.ReactNode;
-  action?: React.ReactNode;
-}) {
+}: ToggleGroupItemProps) {
   const context = React.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
 
@@ -2416,10 +2422,14 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
         onValueChange={(val: string) => onPressedChange?.(val === "on")}
         className={className}
-        noDivider
-      >
-        <ToggleGroupItem value="on" icon={addIconSize(icon)} action={<Action id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />} />
-      </ToggleGroup>
+        items={[
+          {
+            value: "on",
+            icon: addIconSize(icon),
+            action: <Action id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />,
+          },
+        ]}
+      />
     );
   }
 
@@ -2482,7 +2492,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       kind: "single" as const,
       onValueChange: handleToggleGroupValueChange,
       className,
-      noDivider: true,
+      items: [
+        {
+          value: selectedItem.value,
+          icon: addIconSize(selectedItem.label),
+          action: dropdownAction,
+        },
+      ],
     };
 
     // Only pass value OR defaultValue, never both
@@ -2493,9 +2509,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     }
 
     return (
-      <ToggleGroup {...toggleGroupProps}>
-        <ToggleGroupItem value={selectedItem.value} icon={addIconSize(selectedItem.label)} action={dropdownAction} />
-      </ToggleGroup>
+      <ToggleGroup {...toggleGroupProps} />
     );
   }
 
@@ -2511,10 +2525,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
       onValueChange={(val: string) => onPressedChange?.(val === "on")}
       className={className}
-      noDivider
-    >
-      <ToggleGroupItem value="on" icon={addIconSize(icon)} />
-    </ToggleGroup>
+      items={[
+        {
+          value: "on",
+          icon: addIconSize(icon),
+        },
+      ]}
+    />
   );
 }
 
@@ -5118,8 +5135,26 @@ export interface TableColumn<T = unknown> {
   accessor: (row: T) => React.ReactNode;
   width?: string;
   className?: string;
+  headerClassName?: string;
   sortable?: boolean;
   visible?: boolean | ((data: T[]) => boolean);
+}
+
+export interface HierarchicalRowData {
+  id: string;
+  level?: number;
+  parentId?: string;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+}
+
+export interface DragDropConfig {
+  enabled?: boolean;
+  onDragStart?: (rowId: string) => void;
+  onDragEnd?: (event: { active: string; over: string | null }) => void;
+  canDrag?: (rowId: string) => boolean;
+  canDrop?: (draggedId: string, targetId: string) => boolean;
+  renderDragOverlay?: (rowId: string) => React.ReactNode;
 }
 
 export interface TableProps<T = unknown> {
@@ -5141,6 +5176,13 @@ export interface TableProps<T = unknown> {
   rowHeight?: "compact" | "normal" | "comfortable";
   focusedItemId?: string;
   onFocusComplete?: () => void;
+  renderMobileRow?: (row: T, index: number, isSelected: boolean, onClick: (e: React.MouseEvent) => void, onDoubleClick: () => void) => React.ReactNode;
+  isMobile?: boolean;
+  hierarchical?: boolean;
+  onToggleRow?: (rowId: string) => void;
+  renderHierarchyControls?: (row: T & HierarchicalRowData) => React.ReactNode;
+  dragDrop?: DragDropConfig;
+  wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }
 
 const Table = <T,>({
@@ -5162,13 +5204,30 @@ const Table = <T,>({
   rowHeight = "normal",
   focusedItemId,
   onFocusComplete,
+  renderMobileRow,
+  isMobile = false,
+  hierarchical = false,
+  onToggleRow,
+  renderHierarchyControls,
+  dragDrop,
+  wrapperComponent: WrapperComponent,
 }: TableProps<T>) => {
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const [activeId, setActiveId] = React.useState<string | null>(null);
+
+  // Configure sensors with activation constraint to allow clicks
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before drag starts
+      },
+    })
+  );
 
   React.useEffect(() => {
     if (focusedItemId && scrollAreaRef.current) {
-      const rowElements = scrollAreaRef.current.querySelectorAll("tbody tr");
+      const rowElements = scrollAreaRef.current.querySelectorAll(isMobile ? "[data-row]" : "tbody tr");
       let focusedIndex = -1;
 
       data.forEach((row, index) => {
@@ -5185,12 +5244,12 @@ const Table = <T,>({
         }
       }
     }
-  }, [focusedItemId, data, getRowId, rowKey, onFocusComplete]);
+  }, [focusedItemId, data, getRowId, rowKey, onFocusComplete, isMobile]);
 
   const rowHeightClass = {
-    compact: "py-single",
-    normal: "py-single",
-    comfortable: "py-single",
+    compact: "h-large",
+    normal: "h-large",
+    comfortable: "h-large",
   }[rowHeight];
 
   const visibleColumns = columns.filter((col) => {
@@ -5199,55 +5258,162 @@ const Table = <T,>({
     return col.visible(data);
   });
 
-  return (
-    <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
-      <table className="w-full border-collapse">
-        <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
-          <tr>
-            {visibleColumns.map((column) => (
-              <th key={column.id} className={`text-left p-single font-medium ${rowHeightClass} ${column.className || ""}`} style={{ width: column.width }}>
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.length === 0 ? (
-            <tr>
-              <td colSpan={visibleColumns.length} className="p-small text-center text-muted-foreground">
-                {emptyMessage}
-              </td>
-            </tr>
-          ) : (
-            data.map((row, index) => {
-              const key = rowKey ? rowKey(row, index) : index.toString();
-              const rowId = getRowId ? getRowId(row) : key;
-              const isSelected = selectedSet.has(rowId);
-              const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
-              const customRowClassName = rowClassName ? rowClassName(row, index) : "";
+  const handleDragStart = (event: any) => {
+    const id = event.active.id;
+    setActiveId(id);
+    dragDrop?.onDragStart?.(id);
+  };
 
-              return (
-                <tr
-                  key={key}
-                  className={`${baseRowClassName} ${customRowClassName} ${onRowClick ? "cursor-selectable" : ""}`}
-                  onClick={(e) => onRowClick?.(row, index, e)}
-                  onDoubleClick={() => onRowDoubleClick?.(row, index)}
-                  role={onRowClick ? "button" : undefined}
-                  tabIndex={onRowClick ? 0 : undefined}
-                >
-                  {visibleColumns.map((column) => (
-                    <td key={column.id} className={`p-single ${column.className || ""}`}>
-                      {column.accessor(row)}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </Scrollable>
-  );
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (dragDrop?.onDragEnd) {
+      dragDrop.onDragEnd({ active: active.id, over: over?.id || null });
+    }
+  };
+
+  const DraggableRow = ({ row, rowId, index, isSelected, customRowClassName }: { row: T; rowId: string; index: number; isSelected: boolean; customRowClassName: string }) => {
+    const canDragRow = !dragDrop?.canDrag || dragDrop.canDrag(rowId);
+    const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging: isDraggingHook } = useDraggable({
+      id: rowId,
+      disabled: !canDragRow,
+      data: { row },
+    });
+    const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+      id: rowId,
+      data: { row },
+    });
+
+    const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+
+    const combinedRef = (node: HTMLElement | null) => {
+      setDraggableRef(node);
+      setDroppableRef(node);
+    };
+
+    const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
+    const isDragging = activeId === rowId || isDraggingHook;
+
+    return (
+      <tr
+        ref={combinedRef}
+        style={style}
+        className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+        onClick={(e) => onRowClick?.(row, index, e)}
+        onDoubleClick={() => onRowDoubleClick?.(row, index)}
+        {...(canDragRow ? { ...attributes, ...listeners } : {})}
+        role={onRowClick ? "button" : undefined}
+        tabIndex={onRowClick ? 0 : undefined}
+        data-row-id={rowId}
+      >
+        {visibleColumns.map((column) => (
+          <td key={column.id} className={`p-single ${column.className || ""}`}>
+            {column.accessor(row)}
+          </td>
+        ))}
+      </tr>
+    );
+  };
+
+  const renderTableContent = () => {
+    if (isMobile && renderMobileRow) {
+      return (
+        <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
+          <div className="flex flex-col">
+            {data.length === 0 ? (
+              <div className="p-small text-center text-muted-foreground">{emptyMessage}</div>
+            ) : (
+              data.map((row, index) => {
+                const key = rowKey ? rowKey(row, index) : index.toString();
+                const rowId = getRowId ? getRowId(row) : key;
+                const isSelected = selectedSet.has(rowId);
+                return (
+                  <div key={key} data-row>
+                    {renderMobileRow(
+                      row,
+                      index,
+                      isSelected,
+                      (e) => onRowClick?.(row, index, e),
+                      () => onRowDoubleClick?.(row, index)
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </Scrollable>
+      );
+    }
+
+    return (
+      <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
+        <table className="w-full border-collapse">
+          <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
+            <tr className="h-large">
+              {visibleColumns.map((column) => (
+                <th key={column.id} className={`text-left p-single font-medium ${rowHeightClass} ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
+                  {column.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.length === 0 ? (
+              <tr>
+                <td colSpan={visibleColumns.length} className="p-small text-center text-muted-foreground">
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              data.map((row, index) => {
+                const key = rowKey ? rowKey(row, index) : index.toString();
+                const rowId = getRowId ? getRowId(row) : key;
+                const isSelected = selectedSet.has(rowId);
+                const customRowClassName = rowClassName ? rowClassName(row, index) : "";
+
+                if (dragDrop?.enabled) {
+                  return <DraggableRow key={key} row={row} rowId={rowId} index={index} isSelected={isSelected} customRowClassName={customRowClassName} />;
+                }
+
+                const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+                const isDragging = activeId === rowId;
+
+                return (
+                  <tr
+                    key={key}
+                    className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+                    onClick={(e) => onRowClick?.(row, index, e)}
+                    onDoubleClick={() => onRowDoubleClick?.(row, index)}
+                    role={onRowClick ? "button" : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    data-row-id={rowId}
+                  >
+                    {visibleColumns.map((column) => (
+                      <td key={column.id} className={`p-single ${column.className || ""}`}>
+                        {column.accessor(row)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </Scrollable>
+    );
+  };
+
+  const content = renderTableContent();
+
+  if (dragDrop?.enabled) {
+    return (
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        {WrapperComponent ? <WrapperComponent>{content}</WrapperComponent> : content}
+      </DndContext>
+    );
+  }
+
+  return WrapperComponent ? <WrapperComponent>{content}</WrapperComponent> : content;
 };
 
 export { Table };
@@ -5262,9 +5428,9 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
       <thead className="bg-panel border-b sticky top-0 z-10">
-        <tr>
+        <tr className="h-large">
           {columns.map((column) => (
-            <th key={column.id} className={`text-left p-single text-sm font-medium ${column.className || ""}`} style={{ width: column.width }}>
+            <th key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
               {column.header}
             </th>
           ))}
@@ -5272,7 +5438,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       </thead>
       <tbody>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <tr key={index} className="border-b">
+          <tr key={index} className="border-b h-large">
             {columns.map((column) => (
               <td key={column.id} className={`p-single text-sm ${column.className || ""}`}>
                 <div className="h-small bg-muted-foreground/20 rounded animate-pulse" />

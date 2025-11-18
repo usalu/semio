@@ -4802,12 +4802,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const focusContext = useFocusSafe();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
   const prevItemsRef = useRef<string>("");
+  const diagramId = useRef(guid()).current;
 
   useEffect(() => {
     if (!focusContext) return;
     const items = [
       ...nodes.map((n) => ({
-        id: n.data.piece.guid, // Use actual piece.guid for 3D scene focus
+        id: n.data.piece.guid,
         label: n.data.piece.description || `Piece ${n.data.piece.guid.substring(0, 8)}`,
         category: "Pieces",
       })),
@@ -4817,25 +4818,21 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         category: "Connections",
       })),
     ];
-    // Only update if the items have actually changed
     const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
     if (prevItemsRef.current !== itemsKey) {
       prevItemsRef.current = itemsKey;
       focusContext.setFocusItems(items);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes, edges]);
 
   useEffect(() => {
     if (!focusContext) return;
     const handleFocus = (itemId: string) => {
-      // itemId is the piece.guid
-      // Find the corresponding React Flow node ID for 2D diagram focus
       const node = nodes.find((n) => n.data.piece.guid === itemId);
       if (node) {
-        setFocusedItemId(node.id); // Focus 2D diagram with React Flow node ID
+        setFocusedItemId(node.id);
       }
-      focusPiece("semio.sketchpad.app.design.canvas.diagram.handleFocus", itemId); // Focus 3D scene with piece.guid
+      focusPiece("semio.sketchpad.app.design.canvas.diagram.handleFocus", itemId);
     };
     focusContext.setOnFocusItem(handleFocus);
     return () => {
@@ -4850,7 +4847,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const fullscreen = fullscreenWindow === DesignAppFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
-  const { setNodeRef: setDroppableRef } = useDroppable({ id: "diagram-drop-zone" });
+  const { setNodeRef: setDroppableRef } = useDroppable({ id: `diagram-drop-zone-${diagramId}` });
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -6313,26 +6310,9 @@ const App: FC<AppProps> = () => {
         const children = kit.types?.filter((t) => t.parent === type.guid) || [];
         return (
           <div key={type.guid} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
-            <TreeItem
-              label={type.name}
-              onDoubleClick={(event) => {
-                if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
-                  return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                if (kit?.guid) navigateToType(kit.guid, type.guid);
-              }}
-              actions={[
-                {
-                  icon: <AddIcon size={12} />,
-                  onClick: () => handleCreateChild(type),
-                  id: "semio.sketchpad.common.addChild",
-                },
-              ]}
-            >
+            <TypeTreeItem type={type} onCreateChild={handleCreateChild}>
               {children.length > 0 && renderTypeTree(children)}
-            </TreeItem>
+            </TypeTreeItem>
           </div>
         );
       });
@@ -6341,6 +6321,61 @@ const App: FC<AppProps> = () => {
     const rootTypes = kit.types?.filter((t) => !t.parent) || [];
 
     return <>{renderTypeTree(rootTypes)}</>;
+  };
+
+  const TypeTreeItem: FC<{ type: Type; onCreateChild: (type: Type) => void; children?: ReactNode }> = ({ type, onCreateChild, children }) => {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+      id: `type-${type.guid}`,
+      data: { type: "type", typeGuid: type.guid },
+    });
+
+    const handleDragStart = () => {
+      setActiveDraggedType(type);
+    };
+
+    useEffect(() => {
+      if (isDragging) {
+        handleDragStart();
+      }
+    }, [isDragging]);
+
+    return (
+      <TreeItem
+        label={
+          <div className="flex items-center gap-single min-w-0">
+            <DraggableAvatar
+              ref={setNodeRef}
+              dragRef={setNodeRef}
+              dragListeners={listeners}
+              dragAttributes={attributes}
+              content={type.name.substring(0, 2).toUpperCase()}
+              isSelected={false}
+              isHovered={false}
+              shouldFade={isDragging}
+              title={type.name}
+            />
+            <span className="truncate">{type.name}</span>
+          </div>
+        }
+        onDoubleClick={(event) => {
+          if ((event.target as HTMLElement).closest('[data-slot="action"]') || (event.target as HTMLElement).closest('[data-slot="avatar"]')) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          navigateToType(kit.guid, type.guid);
+        }}
+        actions={[
+          {
+            icon: <AddIcon size={12} />,
+            onClick: () => onCreateChild(type),
+            id: "semio.sketchpad.common.addChild",
+          },
+        ]}
+      >
+        {children}
+      </TreeItem>
+    );
   };
 
   const DesignsWorkbenchContent: FC = () => {
@@ -6366,26 +6401,9 @@ const App: FC<AppProps> = () => {
         const children = kit.designs?.filter((child) => child.parent === d.guid) || [];
         return (
           <div key={d.guid} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [d.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
-            <TreeItem
-              label={d.name}
-              onDoubleClick={(event) => {
-                if ((event.target as HTMLElement).closest('[data-slot="action"]')) {
-                  return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                navigateToDesign(kit.guid, d.guid);
-              }}
-              actions={[
-                {
-                  icon: <AddIcon size={12} />,
-                  onClick: () => handleCreateChild(d),
-                  id: "semio.sketchpad.common.addChild",
-                },
-              ]}
-            >
+            <DesignTreeItem design={d} onCreateChild={handleCreateChild}>
               {children.length > 0 && renderDesignTree(children)}
-            </TreeItem>
+            </DesignTreeItem>
           </div>
         );
       });
@@ -6394,6 +6412,61 @@ const App: FC<AppProps> = () => {
     const rootDesigns = kit.designs?.filter((d) => !d.parent) || [];
 
     return <>{renderDesignTree(rootDesigns)}</>;
+  };
+
+  const DesignTreeItem: FC<{ design: Design; onCreateChild: (design: Design) => void; children?: ReactNode }> = ({ design, onCreateChild, children }) => {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+      id: `design-${design.guid}`,
+      data: { type: "design", designGuid: design.guid },
+    });
+
+    const handleDragStart = () => {
+      setActiveDraggedDesign(design);
+    };
+
+    useEffect(() => {
+      if (isDragging) {
+        handleDragStart();
+      }
+    }, [isDragging]);
+
+    return (
+      <TreeItem
+        label={
+          <div className="flex items-center gap-single min-w-0">
+            <DraggableAvatar
+              ref={setNodeRef}
+              dragRef={setNodeRef}
+              dragListeners={listeners}
+              dragAttributes={attributes}
+              content={design.name.substring(0, 2).toUpperCase()}
+              isSelected={false}
+              isHovered={false}
+              shouldFade={isDragging}
+              title={design.name}
+            />
+            <span className="truncate">{design.name}</span>
+          </div>
+        }
+        onDoubleClick={(event) => {
+          if ((event.target as HTMLElement).closest('[data-slot="action"]') || (event.target as HTMLElement).closest('[data-slot="avatar"]')) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          navigateToDesign(kit.guid, design.guid);
+        }}
+        actions={[
+          {
+            icon: <AddIcon size={12} />,
+            onClick: () => onCreateChild(design),
+            id: "semio.sketchpad.common.addChild",
+          },
+        ]}
+      >
+        {children}
+      </TreeItem>
+    );
   };
 
   // Add toolbar tools
@@ -6561,12 +6634,16 @@ const App: FC<AppProps> = () => {
       return;
     }
 
-    if (over && over.id === "diagram-drop-zone" && reactFlowInstanceRef.current) {
-      if (!(event.activatorEvent instanceof PointerEvent)) {
+    if (over && typeof over.id === "string" && over.id.startsWith("diagram-drop-zone")) {
+      const windowId = over.id.replace("diagram-drop-zone-", "");
+      const diagramElement = document.querySelector(`[data-diagram-id="${windowId}"]`);
+      const reactFlowInstance = diagramElement && (diagramElement as any).__reactFlowInstance;
+
+      if (!reactFlowInstance || !(event.activatorEvent instanceof PointerEvent)) {
         return;
       }
 
-      const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
+      const { x, y } = reactFlowInstance.screenToFlowPosition({
         x: event.activatorEvent.clientX + delta.x,
         y: event.activatorEvent.clientY + delta.y,
       });
