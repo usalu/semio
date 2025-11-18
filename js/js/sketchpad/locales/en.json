@@ -72,6 +72,24 @@
             "beginner": "The version of the kit"
           }
         },
+        "kit": {
+          "label": {
+            "normal": "Kit",
+            "beginner": "The current kit"
+          }
+        },
+        "name": {
+          "label": {
+            "normal": "Name",
+            "beginner": "The name of the artifact"
+          }
+        },
+        "navigationButtons": {
+          "label": {
+            "normal": "Navigation",
+            "beginner": "Navigation buttons"
+          }
+        },
         "versions": {
           "label": {
             "normal": "Versions",
@@ -147,8 +165,8 @@
         },
         "search": {
           "label": {
-            "normal": "",
-            "beginner": ""
+            "normal": "Search",
+            "beginner": "Search for content"
           },
           "open": {
             "label": {
@@ -195,8 +213,8 @@
         },
         "focus": {
           "label": {
-            "normal": "",
-            "beginner": ""
+            "normal": "Focus Mode",
+            "beginner": "Toggle focus mode to hide distractions"
           },
           "open": {
             "label": {
@@ -251,6 +269,15 @@
           "label": {
             "normal": "Fullscreen",
             "beginner": "Click to enter fullscreen mode for maximum workspace"
+          },
+          "manual": "navigation#fullscreen",
+          "tutorial": "getting-started/intro#fullscreen",
+          "hotkey": "F11"
+        },
+        "fullscreenToggle": {
+          "label": {
+            "normal": "Toggle Fullscreen",
+            "beginner": "Toggle fullscreen mode on or off"
           },
           "manual": "navigation#fullscreen",
           "tutorial": "getting-started/intro#fullscreen",
@@ -320,6 +347,24 @@
             "label": {
               "normal": "Kits",
               "beginner": "Kits"
+            }
+          },
+          "temporary": {
+            "label": {
+              "normal": "Temporary Kits",
+              "beginner": "Kits stored in browser memory"
+            }
+          },
+          "local": {
+            "label": {
+              "normal": "Local Kits",
+              "beginner": "Kits stored on your device"
+            }
+          },
+          "remote": {
+            "label": {
+              "normal": "Remote Kits",
+              "beginner": "Kits synced with remote storage"
             }
           },
           "designs": {
@@ -413,6 +458,18 @@
             "beginner": "Type to search for elements"
           }
         },
+        "navigation": {
+          "label": {
+            "normal": "Navigation",
+            "beginner": "Navigation controls"
+          }
+        },
+        "panelToggles": {
+          "label": {
+            "normal": "Panel Toggles",
+            "beginner": "Toggle panels on and off"
+          }
+        },
         "panelToggle": {
           "label": {
             "normal": "",
@@ -442,8 +499,8 @@
           },
           "workbench": {
             "label": {
-              "normal": "",
-              "beginner": ""
+              "normal": "Toggle Workbench",
+              "beginner": "Toggle the Workbench panel on the left side"
             },
             "show": {
               "label": {
@@ -490,8 +547,8 @@
           },
           "hud": {
             "label": {
-              "normal": "",
-              "beginner": ""
+              "normal": "Toggle HUD",
+              "beginner": "Toggle the HUD panel in the middle"
             },
             "show": {
               "label": {
@@ -610,8 +667,8 @@
           },
           "right": {
             "label": {
-              "normal": "",
-              "beginner": ""
+              "normal": "Toggle Right Panel",
+              "beginner": "Toggle the right panel for details and settings"
             },
             "show": {
               "label": {
@@ -750,18 +807,90 @@
             "label": {
               "normal": "Theme",
               "beginner": "Choose the color theme for the application"
+            },
+            "dark": {
+              "label": {
+                "normal": "Dark",
+                "beginner": "Use dark color scheme"
+              }
+            },
+            "light": {
+              "label": {
+                "normal": "Light",
+                "beginner": "Use light color scheme"
+              }
+            },
+            "system": {
+              "label": {
+                "normal": "System",
+                "beginner": "Follow system theme preference"
+              }
             }
           },
           "layout": {
             "label": {
               "normal": "Layout",
               "beginner": "Configure the window layout and panel arrangement"
+            },
+            "desktop": {
+              "label": {
+                "normal": "Desktop",
+                "beginner": "Optimized layout for desktop computers"
+              }
+            },
+            "tablet": {
+              "label": {
+                "normal": "Tablet",
+                "beginner": "Optimized layout for tablets"
+              }
+            },
+            "mobile": {
+              "label": {
+                "normal": "Mobile",
+                "beginner": "Optimized layout for mobile devices"
+              }
             }
           },
           "mode": {
             "label": {
               "normal": "Mode",
               "beginner": "Select the user interface mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)"
+            },
+            "dev": {
+              "label": {
+                "normal": "Developer",
+                "beginner": "Developer mode with advanced tools and debugging features"
+              }
+            },
+            "user": {
+              "label": {
+                "normal": "User",
+                "beginner": "Standard user mode for regular operations"
+              }
+            }
+          },
+          "expertise": {
+            "label": {
+              "normal": "Expertise",
+              "beginner": "Select your expertise level to adjust the interface complexity"
+            },
+            "beginner": {
+              "label": {
+                "normal": "Beginner",
+                "beginner": "Show detailed explanations and tutorials"
+              }
+            },
+            "normal": {
+              "label": {
+                "normal": "Normal",
+                "beginner": "Show standard tooltips and help"
+              }
+            },
+            "expert": {
+              "label": {
+                "normal": "Expert",
+                "beginner": "Minimal tooltips for experienced users"
+              }
             }
           }
         },
@@ -841,6 +970,8 @@
           "normal": "",
           "beginner": ""
         },
+        "selectVariant": "Select variant...",
+        "selectView": "Select view...",
         "add": {
           "label": {
             "normal": "Add",
@@ -934,6 +1065,150 @@
               "beginner": "Sort items from Z to A or largest to smallest."
             }
           }
+        },
+        "settings": {
+          "label": {
+            "normal": "",
+            "beginner": ""
+          },
+          "theme": {
+            "label": {
+              "normal": "Theme",
+              "beginner": "Choose the color theme"
+            }
+          },
+          "layout": {
+            "label": {
+              "normal": "Layout",
+              "beginner": "Choose the layout mode"
+            }
+          },
+          "mode": {
+            "label": {
+              "normal": "Mode",
+              "beginner": "Choose the interface mode"
+            }
+          },
+          "expertise": {
+            "label": {
+              "normal": "Expertise Level",
+              "beginner": "Choose your expertise level"
+            }
+          }
+        }
+      },
+      "settings": {
+        "label": {
+          "normal": "",
+          "beginner": ""
+        },
+        "theme": {
+          "label": {
+            "normal": "Theme",
+            "beginner": "Color scheme for the interface"
+          },
+          "dark": {
+            "label": {
+              "normal": "Dark",
+              "beginner": "Use dark color scheme"
+            }
+          },
+          "light": {
+            "label": {
+              "normal": "Light",
+              "beginner": "Use light color scheme"
+            }
+          },
+          "system": {
+            "label": {
+              "normal": "System",
+              "beginner": "Follow system theme preference"
+            }
+          }
+        },
+        "layout": {
+          "label": {
+            "normal": "Layout",
+            "beginner": "Layout mode for the interface"
+          },
+          "desktop": {
+            "label": {
+              "normal": "Desktop",
+              "beginner": "Optimized for desktop computers"
+            }
+          },
+          "tablet": {
+            "label": {
+              "normal": "Tablet",
+              "beginner": "Optimized for tablets"
+            }
+          },
+          "mobile": {
+            "label": {
+              "normal": "Mobile",
+              "beginner": "Optimized for mobile devices"
+            }
+          }
+        },
+        "mode": {
+          "label": {
+            "normal": "Mode",
+            "beginner": "Interface mode"
+          },
+          "dev": {
+            "label": {
+              "normal": "Developer",
+              "beginner": "Developer mode with advanced tools"
+            }
+          },
+          "user": {
+            "label": {
+              "normal": "User",
+              "beginner": "Standard user mode"
+            }
+          }
+        },
+        "expertise": {
+          "label": {
+            "normal": "Expertise",
+            "beginner": "Your expertise level"
+          },
+          "beginner": {
+            "label": {
+              "normal": "Beginner",
+              "beginner": "Show detailed help and tutorials"
+            }
+          },
+          "normal": {
+            "label": {
+              "normal": "Normal",
+              "beginner": "Show standard tooltips"
+            }
+          },
+          "expert": {
+            "label": {
+              "normal": "Expert",
+              "beginner": "Minimal tooltips"
+            }
+          }
+        }
+      },
+      "sort": {
+        "label": {
+          "normal": "",
+          "beginner": ""
+        },
+        "ascending": {
+          "label": {
+            "normal": "Sort ascending",
+            "beginner": "Sort from A to Z or smallest to largest"
+          }
+        },
+        "descending": {
+          "label": {
+            "normal": "Sort descending",
+            "beginner": "Sort from Z to A or largest to smallest"
+          }
         }
       },
       "app": {
@@ -941,28 +1216,17 @@
           "normal": "",
           "beginner": ""
         },
-        "sort": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "ascending": {
-            "label": {
-              "normal": "Sort ascending",
-              "beginner": "Sort artifacts from A to Z."
-            }
-          },
-          "descending": {
-            "label": {
-              "normal": "Sort descending",
-              "beginner": "Sort artifacts from Z to A."
-            }
-          }
-        },
         "home": {
           "label": {
             "normal": "",
             "beginner": ""
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Open chat for assistance"
+            },
+            "hotkey": "Ctrl+Shift+C"
           },
           "title": {
             "label": {
@@ -1022,6 +1286,13 @@
             "label": {
               "normal": "",
               "beginner": ""
+            },
+            "strip": {
+              "label": {
+                "normal": "Filter strip",
+                "beginner": "Toggle the filter strip to show or hide filter options"
+              },
+              "hotkey": "Ctrl+F"
             },
             "kind": {
               "label": {
@@ -1108,8 +1379,8 @@
           },
           "settings": {
             "label": {
-              "normal": "",
-              "beginner": ""
+              "normal": "Settings",
+              "beginner": "Configure application settings"
             },
             "theme": {
               "label": {
@@ -1127,6 +1398,12 @@
               "label": {
                 "normal": "Expertise",
                 "beginner": "Select your expertise level"
+              }
+            },
+            "layout": {
+              "label": {
+                "normal": "Layout",
+                "beginner": "Choose the layout for the kit overview"
               }
             }
           },
@@ -1220,6 +1497,12 @@
             "normal": "Kit",
             "beginner": "Kit"
           },
+          "notFound": {
+            "label": {
+              "normal": "Kit not found",
+              "beginner": "The requested kit could not be found"
+            }
+          },
           "title": {
             "label": {
               "normal": "Kit",
@@ -1269,10 +1552,7 @@
             }
           },
           "versionPlaceholder": {
-            "label": {
-              "normal": "e.g., 1.0.0",
-              "beginner": "e.g., 1.0.0"
-            }
+            "label": "e.g., 1.0.0"
           },
           "descriptionLabel": {
             "label": {
@@ -1281,34 +1561,19 @@
             }
           },
           "descriptionPlaceholder": {
-            "label": {
-              "normal": "Describe what this kit contains...",
-              "beginner": "Describe what this kit contains..."
-            }
+            "label": "Describe what this kit contains..."
           },
           "iconPlaceholder": {
-            "label": {
-              "normal": "🎨 or URL to icon",
-              "beginner": "🎨 or URL to icon"
-            }
+            "label": "🎨 or URL to icon"
           },
           "imagePlaceholder": {
-            "label": {
-              "normal": "URL to preview image",
-              "beginner": "URL to preview image"
-            }
+            "label": "URL to preview image"
           },
           "homepagePlaceholder": {
-            "label": {
-              "normal": "https://example.com",
-              "beginner": "https://example.com"
-            }
+            "label": "https://example.com"
           },
           "licensePlaceholder": {
-            "label": {
-              "normal": "e.g., MIT, GPL-3.0, Apache-2.0",
-              "beginner": "e.g., MIT, GPL-3.0, Apache-2.0"
-            }
+            "label": "e.g., MIT, GPL-3.0, Apache-2.0"
           },
           "defaultName": {
             "label": {
@@ -1372,7 +1637,28 @@
               },
               "manual": "manuals/semio/kit",
               "tutorial": "hello-semio/model-design",
-              "hotkey": "Ctrl+N"
+              "hotkey": "Ctrl+N",
+              "hide": {
+                "label": {
+                  "normal": "Hide name filter",
+                  "beginner": "Click to hide the name filter"
+                },
+                "hotkey": "Ctrl+Shift+N"
+              }
+            },
+            "strip": {
+              "label": {
+                "normal": "Filter strip",
+                "beginner": "Toggle the filter strip to show or hide filter options"
+              },
+              "hotkey": "Ctrl+F"
+            },
+            "search": {
+              "label": {
+                "normal": "Search filter",
+                "beginner": "Search for specific filters"
+              },
+              "hotkey": "Ctrl+Shift+F"
             }
           },
           "designs": {
@@ -1504,6 +1790,9 @@
               "normal": "Folder",
               "beginner": "Folder"
             },
+            "descriptionPlaceholder": {
+              "label": "Describe this folder..."
+            },
             "title": {
               "label": {
                 "normal": "Folder",
@@ -1618,6 +1907,34 @@
                 "beginner": "{{count}} Artifact Kinds"
               }
             }
+          },
+          "sortByArtifact": {
+            "label": {
+              "normal": "Sort by artifact",
+              "beginner": "Sort artifacts by their name"
+            },
+            "hotkey": "Ctrl+Shift+A"
+          },
+          "sortByKind": {
+            "label": {
+              "normal": "Sort by kind",
+              "beginner": "Sort artifacts by their type (design, type, quality, etc.)"
+            },
+            "hotkey": "Ctrl+Shift+K"
+          },
+          "sortByCreatedAt": {
+            "label": {
+              "normal": "Sort by creation date",
+              "beginner": "Sort artifacts by when they were created"
+            },
+            "hotkey": "Ctrl+Shift+C"
+          },
+          "sortByUpdatedAt": {
+            "label": {
+              "normal": "Sort by update date",
+              "beginner": "Sort artifacts by when they were last updated"
+            },
+            "hotkey": "Ctrl+Shift+U"
           },
           "kitApp": {
             "label": {
@@ -1790,15 +2107,42 @@
                 "normal": "",
                 "beginner": ""
               },
+              "search": {
+                "label": {
+                  "normal": "Search table",
+                  "beginner": "Search for artifacts in the table"
+                },
+                "hotkey": "Ctrl+F"
+              },
               "header": {
                 "label": {
                   "normal": "",
                   "beginner": ""
                 },
-                "kind": "Kind",
-                "artifact": "Artifact",
-                "updatedAt": "Updated",
-                "createdAt": "Created"
+                "kind": {
+                  "label": {
+                    "normal": "Kind",
+                    "beginner": "Type of artifact"
+                  }
+                },
+                "artifact": {
+                  "label": {
+                    "normal": "Artifact",
+                    "beginner": "The artifact name"
+                  }
+                },
+                "updatedAt": {
+                  "label": {
+                    "normal": "Updated",
+                    "beginner": "Last update time"
+                  }
+                },
+                "createdAt": {
+                  "label": {
+                    "normal": "Created",
+                    "beginner": "Creation time"
+                  }
+                }
               }
             }
           },
@@ -1978,16 +2322,49 @@
             }
           },
           "descriptionPlaceholder": {
-            "label": {
-              "normal": "Describe this folder...",
-              "beginner": "Describe this folder..."
-            }
+            "label": "Describe this folder..."
           }
         },
         "design": {
           "label": {
             "normal": "Design",
             "beginner": "Design"
+          },
+          "appTitle": {
+            "label": {
+              "normal": "Design",
+              "beginner": "Design editor for creating and modifying designs"
+            }
+          },
+          "windows": {
+            "label": {
+              "normal": "Windows",
+              "beginner": "Manage design windows (scene, diagram, table)"
+            }
+          },
+          "canvas": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "diagram": {
+              "label": {
+                "normal": "",
+                "beginner": ""
+              },
+              "designNode": {
+                "label": {
+                  "normal": "Design",
+                  "beginner": "A design piece in the diagram"
+                }
+              },
+              "pieceNode": {
+                "label": {
+                  "normal": "Piece",
+                  "beginner": "A piece instance in the diagram"
+                }
+              }
+            }
           },
           "title": {
             "label": {
@@ -2985,6 +3362,18 @@
             "normal": "Type",
             "beginner": "Type"
           },
+          "footer": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "someAction": {
+              "label": {
+                "normal": "Action",
+                "beginner": "Perform an action on the type"
+              }
+            }
+          },
           "title": {
             "label": {
               "normal": "Type",
@@ -3046,22 +3435,13 @@
             }
           },
           "descriptionPlaceholder": {
-            "label": {
-              "normal": "Describe this type...",
-              "beginner": "Describe this type..."
-            }
+            "label": "Describe this type..."
           },
           "iconPlaceholder": {
-            "label": {
-              "normal": "??",
-              "beginner": "??"
-            }
+            "label": "??"
           },
           "imagePlaceholder": {
-            "label": {
-              "normal": "https://example.com/image.png",
-              "beginner": "https://example.com/image.png"
-            }
+            "label": "https://example.com/image.png"
           },
           "variantPlaceholder": {
             "label": {
@@ -3070,10 +3450,7 @@
             }
           },
           "parentPlaceholder": {
-            "label": {
-              "normal": "Select parent type...",
-              "beginner": "Choose a parent type for inheritance"
-            }
+            "label": "Select parent type..."
           },
           "variant": {
             "label": {
@@ -3096,16 +3473,10 @@
             }
           },
           "representationDescriptionPlaceholder": {
-            "label": {
-              "normal": "Describe this representation...",
-              "beginner": "Describe this representation..."
-            }
+            "label": "Describe this representation..."
           },
           "representationTagsPlaceholder": {
-            "label": {
-              "normal": "tag1, tag2, tag3",
-              "beginner": "tag1, tag2, tag3"
-            }
+            "label": "tag1, tag2, tag3"
           },
           "ports": {
             "label": {
@@ -3128,16 +3499,10 @@
             }
           },
           "portFamilyPlaceholder": {
-            "label": {
-              "normal": "e.g., electrical, mechanical",
-              "beginner": "e.g., electrical, mechanical"
-            }
+            "label": "e.g., electrical, mechanical"
           },
           "portDescriptionPlaceholder": {
-            "label": {
-              "normal": "Describe this port...",
-              "beginner": "Describe this port..."
-            }
+            "label": "Describe this port..."
           },
           "portT": {
             "label": {
@@ -3162,10 +3527,7 @@
             "tutorial": "hello-semio/model-brick-set#ports"
           },
           "portCompatibleFamiliesPlaceholder": {
-            "label": {
-              "normal": "family1, family2",
-              "beginner": "family1, family2"
-            }
+            "label": "family1, family2"
           },
           "portNotFound": {
             "label": {
@@ -3204,16 +3566,10 @@
             }
           },
           "attributeValuePlaceholder": {
-            "label": {
-              "normal": "Value...",
-              "beginner": "Value..."
-            }
+            "label": "Value..."
           },
           "attributeDefinitionPlaceholder": {
-            "label": {
-              "normal": "Definition or URL...",
-              "beginner": "Definition or URL..."
-            }
+            "label": "Definition or URL..."
           },
           "panel": {
             "label": {
@@ -3635,6 +3991,79 @@
               "beginner": "No qualities defined"
             }
           },
+          "key": {
+            "label": {
+              "normal": "Key",
+              "beginner": "The unique identifier for this quality"
+            }
+          },
+          "name": {
+            "label": {
+              "normal": "Name",
+              "beginner": "The display name for this quality"
+            }
+          },
+          "kind": {
+            "label": {
+              "normal": "Kind",
+              "beginner": "The type of entity this quality applies to"
+            }
+          },
+          "formula": {
+            "label": {
+              "normal": "Formula",
+              "beginner": "The formula to calculate this quality"
+            }
+          },
+          "formulaPlaceholder": "Enter formula...",
+          "defaultValue": {
+            "label": {
+              "normal": "Default value",
+              "beginner": "The default value for this quality"
+            }
+          },
+          "defaultSiUnit": {
+            "label": {
+              "normal": "Default SI unit",
+              "beginner": "The default unit in the SI system"
+            }
+          },
+          "defaultImperialUnit": {
+            "label": {
+              "normal": "Default Imperial unit",
+              "beginner": "The default unit in the Imperial system"
+            }
+          },
+          "min": {
+            "label": {
+              "normal": "Minimum",
+              "beginner": "The minimum allowed value"
+            }
+          },
+          "isMinExcluded": {
+            "label": {
+              "normal": "Exclude minimum",
+              "beginner": "Whether the minimum value is excluded"
+            }
+          },
+          "max": {
+            "label": {
+              "normal": "Maximum",
+              "beginner": "The maximum allowed value"
+            }
+          },
+          "isMaxExcluded": {
+            "label": {
+              "normal": "Exclude maximum",
+              "beginner": "Whether the maximum value is excluded"
+            }
+          },
+          "canScale": {
+            "label": {
+              "normal": "Can scale",
+              "beginner": "Whether this quality scales with piece size"
+            }
+          },
           "panel": {
             "label": {
               "normal": "",
@@ -3853,40 +4282,106 @@
   "settings": {
     "theme": {
       "system": {
-        "label": "System theme",
-        "beginner": "Match the interface theme with your operating system."
+        "label": {
+          "normal": "System theme",
+          "beginner": "Match the interface theme with your operating system."
+        }
       },
       "light": {
-        "label": "Light theme",
-        "beginner": "Use the light theme regardless of the system setting."
+        "label": {
+          "normal": "Light theme",
+          "beginner": "Use the light theme regardless of the system setting."
+        }
       },
       "dark": {
-        "label": "Dark theme",
-        "beginner": "Use the dark theme regardless of the system setting."
+        "label": {
+          "normal": "Dark theme",
+          "beginner": "Use the dark theme regardless of the system setting."
+        }
       }
     },
     "layout": {
       "normal": {
-        "label": "Normal layout",
-        "beginner": "Use the standard layout optimized for mouse and keyboard."
+        "label": {
+          "normal": "Normal layout",
+          "beginner": "Use the standard layout optimized for mouse and keyboard."
+        }
+      },
+      "desktop": {
+        "label": {
+          "normal": "Desktop layout",
+          "beginner": "Use the desktop layout optimized for large screens."
+        }
+      },
+      "tablet": {
+        "label": {
+          "normal": "Tablet layout",
+          "beginner": "Use the tablet layout optimized for medium screens."
+        }
+      },
+      "mobile": {
+        "label": {
+          "normal": "Mobile layout",
+          "beginner": "Use the mobile layout optimized for small screens."
+        }
       },
       "touch": {
-        "label": "Touch layout",
-        "beginner": "Use the layout optimized for touch input."
+        "label": {
+          "normal": "Touch layout",
+          "beginner": "Use the layout optimized for touch input."
+        }
       }
     },
     "mode": {
+      "dev": {
+        "label": {
+          "normal": "Developer mode",
+          "beginner": "Show developer tools and advanced options."
+        }
+      },
+      "user": {
+        "label": {
+          "normal": "User mode",
+          "beginner": "Show standard user interface."
+        }
+      },
       "beginner": {
-        "label": "Beginner mode",
-        "beginner": "Show full guidance, tutorials, and detailed tooltips."
+        "label": {
+          "normal": "Beginner mode",
+          "beginner": "Show full guidance, tutorials, and detailed tooltips."
+        }
       },
       "normal": {
-        "label": "Normal mode",
-        "beginner": "Show contextual help without tutorials."
+        "label": {
+          "normal": "Normal mode",
+          "beginner": "Show contextual help without tutorials."
+        }
       },
       "expert": {
-        "label": "Expert mode",
-        "beginner": "Hide guidance and tutorials for a distraction-free workflow."
+        "label": {
+          "normal": "Expert mode",
+          "beginner": "Hide guidance and tutorials for a distraction-free workflow."
+        }
+      }
+    },
+    "expertise": {
+      "beginner": {
+        "label": {
+          "normal": "Beginner",
+          "beginner": "Show full guidance and tutorials."
+        }
+      },
+      "normal": {
+        "label": {
+          "normal": "Normal",
+          "beginner": "Show contextual help."
+        }
+      },
+      "expert": {
+        "label": {
+          "normal": "Expert",
+          "beginner": "Hide guidance."
+        }
       }
     }
   },

@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home } from "lucide-react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../../../../sketchpad/elements";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from "../../../../sketchpad/elements";
 
 // #region Breadcrumb
 const meta = {

@@ -636,6 +636,18 @@ export interface AppWindowProps {
     className?: string;
 }
 
+export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[]): any {
+    return {
+        type: direction === "row" ? "row" : "column",
+        content: windowIds.map((id, index) => ({
+            type: "component",
+            componentName: id,
+            componentState: {},
+            ...(sizes && sizes[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
+        })),
+    };
+}
+
 // #endregion Window
 
 // #region Tool

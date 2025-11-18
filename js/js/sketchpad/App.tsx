@@ -9845,9 +9845,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         ) : null}
         {isKitApp && (
           <>
-            <BreadcrumbItem id="semio.sketchpad.navbar.artifacts" items={artifactKinds} onNavigate={(href) => navigate(href)}>
-              <BreadcrumbLink style={{ cursor: "default" }}>{/* Empty link for dropdown trigger */}</BreadcrumbLink>
-            </BreadcrumbItem>
             {filteredKind && (
               <>
                 <BreadcrumbItem id={`semio.sketchpad.navbar.breadcrumb.${filteredKind}`} items={filteredNameItems} onNavigate={(href) => navigate(href)}>
@@ -10030,17 +10027,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 </Fragment>
               );
             })}
-            <BreadcrumbItem
-              id="semio.sketchpad.navbar.selectChild"
-              items={typeChildItems}
-              onNavigate={(href) => {
-                if (href === "#create-child" && type && typeof type === "object" && "guid" in type) {
-                  handleCreateChild("semio.sketchpad.navbar.selectChild", type as Type, true);
-                } else navigate(href);
-              }}
-            >
-              <BreadcrumbLink style={{ cursor: "default" }}>{/* Empty for dropdown trigger */}</BreadcrumbLink>
-            </BreadcrumbItem>
           </>
         )}
         {isQualityApp && quality && (
@@ -11237,11 +11223,13 @@ export const LayoutCanvas: FC<{
               return (
                 <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0}>
                   <LayoutScopeWrapper>
-                    <ReactFlowProvider>
-                      <Window id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
-                        <WindowComponent />
-                      </Window>
-                    </ReactFlowProvider>
+                    <DragDropProvider>
+                      <ReactFlowProvider>
+                        <Window id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
+                          <WindowComponent />
+                        </Window>
+                      </ReactFlowProvider>
+                    </DragDropProvider>
                   </LayoutScopeWrapper>
                 </MemoryRouter>
               );
@@ -11870,29 +11858,36 @@ const LayoutWrapper: FC = () => {
   );
 
   const customCollisionDetection = useCallback((args: any) => {
+    console.log("[DEBUG] DRAGNDROP Collision detection called with droppables:", args.droppableContainers?.length || 0);
+
     // Try pointer-based collision first (most accurate for drop zones)
     const pointerCollisions = pointerWithin(args);
-    console.log("[DEBUG] DRAGNDROP Pointer collisions:", pointerCollisions.length);
 
     if (pointerCollisions.length > 0) {
+      console.log("[DEBUG] DRAGNDROP Using pointer collision:", pointerCollisions[0].id);
       return pointerCollisions;
     }
 
     // Fall back to rectangle intersection
     const rectCollisions = rectIntersection(args);
-    console.log("[DEBUG] DRAGNDROP Rect collisions:", rectCollisions.length);
 
     if (rectCollisions.length > 0) {
+      console.log("[DEBUG] DRAGNDROP Using rect collision:", rectCollisions[0].id);
       return rectCollisions;
     }
 
-    // Last resort: closest center
-    const centerCollisions = closestCenter(args);
-    console.log("[DEBUG] DRAGNDROP Center collisions:", centerCollisions ? 1 : 0);
+    // Last resort: closest center (returns single object or null)
+    const centerCollision = closestCenter(args);
+    console.log("[DEBUG] DRAGNDROP closestCenter returned:", centerCollision);
 
-    return centerCollisions ? [centerCollisions] : [];
+    if (centerCollision && centerCollision.id) {
+      console.log("[DEBUG] DRAGNDROP Using center collision:", centerCollision.id);
+      return [centerCollision]; // Wrap in array
+    }
+
+    console.log("[DEBUG] DRAGNDROP No collisions found");
+    return [];
   }, []);
-
   const kitShallows = useKitShallows();
   const getTypeOrDesignName = useCallback(() => {
     if (!activeDragData) return null;

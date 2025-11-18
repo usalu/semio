@@ -2859,7 +2859,7 @@ const AppContent: FC = () => {
     setSearchParams(newParams);
   };
 
-  const handleRowClick = (row: TableRow, e: React.MouseEvent) => {
+  const handleRowClick = (row: TableRow, index: number, e: React.MouseEvent) => {
     if (row.kind === "designs") {
       const designId = (row.data as Design).guid;
       if (e.shiftKey) {
@@ -3031,7 +3031,7 @@ const AppContent: FC = () => {
     }
   };
 
-  const handleRowDoubleClick = (row: TableRow) => {
+  const handleRowDoubleClick = (row: TableRow, index: number) => {
     if (row.kind === "designs") {
       sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
     } else if (row.kind === "types") {

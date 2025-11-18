@@ -213,9 +213,9 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### Keywords
 
-- `PLAN`: Create a markdown document to plan a new feature. Use a slug and call the document `SLUG.md` (replace SLUG with a unique slug for this plan).
+- `PLAN`: Create an agents markdown document to plan a new feature. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this plan).
 
-- `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. Use a slug and call the document `SLUG.md` (replace SLUG with a unique slug for this diagnosis). NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [AVATAR-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`.
+- `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this diagnosis). NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [AVATAR-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`.
 
 1. Analyis [DIAGNOSESLUG]
    1.1. Problem description
@@ -228,7 +228,9 @@ Stats provide computed or measured performance data for entire designs using the
 
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, temporary code, …
 
-- `I18N`: Check for all missing translation keys in the locales.
+- `I18N`: Run `scripts/i18n.ps1` to produce a report in `agents/i18n.md`. Fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. Add missing keys, update incomplete keys, remove unused keys, …
+
+- `AUTOMATE`: Create a powershell script to automate a task.
 
 ### Internationalization (i18n)
 
@@ -296,12 +298,15 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── .github
 │ ├── chatmodes
 │ │ ├── Reformatter.chatmode.md # Exclusively to reformat text (code, lists, …)
-│ │ └── Reorderer.chatmode.md # Exclusively to reorder text (code, lists, …)
+│ │ ├── Reorderer.chatmode.md # Exclusively to reorder text (code, lists, …)
 │ │ └── Schema-Changer.chatmode.md # Exclusively to change the schema (code, api, database, …)
 │ ├── workflows
 │ │ └── gh-pages.yml # Deploy user docs togh-pages
 │ └── dependabot.yml
 ├── .vscode
+├── agents # All temporary markdown documents for planning, diagnosing, implementing, … by and for agents.
+│ ├── i18n.md # i18n validation report produced by scripts/i18n.ps1
+│ └── DATE_SLUG.md # DATE is YEAR-MONTH-DAY and SLUG is a unique slug in CAPS-CASE.
 ├── antlr
 ├── assets # @semio/gh: assets for the complete repo
 │ ├── badges
@@ -500,6 +505,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── rb
 ├── rdf
 ├── scripts
+│ └── i18n.ps1
 ├── sqlite
 ├── yak
 ├── .gitignore

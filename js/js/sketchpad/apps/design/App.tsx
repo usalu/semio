@@ -45,13 +45,13 @@ import { areSameKit, Guid, KitDiff, PieceDiff } from "../../../semio";
 import type { DesignStore, KitStore, SketchpadStore } from "../../App";
 import { identitySelector, KitDiffAppStore, registerDesignAppStoreFactory, useDesignScope, useKitScope, useSketchpadStore, useSync, useSyncDeep } from "../../App";
 import type { AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
+import { createDefaultLayout, createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 
 // #endregion Store
 
 // #region Imports
 
-import { DndContext, DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
+import { DndContext, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
@@ -208,6 +208,10 @@ export enum DesignAppFullscreenWindow {
   None = "none",
   Diagram = "diagram",
   Accessl = "accessl",
+}
+export enum DesignAppWindowKind {
+  Diagram = "diagram",
+  Scene = "scene",
 }
 export interface DesignAppPresence {
   cursor?: Coord;
@@ -4847,8 +4851,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const fullscreen = fullscreenWindow === DesignAppFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
-  const { setNodeRef: setDroppableRef } = useDroppable({ id: `diagram-drop-zone-${diagramId}` });
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
+  const { activeDraggedType, activeDraggedDesign } = useDragDrop();
 
   const setDropZoneRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -4860,10 +4864,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         x: rect.x,
         y: rect.y
       });
+      node.setAttribute('data-drop-zone', 'diagram');
+      node.setAttribute('data-drop-zone-id', diagramId);
     }
     dropZoneRef.current = node;
-    setDroppableRef(node);
-  }, [diagramId, setDroppableRef]);
+  }, [diagramId]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -5613,8 +5618,44 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [addConnection, reactFlowInstanceRef, design],
   );
 
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (!activeDraggedType && !activeDraggedDesign) return;
+    if (!reactFlowInstanceRef.current) return;
+
+    console.log("[DEBUG] DRAGNDROP Diagram pointer up, activeDraggedType:", activeDraggedType, "activeDraggedDesign:", activeDraggedDesign);
+
+    const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
+
+    if (activeDraggedType) {
+      startTransaction("semio.sketchpad.app.design.dragEnd.type");
+      const pieceGuid = guid();
+      const piece = {
+        guid: pieceGuid,
+        id_: pieceGuid,
+        type: activeDraggedType.guid,
+        center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
+      };
+      addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
+      finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
+    } else if (activeDraggedDesign) {
+      startTransaction("semio.sketchpad.app.design.dragEnd.design");
+      const pieceGuid = guid();
+      const piece = {
+        guid: pieceGuid,
+        id_: pieceGuid,
+        design: activeDraggedDesign.guid,
+        center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
+      };
+      addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
+      finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
+    }
+  }, [activeDraggedType, activeDraggedDesign, reactFlowInstanceRef, startTransaction, addPiece, finalizeTransaction]);
+
   return (
-    <div id="diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
+    <div id="diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef} onPointerUp={handlePointerUp}>
       <Diagram
         nodes={nodes}
         edges={edges}
@@ -6142,6 +6183,40 @@ const App: FC<AppProps> = () => {
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
+  const store = useDesignAppStore() as DesignAppStore | null;
+  const windowLayout = useDesignApp((s) => s.windowLayout);
+
+  const defaultLayout = useMemo(() => {
+    return createDefaultLayout([DesignAppWindowKind.Diagram, DesignAppWindowKind.Scene], "row", [70, 30]);
+  }, []);
+
+  const windowConfig: AppWindowConfig = useMemo(() => {
+    return {
+      windowKinds: [
+        {
+          id: DesignAppWindowKind.Diagram,
+          label: "Diagram",
+          component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
+        },
+        {
+          id: DesignAppWindowKind.Scene,
+          label: "Scene",
+          component: (props: any) => <SceneWindow />,
+        },
+      ],
+      defaultLayout,
+    };
+  }, [defaultLayout, reactFlowInstanceRef]);
+
+  const handleLayoutChange = useCallback(
+    (config: any) => {
+      if (store && typeof store.change === "function") {
+        store.change({ windowLayout: config });
+      }
+    },
+    [store],
+  );
+
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const { useKitAppCommands } = getKitAppHooks();
@@ -6662,170 +6737,9 @@ const App: FC<AppProps> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    console.log("[DEBUG] handleDragEnd called with event:", event);
-    const { active, over, delta } = event;
-    console.log("[DEBUG] active:", active?.id, "over:", over?.id, "delta:", delta);
-
-    // Handle window template drops on the canvas
-    if (active.data.current?.type === "window-template" && over && over.id === "layout-canvas-drop-zone") {
-      const windowTemplate = active.data.current.windowTemplate;
-      // TODO: Implement adding window to layout
-      // This will require extending the layout API to add windows dynamically
-      return;
-    }
-
-    if (over && typeof over.id === "string" && over.id.startsWith("diagram-drop-zone")) {
-      const windowId = over.id.replace("diagram-drop-zone-", "");
-      const diagramElement = document.querySelector(`[data-diagram-id="${windowId}"]`);
-      const reactFlowInstance = diagramElement && (diagramElement as any).__reactFlowInstance;
-
-      if (!reactFlowInstance || !(event.activatorEvent instanceof PointerEvent)) {
-        return;
-      }
-
-      const { x, y } = reactFlowInstance.screenToFlowPosition({
-        x: event.activatorEvent.clientX + delta.x,
-        y: event.activatorEvent.clientY + delta.y,
-      });
-
-      if (activeDraggedType) {
-        console.log("[DEBUG] Creating piece from type:", activeDraggedType.name, "at position:", { x, y });
-        startTransaction("semio.sketchpad.app.design.dragEnd.type");
-        const pieceGuid = guid();
-        const piece = {
-          guid: pieceGuid,
-          id_: pieceGuid,
-          type: activeDraggedType.guid,
-          center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
-        };
-        addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
-        finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
-        console.log("[DEBUG] Piece created successfully");
-      } else if (activeDraggedDesign) {
-        console.log("[DEBUG] Creating piece from design:", activeDraggedDesign.name, "at position:", { x, y });
-        startTransaction("semio.sketchpad.app.design.dragEnd.design");
-        const pieceGuid = guid();
-        const piece = {
-          guid: pieceGuid,
-          id_: pieceGuid,
-          design: activeDraggedDesign.guid,
-          center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
-        };
-        addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
-        finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
-        console.log("[DEBUG] Piece created successfully");
-      } else {
-        console.log("[DEBUG] No active dragged type or design");
-      }
-    }
-
-    setActiveDraggedType(null);
-    setActiveDraggedDesign(null);
-  };
-
-  const store = useDesignAppStore() as DesignAppStore | null;
-  const windowLayoutRaw = useDesignApp((s) => s.windowLayout);
-
-  const defaultLayout = useMemo(() => {
-    return {
-      settings: {
-        hasHeaders: true,
-      },
-      content: [
-        {
-          type: "row",
-          content: [
-            {
-              type: "stack",
-              content: [
-                {
-                  type: "component",
-                  componentName: DesignAppFullscreenWindow.Diagram,
-                  title: "Diagram",
-                },
-              ],
-              width: 50,
-            },
-            {
-              type: "stack",
-              content: [
-                {
-                  type: "component",
-                  componentName: DesignAppFullscreenWindow.Accessl,
-                  title: "Scene",
-                },
-              ],
-              width: 50,
-            },
-          ],
-        },
-      ],
-    };
-  }, []);
-
-  const windowLayout = useMemo(() => {
-    if (!windowLayoutRaw) return undefined;
-    const extractComponentNames = (item: any): string[] => {
-      const names: string[] = [];
-      if (item.type === "component") {
-        const name = item.componentName || item.componentType;
-        if (name) names.push(name);
-      }
-      if (item.content && Array.isArray(item.content)) {
-        item.content.forEach((child: any) => {
-          names.push(...extractComponentNames(child));
-        });
-      }
-      return names;
-    };
-    const root = windowLayoutRaw.root || windowLayoutRaw;
-    const componentNames = extractComponentNames(root);
-    const requiredWindows = [DesignAppFullscreenWindow.Diagram, DesignAppFullscreenWindow.Accessl];
-    const hasAllWindows = requiredWindows.every((id) => componentNames.includes(id));
-    return hasAllWindows ? windowLayoutRaw : undefined;
-  }, [windowLayoutRaw]);
-
-  const windowConfig: AppWindowConfig = useMemo(() => {
-    return {
-      windowKinds: [
-        {
-          id: DesignAppFullscreenWindow.Diagram,
-          label: "Diagram",
-          component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
-        },
-        {
-          id: DesignAppFullscreenWindow.Accessl,
-          label: "Scene",
-          component: () => <SceneWindow />,
-        },
-      ],
-      defaultLayout,
-    };
-  }, [defaultLayout, reactFlowInstanceRef]);
-
-  const handleLayoutChange = useCallback(
-    (config: any) => {
-      if (store && typeof store.change === "function") {
-        store.change({ windowLayout: config });
-      }
-    },
-    [store],
-  );
-
   useEffect(() => {
     console.log("[DEBUG] Design App mounted.");
   }, []);
-
-  useEffect(() => {
-    console.log("[DEBUG] DRAGNDROP Registering handleDragEnd for design-drag-end event");
-    const handleEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<DragEndEvent>;
-      handleDragEnd(customEvent.detail);
-    };
-    window.addEventListener("design-drag-end", handleEvent);
-    return () => window.removeEventListener("design-drag-end", handleEvent);
-  }, [handleDragEnd]);
 
   return (
     <ReactFlowProvider>

@@ -2340,13 +2340,7 @@ function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind =
   return toggleGroupElement;
 }
 
-function ToggleGroupItem({
-  className,
-  id,
-  icon,
-  action,
-  ...props
-}: ToggleGroupItemProps) {
+function ToggleGroupItem({ className, id, icon, action, ...props }: ToggleGroupItemProps) {
   const context = React.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
 
@@ -2470,11 +2464,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
           <div className="flex flex-col">
             {availableItems.map((item) => (
-              <button
-                key={item.value}
-                onClick={() => handleSelect(item.value)}
-                className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}
-              >
+              <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}>
                 <span className="flex-1 text-left">{addIconSize(item.label)}</span>
               </button>
             ))}
@@ -2508,9 +2498,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       toggleGroupProps.defaultValue = defaultPressed ? selectedItem.value : undefined;
     }
 
-    return (
-      <ToggleGroup {...toggleGroupProps} />
-    );
+    return <ToggleGroup {...toggleGroupProps} />;
   }
 
   const { id, showLabel, level, className, icon, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
@@ -2748,13 +2736,21 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
 // #region Scrollable
 
-const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root>>(({ className, children, ...props }, ref) => {
+const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(({ className, children, orientation = "vertical", ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
-      <ScrollAreaPrimitive.Viewport ref={ref} data-slot="scroll-area-viewport" className="focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0 overflow-hidden">
+      <ScrollAreaPrimitive.Viewport
+        ref={ref}
+        data-slot="scroll-area-viewport"
+        className={cn(
+          "focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0",
+          orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
+        )}
+      >
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      {(orientation === "vertical" || orientation === "both") && <ScrollBar />}
+      {(orientation === "horizontal" || orientation === "both") && <ScrollBar orientation="horizontal" />}
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   );
@@ -2790,8 +2786,8 @@ function Strip({ direction = "horizontal", items, className, level: propLevel, i
   const level = useElementLevel(propLevel);
 
   return (
-    <Scrollable className={cn("border-b", direction === "horizontal" ? "h-large" : "w-large", className)}>
-      <div className={cn("p-single flex gap-single", direction === "horizontal" ? "flex-row h-full items-center" : "flex-col w-full")}>
+    <Scrollable orientation="horizontal" className={cn("border-b", direction === "horizontal" ? "h-large" : "w-large", className)}>
+      <div className={cn("p-single flex gap-single", direction === "horizontal" ? "flex-row h-full items-center w-fit" : "flex-col w-full")}>
         {items.map((item, index) => (
           <div key={index} className={cn(direction === "horizontal" ? "h-medium" : "w-medium", "shrink-0")}>
             {item}
@@ -3604,7 +3600,11 @@ function BreadcrumbList({ className, children, ...props }: React.ComponentProps<
     );
   });
 
-  return <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full", className)} {...props}>{childrenWithSeparators}</ol>;
+  return (
+    <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full", className)} {...props}>
+      {childrenWithSeparators}
+    </ol>
+  );
 }
 
 interface BreadcrumbItemProps extends React.ComponentProps<"li"> {
@@ -5222,7 +5222,7 @@ const Table = <T,>({
       activationConstraint: {
         distance: 8, // Require 8px of movement before drag starts
       },
-    })
+    }),
   );
 
   React.useEffect(() => {
@@ -5274,7 +5274,13 @@ const Table = <T,>({
 
   const DraggableRow = ({ row, rowId, index, isSelected, customRowClassName }: { row: T; rowId: string; index: number; isSelected: boolean; customRowClassName: string }) => {
     const canDragRow = !dragDrop?.canDrag || dragDrop.canDrag(rowId);
-    const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging: isDraggingHook } = useDraggable({
+    const {
+      attributes,
+      listeners,
+      setNodeRef: setDraggableRef,
+      transform,
+      isDragging: isDraggingHook,
+    } = useDraggable({
       id: rowId,
       disabled: !canDragRow,
       data: { row },
@@ -5334,7 +5340,7 @@ const Table = <T,>({
                       index,
                       isSelected,
                       (e) => onRowClick?.(row, index, e),
-                      () => onRowDoubleClick?.(row, index)
+                      () => onRowDoubleClick?.(row, index),
                     )}
                   </div>
                 );
