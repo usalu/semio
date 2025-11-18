@@ -21,7 +21,26 @@
 
 // #region Imports
 
-import { AwardIcon, DocumentIcon, FocusIcon, HomeIcon, LayoutIcon, LocalKitIcon, Maximize2Icon, Minimize2Icon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, RemoteKitIcon, SearchIcon, TemporaryKitIcon, TutorialIcon, TypeIcon, UserIcon } from "@semio/assets";
+import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  AwardIcon,
+  DocumentIcon,
+  FocusIcon,
+  HomeIcon,
+  LayoutIcon,
+  LocalKitIcon,
+  Maximize2Icon,
+  Minimize2Icon,
+  NavigateBackIcon,
+  NavigateForwardIcon,
+  NavigateUpIcon,
+  RemoteKitIcon,
+  SearchIcon,
+  TemporaryKitIcon,
+  TutorialIcon,
+  TypeIcon,
+  UserIcon,
+} from "@semio/assets";
 import { ReactFlowProvider } from "@xyflow/react";
 import Fuse, { FuseResult } from "fuse.js";
 import JSZip from "jszip";
@@ -9090,11 +9109,9 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
 
   return (
     <div className="flex flex-wrap items-center gap-single p-single border-b">
-      {allConcepts
-        .filter((c) => !selectedConcepts.includes(c))
-        .map((concept) => (
-          <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={concept} />
-        ))}
+      {allConcepts.map((concept) => (
+        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={concept} />
+      ))}
     </div>
   );
 };
@@ -11135,121 +11152,62 @@ export const LayoutCanvas: FC<{
           return;
         }
 
-        const normalizeLayoutConfig = (config: any, depth: number = 0, path: string = "root"): any => {
+        const normalizeLayoutConfig = (config: any): any => {
           if (!config || typeof config !== "object") return config;
           if (Array.isArray(config)) {
-            return config.map((item, idx) => normalizeLayoutConfig(item, depth, `${path}[${idx}]`));
+            return config.map((item) => normalizeLayoutConfig(item));
           }
 
           const normalized: any = {};
-          const indent = "  ".repeat(depth);
-
-          console.log(`${indent}[Normalize ${path}] Type: ${config.type || "unknown"}`);
 
           for (const [key, value] of Object.entries(config)) {
-            console.log(`${indent}  Processing key: ${key}, value type: ${typeof value}, value:`, value);
+            const unitKey = `${key}Unit` as string;
+            const hasUnitField = unitKey in config;
 
-            // Handle size/width/height - these need special handling based on whether a unit field exists
-            if (key === "size" || key === "width" || key === "height") {
-              const unitKey = `${key}Unit` as string;
-              const hasUnitField = unitKey in config;
-              console.log(`${indent}    ${key}: hasUnitField=${hasUnitField}, unitKey=${unitKey}, unitValue=${config[unitKey]}`);
-
-              if (hasUnitField) {
-                // When a unit field exists, the size should be a number
-                if (typeof value === "string") {
-                  // Convert string to number
-                  const numValue = parseFloat(value);
-                  if (!isNaN(numValue)) {
-                    console.log(`${indent}    ${key}: Converting string "${value}" to number ${numValue}`);
-                    normalized[key] = numValue;
-                  } else {
-                    console.log(`${indent}    ${key}: Failed to parse string "${value}" as number, using default 1`);
-                    normalized[key] = 1;
-                  }
-                } else if (typeof value === "number") {
-                  // Keep as number
-                  console.log(`${indent}    ${key}: Keeping as number ${value}`);
-                  normalized[key] = value;
-                } else if (value === null || value === undefined) {
-                  // Provide default value when null/undefined
-                  console.log(`${indent}    ${key}: null/undefined with unit field, defaulting to 1`);
-                  normalized[key] = 1;
-                } else {
-                  console.log(`${indent}    ${key}: Unexpected type with unit field, defaulting to 1:`, typeof value, value);
-                  normalized[key] = 1;
-                }
+            if (hasUnitField) {
+              const unit = config[unitKey];
+              if (typeof value === "string") {
+                const numValue = parseFloat(value);
+                normalized[key] = !isNaN(numValue) ? `${numValue}${unit}` : `1${unit}`;
+              } else if (typeof value === "number") {
+                normalized[key] = `${value}${unit}`;
               } else {
-                // When no unit field exists, the size should be a string with unit
-                if (typeof value === "string") {
-                  if (value.trim() === "") {
-                    if (key === "size") {
-                      console.log(`${indent}    ${key}: Empty string, defaulting to 50%`);
-                      normalized[key] = "50%";
-                    }
-                  } else {
-                    console.log(`${indent}    ${key}: Keeping string "${value}"`);
-                    normalized[key] = value;
-                  }
-                } else if (typeof value === "number") {
-                  // Add % suffix for numbers without unit field
-                  console.log(`${indent}    ${key}: Converting number ${value} to string "${value}%"`);
-                  normalized[key] = `${value}%`;
-                } else if (value === null || value === undefined) {
-                  // Provide default value when null/undefined
-                  console.log(`${indent}    ${key}: null/undefined without unit field, defaulting to 50%`);
-                  normalized[key] = "50%";
-                } else {
-                  console.log(`${indent}    ${key}: Unexpected type without unit field, defaulting to 50%:`, typeof value, value);
-                  normalized[key] = "50%";
-                }
+                normalized[key] = `1${unit}`;
+              }
+            } else if (key === "size" || key === "width" || key === "height") {
+              if (typeof value === "string") {
+                normalized[key] = value.trim() === "" && key === "size" ? "50%" : value;
+              } else if (typeof value === "number") {
+                normalized[key] = `${value}%`;
+              } else {
+                normalized[key] = "50%";
               }
             } else if (key === "title" || key === "componentName" || key === "componentType" || key === "type" || key === "id") {
-              // These should be strings
               if (typeof value === "string") {
-                if (value.trim() === "") {
-                  console.log(`${indent}    ${key}: Empty string, skipping`);
-                  // Skip empty strings
-                  continue;
-                } else {
-                  console.log(`${indent}    ${key}: Keeping string "${value}"`);
+                if (value.trim() !== "") {
                   normalized[key] = value;
                 }
               } else if (value !== null && value !== undefined) {
-                console.log(`${indent}    ${key}: Converting ${typeof value} to string "${String(value)}"`);
                 normalized[key] = String(value);
               }
             } else if (key === "content" && Array.isArray(value)) {
-              // Only include content if it's not empty, or if this is not a component type
               if (value.length > 0 || config.type !== "component") {
-                console.log(`${indent}    content: Processing array of ${value.length} items`);
-                normalized[key] = value.map((item, idx) => normalizeLayoutConfig(item, depth + 1, `${path}.content[${idx}]`));
-              } else {
-                console.log(`${indent}    content: Skipping empty content array for component`);
+                normalized[key] = value.map((item) => normalizeLayoutConfig(item));
               }
             } else if (key === "componentState") {
-              console.log(`${indent}    componentState: Passing through as-is`);
-              // componentState should be passed through as-is (it's data, not layout config)
               normalized[key] = value;
             } else if (typeof value === "object" && value !== null) {
-              console.log(`${indent}    ${key}: Recursing into nested object`);
-              // Recursively normalize other objects
-              normalized[key] = normalizeLayoutConfig(value, depth + 1, `${path}.${key}`);
+              normalized[key] = normalizeLayoutConfig(value);
             } else {
-              console.log(`${indent}    ${key}: Passing through ${typeof value} value:`, value);
               normalized[key] = value;
             }
           }
 
-          console.log(`${indent}[Normalize ${path}] Result keys:`, Object.keys(normalized));
           return normalized;
         };
 
-        console.log("[GoldenLayout] Raw config:", JSON.stringify(layoutState || windowConfig.defaultLayout, null, 2));
         const rawConfig = layoutState || windowConfig.defaultLayout || createDefaultLayout(windowConfig.windowKinds.map((wt) => wt.id));
         const config = normalizeLayoutConfig(rawConfig);
-
-        console.log("[GoldenLayout] Normalized config:", JSON.stringify(config, null, 2));
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
@@ -11897,66 +11855,155 @@ const LayoutWrapper: FC = () => {
     return { leftItems, centerItems, rightItems };
   }, [navigationHistory, upTarget, isAtRoot, navigate, sketchpadCommands, isFullscreen]);
 
+  const activeInteraction = useActiveInteraction();
+  const panelOpacity = activeInteraction === "dragging" ? 0.3 : 1;
+
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragData, setActiveDragData] = useState<any>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px of movement required before drag starts
+      },
+    }),
+  );
+
+  const customCollisionDetection = useCallback((args: any) => {
+    // Try pointer-based collision first (most accurate for drop zones)
+    const pointerCollisions = pointerWithin(args);
+    console.log("[DEBUG] DRAGNDROP Pointer collisions:", pointerCollisions.length);
+
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+
+    // Fall back to rectangle intersection
+    const rectCollisions = rectIntersection(args);
+    console.log("[DEBUG] DRAGNDROP Rect collisions:", rectCollisions.length);
+
+    if (rectCollisions.length > 0) {
+      return rectCollisions;
+    }
+
+    // Last resort: closest center
+    const centerCollisions = closestCenter(args);
+    console.log("[DEBUG] DRAGNDROP Center collisions:", centerCollisions ? 1 : 0);
+
+    return centerCollisions ? [centerCollisions] : [];
+  }, []);
+
+  const kitShallows = useKitShallows();
+  const getTypeOrDesignName = useCallback(() => {
+    if (!activeDragData) return null;
+    if (activeDragData.type === "type") {
+      const kitId = activeDragData.typeGuid?.split("-")[0];
+      const kit = kitShallows.find((k) => k.guid.startsWith(kitId));
+      const type = kit?.types?.find((t) => t.guid === activeDragData.typeGuid);
+      return type?.name || "Type";
+    } else if (activeDragData.type === "design") {
+      const kitId = activeDragData.designGuid?.split("-")[0];
+      const kit = kitShallows.find((k) => k.guid.startsWith(kitId));
+      const design = kit?.designs?.find((d) => d.guid === activeDragData.designGuid);
+      return design?.name || "Design";
+    }
+    return null;
+  }, [activeDragData, kitShallows]);
+
   return (
     <TutorialProvider store={tutorialStore}>
-      <LayoutComponent
-        className="bg-base text-foreground relative border"
-        navbar={<Navbar leftItems={navbarItems.leftItems} centerItems={navbarItems.centerItems} rightItems={navbarItems.rightItems} isExpanded={isNavbarExpanded} />}
-        footer={
-          !isFullscreen || isFooterExpanded ? (
-            <Footer
-              items={footerItems.map((item) => ({
-                id: item.id,
-                content: item.content,
-                order: item.order,
-                onClick: item.onClick,
-              }))}
-              isVisible={isFooterExpanded || !isFullscreen}
-            />
-          ) : undefined
-        }
-        leftPanel={
-          panelVisibility.workbench || panelVisibility.tools
-            ? {
-                visible: panelVisibility.workbench || panelVisibility.tools,
-                size: panelVisibility.workbench ? panelSizes.workbenchWidth : panelSizes.toolsWidth,
-                onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.workbench ? "workbenchWidth" : "toolsWidth", size),
-                sections: panelVisibility.workbench ? workbenchSections : toolsSections,
-              }
-            : undefined
-        }
-        middlePanel={
-          panelVisibility.hud || panelVisibility.stats
-            ? {
-                visible: panelVisibility.hud || panelVisibility.stats,
-                size: panelVisibility.hud ? panelSizes.hudWidth : panelSizes.statsWidth,
-                onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.hud ? "hudWidth" : "statsWidth", size),
-                sections: panelVisibility.hud ? hudSections : statsSections,
-              }
-            : undefined
-        }
-        rightPanel={
-          panelVisibility.details || panelVisibility.chat || panelVisibility.settings
-            ? {
-                visible: panelVisibility.details || panelVisibility.chat || panelVisibility.settings,
-                size: panelVisibility.details ? panelSizes.detailsWidth : panelVisibility.chat ? panelSizes.chatWidth : panelSizes.settingsWidth,
-                onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.details ? "detailsWidth" : panelVisibility.chat ? "chatWidth" : "settingsWidth", size),
-                sections: panelVisibility.details ? detailsSections : panelVisibility.chat ? chatSections : settingsSections,
-              }
-            : undefined
-        }
-        bottomPanel={
-          panelVisibility.chat
-            ? {
-                visible: panelVisibility.chat,
-                size: panelSizes.consoleHeight,
-                onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                sections: consoleSections,
-              }
-            : undefined
-        }
-        canvas={<AppRouter />}
-      />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={customCollisionDetection}
+        onDragStart={(event) => {
+          console.log("[DEBUG] DRAGNDROP Sketchpad DndContext onDragStart:", event);
+          setActiveDragId(event.active.id as string);
+          setActiveDragData(event.active.data.current);
+          // Set active interaction to make panels fade
+          sketchpadCommands.setActiveInteraction("semio.sketchpad.drag", "dragging");
+        }}
+        onDragEnd={(event) => {
+          console.log("[DEBUG] DRAGNDROP Sketchpad DndContext onDragEnd:", event);
+          console.log("[DEBUG] DRAGNDROP Collisions:", event.collisions);
+          console.log("[DEBUG] DRAGNDROP Over:", event.over);
+          setActiveDragId(null);
+          setActiveDragData(null);
+          // Clear active interaction
+          sketchpadCommands.setActiveInteraction("semio.sketchpad.drag", undefined);
+          // Dispatch custom event that apps can listen to
+          const customEvent = new CustomEvent("design-drag-end", { detail: event });
+          window.dispatchEvent(customEvent);
+        }}
+      >
+        <LayoutComponent
+          className="bg-base text-foreground relative border"
+          navbar={<Navbar leftItems={navbarItems.leftItems} centerItems={navbarItems.centerItems} rightItems={navbarItems.rightItems} isExpanded={isNavbarExpanded} />}
+          footer={
+            !isFullscreen || isFooterExpanded ? (
+              <Footer
+                items={footerItems.map((item) => ({
+                  id: item.id,
+                  content: item.content,
+                  order: item.order,
+                  onClick: item.onClick,
+                }))}
+                isVisible={isFooterExpanded || !isFullscreen}
+              />
+            ) : undefined
+          }
+          leftPanel={
+            panelVisibility.workbench || panelVisibility.tools
+              ? {
+                  visible: panelVisibility.workbench || panelVisibility.tools,
+                  size: panelVisibility.workbench ? panelSizes.workbenchWidth : panelSizes.toolsWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.workbench ? "workbenchWidth" : "toolsWidth", size),
+                  sections: panelVisibility.workbench ? workbenchSections : toolsSections,
+                  opacity: panelOpacity,
+                }
+              : undefined
+          }
+          middlePanel={
+            panelVisibility.hud || panelVisibility.stats
+              ? {
+                  visible: panelVisibility.hud || panelVisibility.stats,
+                  size: panelVisibility.hud ? panelSizes.hudWidth : panelSizes.statsWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.hud ? "hudWidth" : "statsWidth", size),
+                  sections: panelVisibility.hud ? hudSections : statsSections,
+                }
+              : undefined
+          }
+          rightPanel={
+            panelVisibility.details || panelVisibility.chat || panelVisibility.settings
+              ? {
+                  visible: panelVisibility.details || panelVisibility.chat || panelVisibility.settings,
+                  size: panelVisibility.details ? panelSizes.detailsWidth : panelVisibility.chat ? panelSizes.chatWidth : panelSizes.settingsWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.details ? "detailsWidth" : panelVisibility.chat ? "chatWidth" : "settingsWidth", size),
+                  sections: panelVisibility.details ? detailsSections : panelVisibility.chat ? chatSections : settingsSections,
+                }
+              : undefined
+          }
+          bottomPanel={
+            panelVisibility.chat
+              ? {
+                  visible: panelVisibility.chat,
+                  size: panelSizes.consoleHeight,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                  sections: consoleSections,
+                }
+              : undefined
+          }
+          canvas={<AppRouter />}
+        />
+        <DragOverlay>
+          {activeDragId && activeDragData ? (
+            <div className="cursor-grabbing">
+              <div className="bg-base border border-[color:var(--border-color)] rounded-full w-small h-small flex items-center justify-center shadow-lg">
+                <span className="text-small font-medium select-none">{getTypeOrDesignName()?.substring(0, 2).toUpperCase() || "?"}</span>
+              </div>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </TutorialProvider>
   );
 };

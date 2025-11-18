@@ -213,9 +213,9 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### Keywords
 
-- `PLAN`: Create a markdown document to plan a new feature.
+- `PLAN`: Create a markdown document to plan a new feature. Use a slug and call the document `SLUG.md` (replace SLUG with a unique slug for this plan).
 
-- `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[DIAGNOSESLUG] ` (replace DIAGNOSESLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis.
+- `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. Use a slug and call the document `SLUG.md` (replace SLUG with a unique slug for this diagnosis). NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [AVATAR-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`.
 
 1. Analyis [DIAGNOSESLUG]
    1.1. Problem description
@@ -224,7 +224,11 @@ Stats provide computed or measured performance data for entire designs using the
 
 - `IMPLEMENT`: Implement a markdown document (such as created by `PLAN` or `DIAGNOSE`). When implementing a `DIAGNOSE` you receive the logs from the user and if the logs are enough to verify your hypothesis, ALWAYs directly implement the solution. When the `DIAGNOSE` is not enough, update the document with the new information, add new logs and continue the process.
 
+- `FIX`: Anaylze and fix the problem imediatley in one step (without any approval). When you are not sure about the root cause, pick the most likely one and try to implement the solution directly.
+
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, temporary code, …
+
+- `I18N`: Check for all missing translation keys in the locales.
 
 ### Internationalization (i18n)
 

@@ -19,9 +19,9 @@
 
 // #endregion
 
+import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
 import type { Meta, StoryObj } from "@storybook/react";
-import { AddIcon, LayoutIcon, TypeIcon, AwardIcon, DocumentIcon, FolderIcon, UserIcon } from "@semio/assets";
-import { Strip, Toggle, Input, Button } from "../../../../sketchpad/elements";
+import { Button, Input, Strip, Toggle } from "../../../../sketchpad/elements";
 
 const meta = {
   title: "Elements/Aggregation/Strip",
@@ -201,9 +201,7 @@ export const VerticalWithToggles: Story = {
 export const OverflowingHorizontal: Story = {
   args: {
     direction: "horizontal",
-    items: Array.from({ length: 20 }, (_, i) => (
-      <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />
-    )),
+    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />),
   },
   render: (args) => (
     <div className="w-[600px]">
@@ -215,9 +213,7 @@ export const OverflowingHorizontal: Story = {
 export const OverflowingVertical: Story = {
   args: {
     direction: "vertical",
-    items: Array.from({ length: 20 }, (_, i) => (
-      <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />
-    )),
+    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />),
   },
   render: (args) => (
     <div className="h-[400px]">

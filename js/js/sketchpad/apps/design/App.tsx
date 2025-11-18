@@ -51,7 +51,7 @@ import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 
 // #region Imports
 
-import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
@@ -139,7 +139,7 @@ import {
   useTooltip,
   useType,
 } from "../../App";
-import { Avatar, AvatarFallback, Button, Combobox, Diagram, Input, Model, Scene, Slider, SortableTreeItems, Stepper, Textarea, TransformableModel, TreeContent, TreeItem, TreeSection } from "../../elements";
+import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Input, Model, Scene, Slider, SortableTreeItems, Stepper, Textarea, TransformableModel, TreeContent, TreeItem, TreeSection } from "../../elements";
 import { AppConfig } from "../index";
 
 let kitAppModuleCache: any = null;
@@ -4848,6 +4848,22 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
   const { setNodeRef: setDroppableRef } = useDroppable({ id: `diagram-drop-zone-${diagramId}` });
+  const dropZoneRef = useRef<HTMLDivElement | null>(null);
+
+  const setDropZoneRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      const rect = node.getBoundingClientRect();
+      console.log("[DEBUG] DRAGNDROP Diagram drop zone dimensions:", {
+        id: `diagram-drop-zone-${diagramId}`,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      });
+    }
+    dropZoneRef.current = node;
+    setDroppableRef(node);
+  }, [diagramId, setDroppableRef]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -5598,9 +5614,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   return (
-    <div id="diagram" className="h-full w-full relative" ref={setDroppableRef}>
+    <div id="diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
       <Diagram
-        wrapperRef={setDroppableRef}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeComponents as NodeTypes}
@@ -5627,6 +5642,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         onMoveEnd={onMoveEnd}
         onConnect={onConnect}
         reactFlowInstanceRef={reactFlowInstanceRef}
+        onInit={(instance) => {
+          if (reactFlowInstanceRef) {
+            reactFlowInstanceRef.current = instance;
+          }
+          const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
+          if (diagramElement) {
+            (diagramElement as any).__reactFlowInstance = instance;
+          }
+        }}
         showControls={fullscreen && panelVisibility.toolbar}
         showMinimap={fullscreen && panelVisibility.toolbar}
         miniMapNodeComponent={MiniMapNode}
@@ -6329,11 +6353,19 @@ const App: FC<AppProps> = () => {
       data: { type: "type", typeGuid: type.guid },
     });
 
+    useEffect(() => {
+      console.log("[DEBUG] DRAGNDROP TypeTreeItem mounted for type:", type.name);
+      console.log("[DEBUG] DRAGNDROP listeners:", listeners);
+      console.log("[DEBUG] DRAGNDROP attributes:", attributes);
+    }, []);
+
     const handleDragStart = () => {
+      console.log("[DEBUG] DRAGNDROP TypeTreeItem drag started for:", type.name);
       setActiveDraggedType(type);
     };
 
     useEffect(() => {
+      console.log("[DEBUG] DRAGNDROP isDragging changed:", isDragging, "for type:", type.name);
       if (isDragging) {
         handleDragStart();
       }
@@ -6353,6 +6385,7 @@ const App: FC<AppProps> = () => {
               isHovered={false}
               shouldFade={isDragging}
               title={type.name}
+              onClick={() => console.log("[DEBUG] DRAGNDROP Avatar clicked for:", type.name)}
             />
             <span className="truncate">{type.name}</span>
           </div>
@@ -6420,12 +6453,18 @@ const App: FC<AppProps> = () => {
       data: { type: "design", designGuid: design.guid },
     });
 
+    useEffect(() => {
+      console.log("[DEBUG] DesignTreeItem mounted for design:", design.name, "isDragging:", isDragging);
+    }, []);
+
     const handleDragStart = () => {
+      console.log("[DEBUG] DesignTreeItem drag started for:", design.name);
       setActiveDraggedDesign(design);
     };
 
     useEffect(() => {
       if (isDragging) {
+        console.log("[DEBUG] DesignTreeItem isDragging changed to true for:", design.name);
         handleDragStart();
       }
     }, [isDragging]);
@@ -6624,7 +6663,9 @@ const App: FC<AppProps> = () => {
   }, []);
 
   const handleDragEnd = (event: DragEndEvent) => {
+    console.log("[DEBUG] handleDragEnd called with event:", event);
     const { active, over, delta } = event;
+    console.log("[DEBUG] active:", active?.id, "over:", over?.id, "delta:", delta);
 
     // Handle window template drops on the canvas
     if (active.data.current?.type === "window-template" && over && over.id === "layout-canvas-drop-zone") {
@@ -6649,6 +6690,7 @@ const App: FC<AppProps> = () => {
       });
 
       if (activeDraggedType) {
+        console.log("[DEBUG] Creating piece from type:", activeDraggedType.name, "at position:", { x, y });
         startTransaction("semio.sketchpad.app.design.dragEnd.type");
         const pieceGuid = guid();
         const piece = {
@@ -6659,7 +6701,9 @@ const App: FC<AppProps> = () => {
         };
         addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
         finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
+        console.log("[DEBUG] Piece created successfully");
       } else if (activeDraggedDesign) {
+        console.log("[DEBUG] Creating piece from design:", activeDraggedDesign.name, "at position:", { x, y });
         startTransaction("semio.sketchpad.app.design.dragEnd.design");
         const pieceGuid = guid();
         const piece = {
@@ -6670,21 +6714,15 @@ const App: FC<AppProps> = () => {
         };
         addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
         finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
+        console.log("[DEBUG] Piece created successfully");
+      } else {
+        console.log("[DEBUG] No active dragged type or design");
       }
     }
 
     setActiveDraggedType(null);
     setActiveDraggedDesign(null);
   };
-
-  useEffect(() => {
-    const listener = (e: Event) => {
-      const customEvent = e as CustomEvent<DragEndEvent>;
-      handleDragEnd(customEvent.detail);
-    };
-    window.addEventListener("design-drag-end", listener);
-    return () => window.removeEventListener("design-drag-end", listener);
-  }, [handleDragEnd]);
 
   const store = useDesignAppStore() as DesignAppStore | null;
   const windowLayoutRaw = useDesignApp((s) => s.windowLayout);
@@ -6774,6 +6812,20 @@ const App: FC<AppProps> = () => {
     },
     [store],
   );
+
+  useEffect(() => {
+    console.log("[DEBUG] Design App mounted.");
+  }, []);
+
+  useEffect(() => {
+    console.log("[DEBUG] DRAGNDROP Registering handleDragEnd for design-drag-end event");
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<DragEndEvent>;
+      handleDragEnd(customEvent.detail);
+    };
+    window.addEventListener("design-drag-end", handleEvent);
+    return () => window.removeEventListener("design-drag-end", handleEvent);
+  }, [handleDragEnd]);
 
   return (
     <ReactFlowProvider>

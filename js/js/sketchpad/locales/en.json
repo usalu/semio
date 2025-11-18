@@ -2037,6 +2037,36 @@
               "beginner": "Default"
             }
           },
+          "windowLibrary": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "scene": {
+              "label": {
+                "normal": "Scene Windows",
+                "beginner": "Browse and add 3D scene windows for viewing your design in 3D space."
+              },
+              "manual": "design#windows",
+              "tutorial": "hello-semio/model-design#scene"
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagram Windows",
+                "beginner": "Browse and add 2D diagram windows for viewing connection topology."
+              },
+              "manual": "design#windows",
+              "tutorial": "hello-semio/model-design#diagram"
+            },
+            "table": {
+              "label": {
+                "normal": "Table Windows",
+                "beginner": "Browse and add table windows for viewing design data in tabular format."
+              },
+              "manual": "design#windows",
+              "tutorial": "hello-semio/model-design#table"
+            }
+          },
           "descriptionPlaceholder": {
             "label": {
               "normal": "Describe this design...",

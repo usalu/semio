@@ -778,7 +778,7 @@ export interface DraggableAvatarProps {
 export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
   ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onDoubleClick, onPointerEnter, onPointerLeave, className }, ref) => {
     return (
-      <div ref={dragRef || ref} {...dragListeners} {...dragAttributes} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} title={title} className={className}>
+      <div data-slot="avatar" ref={dragRef || ref} {...dragListeners} {...dragAttributes} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} title={title} className={className}>
         <Avatar
           className={cn(
             "cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)]",
@@ -2426,7 +2426,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           {
             value: "on",
             icon: addIconSize(icon),
-            action: <Action id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />,
+            action: <Action as="div" id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />,
           },
         ]}
       />
@@ -2465,7 +2465,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const dropdownAction = (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Action id={dropdownId} icon={<ChevronDownIcon className="size-small" />} level={level} />
+          <Action as="div" id={dropdownId} icon={<ChevronDownIcon className="size-small" />} level={level} />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
           <div className="flex flex-col">

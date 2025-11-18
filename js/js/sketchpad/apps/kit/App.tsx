@@ -3169,8 +3169,6 @@ const AppContent: FC = () => {
           }
         }}
       >
-        {/* Concept Filter */}
-        <ConceptFilter allConcepts={allConcepts} paramName="c" />
         <Strip
           direction="horizontal"
           id="semio.sketchpad.app.kit.filter.strip"
@@ -3181,18 +3179,18 @@ const AppContent: FC = () => {
                     kind="withAction"
                     pressed={true}
                     onPressedChange={() => toggleKind(selectedKind)}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact(selectedKind)}
                     id="semio.sketchpad.app.kit.kitApp.hideKind"
                     actionId="semio.sketchpad.app.kit.kitApp.createArtifact"
                     icon={
                       <>
-                        {selectedKind === "designs" && <LayoutIcon className="size-tiny" />}
-                        {selectedKind === "types" && <TypeIcon className="size-tiny" />}
-                        {selectedKind === "qualities" && <AwardIcon className="size-tiny" />}
-                        {selectedKind === "files" && <DocumentIcon className="size-tiny" />}
-                        {selectedKind === "folders" && <FolderIcon className="size-tiny" />}
-                        {selectedKind === "authors" && <UserIcon className="size-tiny" />}
+                        {selectedKind === "designs" && <LayoutIcon />}
+                        {selectedKind === "types" && <TypeIcon />}
+                        {selectedKind === "qualities" && <AwardIcon />}
+                        {selectedKind === "files" && <DocumentIcon />}
+                        {selectedKind === "folders" && <FolderIcon />}
+                        {selectedKind === "authors" && <UserIcon />}
                       </>
                     }
                   />,
@@ -3202,68 +3200,64 @@ const AppContent: FC = () => {
                     kind="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("designs")}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("designs")}
                     id="semio.sketchpad.app.kit.kitApp.showDesigns"
                     actionId="semio.sketchpad.app.kit.kitApp.createDesign"
-                    icon={<LayoutIcon className="size-tiny" />}
+                    icon={<LayoutIcon />}
                   />,
                   <Toggle
                     kind="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("types")}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("types")}
                     id="semio.sketchpad.app.kit.kitApp.showTypes"
                     actionId="semio.sketchpad.app.kit.kitApp.createType"
-                    icon={<TypeIcon className="size-tiny" />}
+                    icon={<TypeIcon />}
                   />,
                   <Toggle
                     kind="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("qualities")}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("qualities")}
                     id="semio.sketchpad.app.kit.kitApp.showQualities"
                     actionId="semio.sketchpad.app.kit.kitApp.createQuality"
-                    icon={<AwardIcon className="size-tiny" />}
+                    icon={<AwardIcon />}
                   />,
                   <Toggle
                     kind="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("files")}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("files")}
                     id="semio.sketchpad.app.kit.kitApp.showFiles"
                     actionId="semio.sketchpad.app.kit.kitApp.createFile"
-                    icon={<DocumentIcon className="size-tiny" />}
+                    icon={<DocumentIcon />}
                   />,
                   <Toggle
                     kind="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("folders")}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("folders")}
                     id="semio.sketchpad.app.kit.kitApp.showFolders"
                     actionId="semio.sketchpad.app.kit.kitApp.createFolder"
-                    icon={<FolderIcon className="size-tiny" />}
+                    icon={<FolderIcon />}
                   />,
                   <Toggle
                     kind="withAction"
                     pressed={false}
                     onPressedChange={() => toggleKind("authors")}
-                    actionIcon={<AddIcon className="size-tiny" />}
+                    actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("authors")}
                     id="semio.sketchpad.app.kit.kitApp.showAuthors"
                     actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
-                    icon={<UserIcon className="size-tiny" />}
+                    icon={<UserIcon />}
                   />,
                 ]),
             ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
-            ...(selectedConcepts.length > 0 ? selectedConcepts.map((concept) => <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide" icon={concept} />) : []),
-            ...(allConcepts.length > 0
-              ? allConcepts.filter((c) => !selectedConcepts.includes(c)).map((concept) => <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.show" icon={concept} />)
-              : []),
             ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={name} />) : []),
             <Input
               key="search"
@@ -3273,23 +3267,9 @@ const AppContent: FC = () => {
               value={searchQuery}
               onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)}
             />,
-            <Toggle
-              key="sort"
-              kind="dropdown"
-              pressed={sortColumn === "artifact"}
-              value={sortColumn === "artifact" ? sortDirection : "asc"}
-              onValueChange={(value) => {
-                kitAppCommands.setSortColumn("semio.sketchpad.app.kit.filter.artifact.sortColumn", "artifact");
-                kitAppCommands.setSortDirection("semio.sketchpad.app.kit.filter.artifact.sortDirection", value as "asc" | "desc");
-              }}
-              items={[
-                { value: "asc", label: <SortAscendingIcon className="size-tiny" />, id: "semio.sketchpad.app.sort.ascending" },
-                { value: "desc", label: <SortDescendingIcon className="size-tiny" />, id: "semio.sketchpad.app.sort.descending" },
-              ]}
-              id="semio.sketchpad.app.kit.kitApp.sortByName"
-            />,
           ]}
         />
+        <ConceptFilter allConcepts={allConcepts} paramName="c" />
 
         {/* Mobile table using general Table component */}
         <Table
@@ -3399,18 +3379,18 @@ const AppContent: FC = () => {
                   kind="withAction"
                   pressed={true}
                   onPressedChange={() => toggleKind(selectedKind)}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact(selectedKind)}
                   id="semio.sketchpad.app.kit.kitApp.hideKind"
                   actionId="semio.sketchpad.app.kit.kitApp.createArtifact"
                   icon={
                     <>
-                      {selectedKind === "designs" && <LayoutIcon className="size-tiny" />}
-                      {selectedKind === "types" && <TypeIcon className="size-tiny" />}
-                      {selectedKind === "qualities" && <AwardIcon className="size-tiny" />}
-                      {selectedKind === "files" && <DocumentIcon className="size-tiny" />}
-                      {selectedKind === "folders" && <FolderIcon className="size-tiny" />}
-                      {selectedKind === "authors" && <UserIcon className="size-tiny" />}
+                      {selectedKind === "designs" && <LayoutIcon />}
+                      {selectedKind === "types" && <TypeIcon />}
+                      {selectedKind === "qualities" && <AwardIcon />}
+                      {selectedKind === "files" && <DocumentIcon />}
+                      {selectedKind === "folders" && <FolderIcon />}
+                      {selectedKind === "authors" && <UserIcon />}
                     </>
                   }
                 />,
@@ -3420,79 +3400,76 @@ const AppContent: FC = () => {
                   kind="withAction"
                   pressed={false}
                   onPressedChange={() => toggleKind("designs")}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("designs")}
                   id="semio.sketchpad.app.kit.kitApp.showDesigns"
                   actionId="semio.sketchpad.app.kit.kitApp.createDesign"
-                  icon={<LayoutIcon className="size-tiny" />}
+                  icon={<LayoutIcon />}
                 />,
                 <Toggle
                   kind="withAction"
                   pressed={false}
                   onPressedChange={() => toggleKind("types")}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("types")}
                   id="semio.sketchpad.app.kit.kitApp.showTypes"
                   actionId="semio.sketchpad.app.kit.kitApp.createType"
-                  icon={<TypeIcon className="size-tiny" />}
+                  icon={<TypeIcon />}
                 />,
                 <Toggle
                   kind="withAction"
                   pressed={false}
                   onPressedChange={() => toggleKind("qualities")}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("qualities")}
                   id="semio.sketchpad.app.kit.kitApp.showQualities"
                   actionId="semio.sketchpad.app.kit.kitApp.createQuality"
-                  icon={<AwardIcon className="size-tiny" />}
+                  icon={<AwardIcon />}
                 />,
                 <Toggle
                   kind="withAction"
                   pressed={false}
                   onPressedChange={() => toggleKind("files")}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("files")}
                   id="semio.sketchpad.app.kit.kitApp.showFiles"
                   actionId="semio.sketchpad.app.kit.kitApp.createFile"
-                  icon={<DocumentIcon className="size-tiny" />}
+                  icon={<DocumentIcon />}
                 />,
                 <Toggle
                   kind="withAction"
                   pressed={false}
                   onPressedChange={() => toggleKind("folders")}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("folders")}
                   id="semio.sketchpad.app.kit.kitApp.showFolders"
                   actionId="semio.sketchpad.app.kit.kitApp.createFolder"
-                  icon={<FolderIcon className="size-tiny" />}
+                  icon={<FolderIcon />}
                 />,
                 <Toggle
                   kind="withAction"
                   pressed={false}
                   onPressedChange={() => toggleKind("authors")}
-                  actionIcon={<AddIcon className="size-tiny" />}
+                  actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("authors")}
                   id="semio.sketchpad.app.kit.kitApp.showAuthors"
                   actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
-                  icon={<UserIcon className="size-tiny" />}
+                  icon={<UserIcon />}
                 />,
               ]),
           ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
-          ...(selectedConcepts.length > 0 ? selectedConcepts.map((concept) => <Toggle key={concept} pressed={true} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.hide" icon={concept} />) : []),
-          ...(allConcepts.length > 0
-            ? allConcepts.filter((c) => !selectedConcepts.includes(c)).map((concept) => <Toggle key={concept} pressed={false} onPressedChange={() => toggleConcept(concept)} id="semio.sketchpad.app.kit.filter.concept.show" icon={concept} />)
-            : []),
           ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={name} />) : []),
           <Input
             key="search"
             id="semio.sketchpad.app.kit.canvas.table.search"
             className="flex-1 min-w-[200px]"
-            placeholder={t("semio.sketchpad.common.search")}
-            value={searchQuery}
-            onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
-          />,
-        ]}
-      />
+          placeholder={t("semio.sketchpad.common.search")}
+          value={searchQuery}
+          onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
+        />,
+      ]}
+    />
+      <ConceptFilter allConcepts={allConcepts} paramName="c" />
       <Scrollable ref={scrollAreaRef} className="flex-1" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
         {isDragOver && (
           <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-10">
@@ -3526,12 +3503,12 @@ const AppContent: FC = () => {
                     ),
                     accessor: (row: TableRow) => (
                       <>
-                        {row.kind === "designs" && <LayoutIcon className="size-tiny" />}
-                        {row.kind === "types" && <TypeIcon className="size-tiny" />}
-                        {row.kind === "qualities" && <AwardIcon className="size-tiny" />}
-                        {row.kind === "files" && <DocumentIcon className="size-tiny" />}
-                        {row.kind === "folders" && <FolderIcon className="size-tiny" />}
-                        {row.kind === "authors" && <UserIcon className="size-tiny" />}
+                        {row.kind === "designs" && <LayoutIcon />}
+                        {row.kind === "types" && <TypeIcon />}
+                        {row.kind === "qualities" && <AwardIcon />}
+                        {row.kind === "files" && <DocumentIcon />}
+                        {row.kind === "folders" && <FolderIcon />}
+                        {row.kind === "authors" && <UserIcon />}
                       </>
                     ),
                     width: "w-small",

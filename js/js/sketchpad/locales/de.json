@@ -2007,6 +2007,36 @@
               "beginner": "Standard"
             }
           },
+          "windowLibrary": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "scene": {
+              "label": {
+                "normal": "Szenen-Fenster",
+                "beginner": "Durchsuchen und Hinzufuegen von 3D-Szenen-Fenstern zum Betrachten Ihres Entwurfs im 3D-Raum."
+              },
+              "manual": "design#windows",
+              "tutorial": "hello-semio/model-design#scene"
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagramm-Fenster",
+                "beginner": "Durchsuchen und Hinzufuegen von 2D-Diagramm-Fenstern zum Betrachten der Verbindungstopologie."
+              },
+              "manual": "design#windows",
+              "tutorial": "hello-semio/model-design#diagram"
+            },
+            "table": {
+              "label": {
+                "normal": "Tabellen-Fenster",
+                "beginner": "Durchsuchen und Hinzufuegen von Tabellen-Fenstern zum Betrachten von Entwurfsdaten in tabellarischer Form."
+              },
+              "manual": "design#windows",
+              "tutorial": "hello-semio/model-design#table"
+            }
+          },
           "descriptionPlaceholder": {
             "label": {
               "normal": "Beschreiben Sie diesen Entwurf...",

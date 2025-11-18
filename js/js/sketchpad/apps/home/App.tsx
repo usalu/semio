@@ -1233,25 +1233,26 @@ const Home: FC = ({}) => {
                 ))
               : []),
             <Input key="search" id="semio.sketchpad.app.home.search" className="flex-1 min-w-[160px]" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />,
-            <Toggle
-              key="sort"
-              kind="dropdown"
-              pressed={sortColumn === "name"}
-              value={sortColumn === "name" ? sortDirection : "asc"}
-              onValueChange={(value) => {
-                homeCommands.setSortColumn("semio.sketchpad.app.home.filter.name.sortColumn", "name");
-                homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
-              }}
-              items={[
-                { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-              ]}
-              id={"semio.sketchpad.app.home.sortByName"}
-            />,
           ]}
         />
-
-        {/* Simplified table - only name column, no headers */}
+        <ConceptFilter allConcepts={allConcepts} />
+        <div className="flex items-center justify-between border-b px-single h-large">
+          <span className="font-medium">{useLabel("semio.sketchpad.app.home.name")}</span>
+          <Toggle
+            kind="dropdown"
+            pressed={sortColumn === "name"}
+            value={sortColumn === "name" ? sortDirection : "asc"}
+            onValueChange={(value) => {
+              homeCommands.setSortColumn("semio.sketchpad.app.home.filter.name.sortColumn", "name");
+              homeCommands.setSortDirection("semio.sketchpad.app.home.header.name.sortDirection", value as "asc" | "desc");
+            }}
+            items={[
+              { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+              { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+            ]}
+            id={"semio.sketchpad.app.home.sortByName"}
+          />
+        </div>
         <Scrollable className="flex-1">
           <div className="flex flex-col">
             {rows.map((row) => {
@@ -1260,7 +1261,7 @@ const Home: FC = ({}) => {
               return (
                 <div
                   key={row.id}
-                  className={`border-b p-single cursor-selectable ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                  className={`border-b p-single cursor-selectable h-large ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
                   role="button"
                   tabIndex={0}
                   onClick={(e) => {
