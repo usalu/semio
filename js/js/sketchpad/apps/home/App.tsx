@@ -21,7 +21,7 @@
 
 // #region Imports
 
-import { AddIcon, AwardIcon, ChevronDownIcon, ChevronRightIcon, CodeIcon, DocumentIcon, LocalKitIcon, MonitorIcon, MoonIcon, RemoteKitIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, SunIcon, TabletIcon, TemporaryKitIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, ChevronDownIcon, ChevronRightIcon, CodeIcon, DocumentIcon, HandIcon, LocalKitIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoteKitIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, SunIcon, TabletIcon, TemporaryKitIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
@@ -547,9 +547,6 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
   const expertise = useExpertise();
   const mode = useMode();
 
-  // Determine simple layout string for toggle group
-  const layoutValue = typeof layout === "object" ? "mobile" : layout;
-
   return (
     <>
       <TreeItem>
@@ -572,17 +569,13 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
         <TreeContent>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.layout"
-            value={layoutValue}
-            onValueChange={(value: string) => {
-              const newLayout: Layout = value === "mobile" ? { isNavbarExpanded: false, isFooterExpanded: false } : (value as "desktop" | "tablet");
-              setLayout("semio.sketchpad.app.home.settings.layout", newLayout);
-            }}
+            value={typeof layout === "object" ? "desktop" : layout}
+            onValueChange={(value: string) => setLayout("semio.sketchpad.app.home.settings.layout", value as "desktop" | "tablet")}
             showLabel
             kind="single"
             items={[
-              { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MonitorIcon className="size-small" /> },
-              { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <TabletIcon className="size-small" /> },
-              { value: "mobile", id: "semio.sketchpad.settings.layout.mobile", icon: <SmartphoneIcon className="size-small" /> },
+              { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+              { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
             ]}
           />
         </TreeContent>
@@ -759,7 +752,7 @@ const Home: FC = ({}) => {
     return () => {
       removeSection("settings", "semio.sketchpad.app.home.settings");
     };
-  }, [appType, addSection, removeSection, setTheme, setExpertise, setMode]);
+  }, [appType, addSection, removeSection, setTheme, setLayout, setExpertise, setMode]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitStoreKind | null;

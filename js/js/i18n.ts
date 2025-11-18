@@ -37,31 +37,44 @@ export function setExpertiseProvider(fn: () => Expertise) {
 }
 
 export function useLabel(id: string, defaultValue?: string): string {
-  const { t } = useI18nTranslation();
+  const { t } = useTranslation();
   const expertise = getExpertiseFunction ? getExpertiseFunction() : Expertise.NORMAL;
   const value = t(id);
 
+  console.log(`[DEBUG] [BREADCRUMB-RENDER] useLabel called with id="${id}"`, { value, expertise, valueType: typeof value, hasLabel: value && typeof value === "object" && "label" in value });
+
   if (typeof value === "string") {
+    console.log(`[DEBUG] [BREADCRUMB-RENDER] Returning string value:`, value);
     return value;
   }
 
   if (value && typeof value === "object" && value.label) {
+    console.log(`[DEBUG] [BREADCRUMB-RENDER] value.label exists:`, { label: value.label, labelType: typeof value.label });
     if (typeof value.label === "string") {
+      console.log(`[DEBUG] [BREADCRUMB-RENDER] Returning value.label (string):`, value.label);
       return value.label;
     }
     if (value.label && typeof value.label === "object") {
+      console.log(`[DEBUG] [BREADCRUMB-RENDER] value.label is object:`, value.label);
       if (expertise === Expertise.BEGINNER && value.label.beginner !== undefined) {
-        return value.label.beginner;
+        const result = String(value.label.beginner);
+        console.log(`[DEBUG] [BREADCRUMB-RENDER] Returning beginner label:`, result);
+        return result;
       }
       if (value.label.normal !== undefined) {
-        return value.label.normal;
+        const result = String(value.label.normal);
+        console.log(`[DEBUG] [BREADCRUMB-RENDER] Returning normal label:`, result);
+        return result;
       }
       if (value.label.beginner !== undefined) {
-        return value.label.beginner;
+        const result = String(value.label.beginner);
+        console.log(`[DEBUG] [BREADCRUMB-RENDER] Returning beginner label (fallback):`, result);
+        return result;
       }
     }
   }
 
+  console.log(`[DEBUG] [BREADCRUMB-RENDER] Returning default/id:`, defaultValue ?? id);
   return defaultValue ?? id;
 }
 

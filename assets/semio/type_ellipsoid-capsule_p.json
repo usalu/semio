@@ -1,175 +1,197 @@
 {
+  "unit": "m",
   "name": "Ellipsoid Capsule",
-  "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
-  "icon": "icons/ellipsoid-capsule_p.svg",
-  "image": "images/ellipsoid-capsule_p.png",
-  "variant": "p",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
-  "unit": "m",
-  "representations": [
-    {
-      "url": "representations/ellipsoid-capsule_p.glb",
-      "description": "",
-      "tags": ["model/gltf-binary"],
-      "attributes": []
-    },
-    {
-      "url": "representations/ellipsoid-capsule_p_1to500.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "attributes": []
-    },
-    {
-      "url": "representations/ellipsoid-capsule_p_1to200.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/80ad44ffe9",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0c53ae86dc",
-      "description": "",
-      "tags": ["application/octet-stream", "model/vnd.speckle+json", "model/vnd.3dm", "1to200"],
-      "attributes": []
-    },
-    {
-      "url": "representations/ellipsoid-capsule_p_collider.glb",
-      "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "attributes": []
-    }
-  ],
-  "ports": [
-    {
-      "id_": "",
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "family": "door capsule west",
-      "compatibleFamilies": ["door tambour west"],
-      "point": {
-        "x": -0.87,
-        "y": -1.8,
-        "z": 0.0
-      },
-      "direction": {
-        "x": 0.0,
-        "y": -1.0,
-        "z": 0.0
-      },
-      "t": 0.0,
-      "attributes": [
-        {
-          "name": "entrance",
-          "value": "",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    }
-  ],
-  "authors": [
-    {
-      "name": "Ueli Saluz",
-      "email": "ueli@semio-tech.org"
-    }
-  ],
   "attributes": [
     {
-      "name": "entrance",
       "value": "back",
-      "unit": "",
+      "guid": "45073168-c28c-4b0c-bb88-a0bfe06d14dc",
+      "key": "entrance",
       "definition": ""
     },
     {
-      "name": "view",
       "value": "side",
-      "unit": "",
+      "guid": "3c3b54c9-1a57-425e-b5ff-d08e7da6f118",
+      "key": "view",
       "definition": ""
     },
     {
-      "name": "length",
       "value": "3.6",
-      "unit": "m",
+      "guid": "e3ef4a15-2f53-4171-8600-32ea973245b1",
+      "key": "length",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
-      "name": "width",
       "value": "4",
-      "unit": "m",
+      "guid": "12c1ba69-9557-480b-b4af-85dd90472743",
+      "key": "width",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
-      "name": "heigth",
       "value": "2.6",
-      "unit": "m",
+      "guid": "709d2983-c5c0-4c74-aa95-3de4c14e8ab1",
+      "key": "heigth",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
-      "name": "window shape",
       "value": "round",
-      "unit": "",
+      "guid": "204fba3c-d55b-460f-9144-d5ddc126af5e",
+      "key": "window shape",
       "definition": ""
     },
     {
-      "name": "effective floor area",
       "value": "6.92",
-      "unit": "m²",
+      "guid": "d97aa079-263f-4082-bce6-1bb04843d7de",
+      "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
-      "name": "construction cost",
       "value": "79488",
-      "unit": "€",
+      "guid": "32e11a4b-d31f-47bd-8b9a-f7ff66e72780",
+      "key": "construction cost",
       "definition": ""
     },
     {
-      "name": "heating energy demand",
       "value": "276",
-      "unit": "kWh/a",
+      "guid": "e414a10d-2ca9-487c-b1ca-93e78d013910",
+      "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "cooling energy demand",
       "value": "173",
-      "unit": "kWh/a",
+      "guid": "89054799-0855-4940-b650-016bc4faa51f",
+      "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "technical equipment energy demand",
       "value": "242",
-      "unit": "kWh/a",
+      "guid": "66c3a450-81a3-4451-acce-cca31274ef62",
+      "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "income",
       "value": "24883",
-      "unit": "€/a",
+      "guid": "4ea6d8f4-6c1a-41c4-b37f-73ce29d81b5c",
+      "key": "income",
       "definition": ""
     },
     {
-      "name": "maintenance expenses",
       "value": "1659",
-      "unit": "€/a",
+      "guid": "2433e784-5664-415b-9349-ca568c9fbc3a",
+      "key": "maintenance expenses",
       "definition": ""
     },
     {
-      "name": "construction global warming potential",
       "value": "1200",
-      "unit": "kgCO2e",
+      "guid": "2f794af6-4d18-454b-a39b-9a1dd4d48581",
+      "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     },
     {
-      "name": "mirrored",
       "value": "",
-      "unit": "",
+      "guid": "2953f536-816b-40da-8e52-3b551f16e03c",
+      "key": "mirrored",
       "definition": ""
     }
-  ]
+  ],
+  "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
+  "icon": "icons/ellipsoid-capsule_p.svg",
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "guid": "45473fa2-84d9-4eab-8b72-ba5570781f09",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "image": "images/ellipsoid-capsule_p.png",
+  "ports": {
+    "mandatory": false,
+    "t": 0.0,
+    "attributes": [
+      {
+        "value": "",
+        "guid": "dcf02daf-b7f0-40e2-b92d-2954339dbcae",
+        "key": "entrance",
+        "definition": ""
+      }
+    ],
+    "guid": "c045e93f-3c61-4584-91a0-2271b9e9b270",
+    "direction": {
+      "y": -1.0,
+      "x": 0.0,
+      "z": 0.0
+    },
+    "description": "The middle of the main entrance door of the upper entrance floor.",
+    "family": "door capsule west",
+    "compatibleFamilies": [
+      "door tambour west"
+    ],
+    "point": {
+      "y": -1.8,
+      "x": -0.87,
+      "z": 0.0
+    }
+  },
+  "updatedAt": "2025-11-18T21:31:47.341Z",
+  "guid": "898dff3a-66ee-484f-9bd5-8b55f80dc57b",
+  "representations": [
+    {
+      "file": "representations/ellipsoid-capsule_p.glb",
+      "guid": "28d91d00-83e4-4247-baaf-2e0094b2a556",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/ellipsoid-capsule_p_1to500.3dm",
+      "guid": "c41e746a-da32-4167-97fa-d543457de55d",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/ellipsoid-capsule_p_1to200.3dm",
+      "guid": "b5cc4564-591b-442b-b930-61459c52f97a",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/80ad44ffe9",
+      "guid": "df057c41-048a-47ac-857e-021fd7f24505",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/0c53ae86dc",
+      "guid": "d503aaaf-3e12-4b7b-a56e-4a8946eee85c",
+      "tags": [
+        "application/octet-stream",
+        "model/vnd.speckle+json",
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/ellipsoid-capsule_p_collider.glb",
+      "guid": "30a47e04-602c-4c2c-b73d-5f6e52fc9810",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "description": ""
+    }
+  ],
+  "createdAt": "2025-11-18T21:31:47.341Z"
 }

@@ -133,8 +133,6 @@ import type { TypeAppState } from "./apps/type/App";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
   ButtonGroup,
   ButtonGroupItem,
   CommandDialog,
@@ -7421,6 +7419,7 @@ export class SketchpadStore {
       }
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.layout) this.ySketchpad.set("layout", JSON.stringify(diff.layout));
+      if (diff.expertise) this.ySketchpad.set("expertise", diff.expertise);
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", diff.isFullscreen);
       if (diff.isMobile !== undefined) this.ySketchpad.set("isMobile", diff.isMobile);
@@ -9371,6 +9370,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     { label: <LocalKitIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.local", href: "/?kind=local" },
     { label: <RemoteKitIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
   ];
+  console.log(`[DEBUG] [BREADCRUMB-RENDER] kitKindItems defined:`, kitKindItems.map(item => ({ ...item, labelType: typeof item.label, isReactElement: React.isValidElement(item.label) })));
 
   const filteredKits = useFilteredKitShallows(kitKind);
   const createKitLabel = useLabel("semio.sketchpad.navbar.createKit");
@@ -9761,396 +9761,423 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const isAtRoot = navigation === "/";
   const hasKindFilter = filteredKind || (kitGuid && kitKind);
 
-  return (
-    <Breadcrumb className="flex-1 min-w-0">
-      <BreadcrumbList>
-        {/* Always show Home icon with dropdown to select kinds */}
-        <BreadcrumbItem id="semio.sketchpad.navbar.home" items={kitKindItems} onNavigate={(href) => navigate(href)}>
-          <BreadcrumbLink onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-            <HomeIcon size={16} />
-          </BreadcrumbLink>
-        </BreadcrumbItem>
+  // Build breadcrumb items array
+  const breadcrumbItems: Array<{ id?: string; content: React.ReactNode; options?: any[]; onNavigate?: (href: string) => void }> = [];
 
-        {/* If viewing a kit (or we have a selected home kind), show the kind breadcrumb */}
-        {kitGuid || homeKind ? (
-          <>
-            {(kitKind || homeKind) && (
-              <BreadcrumbItem id={`semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`} items={!kitGuid ? homeKitsForKind : undefined} onNavigate={!kitGuid ? (href) => navigate(href) : undefined}>
-                <BreadcrumbLink onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }}>
-                  {(kitKind === "temporary" || homeKind === "temporary") && <TemporaryKitIcon size={16} />}
-                  {(kitKind === "local" || homeKind === "local") && <LocalKitIcon size={16} />}
-                  {(kitKind === "remote" || homeKind === "remote") && <RemoteKitIcon size={16} />}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            )}
+  // Always show Home icon with dropdown to select kinds
+  breadcrumbItems.push({
+    id: "semio.sketchpad.navbar.home",
+    content: (
+      <a onClick={() => navigate("/")} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+        <HomeIcon size={16} />
+      </a>
+    ),
+    options: kitKindItems,
+    onNavigate: (href) => navigate(href),
+  });
 
-            {homeName && (
-              <>
-                <BreadcrumbItem id="semio.sketchpad.navbar.kitName" items={homeVersionsForName} onNavigate={(href) => navigate(href)}>
-                  <BreadcrumbLink onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }}>
-                    {homeName}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                {homeVersion !== null && (
-                  <BreadcrumbItem id="semio.sketchpad.navbar.kitVersion">
-                    <BreadcrumbLink style={{ cursor: "default" }}>{homeVersion || <span className="italic opacity-70">{defaultVersionLabel}</span>}</BreadcrumbLink>
-                  </BreadcrumbItem>
-                )}
-              </>
-            )}
-            {kitGuid && (
-              <>
-                <BreadcrumbItem
-                  id="semio.sketchpad.navbar.kit"
-                  items={kitItemsWithCreate}
-                  onNavigate={(href) => {
-                    if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
-                    else navigate(href);
-                  }}
-                >
-                  <BreadcrumbLink
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}`);
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {kit?.name || kitGuid}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbItem
-                  id="semio.sketchpad.navbar.kitVersion"
-                  items={kitVersionItems}
-                  onNavigate={(href) => {
-                    if (href === "#create-version") handleCreateVersion("semio.sketchpad.navbar.versions");
-                    else navigate(href);
-                  }}
-                >
-                  <BreadcrumbLink
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const versionParam = kit?.version !== undefined ? `&version=${encodeURIComponent(kit.version)}` : "";
-                      navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}${versionParam}`);
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {kit?.version || <span className="italic opacity-70">{defaultVersionLabel}</span>}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </>
-            )}
-          </>
-        ) : null}
-        {isKitApp && (
-          <>
-            {filteredKind && (
-              <>
-                <BreadcrumbItem id={`semio.sketchpad.navbar.breadcrumb.${filteredKind}`} items={filteredNameItems} onNavigate={(href) => navigate(href)}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }}>
-                    {filteredKind === "designs" && <LayoutIcon size={16} />}
-                    {filteredKind === "types" && <TypeIcon size={16} />}
-                    {filteredKind === "qualities" && <AwardIcon size={16} />}
-                    {filteredKind === "files" && <DocumentIcon size={16} />}
-                    {filteredKind === "authors" && <UserIcon size={16} />}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                {filteredName !== null && (
-                  <>
-                    <BreadcrumbItem id="semio.sketchpad.navbar.name">
-                      <BreadcrumbLink
-                        onClick={() => {
-                          const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName);
-                          if (firstMatchingDesign) {
-                            navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&select=${firstMatchingDesign.guid}`);
-                          }
-                        }}
-                        style={{ cursor: "pointer" }}
-                        id={"semio.sketchpad.navbar.name"}
-                      >
-                        {filteredName}
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                  </>
-                )}
-              </>
-            )}
-          </>
-        )}
-        {isDesignApp && design && (
-          <>
-            <BreadcrumbItem id="semio.sketchpad.navbar.breadcrumb.designs" items={artifactKinds} onNavigate={(href) => navigate(href)}>
-              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }}>
-                <LayoutIcon size={16} />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {designFolderChain.map((folder, index) => (
-              <Fragment key={folder.guid}>
-                <BreadcrumbItem id={`semio.sketchpad.navbar.folder.${folder.guid}`}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }}>
-                    {folder.name}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </Fragment>
-            ))}
-            <BreadcrumbItem
-              id="semio.sketchpad.navbar.design"
-              items={designNameItems}
-              onNavigate={(href) => {
-                if (href === "#create-design") handleCreateDesign("semio.sketchpad.navbar.selectDesign");
-                else navigate(href);
-              }}
-            >
-              <BreadcrumbLink
-                asChild
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (design && typeof design === "object" && "name" in design && "guid" in design) {
-                    const designObj = design as Design;
-                    navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(designObj.name)}&select=${designObj.guid}`);
-                  }
-                }}
-              >
-                <button type="button">{design && typeof design === "object" && "name" in design ? String((design as Design).name) : ""}</button>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {designParentChain.map((parent, index) => {
-              const siblingItems = designParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
-              return (
-                <Fragment key={parent.guid}>
-                  <BreadcrumbItem
-                    id={`semio.sketchpad.navbar.design.parent.${parent.guid}`}
-                    items={siblingItems}
-                    onNavigate={(href) => {
-                      if (href.startsWith("#create-sibling-")) {
-                        handleCreateChild(`semio.sketchpad.navbar.selectDesignSibling.${parent.guid}`, parent, false);
-                      } else {
-                        navigate(href);
-                      }
-                    }}
-                  >
-                    <BreadcrumbLink
-                      asChild
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        navigate(`/kits/${kitGuid}/designs/${parent.guid}`);
-                      }}
-                    >
-                      <button type="button">{parent.name}</button>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                </Fragment>
-              );
-            })}
-            {designChildItems.length > 1 && (
-              <BreadcrumbItem
-                id="semio.sketchpad.navbar.selectChild"
-                items={designChildItems}
-                onNavigate={(href) => {
-                  if (href === "#create-child" && design && typeof design === "object" && "guid" in design) {
-                    handleCreateChild("semio.sketchpad.navbar.selectChild", design as Design, false);
-                  } else navigate(href);
-                }}
-              >
-                <BreadcrumbLink style={{ cursor: "default" }}>{/* Empty for dropdown trigger */}</BreadcrumbLink>
-              </BreadcrumbItem>
-            )}
-          </>
-        )}
-        {isTypeApp && type && (
-          <>
-            <BreadcrumbItem id="semio.sketchpad.navbar.breadcrumb.types" items={artifactKinds} onNavigate={(href) => navigate(href)}>
-              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }}>
-                <TypeIcon size={16} />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {typeFolderChain.map((folder, index) => (
-              <Fragment key={folder.guid}>
-                <BreadcrumbItem id={`semio.sketchpad.navbar.folder.${folder.guid}`}>
-                  <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }}>
-                    {folder.name}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </Fragment>
-            ))}
-            <BreadcrumbItem
-              id="semio.sketchpad.navbar.type"
-              items={typeNameItems}
-              onNavigate={(href) => {
-                if (href === "#create-type") handleCreateType("semio.sketchpad.navbar.selectType");
-                else navigate(href);
-              }}
-            >
-              <BreadcrumbLink
-                asChild
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (type && typeof type === "object" && "name" in type && "guid" in type) {
-                    const typeObj = type as Type;
-                    navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(typeObj.name)}&select=${typeObj.guid}`);
-                  }
-                }}
-              >
-                <button type="button">{type && typeof type === "object" && "name" in type ? String((type as Type).name) : ""}</button>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {typeParentChain.map((parent, index) => {
-              const siblingItems = typeParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
-              return (
-                <Fragment key={parent.guid}>
-                  <BreadcrumbItem
-                    id={`semio.sketchpad.navbar.type.parent.${parent.guid}`}
-                    items={siblingItems}
-                    onNavigate={(href) => {
-                      if (href.startsWith("#create-sibling-")) {
-                        handleCreateChild(`semio.sketchpad.navbar.selectTypeSibling.${parent.guid}`, parent, true);
-                      } else {
-                        navigate(href);
-                      }
-                    }}
-                  >
-                    <BreadcrumbLink
-                      asChild
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        navigate(`/kits/${kitGuid}/types/${parent.guid}`);
-                      }}
-                    >
-                      <button type="button">{parent.name}</button>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                </Fragment>
-              );
-            })}
-          </>
-        )}
-        {isQualityApp && quality && (
-          <>
-            <BreadcrumbItem id="semio.sketchpad.navbar.breadcrumb.qualities" items={artifactKinds} onNavigate={(href) => navigate(href)}>
-              <BreadcrumbLink onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }}>
-                <AwardIcon size={16} />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem id="semio.sketchpad.navbar.quality">
-              <BreadcrumbLink
-                asChild
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(`/kits/${kitGuid}?kind=qualities&key=${encodeURIComponent(quality.key)}&select=${quality.guid}`);
-                }}
-              >
-                <button type="button">{quality.name}</button>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        )}
-        {isDocsPath && (
-          <>
-            <BreadcrumbItem
-              id="semio.sketchpad.navbar.docs"
-              items={
-                docsSection
-                  ? docsSectionsList.map((s) => ({
-                      label: (
-                        <span className="flex items-center gap-single">
-                          {s.icon && <span aria-hidden="true">{s.icon}</span>}
-                          <span>{s.label}</span>
-                        </span>
-                      ),
-                      href: `/docs/${s.id}`,
-                    }))
-                  : undefined
+  // If viewing a kit (or we have a selected home kind), show the kind breadcrumb
+  if (kitGuid || homeKind) {
+    if (kitKind || homeKind) {
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`,
+        content: (
+          <a onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+            {(kitKind === "temporary" || homeKind === "temporary") && <TemporaryKitIcon size={16} />}
+            {(kitKind === "local" || homeKind === "local") && <LocalKitIcon size={16} />}
+            {(kitKind === "remote" || homeKind === "remote") && <RemoteKitIcon size={16} />}
+          </a>
+        ),
+        options: !kitGuid ? homeKitsForKind : undefined,
+        onNavigate: !kitGuid ? (href) => navigate(href) : undefined,
+      });
+    }
+
+    if (homeName) {
+      breadcrumbItems.push({
+        id: "semio.sketchpad.navbar.kitName",
+        content: (
+          <a onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+            {homeName}
+          </a>
+        ),
+        options: homeVersionsForName,
+        onNavigate: (href) => navigate(href),
+      });
+      if (homeVersion !== null) {
+        breadcrumbItems.push({
+          id: "semio.sketchpad.navbar.kitVersion",
+          content: <span className="text-foreground px-single flex items-center gap-single h-full">{homeVersion || <span className="italic opacity-70">{defaultVersionLabel}</span>}</span>,
+        });
+      }
+    }
+
+    if (kitGuid) {
+      breadcrumbItems.push({
+        id: "semio.sketchpad.navbar.kit",
+        content: (
+          <a
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}`);
+            }}
+            style={{ cursor: "pointer" }}
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          >
+            {kit?.name || kitGuid}
+          </a>
+        ),
+        options: kitItemsWithCreate,
+        onNavigate: (href) => {
+          if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
+          else navigate(href);
+        },
+      });
+      breadcrumbItems.push({
+        id: "semio.sketchpad.navbar.kitVersion",
+        content: (
+          <a
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const versionParam = kit?.version !== undefined ? `&version=${encodeURIComponent(kit.version)}` : "";
+              navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}${versionParam}`);
+            }}
+            style={{ cursor: "pointer" }}
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          >
+            {kit?.version || <span className="italic opacity-70">{defaultVersionLabel}</span>}
+          </a>
+        ),
+        options: kitVersionItems,
+        onNavigate: (href) => {
+          if (href === "#create-version") handleCreateVersion("semio.sketchpad.navbar.versions");
+          else navigate(href);
+        },
+      });
+    }
+  }
+
+  if (isKitApp && filteredKind) {
+    breadcrumbItems.push({
+      id: `semio.sketchpad.navbar.breadcrumb.${filteredKind}`,
+      content: (
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          {filteredKind === "designs" && <LayoutIcon size={16} />}
+          {filteredKind === "types" && <TypeIcon size={16} />}
+          {filteredKind === "qualities" && <AwardIcon size={16} />}
+          {filteredKind === "files" && <DocumentIcon size={16} />}
+          {filteredKind === "authors" && <UserIcon size={16} />}
+        </a>
+      ),
+      options: filteredNameItems,
+      onNavigate: (href) => navigate(href),
+    });
+    if (filteredName !== null) {
+      breadcrumbItems.push({
+        id: "semio.sketchpad.navbar.name",
+        content: (
+          <a
+            onClick={() => {
+              const firstMatchingDesign = (kit?.designs as any[])?.find((d: any) => d.name === filteredName);
+              if (firstMatchingDesign) {
+                navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&select=${firstMatchingDesign.guid}`);
               }
-              onNavigate={docsSection ? (href) => navigate(href) : undefined}
-            >
-              <BreadcrumbLink onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>
-                <DocumentIcon size={16} />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {docsSection && (
-              <>
-                <BreadcrumbItem>
-                  <BreadcrumbLink onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }}>
-                    {(() => {
-                      const sectionInfo = docsSectionsList.find((s) => s.id === docsSection);
-                      if (!sectionInfo) return docsSection;
-                      return (
-                        <span className="flex items-center gap-single">
-                          {sectionInfo.icon && <span aria-hidden="true">{sectionInfo.icon}</span>}
-                          <span>{sectionInfo.label}</span>
-                        </span>
-                      );
-                    })()}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </>
-            )}
-            {docsPagePath &&
-              docsSection &&
-              (() => {
-                const pathAfterSection = docsPagePath.split("/").slice(1);
-                const sectionPages = getDocsRegistry()
-                  .getAllPages()
-                  .filter((page) => page.section === docsSection);
-                const breadcrumbItems: React.ReactElement[] = [];
+            }}
+            style={{ cursor: "pointer" }}
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          >
+            {filteredName}
+          </a>
+        ),
+      });
+    }
+  }
 
-                pathAfterSection.forEach((part, index) => {
-                  const isLast = index === pathAfterSection.length - 1;
-                  const partialParts = pathAfterSection.slice(0, index + 1);
-                  const partialPath = `docs/${docsSection}/${partialParts.join("/")}`;
-                  const parentParts = pathAfterSection.slice(0, index);
-                  const siblings = sectionPages
-                    .filter((page) => {
-                      const segments = page.path.replace(/^docs\//, "").split("/");
-                      const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
-                      if (trimmedSegments[0] !== docsSection) return false;
-                      const relative = trimmedSegments.slice(1);
-                      if (relative.length !== parentParts.length + 1) return false;
-                      for (let i = 0; i < parentParts.length; i++) {
-                        if (relative[i] !== parentParts[i]) return false;
-                      }
-                      return true;
-                    })
-                    .sort((a, b) => {
-                      const orderDiff = (a.order ?? 999) - (b.order ?? 999);
-                      if (orderDiff !== 0) return orderDiff;
-                      return a.title.localeCompare(b.title);
-                    });
-                  const separatorItems = siblings.map((page) => ({
-                    label: page.title,
-                    href: `/${page.path.replace(/\/index$/, "")}`,
-                  }));
-                  const normalizedPartial = `${docsSection}/${partialParts.join("/")}`;
-                  const match = siblings.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial) || sectionPages.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial);
-                  const label = match?.title
-                    ? match.title
-                    : part
-                        .split("-")
-                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                        .join(" ");
+  if (isDesignApp && design) {
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.breadcrumb.designs",
+      content: (
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <LayoutIcon size={16} />
+        </a>
+      ),
+      options: artifactKinds,
+      onNavigate: (href) => navigate(href),
+    });
+    designFolderChain.forEach((folder) => {
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.folder.${folder.guid}`,
+        content: (
+          <a onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+            {folder.name}
+          </a>
+        ),
+      });
+    });
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.design",
+      content: (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (design && typeof design === "object" && "name" in design && "guid" in design) {
+              const designObj = design as Design;
+              navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(designObj.name)}&select=${designObj.guid}`);
+            }
+          }}
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+        >
+          {design && typeof design === "object" && "name" in design ? String((design as Design).name) : ""}
+        </button>
+      ),
+      options: designNameItems,
+      onNavigate: (href) => {
+        if (href === "#create-design") handleCreateDesign("semio.sketchpad.navbar.selectDesign");
+        else navigate(href);
+      },
+    });
+    designParentChain.forEach((parent) => {
+      const siblingItems = designParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.design.parent.${parent.guid}`,
+        content: (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/kits/${kitGuid}/designs/${parent.guid}`);
+            }}
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          >
+            {parent.name}
+          </button>
+        ),
+        options: siblingItems,
+        onNavigate: (href) => {
+          if (href.startsWith("#create-sibling-")) {
+            handleCreateChild(`semio.sketchpad.navbar.selectDesignSibling.${parent.guid}`, parent, false);
+          } else {
+            navigate(href);
+          }
+        },
+      });
+    });
+    if (designChildItems.length > 1) {
+      breadcrumbItems.push({
+        id: "semio.sketchpad.navbar.selectChild",
+        content: <span className="text-foreground px-single flex items-center gap-single h-full">{/* Empty for dropdown trigger */}</span>,
+        options: designChildItems,
+        onNavigate: (href) => {
+          if (href === "#create-child" && design && typeof design === "object" && "guid" in design) {
+            handleCreateChild("semio.sketchpad.navbar.selectChild", design as Design, false);
+          } else navigate(href);
+        },
+      });
+    }
+  }
 
-                  breadcrumbItems.push(
-                    <BreadcrumbItem key={partialPath} items={!isLast ? separatorItems : undefined} onNavigate={!isLast ? (href) => navigate(href) : undefined}>
-                      <BreadcrumbLink onClick={() => !isLast && navigate(`/${partialPath}`)} style={{ cursor: isLast ? "default" : "pointer" }}>
-                        {label}
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>,
-                  );
-                });
+  if (isTypeApp && type) {
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.breadcrumb.types",
+      content: (
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <TypeIcon size={16} />
+        </a>
+      ),
+      options: artifactKinds,
+      onNavigate: (href) => navigate(href),
+    });
+    typeFolderChain.forEach((folder) => {
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.folder.${folder.guid}`,
+        content: (
+          <a onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+            {folder.name}
+          </a>
+        ),
+      });
+    });
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.type",
+      content: (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (type && typeof type === "object" && "name" in type && "guid" in type) {
+              const typeObj = type as Type;
+              navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(typeObj.name)}&select=${typeObj.guid}`);
+            }
+          }}
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+        >
+          {type && typeof type === "object" && "name" in type ? String((type as Type).name) : ""}
+        </button>
+      ),
+      options: typeNameItems,
+      onNavigate: (href) => {
+        if (href === "#create-type") handleCreateType("semio.sketchpad.navbar.selectType");
+        else navigate(href);
+      },
+    });
+    typeParentChain.forEach((parent) => {
+      const siblingItems = typeParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.type.parent.${parent.guid}`,
+        content: (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/kits/${kitGuid}/types/${parent.guid}`);
+            }}
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          >
+            {parent.name}
+          </button>
+        ),
+        options: siblingItems,
+        onNavigate: (href) => {
+          if (href.startsWith("#create-sibling-")) {
+            handleCreateChild(`semio.sketchpad.navbar.selectTypeSibling.${parent.guid}`, parent, true);
+          } else {
+            navigate(href);
+          }
+        },
+      });
+    });
+  }
 
-                return <>{breadcrumbItems}</>;
-              })()}
-          </>
-        )}
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
+  if (isQualityApp && quality) {
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.breadcrumb.qualities",
+      content: (
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <AwardIcon size={16} />
+        </a>
+      ),
+      options: artifactKinds,
+      onNavigate: (href) => navigate(href),
+    });
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.quality",
+      content: (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate(`/kits/${kitGuid}?kind=qualities&key=${encodeURIComponent(quality.key)}&select=${quality.guid}`);
+          }}
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+        >
+          {quality.name}
+        </button>
+      ),
+    });
+  }
+
+  if (isDocsPath) {
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.docs",
+      content: (
+        <a onClick={() => navigate("/docs")} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <DocumentIcon size={16} />
+        </a>
+      ),
+      options: docsSection
+        ? docsSectionsList.map((s) => ({
+            label: (
+              <span className="flex items-center gap-single">
+                {s.icon && <span aria-hidden="true">{s.icon}</span>}
+                <span>{s.label}</span>
+              </span>
+            ),
+            href: `/docs/${s.id}`,
+          }))
+        : undefined,
+      onNavigate: docsSection ? (href) => navigate(href) : undefined,
+    });
+    if (docsSection) {
+      breadcrumbItems.push({
+        content: (
+          <a onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+            {(() => {
+              const sectionInfo = docsSectionsList.find((s) => s.id === docsSection);
+              if (!sectionInfo) return docsSection;
+              return (
+                <span className="flex items-center gap-single">
+                  {sectionInfo.icon && <span aria-hidden="true">{sectionInfo.icon}</span>}
+                  <span>{sectionInfo.label}</span>
+                </span>
+              );
+            })()}
+          </a>
+        ),
+      });
+    }
+    if (docsPagePath && docsSection) {
+      const pathAfterSection = docsPagePath.split("/").slice(1);
+      const sectionPages = getDocsRegistry()
+        .getAllPages()
+        .filter((page) => page.section === docsSection);
+
+      pathAfterSection.forEach((part, index) => {
+        const isLast = index === pathAfterSection.length - 1;
+        const partialParts = pathAfterSection.slice(0, index + 1);
+        const partialPath = `docs/${docsSection}/${partialParts.join("/")}`;
+        const parentParts = pathAfterSection.slice(0, index);
+        const siblings = sectionPages
+          .filter((page) => {
+            const segments = page.path.replace(/^docs\//, "").split("/");
+            const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
+            if (trimmedSegments[0] !== docsSection) return false;
+            const relative = trimmedSegments.slice(1);
+            if (relative.length !== parentParts.length + 1) return false;
+            for (let i = 0; i < parentParts.length; i++) {
+              if (relative[i] !== parentParts[i]) return false;
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            const orderDiff = (a.order ?? 999) - (b.order ?? 999);
+            if (orderDiff !== 0) return orderDiff;
+            return a.title.localeCompare(b.title);
+          });
+        const separatorItems = siblings.map((page) => ({
+          label: page.title,
+          href: `/${page.path.replace(/\/index$/, "")}`,
+        }));
+        const normalizedPartial = `${docsSection}/${partialParts.join("/")}`;
+        const match = siblings.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial) || sectionPages.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial);
+        const label = match?.title
+          ? match.title
+          : part
+              .split("-")
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" ");
+
+        breadcrumbItems.push({
+          content: (
+            <a onClick={() => !isLast && navigate(`/${partialPath}`)} style={{ cursor: isLast ? "default" : "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+              {label}
+            </a>
+          ),
+          options: !isLast ? separatorItems : undefined,
+          onNavigate: !isLast ? (href) => navigate(href) : undefined,
+        });
+      });
+    }
+  }
+
+  return <Breadcrumb className="flex-1 min-w-0" items={breadcrumbItems} />;
 };
 
 type SearchResult = {
@@ -10783,7 +10810,7 @@ const PanelToggles: FC = ({}) => {
   const ActiveRightIcon = activeRightConfig?.icon;
 
   return (
-    <div className="flex items-stretch">
+    <div className="flex items-stretch border overflow-hidden h-medium divide-x">
       {workbenchConfigs.length > 0 && (
         <Toggle
           kind="dropdown"
@@ -10793,6 +10820,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleWorkbenchValueChange("semio.sketchpad.navbar.panelToggle.workbench", value)}
           pressed={isAnyWorkbenchPanelOpen}
           onPressedChange={(pressed) => handleWorkbenchPressedChange("semio.sketchpad.navbar.panelToggle.workbench", pressed)}
+          className="border-0"
         />
       )}
       {hudConfigs.length > 0 && (
@@ -10804,6 +10832,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleHudValueChange("semio.sketchpad.navbar.panelToggle.hud", value)}
           pressed={isAnyHudPanelOpen}
           onPressedChange={(pressed) => handleHudPressedChange("semio.sketchpad.navbar.panelToggle.hud", pressed)}
+          className="border-0"
         />
       )}
       {rightConfigs.length > 0 && (
@@ -10815,6 +10844,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleRightValueChange("semio.sketchpad.navbar.panelToggle.right", value)}
           pressed={isAnyRightPanelOpen}
           onPressedChange={(pressed) => handleRightPressedChange("semio.sketchpad.navbar.panelToggle.right", pressed)}
+          className="border-0"
         />
       )}
     </div>
@@ -11564,6 +11594,8 @@ const LayoutWrapper: FC = () => {
   const tutorialStore = store.tutorialStore();
 
   const navigation = useNavigation();
+  const theme = useTheme();
+  const layout = useLayout();
   const isFullscreen = useIsFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
@@ -11612,6 +11644,38 @@ const LayoutWrapper: FC = () => {
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
   }, [isFullscreen, sketchpadCommands]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldBeDark = theme === "dark" || (theme === "system" && prefersDark);
+    if (shouldBeDark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (layout === "tablet") {
+      root.classList.add("touch");
+    } else {
+      root.classList.remove("touch");
+    }
+  }, [layout]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (isFullscreen) {
+      root.classList.add("fullscreen");
+    } else {
+      root.classList.remove("fullscreen");
+    }
+  }, [isFullscreen]);
 
   const navigationHistory = useNavigationHistory();
   const currentPath = `${navigation}${location.search}`;
@@ -11787,6 +11851,18 @@ const LayoutWrapper: FC = () => {
     });
 
     rightItems.push({
+      id: "semio.sketchpad.navbar.focus",
+      content: <Focus />,
+      order: 1,
+    });
+
+    rightItems.push({
+      id: "semio.sketchpad.navbar.panelToggles",
+      content: <PanelToggles />,
+      order: 2,
+    });
+
+    rightItems.push({
       id: "semio.sketchpad.navbar.fullscreenToggle",
       content: (
         <Toggle
@@ -11799,23 +11875,23 @@ const LayoutWrapper: FC = () => {
                 if (target && target.requestFullscreen) {
                   const result = target.requestFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: true })).catch(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false }));
+                    (result as Promise<void>)
+                      .then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId))
+                      .catch(() => {});
                   } else {
-                    sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: true });
+                    sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
-                } else {
-                  sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false });
                 }
               } else {
                 if (document.fullscreenElement && document.exitFullscreen) {
                   const result = document.exitFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false })).catch(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false }));
+                    (result as Promise<void>)
+                      .then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId))
+                      .catch(() => {});
                   } else {
-                    sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false });
+                    sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
-                } else {
-                  sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false });
                 }
               }
               return;
@@ -11825,18 +11901,6 @@ const LayoutWrapper: FC = () => {
           icon={isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
         />
       ),
-      order: 1,
-    });
-
-    rightItems.push({
-      id: "semio.sketchpad.navbar.focus",
-      content: <Focus />,
-      order: 2,
-    });
-
-    rightItems.push({
-      id: "semio.sketchpad.navbar.panelToggles",
-      content: <PanelToggles />,
       order: 3,
     });
 

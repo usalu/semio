@@ -1,157 +1,178 @@
 {
+  "unit": "m",
   "name": "Trapezoid Capsule",
-  "description": "An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
-  "icon": "icons/trapezoid-capsule_z.svg",
-  "image": "images/trapezoid-capsule_z.png",
-  "variant": "z",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
-  "unit": "m",
-  "representations": [
-    {
-      "url": "representations/trapezoid-capsule_z.glb",
-      "description": "",
-      "tags": ["model/gltf-binary"],
-      "attributes": []
-    },
-    {
-      "url": "representations/trapezoid-capsule_z_1to500.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "attributes": []
-    },
-    {
-      "url": "representations/trapezoid-capsule_z_1to200.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "representations/trapezoid-capsule_z_collider.glb",
-      "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "attributes": []
-    }
-  ],
-  "ports": [
-    {
-      "id_": "",
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "family": "door capsule east",
-      "compatibleFamilies": ["door tambour east"],
-      "point": {
-        "x": -0.42,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "direction": {
-        "x": 0.14780942,
-        "y": -0.9890159,
-        "z": 0.0
-      },
-      "t": 0.0,
-      "attributes": [
-        {
-          "name": "entrance",
-          "value": "",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    }
-  ],
-  "authors": [
-    {
-      "name": "Ueli Saluz",
-      "email": "ueli@semio-tech.org"
-    }
-  ],
   "attributes": [
     {
-      "name": "entrance",
       "value": "side",
-      "unit": "",
+      "guid": "35af6d69-bd18-40b7-ac1e-3c9184be9b92",
+      "key": "entrance",
       "definition": ""
     },
     {
-      "name": "view",
       "value": "side",
-      "unit": "",
+      "guid": "96ce8755-de13-4095-b238-a99c2324d0bc",
+      "key": "view",
       "definition": ""
     },
     {
-      "name": "heigth",
       "value": "2.5",
-      "unit": "m",
+      "guid": "00dcd422-f690-42a6-8667-88b3c0f1b0b7",
+      "key": "heigth",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
-      "name": "effective floor area",
       "value": "7.19",
-      "unit": "m²",
+      "guid": "03d4fbea-f31a-413a-aaac-749c73cdf1e8",
+      "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
-      "name": "construction cost",
       "value": "68272",
-      "unit": "€",
+      "guid": "e970f17e-303b-404d-a347-b22394394d84",
+      "key": "construction cost",
       "definition": ""
     },
     {
-      "name": "heating energy demand",
       "value": "323",
-      "unit": "kWh/a",
+      "guid": "bd55dd0c-87cf-4633-bb1d-4e54f7030fe7",
+      "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "cooling energy demand",
       "value": "216",
-      "unit": "kWh/a",
+      "guid": "3776332f-720e-4605-9300-0adede27e5f8",
+      "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "technical equipment energy demand",
       "value": "216",
-      "unit": "kWh/a",
+      "guid": "3a1e3e54-5047-4414-a515-211304f7046d",
+      "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "income",
       "value": "10780",
-      "unit": "€/a",
+      "guid": "0f2c5ffd-84e9-47e6-baf4-2eb7851819d4",
+      "key": "income",
       "definition": ""
     },
     {
-      "name": "maintenance expenses",
       "value": "862",
-      "unit": "€/a",
+      "guid": "05466f8d-49a7-45de-971d-709fdd2de886",
+      "key": "maintenance expenses",
       "definition": ""
     },
     {
-      "name": "construction global warming potential",
       "value": "7186.53",
-      "unit": "kgCO2e",
+      "guid": "a7c988e4-93c9-4357-a3dc-4f69686ef548",
+      "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     },
     {
-      "name": "mirrored",
       "value": "",
-      "unit": "",
+      "guid": "5034e4e4-169a-4f34-8c43-911d3f70c01c",
+      "key": "mirrored",
       "definition": ""
     }
-  ]
+  ],
+  "description": "An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
+  "icon": "icons/trapezoid-capsule_z.svg",
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "guid": "e5e030fd-b6dc-436a-951d-75b721903c65",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "image": "images/trapezoid-capsule_z.png",
+  "ports": {
+    "mandatory": false,
+    "t": 0.0,
+    "attributes": [
+      {
+        "value": "",
+        "guid": "6400a53c-335a-4f3a-a164-eb4746aed246",
+        "key": "entrance",
+        "definition": ""
+      }
+    ],
+    "guid": "55bed31c-c831-47ec-bdd2-1df8bdf88e55",
+    "direction": {
+      "y": -0.9890159,
+      "x": 0.14780942,
+      "z": 0.0
+    },
+    "description": "The middle of the main entrance door of the upper entrance floor.",
+    "family": "door capsule east",
+    "compatibleFamilies": [
+      "door tambour east"
+    ],
+    "point": {
+      "y": 0.0,
+      "x": -0.42,
+      "z": 0.0
+    }
+  },
+  "updatedAt": "2025-11-18T21:31:47.419Z",
+  "guid": "ffc7b1fb-64d2-4f01-b5c2-4f020d2187cc",
+  "representations": [
+    {
+      "file": "representations/trapezoid-capsule_z.glb",
+      "guid": "b7647ec2-8b2b-4fb1-bd2f-31e669c820ba",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/trapezoid-capsule_z_1to500.3dm",
+      "guid": "ada664d2-7700-4f47-b423-111e527504fb",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/trapezoid-capsule_z_1to200.3dm",
+      "guid": "d9417e21-e666-41e8-815d-98416fc93463",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
+      "guid": "43c3faa3-4646-4e71-aa52-496151eb57da",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
+      "guid": "56bc2e78-b632-4ca0-8616-e3d98a0a28ac",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/trapezoid-capsule_z_collider.glb",
+      "guid": "6f91d77f-1fcb-4803-8797-aa4e67ffbc32",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "description": ""
+    }
+  ],
+  "createdAt": "2025-11-18T21:31:47.419Z"
 }

@@ -1,169 +1,190 @@
 {
+  "unit": "m",
   "name": "Capsule with Balcony",
-  "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
-  "icon": "icons/capsule-with-balcony_J.svg",
-  "image": "images/capsule-with-balcony_J.png",
-  "variant": "J",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
-  "unit": "m",
-  "representations": [
-    {
-      "url": "representations/capsule-with-balcony_J.glb",
-      "description": "",
-      "tags": ["model/gltf-binary"],
-      "attributes": []
-    },
-    {
-      "url": "representations/capsule-with-balcony_J_1to500.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "attributes": []
-    },
-    {
-      "url": "representations/capsule-with-balcony_J_1to200.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "representations/capsule-with-balcony_J_collider.glb",
-      "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "attributes": []
-    }
-  ],
-  "ports": [
-    {
-      "id_": "",
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "family": "door capsule east",
-      "compatibleFamilies": ["door tambour east"],
-      "point": {
-        "x": -1.3,
-        "y": -1.25,
-        "z": 0.0
-      },
-      "direction": {
-        "x": -1.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "t": 0.0,
-      "attributes": [
-        {
-          "name": "entrance",
-          "value": "",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    }
-  ],
-  "authors": [
-    {
-      "name": "Ueli Saluz",
-      "email": "ueli@semio-tech.org"
-    }
-  ],
   "attributes": [
     {
-      "name": "entrance",
       "value": "side",
-      "unit": "",
+      "guid": "a1e9c92d-0b3a-47b5-83d0-59b738f2c83b",
+      "key": "entrance",
       "definition": ""
     },
     {
-      "name": "view",
       "value": "front",
-      "unit": "",
+      "guid": "a325759d-842d-4112-8988-c9759392beb2",
+      "key": "view",
       "definition": ""
     },
     {
-      "name": "length",
       "value": "5.7",
-      "unit": "m",
+      "guid": "e50de20f-9a8d-40b0-817c-166440e87b72",
+      "key": "length",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
-      "name": "width",
       "value": "2.6",
-      "unit": "m",
+      "guid": "44e67eb2-d300-4b77-a95f-c8a4e6d5a3fe",
+      "key": "width",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
-      "name": "heigth",
       "value": "2.5",
-      "unit": "m",
+      "guid": "96d4d26b-efa8-4874-9d72-b2adaa16e98a",
+      "key": "heigth",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
-      "name": "window shape",
       "value": "round",
-      "unit": "",
+      "guid": "1617dd21-93dc-44ca-bbca-fbb40efa2179",
+      "key": "window shape",
       "definition": ""
     },
     {
-      "name": "effective floor area",
       "value": "10.17",
-      "unit": "m²",
+      "guid": "89f6e8db-d5ab-422b-834a-c880eb32fa00",
+      "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
-      "name": "construction cost",
       "value": "82992",
-      "unit": "€",
+      "guid": "316a93cf-236d-46cc-a77f-b7fd8716889c",
+      "key": "construction cost",
       "definition": ""
     },
     {
-      "name": "heating energy demand",
       "value": "393",
-      "unit": "kWh/a",
+      "guid": "99d8f082-aaa6-4a54-a0df-584600f06b08",
+      "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "cooling energy demand",
       "value": "262",
-      "unit": "kWh/a",
+      "guid": "5dda58e5-91bd-4c45-8563-c77b7612a59b",
+      "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "technical equipment energy demand",
       "value": "262",
-      "unit": "kWh/a",
+      "guid": "63a2090e-c470-40de-8f4b-028942d191e1",
+      "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "income",
       "value": "13104",
-      "unit": "€/a",
+      "guid": "540578eb-f74e-4183-8228-1c393af575c4",
+      "key": "income",
       "definition": ""
     },
     {
-      "name": "maintenance expenses",
       "value": "1048",
-      "unit": "€/a",
+      "guid": "54bd18cc-be2f-42d2-83f0-e3ab44467584",
+      "key": "maintenance expenses",
       "definition": ""
     },
     {
-      "name": "construction global warming potential",
       "value": "8736.01",
-      "unit": "kgCO2e",
+      "guid": "125db64d-3fc6-48a4-bf58-a564eeb957df",
+      "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     }
-  ]
+  ],
+  "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
+  "icon": "icons/capsule-with-balcony_J.svg",
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "guid": "6329b6b6-1063-4471-9d40-bf425b17b168",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "image": "images/capsule-with-balcony_J.png",
+  "ports": {
+    "mandatory": false,
+    "t": 0.0,
+    "attributes": [
+      {
+        "value": "",
+        "guid": "e1842405-dfe2-4b7a-a70b-8abfbd20d505",
+        "key": "entrance",
+        "definition": ""
+      }
+    ],
+    "guid": "4ca04bb5-a1d3-40cb-895b-a71131d48381",
+    "direction": {
+      "y": 0.0,
+      "x": -1.0,
+      "z": 0.0
+    },
+    "description": "The middle of the main entrance door of the upper entrance floor.",
+    "family": "door capsule east",
+    "compatibleFamilies": [
+      "door tambour east"
+    ],
+    "point": {
+      "y": -1.25,
+      "x": -1.3,
+      "z": 0.0
+    }
+  },
+  "updatedAt": "2025-11-18T21:31:47.264Z",
+  "guid": "6ff37c7a-dd0c-4da4-bde8-4b85d9dc6a73",
+  "representations": [
+    {
+      "file": "representations/capsule-with-balcony_J.glb",
+      "guid": "30f174ed-3346-4dc8-b733-cffe7dc2a4bf",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/capsule-with-balcony_J_1to500.3dm",
+      "guid": "1cdb19d0-a0b9-4995-86a3-aeb9ab1e8c95",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/capsule-with-balcony_J_1to200.3dm",
+      "guid": "b7eef170-b338-4005-8792-626facca95df",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+      "guid": "189de1c6-da3e-43d0-963a-d13b41072eb2",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+      "guid": "7b633aab-441a-4cc5-8306-14aef5ee321c",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/capsule-with-balcony_J_collider.glb",
+      "guid": "21a6823c-1468-459c-a717-1dfc28993f07",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "description": ""
+    }
+  ],
+  "createdAt": "2025-11-18T21:31:47.264Z"
 }

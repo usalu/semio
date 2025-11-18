@@ -1,347 +1,388 @@
 {
+  "unit": "m",
   "name": "Cylindric Tambour",
-  "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
-  "icon": "icons/cylindric-tambour_single-storey.svg",
-  "image": "images/cylindric-tambour_single-storey.svg",
-  "variant": "Single Storey",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
-  "unit": "m",
-  "representations": [
-    {
-      "url": "representations/cylindric-tambour_single-storey.glb",
-      "description": "",
-      "tags": ["model/gltf-binary"],
-      "attributes": []
-    },
-    {
-      "url": "representations/cylindric-tambour_single-storey_1to500.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "attributes": []
-    },
-    {
-      "url": "representations/cylindric-tambour_single-storey_1to200.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/6e372d67ee",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/025c85ea51",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "attributes": []
-    },
-    {
-      "url": "representations/cylindric-tambour_single-storey_collider.glb",
-      "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "attributes": []
-    }
-  ],
-  "ports": [
-    {
-      "id_": "b",
-      "description": "The bottom system center of the elevator.",
-      "mandatory": false,
-      "family": "core circular top",
-      "compatibleFamilies": ["core circular bottom"],
-      "point": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": -1.0
-      },
-      "t": 0.5,
-      "attributes": [
-        {
-          "name": "wasp rotation",
-          "value": "180",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    },
-    {
-      "id_": "t",
-      "description": "The top system center of the elevator.",
-      "mandatory": false,
-      "family": "roof circular bottom",
-      "compatibleFamilies": ["roof circular top"],
-      "point": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 4.5833335
-      },
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 1.0
-      },
-      "t": 0.0,
-      "attributes": [
-        {
-          "name": "top",
-          "value": "",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    },
-    {
-      "id_": "sl0_d0",
-      "description": "The first door of the side plattform in the east facade.",
-      "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": {
-        "x": 3.1557984,
-        "y": 0.7768119,
-        "z": 0.2
-      },
-      "direction": {
-        "x": 0.97101486,
-        "y": 0.23901905,
-        "z": 0.0
-      },
-      "t": 0.2,
-      "attributes": []
-    },
-    {
-      "id_": "sl0_d1",
-      "description": "The second door of the side plattform in the north facade.",
-      "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": {
-        "x": 0.7768119,
-        "y": 3.1557984,
-        "z": 0.2
-      },
-      "direction": {
-        "x": 0.23901905,
-        "y": 0.97101486,
-        "z": 0.0
-      },
-      "t": 0.05,
-      "attributes": []
-    },
-    {
-      "id_": "sl0_d2",
-      "description": "The third door of the side plattform in the north facade.",
-      "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": {
-        "x": -0.7768119,
-        "y": 3.1557984,
-        "z": 0.2
-      },
-      "direction": {
-        "x": -0.23901905,
-        "y": 0.97101486,
-        "z": 0.0
-      },
-      "t": 0.95,
-      "attributes": []
-    },
-    {
-      "id_": "sl0_d3",
-      "description": "The fourth door of the side plattform in the west facade.",
-      "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": {
-        "x": -3.1557984,
-        "y": 0.7768119,
-        "z": 0.2
-      },
-      "direction": {
-        "x": -0.97101486,
-        "y": 0.23901905,
-        "z": 0.0
-      },
-      "t": 0.8,
-      "attributes": []
-    },
-    {
-      "id_": "sl1_d0",
-      "description": "The first door of the main plattform in the west facade.",
-      "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": {
-        "x": -3.1557984,
-        "y": -0.7768119,
-        "z": 1.1166667
-      },
-      "direction": {
-        "x": -0.97101486,
-        "y": -0.23901905,
-        "z": 0.0
-      },
-      "t": 0.7,
-      "attributes": []
-    },
-    {
-      "id_": "sl1_d1",
-      "description": "The second door of the main plattform in the south facade.",
-      "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": {
-        "x": -0.7768119,
-        "y": -3.1557984,
-        "z": 1.1166667
-      },
-      "direction": {
-        "x": -0.23901905,
-        "y": -0.97101486,
-        "z": 0.0
-      },
-      "t": 0.55,
-      "attributes": []
-    },
-    {
-      "id_": "sl2_d0",
-      "description": "The first door of the main plattform in the south facade.",
-      "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": {
-        "x": 0.7768119,
-        "y": -3.1557984,
-        "z": 2.0333333
-      },
-      "direction": {
-        "x": 0.23901905,
-        "y": -0.97101486,
-        "z": 0.0
-      },
-      "t": 0.45,
-      "attributes": []
-    },
-    {
-      "id_": "sl2_d1",
-      "description": "The second door of the main plattform in the east facade.",
-      "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": {
-        "x": 3.1557984,
-        "y": -0.7768119,
-        "z": 2.0333333
-      },
-      "direction": {
-        "x": 0.97101486,
-        "y": -0.23901905,
-        "z": 0.0
-      },
-      "t": 0.3,
-      "attributes": []
-    }
-  ],
-  "authors": [
-    {
-      "name": "Ueli Saluz",
-      "email": "ueli@semio-tech.org"
-    }
-  ],
   "attributes": [
     {
-      "name": "diameter",
       "value": "6.5",
-      "unit": "m",
+      "guid": "c5bb1958-f4d0-4c3f-8939-a91170e816ee",
+      "key": "diameter",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter"
     },
     {
-      "name": "storeys",
       "value": "1",
-      "unit": "",
+      "guid": "09e1fd86-3f14-4d51-9751-aa9c78461b59",
+      "key": "storeys",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
     },
     {
-      "name": "floor height",
       "value": "2.75",
-      "unit": "m",
+      "guid": "10bb2a39-cc28-49ee-9371-b547aa8e932c",
+      "key": "floor height",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
-      "name": "platform",
       "value": "north",
-      "unit": "",
+      "guid": "49cee20a-24dc-4e00-8695-9579ba0ee308",
+      "key": "platform",
       "definition": ""
     },
     {
-      "name": "door width",
       "value": "0.8",
-      "unit": "m",
+      "guid": "9cdb8978-bb3d-4e8b-84f0-8eda77c507de",
+      "key": "door width",
       "definition": ""
     },
     {
-      "name": "door height",
       "value": "2",
-      "unit": "m",
+      "guid": "ea5d00b5-c7a1-4a6b-b0a9-5f1bfefa8a0d",
+      "key": "door height",
       "definition": ""
     },
     {
-      "name": "door offset",
       "value": "1.75",
-      "unit": "m",
+      "guid": "52f9734a-4bc2-481a-8647-66aeb1ed4ef4",
+      "key": "door offset",
       "definition": ""
     },
     {
-      "name": "effective floor area",
       "value": "26.55",
-      "unit": "m²",
+      "guid": "52554c22-e7a2-4862-b55e-611f55725f02",
+      "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
-      "name": "construction cost",
       "value": "278738",
-      "unit": "€",
+      "guid": "3c326cd2-8654-4ce9-8e87-124785a2fe06",
+      "key": "construction cost",
       "definition": ""
     },
     {
-      "name": "heating energy demand",
       "value": "398",
-      "unit": "kWh/a",
+      "guid": "a52e5bec-4916-432c-b6c0-ab8a2f1c5ac2",
+      "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "cooling energy demand",
       "value": "133",
-      "unit": "kWh/a",
+      "guid": "54f521c5-f22e-4dc2-a426-67564b54d96c",
+      "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "technical equipment energy demand",
       "value": "531",
-      "unit": "kWh/a",
+      "guid": "288be371-d87f-4c93-b14b-30ef30b97cd4",
+      "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "maintenance expenses",
       "value": "1115",
-      "unit": "€/a",
+      "guid": "8427efbb-7ace-44ba-8c39-eb7f39bc5681",
+      "key": "maintenance expenses",
       "definition": ""
     },
     {
-      "name": "construction global warming potential",
       "value": "1600",
-      "unit": "kgCO2e",
+      "guid": "a38f6b91-5b4d-4501-b831-55a98ebe74ac",
+      "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }
-  ]
+  ],
+  "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
+  "icon": "icons/cylindric-tambour_single-storey.svg",
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "guid": "4db8f36c-941d-4bdd-92d1-908adf6a0563",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "image": "images/cylindric-tambour_single-storey.svg",
+  "ports": [
+    {
+      "mandatory": false,
+      "t": 0.5,
+      "attributes": [
+        {
+          "value": "180",
+          "guid": "01449e57-a738-48a2-9411-1b618d1fc4ab",
+          "key": "wasp rotation",
+          "definition": ""
+        }
+      ],
+      "guid": "a807ee55-c127-45b4-a96b-386568869365",
+      "direction": {
+        "y": 0.0,
+        "x": 0.0,
+        "z": -1.0
+      },
+      "description": "The bottom system center of the elevator.",
+      "family": "core circular top",
+      "compatibleFamilies": [
+        "core circular bottom"
+      ],
+      "point": {
+        "y": 0.0,
+        "x": 0.0,
+        "z": 0.0
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.0,
+      "attributes": [
+        {
+          "value": "",
+          "guid": "0483e982-c214-43ac-a4a4-0df43e1cb34b",
+          "key": "top",
+          "definition": ""
+        }
+      ],
+      "guid": "46e24fce-dcdc-48d0-98ea-5849bdf5c27c",
+      "direction": {
+        "y": 0.0,
+        "x": 0.0,
+        "z": 1.0
+      },
+      "description": "The top system center of the elevator.",
+      "family": "roof circular bottom",
+      "compatibleFamilies": [
+        "roof circular top"
+      ],
+      "point": {
+        "y": 0.0,
+        "x": 0.0,
+        "z": 4.5833335
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.2,
+      "guid": "46005f6a-0238-4111-aee5-f11ae0402b1c",
+      "direction": {
+        "y": 0.23901905,
+        "x": 0.97101486,
+        "z": 0.0
+      },
+      "description": "The first door of the side plattform in the east facade.",
+      "family": "door tambour west",
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "y": 0.7768119,
+        "x": 3.1557984,
+        "z": 0.2
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.05,
+      "guid": "42f8af24-9bf3-44c6-bd95-6c299451220b",
+      "direction": {
+        "y": 0.97101486,
+        "x": 0.23901905,
+        "z": 0.0
+      },
+      "description": "The second door of the side plattform in the north facade.",
+      "family": "door tambour east",
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "y": 3.1557984,
+        "x": 0.7768119,
+        "z": 0.2
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.95,
+      "guid": "2653d099-ade3-4909-a042-4065a5c2471a",
+      "direction": {
+        "y": 0.97101486,
+        "x": -0.23901905,
+        "z": 0.0
+      },
+      "description": "The third door of the side plattform in the north facade.",
+      "family": "door tambour west",
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "y": 3.1557984,
+        "x": -0.7768119,
+        "z": 0.2
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.8,
+      "guid": "2038fae3-5334-4dc5-bb09-8615a5454928",
+      "direction": {
+        "y": 0.23901905,
+        "x": -0.97101486,
+        "z": 0.0
+      },
+      "description": "The fourth door of the side plattform in the west facade.",
+      "family": "door tambour east",
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "y": 0.7768119,
+        "x": -3.1557984,
+        "z": 0.2
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.7,
+      "guid": "856e731d-b264-44c7-99f2-990baa685392",
+      "direction": {
+        "y": -0.23901905,
+        "x": -0.97101486,
+        "z": 0.0
+      },
+      "description": "The first door of the main plattform in the west facade.",
+      "family": "door tambour west",
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "y": -0.7768119,
+        "x": -3.1557984,
+        "z": 1.1166667
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.55,
+      "guid": "b7d8490f-1565-4f11-b9b7-6933d9769e12",
+      "direction": {
+        "y": -0.97101486,
+        "x": -0.23901905,
+        "z": 0.0
+      },
+      "description": "The second door of the main plattform in the south facade.",
+      "family": "door tambour east",
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "y": -3.1557984,
+        "x": -0.7768119,
+        "z": 1.1166667
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.45,
+      "guid": "2cbaf6f0-ac6f-4ba6-8267-1ad7888789f6",
+      "direction": {
+        "y": -0.97101486,
+        "x": 0.23901905,
+        "z": 0.0
+      },
+      "description": "The first door of the main plattform in the south facade.",
+      "family": "door tambour west",
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "y": -3.1557984,
+        "x": 0.7768119,
+        "z": 2.0333333
+      }
+    },
+    {
+      "mandatory": false,
+      "t": 0.3,
+      "guid": "e2c7694f-4acd-4bd8-9663-bf0211ad62d2",
+      "direction": {
+        "y": -0.23901905,
+        "x": 0.97101486,
+        "z": 0.0
+      },
+      "description": "The second door of the main plattform in the east facade.",
+      "family": "door tambour east",
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "y": -0.7768119,
+        "x": 3.1557984,
+        "z": 2.0333333
+      }
+    }
+  ],
+  "updatedAt": "2025-11-18T21:31:47.317Z",
+  "guid": "0cdc16ce-e40b-4bf4-b1c0-0b2f642ba90e",
+  "representations": [
+    {
+      "file": "representations/cylindric-tambour_single-storey.glb",
+      "guid": "bee44cd9-fc1d-4140-bd31-ee6fe896065d",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/cylindric-tambour_single-storey_1to500.3dm",
+      "guid": "208bd1a4-9149-4242-8b9a-59957a16a7be",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/cylindric-tambour_single-storey_1to200.3dm",
+      "guid": "a3f15c1d-687a-4f3d-95e6-7cbec62d7cb1",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/6e372d67ee",
+      "guid": "c88b263f-df85-4060-a1ea-3d5063058417",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/025c85ea51",
+      "guid": "bc255409-14af-45c8-a591-e2330baa2ef1",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/cylindric-tambour_single-storey_collider.glb",
+      "guid": "6baff63f-c5d2-4c38-9ea2-eacdf459c50a",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "description": ""
+    }
+  ],
+  "createdAt": "2025-11-18T21:31:47.317Z"
 }

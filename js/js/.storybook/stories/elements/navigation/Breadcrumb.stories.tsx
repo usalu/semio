@@ -43,7 +43,7 @@ export const Default: Story = {
       <BreadcrumbList>
         <BreadcrumbItem
           id="breadcrumb-link-home"
-          items={[
+          options={[
             { label: "Temporary Kits", href: "/?kind=temporary" },
             { label: "Local Kits", href: "/?kind=local" },
             { label: "Remote Kits", href: "/?kind=remote" },
@@ -59,7 +59,7 @@ export const Default: Story = {
           <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbItem
-          items={[
+          options={[
             { label: "Types", href: "/metabolism/types" },
             { label: "Designs", href: "/metabolism/designs" },
             { label: "Qualities", href: "/metabolism/qualities" },

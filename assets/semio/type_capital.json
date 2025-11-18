@@ -1,151 +1,172 @@
 {
+  "unit": "m",
   "name": "Capital",
-  "description": "A roof that has the skin of a cut extruded cuboid.",
-  "icon": "icons/capital.svg",
-  "image": "images/capital.png",
-  "variant": "",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
-  "unit": "m",
-  "representations": [
+  "attributes": [
     {
-      "url": "representations/capital.glb",
-      "description": "",
-      "tags": ["model/gltf-binary"],
-      "attributes": []
+      "value": "north west",
+      "guid": "2286aea7-d900-4552-90ed-b59489fd81af",
+      "key": "peak",
+      "definition": ""
     },
     {
-      "url": "representations/capital_1to500.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "attributes": []
+      "value": "5.5",
+      "guid": "72e03cf9-9dae-4e86-9a31-caba8f679533",
+      "key": "length",
+      "definition": ""
     },
     {
-      "url": "representations/capital_1to200.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "attributes": []
+      "value": "5.5",
+      "guid": "a157ad0b-14ad-4a32-9ba0-8fec57c9e9eb",
+      "key": "width",
+      "definition": ""
     },
     {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "attributes": []
+      "value": "5.5",
+      "guid": "eccd94ef-3efb-448d-961a-d7e39ba54084",
+      "key": "height",
+      "definition": ""
     },
     {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "attributes": []
+      "value": "5.5",
+      "guid": "97381892-b111-4571-a081-9198fb3f07f9",
+      "key": "height side",
+      "definition": ""
     },
     {
-      "url": "representations/capital_collider.glb",
-      "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "attributes": []
+      "value": "1",
+      "guid": "d034f72b-b762-45e8-aff8-c0badc3c0cf5",
+      "key": "height low",
+      "definition": ""
+    },
+    {
+      "value": "0.3",
+      "guid": "4b220ae1-8e76-4ed7-aec0-41460a2b1948",
+      "key": "wall thickness",
+      "definition": ""
+    },
+    {
+      "value": "60025",
+      "guid": "bfc38b66-c3c0-4d85-866a-88973c7564b4",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "720",
+      "guid": "4a2d6398-bc00-4a0b-a65e-99a496148f2b",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "4802",
+      "guid": "7c730e10-3868-4692-ad1c-799d7be35aca",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }
   ],
-  "ports": [
-    {
-      "id_": "",
-      "description": "The center of the bottom.",
-      "mandatory": false,
-      "family": "roof rectangular top",
-      "compatibleFamilies": ["roof rectangular bottom"],
-      "point": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": -1.0
-      },
-      "t": 0.0,
-      "attributes": [
-        {
-          "name": "bottom",
-          "value": "",
-          "unit": "",
-          "definition": ""
-        },
-        {
-          "name": "wasp rotation",
-          "value": "180",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    }
-  ],
+  "description": "A roof that has the skin of a cut extruded cuboid.",
+  "icon": "icons/capital.svg",
   "authors": [
     {
       "name": "Ueli Saluz",
+      "guid": "6181e805-de5c-4d80-a522-cd1f3239ddae",
       "email": "ueli@semio-tech.org"
     }
   ],
-  "attributes": [
-    {
-      "name": "peak",
-      "value": "north west",
-      "unit": "",
-      "definition": ""
+  "image": "images/capital.png",
+  "ports": {
+    "mandatory": false,
+    "t": 0.0,
+    "attributes": [
+      {
+        "value": "",
+        "guid": "df696635-878d-48e8-b23c-f93faf130307",
+        "key": "bottom",
+        "definition": ""
+      },
+      {
+        "value": "180",
+        "guid": "5cd2a1bd-3782-4b0d-b278-914a7ee6bf42",
+        "key": "wasp rotation",
+        "definition": ""
+      }
+    ],
+    "guid": "7d14ac63-9a87-4582-a622-a42830811055",
+    "direction": {
+      "y": 0.0,
+      "x": 0.0,
+      "z": -1.0
     },
-    {
-      "name": "length",
-      "value": "5.5",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "width",
-      "value": "5.5",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "height",
-      "value": "5.5",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "height side",
-      "value": "5.5",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "height low",
-      "value": "1",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "wall thickness",
-      "value": "0.3",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "construction cost",
-      "value": "60025",
-      "unit": "€",
-      "definition": ""
-    },
-    {
-      "name": "maintenance expenses",
-      "value": "720",
-      "unit": "€/a",
-      "definition": ""
-    },
-    {
-      "name": "construction global warming potential",
-      "value": "4802",
-      "unit": "kgCO2e",
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    "description": "The center of the bottom.",
+    "family": "roof rectangular top",
+    "compatibleFamilies": [
+      "roof rectangular bottom"
+    ],
+    "point": {
+      "y": 0.0,
+      "x": 0.0,
+      "z": 0.0
     }
-  ]
+  },
+  "updatedAt": "2025-11-18T21:31:47.218Z",
+  "guid": "6fbec0c1-28e7-4438-84b0-923624555961",
+  "representations": [
+    {
+      "file": "representations/capital.glb",
+      "guid": "4a40e6f0-6eb9-4329-bf94-7e54c81bd1ba",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/capital_1to500.3dm",
+      "guid": "7b7a9e40-4ef7-4c45-b517-999d1ed7a24a",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/capital_1to200.3dm",
+      "guid": "f24d61d8-b46c-42da-a92b-efe9d9a6e65c",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
+      "guid": "2b426f20-d696-4b45-bc81-64b0205c4904",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
+      "guid": "122f958e-1baf-46fb-a3b8-50785bad2e61",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/capital_collider.glb",
+      "guid": "e4dea8d0-a4c0-4096-92d5-f4e30bea17c0",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "description": ""
+    }
+  ],
+  "createdAt": "2025-11-18T21:31:47.218Z"
 }

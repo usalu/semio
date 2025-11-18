@@ -51,7 +51,7 @@ import { createDefaultLayout, createPanelDefinition, PanelKind, ToolKind } from 
 
 // #region Imports
 
-import { DndContext, useDraggable } from "@dnd-kit/core";
+import { useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
@@ -4854,21 +4854,24 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const { activeDraggedType, activeDraggedDesign } = useDragDrop();
 
-  const setDropZoneRef = useCallback((node: HTMLDivElement | null) => {
-    if (node) {
-      const rect = node.getBoundingClientRect();
-      console.log("[DEBUG] DRAGNDROP Diagram drop zone dimensions:", {
-        id: `diagram-drop-zone-${diagramId}`,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      });
-      node.setAttribute('data-drop-zone', 'diagram');
-      node.setAttribute('data-drop-zone-id', diagramId);
-    }
-    dropZoneRef.current = node;
-  }, [diagramId]);
+  const setDropZoneRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node) {
+        const rect = node.getBoundingClientRect();
+        console.log("[DEBUG] DRAGNDROP Diagram drop zone dimensions:", {
+          id: `diagram-drop-zone-${diagramId}`,
+          width: rect.width,
+          height: rect.height,
+          x: rect.x,
+          y: rect.y,
+        });
+        node.setAttribute("data-drop-zone", "diagram");
+        node.setAttribute("data-drop-zone-id", diagramId);
+      }
+      dropZoneRef.current = node;
+    },
+    [diagramId],
+  );
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -5618,41 +5621,44 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [addConnection, reactFlowInstanceRef, design],
   );
 
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (!activeDraggedType && !activeDraggedDesign) return;
-    if (!reactFlowInstanceRef.current) return;
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!activeDraggedType && !activeDraggedDesign) return;
+      if (!reactFlowInstanceRef.current) return;
 
-    console.log("[DEBUG] DRAGNDROP Diagram pointer up, activeDraggedType:", activeDraggedType, "activeDraggedDesign:", activeDraggedDesign);
+      console.log("[DEBUG] DRAGNDROP Diagram pointer up, activeDraggedType:", activeDraggedType, "activeDraggedDesign:", activeDraggedDesign);
 
-    const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
-      x: e.clientX,
-      y: e.clientY,
-    });
+      const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
 
-    if (activeDraggedType) {
-      startTransaction("semio.sketchpad.app.design.dragEnd.type");
-      const pieceGuid = guid();
-      const piece = {
-        guid: pieceGuid,
-        id_: pieceGuid,
-        type: activeDraggedType.guid,
-        center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
-      };
-      addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
-      finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
-    } else if (activeDraggedDesign) {
-      startTransaction("semio.sketchpad.app.design.dragEnd.design");
-      const pieceGuid = guid();
-      const piece = {
-        guid: pieceGuid,
-        id_: pieceGuid,
-        design: activeDraggedDesign.guid,
-        center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
-      };
-      addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
-      finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
-    }
-  }, [activeDraggedType, activeDraggedDesign, reactFlowInstanceRef, startTransaction, addPiece, finalizeTransaction]);
+      if (activeDraggedType) {
+        startTransaction("semio.sketchpad.app.design.dragEnd.type");
+        const pieceGuid = guid();
+        const piece = {
+          guid: pieceGuid,
+          id_: pieceGuid,
+          type: activeDraggedType.guid,
+          center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
+        };
+        addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
+        finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
+      } else if (activeDraggedDesign) {
+        startTransaction("semio.sketchpad.app.design.dragEnd.design");
+        const pieceGuid = guid();
+        const piece = {
+          guid: pieceGuid,
+          id_: pieceGuid,
+          design: activeDraggedDesign.guid,
+          center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
+        };
+        addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
+        finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
+      }
+    },
+    [activeDraggedType, activeDraggedDesign, reactFlowInstanceRef, startTransaction, addPiece, finalizeTransaction],
+  );
 
   return (
     <div id="diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef} onPointerUp={handlePointerUp}>

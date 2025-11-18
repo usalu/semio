@@ -561,7 +561,10 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
   if (mode === Expertise.EXPERT) return null;
 
   const label = useLabel(id);
+  const manualLabel = useLabel("tooltip.manual");
+  const tutorialLabel = useLabel("tooltip.tutorial");
   const value = t(id);
+  console.log(`[DEBUG] [BREADCRUMB-RENDER] IdTooltipContent rendering for id="${id}"`, { label, labelType: typeof label, value, valueType: typeof value });
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
 
@@ -601,7 +604,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
           {showManual && fullManualPath ? (
             <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <BookIcon className="size-3" />
-              <span>{useLabel("tooltip.manual")}</span>
+              <span>{manualLabel}</span>
             </Link>
           ) : (
             <span className="block" />
@@ -609,7 +612,7 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
           {showTutorial && fullTutorialPath ? (
             <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <TutorialIcon className="size-3" />
-              <span className="block text-center">{useLabel("tooltip.tutorial")}</span>
+              <span className="block text-center">{tutorialLabel}</span>
             </Link>
           ) : (
             <span className="block" />
@@ -3561,74 +3564,75 @@ export const FileTree = Tree.Files;
 
 // #region Breadcrumb
 
-function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
-  return <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-border bg-base", className)} {...props} />;
+export interface BreadcrumbItemData {
+  id?: string;
+  content: React.ReactNode;
+  options?: { label: React.ReactNode; href: string; id?: string }[];
+  onNavigate?: (href: string) => void;
 }
 
-function BreadcrumbList({ className, children, ...props }: React.ComponentProps<"ol">) {
-  const childArray = React.Children.toArray(children as React.ReactNode);
-  const nonBreakChildren = childArray.filter((child) => {
-    if (React.isValidElement(child) && typeof child.props === "object" && child.props !== null && "data-slot" in child.props) {
-      return (child.props as any)["data-slot"] !== "breadcrumb-break";
-    }
-    return true;
-  });
+interface BreadcrumbProps extends Omit<React.ComponentProps<"nav">, "children"> {
+  items: BreadcrumbItemData[];
+  level?: Level;
+}
 
-  const childrenWithSeparators = childArray.map((child, index) => {
-    const isLastChild = index === childArray.length - 1;
-    const isBreak = React.isValidElement(child) && typeof child.props === "object" && child.props !== null && "data-slot" in child.props && (child.props as any)["data-slot"] === "breadcrumb-break";
-
-    if (isBreak) {
-      return child;
-    }
-
-    const nonBreakIndex = nonBreakChildren.indexOf(child);
-    const isLastNonBreak = nonBreakIndex === nonBreakChildren.length - 1;
-    const hasDropdown = React.isValidElement(child) && typeof child.props === "object" && child.props !== null && "items" in child.props && Array.isArray((child.props as any).items) && (child.props as any).items.length > 0;
-
-    if (isLastNonBreak || hasDropdown) {
-      return child;
-    }
-
-    return (
-      <React.Fragment key={index}>
-        {child}
-        <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className="[&>svg]:size-tiny px-single flex items-center self-stretch border-l">
-          <ChevronRightIcon />
-        </li>
-      </React.Fragment>
-    );
-  });
+function Breadcrumb({ className, items, level: propLevel, ...props }: BreadcrumbProps) {
+  const level = useElementLevel(propLevel);
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
 
   return (
-    <ol data-slot="breadcrumb-list" className={cn("flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full", className)} {...props}>
-      {childrenWithSeparators}
-    </ol>
+    <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-border bg-base", className)} {...props}>
+      <ol data-slot="breadcrumb-list" className="flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full">
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+          const hasOptions = item.options && item.options.length > 0;
+          const showSeparator = !isLast;
+          const isOpen = openIndex === index;
+
+          return (
+            <React.Fragment key={index}>
+              <BreadcrumbItem {...item} level={level} open={isOpen} onOpenChange={(open) => setOpenIndex(open ? index : null)} />
+              {showSeparator && (
+                <BreadcrumbSeparatorItem
+                  level={level}
+                  hasOptions={hasOptions}
+                  isOpen={isOpen}
+                  onClick={hasOptions ? () => setOpenIndex(isOpen ? null : index) : undefined}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 
 interface BreadcrumbItemProps extends React.ComponentProps<"li"> {
   id?: string;
-  mode?: Expertise;
-  items?: { label: React.ReactNode; href: string; id?: string }[];
+  content?: React.ReactNode;
+  options?: { label: React.ReactNode; href: string; id?: string }[];
   onNavigate?: (href: string) => void;
   level?: Level;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-function BreadcrumbItem({ className, id, mode = Expertise.BEGINNER, children, items, onNavigate, level: propLevel, ...props }: BreadcrumbItemProps) {
-  const [open, setOpen] = React.useState(false);
+function BreadcrumbItem({ className, id, content, children, options, onNavigate, level: propLevel, open = false, onOpenChange, ...props }: BreadcrumbItemProps) {
   const level = useElementLevel(propLevel);
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
   const handleSelect = (href: string) => {
-    setOpen(false);
+    onOpenChange?.(false);
     onNavigate?.(href);
   };
 
-  if (!items?.length) {
+  const itemContent = content ?? children;
+
+  if (!options?.length) {
     const itemElement = (
       <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0", className)} {...props}>
-        {children}
+        {itemContent}
       </li>
     );
 
@@ -3646,34 +3650,25 @@ function BreadcrumbItem({ className, id, mode = Expertise.BEGINNER, children, it
     return itemElement;
   }
 
-  return (
+  const itemElement = (
     <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0", className)} {...props}>
-      <DropdownMenuPrimitive.Root open={open} onOpenChange={setOpen}>
-        {id ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-stretch">
-                <div className="flex items-center">{children}</div>
-                <DropdownMenuPrimitive.Trigger asChild>
-                  <button className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch border-l", hoverClass)}>{open ? <ChevronDownIcon /> : <ChevronRightIcon />}</button>
-                </DropdownMenuPrimitive.Trigger>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <IdTooltipContent id={id} />
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <div className="flex items-stretch">
-            <div className="flex items-center">{children}</div>
-            <DropdownMenuPrimitive.Trigger asChild>
-              <button className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch border-l", hoverClass)}>{open ? <ChevronDownIcon /> : <ChevronRightIcon />}</button>
-            </DropdownMenuPrimitive.Trigger>
-          </div>
-        )}
+      <DropdownMenuPrimitive.Root open={open} onOpenChange={onOpenChange}>
+        <DropdownMenuPrimitive.Trigger asChild>
+          <div className={cn("flex items-center cursor-pointer", hoverClass)}>{itemContent}</div>
+        </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single">
-            {items.map((item, index) => {
+            {options.map((item, index) => {
+              const labelKeys = typeof item.label === "object" && item.label !== null && !React.isValidElement(item.label) ? Object.keys(item.label) : undefined;
+              console.log(`[DEBUG] [BREADCRUMB-RENDER] Rendering dropdown item:`, {
+                item,
+                label: item.label,
+                labelType: typeof item.label,
+                isObject: typeof item.label === "object" && item.label !== null,
+                isReactElement: React.isValidElement(item.label),
+                keys: labelKeys,
+                labelValue: labelKeys ? item.label : "N/A",
+              });
               const menuItem = (
                 <DropdownMenuPrimitive.Item
                   key={index}
@@ -3696,7 +3691,7 @@ function BreadcrumbItem({ className, id, mode = Expertise.BEGINNER, children, it
                 menuItem
               );
 
-              if (index < items.length - 1) {
+              if (index < options.length - 1) {
                 return (
                   <React.Fragment key={index}>
                     {wrappedItem}
@@ -3712,147 +3707,46 @@ function BreadcrumbItem({ className, id, mode = Expertise.BEGINNER, children, it
       </DropdownMenuPrimitive.Root>
     </li>
   );
-}
 
-function BreadcrumbLink({
-  asChild,
-  className,
-  level: propLevel,
-  ...props
-}: React.ComponentProps<"a"> & {
-  asChild?: boolean;
-  level?: Level;
-}) {
-  const level = useElementLevel(propLevel);
-  const Comp = asChild ? Slot : "a";
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-
-  return <Comp data-slot="breadcrumb-link" className={cn("text-foreground transition-colors px-single flex items-center gap-single h-full", hoverClass, className)} {...(props as any)} />;
-}
-
-function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
-  return <span data-slot="breadcrumb-page" role="link" aria-disabled="true" aria-current="page" className={cn("text-foreground font-normal", className)} {...props} />;
-}
-
-interface BreadcrumbSeparatorProps extends React.ComponentProps<"li"> {
-  items?: { label: React.ReactNode; href: string; id?: string }[];
-  onNavigate?: (href: string) => void;
-  id?: string;
-  mode?: Expertise;
-  level?: Level;
-}
-
-function BreadcrumbSeparator({ children, className, items, onNavigate, id, mode = Expertise.BEGINNER, level: propLevel, ...props }: BreadcrumbSeparatorProps) {
-  const level = useElementLevel(propLevel);
-  console.warn("BreadcrumbSeparator is deprecated. Use BreadcrumbItem with items prop instead. Separators are now automatically added between items.");
-
-  const [open, setOpen] = React.useState(false);
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-
-  const handleSelect = (href: string) => {
-    setOpen(false);
-    onNavigate?.(href);
-  };
-
-  if (!items?.length) {
-    const separatorElement = (
-      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-tiny px-single flex items-center self-stretch", className)} {...props}>
-        {children ?? <ChevronRightIcon />}
-      </li>
+  if (id) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
+        <TooltipContent>
+          <IdTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
     );
-
-    if (id) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>{separatorElement}</TooltipTrigger>
-          <TooltipContent>
-            <IdTooltipContent id={id} />
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return separatorElement;
   }
 
+  return itemElement;
+}
+
+interface BreadcrumbSeparatorItemProps {
+  level: Level;
+  hasOptions: boolean;
+  isOpen: boolean;
+  onClick?: () => void;
+}
+
+function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onClick }: BreadcrumbSeparatorItemProps) {
+  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
+
   return (
-    <DropdownMenuPrimitive.Root open={open} onOpenChange={setOpen}>
-      {id ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuPrimitive.Trigger asChild>
-              <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch", hoverClass, className)} {...props} role="button">
-                {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
-              </li>
-            </DropdownMenuPrimitive.Trigger>
-          </TooltipTrigger>
-          <TooltipContent>
-            <IdTooltipContent id={id} />
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        <DropdownMenuPrimitive.Trigger asChild>
-          <li data-slot="breadcrumb-separator" className={cn("[&>svg]:size-tiny px-single flex items-center transition-colors self-stretch", hoverClass, className)} {...props} role="button">
-            {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
-          </li>
-        </DropdownMenuPrimitive.Trigger>
-      )}
-      <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single">
-          {items.map((item, index) => {
-            const menuItem = (
-              <DropdownMenuPrimitive.Item
-                key={index}
-                className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center p-single text-sm outline-none whitespace-nowrap"
-                onClick={() => handleSelect(item.href)}
-                role="button"
-              >
-                {item.label}
-              </DropdownMenuPrimitive.Item>
-            );
-
-            const wrappedItem = item.id ? (
-              <Tooltip key={index}>
-                <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
-                <TooltipContent>
-                  <IdTooltipContent id={item.id} />
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              menuItem
-            );
-
-            if (index < items.length - 1) {
-              return (
-                <React.Fragment key={index}>
-                  {wrappedItem}
-                  <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />
-                </React.Fragment>
-              );
-            }
-
-            return wrappedItem;
-          })}
-        </DropdownMenuPrimitive.Content>
-      </DropdownMenuPrimitive.Portal>
-    </DropdownMenuPrimitive.Root>
+    <li
+      data-slot="breadcrumb-separator"
+      role="presentation"
+      aria-hidden="true"
+      className={cn("[&>svg]:size-tiny px-single flex items-center self-stretch border-l", hasOptions && "cursor-pointer", hasOptions && hoverClass)}
+      onClick={onClick}
+    >
+      {isOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
+    </li>
   );
 }
 
-function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span">) {
-  return (
-    <span data-slot="breadcrumb-ellipsis" role="presentation" aria-hidden="true" className={cn("flex size-large items-center justify-center", className)} {...props}>
-      <MoreHorizontalIcon className="size-tiny" />
-      <span className="sr-only">More</span>
-    </span>
-  );
-}
-
-function BreadcrumbBreak({ className, ...props }: React.ComponentProps<"li">) {
-  return <li data-slot="breadcrumb-break" role="presentation" aria-hidden="true" className={cn("basis-full h-0 hidden", className)} {...props} />;
-}
-
-export { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage };
+export { Breadcrumb, BreadcrumbItem };
+export type { BreadcrumbItemData };
 
 // #region PageNavigation
 

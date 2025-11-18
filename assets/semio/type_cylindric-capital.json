@@ -1,139 +1,160 @@
 {
+  "unit": "m",
   "name": "Cylindric Capital",
-  "description": "A roof that has the skin of a cut extruded cylinder.",
-  "icon": "icons/cylindric-capital.svg",
-  "image": "images/cylindric-capital.png",
-  "variant": "",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
-  "unit": "m",
-  "representations": [
+  "attributes": [
     {
-      "url": "representations/cylindric-capital.glb",
-      "description": "",
-      "tags": ["model/gltf-binary"],
-      "attributes": []
+      "value": "south west",
+      "guid": "5c057908-a85d-46d9-8638-cea0cc057bd0",
+      "key": "peak",
+      "definition": ""
     },
     {
-      "url": "representations/cylindric-capital_1to500.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "attributes": []
+      "value": "6.5",
+      "guid": "5649ac3d-2607-45f0-a5fb-08807f74b3cf",
+      "key": "diameter",
+      "definition": ""
     },
     {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "attributes": []
+      "value": "5.5",
+      "guid": "1d1edea0-b799-40c9-9441-9bf9fbb7c9c2",
+      "key": "height side",
+      "definition": ""
     },
     {
-      "url": "representations/cylindric-capital_1to200.3dm",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "attributes": []
+      "value": "1",
+      "guid": "fb11cd96-cffe-4bde-be1f-aa2577fff828",
+      "key": "height low",
+      "definition": ""
     },
     {
-      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
-      "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "attributes": []
+      "value": "0.3",
+      "guid": "a778b9cc-55b4-4be0-a13d-6c34e28c2ba9",
+      "key": "wall thickness",
+      "definition": ""
     },
     {
-      "url": "representations/cylindric-capital_collider.glb",
-      "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "attributes": []
+      "value": "123029",
+      "guid": "0582a9fc-990e-4da1-812b-4b531733d0e8",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "820",
+      "guid": "9f8567a6-b4c2-4d20-8348-9cd39476284e",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "8202",
+      "guid": "c977de70-084f-49e8-823a-22932839f88e",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }
   ],
-  "ports": [
-    {
-      "id_": "",
-      "description": "The center of the bottom.",
-      "mandatory": false,
-      "family": "roof circular top",
-      "compatibleFamilies": ["roof circular bottom"],
-      "point": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": -1.0
-      },
-      "t": 0.0,
-      "attributes": [
-        {
-          "name": "bottom",
-          "value": "",
-          "unit": "",
-          "definition": ""
-        },
-        {
-          "name": "wasp rotation",
-          "value": "180",
-          "unit": "",
-          "definition": ""
-        }
-      ]
-    }
-  ],
+  "description": "A roof that has the skin of a cut extruded cylinder.",
+  "icon": "icons/cylindric-capital.svg",
   "authors": [
     {
       "name": "Ueli Saluz",
+      "guid": "5873bb43-818f-41a3-9b67-abab9b5fde41",
       "email": "ueli@semio-tech.org"
     }
   ],
-  "attributes": [
-    {
-      "name": "peak",
-      "value": "south west",
-      "unit": "",
-      "definition": ""
+  "image": "images/cylindric-capital.png",
+  "ports": {
+    "mandatory": false,
+    "t": 0.0,
+    "attributes": [
+      {
+        "value": "",
+        "guid": "c0738615-5341-449c-8b10-fa95a293541b",
+        "key": "bottom",
+        "definition": ""
+      },
+      {
+        "value": "180",
+        "guid": "a9256f90-cf14-475a-8fdf-5a6bd94e665a",
+        "key": "wasp rotation",
+        "definition": ""
+      }
+    ],
+    "guid": "e7b9f9b4-3b4e-4525-ad8e-c4c542d2d1c7",
+    "direction": {
+      "y": 0.0,
+      "x": 0.0,
+      "z": -1.0
     },
-    {
-      "name": "diameter",
-      "value": "6.5",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "height side",
-      "value": "5.5",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "height low",
-      "value": "1",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "wall thickness",
-      "value": "0.3",
-      "unit": "m",
-      "definition": ""
-    },
-    {
-      "name": "construction cost",
-      "value": "123029",
-      "unit": "€",
-      "definition": ""
-    },
-    {
-      "name": "maintenance expenses",
-      "value": "820",
-      "unit": "€/a",
-      "definition": ""
-    },
-    {
-      "name": "construction global warming potential",
-      "value": "8202",
-      "unit": "kgCO2e",
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    "description": "The center of the bottom.",
+    "family": "roof circular top",
+    "compatibleFamilies": [
+      "roof circular bottom"
+    ],
+    "point": {
+      "y": 0.0,
+      "x": 0.0,
+      "z": 0.0
     }
-  ]
+  },
+  "updatedAt": "2025-11-18T21:31:47.296Z",
+  "guid": "589ebfa8-a364-45fd-b11f-31c4ef6dee5c",
+  "representations": [
+    {
+      "file": "representations/cylindric-capital.glb",
+      "guid": "c9909c59-09e6-4943-9c2f-5b9c067abde2",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/cylindric-capital_1to500.3dm",
+      "guid": "c84ff42e-cfd1-4fe6-aea2-73ddec21de57",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
+      "guid": "b442253b-fdae-445e-9bfc-fedb4f717c0a",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/cylindric-capital_1to200.3dm",
+      "guid": "fde88567-4578-4ea4-bfdf-1a994a6d0cb4",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "description": ""
+    },
+    {
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
+      "guid": "5dce5223-51a6-4b42-94a7-91c2c3b41221",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "description": ""
+    },
+    {
+      "file": "representations/cylindric-capital_collider.glb",
+      "guid": "98050f08-8f63-43f5-a0bc-300b3856c692",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "description": ""
+    }
+  ],
+  "createdAt": "2025-11-18T21:31:47.296Z"
 }
