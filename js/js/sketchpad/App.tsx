@@ -11651,6 +11651,18 @@ const LayoutWrapper: FC = () => {
     }
   }, [location.pathname, location.search, sketchpadCommands, store]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handler = () => {
+      const active = !!document.fullscreenElement;
+      if (active !== isFullscreen) {
+        sketchpadCommands.setState("semio.sketchpad.fullscreenChange", { isFullscreen: active });
+      }
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, [isFullscreen, sketchpadCommands]);
+
   const navigationHistory = useNavigationHistory();
   const currentPath = `${navigation}${location.search}`;
   const [searchParams] = useSearchParams();
@@ -11779,6 +11791,8 @@ const LayoutWrapper: FC = () => {
   }, [currentPath, isDesignApp, isTypeApp, isQualityApp, isKitApp, design, type, kitGuid, filteredKind, filteredName, kitKind, kit, homeKind, homeName, homeVersion]);
   const isAtRoot = currentPath === "/" || (currentPath === "/kits" && !kitGuid);
 
+  const fullscreenToggleId = isFullscreen ? "semio.sketchpad.navbar.exitFullscreen" : "semio.sketchpad.navbar.fullscreen";
+
   const navbarItems = useMemo(() => {
     const leftItems: NavbarItem[] = [];
     const centerItems: NavbarItem[] = [];
@@ -11822,11 +11836,45 @@ const LayoutWrapper: FC = () => {
       order: 0,
     });
 
-    const fullscreenToggleId = isFullscreen ? "semio.sketchpad.navbar.exitFullscreen" : "semio.sketchpad.navbar.fullscreen";
-
     rightItems.push({
       id: "semio.sketchpad.navbar.fullscreenToggle",
-      content: <Toggle id={fullscreenToggleId} pressed={isFullscreen} onPressedChange={() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)} icon={isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />} />,
+      content: (
+        <Toggle
+          id={fullscreenToggleId}
+          pressed={isFullscreen}
+          onPressedChange={() => {
+            if (typeof document !== "undefined") {
+              if (!isFullscreen) {
+                const target = document.documentElement;
+                if (target && target.requestFullscreen) {
+                  const result = target.requestFullscreen();
+                  if (result && typeof (result as any).then === "function") {
+                    (result as Promise<void>).then(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: true })).catch(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false }));
+                  } else {
+                    sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: true });
+                  }
+                } else {
+                  sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false });
+                }
+              } else {
+                if (document.fullscreenElement && document.exitFullscreen) {
+                  const result = document.exitFullscreen();
+                  if (result && typeof (result as any).then === "function") {
+                    (result as Promise<void>).then(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false })).catch(() => sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false }));
+                  } else {
+                    sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false });
+                  }
+                } else {
+                  sketchpadCommands.setState(fullscreenToggleId, { isFullscreen: false });
+                }
+              }
+              return;
+            }
+            sketchpadCommands.toggleFullscreen(fullscreenToggleId);
+          }}
+          icon={isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
+        />
+      ),
       order: 1,
     });
 

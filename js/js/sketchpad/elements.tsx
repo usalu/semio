@@ -2332,14 +2332,13 @@ function ToggleGroup({ className, id, showLabel, level: propLevel, children, kin
 
 function ToggleGroupItem({
   className,
-  children,
   id,
   icon,
   action,
   ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & {
+}: Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
   id?: string;
-  icon?: React.ReactNode;
+  icon: React.ReactNode;
   action?: React.ReactNode;
 }) {
   const context = React.useContext(ToggleGroupContext);
@@ -2358,7 +2357,7 @@ function ToggleGroupItem({
       )}
       {...props}
     >
-      {(icon || children) as React.ReactNode}
+      {icon as React.ReactNode}
       {action && (
         <div
           className={cn("flex items-center justify-center w-small h-small bg-base", level === "panel" && "bg-panel", level === "temporary" && "bg-temporary")}
@@ -2388,14 +2387,38 @@ function ToggleGroupItem({
   return toggleGroupItemElement;
 }
 
+// Helper to add size-small class to icon elements
+const addIconSize = (element: React.ReactNode): React.ReactNode => {
+  if (React.isValidElement(element)) {
+    const existingClassName = (element.props as any).className || "";
+    // Only add size-small if no size class is already present
+    if (!existingClassName.includes("size-")) {
+      return React.cloneElement(element, {
+        ...element.props,
+        className: cn(existingClassName, "size-small"),
+      } as any);
+    }
+  }
+  return element;
+};
+
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {
     const { actionIcon, onActionClick, icon, pressed, defaultPressed, onPressedChange, id, showLabel, level, className, actionId } = props as ToggleWithActionProps;
+    const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
     return (
-      <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className} noDivider>
-        <ToggleGroupItem value="on" action={<Action id={actionId} icon={actionIcon} onClick={onActionClick} level={level} />}>
-          {icon}
-        </ToggleGroupItem>
+      <ToggleGroup
+        id={id}
+        showLabel={showLabel}
+        level={level}
+        kind="single"
+        value={value}
+        defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
+        onValueChange={(val: string) => onPressedChange?.(val === "on")}
+        className={className}
+        noDivider
+      >
+        <ToggleGroupItem value="on" icon={addIconSize(icon)} action={<Action id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />} />
       </ToggleGroup>
     );
   }
@@ -2442,7 +2465,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
                 onClick={() => handleSelect(item.value)}
                 className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}
               >
-                <span className="flex-1 text-left">{item.label}</span>
+                <span className="flex-1 text-left">{addIconSize(item.label)}</span>
               </button>
             ))}
           </div>
@@ -2464,24 +2487,33 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     // Only pass value OR defaultValue, never both
     if (isPressedControlled) {
-      toggleGroupProps.value = pressed ? selectedItem.value : undefined;
+      toggleGroupProps.value = pressed ? selectedItem.value : "";
     } else if (defaultPressed !== undefined) {
       toggleGroupProps.defaultValue = defaultPressed ? selectedItem.value : undefined;
     }
 
     return (
       <ToggleGroup {...toggleGroupProps}>
-        <ToggleGroupItem value={selectedItem.value} action={dropdownAction}>
-          {selectedItem.label}
-        </ToggleGroupItem>
+        <ToggleGroupItem value={selectedItem.value} icon={addIconSize(selectedItem.label)} action={dropdownAction} />
       </ToggleGroup>
     );
   }
 
   const { id, showLabel, level, className, icon, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
+  const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
   return (
-    <ToggleGroup id={id} showLabel={showLabel} level={level} kind="single" value={pressed ? "on" : undefined} defaultValue={defaultPressed ? "on" : undefined} onValueChange={(val: string) => onPressedChange?.(val === "on")} className={className} noDivider>
-      <ToggleGroupItem value="on">{icon}</ToggleGroupItem>
+    <ToggleGroup
+      id={id}
+      showLabel={showLabel}
+      level={level}
+      kind="single"
+      value={value}
+      defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
+      onValueChange={(val: string) => onPressedChange?.(val === "on")}
+      className={className}
+      noDivider
+    >
+      <ToggleGroupItem value="on" icon={addIconSize(icon)} />
     </ToggleGroup>
   );
 }

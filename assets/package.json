@@ -8,5 +8,8 @@
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
+  },
+  "dependencies": {
+    "lucide-react": "^0.536.0"
   }
 }

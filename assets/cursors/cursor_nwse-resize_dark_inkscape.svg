@@ -2,14 +2,14 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="19.906374"
-   height="25.348385"
-   viewBox="0 0 19.906373 25.348385"
+   width="25.519381"
+   height="19.762911"
+   viewBox="0 0 25.519379 19.762911"
    version="1.1"
    id="svg1"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
-   sodipodi:docname="cursor_nesw-resize_inkscape.svg"
-   inkscape:export-filename="cursor_nesw-resize.svg"
+   sodipodi:docname="cursor_nwse-resize_dark_inkscape.svg"
+   inkscape:export-filename="cursor_nwse-resize_dark.svg"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -27,8 +27,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="16"
-     inkscape:cx="7.34375"
-     inkscape:cy="12.5625"
+     inkscape:cx="10.15625"
+     inkscape:cy="9.75"
      inkscape:window-width="1920"
      inkscape:window-height="1010"
      inkscape:window-x="-6"
@@ -41,15 +41,15 @@
      inkscape:label="Ebene 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-218.98793,-288.5052)">
+     transform="translate(-216.18143,-291.29796)">
     <path
-       style="fill:#001117;fill-opacity:1;stroke:#f7f3e3;stroke-width:0.15;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
-       d="m 238.81426,288.69131 -11.03904,11.03903 2.61495,2.61495 8.4238,-8.40819 z"
+       style="fill:#f7f3e3;fill-opacity:1;stroke:#000117;stroke-width:0.15;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       d="m 216.36318,291.42097 11.13961,10.93753 2.59091,-2.63877 -8.48494,-8.34649 z"
        id="path1-8"
        sodipodi:nodetypes="ccccc" />
     <path
-       style="fill:#001117;fill-opacity:1;stroke:#f7f3e3;stroke-width:0.15;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
-       d="m 219.06797,313.66748 11.03903,-11.03903 -2.61494,-2.61494 -8.42381,8.40427 z"
+       style="fill:#f7f3e3;fill-opacity:1;stroke:#000117;stroke-width:0.15;stroke-miterlimit:5;stroke-dasharray:none;stroke-opacity:1"
+       d="m 241.51905,310.93782 -11.13961,-10.93752 -2.5909,2.63876 8.48102,8.34653 z"
        id="path1-8-8"
        sodipodi:nodetypes="ccccc" />
   </g>

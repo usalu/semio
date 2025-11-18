@@ -31,8 +31,8 @@
     "docs": "npx nx dev @semio/docs"
   },
   "devDependencies": {
+    "@nx/eslint-plugin": "^21.6.8",
     "@nxlv/python": "^21.2.0",
-    "@nx/eslint-plugin": "^21.2.0",
     "nx": "^21.4.1"
   },
   "keywords": [
@@ -65,5 +65,8 @@
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
+  },
+  "dependencies": {
+    "esbuild": "^0.27.0"
   }
 }
