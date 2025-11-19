@@ -26,6 +26,7 @@ import { HashIcon } from "@semio/assets";
 import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
+import { useLabel } from "../../../i18n";
 import * as Y from "yjs";
 import type { SketchpadStore } from "../../App";
 import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "../../App";
@@ -1269,7 +1270,7 @@ const Overview: FC<OverviewProps> = () => {
   if (flatHeadings.length === 0) {
     return (
       <div className="p-single">
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.docs.noHeadings")}</p>
+        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.docs.noHeadings")}</p>
       </div>
     );
   }
@@ -1355,7 +1356,7 @@ const Details: FC = () => {
   if (flatHeadings.length === 0) {
     return (
       <div className="p-single">
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.docs.noHeadings")}</p>
+        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.docs.noHeadings")}</p>
       </div>
     );
   }

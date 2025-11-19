@@ -21,7 +21,27 @@
 
 // #region Imports
 
-import { AddIcon, AwardIcon, ChevronDownIcon, ChevronRightIcon, CodeIcon, DocumentIcon, HandIcon, LocalKitIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoteKitIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, SunIcon, TabletIcon, TemporaryKitIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import {
+  AddIcon,
+  AwardIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CodeIcon,
+  DocumentIcon,
+  GlobeIcon,
+  HandIcon,
+  LocalKitIcon,
+  MonitorIcon,
+  MoonIcon,
+  MousePointerIcon,
+  RemoteKitIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  SunIcon,
+  TemporaryKitIcon,
+  TutorialIcon,
+  UserIcon,
+} from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
@@ -46,6 +66,7 @@ import {
   useIsMobile,
   useKits,
   useKitShallows,
+  useLanguage,
   useLayout,
   useMode,
   useNavigation,
@@ -58,7 +79,7 @@ import {
   useTooltip,
   Window,
 } from "../../App";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "../../elements";
+import { Action, Input, Scrollable, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "../../elements";
 import type { AppEdit, PanelDefinition, PanelVisibility } from "../../sketchpad";
 import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "../../sketchpad";
 import { docsRegistry } from "../docs/App";
@@ -541,8 +562,15 @@ const ChatPlaceholder: FC = () => {
 
 // #region Settings
 
-const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; setLayout: (origin: string, layout: Layout) => void; setExpertise: (origin: string, expertise: Expertise) => void; setMode: (origin: string, mode: Mode) => void }> = ({ setTheme, setLayout, setExpertise, setMode }) => {
+const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; setLanguage: (origin: string, language: string) => void; setLayout: (origin: string, layout: Layout) => void; setExpertise: (origin: string, expertise: Expertise) => void; setMode: (origin: string, mode: Mode) => void }> = ({
+  setTheme,
+  setLanguage,
+  setLayout,
+  setExpertise,
+  setMode,
+}) => {
   const theme = useTheme();
+  const language = useLanguage();
   const layout = useLayout();
   const expertise = useExpertise();
   const mode = useMode();
@@ -561,6 +589,21 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
               { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
               { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
               { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+            ]}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <ToggleGroup
+            id="semio.sketchpad.app.home.settings.language"
+            value={language}
+            onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)}
+            showLabel
+            kind="single"
+            items={[
+              { value: "en", id: "semio.sketchpad.settings.language.en", icon: <GlobeIcon className="size-small" /> },
+              { value: "de", id: "semio.sketchpad.settings.language.de", icon: <GlobeIcon className="size-small" /> },
             ]}
           />
         </TreeContent>
@@ -674,7 +717,7 @@ const Home: FC = ({}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
   const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit, setTheme, setLayout, setExpertise, setMode } = useSketchpadCommands();
+  const { createKit, navigateToKit, setTheme, setLanguage, setLayout, setExpertise, setMode } = useSketchpadCommands();
 
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
@@ -745,7 +788,7 @@ const Home: FC = ({}) => {
       id: "semio.sketchpad.app.home.settings",
       order: 0,
       content: () => {
-        return <SettingsContent setTheme={setTheme} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
+        return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
       },
     });
 
@@ -1212,14 +1255,8 @@ const Home: FC = ({}) => {
                   />,
                 ]),
             ...(selectedName ? [<Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={selectedName} />] : []),
-            ...(selectedVersion !== null
-              ? [<Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} id="semio.sketchpad.app.home.filter.version" icon={selectedVersion || defaultVersionLabel} />]
-              : []),
-            ...(selectedKind && !selectedName && uniqueNames.length > 0
-              ? uniqueNames.map((name) => (
-                  <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={name} />
-                ))
-              : []),
+            ...(selectedVersion !== null ? [<Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} id="semio.sketchpad.app.home.filter.version" icon={selectedVersion || defaultVersionLabel} />] : []),
+            ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={name} />) : []),
             ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
               ? uniqueVersions.map((version) => (
                   <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || <span className="italic opacity-50">{defaultVersionLabel}</span>} />
@@ -1382,16 +1419,12 @@ const Home: FC = ({}) => {
                       />,
                     ]),
                 ...(selectedName ? [<Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
-                ...(selectedVersion !== null
-                  ? [<Toggle id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`} pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} icon={selectedVersion || defaultVersionLabel} />]
-                  : []),
+                ...(selectedVersion !== null ? [<Toggle id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`} pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} icon={selectedVersion || defaultVersionLabel} />] : []),
                 ...(selectedKind && !selectedName && uniqueNames.length > 0
                   ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={name} />)
                   : []),
                 ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
-                  ? uniqueVersions.map((version) => (
-                      <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || defaultVersionLabel} />
-                    ))
+                  ? uniqueVersions.map((version) => <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || defaultVersionLabel} />)
                   : []),
                 <Input
                   key="search"

@@ -28,6 +28,7 @@ import React, { createContext, FC, memo, useCallback, useContext, useEffect, use
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import * as Y from "yjs";
+import { useLabel } from "../../../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../../../semio";
 import type { KitStore, QualityStore, SketchpadStore } from "../../App";
 import {
@@ -106,7 +107,7 @@ export interface QualityAppDiff {
   hover?: QualityAppHover;
   fullscreenWindow?: QualityAppFullscreenWindow;
   panelVisibility?: Partial<PanelVisibility>;
-  activeTool?: ToolType;
+  activeTool?: ToolKind;
   formulaNodes?: FormulaNode[];
   windowLayout?: any;
 }
@@ -116,7 +117,7 @@ export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> 
 export interface QualityAppState {
   fullscreenWindow: QualityAppFullscreenWindow;
   panelVisibility: PanelVisibility;
-  activeTool: ToolType;
+  activeTool: ToolKind;
   selection?: QualityAppSelection;
   hover?: QualityAppHover;
   formulaNodes: FormulaNode[];
@@ -487,7 +488,7 @@ const qualityAppCommands = {
       },
     };
   },
-  "semio.qualityApp.setActiveTool": (context: QualityAppCommandContext, tool: ToolType): QualityAppCommandResult => {
+  "semio.qualityApp.setActiveTool": (context: QualityAppCommandContext, tool: ToolKind): QualityAppCommandResult => {
     return {
       diff: {
         activeTool: tool,
@@ -934,7 +935,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
       redo: () => {},
       toggleFormulaFullscreen: () => Promise.resolve(),
       toggleDiagramFullscreen: () => Promise.resolve(),
-      setActiveTool: (_origin: string, _tool: ToolType) => Promise.resolve(),
+      setActiveTool: (_origin: string, _tool: ToolKind) => Promise.resolve(),
       updateFormula: (_origin: string, _formula: string) => Promise.resolve(),
       addFormulaNode: (_origin: string, _node: FormulaNode) => Promise.resolve(),
       removeFormulaNode: (_origin: string, _nodeId: Guid) => Promise.resolve(),
@@ -955,7 +956,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
     redo: (origin: string) => store.redo(),
     toggleFormulaFullscreen: (origin: string) => store.execute("semio.qualityApp.toggleFormulaFullscreen", origin),
     toggleDiagramFullscreen: (origin: string) => store.execute("semio.qualityApp.toggleDiagramFullscreen", origin),
-    setActiveTool: (origin: string, tool: ToolType) => store.execute("semio.qualityApp.setActiveTool", origin, tool),
+    setActiveTool: (origin: string, tool: ToolKind) => store.execute("semio.qualityApp.setActiveTool", origin, tool),
     updateFormula: (origin: string, formula: string) => store.execute("semio.qualityApp.updateFormula", origin, formula),
     addFormulaNode: (origin: string, node: FormulaNode) => store.execute("semio.qualityApp.addFormulaNode", origin, node),
     removeFormulaNode: (origin: string, nodeId: Guid) => store.execute("semio.qualityApp.removeFormulaNode", origin, nodeId),
@@ -1403,26 +1404,26 @@ export const QualityWorkbench: FC = () => {
       <TreeItem id="semio.sketchpad.app.quality.numericFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="Add" kind="function" label={t("semio.sketchpad.app.quality.add")} />
-            <FunctionNode name="Subtract" kind="function" label={t("semio.sketchpad.app.quality.subtract")} />
-            <FunctionNode name="Multiply" kind="function" label={t("semio.sketchpad.app.quality.multiply")} />
-            <FunctionNode name="Divide" kind="function" label={t("semio.sketchpad.app.quality.divide")} />
+            <FunctionNode name="Add" kind="function" label={useLabel("semio.sketchpad.app.quality.add")} />
+            <FunctionNode name="Subtract" kind="function" label={useLabel("semio.sketchpad.app.quality.subtract")} />
+            <FunctionNode name="Multiply" kind="function" label={useLabel("semio.sketchpad.app.quality.multiply")} />
+            <FunctionNode name="Divide" kind="function" label={useLabel("semio.sketchpad.app.quality.divide")} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.branchingFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="If" kind="function" label={t("semio.sketchpad.app.quality.if")} />
-            <FunctionNode name="Switch" kind="function" label={t("semio.sketchpad.app.quality.switch")} />
+            <FunctionNode name="If" kind="function" label={useLabel("semio.sketchpad.app.quality.if")} />
+            <FunctionNode name="Switch" kind="function" label={useLabel("semio.sketchpad.app.quality.switch")} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.dataStructures">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="List" kind="function" label={t("semio.sketchpad.app.quality.list")} />
-            <FunctionNode name="Dictionary" kind="function" label={t("semio.sketchpad.app.quality.dictionary")} />
+            <FunctionNode name="List" kind="function" label={useLabel("semio.sketchpad.app.quality.list")} />
+            <FunctionNode name="Dictionary" kind="function" label={useLabel("semio.sketchpad.app.quality.dictionary")} />
           </div>
         </TreeContent>
       </TreeItem>
@@ -1515,7 +1516,7 @@ const QualityWorkbenchQualities: FC = () => {
   if (qualities.length === 0) {
     return (
       <TreeContent>
-        <div className="text-sm text-muted-foreground p-single">{t("semio.sketchpad.app.quality.noQualities")}</div>
+        <div className="text-sm text-muted-foreground p-single">{useLabel("semio.sketchpad.app.quality.noQualities")}</div>
       </TreeContent>
     );
   }

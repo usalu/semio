@@ -69,7 +69,7 @@ const FocusOverlay: FC<FocusOverlayProps> = ({ focusElement }) => {
   return (
     <>
       {focusElement.highlightMode === "dim" && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none">
+        <div className="fixed inset-0 z-tutorial pointer-events-none">
           <svg width="100%" height="100%">
             <defs>
               <mask id="tutorial-mask">
@@ -83,7 +83,7 @@ const FocusOverlay: FC<FocusOverlayProps> = ({ focusElement }) => {
         </div>
       )}
       {focusElement.highlightMode === "spotlight" && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none">
+        <div className="fixed inset-0 z-tutorial pointer-events-none">
           <div
             className="absolute rounded shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] border-2 border-primary"
             style={{
@@ -96,7 +96,7 @@ const FocusOverlay: FC<FocusOverlayProps> = ({ focusElement }) => {
         </div>
       )}
       {focusElement.highlightMode === "pulse" && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none">
+        <div className="fixed inset-0 z-tutorial pointer-events-none">
           <div
             className="absolute rounded border-2 border-primary animate-pulse"
             style={{
@@ -119,7 +119,7 @@ interface AnimatedCursorProps {
 
 const AnimatedCursor: FC<AnimatedCursorProps> = ({ position, action }) => {
   return (
-    <div className="fixed z-[10000] pointer-events-none transition-all duration-100" style={{ left: position.x, top: position.y }}>
+    <div className="fixed z-tutorial pointer-events-none transition-all duration-100" style={{ left: position.x, top: position.y }}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="rgb(var(--primary))" stroke="rgb(var(--primary-foreground))" strokeWidth="1" />
       </svg>
@@ -141,7 +141,7 @@ interface MilestoneTooltipProps {
 
 const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
   return (
-    <div className="fixed top-small left-1/2 -translate-x-1/2 z-[10001] bg-panel border rounded-lg shadow-lg p-small max-w-md pointer-events-none">
+    <div className="fixed top-small left-1/2 -translate-x-1/2 z-tutorial bg-panel border rounded-lg shadow-lg p-small max-w-md pointer-events-none">
       <h3 className="font-medium text-sm mb-1">{milestone.title}</h3>
       {milestone.description && <p className="text-xs text-muted">{milestone.description}</p>}
     </div>

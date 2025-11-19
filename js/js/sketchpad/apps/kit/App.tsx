@@ -238,7 +238,7 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
 
   return inverseDiff;
 };
-export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => areSameKit(kitApp.kit.guid, other.kit.guid);
+export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => kitApp.kit === other.kit;
 export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
 
 class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
@@ -1787,7 +1787,7 @@ const AppContent: FC = () => {
   if (!hasKit || !kit) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.noKitLoaded")}</p>
+        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.noKitLoaded")}</p>
       </div>
     );
   }
@@ -1796,7 +1796,7 @@ const AppContent: FC = () => {
   if (!kitApp) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.loading")}</p>
+        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.loading")}</p>
       </div>
     );
   }
@@ -2196,7 +2196,7 @@ const AppContent: FC = () => {
       // Helper function to recursively build folder hierarchy
       const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentGuid = parentFolder?.guid;
-        const childFolders = kit.folders?.filter((f: Folder) => f.parent === parentGuid) || [];
+        const childFolders = kit.folders?.filter((f: Folder) => !f.parent && !parentGuid || f.parent && typeof f.parent === 'object' && f.parent.guid === parentGuid) || [];
 
         childFolders.forEach((folder: Folder) => {
           if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
@@ -3263,7 +3263,7 @@ const AppContent: FC = () => {
               key="search"
               id="semio.sketchpad.app.kit.filter.search"
               className="flex-1 min-w-[160px]"
-              placeholder={t("semio.sketchpad.common.search")}
+              placeholder={useLabel("semio.sketchpad.common.search")}
               value={searchQuery}
               onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)}
             />,
@@ -3278,7 +3278,7 @@ const AppContent: FC = () => {
               id: "artifact",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.canvas.table.header.artifact")}</span>
+                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.artifact")}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "artifact"}
@@ -3463,7 +3463,7 @@ const AppContent: FC = () => {
             key="search"
             id="semio.sketchpad.app.kit.canvas.table.search"
             className="flex-1 min-w-[200px]"
-          placeholder={t("semio.sketchpad.common.search")}
+          placeholder={useLabel("semio.sketchpad.common.search")}
           value={searchQuery}
           onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
         />,
@@ -3472,7 +3472,7 @@ const AppContent: FC = () => {
       <ConceptFilter allConcepts={allConcepts} paramName="c" />
       <Scrollable ref={scrollAreaRef} className="flex-1" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
         {isDragOver && (
-          <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-panel">
             <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
           </div>
         )}
@@ -3484,7 +3484,7 @@ const AppContent: FC = () => {
                     id: "kind",
                     header: (
                       <div className="inline-flex items-center gap-single">
-                        <span>{t("semio.sketchpad.app.kit.canvas.table.header.kind")}</span>
+                        <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.kind")}</span>
                         <Toggle
                           kind="dropdown"
                           pressed={sortColumn === "kind"}
@@ -3520,7 +3520,7 @@ const AppContent: FC = () => {
               id: "artifact",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.canvas.table.header.artifact")}</span>
+                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.artifact")}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "artifact"}
@@ -3575,7 +3575,7 @@ const AppContent: FC = () => {
               id: "updatedAt",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.canvas.table.header.updatedAt")}</span>
+                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.updatedAt")}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "updatedAt"}
@@ -3599,7 +3599,7 @@ const AppContent: FC = () => {
               id: "createdAt",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{t("semio.sketchpad.app.kit.canvas.table.header.createdAt")}</span>
+                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.createdAt")}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "createdAt"}
@@ -3721,7 +3721,7 @@ const KitSectionForm: FC = () => {
       return (
         <TreeItem>
           <TreeContent>
-            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.notAvailable")}</p>
+            <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notAvailable")}</p>
           </TreeContent>
         </TreeItem>
       );
@@ -3750,7 +3750,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.version"
               value={kit.version || ""}
-              placeholder={t("semio.sketchpad.app.kit.versionPlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ version: value })}
               startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
               finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
@@ -3765,7 +3765,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.description"
               value={kit.description || ""}
-              placeholder={t("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ description: value })}
               startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
               finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
@@ -3780,7 +3780,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
               value={kit.icon || ""}
-              placeholder={t("semio.sketchpad.app.kit.iconPlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ icon: value })}
               startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
               finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
@@ -3795,7 +3795,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.image"
               value={kit.image || ""}
-              placeholder={t("semio.sketchpad.app.kit.imagePlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ image: value })}
               startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
               finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
@@ -3810,7 +3810,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
               value={kit.homepage || ""}
-              placeholder={t("semio.sketchpad.app.kit.homepagePlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ homepage: value })}
               startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
               finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
@@ -3825,7 +3825,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.license"
               value={kit.license || ""}
-              placeholder={t("semio.sketchpad.app.kit.licensePlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.kit.licensePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ license: value })}
               startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
               finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
@@ -3840,7 +3840,7 @@ const KitSectionForm: FC = () => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.notFound")}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -3876,7 +3876,7 @@ const SingleTypeSection: FC<{ typeGuid: string }> = ({ typeGuid }) => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea id="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholder={t("semio.sketchpad.app.type.descriptionPlaceholder.label")} readOnly showLabel />
+          <Textarea id="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholder={useLabel("semio.sketchpad.app.type.descriptionPlaceholder.label")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
     </>
@@ -3891,7 +3891,7 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
     <>
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.types.multipleSelected", { count: types.length })}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.types.multipleSelected")}</p>
         </TreeContent>
       </TreeItem>
       {types.map((type) => (
@@ -3934,7 +3934,7 @@ const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea id="semio.sketchpad.app.design.panel.details.section.design.description" value={design.description || ""} placeholder={t("semio.sketchpad.app.design.descriptionPlaceholder")} readOnly showLabel />
+          <Textarea id="semio.sketchpad.app.design.panel.details.section.design.description" value={design.description || ""} placeholder={useLabel("semio.sketchpad.app.design.descriptionPlaceholder")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
     </>
@@ -3949,7 +3949,7 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
     <>
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.designs.multipleSelected", { count: designs.length })}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.designs.multipleSelected")}</p>
         </TreeContent>
       </TreeItem>
       {designs.map((design) => (
@@ -3999,22 +3999,22 @@ export const FileSection: FC = () => {
           <TreeContent>
             <div className="space-y-2">
               <div>
-                <label className="text-xs text-muted-foreground">{t("semio.file.name")}</label>
+                <label className="text-xs text-muted-foreground">{useLabel("semio.file.name")}</label>
                 <p className="text-sm">{file!.name}</p>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">{t("semio.file.size")}</label>
+                <label className="text-xs text-muted-foreground">{useLabel("semio.file.size")}</label>
                 <p className="text-sm">{formatFileSize(file!.size)}</p>
               </div>
               {file!.createdAt && (
                 <div>
-                  <label className="text-xs text-muted-foreground">{t("semio.file.created")}</label>
+                  <label className="text-xs text-muted-foreground">{useLabel("semio.file.created")}</label>
                   <p className="text-sm">{formatDate(file!.createdAt)}</p>
                 </div>
               )}
               {file!.updatedAt && (
                 <div>
-                  <label className="text-xs text-muted-foreground">{t("semio.file.updated")}</label>
+                  <label className="text-xs text-muted-foreground">{useLabel("semio.file.updated")}</label>
                   <p className="text-sm">{formatDate(file!.updatedAt)}</p>
                 </div>
               )}
@@ -4081,7 +4081,7 @@ export const FolderSection: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.folder.description"
               value={folder.description || ""}
-              placeholder={t("semio.sketchpad.app.folder.descriptionPlaceholder.label")}
+              placeholder={useLabel("semio.sketchpad.app.folder.descriptionPlaceholder.label")}
               onLazyChange={(value) => {
                 const folderStore = (kitStore as any).folder(folder.guid);
                 folderStore.change({ description: value });
@@ -4098,7 +4098,7 @@ export const FolderSection: FC = () => {
         <TreeItem>
           <TreeContent>
             <div>
-              <label className="text-xs text-muted-foreground">{t("semio.folder.created")}</label>
+              <label className="text-xs text-muted-foreground">{useLabel("semio.folder.created")}</label>
               <p className="text-sm">{formatDate(folder.createdAt)}</p>
             </div>
           </TreeContent>
@@ -4108,7 +4108,7 @@ export const FolderSection: FC = () => {
         <TreeItem>
           <TreeContent>
             <div>
-              <label className="text-xs text-muted-foreground">{t("semio.folder.updated")}</label>
+              <label className="text-xs text-muted-foreground">{useLabel("semio.folder.updated")}</label>
               <p className="text-sm">{formatDate(folder.updatedAt)}</p>
             </div>
           </TreeContent>

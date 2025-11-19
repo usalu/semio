@@ -795,6 +795,18 @@
             "label": {
               "normal": "Language",
               "beginner": "Select the language for the application interface"
+            },
+            "en": {
+              "label": {
+                "normal": "English",
+                "beginner": "English"
+              }
+            },
+            "de": {
+              "label": {
+                "normal": "German",
+                "beginner": "German"
+              }
             }
           },
           "general": {

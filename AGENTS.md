@@ -213,7 +213,7 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### Keywords
 
-- `PLAN`: Create an agents markdown document to plan a new feature. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this plan).
+- `PLAN`: Create an agents markdown document to plan a new feature. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this plan). If `IMPLEMENT` is also called then proceed with the implementation directly.
 
 - `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this diagnosis). NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [AVATAR-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`.
 
@@ -228,7 +228,7 @@ Stats provide computed or measured performance data for entire designs using the
 
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, temporary code, …
 
-- `I18N`: Run `scripts/i18n.ps1` to produce a report in `agents/i18n.md`. Fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. Add missing keys, update incomplete keys, remove unused keys, …
+- `I18N`: Run `scripts/i18n.ps1` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
 
 - `AUTOMATE`: Create a powershell script to automate a task.
 
@@ -251,7 +251,7 @@ Every UI element with an `id` prop automatically gets i18n keys based on that ID
 NEVER use `useTranslation` directly or hardcode strings. Instead:
 
 1. Assign an `id` prop to the UI element matching the i18n key path
-2. Use `<IdTooltipContent>` or let tooltips automatically resolve content
+2. Use `<DescriptionTooltipContent>` or let tooltips automatically resolve content
 3. For custom text, use `t(id)` where `id` matches the element's `id` prop
 
 #### Translation Files
@@ -630,7 +630,7 @@ Example:
 
 ```typescript
 export const MyTool: Tool<MyAppState> = {
-  id: ToolType.MY_TOOL,
+  id: ToolKind.MY_TOOL,
   label: "My Tool",
   icon: <Icon />,
   render: (context) => ({ scene: <></>, diagram: null, table: null }),
@@ -667,7 +667,7 @@ Tutorial commands live in `commands.ts` under the `semio.tutorial.*` and `semio.
 
 Register items inside effects and always call the remove helper in the cleanup; default contributions now live inside each app's `App.tsx`, next to the `config` export.
 
-Providing an `id` shows the translated `IdTooltipContent`, and the base footer auto-hides in fullscreen until the cursor nears the bottom edge, so interactive elements must tolerate that visibility change.
+Providing an `id` shows the translated `DescriptionTooltipContent`, and the base footer auto-hides in fullscreen until the cursor nears the bottom edge, so interactive elements must tolerate that visibility change.
 
 #### Styling
 
@@ -1221,7 +1221,7 @@ Each UI element with an `id` prop automatically gets tooltip content from i18n:
 #### Tooltip Components
 
 - `<Tooltip>` - Base tooltip wrapper
-- `<IdTooltipContent>` - Automatic content from element ID
+- `<DescriptionTooltipContent>` - Automatic content from element ID
 - `<EnhancedTooltipContent>` - Manual configuration
 
 ### Windows

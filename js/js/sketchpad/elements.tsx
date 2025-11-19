@@ -64,7 +64,6 @@ import {
   LucideIcon,
   Maximize2Icon,
   Minimize2Icon,
-  MoreHorizontalIcon,
   RemoveIcon,
   SearchIcon,
   TriangleAlertIcon,
@@ -356,7 +355,7 @@ const Navbar: React.FC<NavbarProps> = ({ leftItems = [], centerItems = [], right
   const sortedCenter = [...centerItems].sort((a, b) => (a.order || 0) - (b.order || 0));
   const sortedRight = [...rightItems].sort((a, b) => (a.order || 0) - (b.order || 0));
   return (
-    <nav id="navbar" className={`bg-base border-b flex items-center gap-single px-single h-large z-[100] ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
+    <nav id="navbar" className={`bg-base border-b flex items-center gap-single px-single h-large z-base ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
       {sortedLeft.map((item) => (
         <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
           {item.content}
@@ -402,7 +401,7 @@ function PopoverContent({ className, align = "center", sideOffset = 4, ...props 
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[100] w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
           className,
         )}
         {...props}
@@ -432,7 +431,7 @@ export interface TooltipConfig {
   hotkey?: string;
 }
 
-export interface IdTooltipData {
+export interface DescriptionTooltipData {
   label?: string;
   description?: string;
   descriptionBeginner?: string;
@@ -476,7 +475,7 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-w-[300px] origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance",
+          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary max-w-[300px] origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance",
           className,
         )}
         {...props}
@@ -550,11 +549,11 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
   );
 }
 
-interface IdTooltipContentProps {
+interface DescriptionTooltipContentProps {
   id: string;
 }
 
-function IdTooltipContent({ id }: IdTooltipContentProps) {
+function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const { t } = useTranslation();
   const mode = useTooltipMode();
 
@@ -564,7 +563,6 @@ function IdTooltipContent({ id }: IdTooltipContentProps) {
   const manualLabel = useLabel("tooltip.manual");
   const tutorialLabel = useLabel("tooltip.tutorial");
   const value = t(id);
-  console.log(`[DEBUG] [BREADCRUMB-RENDER] IdTooltipContent rendering for id="${id}"`, { label, labelType: typeof label, value, valueType: typeof value });
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
 
@@ -652,7 +650,7 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          <IdTooltipContent id={id} />
+          <DescriptionTooltipContent id={id} />
         </TooltipContent>
       </Tooltip>
       {children}
@@ -694,13 +692,13 @@ function IdSemioTooltip({ children, id }: IdSemioTooltipProps) {
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent>
-        <IdTooltipContent id={id} />
+        <DescriptionTooltipContent id={id} />
       </TooltipContent>
     </Tooltip>
   );
 }
 
-export { EnhancedTooltipContent, IdSemioTooltip, IdTooltipContent, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 
 // #endregion Tooltip
 
@@ -934,7 +932,7 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
           className,
         )}
         {...props}
@@ -1083,7 +1081,7 @@ function ActionGroupItem({
         actionGroupItemVariants({
           level: context.level || level,
         }),
-        "min-w-0 shrink-0 focus:z-10 focus-visible:z-10",
+        "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel",
         !id && "flex-1",
         className,
       )}
@@ -1100,7 +1098,7 @@ function ActionGroupItem({
           {actionGroupItemElement}
         </TooltipTrigger>
         <TooltipContent>
-          <IdTooltipContent id={id} />
+          <DescriptionTooltipContent id={id} />
         </TooltipContent>
       </Tooltip>
     );
@@ -1264,7 +1262,7 @@ function ButtonGroupItem({
         buttonGroupItemVariants({
           level: context.level || level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10",
+        "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         className,
       )}
       {...(props as any)}
@@ -1639,7 +1637,7 @@ function SelectContent({ className, children, position = "popper", ...props }: R
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-temporary max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
           position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
         )}
@@ -1887,7 +1885,7 @@ function Slider({
     <Tooltip>
       <TooltipTrigger asChild>{sliderElement}</TooltipTrigger>
       <TooltipContent>
-        <IdTooltipContent id={id} />
+        <DescriptionTooltipContent id={id} />
       </TooltipContent>
     </Tooltip>
   );
@@ -2354,7 +2352,7 @@ function ToggleGroupItem({ className, id, icon, action, ...props }: ToggleGroupI
         toggleVariants({
           level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
+        "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
         action && "flex items-center gap-0 p-single w-mega aspect-auto",
         className,
       )}
@@ -2381,7 +2379,7 @@ function ToggleGroupItem({ className, id, icon, action, ...props }: ToggleGroupI
           <span>{toggleGroupItemElement}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <IdTooltipContent id={id} />
+          <DescriptionTooltipContent id={id} />
         </TooltipContent>
       </Tooltip>
     );
@@ -2612,7 +2610,11 @@ function DialogClose({ className, ...props }: React.ComponentProps<typeof Dialog
 
 function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
-    <DialogPrimitive.Overlay data-slot="dialog-overlay" className={cn("data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50", className)} {...props} />
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn("data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-overlay bg-black/50", className)}
+      {...props}
+    />
   );
 }
 
@@ -2630,7 +2632,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-temporary data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2*var(--spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+          "bg-temporary data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-temporary grid w-full max-w-[calc(100%-2*var(--spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
           className,
         )}
         {...props}
@@ -3024,7 +3026,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
               <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
             </TooltipTrigger>
             <TooltipContent>
-              <IdTooltipContent id={id} />
+              <DescriptionTooltipContent id={id} />
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -3082,7 +3084,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
                 <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
               </TooltipTrigger>
               <TooltipContent>
-                <IdTooltipContent id={id} />
+                <DescriptionTooltipContent id={id} />
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -3584,22 +3586,13 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
     <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-border bg-base", className)} {...props}>
       <ol data-slot="breadcrumb-list" className="flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full">
         {items.map((item, index) => {
-          const isLast = index === items.length - 1;
           const hasOptions = item.options && item.options.length > 0;
-          const showSeparator = !isLast;
           const isOpen = openIndex === index;
 
           return (
             <React.Fragment key={index}>
               <BreadcrumbItem {...item} level={level} open={isOpen} onOpenChange={(open) => setOpenIndex(open ? index : null)} />
-              {showSeparator && (
-                <BreadcrumbSeparatorItem
-                  level={level}
-                  hasOptions={hasOptions}
-                  isOpen={isOpen}
-                  onClick={hasOptions ? () => setOpenIndex(isOpen ? null : index) : undefined}
-                />
-              )}
+              <BreadcrumbSeparatorItem level={level} hasOptions={hasOptions} isOpen={isOpen} onClick={hasOptions ? () => setOpenIndex(isOpen ? null : index) : undefined} id={item.id} />
             </React.Fragment>
           );
         })}
@@ -3628,11 +3621,33 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
   };
 
   const itemContent = content ?? children;
+  const interactiveContent = React.useMemo(() => {
+    if (itemContent == null || typeof itemContent === "boolean") return null;
+    if (React.isValidElement(itemContent)) {
+      if (itemContent.type === React.Fragment) {
+        return (
+          <span data-slot="breadcrumb-link" className="cursor-selectable">
+            {itemContent}
+          </span>
+        );
+      }
+      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
+      return React.cloneElement(itemContent, {
+        className: cn("cursor-selectable", elementProps?.className),
+        "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
+      });
+    }
+    return (
+      <span data-slot="breadcrumb-link" className="cursor-selectable">
+        {itemContent}
+      </span>
+    );
+  }, [itemContent]);
 
   if (!options?.length) {
     const itemElement = (
-      <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0", className)} {...props}>
-        {itemContent}
+      <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
+        {interactiveContent}
       </li>
     );
 
@@ -3641,7 +3656,7 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
         <Tooltip>
           <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
           <TooltipContent>
-            <IdTooltipContent id={id} />
+            <DescriptionTooltipContent id={id} />
           </TooltipContent>
         </Tooltip>
       );
@@ -3650,25 +3665,28 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
     return itemElement;
   }
 
-  const itemElement = (
-    <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0", className)} {...props}>
+  const triggerContent = id && !open ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <DescriptionTooltipContent id={id} />
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
+  );
+
+  return (
+    <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
       <DropdownMenuPrimitive.Root open={open} onOpenChange={onOpenChange}>
         <DropdownMenuPrimitive.Trigger asChild>
-          <div className={cn("flex items-center cursor-pointer", hoverClass)}>{itemContent}</div>
+          {triggerContent}
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single">
+          <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single z-temporary">
             {options.map((item, index) => {
-              const labelKeys = typeof item.label === "object" && item.label !== null && !React.isValidElement(item.label) ? Object.keys(item.label) : undefined;
-              console.log(`[DEBUG] [BREADCRUMB-RENDER] Rendering dropdown item:`, {
-                item,
-                label: item.label,
-                labelType: typeof item.label,
-                isObject: typeof item.label === "object" && item.label !== null,
-                isReactElement: React.isValidElement(item.label),
-                keys: labelKeys,
-                labelValue: labelKeys ? item.label : "N/A",
-              });
               const menuItem = (
                 <DropdownMenuPrimitive.Item
                   key={index}
@@ -3683,8 +3701,8 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
               const wrappedItem = item.id ? (
                 <Tooltip key={index}>
                   <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
-                  <TooltipContent>
-                    <IdTooltipContent id={item.id} />
+                  <TooltipContent side="right">
+                    <DescriptionTooltipContent id={item.id} />
                   </TooltipContent>
                 </Tooltip>
               ) : (
@@ -3707,19 +3725,6 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
       </DropdownMenuPrimitive.Root>
     </li>
   );
-
-  if (id) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
-        <TooltipContent>
-          <IdTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return itemElement;
 }
 
 interface BreadcrumbSeparatorItemProps {
@@ -3727,22 +3732,30 @@ interface BreadcrumbSeparatorItemProps {
   hasOptions: boolean;
   isOpen: boolean;
   onClick?: () => void;
+  id?: string;
 }
 
-function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onClick }: BreadcrumbSeparatorItemProps) {
+function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onClick, id }: BreadcrumbSeparatorItemProps) {
   const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
 
-  return (
-    <li
-      data-slot="breadcrumb-separator"
-      role="presentation"
-      aria-hidden="true"
-      className={cn("[&>svg]:size-tiny px-single flex items-center self-stretch border-l", hasOptions && "cursor-pointer", hasOptions && hoverClass)}
-      onClick={onClick}
-    >
-      {isOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
+  const separatorElement = (
+    <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-tiny px-single flex items-center self-stretch border-l cursor-foldable", hasOptions && hoverClass)} onClick={onClick}>
+      {isOpen ? <ChevronDownIcon className="cursor-foldable" /> : <ChevronRightIcon className="cursor-foldable" />}
     </li>
   );
+
+  if (id && hasOptions && !isOpen) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{separatorElement}</TooltipTrigger>
+        <TooltipContent>
+          <DescriptionTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return separatorElement;
 }
 
 export { Breadcrumb, BreadcrumbItem };
@@ -4103,7 +4116,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   return (
     <div className={`relative h-full w-full ${className}`} onDoubleClick={onDoubleClick}>
       {(showControls || controls) && (
-        <div className="absolute top-1 right-1 z-10">
+        <div className="absolute top-1 right-1 z-panel">
           {controls || (
             <ActionGroup id={`${id}-window-controls`}>
               {onOpenInNewWindow && (
@@ -4994,7 +5007,7 @@ export const Scene: React.FC<SceneProps> = ({
   return (
     <div className={`relative h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
       {onProjectionChange && (
-        <div className="absolute top-1 right-1 z-10">
+        <div className="absolute top-1 right-1 z-panel">
           <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} level="base" />
         </div>
       )}
@@ -5199,9 +5212,9 @@ const Table = <T,>({
         ref={combinedRef}
         style={style}
         className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+        {...(canDragRow ? { ...attributes, ...listeners } : {})}
         onClick={(e) => onRowClick?.(row, index, e)}
         onDoubleClick={() => onRowDoubleClick?.(row, index)}
-        {...(canDragRow ? { ...attributes, ...listeners } : {})}
         role={onRowClick ? "button" : undefined}
         tabIndex={onRowClick ? 0 : undefined}
         data-row-id={rowId}
@@ -5248,7 +5261,7 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-10" : ""} ${headerClassName}`}>
+          <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th key={column.id} className={`text-left p-single font-medium ${rowHeightClass} ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
@@ -5327,7 +5340,7 @@ export interface TableSkeletonProps {
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
-      <thead className="bg-panel border-b sticky top-0 z-10">
+      <thead className="bg-panel border-b sticky top-0 z-panel">
         <tr className="h-large">
           {columns.map((column) => (
             <th key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>

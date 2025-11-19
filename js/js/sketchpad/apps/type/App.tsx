@@ -29,8 +29,8 @@ import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
-import i18n from "../../../i18n";
-import { Author, Camera, Coord, guid, Guid, Kit, Point, Port, Representation, selectBestRepresentation, File as SemioFile, Type, TypeDiff, Vector } from "../../../semio";
+import i18n, { useLabel } from "../../../i18n";
+import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Point, Port, Representation, selectBestRepresentation, File as SemioFile, Type, TypeDiff, Vector } from "../../../semio";
 import type { KitStore, SketchpadStore, TypeStore } from "../../App";
 import {
   Canvas,
@@ -2365,7 +2365,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{i18n.t("semio.sketchpad.app.type.portNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.portNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -2592,7 +2592,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{i18n.t("semio.sketchpad.app.type.portsNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.portsNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );

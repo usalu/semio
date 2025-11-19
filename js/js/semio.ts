@@ -1663,7 +1663,7 @@ export const findPort = (ports: Port[], portGuid: string): Port => {
 export const TypeSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  parent: z.string().optional(),
+  parent: TypeIdSchema.optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   representations: z.array(RepresentationSchema).optional(),
@@ -1674,7 +1674,7 @@ export const TypeSchema = z.object({
   unit: z.string().optional(),
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
-  location: LocationSchema.optional(),
+  location: LocationIdSchema.optional(),
   authors: z.array(AuthorIdSchema).optional(),
   concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
@@ -1834,8 +1834,29 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
   return { ...diff1, ...diff2 };
 };
 export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
-  // TODO: Implement full Piece apply diff logic
-  return base;
+  let newPlane = base.plane;
+  if (diff.plane) {
+    const diffPlane = diff.plane as any;
+    if (diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis) {
+      newPlane = diffPlane as Plane;
+    } else {
+      newPlane = applyPlaneDiff(base.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, diff.plane);
+    }
+  }
+  return {
+    ...base,
+    type: diff.type ?? base.type,
+    design: diff.design ?? base.design,
+    plane: newPlane,
+    center: diff.center ?? base.center,
+    scale: diff.scale ?? base.scale,
+    mirrorPlane: diff.mirrorPlane ?? base.mirrorPlane,
+    isHidden: diff.isHidden ?? base.isHidden,
+    isLocked: diff.isLocked ?? base.isLocked,
+    color: diff.color ?? base.color,
+    description: diff.description ?? base.description,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
 };
 
 export const PiecesDiffSchema = z.object({
@@ -2147,7 +2168,7 @@ export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.par
 export const DesignSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  parent: z.string().optional(),
+  parent: DesignIdSchema.optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   pieces: z.array(PieceSchema).optional(),
@@ -2160,7 +2181,7 @@ export const DesignSchema = z.object({
   canScale: z.boolean().optional(),
   canMirror: z.boolean().optional(),
   unit: z.string().optional(),
-  location: LocationSchema.optional(),
+  location: LocationIdSchema.optional(),
   authors: z.array(AuthorIdSchema).optional(),
   concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
@@ -2331,8 +2352,56 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 };
 
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
-  // TODO: Implement full Design apply diff logic
-  return base;
+  let result = { ...base };
+  if (diff.name !== undefined) result.name = diff.name;
+  if (diff.parent !== undefined) result.parent = diff.parent;
+  if (diff.isAbstract !== undefined) result.isAbstract = diff.isAbstract;
+  if (diff.folder !== undefined) result.folder = diff.folder;
+  if (diff.canScale !== undefined) result.canScale = diff.canScale;
+  if (diff.canMirror !== undefined) result.canMirror = diff.canMirror;
+  if (diff.unit !== undefined) result.unit = diff.unit;
+  if (diff.location !== undefined) result.location = diff.location;
+  if (diff.icon !== undefined) result.icon = diff.icon;
+  if (diff.image !== undefined) result.image = diff.image;
+  if (diff.description !== undefined) result.description = diff.description;
+  if (diff.createdAt !== undefined) result.createdAt = diff.createdAt;
+  if (diff.updatedAt !== undefined) result.updatedAt = diff.updatedAt;
+  if (diff.pieces) {
+    let pieces = [...(result.pieces ?? [])];
+    if (diff.pieces.removed) {
+      pieces = pieces.filter((p) => !diff.pieces!.removed!.includes(p.guid));
+    }
+    if (diff.pieces.updated) {
+      pieces = pieces.map((piece) => {
+        const update = diff.pieces!.updated!.find((u) => u.id === piece.guid);
+        return update ? applyPieceDiff(piece, update.diff) : piece;
+      });
+    }
+    if (diff.pieces.added) {
+      pieces.push(...diff.pieces.added);
+    }
+    result.pieces = pieces;
+  }
+  if (diff.connections) {
+    let connections = [...(result.connections ?? [])];
+    if (diff.connections.removed) {
+      connections = connections.filter((c) => !diff.connections!.removed!.some((removed) => areSameConnection(c, removed as any)));
+    }
+    if (diff.connections.updated) {
+      connections = connections.map((connection) => {
+        const update = diff.connections!.updated!.find((u) => areSameConnection(connection, u.id as any));
+        return update ? applyConnectionDiff(connection, update.diff) : connection;
+      });
+    }
+    if (diff.connections.added) {
+      connections.push(...diff.connections.added);
+    }
+    result.connections = connections;
+  }
+  if (diff.attributes) {
+    result.attributes = applyAttributesDiff(result.attributes ?? [], diff.attributes);
+  }
+  return result;
 };
 
 export const DesignsDiffSchema = z.object({
@@ -2472,8 +2541,17 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     return typesDict[typeGuid];
   };
   const getPort = (type: Type | undefined, portGuid: string | undefined): Port | undefined => {
-    if (!type?.ports) return undefined;
-    return portGuid ? type.ports.find((p) => p.guid === portGuid) : type.ports[0];
+    if (!type) return undefined;
+    if (type.ports) {
+      const port = portGuid ? type.ports.find((p) => p.guid === portGuid) : type.ports[0];
+      if (port) return port;
+    }
+    const childTypes = types.filter((t) => t.parent?.guid === type.guid);
+    for (const childType of childTypes) {
+      const port = getPort(childType, portGuid);
+      if (port) return port;
+    }
+    return undefined;
   };
 
   const flatDesign: Design = JSON.parse(JSON.stringify(expandedDesign));
@@ -2485,22 +2563,6 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     if (p.guid) pieceMap[p.guid] = p;
   });
 
-  console.log(`[ORIGIN] flattenDesign: Starting with ${flatDesign.pieces?.length || 0} pieces and ${flatDesign.connections?.length || 0} connections`);
-  console.log(
-    `[ORIGIN] flattenDesign: Piece GUIDs in array:`,
-    flatDesign.pieces?.map((p) => p.guid),
-  );
-  console.log(`[ORIGIN] flattenDesign: Piece GUIDs in map:`, Object.keys(pieceMap));
-  if (flatDesign.connections && flatDesign.connections.length > 0) {
-    console.log(
-      `[ORIGIN] flattenDesign: Connection details:`,
-      flatDesign.connections.map((c) => ({
-        guid: c.guid,
-        connected: c.connected.piece.guid,
-        connecting: c.connecting.piece.guid,
-      })),
-    );
-  }
 
   const cy = cytoscape({
     elements: {

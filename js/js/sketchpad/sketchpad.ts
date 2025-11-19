@@ -426,6 +426,7 @@ export interface SketchpadChangableState {
     recentSearches: string[];
     recentFocusItems: Record<string, string[]>;
     theme: Theme;
+    language: string;
     layout: Layout;
     expertise: Expertise;
     mode: Mode;
@@ -452,6 +453,7 @@ export interface SketchpadDiff {
     recentSearches?: string[];
     recentFocusItems?: Record<string, string[]>;
     theme?: Theme;
+    language?: string;
     layout?: Layout;
     expertise?: Expertise;
     mode?: Mode;

@@ -6,7 +6,7 @@
 
 #navbar {
   position: relative !important;
-  z-index: 100 !important;
+  z-index: var(--z-base) !important;
   pointer-events: auto !important;
 }
 
@@ -28,7 +28,7 @@
 .lm_goldenlayout {
   background-color: var(--base) !important;
   color: var(--foreground) !important;
-  z-index: 0 !important;
+  z-index: var(--z-base) !important;
   position: relative !important;
   pointer-events: auto !important;
   overflow: hidden !important;
@@ -39,20 +39,20 @@
 }
 
 .lm_root {
-  z-index: 0 !important;
+  z-index: var(--z-base) !important;
   position: relative !important;
   overflow: hidden !important;
 }
 
 .lm_item {
-  z-index: 0 !important;
+  z-index: var(--z-base) !important;
   position: relative !important;
 }
 
 .lm_header,
 .lm_tabs,
 .lm_controls {
-  z-index: 1 !important;
+  z-index: var(--z-panel) !important;
 }
 
 .lm_header {
@@ -62,7 +62,7 @@
   min-height: 20px !important;
   max-height: 20px !important;
   opacity: 1 !important;
-  z-index: 1 !important;
+  z-index: var(--z-panel) !important;
   position: relative !important;
   background-color: var(--base) !important;
   border-bottom: 1px solid var(--border-color) !important;
@@ -283,6 +283,13 @@
     --overlay: var(--color-light-6-7);
     --temporary: var(--color-light-5-7);
     --foreground: var(--color-dark);
+    --z-base: 0;
+    --z-panel: 10;
+    --z-overlay: 20;
+    --z-temporary: 30;
+    --z-navbar: 100;
+    --z-modal: 1000;
+    --z-tutorial: 10000;
     --muted: var(--color-light-8-9);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-primary);
@@ -906,6 +913,34 @@
   cursor: var(--cursor-grabbing);
 }
 
+@utility z-base {
+  z-index: var(--z-base);
+}
+
+@utility z-panel {
+  z-index: var(--z-panel);
+}
+
+@utility z-overlay {
+  z-index: var(--z-overlay);
+}
+
+@utility z-temporary {
+  z-index: var(--z-temporary);
+}
+
+@utility z-navbar {
+  z-index: var(--z-navbar);
+}
+
+@utility z-modal {
+  z-index: var(--z-modal);
+}
+
+@utility z-tutorial {
+  z-index: var(--z-tutorial);
+}
+
 .docs-content {
   color: var(--foreground);
   .aside-note {
@@ -949,7 +984,7 @@
   right: 0;
   transform: translateY(-100%);
   transition: transform 0.2s ease-in-out;
-  z-index: 1000;
+  z-index: var(--z-modal);
 }
 
 .fullscreen #navbar:hover,
@@ -964,7 +999,7 @@
   right: 0;
   transform: translateY(100%);
   transition: transform 0.2s ease-in-out;
-  z-index: 1000;
+  z-index: var(--z-modal);
 }
 
 .fullscreen #footer:hover,

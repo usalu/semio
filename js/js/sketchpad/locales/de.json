@@ -793,6 +793,18 @@
             "label": {
               "normal": "Sprache",
               "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+            },
+            "en": {
+              "label": {
+                "normal": "Englisch",
+                "beginner": "Englisch"
+              }
+            },
+            "de": {
+              "label": {
+                "normal": "Deutsch",
+                "beginner": "Deutsch"
+              }
             }
           },
           "general": {

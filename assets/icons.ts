@@ -12,7 +12,7 @@ export {
   FileImage as FileImageIcon,
   FileJson as FileJsonIcon,
   FileSpreadsheet as FileSpreadsheetIcon, FileType as FileTypeIcon,
-  FileVideo as FileVideoIcon, Focus as FocusIcon, Folder as FolderIcon, GripVertical as GripVerticalIcon, Hand as HandIcon, Hash as HashIcon,
+  FileVideo as FileVideoIcon, Focus as FocusIcon, Folder as FolderIcon, Globe as GlobeIcon, GripVertical as GripVerticalIcon, Hand as HandIcon, Hash as HashIcon,
   Home as HomeIcon, Layers as HudIcon, Info as InfoIcon, Layout as LayoutIcon,
   Lightbulb as LightbulbIcon, HardDrive as LocalKitIcon, Maximize2 as Maximize2Icon, Minimize2 as Minimize2Icon, Monitor as MonitorIcon, Moon as MoonIcon, MoreHorizontal as MoreHorizontalIcon, MousePointer as MousePointerIcon, ArrowLeft as NavigateBackIcon,
   ArrowRight as NavigateForwardIcon,

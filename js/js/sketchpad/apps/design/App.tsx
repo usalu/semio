@@ -310,7 +310,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     const currentSelection = context.designApp.selection || {};
     const selectedPieces = currentSelection.pieces || [];
     const selectedConnections = currentSelection.connections || [];
-    const connectionsToRemove = (context.design.connections || []).filter((c) => selectedConnections.includes(c.guid)).map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }));
+    const connectionsToRemove = (context.design.connections || []).filter((c) => selectedConnections.includes(c.guid)).map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } }));
     return {
       diff: {
         selection: {
@@ -905,7 +905,7 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 
   return inverseDiff;
 };
-export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => areSameKit(designApp.kit.guid, other.kit.guid) && designApp.design === other.design;
+export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => designApp.kit === other.kit && designApp.design === other.design;
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
 export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
@@ -2848,12 +2848,12 @@ const PiecesSectionForm: FC = () => {
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
 
-  const replacableDesignsRaw = useReplacableDesigns(isSingle && piece && typeof (piece as any).design === "string" ? (piece as Piece) : ({} as Piece));
+  const replacableDesignsRaw = useReplacableDesigns(isSingle && piece && (piece as any).design ? (piece as Piece) : ({} as Piece));
   const availableDesigns = isDesignPiece && isSingle && piece ? replacableDesignsRaw : [];
   const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
 
-  const pieceType = piece?.type ? (typeof piece.type === 'string' ? findTypeInKit(kit, piece.type) : findTypeInKit(kit, piece.type.guid)) : null;
-  const pieceDesign = piece && (piece as any).design && typeof (piece as any).design === "string" ? findDesignInKit(kit, (piece as any).design) : null;
+  const pieceType = piece?.type && 'guid' in piece.type ? findTypeInKit(kit, piece.type.guid) : null;
+  const pieceDesign = piece && (piece as any).design && 'guid' in (piece as any).design ? findDesignInKit(kit, (piece as any).design.guid) : null;
 
   const availableDesignVariants = pieceDesign
     ? [
@@ -2962,7 +2962,7 @@ const PiecesSectionForm: FC = () => {
                       value: name,
                       label: name,
                     }))}
-                    value={isSingle && piece && piece.type ? (typeof piece.type === 'string' ? findTypeInKit(kit, piece.type)?.name : findTypeInKit(kit, piece.type.guid)?.name) || "" : commonTypeName || ""}
+                    value={isSingle && piece && piece.type && 'guid' in piece.type ? findTypeInKit(kit, piece.type.guid)?.name || "" : commonTypeName || ""}
                     placeholder={!isSingle && commonTypeName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.common.selectType")}
                     onValueChange={handleTypeNameChange}
                   />
@@ -2977,7 +2977,7 @@ const PiecesSectionForm: FC = () => {
                         value: variant,
                         label: variant,
                       }))}
-                      value={isSingle && piece && piece.type ? (typeof piece.type === 'string' ? (findTypeInKit(kit, piece.type) as any)?.variant : (findTypeInKit(kit, piece.type.guid) as any)?.variant) || "" : commonTypeVariant || ""}
+                      value={isSingle && piece && piece.type && 'guid' in piece.type ? (findTypeInKit(kit, piece.type.guid) as any)?.variant || "" : commonTypeVariant || ""}
                       placeholder={!isSingle && commonTypeVariant === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.common.selectVariant")}
                       onValueChange={handleTypeVariantChange}
                       allowClear={true}
@@ -3853,8 +3853,8 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       // connected is parent, connecting is child
       // child.center = parent.center + connection.x/y
       // so connection.x/y = child.center - parent.center
-      const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
-      const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
+      const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece.guid);
+      const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece.guid);
 
       if (parentPiece?.center && childPiece?.center) {
         connection.x = childPiece.center.u - parentPiece.center.u;
@@ -4079,8 +4079,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
       // connected is parent, connecting is child
       // child.center = parent.center + connection.x/y
       // so connection.x/y = child.center - parent.center
-      const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece);
-      const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece);
+      const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece.guid);
+      const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece.guid);
 
       if (parentPiece?.center && childPiece?.center) {
         connection.x = childPiece.center.u - parentPiece.center.u;
@@ -4451,7 +4451,7 @@ const HelperLines: React.FC<{
   const viewport = getViewport();
 
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none z-[1000] overflow-hidden">
+    <div className="absolute inset-0 w-full h-full pointer-events-none z-modal overflow-hidden">
       {lines.map((line, index) => {
         if (line.kind === "horizontal" && line.position !== undefined) {
           const screenY = line.position * viewport.zoom + viewport.y;
@@ -4509,8 +4509,8 @@ const designToNode = (piece: Piece, externalConnections: SemioConnection[], cent
   className: selected ? "selected" : "",
 });
 
-const extractPieceIdFromNodeId = (nodeId: string): string => {
-  return nodeId.split("-").slice(2).join("-");
+const extractPieceIdFromNodeId = (nodeId: string): { guid: string } => {
+  return { guid: nodeId.split("-").slice(2).join("-") };
 };
 
 const getPieceIdFromNode = (node: DiagramNode): string => {
@@ -4567,16 +4567,16 @@ const connectionToEdge = (
 
   const sourceIndex = pieceIndexMap.get(sourcePieceId.guid) ?? 0;
   const targetIndex = pieceIndexMap.get(targetPieceId.guid) ?? 0;
-  const sourceNodeId = `piece-${sourceIndex}-${sourcePieceId}`;
-  const targetNodeId = `piece-${targetIndex}-${targetPieceId}`;
+  const sourceNodeId = `piece-${sourceIndex}-${sourcePieceId.guid}`;
+  const targetNodeId = `piece-${targetIndex}-${targetPieceId.guid}`;
 
   return {
     type: "SemioConnection",
     id: SemioConnection.guid,
     source: sourceNodeId,
-    sourceHandle: sourcePortId,
+    sourceHandle: typeof sourcePortId === 'string' ? sourcePortId : sourcePortId.guid,
     target: targetNodeId,
-    targetHandle: targetPortId,
+    targetHandle: typeof targetPortId === 'string' ? targetPortId : targetPortId.guid,
     data: { SemioConnection, isParentConnection },
     selected,
   };
@@ -4680,7 +4680,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
 
       const designPiece: Piece = {
         guid: includedDesign.guid,
-        type: includedDesign.designGuid,
+        type: { guid: includedDesign.designGuid },
         center: calculatedCenter,
         description: `Clustered design: ${includedDesign.designGuid}`,
       };
@@ -4691,7 +4691,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
 
       const designPiece: Piece = {
         guid: includedDesign.guid,
-        type: includedDesign.designGuid,
+        type: { guid: includedDesign.designGuid },
         center: displayCenter,
         plane: includedDesign.plane,
         description: `Fixed design: ${includedDesign.designGuid}`,
@@ -4858,13 +4858,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     (node: HTMLDivElement | null) => {
       if (node) {
         const rect = node.getBoundingClientRect();
-        console.log("[DEBUG] DRAGNDROP Diagram drop zone dimensions:", {
-          id: `diagram-drop-zone-${diagramId}`,
-          width: rect.width,
-          height: rect.height,
-          x: rect.x,
-          y: rect.y,
-        });
         node.setAttribute("data-drop-zone", "diagram");
         node.setAttribute("data-drop-zone-id", diagramId);
       }
@@ -5599,17 +5592,17 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         return;
       }
 
-      const newConnection = {
+      const newConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connected: {
           guid: crypto.randomUUID(),
           piece: sourcePieceId,
-          port: params.sourceHandle,
+          port: { guid: params.sourceHandle },
         },
         connecting: {
           guid: crypto.randomUUID(),
           piece: targetPieceId,
-          port: params.targetHandle,
+          port: { guid: params.targetHandle },
         },
         x: (sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
         y: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
@@ -5626,8 +5619,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     (e: React.PointerEvent) => {
       if (!activeDraggedType && !activeDraggedDesign) return;
       if (!reactFlowInstanceRef.current) return;
-
-      console.log("[DEBUG] DRAGNDROP Diagram pointer up, activeDraggedType:", activeDraggedType, "activeDraggedDesign:", activeDraggedDesign);
 
       const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
         x: e.clientX,
@@ -6435,19 +6426,11 @@ const App: FC<AppProps> = () => {
       data: { type: "type", typeGuid: type.guid },
     });
 
-    useEffect(() => {
-      console.log("[DEBUG] DRAGNDROP TypeTreeItem mounted for type:", type.name);
-      console.log("[DEBUG] DRAGNDROP listeners:", listeners);
-      console.log("[DEBUG] DRAGNDROP attributes:", attributes);
-    }, []);
-
     const handleDragStart = () => {
-      console.log("[DEBUG] DRAGNDROP TypeTreeItem drag started for:", type.name);
       setActiveDraggedType(type);
     };
 
     useEffect(() => {
-      console.log("[DEBUG] DRAGNDROP isDragging changed:", isDragging, "for type:", type.name);
       if (isDragging) {
         handleDragStart();
       }
@@ -6457,18 +6440,17 @@ const App: FC<AppProps> = () => {
       <TreeItem
         label={
           <div className="flex items-center gap-single min-w-0">
-            <DraggableAvatar
-              ref={setNodeRef}
-              dragRef={setNodeRef}
-              dragListeners={listeners}
-              dragAttributes={attributes}
-              content={type.name.substring(0, 2).toUpperCase()}
-              isSelected={false}
-              isHovered={false}
-              shouldFade={isDragging}
-              title={type.name}
-              onClick={() => console.log("[DEBUG] DRAGNDROP Avatar clicked for:", type.name)}
-            />
+              <DraggableAvatar
+                ref={setNodeRef}
+                dragRef={setNodeRef}
+                dragListeners={listeners}
+                dragAttributes={attributes}
+                content={type.name.substring(0, 2).toUpperCase()}
+                isSelected={false}
+                isHovered={false}
+                shouldFade={isDragging}
+                title={type.name}
+              />
             <span className="truncate">{type.name}</span>
           </div>
         }
@@ -6535,18 +6517,12 @@ const App: FC<AppProps> = () => {
       data: { type: "design", designGuid: design.guid },
     });
 
-    useEffect(() => {
-      console.log("[DEBUG] DesignTreeItem mounted for design:", design.name, "isDragging:", isDragging);
-    }, []);
-
     const handleDragStart = () => {
-      console.log("[DEBUG] DesignTreeItem drag started for:", design.name);
       setActiveDraggedDesign(design);
     };
 
     useEffect(() => {
       if (isDragging) {
-        console.log("[DEBUG] DesignTreeItem isDragging changed to true for:", design.name);
         handleDragStart();
       }
     }, [isDragging]);
@@ -6742,10 +6718,6 @@ const App: FC<AppProps> = () => {
       removeSection("settings", "semio.sketchpad.app.design.appTitle");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    console.log("[DEBUG] Design App mounted.");
   }, []);
 
   return (

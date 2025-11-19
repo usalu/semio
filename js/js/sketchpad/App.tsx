@@ -44,7 +44,7 @@ import {
 import { ReactFlowProvider } from "@xyflow/react";
 import Fuse, { FuseResult } from "fuse.js";
 import JSZip from "jszip";
-import React, { ComponentType, createContext, FC, Fragment, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { useHotkeys as useReactHotkeys } from "react-hotkeys-hook";
@@ -131,25 +131,7 @@ import type { DesignAppState } from "./apps/design/App";
 import type { KitAppState } from "./apps/kit/App";
 import type { QualityAppState } from "./apps/quality/App";
 import type { TypeAppState } from "./apps/type/App";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  ButtonGroup,
-  ButtonGroupItem,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  Footer,
-  InteractionProvider,
-  Layout as LayoutComponent,
-  Navbar,
-  NavbarItem,
-  Toggle,
-  Window,
-} from "./elements";
+import { Breadcrumb, ButtonGroup, ButtonGroupItem, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Footer, InteractionProvider, Layout as LayoutComponent, Navbar, NavbarItem, Toggle, Window } from "./elements";
 import {
   AppCommandResult,
   AppConfig,
@@ -3675,7 +3657,10 @@ class GroupStore {
 
     if (group.pieces) {
       const yPieces = new Y.Array<string>();
-      yPieces.insert(0, group.pieces.map(p => p.guid));
+      yPieces.insert(
+        0,
+        group.pieces.map((p) => p.guid),
+      );
       this.yGroup.set("pieces", yPieces);
     }
   }
@@ -3724,7 +3709,7 @@ class GroupStore {
 
   snapshot = (): Group => {
     const currentData = {
-      pieces: this.pieces.map(guid => ({ guid })),
+      pieces: this.pieces.map((guid) => ({ guid })),
       color: this.color,
       name: this.name,
       description: this.description,
@@ -3740,7 +3725,7 @@ class GroupStore {
   };
 
   change = (diff: GroupDiff) => {
-    if (diff.pieces !== undefined) this.pieces = diff.pieces.map(p => p.guid);
+    if (diff.pieces !== undefined) this.pieces = diff.pieces.map((p) => p.guid);
     if (diff.color !== undefined) this.color = diff.color;
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.description !== undefined) this.description = diff.description;
@@ -6308,7 +6293,7 @@ export const kitCommands = {
             typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.parent || null, type.isAbstract ? 1 : 0, type.unit || "", nowIso, nowIso, Guid]);
             const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
             insertQualities(type.attributes, "type_id", typeDbId);
-            insertAuthors(type.authors, "type_id", typeDbId);
+            insertAuthors(type.authors?.map(a => a.guid) || [], "type_id", typeDbId);
 
             if (type.representations) {
               for (const rep of type.representations) {
@@ -6389,7 +6374,7 @@ export const kitCommands = {
               diff: {
                 pieces: {
                   added: [
-                    piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece === piece.guid || connection.connecting.piece === piece.guid)
+                    piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
                       ? piece
                       : {
                           ...piece,
@@ -6419,7 +6404,7 @@ export const kitCommands = {
               diff: {
                 pieces: {
                   added: pieces.map((candidate) =>
-                    candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece === candidate.guid || connection.connecting.piece === candidate.guid)
+                    candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece.guid === candidate.guid || connection.connecting.piece.guid === candidate.guid)
                       ? candidate
                       : {
                           ...candidate,
@@ -6504,7 +6489,7 @@ export const kitCommands = {
           updated: [
             {
               id: guid,
-              diff: { connections: { removed: [{ connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }] } },
+              diff: { connections: { removed: [{ connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } }] } },
             },
           ],
         },
@@ -6524,7 +6509,7 @@ export const kitCommands = {
           updated: [
             {
               id: guid,
-              diff: { connections: { removed: connectionsToRemove } },
+              diff: { connections: { removed: connectionsToRemove.map(c => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) } },
             },
           ],
         },
@@ -7161,6 +7146,9 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("theme")) {
         this.ySketchpad.set("theme", Theme.SYSTEM);
       }
+      if (!this.ySketchpad.has("language")) {
+        this.ySketchpad.set("language", "en");
+      }
       if (!this.ySketchpad.has("layout")) {
         this.ySketchpad.set("layout", JSON.stringify("desktop"));
       }
@@ -7224,6 +7212,7 @@ export class SketchpadStore {
         if (initialState.recentSearches !== undefined) this.ySketchpad.set("recentSearches", JSON.stringify(initialState.recentSearches));
         if (initialState.recentFocusItems !== undefined) this.ySketchpad.set("recentFocusItems", JSON.stringify(initialState.recentFocusItems));
         if (initialState.theme !== undefined) this.ySketchpad.set("theme", initialState.theme);
+        if (initialState.language !== undefined) this.ySketchpad.set("language", initialState.language);
         if (initialState.layout !== undefined) this.ySketchpad.set("layout", JSON.stringify(initialState.layout));
         if (initialState.expertise !== undefined) this.ySketchpad.set("expertise", initialState.expertise);
         if (initialState.mode !== undefined) this.ySketchpad.set("mode", initialState.mode);
@@ -7289,6 +7278,7 @@ export class SketchpadStore {
       recentSearches: recentSearches,
       recentFocusItems: recentFocusItems,
       theme: this.ySketchpad.get("theme") as Theme,
+      language: (this.ySketchpad.get("language") as string) || "en",
       layout: layout,
       expertise: (this.ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
       mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.USER,
@@ -8181,6 +8171,10 @@ export function useTheme(): Theme {
   return useSketchpad((s) => s.theme) as Theme;
 }
 
+export function useLanguage(): string {
+  return useSketchpad((s) => s.language) as string;
+}
+
 export function useLayout(): Layout {
   return useSketchpad((s) => s.layout) as Layout;
 }
@@ -8531,6 +8525,7 @@ export function useSketchpadCommands() {
   return useMemo(
     () => ({
       setTheme: (origin: string, theme: Theme) => store.execute("semio.sketchpad.setTheme", origin, theme),
+      setLanguage: (origin: string, language: string) => store.execute("semio.sketchpad.setLanguage", origin, language),
       setLayout: (origin: string, layout: Layout) => store.execute("semio.sketchpad.setLayout", origin, layout),
       setExpertise: (origin: string, expertise: Expertise) => store.execute("semio.sketchpad.setExpertise", origin, expertise),
       setMode: (origin: string, mode: Mode) => store.execute("semio.sketchpad.setMode", origin, mode),
@@ -8670,6 +8665,12 @@ export const commands = {
   "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
     return {
       diff: { mode },
+    };
+  },
+  "semio.sketchpad.setLanguage": (context: SketchpadCommandContext, language: string): SketchpadCommandResult => {
+    i18n.changeLanguage(language);
+    return {
+      diff: { language },
     };
   },
   "semio.sketchpad.toggleFullscreen": (context: SketchpadCommandContext): SketchpadCommandResult => {
@@ -9371,7 +9372,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     { label: <LocalKitIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.local", href: "/?kind=local" },
     { label: <RemoteKitIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
   ];
-  console.log(`[DEBUG] [BREADCRUMB-RENDER] kitKindItems defined:`, kitKindItems.map(item => ({ ...item, labelType: typeof item.label, isReactElement: React.isValidElement(item.label) })));
 
   const filteredKits = useFilteredKitShallows(kitKind);
   const createKitLabel = useLabel("semio.sketchpad.navbar.createKit");
@@ -9638,24 +9638,26 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const defaultVersionLabel = useLabel("semio.sketchpad.app.kit.defaultVersion");
 
   const designNameItems = useMemo(() => {
-    const rootDesigns = allDesigns.filter((d) => !d.parent);
-    const items = rootDesigns.map((d) => ({
-      label: d.name,
-      href: `/kits/${kitGuid}/designs/${d.guid}`,
-    }));
-    items.push({ label: "+ " + createDesignLabel, href: "#create-design" });
-    return items;
-  }, [allDesigns, kitGuid, createDesignLabel]);
-
-  // Build sibling items for each parent in the chain
-  const designParentSiblingItems = useMemo(() => {
-    return designParentChain.map((parent) => {
-      const siblings = allDesigns.filter((d) => d.parent === parent.parent);
-      const items = siblings.map((d) => ({
+    const currentDesignGuid = design && typeof design === "object" && "guid" in design ? (design as Design).guid : undefined;
+    const items = allDesigns
+      .filter((d) => d.guid !== currentDesignGuid)
+      .map((d) => ({
         label: d.name,
         href: `/kits/${kitGuid}/designs/${d.guid}`,
       }));
-      items.push({ label: "+ " + createChildLabel, href: `#create-sibling-${parent.guid}` });
+    items.push({ label: "+ " + createDesignLabel, href: "#create-design" });
+    return items;
+  }, [allDesigns, kitGuid, createDesignLabel, design]);
+
+  // Build child items for each parent in the chain
+  const designParentChildItems = useMemo(() => {
+    return designParentChain.map((parent) => {
+      const children = allDesigns.filter((d) => d.parent === parent.guid);
+      const items = children.map((d) => ({
+        label: d.name,
+        href: `/kits/${kitGuid}/designs/${d.guid}`,
+      }));
+      items.push({ label: "+ " + createChildLabel, href: `#create-child-${parent.guid}` });
       return { parentGuid: parent.guid, items };
     });
   }, [designParentChain, allDesigns, kitGuid, createChildLabel]);
@@ -9672,26 +9674,28 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return items;
   }, [design, allDesigns, kitGuid, createChildLabel]);
 
-  // Build breadcrumb items for root types (no parent)
+  // Build breadcrumb items for all types
   const typeNameItems = useMemo(() => {
-    const rootTypes = allTypes.filter((t) => !t.parent);
-    const items = rootTypes.map((t) => ({
-      label: t.name,
-      href: `/kits/${kitGuid}/types/${t.guid}`,
-    }));
-    items.push({ label: "+ " + createTypeLabel, href: "#create-type" });
-    return items;
-  }, [allTypes, kitGuid, createTypeLabel]);
-
-  // Build sibling items for each parent in the chain
-  const typeParentSiblingItems = useMemo(() => {
-    return typeParentChain.map((parent) => {
-      const siblings = allTypes.filter((t) => t.parent === parent.parent);
-      const items = siblings.map((t) => ({
+    const currentTypeGuid = type && typeof type === "object" && "guid" in type ? (type as Type).guid : undefined;
+    const items = allTypes
+      .filter((t) => t.guid !== currentTypeGuid)
+      .map((t) => ({
         label: t.name,
         href: `/kits/${kitGuid}/types/${t.guid}`,
       }));
-      items.push({ label: "+ " + createChildLabel, href: `#create-sibling-${parent.guid}` });
+    items.push({ label: "+ " + createTypeLabel, href: "#create-type" });
+    return items;
+  }, [allTypes, kitGuid, createTypeLabel, type]);
+
+  // Build child items for each parent in the chain
+  const typeParentChildItems = useMemo(() => {
+    return typeParentChain.map((parent) => {
+      const children = allTypes.filter((t) => t.parent === parent.guid);
+      const items = children.map((t) => ({
+        label: t.name,
+        href: `/kits/${kitGuid}/types/${t.guid}`,
+      }));
+      items.push({ label: "+ " + createChildLabel, href: `#create-child-${parent.guid}` });
       return { parentGuid: parent.guid, items };
     });
   }, [typeParentChain, allTypes, kitGuid, createChildLabel]);
@@ -9711,35 +9715,39 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   // Build breadcrumb items for kit versions
   const kitVersionItems = useMemo(() => {
     if (!kit?.name) return [];
-    const sameNameKits = kits.filter((k) => k.name === kit.name);
+    const sameNameKits = kits.filter((k) => k.name === kit.name && k.guid !== kitGuid);
     const items = sameNameKits.map((k) => ({
       label: k.version || <span className="italic opacity-70">{defaultVersionLabel}</span>,
       href: `/kits/${k.guid}`,
     }));
     items.push({ label: "+ " + createVersionLabel, href: "#create-version" });
     return items;
-  }, [kit, kits, defaultVersionLabel, createVersionLabel]);
+  }, [kit, kits, defaultVersionLabel, createVersionLabel, kitGuid]);
 
   // Build breadcrumb items for home page kits filtered by kind
   const homeKitsByKind = useFilteredKitShallows(homeKind || undefined);
   const homeKitsForKind = useMemo(() => {
     if (!homeKind) return [];
-    return homeKitsByKind.map((k) => ({
-      label: k.name,
-      href: `/?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
-    }));
-  }, [homeKind, homeKitsByKind]);
+    const items = homeKitsByKind
+      .filter((k) => k.name !== homeName)
+      .map((k) => ({
+        label: k.name,
+        href: `/?kind=${homeKind}&name=${encodeURIComponent(k.name)}`,
+      }));
+    items.push({ label: "+ " + createKitLabel, href: "#create-kit" });
+    return items;
+  }, [homeKind, homeKitsByKind, createKitLabel, homeName]);
 
   // Build breadcrumb items for home page versions filtered by name
   const homeVersionsForName = useMemo(() => {
     if (!homeName || !homeKind) return [];
     return homeKitsByKind
-      .filter((k) => k.name === homeName)
+      .filter((k) => k.name === homeName && k.guid !== kitGuid)
       .map((k) => ({
         label: k.version || <span className="italic opacity-70">{defaultVersionLabel}</span>,
         href: `/kits/${k.guid}`,
       }));
-  }, [homeName, homeKind, homeKitsByKind, defaultVersionLabel]);
+  }, [homeName, homeKind, homeKitsByKind, defaultVersionLabel, kitGuid]);
 
   // Build breadcrumb items for filtered names in kit app
   const filteredNameItems = useMemo(() => {
@@ -9765,11 +9773,11 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   // Build breadcrumb items array
   const breadcrumbItems: Array<{ id?: string; content: React.ReactNode; options?: any[]; onNavigate?: (href: string) => void }> = [];
 
-  // Always show Home icon with dropdown to select kinds
+  // Always show Home icon
   breadcrumbItems.push({
     id: "semio.sketchpad.navbar.home",
     content: (
-      <a onClick={() => navigate("/")} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+      <a onClick={() => navigate("/")} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
         <HomeIcon size={16} />
       </a>
     ),
@@ -9783,22 +9791,38 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       breadcrumbItems.push({
         id: `semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`,
         content: (
-          <a onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <a onClick={() => navigate(`/?kind=${kitKind || homeKind}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
             {(kitKind === "temporary" || homeKind === "temporary") && <TemporaryKitIcon size={16} />}
             {(kitKind === "local" || homeKind === "local") && <LocalKitIcon size={16} />}
             {(kitKind === "remote" || homeKind === "remote") && <RemoteKitIcon size={16} />}
           </a>
         ),
-        options: !kitGuid ? homeKitsForKind : undefined,
-        onNavigate: !kitGuid ? (href) => navigate(href) : undefined,
+        options: kitGuid ? kitItemsWithCreate : homeKitsForKind,
+        onNavigate: (href) => {
+          if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
+          else navigate(href);
+        },
       });
     }
 
     if (homeName) {
+      // Update KIND item to have kit name options
+      const kindIndex = breadcrumbItems.findIndex((item) => item.id === `semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`);
+      if (kindIndex !== -1) {
+        breadcrumbItems[kindIndex] = {
+          ...breadcrumbItems[kindIndex],
+          options: homeKitsForKind,
+          onNavigate: (href) => {
+            if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
+            else navigate(href);
+          },
+        };
+      }
+
       breadcrumbItems.push({
         id: "semio.sketchpad.navbar.kitName",
         content: (
-          <a onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <a onClick={() => navigate(`/?kind=${homeKind}&name=${encodeURIComponent(homeName)}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
             {homeName}
           </a>
         ),
@@ -9806,6 +9830,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         onNavigate: (href) => navigate(href),
       });
       if (homeVersion !== null) {
+
         breadcrumbItems.push({
           id: "semio.sketchpad.navbar.kitVersion",
           content: <span className="text-foreground px-single flex items-center gap-single h-full">{homeVersion || <span className="italic opacity-70">{defaultVersionLabel}</span>}</span>,
@@ -9814,57 +9839,95 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }
 
     if (kitGuid) {
-      breadcrumbItems.push({
-        id: "semio.sketchpad.navbar.kit",
-        content: (
-          <a
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}`);
-            }}
-            style={{ cursor: "pointer" }}
-            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
-          >
-            {kit?.name || kitGuid}
-          </a>
-        ),
-        options: kitItemsWithCreate,
-        onNavigate: (href) => {
-          if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
-          else navigate(href);
-        },
-      });
-      breadcrumbItems.push({
-        id: "semio.sketchpad.navbar.kitVersion",
-        content: (
-          <a
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const versionParam = kit?.version !== undefined ? `&version=${encodeURIComponent(kit.version)}` : "";
-              navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}${versionParam}`);
-            }}
-            style={{ cursor: "pointer" }}
-            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
-          >
-            {kit?.version || <span className="italic opacity-70">{defaultVersionLabel}</span>}
-          </a>
-        ),
-        options: kitVersionItems,
-        onNavigate: (href) => {
-          if (href === "#create-version") handleCreateVersion("semio.sketchpad.navbar.versions");
-          else navigate(href);
-        },
-      });
+      // Update existing KITNAME to have version options (if it exists from homeName)
+      const existingNameIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitName");
+      if (existingNameIndex === -1) {
+        // No homeName breadcrumb exists, create one with version options
+        // Update KIND to have kit name options
+        const kindIndex = breadcrumbItems.findIndex((item) => item.id === `semio.sketchpad.navbar.breadcrumb.${kitKind || homeKind}`);
+        if (kindIndex !== -1) {
+          breadcrumbItems[kindIndex] = {
+            ...breadcrumbItems[kindIndex],
+            options: kitItemsWithCreate,
+            onNavigate: (href) => {
+              if (href === "#create-kit") handleCreateKit("semio.sketchpad.navbar.kits");
+              else navigate(href);
+            },
+          };
+        }
+
+        breadcrumbItems.push({
+          id: "semio.sketchpad.navbar.kitName",
+          content: (
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}`);
+              }}
+              className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
+            >
+              {kit?.name || kitGuid}
+            </a>
+          ),
+          options: kitVersionItems,
+          onNavigate: (href) => {
+            if (href === "#create-version") handleCreateVersion("semio.sketchpad.navbar.versions");
+            else navigate(href);
+          },
+        });
+      } else {
+        // Update existing KITNAME to have version options
+        breadcrumbItems[existingNameIndex] = {
+          ...breadcrumbItems[existingNameIndex],
+          options: kitVersionItems,
+          onNavigate: (href) => {
+            if (href === "#create-version") handleCreateVersion("semio.sketchpad.navbar.versions");
+            else navigate(href);
+          },
+        };
+      }
+
+      // Update or create version breadcrumb with artifact kind options
+      const existingVersionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
+      if (existingVersionIndex === -1) {
+        breadcrumbItems.push({
+          id: "semio.sketchpad.navbar.kitVersion",
+          content: (
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const versionParam = kit?.version !== undefined ? `&version=${encodeURIComponent(kit.version)}` : "";
+                navigate(`/?kind=${kitKind}&name=${encodeURIComponent(kit?.name || "")}${versionParam}`);
+              }}
+              className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
+            >
+              {kit?.version || <span className="italic opacity-70">{defaultVersionLabel}</span>}
+            </a>
+          ),
+          options: artifactKinds,
+          onNavigate: (href) => navigate(href),
+        });
+      }
     }
   }
 
   if (isKitApp && filteredKind) {
+    // Update VERSION to have artifact kind options
+    const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
+    if (versionIndex !== -1) {
+      breadcrumbItems[versionIndex] = {
+        ...breadcrumbItems[versionIndex],
+        options: artifactKinds,
+        onNavigate: (href) => navigate(href),
+      };
+    }
+
     breadcrumbItems.push({
       id: `semio.sketchpad.navbar.breadcrumb.${filteredKind}`,
       content: (
-        <a onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=${filteredKind}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
           {filteredKind === "designs" && <LayoutIcon size={16} />}
           {filteredKind === "types" && <TypeIcon size={16} />}
           {filteredKind === "qualities" && <AwardIcon size={16} />}
@@ -9872,8 +9935,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
           {filteredKind === "authors" && <UserIcon size={16} />}
         </a>
       ),
-      options: filteredNameItems,
-      onNavigate: (href) => navigate(href),
+      options: filteredKind === "designs" ? designNameItems : filteredKind === "types" ? typeNameItems : undefined,
+      onNavigate: (href) => {
+        if (href === "#create-design" && filteredKind === "designs") handleCreateDesign("semio.sketchpad.navbar.selectDesign");
+        else if (href === "#create-type" && filteredKind === "types") handleCreateType("semio.sketchpad.navbar.selectType");
+        else navigate(href);
+      },
     });
     if (filteredName !== null) {
       breadcrumbItems.push({
@@ -9886,37 +9953,80 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
                 navigate(`/kits/${kitGuid}?kind=${filteredKind}&name=${encodeURIComponent(filteredName)}&select=${firstMatchingDesign.guid}`);
               }
             }}
-            style={{ cursor: "pointer" }}
-            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
           >
             {filteredName}
           </a>
         ),
+        options: filteredNameItems,
+        onNavigate: (href) => navigate(href),
       });
     }
   }
 
   if (isDesignApp && design) {
+    // Update KITVERSION to have artifact kind options
+    const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
+    if (versionIndex !== -1) {
+      breadcrumbItems[versionIndex] = {
+        ...breadcrumbItems[versionIndex],
+        options: artifactKinds,
+        onNavigate: (href) => navigate(href),
+      };
+    }
+
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.breadcrumb.designs",
       content: (
-        <a onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=designs`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
           <LayoutIcon size={16} />
         </a>
       ),
-      options: artifactKinds,
-      onNavigate: (href) => navigate(href),
+      options: designNameItems,
+      onNavigate: (href) => {
+        if (href === "#create-design") handleCreateDesign("semio.sketchpad.navbar.selectDesign");
+        else navigate(href);
+      },
     });
     designFolderChain.forEach((folder) => {
       breadcrumbItems.push({
         id: `semio.sketchpad.navbar.folder.${folder.guid}`,
         content: (
-          <a onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <a onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
             {folder.name}
           </a>
         ),
       });
     });
+    // First, push all parents in order (from root to current)
+    designParentChain.forEach((parent, index) => {
+      const childItems = designParentChildItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.design.parent.${parent.guid}`,
+        content: (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/kits/${kitGuid}/designs/${parent.guid}`);
+            }}
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
+          >
+            {parent.name}
+          </button>
+        ),
+        options: childItems,
+        onNavigate: (href) => {
+          if (href.startsWith("#create-child-")) {
+            handleCreateChild(`semio.sketchpad.navbar.design.parent.${parent.guid}`, parent, false);
+          } else {
+            navigate(href);
+          }
+        },
+      });
+    });
+    // Then, push the current design last
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.design",
       content: (
@@ -9930,79 +10040,83 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               navigate(`/kits/${kitGuid}?kind=designs&name=${encodeURIComponent(designObj.name)}&select=${designObj.guid}`);
             }
           }}
-          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
         >
           {design && typeof design === "object" && "name" in design ? String((design as Design).name) : ""}
         </button>
       ),
-      options: designNameItems,
+      options: designChildItems,
       onNavigate: (href) => {
-        if (href === "#create-design") handleCreateDesign("semio.sketchpad.navbar.selectDesign");
+        if (href === "#create-child" && design && typeof design === "object" && "guid" in design) {
+          handleCreateChild("semio.sketchpad.navbar.design", design as Design, false);
+        } else navigate(href);
+      },
+    });
+  }
+
+  if (isTypeApp && type) {
+    // Update KITVERSION to have artifact kind options
+    const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
+    if (versionIndex !== -1) {
+      breadcrumbItems[versionIndex] = {
+        ...breadcrumbItems[versionIndex],
+        options: artifactKinds,
+        onNavigate: (href) => navigate(href),
+      };
+    }
+
+    breadcrumbItems.push({
+      id: "semio.sketchpad.navbar.breadcrumb.types",
+      content: (
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+          <TypeIcon size={16} />
+        </a>
+      ),
+      options: typeNameItems,
+      onNavigate: (href) => {
+        if (href === "#create-type") handleCreateType("semio.sketchpad.navbar.selectType");
         else navigate(href);
       },
     });
-    designParentChain.forEach((parent) => {
-      const siblingItems = designParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+    typeFolderChain.forEach((folder) => {
       breadcrumbItems.push({
-        id: `semio.sketchpad.navbar.design.parent.${parent.guid}`,
+        id: `semio.sketchpad.navbar.folder.${folder.guid}`,
+        content: (
+          <a onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+            {folder.name}
+          </a>
+        ),
+      });
+    });
+    // First, push all parents in order (from root to current)
+    typeParentChain.forEach((parent, index) => {
+      const childItems = typeParentChildItems.find((s) => s.parentGuid === parent.guid)?.items || [];
+      breadcrumbItems.push({
+        id: `semio.sketchpad.navbar.type.parent.${parent.guid}`,
         content: (
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              navigate(`/kits/${kitGuid}/designs/${parent.guid}`);
+              navigate(`/kits/${kitGuid}/types/${parent.guid}`);
             }}
-            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
           >
             {parent.name}
           </button>
         ),
-        options: siblingItems,
+        options: childItems,
         onNavigate: (href) => {
-          if (href.startsWith("#create-sibling-")) {
-            handleCreateChild(`semio.sketchpad.navbar.selectDesignSibling.${parent.guid}`, parent, false);
+          if (href.startsWith("#create-child-")) {
+            handleCreateChild(`semio.sketchpad.navbar.type.parent.${parent.guid}`, parent, true);
           } else {
             navigate(href);
           }
         },
       });
     });
-    if (designChildItems.length > 1) {
-      breadcrumbItems.push({
-        id: "semio.sketchpad.navbar.selectChild",
-        content: <span className="text-foreground px-single flex items-center gap-single h-full">{/* Empty for dropdown trigger */}</span>,
-        options: designChildItems,
-        onNavigate: (href) => {
-          if (href === "#create-child" && design && typeof design === "object" && "guid" in design) {
-            handleCreateChild("semio.sketchpad.navbar.selectChild", design as Design, false);
-          } else navigate(href);
-        },
-      });
-    }
-  }
-
-  if (isTypeApp && type) {
-    breadcrumbItems.push({
-      id: "semio.sketchpad.navbar.breadcrumb.types",
-      content: (
-        <a onClick={() => navigate(`/kits/${kitGuid}?kind=types`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
-          <TypeIcon size={16} />
-        </a>
-      ),
-      options: artifactKinds,
-      onNavigate: (href) => navigate(href),
-    });
-    typeFolderChain.forEach((folder) => {
-      breadcrumbItems.push({
-        id: `semio.sketchpad.navbar.folder.${folder.guid}`,
-        content: (
-          <a onClick={() => navigate(`/kits/${kitGuid}?kind=folders`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
-            {folder.name}
-          </a>
-        ),
-      });
-    });
+    // Then, push the current type last
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.type",
       content: (
@@ -10016,56 +10130,38 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               navigate(`/kits/${kitGuid}?kind=types&name=${encodeURIComponent(typeObj.name)}&select=${typeObj.guid}`);
             }
           }}
-          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
         >
           {type && typeof type === "object" && "name" in type ? String((type as Type).name) : ""}
         </button>
       ),
-      options: typeNameItems,
+      options: typeChildItems,
       onNavigate: (href) => {
-        if (href === "#create-type") handleCreateType("semio.sketchpad.navbar.selectType");
-        else navigate(href);
+        if (href === "#create-child" && type && typeof type === "object" && "guid" in type) {
+          handleCreateChild("semio.sketchpad.navbar.type", type as Type, true);
+        } else navigate(href);
       },
-    });
-    typeParentChain.forEach((parent) => {
-      const siblingItems = typeParentSiblingItems.find((s) => s.parentGuid === parent.guid)?.items || [];
-      breadcrumbItems.push({
-        id: `semio.sketchpad.navbar.type.parent.${parent.guid}`,
-        content: (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate(`/kits/${kitGuid}/types/${parent.guid}`);
-            }}
-            className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
-          >
-            {parent.name}
-          </button>
-        ),
-        options: siblingItems,
-        onNavigate: (href) => {
-          if (href.startsWith("#create-sibling-")) {
-            handleCreateChild(`semio.sketchpad.navbar.selectTypeSibling.${parent.guid}`, parent, true);
-          } else {
-            navigate(href);
-          }
-        },
-      });
     });
   }
 
   if (isQualityApp && quality) {
+    // Update KITVERSION to have artifact kind options
+    const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
+    if (versionIndex !== -1) {
+      breadcrumbItems[versionIndex] = {
+        ...breadcrumbItems[versionIndex],
+        options: artifactKinds,
+        onNavigate: (href) => navigate(href),
+      };
+    }
+
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.breadcrumb.qualities",
       content: (
-        <a onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+        <a onClick={() => navigate(`/kits/${kitGuid}?kind=qualities`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
           <AwardIcon size={16} />
         </a>
       ),
-      options: artifactKinds,
-      onNavigate: (href) => navigate(href),
     });
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.quality",
@@ -10077,7 +10173,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             e.stopPropagation();
             navigate(`/kits/${kitGuid}?kind=qualities&key=${encodeURIComponent(quality.key)}&select=${quality.guid}`);
           }}
-          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base"
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
         >
           {quality.name}
         </button>
@@ -10089,27 +10185,15 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.docs",
       content: (
-        <a onClick={() => navigate("/docs")} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+        <a onClick={() => navigate("/docs")} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
           <DocumentIcon size={16} />
         </a>
       ),
-      options: docsSection
-        ? docsSectionsList.map((s) => ({
-            label: (
-              <span className="flex items-center gap-single">
-                {s.icon && <span aria-hidden="true">{s.icon}</span>}
-                <span>{s.label}</span>
-              </span>
-            ),
-            href: `/docs/${s.id}`,
-          }))
-        : undefined,
-      onNavigate: docsSection ? (href) => navigate(href) : undefined,
     });
     if (docsSection) {
       breadcrumbItems.push({
         content: (
-          <a onClick={() => navigate(`/docs/${docsSection}`)} style={{ cursor: "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+          <a onClick={() => navigate(`/docs/${docsSection}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
             {(() => {
               const sectionInfo = docsSectionsList.find((s) => s.id === docsSection);
               if (!sectionInfo) return docsSection;
@@ -10132,6 +10216,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
       pathAfterSection.forEach((part, index) => {
         const isLast = index === pathAfterSection.length - 1;
+        const isFirst = index === 0;
         const partialParts = pathAfterSection.slice(0, index + 1);
         const partialPath = `docs/${docsSection}/${partialParts.join("/")}`;
         const parentParts = pathAfterSection.slice(0, index);
@@ -10152,10 +10237,38 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             if (orderDiff !== 0) return orderDiff;
             return a.title.localeCompare(b.title);
           });
-        const separatorItems = siblings.map((page) => ({
-          label: page.title,
-          href: `/${page.path.replace(/\/index$/, "")}`,
-        }));
+        const nextParts = pathAfterSection.slice(0, index + 2);
+        const nextSiblings = sectionPages
+          .filter((page) => {
+            const segments = page.path.replace(/^docs\//, "").split("/");
+            const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
+            if (trimmedSegments[0] !== docsSection) return false;
+            const relative = trimmedSegments.slice(1);
+            if (relative.length !== partialParts.length + 1) return false;
+            for (let i = 0; i < partialParts.length; i++) {
+              if (relative[i] !== partialParts[i]) return false;
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            const orderDiff = (a.order ?? 999) - (b.order ?? 999);
+            if (orderDiff !== 0) return orderDiff;
+            return a.title.localeCompare(b.title);
+          });
+        const separatorItems = isFirst
+          ? docsSectionsList.map((s) => ({
+              label: (
+                <span className="flex items-center gap-single">
+                  {s.icon && <span aria-hidden="true">{s.icon}</span>}
+                  <span>{s.label}</span>
+                </span>
+              ),
+              href: `/docs/${s.id}`,
+            }))
+          : nextSiblings.map((page) => ({
+              label: page.title,
+              href: `/${page.path.replace(/\/index$/, "")}`,
+            }));
         const normalizedPartial = `${docsSection}/${partialParts.join("/")}`;
         const match = siblings.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial) || sectionPages.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial);
         const label = match?.title
@@ -10167,12 +10280,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
         breadcrumbItems.push({
           content: (
-            <a onClick={() => !isLast && navigate(`/${partialPath}`)} style={{ cursor: isLast ? "default" : "pointer" }} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base">
+            <a onClick={() => !isLast && navigate(`/${partialPath}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
               {label}
             </a>
           ),
-          options: !isLast ? separatorItems : undefined,
-          onNavigate: !isLast ? (href) => navigate(href) : undefined,
+          options: !isLast || nextSiblings.length > 0 ? separatorItems : undefined,
+          onNavigate: !isLast || nextSiblings.length > 0 ? (href) => navigate(href) : undefined,
         });
       });
     }
@@ -11596,6 +11709,7 @@ const LayoutWrapper: FC = () => {
 
   const navigation = useNavigation();
   const theme = useTheme();
+  const language = useLanguage();
   const layout = useLayout();
   const isFullscreen = useIsFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
@@ -11657,6 +11771,12 @@ const LayoutWrapper: FC = () => {
       root.classList.remove("dark");
     }
   }, [theme]);
+
+  useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -11876,9 +11996,7 @@ const LayoutWrapper: FC = () => {
                 if (target && target.requestFullscreen) {
                   const result = target.requestFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>)
-                      .then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId))
-                      .catch(() => {});
+                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => {});
                   } else {
                     sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
@@ -11887,9 +12005,7 @@ const LayoutWrapper: FC = () => {
                 if (document.fullscreenElement && document.exitFullscreen) {
                   const result = document.exitFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>)
-                      .then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId))
-                      .catch(() => {});
+                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => {});
                   } else {
                     sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
@@ -11923,13 +12039,10 @@ const LayoutWrapper: FC = () => {
   );
 
   const customCollisionDetection = useCallback((args: any) => {
-    console.log("[DEBUG] DRAGNDROP Collision detection called with droppables:", args.droppableContainers?.length || 0);
-
     // Try pointer-based collision first (most accurate for drop zones)
     const pointerCollisions = pointerWithin(args);
 
     if (pointerCollisions.length > 0) {
-      console.log("[DEBUG] DRAGNDROP Using pointer collision:", pointerCollisions[0].id);
       return pointerCollisions;
     }
 
@@ -11937,20 +12050,16 @@ const LayoutWrapper: FC = () => {
     const rectCollisions = rectIntersection(args);
 
     if (rectCollisions.length > 0) {
-      console.log("[DEBUG] DRAGNDROP Using rect collision:", rectCollisions[0].id);
       return rectCollisions;
     }
 
     // Last resort: closest center (returns single object or null)
     const centerCollision = closestCenter(args);
-    console.log("[DEBUG] DRAGNDROP closestCenter returned:", centerCollision);
 
     if (centerCollision && centerCollision.id) {
-      console.log("[DEBUG] DRAGNDROP Using center collision:", centerCollision.id);
       return [centerCollision]; // Wrap in array
     }
 
-    console.log("[DEBUG] DRAGNDROP No collisions found");
     return [];
   }, []);
   const kitShallows = useKitShallows();
@@ -11959,12 +12068,12 @@ const LayoutWrapper: FC = () => {
     if (activeDragData.type === "type") {
       const kitId = activeDragData.typeGuid?.split("-")[0];
       const kit = kitShallows.find((k) => k.guid.startsWith(kitId));
-      const type = kit?.types?.find((t) => t.guid === activeDragData.typeGuid);
+      const type = kit?.types?.find((t: any) => typeof t === 'object' && t.guid === activeDragData.typeGuid) as any;
       return type?.name || "Type";
     } else if (activeDragData.type === "design") {
       const kitId = activeDragData.designGuid?.split("-")[0];
       const kit = kitShallows.find((k) => k.guid.startsWith(kitId));
-      const design = kit?.designs?.find((d) => d.guid === activeDragData.designGuid);
+      const design = kit?.designs?.find((d: any) => typeof d === 'object' && d.guid === activeDragData.designGuid) as any;
       return design?.name || "Design";
     }
     return null;
@@ -11976,16 +12085,12 @@ const LayoutWrapper: FC = () => {
         sensors={sensors}
         collisionDetection={customCollisionDetection}
         onDragStart={(event) => {
-          console.log("[DEBUG] DRAGNDROP Sketchpad DndContext onDragStart:", event);
           setActiveDragId(event.active.id as string);
           setActiveDragData(event.active.data.current);
           // Set active interaction to make panels fade
           sketchpadCommands.setActiveInteraction("semio.sketchpad.drag", "dragging");
         }}
         onDragEnd={(event) => {
-          console.log("[DEBUG] DRAGNDROP Sketchpad DndContext onDragEnd:", event);
-          console.log("[DEBUG] DRAGNDROP Collisions:", event.collisions);
-          console.log("[DEBUG] DRAGNDROP Over:", event.over);
           setActiveDragId(null);
           setActiveDragData(null);
           // Clear active interaction

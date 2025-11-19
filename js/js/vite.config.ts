@@ -41,12 +41,31 @@ import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
-import { defineConfig } from "vite";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import mdx from "@mdx-js/rollup";
+import react from "@vitejs/plugin-react";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import { defineConfig } from "vitest/config";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
+  const isStorybookTest = process.env.VITEST_PROJECT === "storybook";
+  let storybookPlugin: any = undefined;
+  if (isStorybookTest) {
+    const { storybookTest } = await import("@storybook/addon-vitest/vitest-plugin");
+    storybookPlugin = storybookTest({ configDir: path.join(__dirname, ".storybook") });
+  }
   return {
     plugins: [
       tailwind.default(),
@@ -61,6 +80,7 @@ export default defineConfig(async () => {
       react(),
       wasm(),
       topLevelAwait(),
+      ...(storybookPlugin ? [storybookPlugin] : []),
     ],
     optimizeDeps: {
       include: ["golden-layout", "three"],
@@ -73,6 +93,40 @@ export default defineConfig(async () => {
     },
     ssr: {
       noExternal: ["golden-layout"],
+    },
+    test: {
+      globals: true,
+      projects: [
+        {
+          name: "unit",
+          test: {
+            environment: "node",
+            include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+            exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
+          },
+        },
+        ...(isStorybookTest
+          ? [
+              {
+                name: "storybook",
+                test: {
+                  browser: {
+                    enabled: true,
+                    headless: true,
+                    name: "chromium",
+                    provider: "playwright",
+                  },
+                  setupFiles: [".storybook/vitest.setup.ts"],
+                },
+              },
+            ]
+          : []),
+      ],
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "json", "html"],
+        exclude: ["**/*.config.*", "**/*.setup.*", "**/node_modules/**", "**/.storybook/**"],
+      },
     },
   };
 });
