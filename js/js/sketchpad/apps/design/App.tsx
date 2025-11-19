@@ -746,7 +746,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     if (!connection) {
       return {};
     }
-    const connectionId = { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } };
+    const connectionId = { connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } };
     return {
       kitDiff: {
         designs: {
@@ -765,7 +765,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     };
   },
   "semio.designApp.removeConnections": (context: DesignAppCommandContext, connectionGuids: Guid[]): DesignAppCommandResult => {
-    const connectionsToRemove = (context.design.connections || []).filter((c) => connectionGuids.includes(c.guid)).map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }));
+    const connectionsToRemove = (context.design.connections || []).filter((c) => connectionGuids.includes(c.guid)).map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } }));
     return {
       kitDiff: {
         designs: {
@@ -824,7 +824,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     if (!connection) {
       return {};
     }
-    const connectionId = { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } };
+    const connectionId = { connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } };
     return {
       kitDiff: {
         designs: {
@@ -847,7 +847,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       .map((update) => {
         const connection = context.design.connections?.find((c) => c.guid === update.id);
         if (!connection) return null;
-        const connectionId = { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } };
+        const connectionId = { connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } };
         return { id: connectionId, diff: update.diff };
       })
       .filter((u): u is { id: { connected: { piece: string }; connecting: { piece: string } }; diff: ConnectionDiff } => u !== null);
@@ -905,7 +905,7 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 
   return inverseDiff;
 };
-export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => areSameKit(designApp.kit, other.kit) && designApp.design === other.design;
+export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => areSameKit(designApp.kit.guid, other.kit.guid) && designApp.design === other.design;
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
 export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
@@ -1671,9 +1671,9 @@ export function useDesignAppIsPieceTransitiveHovered(id: DesignAppId | undefined
       const piece = design?.pieces?.find((p) => p.guid === pieceId);
       if (!piece) return false;
 
-      if (piece.type && hover?.types?.includes(piece.type)) return true;
+      if (piece.type && hover?.types?.includes(piece.type.guid)) return true;
 
-      if (piece.design && hover?.designs?.includes(piece.design)) return true;
+      if (piece.design && hover?.designs?.includes(piece.design.guid)) return true;
 
       return false;
     },
@@ -1695,7 +1695,7 @@ export function useDesignAppIsTypeTransitiveHovered(id: DesignAppId | undefined,
         const design = store.design().snapshot();
         return hover.pieces.some((pieceId) => {
           const piece = design?.pieces?.find((p) => p.guid === pieceId);
-          return piece?.type === typeId;
+          return piece?.type?.guid === typeId;
         });
       }
 
@@ -2298,7 +2298,7 @@ const DesignSectionForm: FC = () => {
             <TreeContent>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.location.longitude"
-                value={design.location.longitude}
+                value={design.location?.longitude ?? 0}
                 onChange={(value: number) =>
                   handleChange("semio.sketchpad.app.design.panel.details.section.location.longitude", {
                     ...design,
@@ -2318,7 +2318,7 @@ const DesignSectionForm: FC = () => {
             <TreeContent>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.location.latitude"
-                value={design.location.latitude}
+                value={design.location?.latitude ?? 0}
                 onChange={(value: number) =>
                   handleChange("semio.sketchpad.app.design.panel.details.section.location.latitude", {
                     ...design,
@@ -2852,7 +2852,7 @@ const PiecesSectionForm: FC = () => {
   const availableDesigns = isDesignPiece && isSingle && piece ? replacableDesignsRaw : [];
   const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
 
-  const pieceType = piece?.type && typeof piece.type === "string" && piece.type !== "design" ? findTypeInKit(kit, piece.type) : null;
+  const pieceType = piece?.type ? (typeof piece.type === 'string' ? findTypeInKit(kit, piece.type) : findTypeInKit(kit, piece.type.guid)) : null;
   const pieceDesign = piece && (piece as any).design && typeof (piece as any).design === "string" ? findDesignInKit(kit, (piece as any).design) : null;
 
   const availableDesignVariants = pieceDesign
@@ -2962,7 +2962,7 @@ const PiecesSectionForm: FC = () => {
                       value: name,
                       label: name,
                     }))}
-                    value={isSingle && piece && piece.type && typeof piece.type === "string" ? findTypeInKit(kit, piece.type)?.name || "" : commonTypeName || ""}
+                    value={isSingle && piece && piece.type ? (typeof piece.type === 'string' ? findTypeInKit(kit, piece.type)?.name : findTypeInKit(kit, piece.type.guid)?.name) || "" : commonTypeName || ""}
                     placeholder={!isSingle && commonTypeName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.common.selectType")}
                     onValueChange={handleTypeNameChange}
                   />
@@ -2977,7 +2977,7 @@ const PiecesSectionForm: FC = () => {
                         value: variant,
                         label: variant,
                       }))}
-                      value={isSingle && piece && piece.type && typeof piece.type === "string" ? (findTypeInKit(kit, piece.type) as any)?.variant || "" : commonTypeVariant || ""}
+                      value={isSingle && piece && piece.type ? (typeof piece.type === 'string' ? (findTypeInKit(kit, piece.type) as any)?.variant : (findTypeInKit(kit, piece.type.guid) as any)?.variant) || "" : commonTypeVariant || ""}
                       placeholder={!isSingle && commonTypeVariant === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.common.selectVariant")}
                       onValueChange={handleTypeVariantChange}
                       allowClear={true}
@@ -3291,35 +3291,35 @@ const ConnectionsSectionForm: FC<{
         <>
           <TreeItem>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId" value={connection!.connecting.piece} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId" value={connection!.connecting.piece.guid} disabled showLabel />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection!.connecting.port} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection!.connecting.port.guid} disabled showLabel />
             </TreeContent>
           </TreeItem>
           {connection!.connecting.designPiece && (
             <TreeItem>
               <TreeContent>
-                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection!.connecting.designPiece} disabled showLabel />
+                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection!.connecting.designPiece?.guid ?? ''} disabled showLabel />
               </TreeContent>
             </TreeItem>
           )}
           <TreeItem>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId" value={connection!.connected.piece} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId" value={connection!.connected.piece.guid} disabled showLabel />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection!.connected.port} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection!.connected.port.guid} disabled showLabel />
             </TreeContent>
           </TreeItem>
           {connection!.connected.designPiece && (
             <TreeItem>
               <TreeContent>
-                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection!.connected.designPiece} disabled showLabel />
+                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection!.connected.designPiece?.guid ?? ''} disabled showLabel />
               </TreeContent>
             </TreeItem>
           )}
@@ -3490,7 +3490,7 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
     }
   })();
 
-  const type = piece?.type && typeof piece.type === "string" ? findTypeInKit(kit, piece.type) : null;
+  const type = piece?.type ? findTypeInKit(kit, piece.type.guid) : null;
   const port = type?.ports?.find((p) => p.guid === portGuid);
 
   if (!piece || !type || !port) {
@@ -3687,7 +3687,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
       {explodeableDesignNodes.map((node) => {
         const boundingBox = getBoundingBoxForNode(node);
         const piece = node.data.piece as Piece;
-        const type = piece.type ? findTypeInKit(kit, piece.type) : null;
+        const type = piece.type ? findTypeInKit(kit, piece.type.guid) : null;
         const designName = type?.name ?? "";
 
         return (
@@ -3976,10 +3976,10 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
         guid: crypto.randomUUID(),
         connecting: {
           guid: crypto.randomUUID(),
-          piece: currentSelectedPort.piece,
-          port: currentSelectedPort.port,
+          piece: { guid: currentSelectedPort.piece },
+          port: { guid: currentSelectedPort.port },
         },
-        connected: { guid: crypto.randomUUID(), piece: piece.guid, port: port.guid },
+        connected: { guid: crypto.randomUUID(), piece: { guid: piece.guid }, port: { guid: port.guid } },
       };
       addConnection(SemioConnection);
       deselectPiecePort();
@@ -4125,8 +4125,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   }, [guid, commands]);
 
   const ports: Port[] = externalConnections.map((SemioConnection, portIndex) => {
-    const connectedIsDesignPiece = SemioConnection.connected.piece === piece.guid || SemioConnection.connected.designPiece === piece.guid;
-    const connectingIsDesignPiece = SemioConnection.connecting.piece === piece.guid || SemioConnection.connecting.designPiece === piece.guid;
+    const connectedIsDesignPiece = SemioConnection.connected.piece.guid === piece.guid || SemioConnection.connected.designPiece?.guid === piece.guid;
+    const connectingIsDesignPiece = SemioConnection.connecting.piece.guid === piece.guid || SemioConnection.connecting.designPiece?.guid === piece.guid;
 
     const designSide = connectedIsDesignPiece ? SemioConnection.connected : SemioConnection.connecting;
     const originalSide = connectedIsDesignPiece ? SemioConnection.connecting : SemioConnection.connected;
@@ -4235,10 +4235,10 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
         guid: crypto.randomUUID(),
         connecting: {
           guid: crypto.randomUUID(),
-          piece: currentSelectedPort.piece,
-          port: currentSelectedPort.port,
+          piece: { guid: currentSelectedPort.piece },
+          port: { guid: currentSelectedPort.port },
         },
-        connected: { guid: crypto.randomUUID(), piece: piece.guid, port: port.guid },
+        connected: { guid: crypto.randomUUID(), piece: { guid: piece.guid }, port: { guid: port.guid } },
       };
       addConnection(SemioConnection);
       deselectPiecePort();
@@ -4545,7 +4545,7 @@ const connectionToEdge = (
       (conn) =>
         conn.connected.piece === SemioConnection.connected.piece && conn.connecting.piece === SemioConnection.connecting.piece && conn.connected.port === SemioConnection.connected.port && conn.connecting.port === SemioConnection.connecting.port,
     );
-    sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
+    sourcePortId = portIndex >= 0 ? { guid: `port-${portIndex}` } : { guid: "port-0" };
   }
 
   if (SemioConnection.connected.designPiece && allConnections) {
@@ -4562,11 +4562,11 @@ const connectionToEdge = (
       (conn) =>
         conn.connected.piece === SemioConnection.connected.piece && conn.connecting.piece === SemioConnection.connecting.piece && conn.connected.port === SemioConnection.connected.port && conn.connecting.port === SemioConnection.connecting.port,
     );
-    targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
+    targetPortId = portIndex >= 0 ? { guid: `port-${portIndex}` } : { guid: "port-0" };
   }
 
-  const sourceIndex = pieceIndexMap.get(sourcePieceId) ?? 0;
-  const targetIndex = pieceIndexMap.get(targetPieceId) ?? 0;
+  const sourceIndex = pieceIndexMap.get(sourcePieceId.guid) ?? 0;
+  const targetIndex = pieceIndexMap.get(targetPieceId.guid) ?? 0;
   const sourceNodeId = `piece-${sourceIndex}-${sourcePieceId}`;
   const targetNodeId = `piece-${targetIndex}-${targetPieceId}`;
 
@@ -4599,7 +4599,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
         const center = centerMap.get(piece.guid) || piece.center || { u: 0, v: 0 };
 
         if (piece.design) {
-          const design = kit.designs?.find((d: Design) => d.guid === piece.design);
+          const design = kit.designs?.find((d: Design) => d.guid === piece.design?.guid);
           if (!design) {
             const fallbackType: Type = {
               guid: `fallback-${piece.design}`,
@@ -4626,7 +4626,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
           return null;
         }
 
-        const type = findTypeInKit(kit, piece.type);
+        const type = findTypeInKit(kit, typeof piece.type === 'string' ? piece.type : piece.type?.guid);
         if (!type) {
           const fallbackType: Type = {
             guid: `fallback-${piece.type}`,
@@ -4652,10 +4652,10 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
       if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
         const connectedPieceIds = new Set<string>();
         includedDesign.externalConnections.forEach((conn) => {
-          if (conn.connected.designPiece === includedDesign.designGuid) {
-            connectedPieceIds.add(conn.connecting.piece);
-          } else if (conn.connecting.designPiece === includedDesign.designGuid) {
-            connectedPieceIds.add(conn.connected.piece);
+          if (conn.connected.designPiece?.guid === includedDesign.designGuid) {
+            connectedPieceIds.add(conn.connecting.piece.guid);
+          } else if (conn.connecting.designPiece?.guid === includedDesign.designGuid) {
+            connectedPieceIds.add(conn.connected.piece.guid);
           }
         });
 
@@ -4931,8 +4931,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     const kitData = kit as Kit;
     if (!kitData?.guid) return;
     const piece = node.data.piece;
-    if (piece.type) sketchpadCommands.navigateToType(kitData.guid, piece.type);
-    else if (piece.design) sketchpadCommands.navigateToDesign(kitData.guid, piece.design);
+    if (piece.type) sketchpadCommands.navigateToType(kitData.guid, typeof piece.type === 'string' ? piece.type : piece.type.guid);
+    else if (piece.design) sketchpadCommands.navigateToDesign(kitData.guid, typeof piece.design === 'string' ? piece.design : piece.design.guid);
   };
 
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
@@ -5458,8 +5458,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design?.connections?.find((c) =>
               areSameConnection(c, {
-                connected: { piece: selectedNode.data.piece.guid },
-                connecting: { piece: otherNode.data.piece.guid },
+                guid: '',
+                connected: { guid: '', piece: { guid: selectedNode.data.piece.guid }, port: { guid: '' } },
+                connecting: { guid: '', piece: { guid: otherNode.data.piece.guid }, port: { guid: '' } },
               } as SemioConnection),
             );
             if (existingConnection) continue;
@@ -5502,13 +5503,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                     guid: crypto.randomUUID(),
                     connected: {
                       guid: crypto.randomUUID(),
-                      piece: otherNode.data.piece.guid,
-                      port: otherHandle.id,
+                      piece: { guid: otherNode.data.piece.guid },
+                      port: { guid: otherHandle.id },
                     },
                     connecting: {
                       guid: crypto.randomUUID(),
-                      piece: selectedNode.data.piece.guid,
-                      port: handle.id,
+                      piece: { guid: selectedNode.data.piece.guid },
+                      port: { guid: handle.id },
                     },
                     x: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
                     y: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
@@ -5810,7 +5811,7 @@ const LoadedPieceMesh: FC<{ url: string; fileExtension: string }> = ({ url, file
 
 const PieceMesh: FC = () => {
   const piece = usePiece() as Piece;
-  const type = useType(undefined, piece.type) as Type | undefined;
+  const type = useType(undefined, typeof piece.type === 'string' ? piece.type : piece.type?.guid) as Type | undefined;
   const kit = useKit(undefined, undefined, true) as Kit | undefined;
   const kitStore = useKitStore() as KitStore;
   const selectedRepresentationTags = useDesignAppSelectedRepresentationTags();

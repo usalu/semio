@@ -150,6 +150,110 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 export type Guid = string;
 
+// #region Entity IDs
+
+export type AttributeId = { guid: Guid };
+export type LocationId = { guid: Guid };
+export type AuthorId = { guid: Guid };
+export type FileId = { guid: Guid };
+export type FolderId = { guid: Guid };
+export type BenchmarkId = { guid: Guid };
+export type QualityId = { guid: Guid };
+export type PropId = { guid: Guid };
+export type RepresentationId = { guid: Guid };
+export type PortId = { guid: Guid };
+export type TypeId = { guid: Guid };
+export type LayerId = { guid: Guid };
+export type PieceId = { guid: Guid };
+export type GroupId = { guid: Guid };
+export type SideId = { guid: Guid };
+export type ConnectionId = { guid: Guid };
+export type StatId = { guid: Guid };
+export type DesignId = { guid: Guid };
+export type KitId = { guid: Guid };
+
+export const AttributeIdSchema = z.object({ guid: z.string() });
+export const LocationIdSchema = z.object({ guid: z.string() });
+export const AuthorIdSchema = z.object({ guid: z.string() });
+export const FileIdSchema = z.object({ guid: z.string() });
+export const FolderIdSchema = z.object({ guid: z.string() });
+export const BenchmarkIdSchema = z.object({ guid: z.string() });
+export const QualityIdSchema = z.object({ guid: z.string() });
+export const PropIdSchema = z.object({ guid: z.string() });
+export const RepresentationIdSchema = z.object({ guid: z.string() });
+export const PortIdSchema = z.object({ guid: z.string() });
+export const TypeIdSchema = z.object({ guid: z.string() });
+export const LayerIdSchema = z.object({ guid: z.string() });
+export const PieceIdSchema = z.object({ guid: z.string() });
+export const GroupIdSchema = z.object({ guid: z.string() });
+export const SideIdSchema = z.object({ guid: z.string() });
+export const ConnectionIdSchema = z.object({ guid: z.string() });
+export const StatIdSchema = z.object({ guid: z.string() });
+export const DesignIdSchema = z.object({ guid: z.string() });
+export const KitIdSchema = z.object({ guid: z.string() });
+
+export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
+export const createLocationId = (guid: Guid): LocationId => ({ guid });
+export const createAuthorId = (guid: Guid): AuthorId => ({ guid });
+export const createFileId = (guid: Guid): FileId => ({ guid });
+export const createFolderId = (guid: Guid): FolderId => ({ guid });
+export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
+export const createQualityId = (guid: Guid): QualityId => ({ guid });
+export const createPropId = (guid: Guid): PropId => ({ guid });
+export const createRepresentationId = (guid: Guid): RepresentationId => ({ guid });
+export const createPortId = (guid: Guid): PortId => ({ guid });
+export const createTypeId = (guid: Guid): TypeId => ({ guid });
+export const createLayerId = (guid: Guid): LayerId => ({ guid });
+export const createPieceId = (guid: Guid): PieceId => ({ guid });
+export const createGroupId = (guid: Guid): GroupId => ({ guid });
+export const createSideId = (guid: Guid): SideId => ({ guid });
+export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
+export const createStatId = (guid: Guid): StatId => ({ guid });
+export const createDesignId = (guid: Guid): DesignId => ({ guid });
+export const createKitId = (guid: Guid): KitId => ({ guid });
+
+export const areSameAttributeId = (a: AttributeId, b: AttributeId): boolean => a.guid === b.guid;
+export const areSameLocationId = (a: LocationId, b: LocationId): boolean => a.guid === b.guid;
+export const areSameAuthorId = (a: AuthorId, b: AuthorId): boolean => a.guid === b.guid;
+export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.guid;
+export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid === b.guid;
+export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
+export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
+export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
+export const areSameRepresentationId = (a: RepresentationId, b: RepresentationId): boolean => a.guid === b.guid;
+export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
+export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
+export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
+export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
+export const areSameGroupId = (a: GroupId, b: GroupId): boolean => a.guid === b.guid;
+export const areSameSideId = (a: SideId, b: SideId): boolean => a.guid === b.guid;
+export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean => a.guid === b.guid;
+export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.guid;
+export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
+export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
+
+export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
+export const getLocationGuid = (id: LocationId): Guid => id.guid;
+export const getAuthorGuid = (id: AuthorId): Guid => id.guid;
+export const getFileGuid = (id: FileId): Guid => id.guid;
+export const getFolderGuid = (id: FolderId): Guid => id.guid;
+export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
+export const getQualityGuid = (id: QualityId): Guid => id.guid;
+export const getPropGuid = (id: PropId): Guid => id.guid;
+export const getRepresentationGuid = (id: RepresentationId): Guid => id.guid;
+export const getPortGuid = (id: PortId): Guid => id.guid;
+export const getTypeGuid = (id: TypeId): Guid => id.guid;
+export const getLayerGuid = (id: LayerId): Guid => id.guid;
+export const getPieceGuid = (id: PieceId): Guid => id.guid;
+export const getGroupGuid = (id: GroupId): Guid => id.guid;
+export const getSideGuid = (id: SideId): Guid => id.guid;
+export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
+export const getStatGuid = (id: StatId): Guid => id.guid;
+export const getDesignGuid = (id: DesignId): Guid => id.guid;
+export const getKitGuid = (id: KitId): Guid => id.guid;
+
+// #endregion Entity IDs
+
 const DateProperty = () =>
   z
     .string()
@@ -713,7 +817,7 @@ export const FileSchema = z.object({
   guid: z.string(),
   name: z.string(),
   remote: z.string().optional(),
-  folder: z.string().optional(),
+  folder: FolderIdSchema.optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
   createdAt: DateProperty(),
@@ -737,7 +841,7 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
   if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
   if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
   if (before.updatedBy !== after.updatedBy) diff.updatedBy = after.updatedBy;
-  if (before.folder !== after.folder) diff.folder = after.folder;
+  if (before.folder?.guid !== after.folder?.guid) diff.folder = after.folder;
   return diff;
 };
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
@@ -785,7 +889,7 @@ export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 export const FolderSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  parent: z.string().optional(),
+  parent: FolderIdSchema.optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
   createdAt: DateProperty(),
@@ -804,7 +908,7 @@ export type FolderDiff = z.infer<typeof FolderDiffSchema>;
 export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
   const diff: FolderDiff = {};
   if (before.name !== after.name) diff.name = after.name;
-  if (before.parent !== after.parent) diff.parent = after.parent;
+  if (before.parent?.guid !== after.parent?.guid) diff.parent = after.parent;
   if (before.description !== after.description) diff.description = after.description;
   if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   if (before.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
@@ -1106,7 +1210,7 @@ export const QualitiesDiffSchema = z.object({
 
 export const PropSchema = z.object({
   guid: z.string(),
-  key: z.string(),
+  quality: QualityIdSchema,
   value: z.string(),
   unit: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
@@ -1121,7 +1225,7 @@ export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).ex
 export type PropDiff = z.infer<typeof PropDiffSchema>;
 export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
   const diff: PropDiff = {};
-  if (before.key !== after.key) diff.key = after.key;
+  if (before.quality.guid !== after.quality.guid) diff.quality = after.quality;
   if (before.value !== after.value) diff.value = after.value;
   if (before.unit !== after.unit) diff.unit = after.unit;
   if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
@@ -1129,7 +1233,7 @@ export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
 };
 export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => {
   const inverse: PropDiff = {};
-  if (appliedDiff.key !== undefined) inverse.key = original.key;
+  if (appliedDiff.quality !== undefined) inverse.quality = original.quality;
   if (appliedDiff.value !== undefined) inverse.value = original.value;
   if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
@@ -1141,7 +1245,7 @@ export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
 export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
   return {
     ...base,
-    key: diff.key ?? base.key,
+    quality: diff.quality ?? base.quality,
     value: diff.value ?? base.value,
     unit: diff.unit ?? base.unit,
     attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
@@ -1156,30 +1260,30 @@ export const PropsDiffSchema = z.object({
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
 
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
-  const beforeKeys = before.map((p) => p.key);
-  const afterKeys = after.map((p) => p.key);
+  const beforeKeys = before.map((p) => p.quality.guid);
+  const afterKeys = after.map((p) => p.quality.guid);
   const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
-  const added = after.filter((p) => !beforeKeys.includes(p.key));
+  const added = after.filter((p) => !beforeKeys.includes(p.quality.guid));
   const updated = after
-    .filter((p) => beforeKeys.includes(p.key))
+    .filter((p) => beforeKeys.includes(p.quality.guid))
     .map((afterProp) => {
-      const beforeProp = before.find((p) => p.key === afterProp.key)!;
+      const beforeProp = before.find((p) => p.quality.guid === afterProp.quality.guid)!;
       const diff = getPropDiff(beforeProp, afterProp);
-      return { id: afterProp.key, diff };
+      return { id: afterProp.quality.guid, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
   return { removed, added, updated };
 };
 
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
-  const addedKeys = appliedDiff.added?.map((p) => p.key) ?? [];
+  const addedKeys = appliedDiff.added?.map((p) => p.quality.guid) ?? [];
   const removedKeys = appliedDiff.removed ?? [];
   const updatedKeys = appliedDiff.updated?.map((u) => u.id) ?? [];
   return {
     removed: addedKeys,
-    added: original.filter((p) => removedKeys.includes(p.key)),
+    added: original.filter((p) => removedKeys.includes(p.quality.guid)),
     updated: updatedKeys.map((key) => {
-      const orig = original.find((p) => p.key === key)!;
+      const orig = original.find((p) => p.quality.guid === key)!;
       const upd = appliedDiff.updated?.find((u) => u.id === key)!;
       return { id: key, diff: inversePropDiff(orig, upd.diff) };
     }),
@@ -1193,11 +1297,11 @@ const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
 const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((prop) => !diff.removed!.includes(prop.key));
+    result = result.filter((prop) => !diff.removed!.includes(prop.quality.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((prop) => prop.key === update.id);
+      const index = result.findIndex((prop) => prop.quality.guid === update.id);
       if (index !== -1) {
         result[index] = applyPropDiff(result[index], update.diff);
       }
@@ -1571,7 +1675,7 @@ export const TypeSchema = z.object({
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
   location: LocationSchema.optional(),
-  authors: z.array(z.string()).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
   concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
@@ -1696,8 +1800,8 @@ export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 export const PieceSchema = z.object({
   guid: z.string(),
-  type: z.string().optional(),
-  design: z.string().optional(),
+  type: TypeIdSchema.optional(),
+  design: DesignIdSchema.optional(),
   plane: PlaneSchema.optional(),
   center: CoordSchema.optional(),
   scale: z.number().optional(),
@@ -1751,9 +1855,9 @@ export const getPieceRepresentationFileGuids = (design: Design, types: Type[], t
   const representationFileGuids = new Map<string, string>();
   design.pieces?.forEach((p) => {
     if (!p.type) return;
-    const type = types.find((t) => t.guid === p.type);
-    if (!type) throw new Error(`Type ${p.type} for piece ${p.guid} not found`);
-    if (!type.representations) throw new Error(`Type ${p.type} for piece ${p.guid} has no representations`);
+    const type = types.find((t) => t.guid === p.type.guid);
+    if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
+    if (!type.representations) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no representations`);
     const representation = findRepresentation(type.representations, tags);
     representationFileGuids.set(p.guid, representation.file);
   });
@@ -1772,9 +1876,9 @@ export const getPieceRepresentationUrls = (design: Design, types: Type[], files:
   const representationUrls = new Map<string, string>();
   design.pieces?.forEach((p) => {
     if (!p.type) return;
-    const type = types.find((t) => t.guid === p.type);
-    if (!type) throw new Error(`Type ${p.type} for piece ${p.guid} not found`);
-    if (!type.representations) throw new Error(`Type ${p.type} for piece ${p.guid} has no representations`);
+    const type = types.find((t) => t.guid === p.type.guid);
+    if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
+    if (!type.representations) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no representations`);
     const representation = findRepresentation(type.representations, tags);
     const file = files.find((f) => f.guid === representation.file);
     if (!file) throw new Error(`File ${representation.file} for representation ${representation.guid} not found`);
@@ -1788,8 +1892,8 @@ export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): D
     connections: {
       removed: [
         {
-          connected: { piece: parentConnection.connected.piece },
-          connecting: { piece: parentConnection.connecting.piece },
+          connected: { piece: parentConnection.connected.piece.guid },
+          connecting: { piece: parentConnection.connecting.piece.guid },
         },
       ],
     },
@@ -1801,8 +1905,8 @@ export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]
   return {
     connections: {
       removed: parentConnections.map((c) => ({
-        connected: { piece: c.connected.piece },
-        connecting: { piece: c.connecting.piece },
+        connected: { piece: c.connected.piece.guid },
+        connecting: { piece: c.connecting.piece.guid },
       })),
     },
   };
@@ -1827,7 +1931,7 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 // https://github.com/usalu/semio#-group-
 
 export const GroupSchema = z.object({
-  pieces: z.array(z.string()),
+  pieces: z.array(PieceIdSchema),
   color: z.string().optional(),
   name: z.string().optional(),
   description: z.string().optional(),
@@ -1851,9 +1955,9 @@ export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.
 
 export const SideSchema = z.object({
   guid: z.string(),
-  piece: z.string(),
-  designPiece: z.string().optional(),
-  port: z.string(),
+  piece: PieceIdSchema,
+  designPiece: PieceIdSchema.optional(),
+  port: PortIdSchema,
 });
 export type Side = z.infer<typeof SideSchema>;
 export const SideDiffSchema = SideSchema.partial();
@@ -1866,9 +1970,9 @@ export const SidesDiffSchema = z.object({
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
 export const getSideDiff = (before: Side, after: Side): SideDiff => {
   const diff: SideDiff = {};
-  if (before.piece !== after.piece) diff.piece = after.piece;
-  if (before.designPiece !== after.designPiece) diff.designPiece = after.designPiece;
-  if (before.port !== after.port) diff.port = after.port;
+  if (before.piece.guid !== after.piece.guid) diff.piece = after.piece;
+  if (before.designPiece?.guid !== after.designPiece?.guid) diff.designPiece = after.designPiece;
+  if (before.port.guid !== after.port.guid) diff.port = after.port;
   return diff;
 };
 export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff => {
@@ -1981,8 +2085,8 @@ export const serializeConnection = (connection: Connection): string => JSON.stri
 export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
 export const areSameConnection = (connection: Connection | ConnectionDiff, other: Connection | ConnectionDiff, strict: boolean = false): boolean => {
-  const getConnectedPieceId = (conn: typeof connection) => ("connected" in conn && conn.connected && "piece" in conn.connected ? conn.connected.piece : "");
-  const getConnectingPieceId = (conn: typeof connection) => ("connecting" in conn && conn.connecting && "piece" in conn.connecting ? conn.connecting.piece : "");
+  const getConnectedPieceId = (conn: typeof connection) => ("connected" in conn && conn.connected && "piece" in conn.connected ? (typeof conn.connected.piece === "string" ? conn.connected.piece : conn.connected.piece?.guid ?? "") : "");
+  const getConnectingPieceId = (conn: typeof connection) => ("connecting" in conn && conn.connecting && "piece" in conn.connecting ? (typeof conn.connecting.piece === "string" ? conn.connecting.piece : conn.connecting.piece?.guid ?? "") : "");
 
   const connectedPiece1 = getConnectedPieceId(connection);
   const connectingPiece1 = getConnectingPieceId(connection);
@@ -2002,11 +2106,11 @@ export const findConnection = (connections: Connection[], connectionGuid: string
 };
 
 export const findPieceConnections = (connections: Connection[], pieceGuid: string): Connection[] => {
-  return connections.filter((c) => c.connected.piece === pieceGuid || c.connecting.piece === pieceGuid);
+  return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
 
 export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Port => {
-  const portGuid = connection.connected.piece === pieceGuid ? connection.connected.port : connection.connecting.port;
+  const portGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.port.guid : connection.connecting.port.guid;
   return findPortInType(type, portGuid);
 };
 
@@ -2017,7 +2121,7 @@ export const findPortForPieceInConnection = (type: Type, connection: Connection,
 
 export const StatSchema = z.object({
   guid: z.string(),
-  key: z.string(),
+  quality: QualityIdSchema,
   unit: z.string().optional(),
   min: z.number().optional(),
   minExcluded: z.boolean().optional(),
@@ -2051,13 +2155,13 @@ export const DesignSchema = z.object({
   stats: z.array(StatSchema).optional(),
   props: z.array(PropSchema).optional(),
   layers: z.array(LayerSchema).optional(),
-  activeLayer: z.string().optional(),
+  activeLayer: LayerIdSchema.optional(),
   groups: z.array(GroupSchema).optional(),
   canScale: z.boolean().optional(),
   canMirror: z.boolean().optional(),
   unit: z.string().optional(),
   location: LocationSchema.optional(),
-  authors: z.array(z.string()).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
   concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
@@ -2265,7 +2369,7 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
     .map((connId) => {
       const conn = design?.connections?.find((c) => c.guid === connId);
       if (!conn) return null;
-      return { connected: { piece: conn.connected.piece }, connecting: { piece: conn.connecting.piece } };
+      return { connected: { piece: conn.connected.piece.guid }, connecting: { piece: conn.connecting.piece.guid } };
     })
     .filter((c): c is { connected: { piece: string }; connecting: { piece: string } } => c !== null);
 
@@ -2392,8 +2496,8 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
       `[ORIGIN] flattenDesign: Connection details:`,
       flatDesign.connections.map((c) => ({
         guid: c.guid,
-        connected: c.connected.piece,
-        connecting: c.connecting.piece,
+        connected: c.connected.piece.guid,
+        connecting: c.connecting.piece.guid,
       })),
     );
   }
@@ -2405,8 +2509,8 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
       })),
       edges: flatDesign.connections
         ?.filter((connection) => {
-          const sourceId = connection.connected.piece;
-          const targetId = connection.connecting.piece;
+          const sourceId = connection.connected.piece.guid;
+          const targetId = connection.connecting.piece.guid;
           const sourceExists = pieceMap[sourceId];
           const targetExists = pieceMap[targetId];
           if (!sourceExists) {
@@ -2420,8 +2524,8 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
           return true;
         })
         .map((connection, index) => {
-          const sourceId = connection.connected.piece;
-          const targetId = connection.connecting.piece;
+          const sourceId = connection.connected.piece.guid;
+          const targetId = connection.connecting.piece.guid;
           return {
             data: {
               id: connection.guid,
@@ -2510,14 +2614,14 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
           console.error(`Error during flatten: Parent piece ${parentPiece.guid} plane not found.`);
           return;
         }
-        const parentSide = connection.connected.piece === parentId ? connection.connected : connection.connecting;
-        const childSide = connection.connecting.piece === childId ? connection.connecting : connection.connected;
-        const parentType = parentPiece.type ? getType(parentPiece.type) : undefined;
-        const childType = childPiece.type ? getType(childPiece.type) : undefined;
-        const parentPort = getPort(parentType, parentSide.port);
-        const childPort = getPort(childType, childSide.port);
+        const parentSide = connection.connected.piece.guid === parentId ? connection.connected : connection.connecting;
+        const childSide = connection.connecting.piece.guid === childId ? connection.connecting : connection.connected;
+        const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
+        const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
+        const parentPort = getPort(parentType, parentSide.port.guid);
+        const childPort = getPort(childType, childSide.port.guid);
         if (!parentPort || !childPort) {
-          console.error(`Error during flatten: Ports not found for connection between ${parentId} and ${childId}. Parent Port: ${parentSide.port}, Child Port: ${childSide.port}`);
+          console.error(`Error during flatten: Ports not found for connection between ${parentId} and ${childId}. Parent Port: ${parentSide.port.guid}, Child Port: ${childSide.port.guid}`);
           return;
         }
         const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
@@ -2584,7 +2688,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     })
     .filter((update) => update !== null) as Array<{ id: string; diff: PieceDiff }>;
 
-  const removedConnections = expandedDesign.connections?.map((c) => c.guid) || [];
+  const removedConnections = expandedDesign.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
 
   return {
     pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
@@ -2616,12 +2720,12 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
   }
 
   // Find internal connections (both pieces in cluster)
-  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece) && clusterPieceIds.includes(connection.connecting.piece));
+  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.guid) && clusterPieceIds.includes(connection.connecting.piece.guid));
 
   // Find external connections (one piece in cluster, one outside)
   const externalConnections = (originalDesign.connections || []).filter((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece);
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
     return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
   });
 
@@ -2655,16 +2759,16 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
   // Remove all connections involving clustered pieces
   const connectionsToRemove = (originalDesign.connections || [])
     .filter((connection) => {
-      const connectedInCluster = clusterPieceIds.includes(connection.connected.piece);
-      const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece);
+      const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
+      const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
       return connectedInCluster || connectingInCluster;
     })
-    .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }));
+    .map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } }));
 
   // Update external connections to use direct design references
   const updatedExternalConnections = externalConnections.map((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece);
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
 
     if (connectedInCluster) {
       // Keep original piece guid but add designPiece to reference the nested design
@@ -2672,7 +2776,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
         ...connection,
         connected: {
           ...connection.connected,
-          designPiece: clusteredDesign.name, // Reference to nested design
+          designPiece: { guid: connection.connected.piece.guid }, // Reference to the piece within nested design
         },
       };
     } else if (connectingInCluster) {
@@ -2681,7 +2785,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
         ...connection,
         connecting: {
           ...connection.connecting,
-          designPiece: clusteredDesign.name, // Reference to nested design
+          designPiece: { guid: connection.connecting.piece.guid }, // Reference to the piece within nested design
         },
       };
     }
@@ -2712,8 +2816,8 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
   // Build adjacency map from all connections
   const adjacencyMap = new Map<string, Set<string>>();
   (design.connections || []).forEach((connection) => {
-    const sourceId = connection.connecting.piece;
-    const targetId = connection.connected.piece;
+    const sourceId = connection.connecting.piece.guid;
+    const targetId = connection.connected.piece.guid;
 
     if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
     if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
@@ -2774,8 +2878,8 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   // Find all unique designIds referenced in connections
   const designIds = new Set<string>();
   design.connections?.forEach((conn) => {
-    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece);
-    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece);
+    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
+    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
   });
 
   if (designIds.size === 0) {
@@ -2800,7 +2904,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
     const transformedConnections = expandedReferencedDesign.connections || [];
 
     const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
-      if (connection.connected.designPiece === designName) {
+      if (connection.connected.designPiece?.guid === designName) {
         return {
           ...connection,
           connected: {
@@ -2810,7 +2914,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
         };
       }
 
-      if (connection.connecting.designPiece === designName) {
+      if (connection.connecting.designPiece?.guid === designName) {
         // Use the original piece ID directly (no namespacing)
         return {
           ...connection,
@@ -2850,16 +2954,16 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   // Get designs from external connections (clustered designs)
   const designIds = new Set<string>();
   design.connections?.forEach((conn: Connection) => {
-    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece);
-    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece);
+    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
+    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
   });
 
   // Add connected designs
   Array.from(designIds).forEach((designIdString) => {
     const externalConnections =
       design.connections?.filter((connection: Connection) => {
-        const connectedToDesign = connection.connected.designPiece === designIdString;
-        const connectingToDesign = connection.connecting.designPiece === designIdString;
+        const connectedToDesign = connection.connected.designPiece?.guid === designIdString;
+        const connectingToDesign = connection.connecting.designPiece?.guid === designIdString;
         return connectedToDesign || connectingToDesign;
       }) ?? [];
 
@@ -2877,8 +2981,8 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
 export const isPortInUse = (design: Design, pieceGuid: string, portGuid: string): boolean => {
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   for (const connection of connections) {
-    const isPieceConnected = connection.connected.piece === pieceGuid;
-    const isPortConnected = isPieceConnected ? connection.connected.port === portGuid : connection.connecting.port === portGuid;
+    const isPieceConnected = connection.connected.piece.guid === pieceGuid;
+    const isPortConnected = isPieceConnected ? connection.connected.port.guid === portGuid : connection.connecting.port.guid === portGuid;
     if (isPortConnected) return true;
   }
   return false;
@@ -2904,8 +3008,8 @@ export const findPieceConnectionsInDesign = (design: Design, pieceGuid: string):
 
 export const findConnectionPiecesInDesign = (design: Design, connection: Connection): { connecting: Piece; connected: Piece } => {
   return {
-    connected: findPieceInDesign(design, connection.connected.piece),
-    connecting: findPieceInDesign(design, connection.connecting.piece),
+    connected: findPieceInDesign(design, connection.connected.piece.guid),
+    connecting: findPieceInDesign(design, connection.connecting.piece.guid),
   };
 };
 
@@ -2913,8 +3017,8 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   return (
     design.connections?.filter((c) => {
       try {
-        findPieceInDesign(design, c.connected.piece);
-        findPieceInDesign(design, c.connecting.piece);
+        findPieceInDesign(design, c.connected.piece.guid);
+        findPieceInDesign(design, c.connecting.piece.guid);
         return false;
       } catch (e) {
         return true;
@@ -3068,7 +3172,7 @@ export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid:
   if (!designPiece.design) return [];
 
   const allDesigns = kit.designs || [];
-  const currentDesign = findDesignInKit(kit, designPiece.design);
+  const currentDesign = findDesignInKit(kit, designPiece.design.guid);
 
   return allDesigns.filter((design) => {
     if (design.guid === currentDesign.guid) return false;
@@ -3097,7 +3201,7 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
 export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type => {
   const piece = findPieceInDesign(findDesignInKit(kit, designGuid), pieceGuid);
   if (!piece.type) throw new Error(`Piece ${pieceGuid} has no type`);
-  return findTypeInKit(kit, piece.type);
+  return findTypeInKit(kit, piece.type.guid);
 };
 
 export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => {
@@ -3128,7 +3232,7 @@ export const findUsedPortsByPieceInDesign = (kit: Kit, designGuid: string, piece
   const design = findDesignInKit(kit, designGuid);
   const piece = findPieceInDesign(design, pieceGuid);
   if (!piece.type) return [];
-  const type = findTypeInKit(kit, piece.type);
+  const type = findTypeInKit(kit, piece.type.guid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid));
 };
@@ -3139,11 +3243,11 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
   const requiredPorts: Port[] = [];
   for (const connection of connections) {
     try {
-      const otherPieceId = connection.connected.piece === pieceGuid ? connection.connecting.piece : connection.connected.piece;
+      const otherPieceId = connection.connected.piece.guid === pieceGuid ? connection.connecting.piece.guid : connection.connected.piece.guid;
       const otherPiece = findPieceInDesign(design, otherPieceId);
       if (!otherPiece.type) continue;
-      const otherType = findTypeInKit(kit, otherPiece.type);
-      const otherPortId = connection.connected.piece === pieceGuid ? connection.connecting.port : connection.connected.port;
+      const otherType = findTypeInKit(kit, otherPiece.type.guid);
+      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.port.guid : connection.connected.port.guid;
       const otherPort = findPortInType(otherType, otherPortId || "");
       requiredPorts.push(otherPort);
     } catch (error) {
@@ -3172,13 +3276,13 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
   for (const piece of pieces) {
     const connections = findPieceConnectionsInDesign(design, piece.guid);
     for (const connection of connections) {
-      const otherPieceId = connection.connected.piece === piece.guid ? connection.connecting.piece : connection.connected.piece;
+      const otherPieceId = connection.connected.piece.guid === piece.guid ? connection.connecting.piece.guid : connection.connected.piece.guid;
       if (!pieceGuids.includes(otherPieceId)) {
         try {
           const otherPiece = findPieceInDesign(design, otherPieceId);
           if (!otherPiece.type) continue;
-          const otherType = findTypeInKit(kit, otherPiece.type);
-          const otherPortId = connection.connected.piece === piece.guid ? connection.connecting.port : connection.connected.port;
+          const otherType = findTypeInKit(kit, otherPiece.type.guid);
+          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.port.guid : connection.connected.port.guid;
           const otherPort = findPortInType(otherType, otherPortId || "");
           externalConnections.push({ connection, requiredPort: otherPort });
         } catch (error) {
@@ -3364,14 +3468,14 @@ export interface FileTreeNode {
 export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] => {
   const folderChildren = new Map<string | undefined, Folder[]>();
   folders.forEach((folder) => {
-    const parent = folder.parent;
+    const parent = folder.parent?.guid;
     if (!folderChildren.has(parent)) folderChildren.set(parent, []);
     folderChildren.get(parent)!.push(folder);
   });
 
   const filesByFolder = new Map<string | undefined, File[]>();
   files.forEach((file) => {
-    const folder = file.folder;
+    const folder = file.folder?.guid;
     if (!filesByFolder.has(folder)) filesByFolder.set(folder, []);
     filesByFolder.get(folder)!.push(file);
   });

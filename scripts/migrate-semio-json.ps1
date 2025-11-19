@@ -228,22 +228,36 @@ function Migrate-Ports {
 }
 
 function Migrate-Type {
-    param($type)
+    param($type, $typeNameToGuidMap)
     
     if ($null -eq $type) { return $null }
     
     $timestamp = Get-CurrentTimestamp
+    $typeGuid = New-Guid
     
     $migrated = @{
-        guid = New-Guid
+        guid = $typeGuid
         name = $type.name
         createdAt = $timestamp
         updatedAt = $timestamp
     }
     
+    # Store mapping for later reference resolution
+    if ($null -ne $typeNameToGuidMap) {
+        $typeNameToGuidMap[$type.name] = $typeGuid
+    }
+    
     # Optional fields
-    if ($type.PSObject.Properties.Name -contains 'parent' -and $null -ne $type.parent) {
-        $migrated.parent = $type.parent
+    # Check for both 'variant' (old field) and 'parent' (new field)
+    $parentValue = $null
+    if ($type.PSObject.Properties.Name -contains 'variant' -and $null -ne $type.variant) {
+        $parentValue = $type.variant
+    } elseif ($type.PSObject.Properties.Name -contains 'parent' -and $null -ne $type.parent) {
+        $parentValue = $type.parent
+    }
+    if ($null -ne $parentValue) {
+        # Parent will be resolved in third pass (name to GUID)
+        $migrated.parent = $parentValue
     }
     if ($type.PSObject.Properties.Name -contains 'isAbstract' -and $null -ne $type.isAbstract) {
         $migrated.isAbstract = $type.isAbstract
@@ -272,9 +286,12 @@ function Migrate-Type {
     if ($type.PSObject.Properties.Name -contains 'authors' -and $null -ne $type.authors -and $type.authors.Count -gt 0) {
         # Authors might be strings (references) or objects (inline definitions)
         if ($type.authors[0] -is [string]) {
+            # Already references, keep as-is (TODO: might need to convert to { guid } format)
             $migrated.authors = $type.authors
         } else {
-            $migrated.authors = @($type.authors | ForEach-Object { Migrate-Author $_ })
+            # Inline author objects - convert to ID references
+            $migratedAuthors = @($type.authors | ForEach-Object { Migrate-Author $_ })
+            $migrated.authors = @($migratedAuthors | ForEach-Object { @{ guid = $_.guid } })
         }
     }
     if ($type.PSObject.Properties.Name -contains 'concepts' -and $null -ne $type.concepts -and $type.concepts.Count -gt 0) {
@@ -296,9 +313,12 @@ function Migrate-Type {
         $migrated.props = $props
     }
     
-    $location = Migrate-Location $type.location
-    if ($null -ne $location) {
-        $migrated.location = $location
+    # Convert location to ID reference
+    if ($type.PSObject.Properties.Name -contains 'location' -and $null -ne $type.location) {
+        $migratedLocation = Migrate-Location $type.location
+        if ($null -ne $migratedLocation) {
+            $migrated.location = @{ guid = $migratedLocation.guid }
+        }
     }
     
     $attrs = Migrate-Attributes $type.attributes
@@ -310,32 +330,41 @@ function Migrate-Type {
 }
 
 function Migrate-Piece {
-    param($piece)
+    param($piece, $typeNameToGuidMap, $designNameToGuidMap)
     
     if ($null -eq $piece) { return $null }
     
     $migrated = @{
         guid = if ($piece.PSObject.Properties.Name -contains 'guid') { $piece.guid } else { New-Guid }
-        id = if ($piece.PSObject.Properties.Name -contains 'id_') { $piece.id_ } else { $piece.id }
     }
     
-    # Type reference
+    # Type reference - convert name to guid reference
     if ($piece.PSObject.Properties.Name -contains 'type' -and $null -ne $piece.type) {
+        $typeName = $null
         if ($piece.type -is [string]) {
-            $migrated.type = $piece.type
+            $typeName = $piece.type
         } else {
             # Old format with name/variant object
-            $migrated.type = $piece.type.name
+            $typeName = $piece.type.name
+        }
+        
+        if ($null -ne $typeName -and $typeNameToGuidMap.ContainsKey($typeName)) {
+            $migrated.type = @{ guid = $typeNameToGuidMap[$typeName] }
         }
     }
     
-    # Design reference
+    # Design reference - convert name to guid reference
     if ($piece.PSObject.Properties.Name -contains 'design' -and $null -ne $piece.design) {
+        $designName = $null
         if ($piece.design -is [string]) {
-            $migrated.design = $piece.design
+            $designName = $piece.design
         } else {
             # Old format with name/variant object
-            $migrated.design = $piece.design.name
+            $designName = $piece.design.name
+        }
+        
+        if ($null -ne $designName -and $designNameToGuidMap.ContainsKey($designName)) {
+            $migrated.design = @{ guid = $designNameToGuidMap[$designName] }
         }
     }
     
@@ -386,15 +415,15 @@ function Migrate-Piece {
 }
 
 function Migrate-Pieces {
-    param($pieces)
+    param($pieces, $typeNameToGuidMap, $designNameToGuidMap)
     
     if ($null -eq $pieces -or $pieces.Count -eq 0) { return $null }
     
-    return @($pieces | ForEach-Object { Migrate-Piece $_ })
+    return @($pieces | ForEach-Object { Migrate-Piece $_ $typeNameToGuidMap $designNameToGuidMap })
 }
 
 function Migrate-Connection {
-    param($conn)
+    param($conn, $pieceIdToGuidMap, $portIdToGuidMap)
     
     if ($null -eq $conn) { return $null }
     
@@ -402,37 +431,70 @@ function Migrate-Connection {
         guid = if ($conn.PSObject.Properties.Name -contains 'guid') { $conn.guid } else { New-Guid }
     }
     
-    # Connected/connecting can be piece IDs or port references
+    # Connected side
     if ($conn.PSObject.Properties.Name -contains 'connected' -and $null -ne $conn.connected) {
+        $connectedSide = @{
+            guid = New-Guid
+        }
+        
         if ($conn.connected -is [string]) {
-            $migrated.connected = @{ piece = $conn.connected }
+            # Simple string reference to piece
+            if ($pieceIdToGuidMap.ContainsKey($conn.connected)) {
+                $connectedSide.piece = @{ guid = $pieceIdToGuidMap[$conn.connected] }
+            }
         } else {
-            $migrated.connected = @{
-                piece = $conn.connected.piece
+            # Object with piece and optionally port/designPiece
+            if ($conn.connected.PSObject.Properties.Name -contains 'piece' -and $null -ne $conn.connected.piece) {
+                if ($pieceIdToGuidMap.ContainsKey($conn.connected.piece)) {
+                    $connectedSide.piece = @{ guid = $pieceIdToGuidMap[$conn.connected.piece] }
+                }
             }
             if ($conn.connected.PSObject.Properties.Name -contains 'port' -and $null -ne $conn.connected.port) {
-                $migrated.connected.port = $conn.connected.port
+                if ($portIdToGuidMap.ContainsKey($conn.connected.port)) {
+                    $connectedSide.port = @{ guid = $portIdToGuidMap[$conn.connected.port] }
+                }
             }
             if ($conn.connected.PSObject.Properties.Name -contains 'designPiece' -and $null -ne $conn.connected.designPiece) {
-                $migrated.connected.designPiece = $conn.connected.designPiece
+                if ($pieceIdToGuidMap.ContainsKey($conn.connected.designPiece)) {
+                    $connectedSide.designPiece = @{ guid = $pieceIdToGuidMap[$conn.connected.designPiece] }
+                }
             }
         }
+        
+        $migrated.connected = $connectedSide
     }
     
+    # Connecting side
     if ($conn.PSObject.Properties.Name -contains 'connecting' -and $null -ne $conn.connecting) {
+        $connectingSide = @{
+            guid = New-Guid
+        }
+        
         if ($conn.connecting -is [string]) {
-            $migrated.connecting = @{ piece = $conn.connecting }
+            # Simple string reference to piece
+            if ($pieceIdToGuidMap.ContainsKey($conn.connecting)) {
+                $connectingSide.piece = @{ guid = $pieceIdToGuidMap[$conn.connecting] }
+            }
         } else {
-            $migrated.connecting = @{
-                piece = $conn.connecting.piece
+            # Object with piece and optionally port/designPiece
+            if ($conn.connecting.PSObject.Properties.Name -contains 'piece' -and $null -ne $conn.connecting.piece) {
+                if ($pieceIdToGuidMap.ContainsKey($conn.connecting.piece)) {
+                    $connectingSide.piece = @{ guid = $pieceIdToGuidMap[$conn.connecting.piece] }
+                }
             }
             if ($conn.connecting.PSObject.Properties.Name -contains 'port' -and $null -ne $conn.connecting.port) {
-                $migrated.connecting.port = $conn.connecting.port
+                if ($portIdToGuidMap.ContainsKey($conn.connecting.port)) {
+                    $connectingSide.port = @{ guid = $portIdToGuidMap[$conn.connecting.port] }
+                }
             }
             if ($conn.connecting.PSObject.Properties.Name -contains 'designPiece' -and $null -ne $conn.connecting.designPiece) {
-                $migrated.connecting.designPiece = $conn.connecting.designPiece
+                if ($pieceIdToGuidMap.ContainsKey($conn.connecting.designPiece)) {
+                    $connectingSide.designPiece = @{ guid = $pieceIdToGuidMap[$conn.connecting.designPiece] }
+                }
             }
         }
+        
+        $migrated.connecting = $connectingSide
     }
     
     # Translation/rotation parameters
@@ -476,30 +538,44 @@ function Migrate-Connection {
 }
 
 function Migrate-Connections {
-    param($connections)
+    param($connections, $pieceIdToGuidMap, $portIdToGuidMap)
     
     if ($null -eq $connections -or $connections.Count -eq 0) { return $null }
     
-    return @($connections | ForEach-Object { Migrate-Connection $_ })
+    return @($connections | ForEach-Object { Migrate-Connection $_ $pieceIdToGuidMap $portIdToGuidMap })
 }
 
 function Migrate-Design {
-    param($design)
+    param($design, $designNameToGuidMap, $typeNameToGuidMap, $portIdToGuidMap)
     
     if ($null -eq $design) { return $null }
     
     $timestamp = Get-CurrentTimestamp
+    $designGuid = New-Guid
     
     $migrated = @{
-        guid = New-Guid
+        guid = $designGuid
         name = $design.name
         createdAt = $timestamp
         updatedAt = $timestamp
     }
     
+    # Store mapping for later reference resolution
+    if ($null -ne $designNameToGuidMap) {
+        $designNameToGuidMap[$design.name] = $designGuid
+    }
+    
     # Optional fields
-    if ($design.PSObject.Properties.Name -contains 'parent' -and $null -ne $design.parent) {
-        $migrated.parent = $design.parent
+    # Check for both 'variant' (old field) and 'parent' (new field)
+    $parentValue = $null
+    if ($design.PSObject.Properties.Name -contains 'variant' -and $null -ne $design.variant) {
+        $parentValue = $design.variant
+    } elseif ($design.PSObject.Properties.Name -contains 'parent' -and $null -ne $design.parent) {
+        $parentValue = $design.parent
+    }
+    if ($null -ne $parentValue) {
+        # Parent will be resolved in third pass (name to GUID)
+        $migrated.parent = $parentValue
     }
     if ($design.PSObject.Properties.Name -contains 'isAbstract' -and $null -ne $design.isAbstract) {
         $migrated.isAbstract = $design.isAbstract
@@ -525,21 +601,34 @@ function Migrate-Design {
     if ($design.PSObject.Properties.Name -contains 'authors' -and $null -ne $design.authors -and $design.authors.Count -gt 0) {
         # Authors might be strings (references) or objects (inline definitions)
         if ($design.authors[0] -is [string]) {
+            # Already references, keep as-is (TODO: might need to convert to { guid } format)
             $migrated.authors = $design.authors
         } else {
-            $migrated.authors = @($design.authors | ForEach-Object { Migrate-Author $_ })
+            # Inline author objects - convert to ID references
+            $migratedAuthors = @($design.authors | ForEach-Object { Migrate-Author $_ })
+            $migrated.authors = @($migratedAuthors | ForEach-Object { @{ guid = $_.guid } })
         }
     }
     if ($design.PSObject.Properties.Name -contains 'concepts' -and $null -ne $design.concepts -and $design.concepts.Count -gt 0) {
         $migrated.concepts = $design.concepts
     }
     
-    $pieces = Migrate-Pieces $design.pieces
+    # First pass: migrate pieces and build piece ID to GUID map
+    $pieceIdToGuidMap = @{}
+    $pieces = Migrate-Pieces $design.pieces $typeNameToGuidMap $designNameToGuidMap
     if ($null -ne $pieces) {
         $migrated.pieces = $pieces
+        # Build mapping from old piece IDs to new GUIDs
+        for ($i = 0; $i -lt $design.pieces.Count; $i++) {
+            $oldId = if ($design.pieces[$i].PSObject.Properties.Name -contains 'id_') { $design.pieces[$i].id_ } else { $design.pieces[$i].id }
+            if ($null -ne $oldId) {
+                $pieceIdToGuidMap[$oldId] = $pieces[$i].guid
+            }
+        }
     }
     
-    $connections = Migrate-Connections $design.connections
+    # Migrate connections using the piece and port mappings
+    $connections = Migrate-Connections $design.connections $pieceIdToGuidMap $portIdToGuidMap
     if ($null -ne $connections) {
         $migrated.connections = $connections
     }
@@ -549,9 +638,12 @@ function Migrate-Design {
         $migrated.props = $props
     }
     
-    $location = Migrate-Location $design.location
-    if ($null -ne $location) {
-        $migrated.location = $location
+    # Convert location to ID reference
+    if ($design.PSObject.Properties.Name -contains 'location' -and $null -ne $design.location) {
+        $migratedLocation = Migrate-Location $design.location
+        if ($null -ne $migratedLocation) {
+            $migrated.location = @{ guid = $migratedLocation.guid }
+        }
     }
     
     $attrs = Migrate-Attributes $design.attributes
@@ -720,15 +812,65 @@ function Migrate-Kit {
         $migrated.description = $kit.description
     }
     
-    # Migrate nested collections
+    # Create name->guid mappings for types and designs
+    $typeNameToGuidMap = @{}
+    $designNameToGuidMap = @{}
+    $portIdToGuidMap = @{}
+    $authorNameToGuidMap = @{}
+    $locationIdToGuidMap = @{}
+    
+    # First pass: migrate types and build type name map and port ID map
     if ($kit.PSObject.Properties.Name -contains 'types' -and $null -ne $kit.types -and $kit.types.Count -gt 0) {
-        $migrated.types = @($kit.types | ForEach-Object { Migrate-Type $_ })
+        $migrated.types = @($kit.types | ForEach-Object { 
+            $migratedType = Migrate-Type $_ $typeNameToGuidMap
+            # Build port ID to GUID map from this type's ports
+            if ($_.PSObject.Properties.Name -contains 'ports' -and $null -ne $_.ports) {
+                for ($i = 0; $i -lt $_.ports.Count; $i++) {
+                    $oldPortId = if ($_.ports[$i].PSObject.Properties.Name -contains 'id_') { $_.ports[$i].id_ } else { $null }
+                    if ($null -ne $oldPortId -and $null -ne $migratedType.ports -and $i -lt $migratedType.ports.Count) {
+                        $portIdToGuidMap[$oldPortId] = $migratedType.ports[$i].guid
+                    }
+                }
+            }
+            $migratedType
+        })
     }
     
+    # Second pass: migrate designs with type/design/port maps
     if ($kit.PSObject.Properties.Name -contains 'designs' -and $null -ne $kit.designs -and $kit.designs.Count -gt 0) {
-        $migrated.designs = @($kit.designs | ForEach-Object { Migrate-Design $_ })
+        $migrated.designs = @($kit.designs | ForEach-Object { Migrate-Design $_ $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap })
     }
     
+    # Third pass: resolve parent references in types and designs
+    if ($null -ne $migrated.types) {
+        foreach ($type in $migrated.types) {
+            if ($type.PSObject.Properties.Name -contains 'parent' -and $null -ne $type.parent) {
+                # Parent is currently a name, convert to GUID
+                if ($typeNameToGuidMap.ContainsKey($type.parent)) {
+                    $type.parent = $typeNameToGuidMap[$type.parent]
+                } else {
+                    # Parent not found, remove the reference
+                    $type.PSObject.Properties.Remove('parent')
+                }
+            }
+        }
+    }
+    
+    if ($null -ne $migrated.designs) {
+        foreach ($design in $migrated.designs) {
+            if ($design.PSObject.Properties.Name -contains 'parent' -and $null -ne $design.parent) {
+                # Parent is currently a name, convert to GUID
+                if ($designNameToGuidMap.ContainsKey($design.parent)) {
+                    $design.parent = $designNameToGuidMap[$design.parent]
+                } else {
+                    # Parent not found, remove the reference
+                    $design.PSObject.Properties.Remove('parent')
+                }
+            }
+        }
+    }
+    
+    # Migrate other collections
     if ($kit.PSObject.Properties.Name -contains 'qualities' -and $null -ne $kit.qualities -and $kit.qualities.Count -gt 0) {
         $migrated.qualities = @($kit.qualities | ForEach-Object { Migrate-Quality $_ })
     }
@@ -743,8 +885,18 @@ function Migrate-Kit {
             # Keep as strings (references)
             $migrated.authors = $kit.authors
         } else {
-            # Migrate author objects
-            $migrated.authors = @($kit.authors | ForEach-Object { Migrate-Author $_ })
+            # Migrate author objects and convert to ID references
+            $migratedAuthors = @($kit.authors | ForEach-Object { Migrate-Author $_ })
+            # Convert to array of { guid: "..." } references
+            $migrated.authors = @($migratedAuthors | ForEach-Object { @{ guid = $_.guid } })
+        }
+    }
+    
+    # Convert location to ID reference if present
+    if ($kit.PSObject.Properties.Name -contains 'location' -and $null -ne $kit.location) {
+        $migratedLocation = Migrate-Location $kit.location
+        if ($null -ne $migratedLocation) {
+            $migrated.location = @{ guid = $migratedLocation.guid }
         }
     }
     
@@ -778,11 +930,17 @@ function Migrate-JsonFile {
         }
         elseif ($FilePath -match 'type_') {
             Write-Host "  Detected: Type" -ForegroundColor Gray
-            $migrated = Migrate-Type $content
+            # Create empty map for standalone type files
+            $typeNameToGuidMap = @{}
+            $migrated = Migrate-Type $content $typeNameToGuidMap
         }
         elseif ($FilePath -match 'design_') {
             Write-Host "  Detected: Design" -ForegroundColor Gray
-            $migrated = Migrate-Design $content
+            # Create empty maps for standalone design files
+            $designNameToGuidMap = @{}
+            $typeNameToGuidMap = @{}
+            $portIdToGuidMap = @{}
+            $migrated = Migrate-Design $content $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap
         }
         else {
             Write-Warning "  Unknown file type, skipping"

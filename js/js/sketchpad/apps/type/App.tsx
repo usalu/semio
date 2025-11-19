@@ -2117,7 +2117,7 @@ const AuthorsSectionForm: FC = () => {
   const kit = useKit() as Kit;
 
   const updateAuthors = (origin: string, authors: string[]) => {
-    kitCommands?.updateType(origin, type.guid, { authors });
+    kitCommands?.updateType(origin, type.guid, { authors: authors.map(a => ({ guid: a })) });
   };
 
   const hasAuthors = type.authors && type.authors.length > 0;
@@ -2137,7 +2137,7 @@ const AuthorsSectionForm: FC = () => {
                 name: "",
                 email: "",
               });
-              updateAuthors(origin, [...(type.authors || []), newAuthorGuid]);
+              updateAuthors(origin, [...(type.authors || []).map(a => a.guid), newAuthorGuid]);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -2145,19 +2145,19 @@ const AuthorsSectionForm: FC = () => {
       >
         {hasAuthors && (
           <SortableTreeItems
-            items={(type.authors || []).map((authorGuid: string, index: number) => {
-              const author = kit.authors?.find((a: Author) => a.guid === authorGuid);
+            items={(type.authors || []).map((authorId: AuthorId, index: number) => {
+              const author = kit.authors?.find((a: Author) => a.guid === authorId.guid);
               return {
                 id: `author-${index}`,
                 index,
-                guid: authorGuid,
+                guid: authorId.guid,
                 name: author?.name || "",
                 email: author?.email || "",
               };
             })}
             onReorder={(oldIndex, newIndex) => {
               const origin = "semio.sketchpad.app.type.panel.details.authors.reorder";
-              updateAuthors(origin, arrayMove(type.authors!, oldIndex, newIndex));
+              updateAuthors(origin, arrayMove(type.authors!, oldIndex, newIndex).map(a => a.guid));
             }}
           >
             {(item, index) => (
@@ -2175,7 +2175,7 @@ const AuthorsSectionForm: FC = () => {
                       const origin = "semio.sketchpad.app.type.panel.details.authors.remove";
                       updateAuthors(
                         origin,
-                        (type.authors || []).filter((_, i: number) => i !== index),
+                        (type.authors || []).filter((_, i: number) => i !== index).map(a => a.guid),
                       );
                     },
                     id: "semio.sketchpad.common.remove",

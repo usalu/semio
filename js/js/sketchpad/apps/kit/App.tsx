@@ -238,7 +238,7 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
 
   return inverseDiff;
 };
-export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => areSameKit(kitApp.kit, other.kit);
+export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => areSameKit(kitApp.kit.guid, other.kit.guid);
 export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
 
 class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
@@ -2205,8 +2205,8 @@ const AppContent: FC = () => {
           const folderedDesigns = kit.designs?.filter((d: Design) => d.folder === folder.guid) || [];
           const folderedTypes = kit.types?.filter((t: Type) => t.folder === folder.guid) || [];
           const folderedQualities = kit.qualities?.filter((q: Quality) => q.folder === folder.guid) || [];
-          const folderedFiles = kit.files?.filter((f: SemioFile) => f.folder === folder.guid) || [];
-          const folderedSubFolders = kit.folders?.filter((f: Folder) => f.parent === folder.guid) || [];
+          const folderedFiles = kit.files?.filter((f: SemioFile) => f.folder?.guid === folder.guid) || [];
+          const folderedSubFolders = kit.folders?.filter((f: Folder) => f.parent?.guid === folder.guid) || [];
           const folderedArtifacts = folderedDesigns.length + folderedTypes.length + folderedQualities.length + folderedFiles.length + folderedSubFolders.length;
 
           const folderId = `folder-${folder.guid}`;
@@ -2221,7 +2221,7 @@ const AppContent: FC = () => {
             hasChildren: folderedArtifacts > 0,
             isExpanded: expandedRows.has(folderId),
             data: folder,
-            folderId: folder.parent,
+            folderId: folder.parent?.guid,
             parentId: parentRowId,
           });
 
@@ -2643,9 +2643,9 @@ const AppContent: FC = () => {
     } else if (draggedRow.kind === "qualities") {
       currentFolderId = (draggedRow.data as Quality).folder;
     } else if (draggedRow.kind === "files") {
-      currentFolderId = (draggedRow.data as SemioFile).folder;
+      currentFolderId = (draggedRow.data as SemioFile).folder?.guid;
     } else if (draggedRow.kind === "folders") {
-      currentFolderId = (draggedRow.data as Folder).parent;
+      currentFolderId = (draggedRow.data as Folder).parent?.guid;
     }
 
     // If dropped on root and item has parent, allow (to unparent)
@@ -3083,7 +3083,7 @@ const AppContent: FC = () => {
           const resolvePath = (folder: Folder): string => {
             const cached = folderPathCache.get(folder.guid);
             if (cached) return cached;
-            const parentFolder = folder.parent ? folderByGuid.get(folder.parent) : undefined;
+            const parentFolder = folder.parent ? folderByGuid.get(folder.parent.guid) : undefined;
             const path = parentFolder ? `${resolvePath(parentFolder)}/${folder.name}` : folder.name;
             folderPathCache.set(folder.guid, path);
             return path;
@@ -3102,7 +3102,7 @@ const AppContent: FC = () => {
                 const newFolder: Folder = {
                   guid: guid(),
                   name: part,
-                  parent: parentGuid,
+                  parent: parentGuid ? { guid: parentGuid } : undefined,
                   createdAt: new Date(),
                   updatedAt: new Date(),
                 };
@@ -3126,7 +3126,7 @@ const AppContent: FC = () => {
               const extractedFile: SemioFile = {
                 guid: guid(),
                 name: parts[parts.length - 1] || relativePath,
-                folder: parentFolderGuid,
+                folder: parentFolderGuid ? { guid: parentFolderGuid } : undefined,
                 size: fileBlob.size,
                 hash: undefined,
                 createdAt: new Date(),

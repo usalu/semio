@@ -1,222 +1,220 @@
 {
-  "unit": "m",
-  "name": "Base",
-  "stock": 2147483647,
   "virtual": false,
-  "attributes": [
-    {
-      "value": "2",
-      "guid": "67b059ee-41c0-4467-a433-cec3e15c5442",
-      "key": "storey",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
-    },
-    {
-      "value": "3.5",
-      "guid": "f9db172f-ad8e-4b6a-bb17-abd8672a4ef3",
-      "key": "floor height",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
-    },
-    {
-      "value": "4",
-      "guid": "1cf6c206-8dc8-4e73-92ed-54eb153d9fa8",
-      "key": "ground floor height",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
-    },
-    {
-      "value": "2",
-      "guid": "05a7b0a2-e145-4efd-b60e-86d378d055c9",
-      "key": "cores",
-      "definition": ""
-    },
-    {
-      "value": "5.5",
-      "guid": "3de6ced8-496d-41e1-8ca0-2808abcf730a",
-      "key": "core length",
-      "definition": ""
-    },
-    {
-      "value": "5.5",
-      "guid": "6c839502-39f6-4467-b6a3-bbd305ad7ed6",
-      "key": "core width",
-      "definition": ""
-    },
-    {
-      "value": "519.37",
-      "guid": "3c67999a-3bdb-4087-b80b-0030c0de3a0e",
-      "key": "effective floor area",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
-    },
-    {
-      "value": "2856480",
-      "guid": "45f2fadc-dcbb-4244-9f81-cec029b95eac",
-      "key": "construction cost",
-      "definition": ""
-    },
-    {
-      "value": "12984",
-      "guid": "53117b58-31a6-48e2-a4b8-7a40696b2d44",
-      "key": "heating energy demand",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
-    },
-    {
-      "value": "18178",
-      "guid": "1a1d735b-3b2b-472e-8153-eb6d7ff0f3ed",
-      "key": "cooling energy demand",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
-    },
-    {
-      "value": "20774",
-      "guid": "5b932a6e-185b-4b39-b21d-48dd45691bff",
-      "key": "technical equipment energy demand",
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
-    },
-    {
-      "value": "467424",
-      "guid": "fc220580-8a6d-485e-a994-1225c70b9312",
-      "key": "income",
-      "definition": ""
-    },
-    {
-      "value": "46742",
-      "guid": "f8d5eda9-0633-4bd5-be65-fde94cd0cb12",
-      "key": "maintenance expenses",
-      "definition": ""
-    },
-    {
-      "value": "415488",
-      "guid": "784979ad-a03f-49a2-b83c-0c92337a3132",
-      "key": "construction global warming potential",
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
-    }
-  ],
   "description": "A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-  "icon": "icons/base.svg",
+  "updatedAt": "2025-11-18T22:04:05.784Z",
+  "stock": 2147483647,
   "authors": [
     {
-      "name": "Ueli Saluz",
-      "guid": "23154e90-4e56-418e-a6bf-57fb2d60722e",
-      "email": "ueli@semio-tech.org"
+      "guid": "23154e90-4e56-418e-a6bf-57fb2d60722e"
     }
   ],
-  "image": "images/base.png",
-  "ports": [
-    {
-      "mandatory": false,
-      "t": -0.125,
-      "attributes": [
-        {
-          "value": "east",
-          "guid": "1abb9525-efa6-4634-b9d2-32e97c728a16",
-          "key": "core",
-          "definition": ""
-        }
-      ],
-      "guid": "54cbd7f0-fe80-48a4-a98d-ec1725daedc4",
-      "direction": {
-        "y": 0.0,
-        "x": 0.0,
-        "z": 1.0
-      },
-      "description": "The center of the east rectangular core (an elevator and a staircase around it).",
-      "family": "core rectangular bottom",
-      "compatibleFamilies": [
-        "core rectangular top"
-      ],
-      "point": {
-        "y": -7.7,
-        "x": -7.5,
-        "z": 7.5
-      }
-    },
-    {
-      "mandatory": false,
-      "t": 0.125,
-      "attributes": [
-        {
-          "value": "west",
-          "guid": "93ddef00-bdbd-4e3b-844c-74280d46a61f",
-          "key": "core",
-          "definition": ""
-        }
-      ],
-      "guid": "ab1f886e-69e8-4eaa-8c24-493651215ea8",
-      "direction": {
-        "y": 0.0,
-        "x": 0.0,
-        "z": 1.0
-      },
-      "description": "The center of the west rectangular core (an elevator and a staircase around it).",
-      "family": "core rectangular bottom",
-      "compatibleFamilies": [
-        "core rectangular top"
-      ],
-      "point": {
-        "y": -7.7,
-        "x": -18.6,
-        "z": 7.5
-      }
-    }
-  ],
-  "updatedAt": "2025-11-18T21:31:47.209Z",
-  "guid": "94aa150e-0303-48a4-a3a7-dd516185edba",
   "representations": [
     {
-      "file": "representations/base.glb",
-      "guid": "0f1f7e74-d5fd-47a1-9d63-32b580751b86",
       "tags": [
         "model/gltf-binary"
       ],
-      "description": ""
+      "description": "",
+      "guid": "6a5a4a21-0d08-4df1-beab-deec54fafa66",
+      "file": "representations/base.glb"
     },
     {
-      "file": "representations/base_1to500.3dm",
-      "guid": "260f9d0e-eaea-4369-8671-f77445d63f51",
       "tags": [
         "model/vnd.3dm",
         "1to500"
       ],
-      "description": ""
+      "description": "",
+      "guid": "67f236ec-4de6-41d0-97e0-28d7c8898ee2",
+      "file": "representations/base_1to500.3dm"
     },
     {
-      "file": "representations/base_1to200.3dm",
-      "guid": "4a993f8f-3dd0-4fd5-85f7-42add704f34f",
       "tags": [
         "model/vnd.3dm",
         "1to200"
       ],
-      "description": ""
+      "description": "",
+      "guid": "be99a4d5-a328-4e55-8e5f-e8969e77ea58",
+      "file": "representations/base_1to200.3dm"
     },
     {
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5267da44d",
-      "guid": "a51935a6-56ee-4aa9-a1b8-993988fd3d89",
       "tags": [
         "application/octet-stream",
         "model/vnd.speckle+json",
         "model/vnd.3dm",
         "1to500"
       ],
-      "description": ""
+      "description": "",
+      "guid": "a04d93ed-f7de-45ea-98ce-70424724f2a0",
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5267da44d"
     },
     {
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/b394acfd5c",
-      "guid": "4db8046f-36aa-4689-836e-e830e112dcdb",
       "tags": [
         "application/octet-stream",
         "model/vnd.speckle+json",
         "model/vnd.3dm",
         "1to200"
       ],
-      "description": ""
+      "description": "",
+      "guid": "f13c9bad-9d0b-4d94-b931-2d7b16723b94",
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/b394acfd5c"
     },
     {
-      "file": "representations/base_collider.glb",
-      "guid": "bcf5e4e0-9f79-455e-b4cb-66aa64c11c2d",
       "tags": [
         "model/gltf-binary",
         "collider"
       ],
-      "description": ""
+      "description": "",
+      "guid": "9ca92884-4b64-4ea7-b186-70d15d73501d",
+      "file": "representations/base_collider.glb"
     }
   ],
-  "createdAt": "2025-11-18T21:31:47.209Z"
+  "createdAt": "2025-11-18T22:04:05.784Z",
+  "image": "images/base.png",
+  "icon": "icons/base.svg",
+  "ports": [
+    {
+      "attributes": [
+        {
+          "value": "east",
+          "definition": "",
+          "guid": "1b1b0377-45e8-472b-b3e6-5179ebe9e016",
+          "key": "core"
+        }
+      ],
+      "t": -0.125,
+      "direction": {
+        "y": 0.0,
+        "z": 1.0,
+        "x": 0.0
+      },
+      "point": {
+        "y": -7.7,
+        "z": 7.5,
+        "x": -7.5
+      },
+      "mandatory": false,
+      "guid": "dd7cba00-b149-4deb-b55a-98e7f332bb0c",
+      "description": "The center of the east rectangular core (an elevator and a staircase around it).",
+      "compatibleFamilies": [
+        "core rectangular top"
+      ],
+      "family": "core rectangular bottom"
+    },
+    {
+      "attributes": [
+        {
+          "value": "west",
+          "definition": "",
+          "guid": "fdb7a078-219f-4225-b321-11e74d243ffd",
+          "key": "core"
+        }
+      ],
+      "t": 0.125,
+      "direction": {
+        "y": 0.0,
+        "z": 1.0,
+        "x": 0.0
+      },
+      "point": {
+        "y": -7.7,
+        "z": 7.5,
+        "x": -18.6
+      },
+      "mandatory": false,
+      "guid": "c54f87fc-28f7-44bc-b9f2-add0d868f524",
+      "description": "The center of the west rectangular core (an elevator and a staircase around it).",
+      "compatibleFamilies": [
+        "core rectangular top"
+      ],
+      "family": "core rectangular bottom"
+    }
+  ],
+  "name": "Base",
+  "attributes": [
+    {
+      "value": "2",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey",
+      "guid": "354978d6-e02f-4973-99fc-6f954912d459",
+      "key": "storey"
+    },
+    {
+      "value": "3.5",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
+      "guid": "802a79dc-be3d-455c-88c4-d846f2734d80",
+      "key": "floor height"
+    },
+    {
+      "value": "4",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
+      "guid": "b08d615b-5d89-4058-bd0f-a134ab8f25be",
+      "key": "ground floor height"
+    },
+    {
+      "value": "2",
+      "definition": "",
+      "guid": "913b1859-54ff-4531-b65a-787e0494013f",
+      "key": "cores"
+    },
+    {
+      "value": "5.5",
+      "definition": "",
+      "guid": "e3c0b23d-601f-48cd-866e-4db6958a001f",
+      "key": "core length"
+    },
+    {
+      "value": "5.5",
+      "definition": "",
+      "guid": "33d5d406-50f3-4d9e-b5f8-067279b54882",
+      "key": "core width"
+    },
+    {
+      "value": "519.37",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
+      "guid": "9460f944-f713-4dcf-88fd-b43b82d052cb",
+      "key": "effective floor area"
+    },
+    {
+      "value": "2856480",
+      "definition": "",
+      "guid": "cf36b95f-d9f2-4556-8251-8dbe95410765",
+      "key": "construction cost"
+    },
+    {
+      "value": "12984",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
+      "guid": "d1b6408c-b6fe-451f-af29-509019e7751f",
+      "key": "heating energy demand"
+    },
+    {
+      "value": "18178",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
+      "guid": "cd829b99-9fc7-41a8-ac12-5692308cdc05",
+      "key": "cooling energy demand"
+    },
+    {
+      "value": "20774",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
+      "guid": "916c562a-216d-45f6-80bc-216191d6dd7a",
+      "key": "technical equipment energy demand"
+    },
+    {
+      "value": "467424",
+      "definition": "",
+      "guid": "da29f541-cc10-4153-9991-002935ad862c",
+      "key": "income"
+    },
+    {
+      "value": "46742",
+      "definition": "",
+      "guid": "9143a11e-31df-4667-86e5-4cdddb280c87",
+      "key": "maintenance expenses"
+    },
+    {
+      "value": "415488",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
+      "guid": "014acf72-78f3-4ed3-a632-f061d6c3bd79",
+      "key": "construction global warming potential"
+    }
+  ],
+  "guid": "d8e9a90f-9250-4d11-a2f2-47fc6b1c0a50",
+  "unit": "m"
 }

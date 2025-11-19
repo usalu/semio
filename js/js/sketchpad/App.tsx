@@ -111,6 +111,7 @@ import {
   PropDiff,
   Quality,
   QualityDiff,
+  QualityId,
   Representation,
   RepresentationDiff,
   File as SemioFile,
@@ -1877,7 +1878,7 @@ class FileStore {
 
     this.guid = file.guid;
     this.name = file.name;
-    this.folder = file.folder;
+    this.folder = file.folder?.guid;
     this.remote = file.remote;
     this.size = file.size;
     this.fileHash = file.hash;
@@ -1974,7 +1975,7 @@ class FileStore {
     const currentData = {
       guid: this.guid,
       name: this.name,
-      folder: this.folder,
+      folder: this.folder ? { guid: this.folder } : undefined,
       remote: this.remote,
       size: this.size,
       hash: this.fileHash,
@@ -1995,7 +1996,7 @@ class FileStore {
 
   change = (diff: FileDiff) => {
     if (diff.name !== undefined) this.name = diff.name;
-    if (diff.folder !== undefined) this.folder = diff.folder;
+    if (diff.folder !== undefined) this.folder = diff.folder?.guid;
     if (diff.remote !== undefined) this.remote = diff.remote;
     if (diff.size !== undefined) this.size = diff.size;
     if (diff.hash !== undefined) this.fileHash = diff.hash;
@@ -2032,7 +2033,7 @@ class FolderStore {
     this.yFolder = yFolder;
     this.guid = folder.guid;
     this.name = folder.name;
-    this.parent = folder.parent;
+    this.parent = folder.parent?.guid;
     this.description = folder.description;
     this.createdAt = folder.createdAt;
     this.updatedAt = folder.updatedAt;
@@ -2107,7 +2108,7 @@ class FolderStore {
     const currentData = {
       guid: this.guid,
       name: this.name,
-      parent: this.parent,
+      parent: this.parent ? { guid: this.parent } : undefined,
       description: this.description,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
@@ -2126,7 +2127,7 @@ class FolderStore {
 
   change = (diff: FolderDiff) => {
     if (diff.name !== undefined) this.name = diff.name;
-    if (diff.parent !== undefined) this.parent = diff.parent;
+    if (diff.parent !== undefined) this.parent = diff.parent?.guid;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.createdAt !== undefined) this.createdAt = diff.createdAt;
     if (diff.updatedAt !== undefined) this.updatedAt = diff.updatedAt;
@@ -2397,7 +2398,7 @@ class PropStore {
   constructor(yProp: YProp, prop: Prop) {
     this.yProp = yProp;
     this.guid = prop.guid;
-    this.key = prop.key;
+    this.quality = prop.quality;
     this.value = prop.value;
     this.unit = prop.unit;
   }
@@ -2409,11 +2410,11 @@ class PropStore {
     this.yProp.set("guid", guid);
   }
 
-  get key(): string {
-    return this.yProp.get("key") as string;
+  get quality(): QualityId {
+    return { guid: this.yProp.get("quality") as string };
   }
-  set key(key: string) {
-    this.yProp.set("key", key);
+  set quality(quality: QualityId) {
+    this.yProp.set("quality", quality.guid);
   }
 
   get value(): string | undefined {
@@ -2441,7 +2442,7 @@ class PropStore {
   snapshot(): Prop {
     const currentHash = this.hash({
       guid: this.guid,
-      key: this.key,
+      quality: this.quality,
       value: this.value || "",
       unit: this.unit,
     });
@@ -2452,7 +2453,7 @@ class PropStore {
 
     const prop: Prop = {
       guid: this.guid,
-      key: this.key,
+      quality: this.quality,
       value: this.value || "",
       unit: this.unit,
     };
@@ -2463,7 +2464,7 @@ class PropStore {
   }
 
   change = (diff: PropDiff) => {
-    if (diff.key !== undefined) this.key = diff.key;
+    if (diff.quality !== undefined) this.quality = diff.quality;
     if (diff.value !== undefined) this.value = diff.value;
     if (diff.unit !== undefined) this.unit = diff.unit;
   };
@@ -2765,7 +2766,7 @@ export class TypeStore {
     this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
     if (type.authors) {
       for (const author of type.authors) {
-        const authorStore = this.parent.author(author);
+        const authorStore = this.parent.author(author.guid);
         this.authors.set(authorStore.guid, authorStore);
         this.yAuthors.push([authorStore.guid]);
       }
@@ -2963,7 +2964,7 @@ export class TypeStore {
       icon: this.icon,
       image: this.image,
       description: this.description,
-      authors: Array.from(this.authors.values()).map((a) => a.guid),
+      authors: Array.from(this.authors.values()).map((a) => ({ guid: a.guid })),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       representations: Array.from(this.representations.values()).map((rep) => rep.snapshot()),
       ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
@@ -3007,8 +3008,8 @@ export class TypeStore {
       if (diff.authors !== undefined) {
         this.yAuthors.delete(0, this.yAuthors.length);
         this.authors = new Map(
-          diff.authors.map((authorGuid) => {
-            const author = this.parent.author(authorGuid);
+          diff.authors.map((authorId) => {
+            const author = this.parent.author(authorId.guid);
             return [author.guid, author];
           }),
         );
@@ -3299,10 +3300,10 @@ class PieceStore {
 
     this.localId = piece.guid;
     if (piece.type) {
-      const type = this.parent.parent.type(piece.type);
+      const type = this.parent.parent.type(piece.type.guid);
       if (type) this.yPiece.set("type", type.guid);
     } else {
-      const design = this.parent.parent.design(piece.design!);
+      const design = this.parent.parent.design(piece.design!.guid);
       this.yPiece.set("design", design.guid);
     }
     this.scale = piece.scale;
@@ -3442,8 +3443,8 @@ class PieceStore {
     const currentData = {
       guid: this.guid,
       id_: this.localId,
-      type: this.type,
-      design: this.design,
+      type: this.type ? { guid: this.type } : undefined,
+      design: this.design ? { guid: this.design } : undefined,
       scale: this.scale,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -3466,8 +3467,8 @@ class PieceStore {
 
   change = (diff: PieceDiff) => {
     if (diff.guid !== undefined) this.guid = diff.guid;
-    if (diff.type !== undefined) this.type = diff.type;
-    if (diff.design !== undefined) this.design = diff.design;
+    if (diff.type !== undefined) this.type = diff.type?.guid;
+    if (diff.design !== undefined) this.design = diff.design?.guid;
     if (diff.scale !== undefined) this.scale = diff.scale;
     if (diff.isHidden !== undefined) this.isHidden = diff.isHidden;
     if (diff.isLocked !== undefined) this.isLocked = diff.isLocked;
@@ -3648,7 +3649,7 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
   if (!pieceGuid || !design.connections) return null;
 
-  return design.connections.find((c: Connection) => c.connecting.piece === pieceGuid || c.connected.piece === pieceGuid) ?? null;
+  return design.connections.find((c: Connection) => c.connecting.piece.guid === pieceGuid || c.connected.piece.guid === pieceGuid) ?? null;
 }
 
 // usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
@@ -3674,7 +3675,7 @@ class GroupStore {
 
     if (group.pieces) {
       const yPieces = new Y.Array<string>();
-      yPieces.insert(0, group.pieces);
+      yPieces.insert(0, group.pieces.map(p => p.guid));
       this.yGroup.set("pieces", yPieces);
     }
   }
@@ -3723,7 +3724,7 @@ class GroupStore {
 
   snapshot = (): Group => {
     const currentData = {
-      pieces: this.pieces,
+      pieces: this.pieces.map(guid => ({ guid })),
       color: this.color,
       name: this.name,
       description: this.description,
@@ -3739,7 +3740,7 @@ class GroupStore {
   };
 
   change = (diff: GroupDiff) => {
-    if (diff.pieces !== undefined) this.pieces = diff.pieces;
+    if (diff.pieces !== undefined) this.pieces = diff.pieces.map(p => p.guid);
     if (diff.color !== undefined) this.color = diff.color;
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.description !== undefined) this.description = diff.description;
@@ -3770,14 +3771,14 @@ class SideStore {
     this.guid = side.guid;
 
     // Store piece UUID
-    const pieceStore = this.parent.piece(side.piece);
+    const pieceStore = this.parent.piece(side.piece.guid);
     if (pieceStore) {
       this.ySide.set("piece", pieceStore.guid);
     }
 
     // Store designPiece UUID if present
     if (side.designPiece) {
-      const designPieceStore = this.parent.piece(side.designPiece);
+      const designPieceStore = this.parent.piece(side.designPiece.guid);
       if (designPieceStore) {
         this.ySide.set("designPiece", designPieceStore.guid);
       }
@@ -3789,7 +3790,7 @@ class SideStore {
       if (typeGuid) {
         const typeStore = this.parent.parent.type(typeGuid);
         if (typeStore) {
-          const portStore = typeStore.ports.get(side.port);
+          const portStore = typeStore.ports.get(side.port.guid);
           if (portStore) {
             this.ySide.set("port", portStore.guid);
           }
@@ -3872,9 +3873,9 @@ class SideStore {
   snapshot = (): Side => {
     const currentData = {
       guid: this.guid,
-      piece: this.piece,
-      designPiece: this.designPiece,
-      port: this.port,
+      piece: { guid: this.piece },
+      designPiece: this.designPiece ? { guid: this.designPiece } : undefined,
+      port: { guid: this.port },
     };
     const currentHash = this.hash(currentData);
 
@@ -3891,9 +3892,9 @@ class SideStore {
   };
 
   change = (diff: SideDiff) => {
-    if (diff.piece !== undefined) this.piece = diff.piece;
-    if (diff.designPiece !== undefined) this.designPiece = diff.designPiece;
-    if (diff.port !== undefined) this.port = diff.port;
+    if (diff.piece !== undefined) this.piece = diff.piece.guid;
+    if (diff.designPiece !== undefined) this.designPiece = diff.designPiece?.guid;
+    if (diff.port !== undefined) this.port = diff.port.guid;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -4131,7 +4132,7 @@ class StatStore {
   constructor(yStat: YStat, stat: Stat) {
     this.yStat = yStat;
     this.guid = stat.guid;
-    this.key = stat.key;
+    this.quality = stat.quality;
     this.unit = stat.unit;
     this.min = stat.min;
     this.minExcluded = stat.minExcluded;
@@ -4146,11 +4147,11 @@ class StatStore {
     this.yStat.set("guid", guid);
   }
 
-  get key(): string {
-    return this.yStat.get("key") as string;
+  get quality(): QualityId {
+    return { guid: this.yStat.get("quality") as string };
   }
-  set key(key: string) {
-    this.yStat.set("key", key);
+  set quality(quality: QualityId) {
+    this.yStat.set("quality", quality.guid);
   }
 
   get unit(): string | undefined {
@@ -4209,7 +4210,7 @@ class StatStore {
   snapshot(): Stat {
     const currentData = {
       guid: this.guid,
-      key: this.key,
+      quality: this.quality,
       unit: this.unit,
       min: this.min,
       minExcluded: this.minExcluded,
@@ -4226,7 +4227,7 @@ class StatStore {
 
   change = (diff: StatDiff) => {
     if (diff.guid !== undefined) this.guid = diff.guid;
-    if (diff.key !== undefined) this.key = diff.key;
+    if (diff.quality !== undefined) this.quality = diff.quality;
     if (diff.unit !== undefined) this.unit = diff.unit;
     if (diff.min !== undefined) this.min = diff.min;
     if (diff.minExcluded !== undefined) this.minExcluded = diff.minExcluded;
@@ -4342,7 +4343,7 @@ export class DesignStore {
     }
 
     if (design.activeLayer) {
-      this.yDesign.set("activeLayer", design.activeLayer);
+      this.yDesign.set("activeLayer", design.activeLayer.guid);
     }
 
     this.yGroups = this.yDesign.set("groups", new Y.Array<YGroup>());
@@ -4365,9 +4366,9 @@ export class DesignStore {
 
     this.authors = new Map();
     if (design.authors) {
-      design.authors.forEach((authorGuid) => {
-        const authorStore = this.parent.author(authorGuid);
-        this.authors.set(authorGuid, authorStore);
+      design.authors.forEach((authorId) => {
+        const authorStore = this.parent.author(authorId.guid);
+        this.authors.set(authorId.guid, authorStore);
       });
     }
     this.yAuthors = this.yDesign.set("authors", new Y.Array<YAuthorUuid>());
@@ -4491,14 +4492,14 @@ export class DesignStore {
     const yStat = new Y.Map() as YStat;
     this.yStats.push([yStat]);
     const yStatStore = new StatStore(yStat, stat);
-    this.stats.set(stat.key, yStatStore);
+    this.stats.set(stat.guid, yStatStore);
   }
 
   createProp(prop: Prop): void {
     const yProp = new Y.Map() as YProp;
     this.yProps.push([yProp]);
     const yPropStore = new PropStore(yProp, prop);
-    this.props.set(prop.key, yPropStore);
+    this.props.set(prop.guid, yPropStore);
   }
 
   createLayer(layer: Layer): void {
@@ -4568,10 +4569,10 @@ export class DesignStore {
       stats: Array.from(this.stats.values()).map((stat) => stat.snapshot()),
       props: Array.from(this.props.values()).map((prop) => prop.snapshot()),
       layers: Array.from(this.layers.values()).map((layer) => layer.snapshot()),
-      activeLayer: this.yDesign.get("activeLayer") as string | undefined,
+      activeLayer: this.yDesign.get("activeLayer") ? { guid: this.yDesign.get("activeLayer") as string } : undefined,
       groups: Array.from(this.groups.values()).map((group) => group.snapshot()),
       location: this.location?.snapshot(),
-      authors: Array.from(this.authors.values()).map((author) => author.guid),
+      authors: Array.from(this.authors.values()).map((author) => ({ guid: author.guid })),
       concepts: (this.yDesign.get("concepts") as Y.Array<string> | undefined)?.toArray(),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       createdAt: this.createdAt,
@@ -4650,7 +4651,7 @@ export class DesignStore {
             // Find connection by composite id (connected/connecting pieces)
             const connectionStore = Array.from(this.connections.values()).find((c) => {
               const snapshot = c.snapshot();
-              return snapshot.connected.piece === id.connected.piece && snapshot.connecting.piece === id.connecting.piece;
+              return snapshot.connected.piece.guid === id.connected.piece && snapshot.connecting.piece.guid === id.connecting.piece;
             });
             if (connectionStore) {
               connectionStore.change(connectionDiff);
@@ -4662,7 +4663,7 @@ export class DesignStore {
             // Find connection by composite id
             const connectionStore = Array.from(this.connections.values()).find((c) => {
               const snapshot = c.snapshot();
-              return snapshot.connected.piece === compositeId.connected.piece && snapshot.connecting.piece === compositeId.connecting.piece;
+              return snapshot.connected.piece.guid === compositeId.connected.piece && snapshot.connecting.piece.guid === compositeId.connecting.piece;
             });
             if (connectionStore) {
               const connectionArray = Array.from(this.connections.values());
@@ -4761,7 +4762,7 @@ export class DesignStore {
 
     if (diff.activeLayer !== undefined) {
       if (diff.activeLayer) {
-        this.yDesign.set("activeLayer", diff.activeLayer);
+        this.yDesign.set("activeLayer", diff.activeLayer.guid);
       } else {
         this.yDesign.delete("activeLayer");
       }
@@ -5415,7 +5416,7 @@ export class KitStore {
   }
 
   private getFileStoragePath(file: SemioFile): string {
-    const folderPath = this.resolveFolderPath(file.folder);
+    const folderPath = this.resolveFolderPath(file.folder?.guid);
     return folderPath ? `${folderPath}/${file.name}` : file.name;
   }
 
@@ -6103,11 +6104,11 @@ export const kitCommands = {
         return { diff: { qualities: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
       }
       case "file": {
-        const folderDiff = { folder: folderGuid };
+        const folderDiff = { folder: folderGuid ? { guid: folderGuid } : undefined };
         return { diff: { files: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
       }
       case "folder": {
-        const parentDiff = { parent: folderGuid };
+        const parentDiff = { parent: folderGuid ? { guid: folderGuid } : undefined };
         return { diff: { folders: { updated: [{ id: artifactGuid, diff: parentDiff }] } } };
       }
     }
@@ -9562,7 +9563,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const folder = allFolders.find((f) => f.guid === currentFolderId);
       if (!folder) break;
       chain.unshift(folder);
-      currentFolderId = folder.parent;
+      currentFolderId = folder.parent?.guid;
     }
     return chain;
   }, [design, allDesigns, allFolders]);
@@ -9590,7 +9591,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const folder = allFolders.find((f) => f.guid === currentFolderId);
       if (!folder) break;
       chain.unshift(folder);
-      currentFolderId = folder.parent;
+      currentFolderId = folder.parent?.guid;
     }
     return chain;
   }, [type, allTypes, allFolders]);

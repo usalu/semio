@@ -1,160 +1,158 @@
 {
-  "unit": "m",
-  "name": "Cylindric Capital",
-  "stock": 2147483647,
   "virtual": false,
-  "attributes": [
-    {
-      "value": "south west",
-      "guid": "5c057908-a85d-46d9-8638-cea0cc057bd0",
-      "key": "peak",
-      "definition": ""
-    },
-    {
-      "value": "6.5",
-      "guid": "5649ac3d-2607-45f0-a5fb-08807f74b3cf",
-      "key": "diameter",
-      "definition": ""
-    },
-    {
-      "value": "5.5",
-      "guid": "1d1edea0-b799-40c9-9441-9bf9fbb7c9c2",
-      "key": "height side",
-      "definition": ""
-    },
-    {
-      "value": "1",
-      "guid": "fb11cd96-cffe-4bde-be1f-aa2577fff828",
-      "key": "height low",
-      "definition": ""
-    },
-    {
-      "value": "0.3",
-      "guid": "a778b9cc-55b4-4be0-a13d-6c34e28c2ba9",
-      "key": "wall thickness",
-      "definition": ""
-    },
-    {
-      "value": "123029",
-      "guid": "0582a9fc-990e-4da1-812b-4b531733d0e8",
-      "key": "construction cost",
-      "definition": ""
-    },
-    {
-      "value": "820",
-      "guid": "9f8567a6-b4c2-4d20-8348-9cd39476284e",
-      "key": "maintenance expenses",
-      "definition": ""
-    },
-    {
-      "value": "8202",
-      "guid": "c977de70-084f-49e8-823a-22932839f88e",
-      "key": "construction global warming potential",
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
-    }
-  ],
   "description": "A roof that has the skin of a cut extruded cylinder.",
-  "icon": "icons/cylindric-capital.svg",
+  "updatedAt": "2025-11-18T22:04:05.888Z",
+  "stock": 2147483647,
   "authors": [
     {
-      "name": "Ueli Saluz",
-      "guid": "5873bb43-818f-41a3-9b67-abab9b5fde41",
-      "email": "ueli@semio-tech.org"
+      "guid": "5873bb43-818f-41a3-9b67-abab9b5fde41"
     }
   ],
-  "image": "images/cylindric-capital.png",
-  "ports": {
-    "mandatory": false,
-    "t": 0.0,
-    "attributes": [
-      {
-        "value": "",
-        "guid": "c0738615-5341-449c-8b10-fa95a293541b",
-        "key": "bottom",
-        "definition": ""
-      },
-      {
-        "value": "180",
-        "guid": "a9256f90-cf14-475a-8fdf-5a6bd94e665a",
-        "key": "wasp rotation",
-        "definition": ""
-      }
-    ],
-    "guid": "e7b9f9b4-3b4e-4525-ad8e-c4c542d2d1c7",
-    "direction": {
-      "y": 0.0,
-      "x": 0.0,
-      "z": -1.0
-    },
-    "description": "The center of the bottom.",
-    "family": "roof circular top",
-    "compatibleFamilies": [
-      "roof circular bottom"
-    ],
-    "point": {
-      "y": 0.0,
-      "x": 0.0,
-      "z": 0.0
-    }
-  },
-  "updatedAt": "2025-11-18T21:31:47.296Z",
-  "guid": "589ebfa8-a364-45fd-b11f-31c4ef6dee5c",
   "representations": [
     {
-      "file": "representations/cylindric-capital.glb",
-      "guid": "c9909c59-09e6-4943-9c2f-5b9c067abde2",
       "tags": [
         "model/gltf-binary"
       ],
-      "description": ""
+      "description": "",
+      "guid": "8b422514-d8d4-4754-a9e4-15b2db718b97",
+      "file": "representations/cylindric-capital.glb"
     },
     {
-      "file": "representations/cylindric-capital_1to500.3dm",
-      "guid": "c84ff42e-cfd1-4fe6-aea2-73ddec21de57",
       "tags": [
         "model/vnd.3dm",
         "1to500"
       ],
-      "description": ""
+      "description": "",
+      "guid": "33699620-627c-4930-b43a-23fea0a8b4f5",
+      "file": "representations/cylindric-capital_1to500.3dm"
     },
     {
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
-      "guid": "b442253b-fdae-445e-9bfc-fedb4f717c0a",
       "tags": [
         "model/vnd.3dm",
         "1to500",
         "model/vnd.speckle+json"
       ],
-      "description": ""
+      "description": "",
+      "guid": "07a1ba4f-b624-4b04-83df-a62a8dd3c0e2",
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120"
     },
     {
-      "file": "representations/cylindric-capital_1to200.3dm",
-      "guid": "fde88567-4578-4ea4-bfdf-1a994a6d0cb4",
       "tags": [
         "model/vnd.3dm",
         "1to200"
       ],
-      "description": ""
+      "description": "",
+      "guid": "3ff60670-adb3-4906-b664-1e67c8eec311",
+      "file": "representations/cylindric-capital_1to200.3dm"
     },
     {
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
-      "guid": "5dce5223-51a6-4b42-94a7-91c2c3b41221",
       "tags": [
         "model/vnd.3dm",
         "1to200",
         "model/vnd.speckle+json"
       ],
-      "description": ""
+      "description": "",
+      "guid": "69f87634-2efe-4258-b0d0-2e347478a799",
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a"
     },
     {
-      "file": "representations/cylindric-capital_collider.glb",
-      "guid": "98050f08-8f63-43f5-a0bc-300b3856c692",
       "tags": [
         "model/gltf-binary",
         "collider"
       ],
-      "description": ""
+      "description": "",
+      "guid": "0df67342-19fb-40ee-b219-c5c36aa9b025",
+      "file": "representations/cylindric-capital_collider.glb"
     }
   ],
-  "createdAt": "2025-11-18T21:31:47.296Z"
+  "createdAt": "2025-11-18T22:04:05.888Z",
+  "image": "images/cylindric-capital.png",
+  "icon": "icons/cylindric-capital.svg",
+  "ports": {
+    "attributes": [
+      {
+        "value": "",
+        "definition": "",
+        "guid": "3cf0f87f-5631-4b9d-972a-9335b7490f3b",
+        "key": "bottom"
+      },
+      {
+        "value": "180",
+        "definition": "",
+        "guid": "6ad11650-8c26-4a1f-87df-826c31de4bd6",
+        "key": "wasp rotation"
+      }
+    ],
+    "t": 0.0,
+    "direction": {
+      "y": 0.0,
+      "z": -1.0,
+      "x": 0.0
+    },
+    "point": {
+      "y": 0.0,
+      "z": 0.0,
+      "x": 0.0
+    },
+    "mandatory": false,
+    "guid": "de4430ed-af87-4ecc-92cc-eee7597ac5ce",
+    "description": "The center of the bottom.",
+    "compatibleFamilies": [
+      "roof circular bottom"
+    ],
+    "family": "roof circular top"
+  },
+  "name": "Cylindric Capital",
+  "attributes": [
+    {
+      "value": "south west",
+      "definition": "",
+      "guid": "f669e769-370b-43b4-be2f-df1711ffe3cd",
+      "key": "peak"
+    },
+    {
+      "value": "6.5",
+      "definition": "",
+      "guid": "875731e9-0ac7-46b2-87b7-6c1721fb5b9d",
+      "key": "diameter"
+    },
+    {
+      "value": "5.5",
+      "definition": "",
+      "guid": "349c969c-3659-414b-8410-4afea871dcd2",
+      "key": "height side"
+    },
+    {
+      "value": "1",
+      "definition": "",
+      "guid": "aab135d6-e5a2-4d71-ae64-574cbd0d9ba2",
+      "key": "height low"
+    },
+    {
+      "value": "0.3",
+      "definition": "",
+      "guid": "292f40f4-7f90-4a1c-8056-c8995dcb9155",
+      "key": "wall thickness"
+    },
+    {
+      "value": "123029",
+      "definition": "",
+      "guid": "6a2bada2-ef02-43b1-912a-78541b873ba3",
+      "key": "construction cost"
+    },
+    {
+      "value": "820",
+      "definition": "",
+      "guid": "bc7d6da7-002b-4084-a5ce-eb94230f9525",
+      "key": "maintenance expenses"
+    },
+    {
+      "value": "8202",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
+      "guid": "32195cc4-204b-419c-8b55-fe52c0c796b5",
+      "key": "construction global warming potential"
+    }
+  ],
+  "guid": "f35996e8-eea6-4804-ae14-61ff3eb7f13d",
+  "unit": "m"
 }

@@ -1,220 +1,218 @@
 {
-  "unit": "m",
-  "name": "Bridge",
-  "stock": 2147483647,
   "virtual": false,
-  "attributes": [
-    {
-      "value": "5.6",
-      "guid": "5bb336a5-1ff1-4eae-a9bd-22a7ac2eddf8",
-      "key": "length",
-      "definition": ""
-    },
-    {
-      "value": "2.6",
-      "guid": "9b38651b-d95a-4497-94c5-944f63af81b6",
-      "key": "platform west length",
-      "definition": ""
-    },
-    {
-      "value": "2.6",
-      "guid": "f3e8ddf5-b643-4469-91b5-5cc1c1e57a18",
-      "key": "platform east length",
-      "definition": ""
-    },
-    {
-      "value": "0.4",
-      "guid": "8a695ce1-6ba8-4e88-845b-3ff40e03d6a1",
-      "key": "gap",
-      "definition": ""
-    },
-    {
-      "value": "2.6",
-      "guid": "76feed36-7cdf-442f-8f05-5d539c140089",
-      "key": "width",
-      "definition": ""
-    },
-    {
-      "value": "2.5",
-      "guid": "820fd26b-72bc-4889-b47f-1bae74993a95",
-      "key": "height",
-      "definition": ""
-    },
-    {
-      "value": "20",
-      "guid": "71c6f356-753e-49ed-bad2-58587d9ff11d",
-      "key": "base height",
-      "definition": ""
-    },
-    {
-      "value": "10",
-      "guid": "bfb984b3-2cfe-4f15-8665-743097217149",
-      "key": "primary rod diameter",
-      "definition": ""
-    },
-    {
-      "value": "8",
-      "guid": "c45a205f-8a6e-4539-835d-833cd3144eee",
-      "key": "secondary rod diameter",
-      "definition": ""
-    },
-    {
-      "value": "6",
-      "guid": "c8871227-6b22-43dd-8920-4eee2de29687",
-      "key": "tertiary rod diameter",
-      "definition": ""
-    },
-    {
-      "value": "125",
-      "guid": "68e475e6-6309-44fb-9678-9015e5982093",
-      "key": "parapet height",
-      "definition": ""
-    },
-    {
-      "value": "65973",
-      "guid": "7d68c085-a1d7-4404-b7df-a75a6df228a0",
-      "key": "construction cost",
-      "definition": ""
-    },
-    {
-      "value": "880",
-      "guid": "79046fd0-72a5-47aa-a959-c298fc0c4cf2",
-      "key": "maintenance expenses",
-      "definition": ""
-    },
-    {
-      "value": "5864",
-      "guid": "95360a89-55b5-417d-818c-ef44b69f97ba",
-      "key": "construction global warming potential",
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
-    }
-  ],
   "description": "A bridge with two segments an addition on the west along the main path.",
-  "icon": "",
+  "updatedAt": "2025-11-18T22:04:05.799Z",
+  "stock": 2147483647,
   "authors": [
     {
-      "name": "Ueli Saluz",
-      "guid": "d6eb7880-80a1-46bb-9aab-315b38a52cdc",
-      "email": "ueli@semio-tech.org"
+      "guid": "d6eb7880-80a1-46bb-9aab-315b38a52cdc"
     }
   ],
-  "image": "images/bridge.png",
-  "ports": [
-    {
-      "mandatory": false,
-      "t": 0.25,
-      "attributes": [
-        {
-          "value": "",
-          "guid": "953814e9-436b-4341-a3e7-96b30eda67c2",
-          "key": "east",
-          "definition": ""
-        }
-      ],
-      "guid": "01f3151d-da9d-4d75-9b93-18aac11f47c2",
-      "direction": {
-        "y": 0.0,
-        "x": 1.0,
-        "z": 0.0
-      },
-      "description": "The middle of the east side of the plattform.",
-      "family": "platform east",
-      "compatibleFamilies": [
-        "door tambour west"
-      ],
-      "point": {
-        "y": -1.3,
-        "x": 5.6,
-        "z": 0.0
-      }
-    },
-    {
-      "mandatory": false,
-      "t": 0.75,
-      "attributes": [
-        {
-          "value": "",
-          "guid": "88e72272-83c0-46f1-a685-b8f70c6cc4f9",
-          "key": "west",
-          "definition": ""
-        }
-      ],
-      "guid": "6ef18d67-3940-448d-b32c-1bd31afc3221",
-      "direction": {
-        "y": 0.0,
-        "x": -1.0,
-        "z": 0.0
-      },
-      "description": "The middle of the west side of the plattform.",
-      "family": "platform west",
-      "compatibleFamilies": [
-        "door tambour east"
-      ],
-      "point": {
-        "y": -1.3,
-        "x": 0.0,
-        "z": 0.0
-      }
-    }
-  ],
-  "updatedAt": "2025-11-18T21:31:47.213Z",
-  "guid": "c11e6649-094d-4d56-afbf-c2d918fded2a",
   "representations": [
     {
-      "file": "representations/bridge.glb",
-      "guid": "9464cc2e-0944-4a00-9971-031e196660a2",
       "tags": [
         "model/gltf-binary"
       ],
-      "description": ""
+      "description": "",
+      "guid": "5c556af8-c79e-4f0f-b180-172e98defbc0",
+      "file": "representations/bridge.glb"
     },
     {
-      "file": "representations/bridge_1to500.3dm",
-      "guid": "bebbabb8-2b1e-4701-98e9-a0f8f5c03e71",
       "tags": [
         "model/vnd.3dm",
         "1to500"
       ],
-      "description": ""
+      "description": "",
+      "guid": "964fb03d-9d7f-48e0-8b32-4cb3d0802b0e",
+      "file": "representations/bridge_1to500.3dm"
     },
     {
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493",
-      "guid": "73ee498f-a054-4d44-b5f8-ad491d4a2cef",
       "tags": [
         "model/vnd.3dm",
         "1to500",
         "model/vnd.speckle+json"
       ],
-      "description": ""
+      "description": "",
+      "guid": "d8116906-f485-4d28-8938-592b1cfc76de",
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493"
     },
     {
-      "file": "representations/bridge_1to200.3dm",
-      "guid": "377474c9-4039-46ee-9969-51587de4756d",
       "tags": [
         "model/vnd.3dm",
         "1to200"
       ],
-      "description": ""
+      "description": "",
+      "guid": "02c6d597-ba09-4738-8be0-5a2543e3984c",
+      "file": "representations/bridge_1to200.3dm"
     },
     {
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6",
-      "guid": "cf18935d-bbad-4448-a585-b242d0111673",
       "tags": [
         "model/vnd.3dm",
         "1to200",
         "model/vnd.speckle+json"
       ],
-      "description": ""
+      "description": "",
+      "guid": "409b2743-b3a7-4918-b5e8-47591b4e642c",
+      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6"
     },
     {
-      "file": "representations/bridge_collider.glb",
-      "guid": "2fcf057c-8d64-4715-820d-2f2d9a9c0838",
       "tags": [
         "model/gltf-binary",
         "collider"
       ],
-      "description": ""
+      "description": "",
+      "guid": "b4496eea-869d-4ad3-b4c9-99a5dd6f8393",
+      "file": "representations/bridge_collider.glb"
     }
   ],
-  "createdAt": "2025-11-18T21:31:47.213Z"
+  "createdAt": "2025-11-18T22:04:05.799Z",
+  "image": "images/bridge.png",
+  "icon": "",
+  "ports": [
+    {
+      "attributes": [
+        {
+          "value": "",
+          "definition": "",
+          "guid": "f274a569-9791-43ab-9c72-5aa5cccc5009",
+          "key": "east"
+        }
+      ],
+      "t": 0.25,
+      "direction": {
+        "y": 0.0,
+        "z": 0.0,
+        "x": 1.0
+      },
+      "point": {
+        "y": -1.3,
+        "z": 0.0,
+        "x": 5.6
+      },
+      "mandatory": false,
+      "guid": "28644750-074a-420e-9a9a-1edeba59084b",
+      "description": "The middle of the east side of the plattform.",
+      "compatibleFamilies": [
+        "door tambour west"
+      ],
+      "family": "platform east"
+    },
+    {
+      "attributes": [
+        {
+          "value": "",
+          "definition": "",
+          "guid": "8079933e-c359-49d3-a0cd-6a8ca346b43c",
+          "key": "west"
+        }
+      ],
+      "t": 0.75,
+      "direction": {
+        "y": 0.0,
+        "z": 0.0,
+        "x": -1.0
+      },
+      "point": {
+        "y": -1.3,
+        "z": 0.0,
+        "x": 0.0
+      },
+      "mandatory": false,
+      "guid": "c3bade28-4904-4d3b-a736-1407259fb042",
+      "description": "The middle of the west side of the plattform.",
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "family": "platform west"
+    }
+  ],
+  "name": "Bridge",
+  "attributes": [
+    {
+      "value": "5.6",
+      "definition": "",
+      "guid": "72c172cc-5501-4a57-b276-ead5639fad59",
+      "key": "length"
+    },
+    {
+      "value": "2.6",
+      "definition": "",
+      "guid": "42114dd0-3b19-4bd8-955b-3282ae66a7da",
+      "key": "platform west length"
+    },
+    {
+      "value": "2.6",
+      "definition": "",
+      "guid": "6bf48c5c-b9f5-4158-8a1b-1ab2c941c215",
+      "key": "platform east length"
+    },
+    {
+      "value": "0.4",
+      "definition": "",
+      "guid": "3c6e9da6-8476-464e-b432-292367a04788",
+      "key": "gap"
+    },
+    {
+      "value": "2.6",
+      "definition": "",
+      "guid": "79b15074-0e2d-4c74-9d4e-bc13d9f6ace5",
+      "key": "width"
+    },
+    {
+      "value": "2.5",
+      "definition": "",
+      "guid": "cfd8b7f7-93d5-464e-acdc-76f41bef8bad",
+      "key": "height"
+    },
+    {
+      "value": "20",
+      "definition": "",
+      "guid": "46942bdc-3cac-481c-a7b6-42951378022f",
+      "key": "base height"
+    },
+    {
+      "value": "10",
+      "definition": "",
+      "guid": "9192a7c8-a325-406d-b67c-2a5baf3dd93a",
+      "key": "primary rod diameter"
+    },
+    {
+      "value": "8",
+      "definition": "",
+      "guid": "c126d23d-3da3-446b-ba4a-73cb9337e53d",
+      "key": "secondary rod diameter"
+    },
+    {
+      "value": "6",
+      "definition": "",
+      "guid": "9b07e07a-8c83-489f-abde-f35caa26a4ae",
+      "key": "tertiary rod diameter"
+    },
+    {
+      "value": "125",
+      "definition": "",
+      "guid": "854fa1f6-72b9-44cb-a19a-38d00902687b",
+      "key": "parapet height"
+    },
+    {
+      "value": "65973",
+      "definition": "",
+      "guid": "bdc259da-5e1e-4b7f-9a0f-b825cf92805a",
+      "key": "construction cost"
+    },
+    {
+      "value": "880",
+      "definition": "",
+      "guid": "ec95cce5-90c2-4fd3-9e9e-0b32521d43af",
+      "key": "maintenance expenses"
+    },
+    {
+      "value": "5864",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
+      "guid": "fa47c5cb-2cda-4794-af52-2463025c96ab",
+      "key": "construction global warming potential"
+    }
+  ],
+  "guid": "46df4e05-e96b-46c3-84cd-0bd1fb518d97",
+  "unit": "m"
 }
