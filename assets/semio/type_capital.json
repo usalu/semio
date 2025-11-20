@@ -2,71 +2,71 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "7d6c31c5-004c-4f40-bc92-68d9b7f89865",
+      "guid": "80bba32e-0315-438f-b957-94f3685ec912",
       "key": "peak",
       "value": "north west"
     },
     {
       "definition": "",
-      "guid": "ad9c4281-47e3-4be2-8106-60afcdb79c08",
+      "guid": "409a9631-74fb-4b5a-8b0e-9b8af31f47e4",
       "key": "length",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "2a68abad-42d9-43fb-8a23-ba3d6a97fbb6",
+      "guid": "1459fa5d-35b9-41ba-93a8-fde11a1b8369",
       "key": "width",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "98b13785-7ce5-42ad-9051-73e71591592f",
+      "guid": "327a2e03-c7fa-41e9-854a-d707b4499aad",
       "key": "height",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "f78e71d1-118b-44b5-85f4-d5d3893169bb",
+      "guid": "1c86da88-6034-4b4a-a4b4-3d34614a0756",
       "key": "height side",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "de9c5e09-b979-4230-aaf3-cf7462b43c13",
+      "guid": "0f4fd68e-8921-4aa9-b25c-02120d467e83",
       "key": "height low",
       "value": "1"
     },
     {
       "definition": "",
-      "guid": "3651e38e-a864-4aa7-8993-1e61db4f4ddd",
+      "guid": "f2bb5d1a-fd4e-470b-8659-14610152d696",
       "key": "wall thickness",
       "value": "0.3"
     },
     {
       "definition": "",
-      "guid": "879db7b5-82cb-4272-986f-9789b765bf69",
+      "guid": "d1f06e40-2b8c-40cb-8722-9632c0639fec",
       "key": "construction cost",
       "value": "60025"
     },
     {
       "definition": "",
-      "guid": "90303c60-7f63-4d58-bf3d-49669c80e388",
+      "guid": "ec4b92e7-7ff3-4b32-979b-f56cf2d778a8",
       "key": "maintenance expenses",
       "value": "720"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "6b10f829-ff16-4e06-aea6-28ba7fa45f8f",
+      "guid": "f4845ca0-1748-43aa-9900-1879d8ab59d5",
       "key": "construction global warming potential",
       "value": "4802"
     }
   ],
   "authors": {
-    "guid": "759d7569-17da-4f52-88c1-f7d489e308bf"
+    "guid": "c3a23ba2-8859-4305-853e-57f49605465f"
   },
-  "createdAt": "2025-11-19T20:01:12.535Z",
+  "createdAt": "2025-11-20T18:18:26.779Z",
   "description": "A roof that has the skin of a cut extruded cuboid.",
-  "guid": "4397b110-61a5-4efb-bd7e-6cba090ed8b3",
+  "guid": "1b70246e-df12-4892-9667-c9cddb5dc7cd",
   "icon": "icons/capital.svg",
   "image": "images/capital.png",
   "name": "Capital",
@@ -74,26 +74,24 @@
     "attributes": [
       {
         "definition": "",
-        "guid": "a97fcba0-e043-448b-a0d8-de76c0450e0a",
+        "guid": "1d50e682-8dd9-4677-b1d4-0e695ccfa9c6",
         "key": "bottom",
         "value": ""
       },
       {
         "definition": "",
-        "guid": "c26b5907-629e-4b34-9331-53dd1e3fdacd",
+        "guid": "e331d83e-aabb-403f-931e-a69f48b9bc2f",
         "key": "wasp rotation",
         "value": "180"
       }
     ],
-    "compatibleInterfaces": "roof rectangular bottom",
     "description": "The center of the bottom.",
     "direction": {
       "x": 0.0,
       "y": 0.0,
       "z": -1.0
     },
-    "interface": "roof rectangular top",
-    "guid": "977e987b-d8ca-4a2e-a520-87d92b15d69c",
+    "guid": "9e547c66-8676-4a2a-bda3-3c6227af2e35",
     "mandatory": false,
     "point": {
       "x": 0.0,
@@ -102,63 +100,8 @@
     },
     "t": 0.0
   },
-  "models": [
-    {
-      "description": "",
-      "file": "models/capital.glb",
-      "guid": "c23615bd-0fd8-4277-9fc4-1c1b3c78b09c",
-      "tags": "model/gltf-binary"
-    },
-    {
-      "description": "",
-      "file": "models/capital_1to500.3dm",
-      "guid": "6f9d07b4-91e4-44bb-8023-4951a4513756",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/capital_1to200.3dm",
-      "guid": "9910a71e-abb9-4566-b056-25a71b0292a0",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
-      "guid": "b65b0bdc-59c7-4620-8199-a6bea695b710",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
-      "guid": "01eca18c-bc8d-432e-b1ed-4c6bddcd90f2",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/capital_collider.glb",
-      "guid": "fc209afb-524e-4347-8265-34eed712b0f6",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ]
-    }
-  ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-19T20:01:12.535Z",
+  "updatedAt": "2025-11-20T18:18:26.779Z",
   "virtual": false
 }

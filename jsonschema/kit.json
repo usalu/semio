@@ -277,6 +277,13 @@
           "title": "Id",
           "type": "string"
         },
+        "name": {
+          "default": "",
+          "description": "\ud83d\udcdb The optional name of the piece.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
         "description": {
           "default": "",
           "description": "\ud83d\udcac The optional human-readable description of the piece.",
@@ -402,6 +409,13 @@
           "title": "Id",
           "type": "string"
         },
+        "name": {
+          "default": "",
+          "description": "\ud83d\udcdb The optional name of the port.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
         "description": {
           "default": "",
           "description": "\ud83d\udcac The optional human-readable description of the port.",
@@ -416,19 +430,16 @@
           "type": "boolean"
         },
         "interface": {
-          "default": "",
-          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the port. This allows to define explicit compatibility with other ports.",
-          "maxLength": 64,
-          "title": "Interface",
-          "type": "string"
-        },
-        "compatibleInterfaces": {
-          "description": "\u2705 The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
-          "items": {
-            "type": "string"
-          },
-          "title": "Compatibleinterfaces",
-          "type": "array"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InterfaceId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the port. This allows to define explicit compatibility with other ports."
         },
         "point": {
           "$ref": "#/$defs/Point",
@@ -497,9 +508,154 @@
       "title": "Attribute",
       "type": "object"
     },
+    "InterfaceId": {
+      "description": "\ud83e\udeaa The props to identify the interface.",
+      "properties": {
+        "guid": {
+          "description": "\ud83c\udd94 The guid of the interface.",
+          "maxLength": 128,
+          "title": "Guid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "guid"
+      ],
+      "title": "InterfaceId",
+      "type": "object"
+    },
+    "Interface": {
+      "description": "\ud83d\udd0c An interface defines port compatibility.",
+      "properties": {
+        "guid": {
+          "description": "\ud83c\udd94 The guid of the interface.",
+          "maxLength": 128,
+          "title": "Guid",
+          "type": "string"
+        },
+        "name": {
+          "description": "\ud83d\udcdb The name of the interface.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "\ud83d\udcac The optional human-readable description of the interface.",
+          "maxLength": 512,
+          "title": "Description",
+          "type": "string"
+        },
+        "icon": {
+          "default": "",
+          "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the interface.",
+          "maxLength": 1024,
+          "title": "Icon",
+          "type": "string"
+        },
+        "compatibleInterfaces": {
+          "description": "\u2705 The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.",
+          "items": {
+            "$ref": "#/$defs/InterfaceId"
+          },
+          "title": "Compatibleinterfaces",
+          "type": "array"
+        },
+        "attributes": {
+          "description": "\ud83d\udccf The attributes of the interface.",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "guid",
+        "name"
+      ],
+      "title": "Interface",
+      "type": "object"
+    },
+    "InterfaceId": {
+      "description": "\ud83e\udeaa The props to identify the interface.",
+      "properties": {
+        "guid": {
+          "description": "\ud83c\udd94 The guid of the interface.",
+          "maxLength": 128,
+          "title": "Guid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "guid"
+      ],
+      "title": "InterfaceId",
+      "type": "object"
+    },
+    "Interface": {
+      "description": "\ud83d\udd0c An interface defines port compatibility.",
+      "properties": {
+        "guid": {
+          "description": "\ud83c\udd94 The guid of the interface.",
+          "maxLength": 128,
+          "title": "Guid",
+          "type": "string"
+        },
+        "name": {
+          "description": "\ud83d\udcdb The name of the interface.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "\ud83d\udcac The optional human-readable description of the interface.",
+          "maxLength": 512,
+          "title": "Description",
+          "type": "string"
+        },
+        "icon": {
+          "default": "",
+          "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the interface.",
+          "maxLength": 1024,
+          "title": "Icon",
+          "type": "string"
+        },
+        "compatibleInterfaces": {
+          "description": "\u2705 The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.",
+          "items": {
+            "$ref": "#/$defs/InterfaceId"
+          },
+          "title": "Compatibleinterfaces",
+          "type": "array"
+        },
+        "attributes": {
+          "description": "\ud83d\udccf The attributes of the interface.",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "guid",
+        "name"
+      ],
+      "title": "Interface",
+      "type": "object"
+    },
     "Model": {
       "description": "\ud83d\udcbe A model is a link to a resource that describes a type for a certain level of detail and tags.",
       "properties": {
+        "name": {
+          "default": "",
+          "description": "\ud83d\udcdb The optional name of the model.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
         "url": {
           "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the model.",
           "maxLength": 1024,
@@ -820,6 +976,14 @@
         "$ref": "#/$defs/Design"
       },
       "title": "Designs",
+      "type": "array"
+    },
+    "interfaces": {
+      "description": "\ud83d\udd0c The interfaces of the kit.",
+      "items": {
+        "$ref": "#/$defs/Interface"
+      },
+      "title": "Interfaces",
       "type": "array"
     },
     "attributes": {

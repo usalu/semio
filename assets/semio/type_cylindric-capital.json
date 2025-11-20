@@ -2,59 +2,59 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "f9d9bcdb-7465-4e10-bd27-4120522eceac",
+      "guid": "6cd242ba-053b-4139-85e3-55e51006de65",
       "key": "peak",
       "value": "south west"
     },
     {
       "definition": "",
-      "guid": "0011870f-1b8e-4a92-9d86-32cbb8dcc43c",
+      "guid": "d168b82a-124d-4bfd-ad27-be71f9773a63",
       "key": "diameter",
       "value": "6.5"
     },
     {
       "definition": "",
-      "guid": "557d2b8f-ca25-43d6-ae8e-e1ac24d9b9f4",
+      "guid": "0e4ea472-c679-441b-9deb-a81b6813867b",
       "key": "height side",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "4c826fba-a913-44dc-b888-d36a172dcc19",
+      "guid": "09e49307-dca8-4575-aa27-da08c377e069",
       "key": "height low",
       "value": "1"
     },
     {
       "definition": "",
-      "guid": "506bc404-10ce-49d3-9b7d-9aeadbdd9d29",
+      "guid": "2c1e9fa8-87fa-4615-9f75-9ce04c751b0b",
       "key": "wall thickness",
       "value": "0.3"
     },
     {
       "definition": "",
-      "guid": "015eea21-fef5-47ca-b7fe-1b9a14e6491f",
+      "guid": "87f84cc2-320c-4718-bda0-0ed3ebde7b58",
       "key": "construction cost",
       "value": "123029"
     },
     {
       "definition": "",
-      "guid": "ea09b66b-9656-4296-8756-48fc4228d263",
+      "guid": "ab5a0a37-94dc-4afa-ae2d-3bcb679493a9",
       "key": "maintenance expenses",
       "value": "820"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "c04af63a-0f2e-4f57-b626-e6395b2c7c8c",
+      "guid": "3184576f-bdf4-47fc-8023-6dda6409dfcb",
       "key": "construction global warming potential",
       "value": "8202"
     }
   ],
   "authors": {
-    "guid": "bf6c94ed-4bc0-43f0-8659-0842e19c0df3"
+    "guid": "bbe8d468-c1df-41a5-bf7d-d55116e68244"
   },
-  "createdAt": "2025-11-19T20:01:18.039Z",
+  "createdAt": "2025-11-20T18:18:32.917Z",
   "description": "A roof that has the skin of a cut extruded cylinder.",
-  "guid": "fb2f4203-fa33-4a15-8111-4084045c5ae6",
+  "guid": "16503262-d06f-47ba-b0b8-0c2eff2a0ab3",
   "icon": "icons/cylindric-capital.svg",
   "image": "images/cylindric-capital.png",
   "name": "Cylindric Capital",
@@ -62,26 +62,24 @@
     "attributes": [
       {
         "definition": "",
-        "guid": "6d5e7b37-3fb0-4871-bf50-635ea6d186bb",
+        "guid": "c5fd8713-632c-4645-a842-a2b9bb141ba8",
         "key": "bottom",
         "value": ""
       },
       {
         "definition": "",
-        "guid": "f1928a06-a486-4fc5-a4f0-51b20d6a6540",
+        "guid": "ef2a585a-9a21-4e51-a823-27ea64a585e9",
         "key": "wasp rotation",
         "value": "180"
       }
     ],
-    "compatibleInterfaces": "roof circular bottom",
     "description": "The center of the bottom.",
     "direction": {
       "x": 0.0,
       "y": 0.0,
       "z": -1.0
     },
-    "interface": "roof circular top",
-    "guid": "1993cb2b-e24e-4d48-b3a7-1bea2a18f88a",
+    "guid": "33a49606-c5ca-43a2-9b87-517637d3e087",
     "mandatory": false,
     "point": {
       "x": 0.0,
@@ -90,63 +88,8 @@
     },
     "t": 0.0
   },
-  "models": [
-    {
-      "description": "",
-      "file": "models/cylindric-capital.glb",
-      "guid": "5243f5ca-fccd-404e-8438-8dcb2dc734ee",
-      "tags": "model/gltf-binary"
-    },
-    {
-      "description": "",
-      "file": "models/cylindric-capital_1to500.3dm",
-      "guid": "91af92a1-0141-451c-90e9-4c45c4d15e9b",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
-      "guid": "dafe6741-b0f3-4657-acc6-76e209a157c6",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/cylindric-capital_1to200.3dm",
-      "guid": "cf709e85-8dd3-48a0-bf1c-e8547ef6d8de",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
-      "guid": "6bc9da9d-709d-45af-93c6-2e3bc7e8e4d9",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/cylindric-capital_collider.glb",
-      "guid": "f6f29049-31f3-4395-bf98-d962dff77198",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ]
-    }
-  ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-19T20:01:18.039Z",
+  "updatedAt": "2025-11-20T18:18:32.917Z",
   "virtual": false
 }

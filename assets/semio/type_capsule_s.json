@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "8de66092-5f56-49a5-b809-e5f586f93afc",
+      "guid": "99bbee87-4c53-452a-bf35-178cce410043",
       "key": "entrance",
       "value": "side"
     },
     {
       "definition": "",
-      "guid": "8d49b0c9-85e0-44ae-a360-4136304c3bf8",
+      "guid": "42da44a9-2210-4030-bf35-aa1742deea1a",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "4585a3f2-fa65-43dc-b5bd-d20c758c1792",
+      "guid": "d6a5790d-099a-4f1d-a91b-0473b7f7d1b2",
       "key": "length",
       "value": "4.2"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "652796ca-61ab-4a92-84c4-b578c1c8b6d4",
+      "guid": "a4ce3339-4621-4147-929a-c2b8b500ece9",
       "key": "width",
       "value": "2.6"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "b360ea7a-1b42-48ad-8ee2-1c89b9867614",
+      "guid": "85017a70-1b8d-4997-b2c4-e04da5b2ea9f",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "27cdd81f-261a-4e68-afe3-097a261e75e6",
+      "guid": "8d5f832c-c475-4691-9b6c-fcca2ed396f4",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "cfc8b32e-0ea6-4ddb-85a6-8f8a71e0db3d",
+      "guid": "7d7ff31c-805f-42a4-b026-7176f01b3876",
       "key": "effective floor area",
       "value": "8.74"
     },
     {
       "definition": "",
-      "guid": "5a01787c-42eb-40f0-9541-7d516ae86b39",
+      "guid": "81dcf699-0492-4a5a-9bec-c888e9fd5000",
       "key": "construction cost",
       "value": "82992"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "3fad3bea-1c3d-42f5-851e-fa0fc1665c75",
+      "guid": "5b5ead34-1b8d-48a3-81c3-b9295925185a",
       "key": "heating energy demand",
       "value": "393"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "cefbf177-e23c-4f72-8fee-ef0cd050836a",
+      "guid": "eab31710-4ad4-43a2-aade-2efb1f1f1ec6",
       "key": "cooling energy demand",
       "value": "262"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "55e0fdb4-6f7c-459d-96f5-200a917c8292",
+      "guid": "75b9d0da-afec-4483-a3cd-b41a02a602e2",
       "key": "technical equipment energy demand",
       "value": "262"
     },
     {
       "definition": "",
-      "guid": "0eb40ca1-68dd-4b9d-ae52-a338e158ce3e",
+      "guid": "32177161-3f0b-47b7-8290-9e324c7cfc3d",
       "key": "income",
       "value": "13104"
     },
     {
       "definition": "",
-      "guid": "a0c03ad0-6148-4503-9564-bd42a2f3d4b5",
+      "guid": "55104ead-a0a5-4e69-b885-2a9c178c3a8f",
       "key": "maintenance expenses",
       "value": "1048"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "27fed012-84cf-43ee-8de7-f19f127bb985",
+      "guid": "c63615fc-c881-438b-bd8f-447999883352",
       "key": "construction global warming potential",
       "value": "8736.01"
     }
   ],
   "authors": {
-    "guid": "77adb346-cb47-499c-90f1-feccbfea31da"
+    "guid": "dacbd626-fe43-4669-9d0d-508528f847bf"
   },
-  "createdAt": "2025-11-19T20:01:14.348Z",
+  "createdAt": "2025-11-20T18:18:28.995Z",
   "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
-  "guid": "840cb497-5071-436e-88ca-8db6844fd124",
+  "guid": "456ef8a9-1e6a-428a-89aa-670b6184620f",
   "icon": "icons/capsule_s.svg",
   "image": "images/capsule_s.png",
   "name": "s",
@@ -98,19 +98,17 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "6a92ebc6-4ad4-4783-9f35-3f20551862d3",
+      "guid": "6a111277-fdf4-4eae-a370-777f50e17b7d",
       "key": "entrance",
       "value": ""
     },
-    "compatibleInterfaces": "door tambour west",
     "description": "The middle of the main entrance door of the upper entrance floor.",
     "direction": {
       "x": -1.0,
       "y": 0.0,
       "z": 0.0
     },
-    "interface": "door capsule east",
-    "guid": "4964ee77-c365-4291-ae8a-7139220fd12e",
+    "guid": "670da728-214f-4409-a75b-a268253e5811",
     "mandatory": false,
     "point": {
       "x": -1.3,
@@ -119,63 +117,8 @@
     },
     "t": 0.0
   },
-  "models": [
-    {
-      "description": "",
-      "file": "models/capsule_s.glb",
-      "guid": "bd72f3e8-8ab6-49c9-af92-f103882d7cc1",
-      "tags": "model/gltf-binary"
-    },
-    {
-      "description": "",
-      "file": "models/capsule_s_1to500.3dm",
-      "guid": "9f88ebba-2212-4e67-88ed-a48702d70235",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/capsule_s_1to200.3dm",
-      "guid": "9b2c82e0-50e1-40b7-bcec-35c14e4b2b64",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
-      "guid": "39f7880a-70a0-4554-97cc-b03157343e02",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
-      "guid": "a64383b9-68a9-4d4a-a0de-adf565ca5aea",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/capsule_s_collider.glb",
-      "guid": "606162a0-dfc5-4f82-ac54-7387e1f05772",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ]
-    }
-  ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-19T20:01:14.348Z",
+  "updatedAt": "2025-11-20T18:18:28.995Z",
   "virtual": false
 }

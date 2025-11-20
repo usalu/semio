@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "81fe752a-75e8-4cf7-b859-140f6e98e30f",
+      "guid": "be4dd115-4e4f-43ac-b108-249c440fd355",
       "key": "length",
       "value": "5.6"
     },
     {
       "definition": "",
-      "guid": "89b90658-d3f9-4483-9281-7ee591bb846e",
+      "guid": "5a68de30-7967-45a6-852e-869a0bfc8150",
       "key": "platform west length",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "c7ee6a59-ad02-4ebb-a7da-a2d4afe9cce6",
+      "guid": "dee15593-940c-44fd-bb3a-6605da39c366",
       "key": "platform east length",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "724a8632-f149-4654-b4ca-eb6599bd0c03",
+      "guid": "f7723fd2-72dc-495d-a2cb-29fa2d756466",
       "key": "gap",
       "value": "0.4"
     },
     {
       "definition": "",
-      "guid": "848c3d6c-a160-4cc9-a3e2-9d44ab568f82",
+      "guid": "3e88d3ca-375e-4392-82e4-960251f717da",
       "key": "width",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "392588d1-1b89-4d27-9ffc-3390f5812c71",
+      "guid": "4e5576ff-fc64-4d58-ad1e-6ca0fad095c8",
       "key": "height",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "fe0b0d50-6f72-4916-86cd-80ac3865a6b7",
+      "guid": "3ce5633b-5b25-428a-9cdb-7b7784212b05",
       "key": "base height",
       "value": "20"
     },
     {
       "definition": "",
-      "guid": "a46d5976-0cb1-4bfe-9329-8d0f00d1605b",
+      "guid": "3f9e83c4-33e1-4f1c-967b-8c28b4ec0a3b",
       "key": "primary rod diameter",
       "value": "10"
     },
     {
       "definition": "",
-      "guid": "0051508e-3603-4ac9-8d81-5e8915ab93fb",
+      "guid": "644fa77c-2ac0-40b8-a753-ac98b3bf0150",
       "key": "secondary rod diameter",
       "value": "8"
     },
     {
       "definition": "",
-      "guid": "495a8b1b-312c-4d47-906a-86f6c471eeba",
+      "guid": "db4c2d7a-0e55-4a65-825f-ab4dd4b92c95",
       "key": "tertiary rod diameter",
       "value": "6"
     },
     {
       "definition": "",
-      "guid": "269d1006-1bff-4414-86e4-5c21cf08c8f2",
+      "guid": "57189d3f-7b6e-42b6-98bf-2617a1d1e879",
       "key": "parapet height",
       "value": "125"
     },
     {
       "definition": "",
-      "guid": "3dbe293c-2b46-44f3-acf2-b68de06fe472",
+      "guid": "05f2ec2d-7ca3-49f1-91f6-b7dc93764170",
       "key": "construction cost",
       "value": "65973"
     },
     {
       "definition": "",
-      "guid": "21f8ce74-f365-4fff-87df-e289d96cbba3",
+      "guid": "ebddae57-419d-456a-a0f4-bd5f84749b61",
       "key": "maintenance expenses",
       "value": "880"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "7063474e-f382-42a1-9681-74abc1907160",
+      "guid": "c2e2453d-f6c1-4212-b9b3-7960a259eddf",
       "key": "construction global warming potential",
       "value": "5864"
     }
   ],
   "authors": {
-    "guid": "da2c7e51-e499-473e-b88b-1aaaa0885042"
+    "guid": "4cb036f6-5fa9-4af9-95ee-701f160238c5"
   },
-  "createdAt": "2025-11-19T20:01:12.248Z",
+  "createdAt": "2025-11-20T18:18:26.445Z",
   "description": "A bridge with two segments an addition on the west along the main path.",
-  "guid": "012364c2-241f-40fc-9be1-c34746015f96",
+  "guid": "886859d4-e798-48a1-a020-8fff21251952",
   "icon": "",
   "image": "images/bridge.png",
   "name": "Bridge",
@@ -98,20 +98,19 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7701176c-f580-452c-acfa-98027a5ce508",
+        "guid": "d2076409-249f-47cd-9345-27a4bf8406be",
         "key": "east",
         "value": ""
       },
-      "compatibleInterfaces": "door tambour west",
       "description": "The middle of the east side of the plattform.",
       "direction": {
         "x": 1.0,
         "y": 0.0,
         "z": 0.0
       },
-      "interface": "platform east",
-      "guid": "f02aeb9c-1370-46ee-9fb6-addc64c5dd63",
+      "guid": "32f2172f-e124-441c-8a4d-55bc76e17808",
       "mandatory": false,
+      "name": "e",
       "point": {
         "x": 5.6,
         "y": -1.3,
@@ -122,20 +121,19 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "4670613b-bf9f-47d7-a6f7-c6045dc46fcb",
+        "guid": "5b41544d-820a-4b99-beb0-fae1d5b24413",
         "key": "west",
         "value": ""
       },
-      "compatibleInterfaces": "door tambour east",
       "description": "The middle of the west side of the plattform.",
       "direction": {
         "x": -1.0,
         "y": 0.0,
         "z": 0.0
       },
-      "interface": "platform west",
-      "guid": "6c7badc1-e671-4adf-ae7d-20858fba142e",
+      "guid": "2c560f04-9d57-4e97-9165-2552745c292d",
       "mandatory": false,
+      "name": "w",
       "point": {
         "x": 0.0,
         "y": -1.3,
@@ -144,63 +142,8 @@
       "t": 0.75
     }
   ],
-  "models": [
-    {
-      "description": "",
-      "file": "models/bridge.glb",
-      "guid": "27b844c0-717a-4590-8a28-924f47349aa7",
-      "tags": "model/gltf-binary"
-    },
-    {
-      "description": "",
-      "file": "models/bridge_1to500.3dm",
-      "guid": "082a6327-74b8-4f56-a953-f39f5b037f8f",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493",
-      "guid": "cff6dbb0-10cf-4a13-95f7-3181b4beb9b2",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/bridge_1to200.3dm",
-      "guid": "bfc6987f-fe66-44f8-b6c0-ef8bf2335f89",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6",
-      "guid": "48119142-49e7-49fc-a8dd-3a2a9d26a1f9",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/bridge_collider.glb",
-      "guid": "5d0e1aa0-0115-4655-a956-a49c5d1f83f2",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ]
-    }
-  ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-19T20:01:12.248Z",
+  "updatedAt": "2025-11-20T18:18:26.445Z",
   "virtual": false
 }

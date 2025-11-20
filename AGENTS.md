@@ -52,7 +52,7 @@ A `connection` can have `attributes` and diagram positioning with **x** and **y*
 
 ## Piece
 
-A `piece` is an instance of either a `type` or a `design` with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and `attributes`.
+A `piece` is an instance of either a `type` or a `design` with **id**, optional **name**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and `attributes`.
 
 A `piece` is either _fixed_ (with a `plane`) or _linked_ (with a `connection`).
 
@@ -62,21 +62,21 @@ The _hierarchy_ of a `piece` is the length of the shortest path to the next _fix
 
 ## Port
 
-A `port` is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning.
+A `port` is a conceptual connection **point** with an outwards **direction**, **id**, optional **name**, optional **description**, and **t** value for diagram ring positioning.
 
 A `port` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
 
-A `port` can have a port **interface** and a list of **compatible interfaces** for explicit compatibility control.
+A `port` can reference an **interface** (InterfaceId) for explicit compatibility control. The interface defines which other interfaces it is compatible with.
 
-No **interface** means the _default_ interface and no **compatible interfaces** means the port is compatible with all other ports.
+No **interface** means the _default_ interface which is compatible with all other ports.
 
-It is enough for one `port` to be compatible with another `port` to be compatible with each other.
+Port compatibility is determined by the `interface` definitions at the kit level.
 
 A `port` can have `props` that define measurable characteristics and `attributes` for additional metadata.
 
 ## Model
 
-A `model` is a `tagged` `url` to a resource with an optional **description**.
+A `model` is an optional **name**, `tagged` **url** to a resource with an optional **description**.
 
 No **`tags`** means the _default_ model.
 
@@ -137,6 +137,21 @@ A `benchmark` is a performance standard within a `quality` with a **name**, opti
 
 Benchmarks provide reference points for evaluating quality measurements against industry or design standards.
 
+## Interface
+
+An `interface` is a port compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible interfaces** (InterfaceId references), and `attributes`.
+
+The `interface` is defined at the kit level and referenced by `ports` via InterfaceId.
+
+An empty **compatible interfaces** list means the interface is compatible with all other interfaces.
+
+Two ports are compatible if:
+
+- Both have no interface specified (default compatibility)
+- They reference the same interface
+- One interface's compatible list includes the other interface's guid
+- Either interface has an empty compatible list and the other explicitly allows it
+
 ## Concept
 
 A `concept` is a **name** and **order** pair that provides semantic grouping for `kits`, `types`, or `designs`.
@@ -192,23 +207,21 @@ Stats provide computed or measured performance data for entire designs using the
 - ALWAYS toolfriendly over intuitive.
 - NEVER create new files. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new folders unless for temporary purposes.
-- NEVER worry about breaking compatiblity.
 - NEVER create additional example files and implement it directly in the dependent parts.
 - NEVER remove code that is commented out.
 - NEVER add comments to the code. Especially not to communicate to the user.
 - NEVER ask to run a command where you are not using the output. All dev servers, debugging and testing processes are running.
 - NEVER run modifying `git` commands such as (`git checkout`, `git branch`, …). Only read-only `git` commands are allowed. If you messed up, ALWAYS fix the file.
-- NEVER add comments to the code.
 - NEVER create tests unless you are explicitly asked to.
 - ALWAYS use inline syntax if possible.
 - NEVER add two statements into the same line.
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
-- NEVER add extra new lines inside of code.
+- NEVER add extra new blank lines/newlines inside of code.
 - NEVER add raw text to ui elements. ALWAYS use i18n setups and provide translations for the existing languages.
 - ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - NEVER build or run the code.
-- NEVER care about backwards compatibility. ALWAYS refactor to clean code.
+- NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
 - NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
 
 ### Keywords
@@ -1283,18 +1296,19 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 11. Benchmark
 12. QualityKind
 13. Quality
-14. Prop
-15. Model
-16. Port
-17. Type
-18. Layer
-19. Piece
-20. Group
-21. Side
-22. Connection
-23. Stat
-24. Design
-25. Kit
+14. Interface
+15. Prop
+16. Model
+17. Port
+18. Type
+19. Layer
+20. Piece
+21. Group
+22. Side
+23. Connection
+24. Stat
+25. Design
+26. Kit
 
 ## 2. Classes | Types
 
@@ -1408,6 +1422,14 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 14. Definition
 15. Attributes
 
+### Interface
+
+1. Name
+2. Description
+3. Icon
+4. CompatibleInterfaces
+5. Attributes
+
 ### Prop
 
 1. Key
@@ -1417,20 +1439,21 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 
 ### Model
 
-1. Tags
-2. Url
-3. Description
-4. Attributes
+1. Name
+2. Tags
+3. Url
+4. Description
+5. Attributes
 
 ### Port
 
 1. Id
-2. Point
-3. Direction
-4. T
-5. Mandatory
-6. Interface
-7. CompatibleInterfaces
+2. Name
+3. Point
+4. Direction
+5. T
+6. Mandatory
+7. Interface
 8. Description
 9. Attributes
 
@@ -1474,18 +1497,19 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 ### Piece
 
 1. Id
-2. Type
-3. Design
-4. Plane
-5. Center
-6. Scale
-7. MirrorPlane
-8. Props
-9. IsHidden
-10. IsLocked
-11. Color
-12. Description
-13. Attributes
+2. Name
+3. Type
+4. Design
+5. Plane
+6. Center
+7. Scale
+8. MirrorPlane
+9. Props
+10. IsHidden
+11. IsLocked
+12. Color
+13. Description
+14. Attributes
 
 ### Side
 

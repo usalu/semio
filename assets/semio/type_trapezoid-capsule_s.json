@@ -2,77 +2,77 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "adc6e87b-068a-40a8-af84-63809401cbc7",
+      "guid": "7afba239-10c4-46f7-86f0-9cf2e27fff1e",
       "key": "entrance",
       "value": "side"
     },
     {
       "definition": "",
-      "guid": "cd114da9-830c-4966-bc3c-d9871f636951",
+      "guid": "8544addd-b7bb-4b81-aa18-ce19ec1dbeb7",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "ea2a9478-c1bf-48ec-8efd-e332537c0bcc",
+      "guid": "9da9461d-e6e4-4410-b614-ff1ebcbc6a3c",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "ee0d6089-e6c4-4bcd-865c-6a9fecf8ee8b",
+      "guid": "69c13d1f-547b-4a3a-a622-58ef19238f40",
       "key": "effective floor area",
       "value": "7.19"
     },
     {
       "definition": "",
-      "guid": "670c7640-9298-4628-a032-46353489123e",
+      "guid": "a518de77-492f-4e20-90c3-3ed048bf7c4a",
       "key": "construction cost",
       "value": "68272"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "539fb002-a401-4d69-a175-264cc5948816",
+      "guid": "d0a3858e-cd39-4197-b2f5-00e652f8d9ee",
       "key": "heating energy demand",
       "value": "323"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "6677bce9-f2bd-4ffc-97ff-9ef05d546b78",
+      "guid": "5e1e0a36-0b2f-4e26-a925-bb2ccf5e9dab",
       "key": "cooling energy demand",
       "value": "216"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "1dd52a74-5507-4cf2-8f7b-e06d17486f68",
+      "guid": "0fb743a5-f1fa-4155-890a-39d3a4274964",
       "key": "technical equipment energy demand",
       "value": "216"
     },
     {
       "definition": "",
-      "guid": "616c2b16-5b47-499e-88de-c0dbb5c1d03d",
+      "guid": "e8f9c26c-9a8e-4421-9810-de387af4e31e",
       "key": "income",
       "value": "10780"
     },
     {
       "definition": "",
-      "guid": "9a06b9c6-2335-48f7-855c-568d7c7db52e",
+      "guid": "194cd4ed-359b-4e8f-a82e-1581df39409a",
       "key": "maintenance expenses",
       "value": "862"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "633bc965-b8b5-4cf5-85f6-25273f5f951a",
+      "guid": "a04347e1-261f-401f-b45c-f0dece6cdb8d",
       "key": "construction global warming potential",
       "value": "7186.53"
     }
   ],
   "authors": {
-    "guid": "015d940e-a80f-4723-ba09-5921ee27a7b0"
+    "guid": "5a10ad4d-f051-48e7-b124-fae047739f02"
   },
-  "createdAt": "2025-11-19T20:01:25.068Z",
+  "createdAt": "2025-11-20T18:18:41.064Z",
   "description": "An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
-  "guid": "840cb497-5071-436e-88ca-8db6844fd124",
+  "guid": "456ef8a9-1e6a-428a-89aa-670b6184620f",
   "icon": "icons/trapezoid-capsule_s.svg",
   "image": "images/trapezoid-capsule_s.png",
   "name": "s",
@@ -80,19 +80,17 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "c58bd733-01a8-4134-9efc-916a63b47751",
+      "guid": "2bb3342a-ebc7-4613-9108-fd2578ddcc52",
       "key": "entrance",
       "value": ""
     },
-    "compatibleInterfaces": "door tambour east",
     "description": "The middle of the main entrance door of the upper entrance floor.",
     "direction": {
       "x": -0.14780942,
       "y": -0.9890159,
       "z": 0.0
     },
-    "interface": "door capsule east",
-    "guid": "3ce75cc7-b356-49c8-be10-4fa1a98352a0",
+    "guid": "614abdf9-7984-4b36-8e39-d7b40869a8ba",
     "mandatory": false,
     "point": {
       "x": 0.42,
@@ -101,63 +99,8 @@
     },
     "t": 0.0
   },
-  "models": [
-    {
-      "description": "",
-      "file": "models/trapezoid-capsule_s.glb",
-      "guid": "0bd268db-9280-457e-b2f4-c535aadb7527",
-      "tags": "model/gltf-binary"
-    },
-    {
-      "description": "",
-      "file": "models/trapezoid-capsule_s_1to500.3dm",
-      "guid": "e1c0a80b-5543-4d76-9df2-a2f2fa382d4a",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/trapezoid-capsule_s_1to200.3dm",
-      "guid": "8b708745-5e4a-4e52-aee5-b1d4fb9b4d37",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
-      "guid": "2bf2b76f-6cf2-4263-9062-754044456883",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
-      "guid": "918bbf23-f037-44df-9325-4701549ed45b",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/trapezoid-capsule_s_collider.glb",
-      "guid": "5a0fda62-41cd-44f2-ba6a-bbbe594ee2ec",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ]
-    }
-  ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-19T20:01:25.068Z",
+  "updatedAt": "2025-11-20T18:18:41.064Z",
   "virtual": false
 }

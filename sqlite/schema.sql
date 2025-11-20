@@ -76,6 +76,7 @@ CREATE TABLE design (
 );
 CREATE TABLE model (
 	url VARCHAR(1024) NOT NULL, 
+	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
 	type_id INTEGER, 
@@ -83,9 +84,10 @@ CREATE TABLE model (
 	FOREIGN KEY(type_id) REFERENCES type (id)
 );
 CREATE TABLE port (
+	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(512) NOT NULL, 
 	mandatory BOOLEAN NOT NULL, 
-	interface VARCHAR(64) NOT NULL, 
+	interface_id INTEGER, 
 	t FLOAT NOT NULL, 
 	id INTEGER NOT NULL, 
 	local_id VARCHAR(128), 
@@ -98,6 +100,7 @@ CREATE TABLE port (
 	type_id INTEGER, 
 	PRIMARY KEY (id), 
 	CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), 
+	FOREIGN KEY(interface_id) REFERENCES interface (id), 
 	FOREIGN KEY(type_id) REFERENCES type (id)
 );
 CREATE TABLE author (
@@ -112,6 +115,7 @@ CREATE TABLE author (
 	FOREIGN KEY(design_id) REFERENCES design (id)
 );
 CREATE TABLE piece (
+	name VARCHAR(64) NOT NULL, 
 	description VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
 	local_id VARCHAR(128), 
@@ -134,13 +138,22 @@ CREATE TABLE tag (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(model_id) REFERENCES model (id)
 );
-CREATE TABLE compatible_interface (
+CREATE TABLE interface (
 	name VARCHAR(64) NOT NULL, 
-	"order" INTEGER NOT NULL, 
+	description VARCHAR(512) NOT NULL, 
+	icon VARCHAR(1024) NOT NULL, 
 	id INTEGER NOT NULL, 
-	port_id INTEGER, 
+	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(port_id) REFERENCES port (id)
+	FOREIGN KEY(kit_id) REFERENCES kit (id)
+);
+CREATE TABLE interface_compatibility (
+	id INTEGER NOT NULL, 
+	interface_id INTEGER, 
+	compatible_interface_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(interface_id) REFERENCES interface (id), 
+	FOREIGN KEY(compatible_interface_id) REFERENCES interface (id)
 );
 CREATE TABLE connection (
 	description VARCHAR(512) NOT NULL, 
@@ -186,6 +199,7 @@ CREATE TABLE attribute (
 	piece_id INTEGER, 
 	connection_id INTEGER, 
 	design_id INTEGER, 
+	interface_id INTEGER, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(model_id) REFERENCES model (id), 
@@ -194,5 +208,6 @@ CREATE TABLE attribute (
 	FOREIGN KEY(piece_id) REFERENCES piece (id), 
 	FOREIGN KEY(connection_id) REFERENCES connection (id), 
 	FOREIGN KEY(design_id) REFERENCES design (id), 
+	FOREIGN KEY(interface_id) REFERENCES interface (id), 
 	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );

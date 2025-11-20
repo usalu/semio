@@ -2,101 +2,101 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "6999d5ae-b7c9-4b87-9265-00e31a72a267",
+      "guid": "5088097c-88ee-4000-b895-bb15e5d9d07e",
       "key": "entrance",
       "value": "side"
     },
     {
       "definition": "",
-      "guid": "ad9927ef-b3fd-494a-bd59-a066e65a5ea7",
+      "guid": "4c2bc3bf-fbf3-4381-8196-3f1ab7deb0eb",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "37c31a9c-0ca3-42ce-acfe-302afe04c543",
+      "guid": "b3bb064e-e2c1-4a91-a877-3d2619b5635a",
       "key": "length",
       "value": "4.2"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "62ad82bf-2d40-4230-830d-c7b8077accc9",
+      "guid": "3e61bf93-a063-4667-b754-f671a26ed9ae",
       "key": "width",
       "value": "4.1"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "806c1e6d-01f4-4393-a791-16cab3eacfe6",
+      "guid": "4ff81649-1560-4900-8134-9e231ae2fe39",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "ced7cf10-8e40-4aa8-a7cd-f87bc4c67bfa",
+      "guid": "1214e3ab-a7ea-470a-b10a-27bf1e541f3f",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "fb996e30-4e9e-4198-b185-b63fac6a7fa5",
+      "guid": "cc77c8c6-e175-4b8a-801a-bee13a98c431",
       "key": "effective floor area",
       "value": "11.21"
     },
     {
       "definition": "",
-      "guid": "f8a9140c-4815-4a92-bef0-7566fd47b700",
+      "guid": "18dcd003-c722-41a2-a57f-941433f3042d",
       "key": "construction cost",
       "value": "82992"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "c3662775-ff0e-44b4-bc0d-99876d77f95f",
+      "guid": "017945ca-1bc0-42d7-b2dc-1c095f868051",
       "key": "heating energy demand",
       "value": "393"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "228beda4-5146-4aad-9c47-d1ba9f0dddca",
+      "guid": "373fa057-f566-4de4-9e4c-3e5221d670fe",
       "key": "cooling energy demand",
       "value": "262"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "3d8f9992-8b58-4dbf-b0ec-cd202cccaa80",
+      "guid": "8b6750e1-fd81-4d4b-8894-dca8157b6c87",
       "key": "technical equipment energy demand",
       "value": "262"
     },
     {
       "definition": "",
-      "guid": "7ce9f091-5aa0-4145-a0e8-5950d6e2f732",
+      "guid": "86fdc3f4-73f1-4916-b0a0-0b69f8007dce",
       "key": "income",
       "value": "13104"
     },
     {
       "definition": "",
-      "guid": "b7457beb-8e91-4162-ae96-438d04d9cb82",
+      "guid": "10799ab3-ff9d-4844-bbcd-c152574ae3e3",
       "key": "maintenance expenses",
       "value": "1048"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "25f1c41e-9ef1-415b-bf9a-a3e4e8f05e37",
+      "guid": "f478b3a7-8f9c-4bcc-86a2-ed9c2c2569c5",
       "key": "construction global warming potential",
       "value": "8736.01"
     },
     {
       "definition": "",
-      "guid": "ccfbd5f7-bef3-4a38-b856-981334e818f6",
+      "guid": "3811522b-05d9-450e-b9aa-2359408fc0b3",
       "key": "mirrored",
       "value": ""
     }
   ],
   "authors": {
-    "guid": "f18f74c3-4397-4576-81ea-3622dc622663"
+    "guid": "feaa19f0-48a4-427f-80bb-7f0727ff0a9e"
   },
-  "createdAt": "2025-11-19T20:01:17.698Z",
+  "createdAt": "2025-11-20T18:18:32.57Z",
   "description": "An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
-  "guid": "e625157b-f680-491a-8369-aa762db57b64",
+  "guid": "2e7d398b-6364-455c-bf68-eaaa821590cf",
   "icon": "icons/capsule-with-balcony_z.svg",
   "image": "images/capsule-with-balcony_z.png",
   "name": "z",
@@ -104,19 +104,17 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "73f6765c-d685-449e-9bf6-07be3d128891",
+      "guid": "4f270a66-9345-417e-abde-a2230a587598",
       "key": "entrance",
       "value": ""
     },
-    "compatibleInterfaces": "door tambour west",
     "description": "The middle of the main entrance door of the upper entrance floor.",
     "direction": {
       "x": 1.0,
       "y": 0.0,
       "z": 0.0
     },
-    "interface": "door capsule west",
-    "guid": "453ce6aa-326e-4569-a869-f298809a6b14",
+    "guid": "7ef0539d-df3f-4df7-a089-a8a7a3f945b6",
     "mandatory": false,
     "point": {
       "x": 1.3,
@@ -125,63 +123,8 @@
     },
     "t": 0.0
   },
-  "models": [
-    {
-      "description": "",
-      "file": "models/capsule-with-balcony_z.glb",
-      "guid": "65097d8f-151f-409b-ac73-11d0d862f92a",
-      "tags": "model/gltf-binary"
-    },
-    {
-      "description": "",
-      "file": "models/capsule-with-balcony_z_1to500.3dm",
-      "guid": "86307bc9-3e90-4b81-9233-4d7c805cc366",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/capsule-with-balcony_z_1to200.3dm",
-      "guid": "3df47f32-01c7-4dc2-ba4f-77b16a26b018",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
-      "guid": "2f789bab-c6a4-4979-b625-3b7db25c2af2",
-      "tags": [
-        "model/vnd.3dm",
-        "1to500",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
-      "guid": "3533bc38-824f-4586-817d-9609972e8360",
-      "tags": [
-        "model/vnd.3dm",
-        "1to200",
-        "model/vnd.speckle+json"
-      ]
-    },
-    {
-      "description": "",
-      "file": "models/capsule-with-balcony_z_collider.glb",
-      "guid": "abc8a931-5dbc-4b1b-9538-8d851920aa7f",
-      "tags": [
-        "model/gltf-binary",
-        "collider"
-      ]
-    }
-  ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-19T20:01:17.698Z",
+  "updatedAt": "2025-11-20T18:18:32.57Z",
   "virtual": false
 }

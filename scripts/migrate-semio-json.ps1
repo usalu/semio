@@ -187,10 +187,19 @@ function Migrate-Port {
     if ($null -eq $port) { return $null }
     
     $migrated = @{
-        guid = New-Guid
+        guid = if ($port.PSObject.Properties.Name -contains 'guid') { $port.guid } else { New-Guid }
         t = $port.t
         point = Migrate-Point $port.point
         direction = Migrate-Vector $port.direction
+    }
+    
+    # Name field - migrate from id_ or id
+    if ($port.PSObject.Properties.Name -contains 'name' -and $null -ne $port.name -and $port.name -ne '') {
+        $migrated.name = $port.name
+    } elseif ($port.PSObject.Properties.Name -contains 'id_' -and $null -ne $port.id_ -and $port.id_ -ne '') {
+        $migrated.name = $port.id_
+    } elseif ($port.PSObject.Properties.Name -contains 'id' -and $null -ne $port.id -and $port.id -ne '') {
+        $migrated.name = $port.id
     }
     
     if ($port.PSObject.Properties.Name -contains 'description' -and $null -ne $port.description) {
@@ -228,7 +237,7 @@ function Migrate-Ports {
 }
 
 function Migrate-Type {
-    param($type, $typeNameToGuidMap, $authorEmailToObjectMap)
+    param($type, $typeNameToGuidMap, $authorEmailToObjectMap, $portNameToDataMap = $null)
     
     if ($null -eq $type) { return $null }
     
@@ -349,9 +358,27 @@ function Migrate-Type {
         $migrated.models = $reps
     }
     
-    $ports = Migrate-Ports $type.ports
-    if ($null -ne $ports) {
-        $migrated.ports = $ports
+    # Migrate ports, preserving GUIDs and names from kit if available
+    if ($type.PSObject.Properties.Name -contains 'ports' -and $null -ne $type.ports) {
+        $migratedPorts = @()
+        foreach ($port in $type.ports) {
+            $migratedPort = Migrate-Port $port
+            
+            # If we have port data from kit, use it to ensure consistency
+            if ($null -ne $portNameToDataMap) {
+                $portName = $migratedPort.name
+                if ($null -ne $portName -and $portNameToDataMap.ContainsKey($portName)) {
+                    $kitPortData = $portNameToDataMap[$portName]
+                    $migratedPort.guid = $kitPortData.guid
+                    $migratedPort.name = $kitPortData.name
+                }
+            }
+            
+            $migratedPorts += $migratedPort
+        }
+        if ($migratedPorts.Count -gt 0) {
+            $migrated.ports = $migratedPorts
+        }
     }
     
     $props = Migrate-Props $type.props
@@ -382,6 +409,15 @@ function Migrate-Piece {
     
     $migrated = @{
         guid = if ($piece.PSObject.Properties.Name -contains 'guid') { $piece.guid } else { New-Guid }
+    }
+    
+    # Name field - migrate from id_ or id
+    if ($piece.PSObject.Properties.Name -contains 'name' -and $null -ne $piece.name -and $piece.name -ne '') {
+        $migrated.name = $piece.name
+    } elseif ($piece.PSObject.Properties.Name -contains 'id_' -and $null -ne $piece.id_ -and $piece.id_ -ne '') {
+        $migrated.name = $piece.id_
+    } elseif ($piece.PSObject.Properties.Name -contains 'id' -and $null -ne $piece.id -and $piece.id -ne '') {
+        $migrated.name = $piece.id
     }
     
     # Type reference - convert name to guid reference
@@ -1285,11 +1321,19 @@ function Migrate-JsonFile {
         }
         elseif ($FilePath -match 'type_') {
             Write-Host "  Detected: Type" -ForegroundColor Gray
-            # Pre-load type GUIDs from kit to ensure consistency
+            # Pre-load type GUIDs and port data from kit to ensure consistency
             $typeNameToGuidMap = @{}
+            $portNameToDataMap = @{}
             $authorEmailToObjectMap = $null
             
-            # Load type GUIDs from kit file if it exists
+            # Extract type name from filename (e.g., "type_bridge.json" -> "Bridge")
+            $filename = Split-Path -Leaf $FilePath
+            $typeName = ($filename -replace 'type_', '' -replace '.json', '').Split('_') | ForEach-Object {
+                $_.Substring(0,1).ToUpper() + $_.Substring(1)
+            }
+            $typeName = $typeName -join ' '
+            
+            # Load type GUIDs and port data from kit file if it exists
             $kitPath = Join-Path (Split-Path $FilePath) "kit_metabolism.json"
             if (Test-Path $kitPath) {
                 try {
@@ -1298,16 +1342,28 @@ function Migrate-JsonFile {
                         foreach ($kitType in $kitContent.types) {
                             if ($kitType.PSObject.Properties.Name -contains 'name' -and $kitType.PSObject.Properties.Name -contains 'guid') {
                                 $typeNameToGuidMap[$kitType.name] = $kitType.guid
+                                
+                                # If this is the type we're migrating, collect its port data
+                                if ($kitType.name -eq $typeName -and $kitType.PSObject.Properties.Name -contains 'ports' -and $null -ne $kitType.ports) {
+                                    foreach ($kitPort in $kitType.ports) {
+                                        if ($kitPort.PSObject.Properties.Name -contains 'name' -and $kitPort.PSObject.Properties.Name -contains 'guid') {
+                                            $portNameToDataMap[$kitPort.name] = @{
+                                                guid = $kitPort.guid
+                                                name = $kitPort.name
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-                        Write-Host "  Pre-loaded $($typeNameToGuidMap.Count) type GUIDs from kit" -ForegroundColor DarkGray
+                        Write-Host "  Pre-loaded $($typeNameToGuidMap.Count) type GUIDs and $($portNameToDataMap.Count) ports from kit" -ForegroundColor DarkGray
                     }
                 } catch {
                     Write-Warning "  Could not pre-load types from kit: $_"
                 }
             }
             
-            $migrated = Migrate-Type $content $typeNameToGuidMap $authorEmailToObjectMap
+            $migrated = Migrate-Type $content $typeNameToGuidMap $authorEmailToObjectMap $portNameToDataMap
         }
         elseif ($FilePath -match 'design_') {
             Write-Host "  Detected: Design" -ForegroundColor Gray

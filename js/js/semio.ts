@@ -159,6 +159,7 @@ export type FileId = { guid: Guid };
 export type FolderId = { guid: Guid };
 export type BenchmarkId = { guid: Guid };
 export type QualityId = { guid: Guid };
+export type InterfaceId = { guid: Guid };
 export type PropId = { guid: Guid };
 export type ModelId = { guid: Guid };
 export type PortId = { guid: Guid };
@@ -179,6 +180,7 @@ export const FileIdSchema = z.object({ guid: z.string() });
 export const FolderIdSchema = z.object({ guid: z.string() });
 export const BenchmarkIdSchema = z.object({ guid: z.string() });
 export const QualityIdSchema = z.object({ guid: z.string() });
+export const InterfaceIdSchema = z.object({ guid: z.string() });
 export const PropIdSchema = z.object({ guid: z.string() });
 export const ModelIdSchema = z.object({ guid: z.string() });
 export const PortIdSchema = z.object({ guid: z.string() });
@@ -199,6 +201,7 @@ export const createFileId = (guid: Guid): FileId => ({ guid });
 export const createFolderId = (guid: Guid): FolderId => ({ guid });
 export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
 export const createQualityId = (guid: Guid): QualityId => ({ guid });
+export const createInterfaceId = (guid: Guid): InterfaceId => ({ guid });
 export const createPropId = (guid: Guid): PropId => ({ guid });
 export const createModelId = (guid: Guid): ModelId => ({ guid });
 export const createPortId = (guid: Guid): PortId => ({ guid });
@@ -219,6 +222,7 @@ export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.gui
 export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid === b.guid;
 export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
 export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
+export const areSameInterfaceId = (a: InterfaceId, b: InterfaceId): boolean => a.guid === b.guid;
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
 export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
 export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
@@ -239,6 +243,7 @@ export const getFileGuid = (id: FileId): Guid => id.guid;
 export const getFolderGuid = (id: FolderId): Guid => id.guid;
 export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
 export const getQualityGuid = (id: QualityId): Guid => id.guid;
+export const getInterfaceGuid = (id: InterfaceId): Guid => id.guid;
 export const getPropGuid = (id: PropId): Guid => id.guid;
 export const getModelGuid = (id: ModelId): Guid => id.guid;
 export const getPortGuid = (id: PortId): Guid => id.guid;
@@ -1205,6 +1210,138 @@ export const QualitiesDiffSchema = z.object({
 
 // #endregion Quality
 
+// #region Interface
+// https://github.com/usalu/semio#-interface-
+
+export const InterfaceSchema = z.object({
+  guid: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  compatibleInterfaces: z.array(InterfaceIdSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Interface = z.infer<typeof InterfaceSchema>;
+export const serializeInterface = (iface: Interface): string => JSON.stringify(InterfaceSchema.parse(iface));
+export const deserializeInterface = (json: string): Interface => InterfaceSchema.parse(JSON.parse(json));
+
+export const InterfaceDiffSchema = InterfaceSchema.partial().omit({ compatibleInterfaces: true, attributes: true }).extend({
+  compatibleInterfaces: z.array(InterfaceIdSchema).optional(),
+  attributes: AttributesDiffSchema.optional(),
+});
+export type InterfaceDiff = z.infer<typeof InterfaceDiffSchema>;
+export const getInterfaceDiff = (before: Interface, after: Interface): InterfaceDiff => {
+  const diff: InterfaceDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (JSON.stringify(before.compatibleInterfaces) !== JSON.stringify(after.compatibleInterfaces)) diff.compatibleInterfaces = after.compatibleInterfaces;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseInterfaceDiff = (original: Interface, appliedDiff: InterfaceDiff): InterfaceDiff => {
+  const inverse: InterfaceDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
+  if (appliedDiff.compatibleInterfaces !== undefined) inverse.compatibleInterfaces = original.compatibleInterfaces;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeInterfaceDiff = (diff1: InterfaceDiff, diff2: InterfaceDiff): InterfaceDiff => {
+  return {
+    ...diff1,
+    ...diff2,
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
+  };
+};
+export const applyInterfaceDiff = (base: Interface, diff: InterfaceDiff): Interface => {
+  return {
+    ...base,
+    name: diff.name ?? base.name,
+    description: diff.description ?? base.description,
+    icon: diff.icon ?? base.icon,
+    compatibleInterfaces: diff.compatibleInterfaces ?? base.compatibleInterfaces,
+    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  };
+};
+
+export const InterfacesDiffSchema = z.object({
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: InterfaceDiffSchema })).optional(),
+  added: z.array(InterfaceSchema).optional(),
+});
+export type InterfacesDiff = z.infer<typeof InterfacesDiffSchema>;
+export const getInterfacesDiff = (before: Interface[], after: Interface[]): InterfacesDiff => {
+  const diff: InterfacesDiff = {};
+  const beforeGuids = new Set(before.map((i) => i.guid));
+  const afterGuids = new Set(after.map((i) => i.guid));
+  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => i.guid);
+  if (removed.length > 0) diff.removed = removed;
+  const updated = before
+    .filter((i) => afterGuids.has(i.guid))
+    .map((i) => {
+      const afterInterface = after.find((a) => a.guid === i.guid)!;
+      const interfaceDiff = getInterfaceDiff(i, afterInterface);
+      return { id: i.guid, diff: interfaceDiff };
+    })
+    .filter((u) => Object.keys(u.diff).length > 0);
+  if (updated.length > 0) diff.updated = updated;
+  const added = after.filter((i) => !beforeGuids.has(i.guid));
+  if (added.length > 0) diff.added = added;
+  return diff;
+};
+export const inverseInterfacesDiff = (original: Interface[], appliedDiff: InterfacesDiff): InterfacesDiff => {
+  const inverse: InterfacesDiff = {};
+  if (appliedDiff.removed) inverse.added = original.filter((i) => appliedDiff.removed!.includes(i.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => i.guid);
+  if (appliedDiff.updated) {
+    inverse.updated = appliedDiff.updated.map((u) => {
+      const originalInterface = original.find((i) => i.guid === u.id)!;
+      return { id: u.id, diff: inverseInterfaceDiff(originalInterface, u.diff) };
+    });
+  }
+  return inverse;
+};
+export const mergeInterfacesDiff = (diff1: InterfacesDiff, diff2: InterfacesDiff): InterfacesDiff => {
+  return {
+    removed: [...(diff1.removed ?? []), ...(diff2.removed ?? [])],
+    updated: [...(diff1.updated ?? []), ...(diff2.updated ?? [])],
+    added: [...(diff1.added ?? []), ...(diff2.added ?? [])],
+  };
+};
+export const applyInterfacesDiff = (base: Interface[], diff: InterfacesDiff): Interface[] => {
+  let result = [...base];
+  if (diff.removed) {
+    result = result.filter((i) => !diff.removed!.includes(i.guid));
+  }
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex((i) => i.guid === update.id);
+      if (index !== -1) {
+        result[index] = applyInterfaceDiff(result[index], update.diff);
+      }
+    }
+  }
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  return result;
+};
+
+export const areInterfacesCompatible = (iface1: Interface | undefined, iface2: Interface | undefined, allInterfaces: Interface[]): boolean => {
+  if (!iface1 || !iface2) return true;
+  if (iface1.guid === iface2.guid) return true;
+  const iface1Compatible = iface1.compatibleInterfaces ?? [];
+  const iface2Compatible = iface2.compatibleInterfaces ?? [];
+  if (iface1Compatible.length === 0 && iface2Compatible.length === 0) return true;
+  if (iface1Compatible.length === 0) return iface2Compatible.some((c) => c.guid === iface1.guid);
+  if (iface2Compatible.length === 0) return iface1Compatible.some((c) => c.guid === iface2.guid);
+  return iface1Compatible.some((c) => c.guid === iface2.guid) || iface2Compatible.some((c) => c.guid === iface1.guid);
+};
+
+// #endregion Interface
+
 // #region Prop
 // https://github.com/usalu/semio#-prop-
 
@@ -1320,6 +1457,7 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 
 export const ModelSchema = z.object({
   guid: z.string(),
+  name: z.string().optional(),
   tags: z.array(z.string()).optional(),
   file: z.string(),
   description: z.string().optional(),
@@ -1335,6 +1473,7 @@ export const ModelDiffSchema = ModelSchema.partial().omit({ attributes: true }).
 export type ModelDiff = z.infer<typeof ModelDiffSchema>;
 export const getModelDiff = (before: Model, after: Model): ModelDiff => {
   const diff: ModelDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
   if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
   if (before.file !== after.file) diff.file = after.file;
   if (before.description !== after.description) diff.description = after.description;
@@ -1343,6 +1482,7 @@ export const getModelDiff = (before: Model, after: Model): ModelDiff => {
 };
 export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
   const inverse: ModelDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.tags !== undefined) inverse.tags = original.tags;
   if (appliedDiff.file !== undefined) inverse.file = original.file;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
@@ -1355,6 +1495,7 @@ export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff =>
 export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
   return {
     ...base,
+    name: diff.name ?? base.name,
     tags: diff.tags ?? base.tags,
     file: diff.file ?? base.file,
     description: diff.description ?? base.description,
@@ -1419,13 +1560,13 @@ export const selectBestModel = (models: Model[], selectedTags: string[]): Model 
 
 export const PortSchema = z.object({
   guid: z.string(),
+  name: z.string().optional(),
   t: z.number(),
   point: PointSchema,
   direction: VectorSchema,
   description: z.string().optional(),
-  interface: z.string().optional(),
+  interface: InterfaceIdSchema.optional(),
   mandatory: z.boolean().optional(),
-  compatibleInterfaces: z.array(z.string()).optional(),
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -1443,11 +1584,11 @@ export type PortDiff = z.infer<typeof PortDiffSchema>;
 export const getPortDiff = (before: Port, after: Port): PortDiff => {
   const diff: PortDiff = {};
   if (before.guid !== after.guid) diff.guid = after.guid;
+  if (before.name !== after.name) diff.name = after.name;
   if (before.description !== after.description) diff.description = after.description;
-  if (before.interface !== after.interface) diff.interface = after.interface;
+  if (before.interface?.guid !== after.interface?.guid) diff.interface = after.interface;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
   if (before.t !== after.t) diff.t = after.t - before.t;
-  if (JSON.stringify(before.compatibleInterfaces) !== JSON.stringify(after.compatibleInterfaces)) diff.compatibleInterfaces = after.compatibleInterfaces;
   if (before.point !== after.point) diff.point = getPointDiff(before.point, after.point);
   if (before.direction !== after.direction) diff.direction = getVectorDiff(before.direction, after.direction);
   if (before.props !== after.props) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
@@ -1467,11 +1608,11 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
   const inverse: PortDiff = {};
   if (appliedDiff.guid !== undefined) inverse.guid = original.guid;
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.interface !== undefined) inverse.interface = original.interface;
   if (appliedDiff.mandatory !== undefined) inverse.mandatory = original.mandatory;
   if (appliedDiff.t !== undefined) inverse.t = original.t;
-  if (appliedDiff.compatibleInterfaces !== undefined) inverse.compatibleInterfaces = original.compatibleInterfaces;
   if (appliedDiff.point !== undefined) inverse.point = inversePointDiff(original.point, appliedDiff.point);
   if (appliedDiff.direction !== undefined) inverse.direction = inverseVectorDiff(original.direction, appliedDiff.direction);
   if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(original.props ?? [], appliedDiff.props);
@@ -1482,11 +1623,11 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   return {
     ...base,
     guid: diff.guid ?? base.guid,
+    name: diff.name ?? base.name,
     description: diff.description ?? base.description,
     interface: diff.interface ?? base.interface,
     mandatory: diff.mandatory ?? base.mandatory,
     t: diff.t ?? base.t,
-    compatibleInterfaces: diff.compatibleInterfaces ?? base.compatibleInterfaces,
     point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
     direction: diff.direction ? applyVectorDiff(base.direction, diff.direction) : base.direction,
     props: diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props,
@@ -1800,6 +1941,7 @@ export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 export const PieceSchema = z.object({
   guid: z.string(),
+  name: z.string().optional(),
   type: TypeIdSchema.optional(),
   design: DesignIdSchema.optional(),
   plane: PlaneSchema.optional(),
@@ -1822,16 +1964,43 @@ export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, attribu
 });
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
 export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
-  // TODO: Implement full Piece diff logic
-  return {};
+  const diff: PieceDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.type?.guid !== after.type?.guid) diff.type = after.type;
+  if (before.design?.guid !== after.design?.guid) diff.design = after.design;
+  if (before.plane !== after.plane) diff.plane = after.plane ? getPlaneDiff(before.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, after.plane) : undefined;
+  if (before.center !== after.center) diff.center = after.center;
+  if (before.scale !== after.scale) diff.scale = after.scale;
+  if (before.mirrorPlane !== after.mirrorPlane) diff.mirrorPlane = after.mirrorPlane;
+  if (before.isHidden !== after.isHidden) diff.isHidden = after.isHidden;
+  if (before.isLocked !== after.isLocked) diff.isLocked = after.isLocked;
+  if (before.color !== after.color) diff.color = after.color;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
 };
 export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
-  // TODO: Implement full Piece inverse diff logic
-  return {};
+  const inverse: PieceDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.type !== undefined) inverse.type = original.type;
+  if (appliedDiff.design !== undefined) inverse.design = original.design;
+  if (appliedDiff.plane !== undefined) inverse.plane = original.plane;
+  if (appliedDiff.center !== undefined) inverse.center = original.center;
+  if (appliedDiff.scale !== undefined) inverse.scale = original.scale;
+  if (appliedDiff.mirrorPlane !== undefined) inverse.mirrorPlane = original.mirrorPlane;
+  if (appliedDiff.isHidden !== undefined) inverse.isHidden = original.isHidden;
+  if (appliedDiff.isLocked !== undefined) inverse.isLocked = original.isLocked;
+  if (appliedDiff.color !== undefined) inverse.color = original.color;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
 };
 export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => {
-  // TODO: Implement full Piece merge diff logic
-  return { ...diff1, ...diff2 };
+  return {
+    ...diff1,
+    ...diff2,
+    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
+  };
 };
 export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
   let newPlane = base.plane;
@@ -1845,6 +2014,7 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
   }
   return {
     ...base,
+    name: diff.name ?? base.name,
     type: diff.type ?? base.type,
     design: diff.design ?? base.design,
     plane: newPlane,
@@ -3100,6 +3270,7 @@ export const KitSchema = z.object({
   version: z.string().optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
+  interfaces: z.array(InterfaceSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   files: z.array(FileSchema).optional(),
   folders: z.array(FolderSchema).optional(),
@@ -3120,9 +3291,10 @@ export type Kit = z.infer<typeof KitSchema>;
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
-export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qualities: true, folders: true, authors: true }).extend({
+export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, interfaces: true, qualities: true, folders: true, authors: true }).extend({
   types: z.array(z.string()).optional(),
   designs: z.array(z.string()).optional(),
+  interfaces: z.array(z.string()).optional(),
   qualities: z.array(z.string()).optional(),
   folders: z.array(z.string()).optional(),
   authors: z.array(z.string()).optional(),
@@ -3130,9 +3302,10 @@ export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qua
 export type KitShallow = z.infer<typeof KitShallowSchema>;
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
-export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, qualities: true, authors: true, files: true, folders: true }).extend({
+export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, interfaces: true, qualities: true, authors: true, files: true, folders: true }).extend({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
+  interfaces: InterfacesDiffSchema.optional(),
   qualities: QualitiesDiffSchema.optional(),
   authors: AuthorsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
@@ -3214,6 +3387,25 @@ export const updateDesignInKit = (design: Design): KitDiff => ({
   },
 });
 
+export const addInterfaceToKit = (iface: Interface): KitDiff => ({
+  interfaces: {
+    added: [iface],
+  },
+});
+export const setInterfaceInKit = (iface: Interface): KitDiff => ({
+  interfaces: {
+    added: [iface],
+  },
+});
+export const removeInterfaceFromKit = (interfaceGuid: string): KitDiff => ({
+  interfaces: { removed: [interfaceGuid] },
+});
+export const updateInterfaceInKit = (iface: Interface): KitDiff => ({
+  interfaces: {
+    added: [iface],
+  },
+});
+
 export const findFileInKit = (kit: Kit, fileGuid: string): File => {
   const file = (kit.files || []).find((f) => f.guid === fileGuid);
   if (!file) throw new Error(`File ${fileGuid} not found in kit`);
@@ -3258,6 +3450,12 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
   const design = kit.designs?.find((d) => d.guid === designGuid);
   if (!design) throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
   return design;
+};
+
+export const findInterfaceInKit = (kit: Kit, interfaceGuid: string): Interface => {
+  const iface = kit.interfaces?.find((i) => i.guid === interfaceGuid);
+  if (!iface) throw new Error(`Interface ${interfaceGuid} not found in kit ${kit.name}`);
+  return iface;
 };
 
 export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type => {
