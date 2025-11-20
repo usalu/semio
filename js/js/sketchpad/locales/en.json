@@ -3410,16 +3410,16 @@
               "beginner": "Tools"
             }
           },
-          "noRepresentations": {
+          "noModels": {
             "label": {
-              "normal": "No representations available",
-              "beginner": "No representations available"
+              "normal": "No models available",
+              "beginner": "No models available"
             }
           },
-          "selectRepresentation": {
+          "selectModel": {
             "label": {
-              "normal": "Select representation",
-              "beginner": "Select representation"
+              "normal": "Select model",
+              "beginner": "Select model"
             }
           },
           "noTags": {
@@ -3476,24 +3476,24 @@
               "beginner": "Variant"
             }
           },
-          "representations": {
+          "models": {
             "label": {
-              "normal": "Representations",
-              "beginner": "Manage different 3D models, images, and visual representations for this type."
+              "normal": "Models",
+              "beginner": "Manage different 3D models, images, and visual models for this type."
             },
-            "manual": "type#representations",
-            "tutorial": "hello-semio/model-brick-set#representations"
+            "manual": "type#models",
+            "tutorial": "hello-semio/model-brick-set#models"
           },
-          "representation": {
+          "model": {
             "label": {
-              "normal": "Representation",
-              "beginner": "Representation"
+              "normal": "Model",
+              "beginner": "Model"
             }
           },
-          "representationDescriptionPlaceholder": {
-            "label": "Describe this representation..."
+          "modelDescriptionPlaceholder": {
+            "label": "Describe this model..."
           },
-          "representationTagsPlaceholder": {
+          "modelTagsPlaceholder": {
             "label": "tag1, tag2, tag3"
           },
           "ports": {
@@ -3676,15 +3676,15 @@
                     }
                   }
                 },
-                "representations": {
+                "models": {
                   "label": {
                     "normal": "",
                     "beginner": ""
                   },
                   "title": {
                     "label": {
-                      "normal": "Representations",
-                      "beginner": "Representations"
+                      "normal": "Models",
+                      "beginner": "Models"
                     }
                   },
                   "url": {
@@ -3692,23 +3692,23 @@
                       "normal": "URL",
                       "beginner": "URL to a 3D model, image, or other resource representing this type."
                     },
-                    "manual": "type#representations",
+                    "manual": "type#models",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "description": {
                     "label": {
                       "normal": "Description",
-                      "beginner": "A description of what this representation shows or how it should be used."
+                      "beginner": "A description of what this model shows or how it should be used."
                     },
-                    "manual": "type#representations",
+                    "manual": "type#models",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "tags": {
                     "label": {
                       "normal": "Tags",
-                      "beginner": "Tags to categorize and filter representations (e.g., 'detailed', 'simplified', 'lod1')."
+                      "beginner": "Tags to categorize and filter models (e.g., 'detailed', 'simplified', 'lod1')."
                     },
-                    "manual": "type#representations",
+                    "manual": "type#models",
                     "tutorial": "hello-semio/model-brick-set"
                   }
                 },

@@ -125,16 +125,16 @@
     },
     "t": 0.0
   },
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/capsule_p.glb",
+      "file": "models/capsule_p.glb",
       "guid": "746345d0-79ee-4211-8764-07ea0e525473",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/capsule_p_1to500.3dm",
+      "file": "models/capsule_p_1to500.3dm",
       "guid": "f3e4068b-0fb2-4ff6-b884-b1291691a87a",
       "tags": [
         "model/vnd.3dm",
@@ -143,7 +143,7 @@
     },
     {
       "description": "",
-      "file": "representations/capsule_p_1to200.3dm",
+      "file": "models/capsule_p_1to200.3dm",
       "guid": "875bac72-677b-42d7-88e2-afda28b002ba",
       "tags": [
         "model/vnd.3dm",
@@ -172,7 +172,7 @@
     },
     {
       "description": "",
-      "file": "representations/capsule_p_collider.glb",
+      "file": "models/capsule_p_collider.glb",
       "guid": "f3fb288f-2011-4194-bc22-adce8e60d6b1",
       "tags": [
         "model/gltf-binary",

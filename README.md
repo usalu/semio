@@ -64,7 +64,7 @@ Let me walk you through 🚶
    - [🔗 Connection](#-connection-)
    - [⭕ Piece](#-piece-)
    - [⚓ Port](#-port-)
-   - [💾 Representation](#-representation-)
+   - [💾 Model](#-model-)
    - [🏷️ Attribute](#%EF%B8%8F-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
@@ -239,7 +239,7 @@ Additional [`connections`](#-connection-) which where not used in the _placement
 
 ## 🏠 Type [↑](#-specs-)
 
-A [`type`](#-type-) is a reusable component with different [`representations`](#-representation-), [`ports`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
+A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`ports`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
 
 A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
 
@@ -283,13 +283,13 @@ It is enough for one [`port`](#-port-) to be compatible with another [`port`](#-
 
 A [`port`](#-port-) can have [`props`](#️-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
-## 💾 Representation [↑](#-specs-)
+## 💾 Model [↑](#-specs-)
 
-A [`representation`](#-representation-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
+A [`model`](#-model-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
 
-No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
+No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
 
-The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
+The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
 ## 🏷️ Attribute [↑](#-specs-)
 

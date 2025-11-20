@@ -87,12 +87,12 @@ import {
   ICON_WIDTH,
   isPortInUse,
   Kit,
+  Model,
   Piece,
   Plane,
   planeToMatrix,
   Port,
-  Representation,
-  selectBestRepresentation,
+  selectBestModel,
   TOLERANCE,
   toThreeRotation,
   Type,
@@ -139,7 +139,7 @@ import {
   useTooltip,
   useType,
 } from "../../App";
-import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Input, Model, Scene, Slider, SortableTreeItems, Stepper, Textarea, TransformableModel, TreeContent, TreeItem, TreeSection } from "../../elements";
+import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Geometry, Input, Scene, Slider, SortableTreeItems, Stepper, Textarea, TreeContent, TreeItem, TreeSection } from "../../elements";
 import { AppConfig } from "../index";
 
 let kitAppModuleCache: any = null;
@@ -240,7 +240,7 @@ export interface DesignAppDiff {
   diagramCenter?: Coord;
   diagramScale?: number;
   focusedPieceGuid?: Guid | null;
-  selectedRepresentationTags?: Record<Guid, string[]>;
+  selectedModelTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
 export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
@@ -257,7 +257,7 @@ export interface DesignAppState {
   diagramScale?: number;
   focusedPieceGuid?: Guid;
   currentTransactionStackLength?: number;
-  selectedRepresentationTags?: Record<Guid, string[]>;
+  selectedModelTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
 
@@ -1115,8 +1115,8 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
     return this.yMap.get("focusedPieceGuid") as Guid | undefined;
   }
 
-  get selectedRepresentationTags(): Record<Guid, string[]> {
-    const yTagsMap = this.yMap.get("selectedRepresentationTags") as Y.Map<Y.Array<string>> | undefined;
+  get selectedModelTags(): Record<Guid, string[]> {
+    const yTagsMap = this.yMap.get("selectedModelTags") as Y.Map<Y.Array<string>> | undefined;
     if (!yTagsMap) return {};
     const result: Record<Guid, string[]> = {};
     yTagsMap.forEach((yTags, typeGuid) => {
@@ -1167,7 +1167,7 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
       diagramScale: this.diagramScale,
       focusedPieceGuid: this.focusedPieceGuid,
       currentTransactionStackLength: this.currentTransactionStack.length,
-      selectedRepresentationTags: this.selectedRepresentationTags,
+      selectedModelTags: this.selectedModelTags,
       windowLayout: this.windowLayout,
     };
   }
@@ -1349,13 +1349,13 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
           this.yMap.set("focusedPieceGuid", diff.focusedPieceGuid);
         }
       }
-      if (diff.selectedRepresentationTags !== undefined) {
-        let yTagsMap = this.yMap.get("selectedRepresentationTags") as Y.Map<Y.Array<string>>;
+      if (diff.selectedModelTags !== undefined) {
+        let yTagsMap = this.yMap.get("selectedModelTags") as Y.Map<Y.Array<string>>;
         if (!yTagsMap) {
           yTagsMap = new Y.Map<Y.Array<string>>();
-          this.yMap.set("selectedRepresentationTags", yTagsMap);
+          this.yMap.set("selectedModelTags", yTagsMap);
         }
-        Object.entries(diff.selectedRepresentationTags).forEach(([typeGuid, tags]) => {
+        Object.entries(diff.selectedModelTags).forEach(([typeGuid, tags]) => {
           if (tags.length === 0) {
             yTagsMap.delete(typeGuid);
           } else {
@@ -1515,8 +1515,8 @@ export function useDesignAppFocusedPieceGuid(): Guid | undefined {
   return useDesignApp((s) => s.focusedPieceGuid) as Guid | undefined;
 }
 
-export function useDesignAppSelectedRepresentationTags(): Record<Guid, string[]> {
-  return useDesignApp((s) => s.selectedRepresentationTags ?? {}) as Record<Guid, string[]>;
+export function useDesignAppSelectedModelTags(): Record<Guid, string[]> {
+  return useDesignApp((s) => s.selectedModelTags ?? {}) as Record<Guid, string[]>;
 }
 
 export function useDesignAppHover(): DesignAppHover | undefined {
@@ -4607,7 +4607,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
               unit: "m",
               description: `Missing design: ${piece.design}`,
               ports: [],
-              representations: [],
+              models: [],
             };
             return pieceToNode(piece, fallbackType, center, isSelected, i);
           }
@@ -4617,7 +4617,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
             unit: design.unit || "m",
             description: design.description,
             ports: [],
-            representations: [],
+            models: [],
           };
           return pieceToNode(piece, designAsType, center, isSelected, i);
         }
@@ -4634,7 +4634,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
             unit: "m",
             description: `Missing type: ${piece.type}`,
             ports: [],
-            representations: [],
+            models: [],
           };
           return pieceToNode(piece, fallbackType, center, isSelected, i);
         }
@@ -5805,35 +5805,35 @@ const PieceMesh: FC = () => {
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.guid) as Type | undefined;
   const kit = useKit(undefined, undefined, true) as Kit | undefined;
   const kitStore = useKitStore() as KitStore;
-  const selectedRepresentationTags = useDesignAppSelectedRepresentationTags();
+  const selectedModelTags = useDesignAppSelectedModelTags();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
-    if (!type?.representations || type.representations.length === 0) {
-      return { representationUrl: null, fileExtension: "", fileGuid: null };
+  const { modelUrl, fileExtension, fileGuid } = useMemo(() => {
+    if (!type?.models || type.models.length === 0) {
+      return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
-    const tagsForType = selectedRepresentationTags[type.guid] ?? [];
-    let representation: Representation | undefined;
+    const tagsForType = selectedModelTags[type.guid] ?? [];
+    let model: Model | undefined;
     if (tagsForType.length > 0) {
-      representation = selectBestRepresentation(type.representations, tagsForType);
+      model = selectBestModel(type.models, tagsForType);
     } else {
-      const defaultRep = type.representations.find((r) => !r.tags || r.tags.length === 0);
-      representation = defaultRep ?? type.representations[0];
+      const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
+      model = defaultRep ?? type.models[0];
     }
-    if (!representation) {
-      return { representationUrl: null, fileExtension: "", fileGuid: null };
+    if (!model) {
+      return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
-    const file = kit?.files?.find((f) => f.guid === representation.file);
+    const file = kit?.files?.find((f) => f.guid === model.file);
     if (!file) {
-      return { representationUrl: null, fileExtension: "", fileGuid: null };
+      return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
     const ext = file.name?.split(".").pop() || "";
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
-      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
+      return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
-    return { representationUrl: url, fileExtension: ext, fileGuid: file.guid };
-  }, [type, kit, kitStore, selectedRepresentationTags]);
+    return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
+  }, [type, kit, kitStore, selectedModelTags]);
 
   useEffect(() => {
     if (!fileGuid) {
@@ -5998,7 +5998,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const userData = useMemo(() => ({ id: piece.guid }), [piece.guid]);
 
   const diffedMeshContent = piece.design ? (
-    <Model
+    <Geometry
       selected={isSelected}
       hovered={isHovered}
       onClick={onSelect}

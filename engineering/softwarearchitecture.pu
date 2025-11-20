@@ -326,35 +326,35 @@ class PropsDiff {
 }
 ' #endregion Prop
 
-' #region Representation
-class Representation {
+' #region Model
+class Model {
   tags: list[str]
   url: str
   description: str
   attributes: list[Attribute]
   --
-  context Representation inv descriptionCanBeEmpty:
+  context Model inv descriptionCanBeEmpty:
     description->notEmpty() or description->isEmpty()
 }
 
-class RepresentationId {
+class ModelId {
   url: str
   tags: list[str]
 }
 
-class RepresentationDiff {
+class ModelDiff {
   tags?: list[str]
   url?: str
   description?: str
   attributes?: AttributesDiff
 }
 
-class RepresentationsDiff {
-  removed?: list[RepresentationId]
-  updated?: list[RepresentationDiff]
-  added?: list[Representation]
+class ModelsDiff {
+  removed?: list[ModelId]
+  updated?: list[ModelDiff]
+  added?: list[Model]
 }
-' #endregion Representation
+' #endregion Model
 
 ' #region Port
 class Port {
@@ -406,7 +406,7 @@ class PortsDiff {
 class Type {
   name: str
   variant: str
-  representations: list[Representation]
+  models: list[Model]
   ports: list[Port]
   props: list[Prop]
   isVirtual: bool
@@ -433,7 +433,7 @@ class TypeId {
 class TypeDiff {
   name?: str
   variant?: str
-  representations?: RepresentationsDiff
+  models?: ModelsDiff
   ports?: PortsDiff
   props?: PropsDiff
   isVirtual?: bool
@@ -827,14 +827,14 @@ Prop o-- "1" Quality : references >
 Prop *-- "0..*" Attribute : has >
 Stat o-- "1" Quality : references >
 
-Type *-- "0..*" Representation : has >
+Type *-- "0..*" Model : has >
 Type *-- "0..*" Port : has >
 Type *-- "0..*" Attribute : has >
 Type *-- "0..*" Prop : has >
 Type *-- "1" Location : located at >
 Type *-- "0..*" Author : created by >
 
-Representation *-- "0..*" Attribute : has >
+Model *-- "0..*" Attribute : has >
 
 Port *-- "0..*" Attribute : has >
 Port *-- "1" Point : at >

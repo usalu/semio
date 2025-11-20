@@ -148,7 +148,7 @@ function Migrate-Props {
     return @($props | ForEach-Object { Migrate-Prop $_ })
 }
 
-function Migrate-Representation {
+function Migrate-Model {
     param($rep)
     
     if ($null -eq $rep) { return $null }
@@ -173,12 +173,12 @@ function Migrate-Representation {
     return $migrated
 }
 
-function Migrate-Representations {
-    param($representations)
+function Migrate-Models {
+    param($models)
     
-    if ($null -eq $representations -or $representations.Count -eq 0) { return $null }
+    if ($null -eq $models -or $models.Count -eq 0) { return $null }
     
-    return @($representations | ForEach-Object { Migrate-Representation $_ })
+    return @($models | ForEach-Object { Migrate-Model $_ })
 }
 
 function Migrate-Port {
@@ -344,9 +344,9 @@ function Migrate-Type {
         $migrated.concepts = $type.concepts
     }
     
-    $reps = Migrate-Representations $type.representations
+    $reps = Migrate-Models $type.models
     if ($null -ne $reps) {
-        $migrated.representations = $reps
+        $migrated.models = $reps
     }
     
     $ports = Migrate-Ports $type.ports

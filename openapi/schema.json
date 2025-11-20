@@ -2420,19 +2420,19 @@
         "title": "Attribute",
         "description": "\ud83d\udccf A attribute is a key value pair with an an optional definition."
       },
-      "RepresentationInput": {
+      "ModelInput": {
         "properties": {
           "url": {
             "type": "string",
             "maxLength": 1024,
             "title": "Url",
-            "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+            "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the model."
           },
           "description": {
             "type": "string",
             "maxLength": 512,
             "title": "Description",
-            "description": "\ud83d\udcac The optional human-readable description of the representation.",
+            "description": "\ud83d\udcac The optional human-readable description of the model.",
             "default": ""
           },
           "tags": {
@@ -2441,7 +2441,7 @@
             },
             "type": "array",
             "title": "Tags",
-            "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
+            "description": "\ud83c\udff7\ufe0f The optional tags to group models. No tags means default."
           },
           "attributes": {
             "items": {
@@ -2449,29 +2449,29 @@
             },
             "type": "array",
             "title": "Attributes",
-            "description": "\ud83d\udccf The attributes of the representation."
+            "description": "\ud83d\udccf The attributes of the model."
           }
         },
         "type": "object",
         "required": [
           "url"
         ],
-        "title": "RepresentationInput",
-        "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
+        "title": "ModelInput",
+        "description": "\ud83d\udcbe A model is a link to a resource that describes a type for a certain level of detail and tags."
       },
-      "Representation": {
+      "Model": {
         "properties": {
           "url": {
             "type": "string",
             "maxLength": 1024,
             "title": "Url",
-            "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation."
+            "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the model."
           },
           "description": {
             "type": "string",
             "maxLength": 512,
             "title": "Description",
-            "description": "\ud83d\udcac The optional human-readable description of the representation.",
+            "description": "\ud83d\udcac The optional human-readable description of the model.",
             "default": ""
           },
           "tags": {
@@ -2480,7 +2480,7 @@
             },
             "type": "array",
             "title": "Tags",
-            "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
+            "description": "\ud83c\udff7\ufe0f The optional tags to group models. No tags means default."
           },
           "attributes": {
             "items": {
@@ -2488,15 +2488,15 @@
             },
             "type": "array",
             "title": "Attributes",
-            "description": "\ud83d\udccf The attributes of the representation."
+            "description": "\ud83d\udccf The attributes of the model."
           }
         },
         "type": "object",
         "required": [
           "url"
         ],
-        "title": "Representation",
-        "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
+        "title": "Model",
+        "description": "\ud83d\udcbe A model is a link to a resource that describes a type for a certain level of detail and tags."
       },
       "SideContext": {
         "properties": {
@@ -2800,12 +2800,12 @@
               }
             ]
           },
-          "representations": {
+          "models": {
             "items": {
-              "$ref": "#/components/schemas/RepresentationInput"
+              "$ref": "#/components/schemas/ModelInput"
             },
             "type": "array",
-            "title": "Representations"
+            "title": "Models"
           },
           "ports": {
             "items": {
@@ -2913,12 +2913,12 @@
               }
             ]
           },
-          "representations": {
+          "models": {
             "items": {
-              "$ref": "#/components/schemas/Representation"
+              "$ref": "#/components/schemas/Model"
             },
             "type": "array",
-            "title": "Representations"
+            "title": "Models"
           },
           "ports": {
             "items": {

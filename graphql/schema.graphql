@@ -109,7 +109,7 @@ type Type implements Node {
   unit: String!
   created: DateTime!
   updated: DateTime!
-  representations(before: String, after: String, first: Int, last: Int): RepresentationNodeConnection
+  models(before: String, after: String, first: Int, last: Int): ModelNodeConnection
   ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
@@ -125,7 +125,7 @@ type Type implements Node {
   concepts: [String!]!
 }
 
-type RepresentationNodeConnection {
+type ModelNodeConnection {
   """
   Pagination data for this connection.
   """
@@ -134,17 +134,17 @@ type RepresentationNodeConnection {
   """
   Contains the nodes in this connection.
   """
-  edges: [RepresentationNodeEdge]!
+  edges: [ModelNodeEdge]!
 }
 
 """
-A Relay edge containing a `RepresentationNode` and its cursor.
+A Relay edge containing a `ModelNode` and its cursor.
 """
-type RepresentationNodeEdge {
+type ModelNodeEdge {
   """
   The item at the end of the edge
   """
-  node: Representation
+  node: Model
 
   """
   A cursor for use in pagination
@@ -152,7 +152,7 @@ type RepresentationNodeEdge {
   cursor: String!
 }
 
-type Representation implements Node {
+type Model implements Node {
   url: String!
   description: String!
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
@@ -197,7 +197,7 @@ type Attribute implements Node {
   value: String!
   unit: String!
   definition: String!
-  representation: Representation
+  model: Model
   port: Port
   type: Type
   piece: Piece
@@ -632,7 +632,7 @@ input TypeInputNode {
   """
   unit: String = ""
   location: LocationInputNode = null
-  representations: [RepresentationInputNode] = null
+  models: [ModelInputNode] = null
   ports: [PortInputNode] = null
   authors: [AuthorInputNode] = null
   attributes: [AttributeInputNode] = null
@@ -651,24 +651,24 @@ input LocationInputNode {
   latitude: Float!
 }
 
-input RepresentationInputNode {
+input ModelInputNode {
   """
-  🔗 The Unique Resource Locator (URL) to the resource of the representation.
+  🔗 The Unique Resource Locator (URL) to the resource of the model.
   """
   url: String!
 
   """
-  💬 The optional human-readable description of the representation.
+  💬 The optional human-readable description of the model.
   """
   description: String = ""
 
   """
-  🏷️ The optional tags to group representations. No tags means default.
+  🏷️ The optional tags to group models. No tags means default.
   """
   tags: [String] = null
 
   """
-  🏷️ The attributes of the representation.
+  🏷️ The attributes of the model.
   """
   attributes: [AttributeInputNode] = null
 }

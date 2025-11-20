@@ -30,7 +30,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
 import { useLabel } from "../../../i18n";
-import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Point, Port, Representation, selectBestRepresentation, File as SemioFile, Type, TypeDiff, Vector } from "../../../semio";
+import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, Type, TypeDiff, Vector } from "../../../semio";
 import type { KitStore, SketchpadStore, TypeStore } from "../../App";
 import {
   Canvas,
@@ -59,7 +59,7 @@ import {
   useType,
   useTypeScope,
 } from "../../App";
-import { Input, Model, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
+import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
 import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, Transact, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
 import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 import { AppConfig } from "../index";
@@ -105,24 +105,24 @@ type YTypeApps = Y.Map<YTypeApp>;
 
 export interface TypeAppSelection {
   ports?: Guid[];
-  representations?: Guid[];
+  models?: Guid[];
 }
 export interface TypeAppSelectionPortsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
-export interface TypeAppSelectionRepresentationsDiff {
+export interface TypeAppSelectionModelsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
 export interface TypeAppSelectionDiff {
   ports?: TypeAppSelectionPortsDiff;
-  representations?: TypeAppSelectionRepresentationsDiff;
+  models?: TypeAppSelectionModelsDiff;
 }
 export enum TypeAppFullscreenWindow {
   None = "none",
   Ports = "ports",
-  Representations = "representations",
+  Models = "models",
 }
 
 export enum TypeAppWindowKind {
@@ -134,7 +134,7 @@ export interface TypeAppPresence {
 }
 export interface TypeAppHover {
   port?: Guid;
-  representation?: Guid;
+  model?: Guid;
 }
 export interface TypeAppPresenceOther extends TypeAppPresence {
   name: string;
@@ -148,8 +148,8 @@ export interface TypeAppDiff {
   activeTool?: ToolKind;
   camera?: Camera;
   focusedPortGuid?: Guid | null;
-  selectedRepresentationGuid?: Guid | null;
-  selectedRepresentationTags?: string[];
+  selectedModelGuid?: Guid | null;
+  selectedModelTags?: string[];
   windowLayout?: any;
 }
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
@@ -163,8 +163,8 @@ export interface TypeAppState {
   others: TypeAppPresenceOther[];
   camera?: Camera;
   focusedPortGuid?: Guid;
-  selectedRepresentationGuid?: Guid;
-  selectedRepresentationTags?: string[];
+  selectedModelGuid?: Guid;
+  selectedModelTags?: string[];
   windowLayout?: any;
 }
 
@@ -185,10 +185,10 @@ function inverseTypeAppSelectionDiff(selection: TypeAppSelection, diff: TypeAppS
       removed: diff.ports.added ?? [],
     };
   }
-  if (diff.representations) {
-    inverse.representations = {
-      added: diff.representations.removed ?? [],
-      removed: diff.representations.added ?? [],
+  if (diff.models) {
+    inverse.models = {
+      added: diff.models.removed ?? [],
+      removed: diff.models.added ?? [],
     };
   }
   return inverse;
@@ -285,9 +285,9 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       result.ports = ports.toArray();
     }
 
-    const representations = selection.get("representations") as Y.Array<string>;
-    if (representations) {
-      result.representations = representations.toArray();
+    const models = selection.get("models") as Y.Array<string>;
+    if (models) {
+      result.models = models.toArray();
     }
 
     return result;
@@ -300,8 +300,8 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     const result: TypeAppHover = {};
     const port = hover.get("port");
     if (port) result.port = port;
-    const representation = hover.get("representation");
-    if (representation) result.representation = representation;
+    const model = hover.get("model");
+    if (model) result.model = model;
 
     return result;
   }
@@ -323,12 +323,12 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     return this.yMap.get("focusedPortGuid") as Guid | undefined;
   }
 
-  get selectedRepresentationGuid(): Guid | undefined {
-    return this.yMap.get("selectedRepresentationGuid") as Guid | undefined;
+  get selectedModelGuid(): Guid | undefined {
+    return this.yMap.get("selectedModelGuid") as Guid | undefined;
   }
 
-  get selectedRepresentationTags(): string[] {
-    const yTags = this.yMap.get("selectedRepresentationTags") as Y.Array<string> | undefined;
+  get selectedModelTags(): string[] {
+    const yTags = this.yMap.get("selectedModelTags") as Y.Array<string> | undefined;
     return yTags ? yTags.toArray() : [];
   }
 
@@ -365,8 +365,8 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       pastTransactionsStack: this.pastTransactionsStack,
       camera: this.camera,
       focusedPortGuid: this.focusedPortGuid,
-      selectedRepresentationGuid: this.selectedRepresentationGuid,
-      selectedRepresentationTags: this.selectedRepresentationTags,
+      selectedModelGuid: this.selectedModelGuid,
+      selectedModelTags: this.selectedModelTags,
       windowLayout: this.windowLayout,
     } as any;
   }
@@ -405,24 +405,24 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       }
     }
 
-    if (selectionDiff.representations) {
-      let yRepresentations = selection.get("representations") as Y.Array<string>;
-      if (!yRepresentations) {
-        yRepresentations = new Y.Array<string>();
-        selection.set("representations", yRepresentations);
+    if (selectionDiff.models) {
+      let yModels = selection.get("models") as Y.Array<string>;
+      if (!yModels) {
+        yModels = new Y.Array<string>();
+        selection.set("models", yModels);
       }
 
-      if (selectionDiff.representations.removed) {
-        for (const repId of selectionDiff.representations.removed) {
-          const index = yRepresentations.toArray().indexOf(repId);
-          if (index >= 0) yRepresentations.delete(index, 1);
+      if (selectionDiff.models.removed) {
+        for (const repId of selectionDiff.models.removed) {
+          const index = yModels.toArray().indexOf(repId);
+          if (index >= 0) yModels.delete(index, 1);
         }
       }
 
-      if (selectionDiff.representations.added) {
-        for (const repId of selectionDiff.representations.added) {
-          if (!yRepresentations.toArray().includes(repId)) {
-            yRepresentations.push([repId]);
+      if (selectionDiff.models.added) {
+        for (const repId of selectionDiff.models.added) {
+          if (!yModels.toArray().includes(repId)) {
+            yModels.push([repId]);
           }
         }
       }
@@ -469,18 +469,18 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
             yHover.delete("port");
           }
         }
-        if (diff.hover.representation !== undefined) {
-          if (diff.hover.representation) {
-            yHover.set("representation", diff.hover.representation);
+        if (diff.hover.model !== undefined) {
+          if (diff.hover.model) {
+            yHover.set("model", diff.hover.model);
           } else {
-            yHover.delete("representation");
+            yHover.delete("model");
           }
         }
-        if (diff.hover.representation !== undefined) {
-          if (diff.hover.representation) {
-            yHover.set("representation", diff.hover.representation);
+        if (diff.hover.model !== undefined) {
+          if (diff.hover.model) {
+            yHover.set("model", diff.hover.model);
           } else {
-            yHover.delete("representation");
+            yHover.delete("model");
           }
         }
       }
@@ -497,22 +497,22 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
           this.yMap.set("focusedPortGuid", diff.focusedPortGuid);
         }
       }
-      if (diff.selectedRepresentationGuid !== undefined) {
-        if (diff.selectedRepresentationGuid === null) {
-          this.yMap.delete("selectedRepresentationGuid");
+      if (diff.selectedModelGuid !== undefined) {
+        if (diff.selectedModelGuid === null) {
+          this.yMap.delete("selectedModelGuid");
         } else {
-          this.yMap.set("selectedRepresentationGuid", diff.selectedRepresentationGuid);
+          this.yMap.set("selectedModelGuid", diff.selectedModelGuid);
         }
       }
-      if (diff.selectedRepresentationTags !== undefined) {
-        let yTags = this.yMap.get("selectedRepresentationTags") as Y.Array<string>;
+      if (diff.selectedModelTags !== undefined) {
+        let yTags = this.yMap.get("selectedModelTags") as Y.Array<string>;
         if (!yTags) {
           yTags = new Y.Array<string>();
-          this.yMap.set("selectedRepresentationTags", yTags);
+          this.yMap.set("selectedModelTags", yTags);
         }
         yTags.delete(0, yTags.length);
-        if (diff.selectedRepresentationTags.length > 0) {
-          yTags.push(diff.selectedRepresentationTags);
+        if (diff.selectedModelTags.length > 0) {
+          yTags.push(diff.selectedModelTags);
         }
       }
       if (diff.windowLayout !== undefined) {
@@ -659,16 +659,16 @@ export function useTypeAppCommands(id?: TypeAppId) {
       setActiveTool: noOp,
       selectPort: noOp,
       deselectPort: noOp,
-      selectRepresentation: noOp,
-      deselectRepresentation: noOp,
+      selectModel: noOp,
+      deselectModel: noOp,
       hoverPort: noOp,
-      hoverRepresentation: noOp,
+      hoverModel: noOp,
       clearHover: noOp,
-      setSelectedRepresentation: noOp,
-      addRepresentationTag: noOp,
-      removeRepresentationTag: noOp,
-      clearRepresentationTags: noOp,
-      setRepresentationTags: noOp,
+      setSelectedModel: noOp,
+      addModelTag: noOp,
+      removeModelTag: noOp,
+      clearModelTags: noOp,
+      setModelTags: noOp,
       execute: noOp,
     };
   }
@@ -732,28 +732,28 @@ export function useTypeAppCommands(id?: TypeAppId) {
         });
       }
     },
-    selectRepresentation: (origin: string, representationId: Guid) => {
+    selectModel: (origin: string, modelId: Guid) => {
       const selection = store.selection;
-      const representations = selection.representations || [];
-      if (!representations.includes(representationId)) {
+      const models = selection.models || [];
+      if (!models.includes(modelId)) {
         store.change({
           selection: {
-            representations: {
-              added: [representationId],
+            models: {
+              added: [modelId],
             },
           },
         });
       }
     },
-    deselectRepresentation: (origin: string, representationId?: Guid) => {
+    deselectModel: (origin: string, modelId?: Guid) => {
       const selection = store.selection;
-      const representations = selection.representations || [];
-      if (representationId) {
-        if (representations.includes(representationId)) {
+      const models = selection.models || [];
+      if (modelId) {
+        if (models.includes(modelId)) {
           store.change({
             selection: {
-              representations: {
-                removed: [representationId],
+              models: {
+                removed: [modelId],
               },
             },
           });
@@ -761,8 +761,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
       } else {
         store.change({
           selection: {
-            representations: {
-              removed: representations,
+            models: {
+              removed: models,
             },
           },
         });
@@ -775,10 +775,10 @@ export function useTypeAppCommands(id?: TypeAppId) {
         },
       });
     },
-    hoverRepresentation: (origin: string, representationId: Guid) => {
+    hoverModel: (origin: string, modelId: Guid) => {
       store.change({
         hover: {
-          representation: representationId,
+          model: modelId,
         },
       });
     },
@@ -786,19 +786,19 @@ export function useTypeAppCommands(id?: TypeAppId) {
       store.change({
         hover: {
           port: undefined,
-          representation: undefined,
+          model: undefined,
         },
       });
     },
-    setSelectedRepresentation: (origin: string, representationGuid: Guid) => {
+    setSelectedModel: (origin: string, modelGuid: Guid) => {
       store.change({
-        selectedRepresentationGuid: representationGuid,
+        selectedModelGuid: modelGuid,
       });
     },
-    addRepresentationTag: (origin: string, tag: string) => store.execute("semio.typeApp.addRepresentationTag", origin, tag),
-    removeRepresentationTag: (origin: string, tag: string) => store.execute("semio.typeApp.removeRepresentationTag", origin, tag),
-    clearRepresentationTags: (origin: string) => store.execute("semio.typeApp.clearRepresentationTags", origin),
-    setRepresentationTags: (origin: string, tags: string[]) => store.execute("semio.typeApp.setRepresentationTags", origin, tags),
+    addModelTag: (origin: string, tag: string) => store.execute("semio.typeApp.addModelTag", origin, tag),
+    removeModelTag: (origin: string, tag: string) => store.execute("semio.typeApp.removeModelTag", origin, tag),
+    clearModelTags: (origin: string) => store.execute("semio.typeApp.clearModelTags", origin),
+    setModelTags: (origin: string, tags: string[]) => store.execute("semio.typeApp.setModelTags", origin, tags),
     execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
@@ -819,12 +819,12 @@ export function useTypeAppIsPortHovered(id: TypeAppId | undefined, portId: strin
   return useTypeApp((s) => s.hover?.port === portId, id) as boolean;
 }
 
-export function useTypeAppSelectedRepresentationGuid(): Guid | undefined {
-  return useTypeApp((s) => s.selectedRepresentationGuid) as Guid | undefined;
+export function useTypeAppSelectedModelGuid(): Guid | undefined {
+  return useTypeApp((s) => s.selectedModelGuid) as Guid | undefined;
 }
 
-export function useTypeAppSelectedRepresentationTags(): string[] {
-  return useTypeApp((s) => s.selectedRepresentationTags ?? []) as string[];
+export function useTypeAppSelectedModelTags(): string[] {
+  return useTypeApp((s) => s.selectedModelTags ?? []) as string[];
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
@@ -858,20 +858,20 @@ export const commands = {
       },
     };
   },
-  "semio.typeApp.selectRepresentation": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.selectModel": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
         selection: {
-          representations: { added: [reprGuid], removed: [] },
+          models: { added: [reprGuid], removed: [] },
         },
       },
     };
   },
-  "semio.typeApp.deselectRepresentation": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.deselectModel": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
         selection: {
-          representations: { added: [], removed: [reprGuid] },
+          models: { added: [], removed: [reprGuid] },
         },
       },
     };
@@ -883,10 +883,10 @@ export const commands = {
       },
     };
   },
-  "semio.typeApp.hoverRepresentation": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.hoverModel": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
-        hover: { representation: reprGuid },
+        hover: { model: reprGuid },
       },
     };
   },
@@ -939,7 +939,7 @@ export const commands = {
       diff: {
         selection: {
           ports: { removed: context.typeApp.selection?.ports || [] },
-          representations: { removed: context.typeApp.selection?.representations || [] },
+          models: { removed: context.typeApp.selection?.models || [] },
         },
       },
     };
@@ -947,46 +947,46 @@ export const commands = {
   "semio.typeApp.selectAll": (context: TypeAppCommandContext): TypeAppCommandResult => {
     const type = context.kit.types?.find((t) => t.guid === context.Guid);
     const allPorts = type?.ports?.map((p) => p.guid) || [];
-    const allRepresentations = type?.representations?.map((r) => r.guid) || [];
+    const allModels = type?.models?.map((r) => r.guid) || [];
     return {
       diff: {
         selection: {
           ports: { added: allPorts },
-          representations: { added: allRepresentations },
+          models: { added: allModels },
         },
       },
     };
   },
-  "semio.typeApp.addRepresentationTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
-    const currentTags = context.typeApp.selectedRepresentationTags || [];
+  "semio.typeApp.addModelTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
+    const currentTags = context.typeApp.selectedModelTags || [];
     if (currentTags.includes(tag)) {
       return {};
     }
     return {
       diff: {
-        selectedRepresentationTags: [...currentTags, tag],
+        selectedModelTags: [...currentTags, tag],
       },
     };
   },
-  "semio.typeApp.removeRepresentationTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
-    const currentTags = context.typeApp.selectedRepresentationTags || [];
+  "semio.typeApp.removeModelTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
+    const currentTags = context.typeApp.selectedModelTags || [];
     return {
       diff: {
-        selectedRepresentationTags: currentTags.filter((t) => t !== tag),
+        selectedModelTags: currentTags.filter((t) => t !== tag),
       },
     };
   },
-  "semio.typeApp.clearRepresentationTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
+  "semio.typeApp.clearModelTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
     return {
       diff: {
-        selectedRepresentationTags: [],
+        selectedModelTags: [],
       },
     };
   },
-  "semio.typeApp.setRepresentationTags": (context: TypeAppCommandContext, tags: string[]): TypeAppCommandResult => {
+  "semio.typeApp.setModelTags": (context: TypeAppCommandContext, tags: string[]): TypeAppCommandResult => {
     return {
       diff: {
-        selectedRepresentationTags: tags,
+        selectedModelTags: tags,
       },
     };
   },
@@ -1064,7 +1064,7 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   );
 
   return (
-    <Model hovered={isHovered} onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} userData={userData} showEdges={false}>
+    <Geometry hovered={isHovered} onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} userData={userData} showEdges={false}>
       <group>
         <Sphere args={[0.03]} position={position}>
           <meshBasicMaterial color={color} />
@@ -1074,7 +1074,7 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
           <meshBasicMaterial color={color} />
         </Sphere>
       </group>
-    </Model>
+    </Geometry>
   );
 };
 
@@ -1176,48 +1176,48 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const type = useType(undefined, undefined, true) as Type | undefined;
   const kit = useKit(undefined, undefined, true) as Kit | undefined;
   const kitStore = useKitStore() as KitStore;
-  const selectedRepresentationGuid = useTypeAppSelectedRepresentationGuid();
-  const selectedRepresentationTags = useTypeAppSelectedRepresentationTags();
+  const selectedModelGuid = useTypeAppSelectedModelGuid();
+  const selectedModelTags = useTypeAppSelectedModelTags();
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  const { representationUrl, fileExtension, fileGuid } = useMemo(() => {
-    if (!type?.representations || type.representations.length === 0) {
-      return { representationUrl: null, fileExtension: "", fileGuid: null };
+  const { modelUrl, fileExtension, fileGuid } = useMemo(() => {
+    if (!type?.models || type.models.length === 0) {
+      return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    let representation: Representation | undefined;
+    let model: Model | undefined;
 
-    if (selectedRepresentationGuid) {
-      representation = type.representations.find((r) => r.guid === selectedRepresentationGuid);
-    } else if (selectedRepresentationTags.length > 0) {
-      representation = selectBestRepresentation(type.representations, selectedRepresentationTags);
+    if (selectedModelGuid) {
+      model = type.models.find((r) => r.guid === selectedModelGuid);
+    } else if (selectedModelTags.length > 0) {
+      model = selectBestModel(type.models, selectedModelTags);
     } else {
-      const defaultRep = type.representations.find((r) => !r.tags || r.tags.length === 0);
-      representation = defaultRep ?? type.representations[0];
+      const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
+      model = defaultRep ?? type.models[0];
     }
 
-    if (!representation) {
-      return { representationUrl: null, fileExtension: "", fileGuid: null };
+    if (!model) {
+      return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    const file = kit?.files?.find((f) => f.guid === representation.file);
+    const file = kit?.files?.find((f) => f.guid === model.file);
     if (!file) {
-      return { representationUrl: null, fileExtension: "", fileGuid: null };
+      return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
     const ext = file.name?.split(".").pop() || "";
 
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
-      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid };
+      return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
 
-    return { representationUrl: url, fileExtension: ext, fileGuid: file.guid };
-  }, [type, kit, kitStore, selectedRepresentationGuid, selectedRepresentationTags]);
+    return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
+  }, [type, kit, kitStore, selectedModelGuid, selectedModelTags]);
 
   // Convert file provider URLs to blob URLs that Three.js can load
   useEffect(() => {
@@ -1632,15 +1632,15 @@ const TypeDetailsForm: FC = () => {
   );
 };
 
-export const RepresentationsSection: FC = () => {
+export const ModelsSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <RepresentationsSectionForm />;
+  return <ModelsSectionForm />;
 };
 
-const RepresentationsSectionForm: FC = () => {
+const ModelsSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const { selectRepresentation, deselectRepresentation, hoverRepresentation, clearHover } = useTypeAppCommands();
+  const { selectModel, deselectModel, hoverModel, clearHover } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
   const selection = useTypeAppSelection();
@@ -1650,27 +1650,27 @@ const RepresentationsSectionForm: FC = () => {
     kitCommands?.updateType(origin, type.guid, diff);
   };
 
-  const updateRepresentation = (origin: string, id: string, representationDiff: any) => {
+  const updateModel = (origin: string, id: string, modelDiff: any) => {
     applyDiff(origin, {
-      representations: {
-        updated: [{ id, diff: representationDiff }],
+      models: {
+        updated: [{ id, diff: modelDiff }],
       },
     });
   };
 
-  const hasRepresentations = type.representations && type.representations.length > 0;
+  const hasModels = type.models && type.models.length > 0;
 
   return (
     <>
       <TreeItem
-        id="semio.sketchpad.app.type.representations"
+        id="semio.sketchpad.app.type.models"
         actions={[
           {
             icon: <AddIcon />,
             onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.representations.add";
+              const origin = "semio.sketchpad.app.type.panel.details.models.add";
               applyDiff(origin, {
-                representations: {
+                models: {
                   added: [{ guid: guid(), url: "", tags: [] }],
                 },
               });
@@ -1679,52 +1679,50 @@ const RepresentationsSectionForm: FC = () => {
           },
         ]}
       >
-        {hasRepresentations && (
+        {hasModels && (
           <SortableTreeItems
-            items={(type.representations || []).map((representation: any, index: number) => ({
-              ...representation,
-              id: `representation-${index}`,
+            items={(type.models || []).map((model: any, index: number) => ({
+              ...model,
+              id: `model-${index}`,
               index,
             }))}
             onReorder={(oldIndex, newIndex) => {
-              if (!type.representations) return;
-              const origin = "semio.sketchpad.app.type.panel.details.representations.reorder";
+              if (!type.models) return;
+              const origin = "semio.sketchpad.app.type.panel.details.models.reorder";
               applyDiff(origin, {
-                representations: {
-                  removed: type.representations.map((representation: any) => representation.guid),
-                  added: arrayMove(type.representations, oldIndex, newIndex),
+                models: {
+                  removed: type.models.map((model: any) => model.guid),
+                  added: arrayMove(type.models, oldIndex, newIndex),
                 },
               });
             }}
           >
-            {(representation, index) => {
-              const isSelected = selection?.representations?.includes(representation.guid) || false;
-              const isHovered = hover?.representation === representation.guid;
+            {(model, index) => {
+              const isSelected = selection?.models?.includes(model.guid) || false;
+              const isHovered = hover?.model === model.guid;
               return (
                 <div
-                  key={`representation-${index}`}
-                  onPointerEnter={() => hoverRepresentation("semio.sketchpad.app.type.panel.details.representation.hover", representation.guid)}
-                  onPointerLeave={() => clearHover("semio.sketchpad.app.type.panel.details.representation.leave")}
-                  onClick={() =>
-                    isSelected ? deselectRepresentation("semio.sketchpad.app.type.panel.details.representation.deselect", representation.guid) : selectRepresentation("semio.sketchpad.app.type.panel.details.representation.select", representation.guid)
-                  }
+                  key={`model-${index}`}
+                  onPointerEnter={() => hoverModel("semio.sketchpad.app.type.panel.details.model.hover", model.guid)}
+                  onPointerLeave={() => clearHover("semio.sketchpad.app.type.panel.details.model.leave")}
+                  onClick={() => (isSelected ? deselectModel("semio.sketchpad.app.type.panel.details.model.deselect", model.guid) : selectModel("semio.sketchpad.app.type.panel.details.model.select", model.guid))}
                 >
                   <TreeItem
-                    key={`representation-${index}`}
-                    id="semio.sketchpad.app.type.representation"
-                    label={representation.url}
+                    key={`model-${index}`}
+                    id="semio.sketchpad.app.type.model"
+                    label={model.url}
                     sortable={true}
-                    sortableId={`representation-${index}`}
+                    sortableId={`model-${index}`}
                     isDragHandle={true}
                     className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
                     actions={[
                       {
                         icon: <RemoveIcon />,
                         onClick: () => {
-                          const origin = "semio.sketchpad.app.type.panel.details.representations.remove";
+                          const origin = "semio.sketchpad.app.type.panel.details.models.remove";
                           applyDiff(origin, {
-                            representations: {
-                              removed: [representation.guid],
+                            models: {
+                              removed: [model.guid],
                             },
                           });
                         },
@@ -1735,10 +1733,10 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          id="semio.sketchpad.app.type.panel.details.section.representations.url"
-                          value={representation.url}
+                          id="semio.sketchpad.app.type.panel.details.section.models.url"
+                          value={model.url}
                           onChange={(e) => {
-                            updateRepresentation("semio.sketchpad.app.type.panel.details.section.representations.url", representation.guid, { url: e.target.value });
+                            updateModel("semio.sketchpad.app.type.panel.details.section.models.url", model.guid, { url: e.target.value });
                           }}
                           showLabel
                         />
@@ -1747,11 +1745,11 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Textarea
-                          id="semio.sketchpad.app.type.panel.details.section.representations.description"
-                          value={representation.description || ""}
-                          placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.models.description"
+                          value={model.description || ""}
+                          placeholderId="semio.sketchpad.app.type.modelDescriptionPlaceholder.label"
                           onChange={(e) => {
-                            updateRepresentation("semio.sketchpad.app.type.panel.details.section.representations.description", representation.guid, { description: e.target.value });
+                            updateModel("semio.sketchpad.app.type.panel.details.section.models.description", model.guid, { description: e.target.value });
                           }}
                           showLabel
                         />
@@ -1760,11 +1758,11 @@ const RepresentationsSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Input
-                          id="semio.sketchpad.app.type.panel.details.section.representations.tags"
-                          value={(representation.tags || []).join(", ")}
-                          placeholderId="semio.sketchpad.app.type.representationTagsPlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.models.tags"
+                          value={(model.tags || []).join(", ")}
+                          placeholderId="semio.sketchpad.app.type.modelTagsPlaceholder.label"
                           onChange={(e) => {
-                            updateRepresentation("semio.sketchpad.app.type.panel.details.section.representations.tags", representation.guid, {
+                            updateModel("semio.sketchpad.app.type.panel.details.section.models.tags", model.guid, {
                               tags: e.target.value
                                 .split(",")
                                 .map((tag) => tag.trim())
@@ -2937,7 +2935,7 @@ const App: FC = () => {
       content: () => (
         <>
           <TypeDetails />
-          <RepresentationsSection />
+          <ModelsSection />
           <PortsListSection />
           <AuthorsSection />
           <AttributesSection />
@@ -2993,10 +2991,10 @@ const App: FC = () => {
           updatedAt: new Date(),
         };
 
-        // Create Representation that references the file
-        const newRepresentationGuid = guid();
-        const newRepresentation: Representation = {
-          guid: newRepresentationGuid,
+        // Create Model that references the file
+        const newModelGuid = guid();
+        const newModel: Model = {
+          guid: newModelGuid,
           file: newFileGuid,
           description: file.name,
         };
@@ -3004,15 +3002,15 @@ const App: FC = () => {
         // Add file to kit with blob
         await kitCommands.addFile("semio.sketchpad.app.type.panel.details.addFile", newFile, file);
 
-        // Add representation to type
-        await kitCommands.updateType("semio.sketchpad.app.type.panel.details.addRepresentation", type.guid, {
-          representations: {
-            added: [newRepresentation],
+        // Add model to type
+        await kitCommands.updateType("semio.sketchpad.app.type.panel.details.addModel", type.guid, {
+          models: {
+            added: [newModel],
           },
         });
 
-        // Select the new representation
-        typeAppCommands.setSelectedRepresentation("semio.sketchpad.app.type.dropRepresentation", newRepresentationGuid);
+        // Select the new model
+        typeAppCommands.setSelectedModel("semio.sketchpad.app.type.dropModel", newModelGuid);
       }
     };
 

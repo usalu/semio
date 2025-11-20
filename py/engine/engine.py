@@ -297,9 +297,9 @@ class NoTypeOrDesignAssigned(NoParentAssigned):
         return "👪 The entity has no parent type or design assigned."
 
 
-class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
+class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
     def __str__(self):
-        return "👪 The entity has no parent representation, port, type, piece, connection, design, kit or folder assigned."
+        return "👪 The entity has no parent model, port, type, piece, connection, design, kit or folder assigned."
 
 
 class AlreadyExists(SpecificationError, abc.ABC):
@@ -564,8 +564,8 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     PLURAL = "attributes"
     __tablename__ = "attributes"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    representationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("representation_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("representations.id")), default=None, exclude=True)
-    representation: typing.Optional["Representation"] = sqlmodel.Relationship(back_populates="attributes")
+    modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
+    model: typing.Optional["Model"] = sqlmodel.Relationship(back_populates="attributes")
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
     port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="attributes")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
@@ -595,31 +595,31 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.CheckConstraint(
             """
         (
-            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL AND folder_id IS NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL AND folder_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NOT NULL)
+            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NOT NULL)
         )
         """,
             name="ck_attributes_parent_set",
@@ -627,9 +627,9 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
     )
 
-    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", "Folder", None]:
-        if self.representation is not None:
-            return self.representation
+    def parent(self) -> typing.Union["Model", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", "Folder", None]:
+        if self.model is not None:
+            return self.model
         if self.port is not None:
             return self.port
         if self.type is not None:
@@ -654,7 +654,7 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
             return self.benchmark
         if self.folder is not None:
             return self.folder
-        raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
+        raise NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         return self.name
@@ -687,8 +687,8 @@ class TagOrderField(RealField, abc.ABC):
 class Tag(TagOrderField, TagNameField, Table, table=True):
     __tablename__ = "tags"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    representationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("representation_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("representations.id")), default=None, exclude=True)
-    representation: typing.Optional["Representation"] = sqlmodel.Relationship(back_populates="tags_")
+    modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
+    model: typing.Optional["Model"] = sqlmodel.Relationship(back_populates="tags_")
 
 
 # endregion Tag
@@ -1774,7 +1774,7 @@ class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, Pr
             return self.type
         if self.design is not None:
             return self.design
-        raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
+        raise NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         return self.key
@@ -1800,75 +1800,75 @@ class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, Pr
 
 # endregion Prop
 
-# region Representation
-# https://github.com/usalu/semio-representation-
+# region Model
+# https://github.com/usalu/semio-model-
 
 
-class RepresentationUrlField(RealField, abc.ABC):
+class ModelUrlField(RealField, abc.ABC):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
 
-class RepresentationFileField(RealField, abc.ABC):
+class ModelFileField(RealField, abc.ABC):
     file: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 
-class RepresentationDescriptionField(RealField, abc.ABC):
+class ModelDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class RepresentationTagsField(MaskedField, abc.ABC):
+class ModelTagsField(MaskedField, abc.ABC):
     tags: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class RepresentationId(RepresentationTagsField, Id):
+class ModelId(ModelTagsField, Id):
     pass
 
 
-class RepresentationProps(RepresentationTagsField, RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, Props):
+class ModelProps(ModelTagsField, ModelDescriptionField, ModelFileField, ModelUrlField, Props):
     pass
 
 
-class RepresentationInput(RepresentationTagsField, RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, Input):
+class ModelInput(ModelTagsField, ModelDescriptionField, ModelFileField, ModelUrlField, Input):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, Context):
+class ModelContext(ModelTagsField, ModelDescriptionField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class RepresentationOutput(RepresentationTagsField, RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, Output):
+class ModelOutput(ModelTagsField, ModelDescriptionField, ModelFileField, ModelUrlField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Representation(RepresentationDescriptionField, RepresentationFileField, RepresentationUrlField, TableEntity, table=True):
-    PLURAL = "representations"
-    __tablename__ = "representations"
+class Model(ModelDescriptionField, ModelFileField, ModelUrlField, TableEntity, table=True):
+    PLURAL = "models"
+    __tablename__ = "models"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    tags_: list[Tag] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
+    tags_: list[Tag] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="representations")
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="models")
 
     @property
-    def tags(self: "Representation") -> list[str]:
+    def tags(self: "Model") -> list[str]:
         return [tag.name for tag in sorted(self.tags_, key=lambda x: x.order)]
 
     @tags.setter
-    def tags(self: "Representation", tags: list[str]):
+    def tags(self: "Model", tags: list[str]):
         self.tags_ = [Tag(name=tag, order=i) for i, tag in enumerate(tags)]
 
-    def parent(self: "Representation") -> "Type":
+    def parent(self: "Model") -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls, input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
+    def parse(cls, input: str | dict | ModelInput | typing.Any | None) -> "Model":
         if input is None:
             return cls(url="", file="")
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = RepresentationProps.model_validate(obj)
+        props = ModelProps.model_validate(obj)
         entity = cls(**props.model_dump())
         try:
             entity.tags = obj["tags"]
@@ -1880,28 +1880,28 @@ class Representation(RepresentationDescriptionField, RepresentationFileField, Re
             pass
         return entity
 
-    def dump(self) -> "RepresentationOutput":
-        entity = {**RepresentationProps.model_validate(self).model_dump()}
+    def dump(self) -> "ModelOutput":
+        entity = {**ModelProps.model_validate(self).model_dump()}
         #  TODO: Fix bug with tags not being dumped correctly.
         # Probably some sqlmodel issue with transient objects that are never written to the database.
         # 'str' object has no attribute 'order'
         # entity["tags"] = self.tags
         entity["attributes"] = [q.dump() for q in self.attributes]
-        return RepresentationOutput(**entity)
+        return ModelOutput(**entity)
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
         return [self.tags]
 
 
-class NoRepresentationAssigned(NoParentAssigned):
+class NoModelAssigned(NoParentAssigned):
     def __str__(self):
-        return "👪 The entity has no parent representation assigned."
+        return "👪 The entity has no parent model assigned."
 
 
-class RepresentationNode(TableEntityNode):
+class ModelNode(TableEntityNode):
     class Meta:
-        model = Representation
+        model = Model
         excludedFields = ("tags_",)
 
     # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
@@ -1910,12 +1910,12 @@ class RepresentationNode(TableEntityNode):
     #     return self.attributes
 
 
-class RepresentationInputNode(InputNode):
+class ModelInputNode(InputNode):
     class Meta:
-        model = RepresentationInput
+        model = ModelInput
 
 
-# endregion Representation
+# endregion Model
 
 # region Port
 # https://github.com/usalu/semio-port-
@@ -2215,7 +2215,7 @@ class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFiel
     is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
     folder: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
-    representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
+    models: list[ModelInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     props: list[PropInput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
@@ -2228,7 +2228,7 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
     is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
     folder: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
-    representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
+    models: list[ModelOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     props: list[PropOutput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
@@ -2270,7 +2270,7 @@ class Type(
 
     locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
 
-    representations: list[Representation] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    models: list[Model] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     ports: list[Port] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
@@ -2351,8 +2351,8 @@ class Type(
         except KeyError:
             pass
         try:
-            representations = [Representation.parse(r) for r in obj["representations"]]
-            entity.representations = representations
+            models = [Model.parse(r) for r in obj["models"]]
+            entity.models = models
         except KeyError:
             pass
         try:
@@ -2384,7 +2384,7 @@ class Type(
 
     def dump(self) -> "TypeOutput":
         entity = {**TypeProps.model_validate(self).model_dump()}
-        entity["representations"] = [r.dump() for r in self.representations]
+        entity["models"] = [r.dump() for r in self.models]
         entity["ports"] = [p.dump() for p in self.ports]
         entity["props"] = [p.dump() for p in self.props]
         entity["attributes"] = [q.dump() for q in self.attributes]
@@ -3793,14 +3793,14 @@ class OperationBuilder(lark.Transformer):
     # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=
     # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types
     # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,/representations
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,/representations/aHR0cHM6Ly9hcHAuc3BlY2tsZS5zeXN0ZW1zL3Byb2plY3RzL2U3ZGUxYTJmOGYvbW9kZWxzL2IzYzIwZGI5NzA=
-    # C:\git\semio\examples\metabolism/types/Capsule,/representations/https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
+    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,/models
+    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,/models/aHR0cHM6Ly9hcHAuc3BlY2tsZS5zeXN0ZW1zL3Byb2plY3RzL2U3ZGUxYTJmOGYvbW9kZWxzL2IzYzIwZGI5NzA=
+    # C:\git\semio\examples\metabolism/types/Capsule,/models/https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
     # uri: C:\git\semio\examples\metabolism
     # kind: type
     # typeName: Capsule
     # typeVariant: ""
-    # representationUrl: https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
+    # modelUrl: https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
 
     def code(self, children):
         if len(children) == 0:
@@ -3831,17 +3831,17 @@ class OperationBuilder(lark.Transformer):
             "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
         }
 
-    # def representation(self, children):
+    # def model(self, children):
     #     type = children[0]
     #     code = {
     #         "typeName": type["typeName"],
     #         "typeVariant": type["typeVariant"],
     #     }
     #     if len(children) == 1:
-    #         code["kind"] = "representations"
+    #         code["kind"] = "models"
     #     else:
-    #         code["kind"] = "representation"
-    #         code["representationUrl"] = decode(children[1].value)
+    #         code["kind"] = "model"
+    #         code["modelUrl"] = decode(children[1].value)
 
     #     return code
 
@@ -4098,10 +4098,10 @@ class DatabaseStore(Store, abc.ABC):
                                 self.session.add(newPort)
                         self.session.flush()
 
-                        existingType.representations = []
-                        for representation in list(type.representations):
-                            representation.type = existingType
-                            self.session.add(representation)
+                        existingType.models = []
+                        for model in list(type.models):
+                            model.type = existingType
+                            self.session.add(model)
                         self.session.flush()
 
                         existingType.attributes = []
@@ -4511,7 +4511,7 @@ Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
 Ids SHOULD be abreviated and don't have to be globally unique.
 Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
-The diagram is only a nice 2D representation of the design and does not change the design.
+The diagram is only a nice 2D model of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
 When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
 # logger.debug("System prompt: {}", systemPrompt)
@@ -4786,11 +4786,11 @@ GRAPHQLTYPES = {
     "list[__main__.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
     "list[__mp_main__.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
     "list[engine.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    "Representation": graphene.NonNull(lambda: RepresentationNode),
-    "list[Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
-    "list[__main__.Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
-    "list[__mp_main__.Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
-    "list[engine.Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
+    "Model": graphene.NonNull(lambda: ModelNode),
+    "list[Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
+    "list[__main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
+    "list[__mp_main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
+    "list[engine.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
     "Author": graphene.NonNull(lambda: AuthorNode),
     "list[Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
     "list[__main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),

@@ -125,16 +125,16 @@
     },
     "t": 0.0
   },
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/capsule-with-balcony_p.glb",
+      "file": "models/capsule-with-balcony_p.glb",
       "guid": "cef8a734-5849-4fa4-b7bf-edaac5a7e35f",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/capsule-with-balcony_p_1to500.3dm",
+      "file": "models/capsule-with-balcony_p_1to500.3dm",
       "guid": "edd5bd50-87d9-4a80-96e2-b579c706d8b1",
       "tags": [
         "model/vnd.3dm",
@@ -143,7 +143,7 @@
     },
     {
       "description": "",
-      "file": "representations/capsule-with-balcony_p_1to200.3dm",
+      "file": "models/capsule-with-balcony_p_1to200.3dm",
       "guid": "972fea99-b84b-4be8-b855-871e795a4231",
       "tags": [
         "model/vnd.3dm",
@@ -172,7 +172,7 @@
     },
     {
       "description": "",
-      "file": "representations/capsule-with-balcony_p_collider.glb",
+      "file": "models/capsule-with-balcony_p_collider.glb",
       "guid": "ac46e833-2ec4-45cb-ae88-639669c8d18c",
       "tags": [
         "model/gltf-binary",

@@ -144,16 +144,16 @@
       "t": 0.75
     }
   ],
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/bridge.glb",
+      "file": "models/bridge.glb",
       "guid": "27b844c0-717a-4590-8a28-924f47349aa7",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/bridge_1to500.3dm",
+      "file": "models/bridge_1to500.3dm",
       "guid": "082a6327-74b8-4f56-a953-f39f5b037f8f",
       "tags": [
         "model/vnd.3dm",
@@ -172,7 +172,7 @@
     },
     {
       "description": "",
-      "file": "representations/bridge_1to200.3dm",
+      "file": "models/bridge_1to200.3dm",
       "guid": "bfc6987f-fe66-44f8-b6c0-ef8bf2335f89",
       "tags": [
         "model/vnd.3dm",
@@ -191,7 +191,7 @@
     },
     {
       "description": "",
-      "file": "representations/bridge_collider.glb",
+      "file": "models/bridge_collider.glb",
       "guid": "5d0e1aa0-0115-4655-a956-a49c5d1f83f2",
       "tags": [
         "model/gltf-binary",

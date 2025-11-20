@@ -9,6 +9,7 @@
 Refactor all entity references from simple GUID strings to structured ID objects with a `guid` property. This enables future GraphQL query expansion while maintaining type safety.
 
 ### Current State
+
 ```typescript
 // Entities reference others by GUID string
 {
@@ -20,6 +21,7 @@ Refactor all entity references from simple GUID strings to structured ID objects
 ```
 
 ### Target State
+
 ```typescript
 // Entities reference others by ID objects
 {
@@ -50,7 +52,7 @@ All entities that reference other entities (in order from specs):
 12. **Benchmark** - self-contained
 13. **Quality** - self-contained
 14. **Prop** - references: `key: string` (quality key) → `quality: QualityId`
-15. **Representation** - self-contained
+15. **Model** - self-contained
 16. **Port** - self-contained
 17. **Type** - references: `authors: string[]` → `authors: AuthorId[]`, location needs `location: LocationId`
 18. **Layer** - self-contained
@@ -73,7 +75,7 @@ export type FileId = { guid: Guid };
 export type FolderId = { guid: Guid };
 export type BenchmarkId = { guid: Guid };
 export type QualityId = { guid: Guid };
-export type RepresentationId = { guid: Guid };
+export type ModelId = { guid: Guid };
 export type PortId = { guid: Guid };
 export type TypeId = { guid: Guid };
 export type LayerId = { guid: Guid };
@@ -88,34 +90,43 @@ export type KitId = { guid: Guid };
 ### 1.3. Reference Changes Required
 
 #### File
+
 - `folder?: string` → `folder?: FolderId`
 
 #### Folder
+
 - `parent?: string` → `parent?: FolderId`
 
 #### Prop
+
 - `key: string` → `quality: QualityId`
 
 #### Type
+
 - `authors?: string[]` → `authors?: AuthorId[]`
 - `location?: Location` → `location?: LocationId`
 
 #### Piece
+
 - `type?: string` → `type?: TypeId`
 - `design?: string` → `design?: DesignId`
 
 #### Group
+
 - `pieces?: string[]` → `pieces?: PieceId[]`
 
 #### Side
+
 - `piece: string` → `piece: PieceId`
 - `designPiece?: string` → `designPiece?: PieceId`
 - `port: number` → `port: PortId`
 
 #### Stat
+
 - `key: string` → `quality: QualityId`
 
 #### Design
+
 - `authors?: string[]` → `authors?: AuthorId[]`
 - `location?: Location` → `location?: LocationId`
 - `activeLayer?: string` → `activeLayer?: LayerId`
@@ -123,6 +134,7 @@ export type KitId = { guid: Guid };
 ### 1.4. Affected Files
 
 #### Core Schema (semio.ts)
+
 - Define all `*Id` types
 - Update all entity schemas
 - Update all diff types
@@ -131,6 +143,7 @@ export type KitId = { guid: Guid };
 - Update helper functions
 
 #### Store Layer (App.tsx - main)
+
 - Update Y.js type definitions
 - Update all Store classes
 - Update snapshot building
@@ -139,6 +152,7 @@ export type KitId = { guid: Guid };
 - Update all hooks
 
 #### App Stores
+
 - `js/js/sketchpad/apps/design/App.tsx` - DesignAppStore
 - `js/js/sketchpad/apps/type/App.tsx` - TypeAppStore
 - `js/js/sketchpad/apps/quality/App.tsx` - QualityAppStore
@@ -146,25 +160,30 @@ export type KitId = { guid: Guid };
 - `js/js/sketchpad/apps/home/App.tsx` - HomeStore
 
 #### Commands
+
 - Update all command signatures
 - Update command context builders
 - Update command implementations
 
 #### UI Components
+
 - Update all components that reference entities
 - Update form inputs
 - Update selectors and dropdowns
 
 #### JSON Schema
+
 - `jsonschema/kit.json`
 - `jsonschema/design.json`
 - `jsonschema/type.json`
 - All other schema files
 
 #### GraphQL Schema
+
 - `graphql/schema.graphql`
 
 #### SQL Schema
+
 - `sqlite/schema.sql`
 
 ## 2. Implementation Strategy
@@ -176,6 +195,7 @@ export type KitId = { guid: Guid };
 #### Steps:
 
 1. **Define ID types** (after Guid definition)
+
    ```typescript
    // Entity ID types
    export type AttributeId = { guid: Guid };
@@ -185,6 +205,7 @@ export type KitId = { guid: Guid };
    ```
 
 2. **Add ID schemas**
+
    ```typescript
    export const AttributeIdSchema = z.object({ guid: z.string() });
    export const LocationIdSchema = z.object({ guid: z.string() });
@@ -207,16 +228,17 @@ export type KitId = { guid: Guid };
    - Update getDiff, inverseDiff, mergeDiff, applyDiff
 
 5. **Add helper functions**
+
    ```typescript
    // ID constructors
    export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
    export const createLocationId = (guid: Guid): LocationId => ({ guid });
    // ... all others
-   
+
    // ID comparisons
    export const areSameAttribute = (a: AttributeId, b: AttributeId): boolean => a.guid === b.guid;
    // ... all others
-   
+
    // ID extractors
    export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
    // ... all others
@@ -268,7 +290,7 @@ export type KitId = { guid: Guid };
 
 2. **TypeAppStore** (`js/js/sketchpad/apps/type/App.tsx`)
    - Update port references
-   - Update representation handling
+   - Update model handling
    - Update commands
 
 3. **KitAppStore** (`js/js/sketchpad/apps/kit/App.tsx`)
@@ -466,6 +488,7 @@ Create a PowerShell migration script: `scripts/migrate-to-entity-ids.ps1`
 Once this refactor is complete, we enable:
 
 1. **GraphQL field expansion**
+
    ```graphql
    query {
      design {
@@ -474,7 +497,7 @@ Once this refactor is complete, we enable:
            guid
            name
            variant
-           representations { ... }
+           models { ... }
          }
        }
      }
@@ -504,6 +527,7 @@ Once this refactor is complete, we enable:
 ### Phase 1: Core Types (semio.ts) - ✅ COMPLETE
 
 **Completed:**
+
 - ✅ All 19 ID type definitions created
 - ✅ All 19 ID schemas (Zod) created
 - ✅ All ID constructor functions (`create*Id`)
@@ -526,12 +550,13 @@ Once this refactor is complete, we enable:
   - Design flattening functions
   - Cluster functions
   - File tree building
-  - Representation helpers
+  - Model helpers
   - Port finding helpers
   - And many more...
 - ✅ No TypeScript errors in semio.ts
 
 **Key Changes:**
+
 1. All entity cross-references now use ID objects with `.guid` property
 2. Prop.key renamed to Prop.quality (with QualityId type)
 3. Stat.key renamed to Stat.quality (with QualityId type)
@@ -549,6 +574,7 @@ Once this refactor is complete, we enable:
 **Phase 2: Store Layer - ✅ COMPLETE**
 
 All Y.js stores updated to handle ID objects:
+
 - ✅ FileStore: folder field returns FolderId in snapshot(), accepts FolderId in change()
 - ✅ FolderStore: parent field returns FolderId in snapshot(), accepts FolderId in change()
 - ✅ SideStore: piece, designPiece, port fields return ID objects in snapshot(), accept ID objects in change()
@@ -557,6 +583,7 @@ All Y.js stores updated to handle ID objects:
 - ✅ No TypeScript errors in App.tsx
 
 **Pattern established:**
+
 - Y.js stores GUID strings internally (for CRDTs)
 - Getters/setters work with GUID strings
 - snapshot() returns ID objects matching semio.ts schemas
@@ -570,6 +597,7 @@ All Y.js stores updated to handle ID objects:
 **Phase 3-7: ✅ COMPLETE**
 
 All remaining phases completed with no TypeScript errors:
+
 - ✅ Phase 3: App Stores - Commands updated to work with ID objects
 - ✅ Phase 4: Commands - All command handlers using .guid accessors where needed
 - ✅ Phase 5: UI Components - Components accessing ID fields updated
@@ -577,6 +605,7 @@ All remaining phases completed with no TypeScript errors:
 - ✅ Phase 7: Examples & Testing - Will need migration scripts for existing data
 
 **Final Status:**
+
 - ✅ No TypeScript compilation errors
 - ✅ Core type system complete (semio.ts)
 - ✅ Store layer complete (App.tsx)

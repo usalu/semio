@@ -497,24 +497,24 @@
       "title": "Attribute",
       "type": "object"
     },
-    "Representation": {
-      "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+    "Model": {
+      "description": "\ud83d\udcbe A model is a link to a resource that describes a type for a certain level of detail and tags.",
       "properties": {
         "url": {
-          "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the representation.",
+          "description": "\ud83d\udd17 The Unique Resource Locator (URL) to the resource of the model.",
           "maxLength": 1024,
           "title": "Url",
           "type": "string"
         },
         "description": {
           "default": "",
-          "description": "\ud83d\udcac The optional human-readable description of the representation.",
+          "description": "\ud83d\udcac The optional human-readable description of the model.",
           "maxLength": 512,
           "title": "Description",
           "type": "string"
         },
         "tags": {
-          "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default.",
+          "description": "\ud83c\udff7\ufe0f The optional tags to group models. No tags means default.",
           "items": {
             "type": "string"
           },
@@ -522,7 +522,7 @@
           "type": "array"
         },
         "attributes": {
-          "description": "\ud83d\udccf The attributes of the representation.",
+          "description": "\ud83d\udccf The attributes of the model.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -533,7 +533,7 @@
       "required": [
         "url"
       ],
-      "title": "Representation",
+      "title": "Model",
       "type": "object"
     },
     "Side": {
@@ -661,11 +661,11 @@
           ],
           "default": null
         },
-        "representations": {
+        "models": {
           "items": {
-            "$ref": "#/$defs/Representation"
+            "$ref": "#/$defs/Model"
           },
-          "title": "Representations",
+          "title": "Models",
           "type": "array"
         },
         "ports": {

@@ -140953,16 +140953,16 @@
           "t": 0.125
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/base.glb",
+          "file": "models/base.glb",
           "guid": "b0660f8d-f092-4653-97c6-71f0ac2099f4",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/base_1to500.3dm",
+          "file": "models/base_1to500.3dm",
           "guid": "c99f94a5-7230-4f6f-a667-a28cb4742f97",
           "tags": [
             "model/vnd.3dm",
@@ -140971,7 +140971,7 @@
         },
         {
           "description": "",
-          "file": "representations/base_1to200.3dm",
+          "file": "models/base_1to200.3dm",
           "guid": "6020feda-fcf7-4d4f-aea8-cdb7b3eea951",
           "tags": [
             "model/vnd.3dm",
@@ -141002,7 +141002,7 @@
         },
         {
           "description": "",
-          "file": "representations/base_collider.glb",
+          "file": "models/base_collider.glb",
           "guid": "cd5427ce-512b-4343-814b-941bbe79b935",
           "tags": [
             "model/gltf-binary",
@@ -141158,16 +141158,16 @@
           "t": 0.125
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/base_blob.glb",
+          "file": "models/base_blob.glb",
           "guid": "806bfd7c-8d65-4ca7-a4ff-81e5ef374a90",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/base_blob_1to500.3dm",
+          "file": "models/base_blob_1to500.3dm",
           "guid": "07573886-c3dc-4cf0-afb6-29e4e35f3172",
           "tags": [
             "model/vnd.3dm",
@@ -141186,7 +141186,7 @@
         },
         {
           "description": "",
-          "file": "representations/base_blob_1to200.3dm",
+          "file": "models/base_blob_1to200.3dm",
           "guid": "e2cf0641-24a0-426f-a66f-a6f7f8810841",
           "tags": [
             "model/vnd.3dm",
@@ -141205,7 +141205,7 @@
         },
         {
           "description": "",
-          "file": "representations/base_blob_collider.glb",
+          "file": "models/base_blob_collider.glb",
           "guid": "efc2eb22-ad77-463e-bca8-3f9e40d78880",
           "tags": [
             "model/gltf-binary",
@@ -141364,16 +141364,16 @@
           "t": 0.75
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/bridge.glb",
+          "file": "models/bridge.glb",
           "guid": "19350d18-0646-4357-8ac9-0caeea26287a",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/bridge_1to500.3dm",
+          "file": "models/bridge_1to500.3dm",
           "guid": "da9e21fb-a15d-4016-940e-aba2289e8eb3",
           "tags": [
             "model/vnd.3dm",
@@ -141392,7 +141392,7 @@
         },
         {
           "description": "",
-          "file": "representations/bridge_1to200.3dm",
+          "file": "models/bridge_1to200.3dm",
           "guid": "0f5d54a0-2eec-4a15-ac89-28afcfa26801",
           "tags": [
             "model/vnd.3dm",
@@ -141411,7 +141411,7 @@
         },
         {
           "description": "",
-          "file": "representations/bridge_collider.glb",
+          "file": "models/bridge_collider.glb",
           "guid": "6d26090e-b2d6-4b4f-b1e8-679ede135cab",
           "tags": [
             "model/gltf-binary",
@@ -141528,16 +141528,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capital.glb",
+          "file": "models/capital.glb",
           "guid": "ccf84c78-1566-4631-ac3d-ee879ca5e457",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capital_1to500.3dm",
+          "file": "models/capital_1to500.3dm",
           "guid": "0dfffa2a-3a5a-435f-9323-2dca22da9878",
           "tags": [
             "model/vnd.3dm",
@@ -141546,7 +141546,7 @@
         },
         {
           "description": "",
-          "file": "representations/capital_1to200.3dm",
+          "file": "models/capital_1to200.3dm",
           "guid": "076f8fcb-ee8e-4f97-8f5e-1480b1762820",
           "tags": [
             "model/vnd.3dm",
@@ -141575,7 +141575,7 @@
         },
         {
           "description": "",
-          "file": "representations/capital_collider.glb",
+          "file": "models/capital_collider.glb",
           "guid": "b12ee362-847b-44b8-9bf8-06e185123e3c",
           "tags": [
             "model/gltf-binary",
@@ -141680,16 +141680,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/cylindric-capital.glb",
+          "file": "models/cylindric-capital.glb",
           "guid": "0056dca6-9356-442a-b893-2c5a6b8dc763",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/cylindric-capital_1to500.3dm",
+          "file": "models/cylindric-capital_1to500.3dm",
           "guid": "f63543fb-6e47-4b61-bf45-8f49f203283b",
           "tags": [
             "model/vnd.3dm",
@@ -141708,7 +141708,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-capital_1to200.3dm",
+          "file": "models/cylindric-capital_1to200.3dm",
           "guid": "b9f621a6-62aa-4144-94b6-fa4af6b6a6a2",
           "tags": [
             "model/vnd.3dm",
@@ -141727,7 +141727,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-capital_collider.glb",
+          "file": "models/cylindric-capital_collider.glb",
           "guid": "28e57c82-1215-409f-9008-63a010ac4a5d",
           "tags": [
             "model/gltf-binary",
@@ -141863,16 +141863,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_backslash.glb",
+          "file": "models/capsule_backslash.glb",
           "guid": "dbc83610-5aa8-4027-9a73-34967283b1f8",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_backslash_1to500.3dm",
+          "file": "models/capsule_backslash_1to500.3dm",
           "guid": "dd9d2056-dc8e-4877-9e18-3614c59f58d3",
           "tags": [
             "model/vnd.3dm",
@@ -141881,7 +141881,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_backslash_1to200.3dm",
+          "file": "models/capsule_backslash_1to200.3dm",
           "guid": "e6c3aa66-d40a-40f6-9c8c-49fd43c28ee5",
           "tags": [
             "model/vnd.3dm",
@@ -141910,7 +141910,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_backslash_collider.glb",
+          "file": "models/capsule_backslash_collider.glb",
           "guid": "19927113-a6db-47a6-a419-666b0276e746",
           "tags": [
             "model/gltf-binary",
@@ -142052,16 +142052,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_slash.glb",
+          "file": "models/capsule_slash.glb",
           "guid": "95cff76e-2724-4717-9471-3525c2e6c026",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_slash_1to500.3dm",
+          "file": "models/capsule_slash_1to500.3dm",
           "guid": "3e87973a-b44b-4913-96fa-f2e01abcc172",
           "tags": [
             "model/vnd.3dm",
@@ -142070,7 +142070,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_slash_1to200.3dm",
+          "file": "models/capsule_slash_1to200.3dm",
           "guid": "ecacb921-a91e-4098-930c-b3d880a2b692",
           "tags": [
             "model/vnd.3dm",
@@ -142099,7 +142099,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_slash_collider.glb",
+          "file": "models/capsule_slash_collider.glb",
           "guid": "83a1bfee-290f-463e-a831-8014d4149872",
           "tags": [
             "model/gltf-binary",
@@ -142235,16 +142235,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_q.glb",
+          "file": "models/capsule_q.glb",
           "guid": "8c260713-fd38-4f33-b50f-8b09b470a02e",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_q_1to500.3dm",
+          "file": "models/capsule_q_1to500.3dm",
           "guid": "79605907-4d71-4016-8a69-bef64153f467",
           "tags": [
             "model/vnd.3dm",
@@ -142253,7 +142253,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_q_1to200.3dm",
+          "file": "models/capsule_q_1to200.3dm",
           "guid": "1222733c-2982-4682-bda1-ddc10ff748d8",
           "tags": [
             "model/vnd.3dm",
@@ -142282,7 +142282,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_q_collider.glb",
+          "file": "models/capsule_q_collider.glb",
           "guid": "1a2816cc-5fea-411e-bc69-a2a7e0f5c47d",
           "tags": [
             "model/gltf-binary",
@@ -142424,16 +142424,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_p.glb",
+          "file": "models/capsule_p.glb",
           "guid": "a7adfbd1-cc36-44f9-bb05-1cd6d2bcedd6",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_p_1to500.3dm",
+          "file": "models/capsule_p_1to500.3dm",
           "guid": "c8340dd8-dec4-4ec9-949d-bcf7fb3cb116",
           "tags": [
             "model/vnd.3dm",
@@ -142442,7 +142442,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_p_1to200.3dm",
+          "file": "models/capsule_p_1to200.3dm",
           "guid": "a5062c60-0d46-4d1a-9e50-e58146cee63f",
           "tags": [
             "model/vnd.3dm",
@@ -142471,7 +142471,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_p_collider.glb",
+          "file": "models/capsule_p_collider.glb",
           "guid": "200fd070-2097-45bd-a84c-0c8ef2de6dbc",
           "tags": [
             "model/gltf-binary",
@@ -142607,16 +142607,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_J.glb",
+          "file": "models/capsule_J.glb",
           "guid": "cca433ff-ab7b-4e12-ac08-e196620e0cad",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_J_1to500.3dm",
+          "file": "models/capsule_J_1to500.3dm",
           "guid": "5df03080-0068-4499-8b0e-1c9263d60810",
           "tags": [
             "model/vnd.3dm",
@@ -142625,7 +142625,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_J_1to200.3dm",
+          "file": "models/capsule_J_1to200.3dm",
           "guid": "0b1cdc17-aa4e-4da4-b586-17d11e0b11ae",
           "tags": [
             "model/vnd.3dm",
@@ -142654,7 +142654,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_J_collider.glb",
+          "file": "models/capsule_J_collider.glb",
           "guid": "40669bf5-7e92-4507-a2e0-65ba52ba8001",
           "tags": [
             "model/gltf-binary",
@@ -142796,16 +142796,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_L.glb",
+          "file": "models/capsule_L.glb",
           "guid": "38530e78-e082-48ed-8127-65071bf03b20",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_L_1to500.3dm",
+          "file": "models/capsule_L_1to500.3dm",
           "guid": "8256c1b1-c640-4b88-a301-216ed9480186",
           "tags": [
             "model/vnd.3dm",
@@ -142814,7 +142814,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_L_1to200.3dm",
+          "file": "models/capsule_L_1to200.3dm",
           "guid": "17748271-3ed7-4903-ba37-eb0763fd5e4c",
           "tags": [
             "model/vnd.3dm",
@@ -142843,7 +142843,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_L_collider.glb",
+          "file": "models/capsule_L_collider.glb",
           "guid": "61bc5eb7-ab12-4ac1-b3f8-7f19a4876087",
           "tags": [
             "model/gltf-binary",
@@ -142979,16 +142979,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_s.glb",
+          "file": "models/capsule_s.glb",
           "guid": "4f95c68c-1676-47c5-a6d0-38e8905c1d61",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_s_1to500.3dm",
+          "file": "models/capsule_s_1to500.3dm",
           "guid": "4cc51c08-24a9-451a-8011-51f9576b87a7",
           "tags": [
             "model/vnd.3dm",
@@ -142997,7 +142997,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_s_1to200.3dm",
+          "file": "models/capsule_s_1to200.3dm",
           "guid": "9a93c71d-3104-4d92-bbb9-dcd1148caf78",
           "tags": [
             "model/vnd.3dm",
@@ -143026,7 +143026,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_s_collider.glb",
+          "file": "models/capsule_s_collider.glb",
           "guid": "acd0d753-d0e2-440d-81ce-8e45f6c65bc7",
           "tags": [
             "model/gltf-binary",
@@ -143168,16 +143168,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule_z.glb",
+          "file": "models/capsule_z.glb",
           "guid": "9de47c18-9fb1-41c1-a09d-566087ac5f6d",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule_z_1to500.3dm",
+          "file": "models/capsule_z_1to500.3dm",
           "guid": "2c11468e-c04e-4cb7-bb30-cdb011c69242",
           "tags": [
             "model/vnd.3dm",
@@ -143186,7 +143186,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_z_1to200.3dm",
+          "file": "models/capsule_z_1to200.3dm",
           "guid": "c56dc9af-8b06-4b3a-95fb-9527918459f4",
           "tags": [
             "model/vnd.3dm",
@@ -143215,7 +143215,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule_z_collider.glb",
+          "file": "models/capsule_z_collider.glb",
           "guid": "a4da98b2-e94e-42e3-b0c1-0f5bb833cdde",
           "tags": [
             "model/gltf-binary",
@@ -143351,16 +143351,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_backslash.glb",
+          "file": "models/capsule-with-balcony_backslash.glb",
           "guid": "1678dbb0-565a-4641-a1a3-625d2951ae86",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_backslash_1to500.3dm",
+          "file": "models/capsule-with-balcony_backslash_1to500.3dm",
           "guid": "8c14a8b3-ff5b-4504-bc38-692801669c21",
           "tags": [
             "model/vnd.3dm",
@@ -143369,7 +143369,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_backslash_1to200.3dm",
+          "file": "models/capsule-with-balcony_backslash_1to200.3dm",
           "guid": "2cef3c21-8f43-4e7c-8818-b39892962681",
           "tags": [
             "model/vnd.3dm",
@@ -143398,7 +143398,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_backslash_collider.glb",
+          "file": "models/capsule-with-balcony_backslash_collider.glb",
           "guid": "cf27751a-1569-4251-8b13-cbe3ecb083a6",
           "tags": [
             "model/gltf-binary",
@@ -143540,16 +143540,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_slash.glb",
+          "file": "models/capsule-with-balcony_slash.glb",
           "guid": "4743f4dc-e8c6-4d20-85ea-f6867c4143e9",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_slash_1to500.3dm",
+          "file": "models/capsule-with-balcony_slash_1to500.3dm",
           "guid": "0da94308-8f81-41ac-8523-107938ff8c64",
           "tags": [
             "model/vnd.3dm",
@@ -143558,7 +143558,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_slash_1to200.3dm",
+          "file": "models/capsule-with-balcony_slash_1to200.3dm",
           "guid": "d7362cf2-4d07-4f67-8daf-3d606281ee05",
           "tags": [
             "model/vnd.3dm",
@@ -143587,7 +143587,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_slash_collider.glb",
+          "file": "models/capsule-with-balcony_slash_collider.glb",
           "guid": "1b969207-5241-44a7-9c78-a90e89664782",
           "tags": [
             "model/gltf-binary",
@@ -143723,16 +143723,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_q.glb",
+          "file": "models/capsule-with-balcony_q.glb",
           "guid": "a99c20be-3da7-48c3-a221-00a65e3a647c",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_q_1to500.3dm",
+          "file": "models/capsule-with-balcony_q_1to500.3dm",
           "guid": "0ddad490-9dc0-46c8-a218-328529b2444e",
           "tags": [
             "model/vnd.3dm",
@@ -143741,7 +143741,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_q_1to200.3dm",
+          "file": "models/capsule-with-balcony_q_1to200.3dm",
           "guid": "623a4847-b79a-4923-ac76-cac7837ce30f",
           "tags": [
             "model/vnd.3dm",
@@ -143770,7 +143770,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_q_collider.glb",
+          "file": "models/capsule-with-balcony_q_collider.glb",
           "guid": "dab3c58d-dd9c-45ef-a6c2-51fcd08f3475",
           "tags": [
             "model/gltf-binary",
@@ -143912,16 +143912,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_p.glb",
+          "file": "models/capsule-with-balcony_p.glb",
           "guid": "9178340b-10c6-472d-9182-acc345ffd735",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_p_1to500.3dm",
+          "file": "models/capsule-with-balcony_p_1to500.3dm",
           "guid": "8c5149ec-3389-4aa6-a116-aba1149bf265",
           "tags": [
             "model/vnd.3dm",
@@ -143930,7 +143930,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_p_1to200.3dm",
+          "file": "models/capsule-with-balcony_p_1to200.3dm",
           "guid": "0001e7da-aa3e-414c-8dd0-e3b6734499a7",
           "tags": [
             "model/vnd.3dm",
@@ -143959,7 +143959,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_p_collider.glb",
+          "file": "models/capsule-with-balcony_p_collider.glb",
           "guid": "5365017c-0e06-484a-b698-9f949a69732b",
           "tags": [
             "model/gltf-binary",
@@ -144095,16 +144095,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_J.glb",
+          "file": "models/capsule-with-balcony_J.glb",
           "guid": "6695bd6a-b4a6-4987-a39a-6ae492a12b9a",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_J_1to500.3dm",
+          "file": "models/capsule-with-balcony_J_1to500.3dm",
           "guid": "ab2b821d-a681-468e-96f0-121fa909746c",
           "tags": [
             "model/vnd.3dm",
@@ -144113,7 +144113,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_J_1to200.3dm",
+          "file": "models/capsule-with-balcony_J_1to200.3dm",
           "guid": "c450d192-a4df-4bc3-be06-994d86338fc1",
           "tags": [
             "model/vnd.3dm",
@@ -144142,7 +144142,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_J_collider.glb",
+          "file": "models/capsule-with-balcony_J_collider.glb",
           "guid": "fc211a54-cda1-44e2-aa0c-a04f149f7712",
           "tags": [
             "model/gltf-binary",
@@ -144284,16 +144284,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_L.glb",
+          "file": "models/capsule-with-balcony_L.glb",
           "guid": "f61603c6-624a-47e1-b692-9a7908663497",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_L_1to500.3dm",
+          "file": "models/capsule-with-balcony_L_1to500.3dm",
           "guid": "fd00c253-a808-42ad-8e3b-b80231b95027",
           "tags": [
             "model/vnd.3dm",
@@ -144302,7 +144302,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_L_1to200.3dm",
+          "file": "models/capsule-with-balcony_L_1to200.3dm",
           "guid": "a54dfe7d-c695-4c59-953b-c669db38109d",
           "tags": [
             "model/vnd.3dm",
@@ -144331,7 +144331,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_L_collider.glb",
+          "file": "models/capsule-with-balcony_L_collider.glb",
           "guid": "8f59a67e-cc9e-4576-94dc-d2ff69473870",
           "tags": [
             "model/gltf-binary",
@@ -144467,16 +144467,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_s.glb",
+          "file": "models/capsule-with-balcony_s.glb",
           "guid": "49d56103-1c38-4af5-a580-0c75fbfffb41",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_s_1to500.3dm",
+          "file": "models/capsule-with-balcony_s_1to500.3dm",
           "guid": "76b4255e-3006-4688-8935-a986a3175556",
           "tags": [
             "model/vnd.3dm",
@@ -144485,7 +144485,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_s_1to200.3dm",
+          "file": "models/capsule-with-balcony_s_1to200.3dm",
           "guid": "f0f01211-2014-456f-8fe9-48cc65a49a8a",
           "tags": [
             "model/vnd.3dm",
@@ -144514,7 +144514,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_s_collider.glb",
+          "file": "models/capsule-with-balcony_s_collider.glb",
           "guid": "a792830f-062c-43a5-a85a-55cbf0ba85e8",
           "tags": [
             "model/gltf-binary",
@@ -144656,16 +144656,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_z.glb",
+          "file": "models/capsule-with-balcony_z.glb",
           "guid": "64df54df-0b5a-463c-8c4b-c7ca3f798e30",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_z_1to500.3dm",
+          "file": "models/capsule-with-balcony_z_1to500.3dm",
           "guid": "04ea7bf9-292c-4476-92b7-df999adc3c45",
           "tags": [
             "model/vnd.3dm",
@@ -144674,7 +144674,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_z_1to200.3dm",
+          "file": "models/capsule-with-balcony_z_1to200.3dm",
           "guid": "93616018-02e5-4156-b542-4bf80c3b3825",
           "tags": [
             "model/vnd.3dm",
@@ -144703,7 +144703,7 @@
         },
         {
           "description": "",
-          "file": "representations/capsule-with-balcony_z_collider.glb",
+          "file": "models/capsule-with-balcony_z_collider.glb",
           "guid": "2320bbb5-55d5-40ea-a6d8-1668329c3e28",
           "tags": [
             "model/gltf-binary",
@@ -144839,16 +144839,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_backslash.glb",
+          "file": "models/ellipsoid-capsule_backslash.glb",
           "guid": "58af06e4-e876-4f90-91f1-ecb888d36fd5",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_backslash_1to500.3dm",
+          "file": "models/ellipsoid-capsule_backslash_1to500.3dm",
           "guid": "bed4b8a2-c649-4aba-a028-eba7cf9e51d8",
           "tags": [
             "model/vnd.3dm",
@@ -144857,7 +144857,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_backslash_1to200.3dm",
+          "file": "models/ellipsoid-capsule_backslash_1to200.3dm",
           "guid": "8379be96-9754-45bb-87a6-f8a3a7c267ff",
           "tags": [
             "model/vnd.3dm",
@@ -144887,7 +144887,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_backslash_collider.glb",
+          "file": "models/ellipsoid-capsule_backslash_collider.glb",
           "guid": "a1639b51-6ca5-4fb0-b9df-f758464eb417",
           "tags": [
             "model/gltf-binary",
@@ -145029,16 +145029,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_slash.glb",
+          "file": "models/ellipsoid-capsule_slash.glb",
           "guid": "79bb91df-df64-43a8-a8ea-8fd0d8c26c37",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_slash_1to500.3dm",
+          "file": "models/ellipsoid-capsule_slash_1to500.3dm",
           "guid": "6ff765aa-5120-4baa-977a-ba908da86055",
           "tags": [
             "model/vnd.3dm",
@@ -145047,7 +145047,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_slash_1to200.3dm",
+          "file": "models/ellipsoid-capsule_slash_1to200.3dm",
           "guid": "65b5ffc1-9cd5-44be-bed2-f072516c8638",
           "tags": [
             "model/vnd.3dm",
@@ -145077,7 +145077,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_slash_collider.glb",
+          "file": "models/ellipsoid-capsule_slash_collider.glb",
           "guid": "2293ded4-717a-412b-b82d-9775f28c0572",
           "tags": [
             "model/gltf-binary",
@@ -145213,16 +145213,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_q.glb",
+          "file": "models/ellipsoid-capsule_q.glb",
           "guid": "54b601fe-4a2d-4f75-8be8-071dc2199323",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_q_1to500.3dm",
+          "file": "models/ellipsoid-capsule_q_1to500.3dm",
           "guid": "a1962573-7ff8-4f0e-ada6-5f1e6c6adf13",
           "tags": [
             "model/vnd.3dm",
@@ -145231,7 +145231,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_q_1to200.3dm",
+          "file": "models/ellipsoid-capsule_q_1to200.3dm",
           "guid": "c030ac60-dad0-46bb-b864-c8832e47ab4d",
           "tags": [
             "model/vnd.3dm",
@@ -145261,7 +145261,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_q_collider.glb",
+          "file": "models/ellipsoid-capsule_q_collider.glb",
           "guid": "e78632a0-cf62-406b-9de3-8604b5737218",
           "tags": [
             "model/gltf-binary",
@@ -145403,16 +145403,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_p.glb",
+          "file": "models/ellipsoid-capsule_p.glb",
           "guid": "1d346071-5d5b-4192-a1b1-fea6fb28812c",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_p_1to500.3dm",
+          "file": "models/ellipsoid-capsule_p_1to500.3dm",
           "guid": "3b9fa82a-83fc-47b5-a7c1-9be45607d4d2",
           "tags": [
             "model/vnd.3dm",
@@ -145421,7 +145421,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_p_1to200.3dm",
+          "file": "models/ellipsoid-capsule_p_1to200.3dm",
           "guid": "385e7942-3f5d-45e8-9e36-afaabc3b5501",
           "tags": [
             "model/vnd.3dm",
@@ -145451,7 +145451,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_p_collider.glb",
+          "file": "models/ellipsoid-capsule_p_collider.glb",
           "guid": "a93cb31c-2542-466f-aae5-235a75d4c438",
           "tags": [
             "model/gltf-binary",
@@ -145587,16 +145587,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_J.glb",
+          "file": "models/ellipsoid-capsule_J.glb",
           "guid": "bcd91b53-2096-47c8-951c-376eacae1540",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_J_1to500.3dm",
+          "file": "models/ellipsoid-capsule_J_1to500.3dm",
           "guid": "40f2ecab-133f-4f16-bcde-30f8ded6d47a",
           "tags": [
             "model/vnd.3dm",
@@ -145605,7 +145605,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_J_1to200.3dm",
+          "file": "models/ellipsoid-capsule_J_1to200.3dm",
           "guid": "6acea49e-888f-437a-85fc-87cb3ecdb53d",
           "tags": [
             "model/vnd.3dm",
@@ -145635,7 +145635,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_J_collider.glb",
+          "file": "models/ellipsoid-capsule_J_collider.glb",
           "guid": "6e661092-6f89-464f-a3fa-0df7cc736024",
           "tags": [
             "model/gltf-binary",
@@ -145777,16 +145777,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_L.glb",
+          "file": "models/ellipsoid-capsule_L.glb",
           "guid": "4b3c16e5-1b33-47b6-892f-f875b05298b5",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_L_1to500.3dm",
+          "file": "models/ellipsoid-capsule_L_1to500.3dm",
           "guid": "6e32c11d-cb4b-4755-88af-2812f23d6a8d",
           "tags": [
             "model/vnd.3dm",
@@ -145795,7 +145795,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_L_1to200.3dm",
+          "file": "models/ellipsoid-capsule_L_1to200.3dm",
           "guid": "4d5df9d5-3de9-4c4b-92ba-0606ab250ab3",
           "tags": [
             "model/vnd.3dm",
@@ -145825,7 +145825,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_L_collider.glb",
+          "file": "models/ellipsoid-capsule_L_collider.glb",
           "guid": "5318c0e7-2524-4a57-930d-14296963bd28",
           "tags": [
             "model/gltf-binary",
@@ -145961,16 +145961,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_s.glb",
+          "file": "models/ellipsoid-capsule_s.glb",
           "guid": "3979b604-d052-4672-b42d-16e450b0a23f",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_s_1to500.3dm",
+          "file": "models/ellipsoid-capsule_s_1to500.3dm",
           "guid": "4c6900cd-953c-4581-b359-efe3bf87825b",
           "tags": [
             "model/vnd.3dm",
@@ -145979,7 +145979,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_s_1to200.3dm",
+          "file": "models/ellipsoid-capsule_s_1to200.3dm",
           "guid": "1297fe24-9144-4a07-aa2b-aeaf6e34474d",
           "tags": [
             "model/vnd.3dm",
@@ -146009,7 +146009,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_s_collider.glb",
+          "file": "models/ellipsoid-capsule_s_collider.glb",
           "guid": "a6fea9f1-913c-412b-97ac-f968fff7cbfd",
           "tags": [
             "model/gltf-binary",
@@ -146151,16 +146151,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_z.glb",
+          "file": "models/ellipsoid-capsule_z.glb",
           "guid": "cad944ea-4abb-465f-b5ef-60313991bf79",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_z_1to500.3dm",
+          "file": "models/ellipsoid-capsule_z_1to500.3dm",
           "guid": "c08139a1-500a-48e1-ab1c-b08ee4f6b024",
           "tags": [
             "model/vnd.3dm",
@@ -146169,7 +146169,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_z_1to200.3dm",
+          "file": "models/ellipsoid-capsule_z_1to200.3dm",
           "guid": "261e453f-3263-468f-9f7e-3a793f3b7acd",
           "tags": [
             "model/vnd.3dm",
@@ -146199,7 +146199,7 @@
         },
         {
           "description": "",
-          "file": "representations/ellipsoid-capsule_z_collider.glb",
+          "file": "models/ellipsoid-capsule_z_collider.glb",
           "guid": "cbfb8261-f1b6-4abd-a48e-844edd6ba65e",
           "tags": [
             "model/gltf-binary",
@@ -146317,16 +146317,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_backslash.glb",
+          "file": "models/trapezoid-capsule_backslash.glb",
           "guid": "9631bad8-6529-4711-aa72-c235eafc40c2",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_backslash_1to500.3dm",
+          "file": "models/trapezoid-capsule_backslash_1to500.3dm",
           "guid": "f13ee407-9300-4c18-aed3-8cea4be32d05",
           "tags": [
             "model/vnd.3dm",
@@ -146335,7 +146335,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_backslash_1to200.3dm",
+          "file": "models/trapezoid-capsule_backslash_1to200.3dm",
           "guid": "9eb8ab36-d077-4191-ad16-3c49272aa4d9",
           "tags": [
             "model/vnd.3dm",
@@ -146364,7 +146364,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_backslash_collider.glb",
+          "file": "models/trapezoid-capsule_backslash_collider.glb",
           "guid": "4578c9a0-312e-4c5d-b755-3d263f61a333",
           "tags": [
             "model/gltf-binary",
@@ -146488,16 +146488,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_slash.glb",
+          "file": "models/trapezoid-capsule_slash.glb",
           "guid": "79ccabcc-ffb5-4905-9442-15fedbc1820f",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_slash_1to500.3dm",
+          "file": "models/trapezoid-capsule_slash_1to500.3dm",
           "guid": "3a28298c-733b-454e-a761-46d051843678",
           "tags": [
             "model/vnd.3dm",
@@ -146506,7 +146506,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_slash_1to200.3dm",
+          "file": "models/trapezoid-capsule_slash_1to200.3dm",
           "guid": "2181868d-3b94-4baf-82fa-368d32cadb3b",
           "tags": [
             "model/vnd.3dm",
@@ -146535,7 +146535,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_slash_collider.glb",
+          "file": "models/trapezoid-capsule_slash_collider.glb",
           "guid": "3d85f115-ea26-4f82-8bfc-7a4b7ec8e7a0",
           "tags": [
             "model/gltf-binary",
@@ -146653,16 +146653,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_q.glb",
+          "file": "models/trapezoid-capsule_q.glb",
           "guid": "09c1b6d7-bdc9-4582-8dbf-c2f41fe608d2",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_q_1to500.3dm",
+          "file": "models/trapezoid-capsule_q_1to500.3dm",
           "guid": "96c8af2c-b131-4780-b0eb-7c6efad1f1b3",
           "tags": [
             "model/vnd.3dm",
@@ -146671,7 +146671,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_q_1to200.3dm",
+          "file": "models/trapezoid-capsule_q_1to200.3dm",
           "guid": "507721be-9eba-4717-8880-ce979940103a",
           "tags": [
             "model/vnd.3dm",
@@ -146700,7 +146700,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_q_collider.glb",
+          "file": "models/trapezoid-capsule_q_collider.glb",
           "guid": "f64fdc99-2bc3-45fd-9939-0ce8236353ab",
           "tags": [
             "model/gltf-binary",
@@ -146824,16 +146824,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_p.glb",
+          "file": "models/trapezoid-capsule_p.glb",
           "guid": "2b48cdc5-a7db-4e17-9242-969ca58f6bac",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_p_1to500.3dm",
+          "file": "models/trapezoid-capsule_p_1to500.3dm",
           "guid": "4575aa61-a31e-47ef-a69d-837aa34f4c61",
           "tags": [
             "model/vnd.3dm",
@@ -146842,7 +146842,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_p_1to200.3dm",
+          "file": "models/trapezoid-capsule_p_1to200.3dm",
           "guid": "0027b16a-cfc4-44e7-9b9c-75891d74066f",
           "tags": [
             "model/vnd.3dm",
@@ -146871,7 +146871,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_p_collider.glb",
+          "file": "models/trapezoid-capsule_p_collider.glb",
           "guid": "13ddeb45-f16d-4222-91e4-f613baa76043",
           "tags": [
             "model/gltf-binary",
@@ -146989,16 +146989,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_J.glb",
+          "file": "models/trapezoid-capsule_J.glb",
           "guid": "a6ed99a3-c36f-4246-b340-99626381a161",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_J_1to500.3dm",
+          "file": "models/trapezoid-capsule_J_1to500.3dm",
           "guid": "25826876-f4bb-4554-8269-1de73d1ff271",
           "tags": [
             "model/vnd.3dm",
@@ -147007,7 +147007,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_J_1to200.3dm",
+          "file": "models/trapezoid-capsule_J_1to200.3dm",
           "guid": "a313b31b-9b90-4262-901d-e15f7a1bd626",
           "tags": [
             "model/vnd.3dm",
@@ -147036,7 +147036,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_J_collider.glb",
+          "file": "models/trapezoid-capsule_J_collider.glb",
           "guid": "4416103b-89d1-4d27-8027-1edd4043234d",
           "tags": [
             "model/gltf-binary",
@@ -147160,16 +147160,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_L.glb",
+          "file": "models/trapezoid-capsule_L.glb",
           "guid": "ec160941-245c-4a2f-a04e-57f1fc45642c",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_L_1to500.3dm",
+          "file": "models/trapezoid-capsule_L_1to500.3dm",
           "guid": "70841d4d-3089-4398-95b2-ee12a432e6a8",
           "tags": [
             "model/vnd.3dm",
@@ -147178,7 +147178,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_L_1to200.3dm",
+          "file": "models/trapezoid-capsule_L_1to200.3dm",
           "guid": "3c49ae63-095e-440e-83e0-c0f05846a979",
           "tags": [
             "model/vnd.3dm",
@@ -147207,7 +147207,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_L_collider.glb",
+          "file": "models/trapezoid-capsule_L_collider.glb",
           "guid": "5341fb00-f3de-4bac-95ac-4882b05b11d6",
           "tags": [
             "model/gltf-binary",
@@ -147325,16 +147325,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_s.glb",
+          "file": "models/trapezoid-capsule_s.glb",
           "guid": "25e349dd-6052-42fa-af55-ac99dcab87c5",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_s_1to500.3dm",
+          "file": "models/trapezoid-capsule_s_1to500.3dm",
           "guid": "9f4a6e19-0b85-4aea-964a-35e5076957c2",
           "tags": [
             "model/vnd.3dm",
@@ -147343,7 +147343,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_s_1to200.3dm",
+          "file": "models/trapezoid-capsule_s_1to200.3dm",
           "guid": "c3a18995-4261-4e75-b12a-51b1af9c8705",
           "tags": [
             "model/vnd.3dm",
@@ -147372,7 +147372,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_s_collider.glb",
+          "file": "models/trapezoid-capsule_s_collider.glb",
           "guid": "eab5a5e5-926e-48a4-885f-3c7f077f83fa",
           "tags": [
             "model/gltf-binary",
@@ -147496,16 +147496,16 @@
         },
         "t": 0.0
       },
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_z.glb",
+          "file": "models/trapezoid-capsule_z.glb",
           "guid": "d55ca6fa-4b53-448a-bb82-9aee8b243e69",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_z_1to500.3dm",
+          "file": "models/trapezoid-capsule_z_1to500.3dm",
           "guid": "0ff8c3c0-6c25-4d9e-b5a4-b9455431a140",
           "tags": [
             "model/vnd.3dm",
@@ -147514,7 +147514,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_z_1to200.3dm",
+          "file": "models/trapezoid-capsule_z_1to200.3dm",
           "guid": "24fd0ab6-496f-4e84-b2a0-6bca4703257f",
           "tags": [
             "model/vnd.3dm",
@@ -147543,7 +147543,7 @@
         },
         {
           "description": "",
-          "file": "representations/trapezoid-capsule_z_collider.glb",
+          "file": "models/trapezoid-capsule_z_collider.glb",
           "guid": "5dc9f92f-4304-46ec-ba53-4fcade9cba40",
           "tags": [
             "model/gltf-binary",
@@ -147878,22 +147878,22 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/tambour.glb",
+          "file": "models/tambour.glb",
           "guid": "6a7c93c8-cbd5-4908-88e4-3f4d9139e82f",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/tambour_1to500.3dm",
+          "file": "models/tambour_1to500.3dm",
           "guid": "8a66a823-01eb-4bb8-858b-8b41588e357f",
           "tags": "model/vnd.3dm"
         },
         {
           "description": "",
-          "file": "representations/tambour_1to200.3dm",
+          "file": "models/tambour_1to200.3dm",
           "guid": "25364ff3-3343-43fb-981b-4b2ab2e42ced",
           "tags": [
             "model/vnd.3dm",
@@ -147921,7 +147921,7 @@
         },
         {
           "description": "",
-          "file": "representations/tambour_collider.glb",
+          "file": "models/tambour_collider.glb",
           "guid": "7ab4bc52-3921-4a1c-b7b4-fefb16964f03",
           "tags": [
             "model/gltf-binary",
@@ -148259,22 +148259,22 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/tambour_first-storey.glb",
+          "file": "models/tambour_first-storey.glb",
           "guid": "62b13b3c-d332-4c5b-8ef9-9a5723c6890a",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/tambour_first-storey_1to500.3dm",
+          "file": "models/tambour_first-storey_1to500.3dm",
           "guid": "680ec6e0-b7ac-40e4-bbc9-11e25e78edfd",
           "tags": "model/vnd.3dm"
         },
         {
           "description": "",
-          "file": "representations/tambour_first-storey_1to200.3dm",
+          "file": "models/tambour_first-storey_1to200.3dm",
           "guid": "ce238817-2bbb-4429-aa9e-f5761c72032a",
           "tags": [
             "model/vnd.3dm",
@@ -148302,7 +148302,7 @@
         },
         {
           "description": "",
-          "file": "representations/tambour_first-storey_collider.glb",
+          "file": "models/tambour_first-storey_collider.glb",
           "guid": "eb039c96-e441-4b76-87f7-42075eb96181",
           "tags": [
             "model/gltf-binary",
@@ -148640,22 +148640,22 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/tambour_last-storey.glb",
+          "file": "models/tambour_last-storey.glb",
           "guid": "e3a70710-d442-46ad-aa66-0bcd5999bde6",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/tambour_last-storey_1to500.3dm",
+          "file": "models/tambour_last-storey_1to500.3dm",
           "guid": "a7425932-b3bf-4db6-8fa9-c66ef03d020f",
           "tags": "model/vnd.3dm"
         },
         {
           "description": "",
-          "file": "representations/tambour_last-storey_1to200.3dm",
+          "file": "models/tambour_last-storey_1to200.3dm",
           "guid": "874eac14-e165-4190-88e1-ef731302fd7c",
           "tags": [
             "model/vnd.3dm",
@@ -148683,7 +148683,7 @@
         },
         {
           "description": "",
-          "file": "representations/tambour_last-storey_collider.glb",
+          "file": "models/tambour_last-storey_collider.glb",
           "guid": "339077c0-c654-463d-988e-0d247bf97a96",
           "tags": [
             "model/gltf-binary",
@@ -149021,22 +149021,22 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/tambour_single-storey.glb",
+          "file": "models/tambour_single-storey.glb",
           "guid": "4c0d560c-ee91-45cb-af3a-f98281fc8afc",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/tambour_single-storey_1to500.3dm",
+          "file": "models/tambour_single-storey_1to500.3dm",
           "guid": "c3728cdc-a5d4-4c03-8d9e-99ff0fbae9bd",
           "tags": "model/vnd.3dm"
         },
         {
           "description": "",
-          "file": "representations/tambour_single-storey_1to200.3dm",
+          "file": "models/tambour_single-storey_1to200.3dm",
           "guid": "aff9dd2f-3258-412d-8b37-b56ff7b9c132",
           "tags": [
             "model/vnd.3dm",
@@ -149064,7 +149064,7 @@
         },
         {
           "description": "",
-          "file": "representations/tambour_single-storey_collider.glb",
+          "file": "models/tambour_single-storey_collider.glb",
           "guid": "209ede63-44a9-4b9f-9847-212da221a749",
           "tags": [
             "model/gltf-binary",
@@ -149391,16 +149391,16 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/cylindric-tambour.glb",
+          "file": "models/cylindric-tambour.glb",
           "guid": "f190cb92-5d95-47f5-9489-7b78cd6d4d0f",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_1to500.3dm",
+          "file": "models/cylindric-tambour_1to500.3dm",
           "guid": "a8bffc8c-77fa-4ca4-af1f-08379cd84dca",
           "tags": [
             "model/vnd.3dm",
@@ -149409,7 +149409,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_1to200.3dm",
+          "file": "models/cylindric-tambour_1to200.3dm",
           "guid": "1d29c7f5-b955-4606-af16-97cd89a99d95",
           "tags": [
             "model/vnd.3dm",
@@ -149438,7 +149438,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_collider.glb",
+          "file": "models/cylindric-tambour_collider.glb",
           "guid": "a6a81930-5b52-4fbe-9364-5053bd874400",
           "tags": [
             "model/gltf-binary",
@@ -149768,16 +149768,16 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/cylindric-tambour_first-storey.glb",
+          "file": "models/cylindric-tambour_first-storey.glb",
           "guid": "857ffc5d-07cc-474e-bb3b-d773462a41a7",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_first-storey_1to500.3dm",
+          "file": "models/cylindric-tambour_first-storey_1to500.3dm",
           "guid": "a6ee1735-9d95-4bde-938e-76b3a9bba6c1",
           "tags": [
             "model/vnd.3dm",
@@ -149786,7 +149786,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_first-storey_1to200.3dm",
+          "file": "models/cylindric-tambour_first-storey_1to200.3dm",
           "guid": "9e26c60d-a9ea-4864-808b-a77e2fa596f4",
           "tags": [
             "model/vnd.3dm",
@@ -149815,7 +149815,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_first-storey_collider.glb",
+          "file": "models/cylindric-tambour_first-storey_collider.glb",
           "guid": "1c7adb3a-b855-4fa2-99de-318359335187",
           "tags": [
             "model/gltf-binary",
@@ -150145,16 +150145,16 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/cylindric-tambour_last-storey.glb",
+          "file": "models/cylindric-tambour_last-storey.glb",
           "guid": "7cb82cd5-7615-46bb-a98d-d1fb3a01f778",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_last-storey_1to500.3dm",
+          "file": "models/cylindric-tambour_last-storey_1to500.3dm",
           "guid": "e70491d3-9428-41dc-9708-133faf7c615d",
           "tags": [
             "model/vnd.3dm",
@@ -150163,7 +150163,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_last-storey_1to200.3dm",
+          "file": "models/cylindric-tambour_last-storey_1to200.3dm",
           "guid": "89aaefc1-3471-4158-9133-92b9d9a57b04",
           "tags": [
             "model/vnd.3dm",
@@ -150192,7 +150192,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_last-storey_collider.glb",
+          "file": "models/cylindric-tambour_last-storey_collider.glb",
           "guid": "4925b90c-cfe2-44f9-8145-0ceeaaafbe41",
           "tags": [
             "model/gltf-binary",
@@ -150522,16 +150522,16 @@
           "t": 0.3
         }
       ],
-      "representations": [
+      "models": [
         {
           "description": "",
-          "file": "representations/cylindric-tambour_single-storey.glb",
+          "file": "models/cylindric-tambour_single-storey.glb",
           "guid": "6a6e0d08-6bbb-49ea-97b5-9c635eaff506",
           "tags": "model/gltf-binary"
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_single-storey_1to500.3dm",
+          "file": "models/cylindric-tambour_single-storey_1to500.3dm",
           "guid": "40c67fd8-2704-4e13-b9c2-be8eef663993",
           "tags": [
             "model/vnd.3dm",
@@ -150540,7 +150540,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_single-storey_1to200.3dm",
+          "file": "models/cylindric-tambour_single-storey_1to200.3dm",
           "guid": "ee94c69a-29b1-4a7e-b0ab-79911452f374",
           "tags": [
             "model/vnd.3dm",
@@ -150569,7 +150569,7 @@
         },
         {
           "description": "",
-          "file": "representations/cylindric-tambour_single-storey_collider.glb",
+          "file": "models/cylindric-tambour_single-storey_collider.glb",
           "guid": "414acbf7-9e8c-4e5e-9f2a-255631ba341f",
           "tags": [
             "model/gltf-binary",

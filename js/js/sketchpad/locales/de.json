@@ -3261,13 +3261,13 @@
               "beginner": "Werkzeuge"
             }
           },
-          "noRepresentations": {
+          "noModels": {
             "label": {
               "normal": "Keine Darstellungen verfuegbar",
               "beginner": "Keine Darstellungen verfuegbar"
             }
           },
-          "selectRepresentation": {
+          "selectModel": {
             "label": {
               "normal": "Darstellung auswaehlen",
               "beginner": "Darstellung auswaehlen"
@@ -3327,24 +3327,24 @@
               "beginner": "Variante"
             }
           },
-          "representations": {
+          "models": {
             "label": {
               "normal": "Darstellungen",
               "beginner": "Verschiedene 3D-Modelle, Bilder und visuelle Darstellungen fuer diesen Typ verwalten."
             },
-            "manual": "type#representations",
-            "tutorial": "hello-semio/model-brick-set#representations"
+            "manual": "type#models",
+            "tutorial": "hello-semio/model-brick-set#models"
           },
-          "representation": {
+          "model": {
             "label": {
               "normal": "Darstellung",
               "beginner": "Darstellung"
             }
           },
-          "representationDescriptionPlaceholder": {
+          "modelDescriptionPlaceholder": {
             "label": "Beschreiben Sie diese Darstellung..."
           },
-          "representationTagsPlaceholder": {
+          "modelTagsPlaceholder": {
             "label": "tag1, tag2, tag3"
           },
           "ports": {
@@ -3527,7 +3527,7 @@
                     }
                   }
                 },
-                "representations": {
+                "models": {
                   "label": {
                     "normal": "",
                     "beginner": ""
@@ -3543,7 +3543,7 @@
                       "normal": "URL",
                       "beginner": "URL zu einem 3D-Modell, Bild oder einer anderen Ressource, die diesen Typ darstellt."
                     },
-                    "manual": "type#representations",
+                    "manual": "type#models",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "description": {
@@ -3551,7 +3551,7 @@
                       "normal": "Beschreibung",
                       "beginner": "Eine Beschreibung dessen, was diese Darstellung zeigt oder wie sie verwendet werden sollte."
                     },
-                    "manual": "type#representations",
+                    "manual": "type#models",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "tags": {
@@ -3559,7 +3559,7 @@
                       "normal": "Tags",
                       "beginner": "Tags zum Kategorisieren und Filtern von Darstellungen (z.B. 'detailliert', 'vereinfacht', 'lod1')."
                     },
-                    "manual": "type#representations",
+                    "manual": "type#models",
                     "tutorial": "hello-semio/model-brick-set"
                   }
                 },

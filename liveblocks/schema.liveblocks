@@ -189,7 +189,7 @@ type Type {
     name: string;
     ports?: Port[];
     attributes?: Attribute[];
-    representations?: Representation[];
+    models?: Model[];
     # Ⓜ️ The length unit of the point and the direction of the ports of the type.
     unit?: string;
     # 🔀 The optional variant of the type. No variant means the default variant.
@@ -218,15 +218,15 @@ type Locator {
     subgroup?: string;
 }
 
-# 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
-type Representation {
-    # 🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
+# 💾 A model is a link to a resource that describes a type for a certain level of detail and tags.
+type Model {
+    # 🔍 The optional Level of Detail/Development/Design (LoD) of the model. No lod means the default lod.
     lod: string;
-    # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
+    # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.
     mime: string;
-    # 🏷️ The optional tags to group representations. No tags means default.
+    # 🏷️ The optional tags to group models. No tags means default.
     tags?: string[];
-    # 🔗 The Unique Resource Locator (URL) to the resource of the representation.
+    # 🔗 The Unique Resource Locator (URL) to the resource of the model.
     url: string;
 }
 

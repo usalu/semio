@@ -85,7 +85,7 @@ import {
   generateUniqueName,
   getClusterableGroups,
   getIncludedDesigns,
-  getPieceRepresentationUrls,
+  getPieceModelUrls,
   Group,
   GroupDiff,
   guid,
@@ -98,6 +98,8 @@ import {
   LayerDiff,
   Location,
   LocationDiff,
+  Model,
+  ModelDiff,
   Piece,
   PieceDiff,
   piecesMetadata,
@@ -112,8 +114,6 @@ import {
   Quality,
   QualityDiff,
   QualityId,
-  Representation,
-  RepresentationDiff,
   File as SemioFile,
   Side,
   SideDiff,
@@ -2462,31 +2462,31 @@ class PropStore {
 
 // #endregion Prop
 
-// #region Representation
+// #region Model
 
-type YRepresentationVal = string | Y.Array<string> | YAttributes;
-type YRepresentation = Y.Map<YRepresentationVal>;
-type YRepresentations = Y.Array<YRepresentation>;
+type YModelVal = string | Y.Array<string> | YAttributes;
+type YModel = Y.Map<YModelVal>;
+type YModels = Y.Array<YModel>;
 
-class RepresentationStore {
-  private yRepresentation: YRepresentation;
+class ModelStore {
+  private yModel: YModel;
   private yTags: Y.Array<string>;
   private yAttributes: YAttributes;
   private attributes: Map<string, AttributeStore>;
-  private cache?: Representation;
+  private cache?: Model;
   private cacheHash?: string;
 
-  constructor(yRepresentation: YRepresentation, representation: Representation) {
-    this.yRepresentation = yRepresentation;
-    this.guid = representation.guid;
-    this.file = representation.file;
-    this.description = representation.description;
-    this.yTags = this.yRepresentation.set("tags", new Y.Array<string>());
-    if (representation.tags) this.yTags.push(representation.tags);
+  constructor(yModel: YModel, model: Model) {
+    this.yModel = yModel;
+    this.guid = model.guid;
+    this.file = model.file;
+    this.description = model.description;
+    this.yTags = this.yModel.set("tags", new Y.Array<string>());
+    if (model.tags) this.yTags.push(model.tags);
     this.attributes = new Map();
-    this.yAttributes = this.yRepresentation.set("attributes", new Y.Array<YAttribute>());
-    if (representation.attributes) {
-      for (const attribute of representation.attributes) {
+    this.yAttributes = this.yModel.set("attributes", new Y.Array<YAttribute>());
+    if (model.attributes) {
+      for (const attribute of model.attributes) {
         const yAttribute = new Y.Map<YAttributeVal>();
         this.yAttributes.push([yAttribute]);
         const attributeStore = new AttributeStore(yAttribute, attribute);
@@ -2496,31 +2496,31 @@ class RepresentationStore {
   }
 
   get guid(): string {
-    return this.yRepresentation.get("guid") as string;
+    return this.yModel.get("guid") as string;
   }
   set guid(guid: string) {
-    this.yRepresentation.set("guid", guid);
+    this.yModel.set("guid", guid);
   }
 
   get file(): string {
-    return this.yRepresentation.get("file") as string;
+    return this.yModel.get("file") as string;
   }
   set file(file: string) {
-    this.yRepresentation.set("file", file);
+    this.yModel.set("file", file);
   }
 
   get description(): string | undefined {
-    return this.yRepresentation.get("description") as string | undefined;
+    return this.yModel.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.yRepresentation.set("description", description || "");
+    this.yModel.set("description", description || "");
   }
 
-  hash = (representation: Representation): string => {
-    return JSON.stringify(representation);
+  hash = (model: Model): string => {
+    return JSON.stringify(model);
   };
 
-  snapshot(): Representation {
+  snapshot(): Model {
     const tags = this.yTags.toArray();
     const currentHash = this.hash({
       guid: this.guid,
@@ -2533,19 +2533,19 @@ class RepresentationStore {
       return this.cache;
     }
 
-    const representation: Representation = {
+    const model: Model = {
       guid: this.guid,
       file: this.file,
       description: this.description,
       tags,
     };
 
-    this.cache = representation;
+    this.cache = model;
     this.cacheHash = currentHash;
-    return representation;
+    return model;
   }
 
-  apply(diff: RepresentationDiff): void {
+  apply(diff: ModelDiff): void {
     if (diff.file !== undefined) this.file = diff.file;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.tags !== undefined) {
@@ -2556,20 +2556,20 @@ class RepresentationStore {
     }
   }
 
-  change = (diff: RepresentationDiff) => {
+  change = (diff: ModelDiff) => {
     this.apply(diff);
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe);
+    return createObserver(this.yModel, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe, true);
+    return createObserver(this.yModel, subscribe, true);
   };
 }
 
-// #endregion Representation
+// #endregion Model
 
 // #region Port
 
@@ -2698,7 +2698,7 @@ class PortStore {
 
 // #region Type
 
-type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YRepresentations | YPorts | YProps | YLocation;
+type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YPorts | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
@@ -2709,9 +2709,9 @@ export class TypeStore {
   private attributes: Map<string, AttributeStore>;
   private yAuthors: YAuthorUuids;
   private authors: Map<string, AuthorStore>;
-  private yRepresentations: YRepresentations;
+  private yModels: YModels;
   private yPorts: YPorts;
-  public representations: Map<string, RepresentationStore>;
+  public models: Map<string, ModelStore>;
   public ports: Map<string, PortStore>;
   private cache?: Type;
   private cacheHash?: string;
@@ -2719,7 +2719,7 @@ export class TypeStore {
   constructor(parent: KitStore, yType: YType, type: Type) {
     this.parent = parent;
     this.yType = yType;
-    this.representations = new Map();
+    this.models = new Map();
     this.ports = new Map();
 
     this.guid = type.guid;
@@ -2754,14 +2754,14 @@ export class TypeStore {
       }
     }
 
-    this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
-    // if (type.representations) {
-    //   for (const representation of type.representations) {
-    //     this.createRepresentation(representation);
+    this.yModels = this.yType.set("models", new Y.Array<YModel>());
+    // if (type.models) {
+    //   for (const model of type.models) {
+    //     this.createModel(model);
     //   }
     // }
-    if (type.representations) {
-      type.representations.forEach((representation) => this.createRepresentation(representation));
+    if (type.models) {
+      type.models.forEach((model) => this.createModel(model));
     }
 
     this.yPorts = this.yType.set("ports", new Y.Array<YPort>());
@@ -2891,20 +2891,20 @@ export class TypeStore {
     return -1;
   }
 
-  createRepresentation(representation: Representation): void {
-    const yRepresentation = new Y.Map<YRepresentationVal>();
-    this.yRepresentations.push([yRepresentation]);
-    const yRepresentationStore = new RepresentationStore(yRepresentation, representation);
-    this.representations.set(representation.guid, yRepresentationStore);
+  createModel(model: Model): void {
+    const yModel = new Y.Map<YModelVal>();
+    this.yModels.push([yModel]);
+    const yModelStore = new ModelStore(yModel, model);
+    this.models.set(model.guid, yModelStore);
   }
 
-  hasRepresentation(guid: string): boolean {
-    return this.representations.has(guid);
+  hasModel(guid: string): boolean {
+    return this.models.has(guid);
   }
 
-  representation(guid: string): RepresentationStore {
-    const rep = this.representations.get(guid);
-    if (!rep) throw new Error(`Representation store not found for guid ${guid}`);
+  model(guid: string): ModelStore {
+    const rep = this.models.get(guid);
+    if (!rep) throw new Error(`Model store not found for guid ${guid}`);
     return rep;
   }
 
@@ -2948,7 +2948,7 @@ export class TypeStore {
       description: this.description,
       authors: Array.from(this.authors.values()).map((a) => ({ guid: a.guid })),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
-      representations: Array.from(this.representations.values()).map((rep) => rep.snapshot()),
+      models: Array.from(this.models.values()).map((rep) => rep.snapshot()),
       ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
@@ -2998,24 +2998,24 @@ export class TypeStore {
         this.authors.forEach((author) => this.yAuthors.push([author.guid]));
       }
 
-      if (diff.representations) {
-        if (diff.representations.removed) {
-          diff.representations.removed.forEach((guid) => {
-            const index = Array.from(this.representations.keys()).indexOf(guid);
+      if (diff.models) {
+        if (diff.models.removed) {
+          diff.models.removed.forEach((guid) => {
+            const index = Array.from(this.models.keys()).indexOf(guid);
             if (index !== -1) {
-              this.yRepresentations.delete(index, 1);
-              this.representations.delete(guid);
+              this.yModels.delete(index, 1);
+              this.models.delete(guid);
             }
           });
         }
-        if (diff.representations.added) {
-          diff.representations.added.forEach((representation) => {
-            this.createRepresentation(representation);
+        if (diff.models.added) {
+          diff.models.added.forEach((model) => {
+            this.createModel(model);
           });
         }
-        if (diff.representations.updated) {
-          diff.representations.updated.forEach(({ id, diff: repDiff }) => {
-            const rep = this.representations.get(id);
+        if (diff.models.updated) {
+          diff.models.updated.forEach(({ id, diff: repDiff }) => {
+            const rep = this.models.get(id);
             if (rep) rep.apply(repDiff);
           });
         }
@@ -4972,7 +4972,7 @@ export function usePiecePlanes(): Plane[] {
   return useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
 }
 
-export function usePieceRepresentationUrls(): Map<string, string> {
+export function usePieceModelUrls(): Map<string, string> {
   const flatDesign = useFlatDesign();
   // TODO: Re-enable once circular dependency is fully resolved
   // const types = usePortColoredTypes();
@@ -4986,7 +4986,7 @@ export function usePieceRepresentationUrls(): Map<string, string> {
     },
     [kitStore],
   );
-  return useMemo(() => getPieceRepresentationUrls(flatDesign, types, files, getFileUrl), [flatDesign, types, files, getFileUrl]);
+  return useMemo(() => getPieceModelUrls(flatDesign, types, files, getFileUrl), [flatDesign, types, files, getFileUrl]);
 }
 
 export function usePieceDiffStatuses(): DiffStatus[] {
@@ -6237,15 +6237,15 @@ export const kitCommands = {
         CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
         CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
         CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
-        CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
-        CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
+        CREATE TABLE model ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
+        CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, model_id INTEGER, FOREIGN KEY(model_id) REFERENCES model (id) );
         CREATE TABLE concept ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, type_id INTEGER, design_id INTEGER, FOREIGN KEY(kit_id) REFERENCES kit (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
         CREATE TABLE port ( description VARCHAR(512) NOT NULL, interface VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
         CREATE TABLE compatible_interface ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
         CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
         CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
         CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-        CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, model_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(model_id) REFERENCES model (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
         CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
       `;
 
@@ -6285,8 +6285,8 @@ export const kitCommands = {
 
         if (kit.types) {
           const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, parent_id, is_abstract, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-          const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
-          const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
+          const repStmt = db.prepare("INSERT INTO model (url, description, type_id) VALUES (?, ?, ?)");
+          const tagStmt = db.prepare('INSERT INTO tag (name, "order", model_id) VALUES (?, ?, ?)');
           const portStmt = db.prepare("INSERT INTO port (local_id, description, interface, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
           for (const type of kit.types) {
@@ -6295,11 +6295,11 @@ export const kitCommands = {
             insertQualities(type.attributes, "type_id", typeDbId);
             insertAuthors(type.authors?.map((a) => a.guid) || [], "type_id", typeDbId);
 
-            if (type.representations) {
-              for (const rep of type.representations) {
+            if (type.models) {
+              for (const rep of type.models) {
                 repStmt.run([rep.file, rep.description ?? "", typeDbId]);
                 const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                insertQualities(rep.attributes, "representation_id", repDbId);
+                insertQualities(rep.attributes, "model_id", repDbId);
                 if (rep.tags) {
                   rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
                 }

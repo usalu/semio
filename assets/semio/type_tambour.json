@@ -318,22 +318,22 @@
       "t": 0.3
     }
   ],
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/tambour.glb",
+      "file": "models/tambour.glb",
       "guid": "4c654d3a-14b5-4903-a8fd-eb5574c51af8",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/tambour_1to500.3dm",
+      "file": "models/tambour_1to500.3dm",
       "guid": "eac0f4d2-1888-4d08-82d5-7c68219cdb50",
       "tags": "model/vnd.3dm"
     },
     {
       "description": "",
-      "file": "representations/tambour_1to200.3dm",
+      "file": "models/tambour_1to200.3dm",
       "guid": "daf9dda8-25d9-4d17-8123-b8e034becded",
       "tags": [
         "model/vnd.3dm",
@@ -361,7 +361,7 @@
     },
     {
       "description": "",
-      "file": "representations/tambour_collider.glb",
+      "file": "models/tambour_collider.glb",
       "guid": "a8f023ad-a912-43aa-b91b-cf85b7d632d9",
       "tags": [
         "model/gltf-binary",

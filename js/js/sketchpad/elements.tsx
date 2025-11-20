@@ -3660,25 +3660,24 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
     return itemElement;
   }
 
-  const triggerContent = id && !open ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <DescriptionTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
-  ) : (
-    <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
-  );
+  const triggerContent =
+    id && !open ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <DescriptionTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
+    );
 
   return (
     <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
       <DropdownMenuPrimitive.Root open={open} onOpenChange={onOpenChange}>
-        <DropdownMenuPrimitive.Trigger asChild>
-          {triggerContent}
-        </DropdownMenuPrimitive.Trigger>
+        <DropdownMenuPrimitive.Trigger asChild>{triggerContent}</DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single z-temporary">
             {options.map((item, index) => {
@@ -4526,7 +4525,7 @@ const getComputedColor = (variable: string): string => getComputedStyle(document
 
 let selectableCursorUsageCount = 0;
 
-export interface SceneModel {
+export interface SceneGeometry {
   guid: string;
   plane?: Plane;
   isSelected?: boolean;
@@ -4537,7 +4536,7 @@ export interface SceneModel {
   onPointerLeave?: () => void;
 }
 
-export interface TransformableModel extends SceneModel {
+export interface TransformableGeometry extends SceneGeometry {
   isTransformable?: boolean;
 }
 
@@ -4547,9 +4546,9 @@ export interface PlaneTransformDelta {
   scale?: number;
 }
 
-export type OnPlaneUpdate = (modelGuid: string, newPlane: Plane) => void;
+export type OnPlaneUpdate = (geometryGuid: string, newPlane: Plane) => void;
 
-export type OnMultiPlaneUpdate = (updates: Array<{ modelGuid: string; newPlane: Plane }>) => void;
+export type OnMultiPlaneUpdate = (updates: Array<{ geometryGuid: string; newPlane: Plane }>) => void;
 
 export const planeFromPointAndDirection = (point: Point, direction: Vector): Plane => {
   const dir = new THREE.Vector3(direction.x, direction.y, direction.z).normalize();
@@ -4570,15 +4569,15 @@ export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
   return new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
 };
 
-export const hasValidPlane = (model: SceneModel): boolean => {
-  return model.plane !== undefined && model.plane !== null;
+export const hasValidPlane = (geometry: SceneGeometry): boolean => {
+  return geometry.plane !== undefined && geometry.plane !== null;
 };
 
-export const isModelFocusable = (model: SceneModel): boolean => {
-  return hasValidPlane(model) && (model.isFocusable === undefined || model.isFocusable === true);
+export const isGeometryFocusable = (geometry: SceneGeometry): boolean => {
+  return hasValidPlane(geometry) && (geometry.isFocusable === undefined || geometry.isFocusable === true);
 };
 
-interface ModelProps {
+interface GeometryProps {
   children?: React.ReactNode;
   selected?: boolean;
   hovered?: boolean;
@@ -4594,7 +4593,7 @@ interface ModelProps {
   userData?: any;
 }
 
-export const Model: React.FC<ModelProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
+export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = React.useMemo(() => getComputedColor("--foreground"), []);
   const activeBaseColor = React.useMemo(() => getComputedColor("--active-base"), []);
   const hoverBaseColor = React.useMemo(() => getComputedColor("--hover-base"), []);
@@ -4698,20 +4697,20 @@ const Gltf: React.FC<GltfProps> = ({ src, roughness, metalness }) => {
   return <primitive object={scene} />;
 };
 
-interface ModelFileProps {
+interface GeometryFileProps {
   src: string;
   environment?: string;
   roughness?: number;
   metalness?: number;
 }
-const ModelFile: React.FC<ModelFileProps> = ({ src, environment, roughness, metalness }) => {
+const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness, metalness }) => {
   return (
     <div className="w-full h-full">
-      <Model>
+      <Geometry>
         <React.Suspense fallback={null}>
           <Gltf src={src} roughness={roughness} metalness={metalness} />
         </React.Suspense>
-      </Model>
+      </Geometry>
     </div>
   );
 };

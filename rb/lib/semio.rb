@@ -30,8 +30,8 @@ module Semio
   # 📑 Represents an author.
   Author = Struct.new(:name, :email, :rank, keyword_init: true)
 
-  # 💾 A representation links to a resource (e.g., file) describing a type.
-  Representation = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
+  # 💾 A model links to a resource (e.g., file) describing a type.
+  Model = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
 
   # ◳ A plane defined by an origin point and two axes vectors.
   Plane = Struct.new(:origin, :x_axis, :y_axis, keyword_init: true)
@@ -86,7 +86,7 @@ module Semio
     :created,
     :updated,
     :location,
-    :representations,
+    :models,
     :ports,
     :authors,
     :attributes,

@@ -30,7 +30,7 @@ Additional `connections` which where not used in the _placement_ can be used to 
 
 ## Type
 
-A `type` is a reusable component with different `representations`, `ports`, `attributes`, `concepts`, and `authors`.
+A `type` is a reusable component with different `models`, `ports`, `attributes`, `concepts`, and `authors`.
 
 The `type` is _proto_ (a _prototype_) when it has no _parent_.
 
@@ -74,13 +74,13 @@ It is enough for one `port` to be compatible with another `port` to be compatibl
 
 A `port` can have `props` that define measurable characteristics and `attributes` for additional metadata.
 
-## Representation
+## Model
 
-A `representation` is a `tagged` `url` to a resource with an optional **description**.
+A `model` is a `tagged` `url` to a resource with an optional **description**.
 
-No **`tags`** means the _default_ representation.
+No **`tags`** means the _default_ model.
 
-The similarity of `representations` is determined by the jaccard index of their **`tags`**.
+The similarity of `models` is determined by the jaccard index of their **`tags`**.
 
 ## Attribute
 
@@ -853,7 +853,7 @@ Extends AppStore undo/redo to also:
 Use this for apps that modify kits:
 
 - **DesignAppStore** - Edit designs (pieces, connections)
-- **TypeAppStore** - Edit types (ports, representations)
+- **TypeAppStore** - Edit types (ports, models)
 - **KitAppStore** - Edit kits (types, designs, qualities, files, authors)
 
 #### Concrete Implementations
@@ -870,8 +870,8 @@ Edits design content:
 
 Edits type definitions:
 
-- Selection: ports, representations
-- Kit diffs: port changes, representation changes
+- Selection: ports, models
+- Kit diffs: port changes, model changes
 - Transaction support for type modifications
 
 ##### KitAppStore
@@ -1284,7 +1284,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 12. QualityKind
 13. Quality
 14. Prop
-15. Representation
+15. Model
 16. Port
 17. Type
 18. Layer
@@ -1415,7 +1415,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 3. Unit
 4. Attributes
 
-### Representation
+### Model
 
 1. Tags
 2. Url
@@ -1438,7 +1438,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 
 1. Name
 2. Variant
-3. Representations
+3. Models
 4. Ports
 5. Props
 6. IsVirtual

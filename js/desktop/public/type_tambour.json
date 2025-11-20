@@ -7,9 +7,9 @@
   "stock": 2147483647,
   "virtual": false,
   "unit": "m",
-  "representations": [
+  "models": [
     {
-      "url": "representations/tambour.glb",
+      "url": "models/tambour.glb",
       "description": "",
       "tags": [
         "model/gltf-binary"
@@ -17,7 +17,7 @@
       "attributes": []
     },
     {
-      "url": "representations/tambour_1to500.3dm",
+      "url": "models/tambour_1to500.3dm",
       "description": "",
       "tags": [
         "model/vnd.3dm"
@@ -25,7 +25,7 @@
       "attributes": []
     },
     {
-      "url": "representations/tambour_1to200.3dm",
+      "url": "models/tambour_1to200.3dm",
       "description": "",
       "tags": [
         "model/vnd.3dm",
@@ -53,7 +53,7 @@
       "attributes": []
     },
     {
-      "url": "representations/tambour_collider.glb",
+      "url": "models/tambour_collider.glb",
       "description": "",
       "tags": [
         "model/gltf-binary",

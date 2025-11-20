@@ -119,16 +119,16 @@
     },
     "t": 0.0
   },
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/ellipsoid-capsule_backslash.glb",
+      "file": "models/ellipsoid-capsule_backslash.glb",
       "guid": "6e501481-1a95-48b0-bca0-720f5ebdf661",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/ellipsoid-capsule_backslash_1to500.3dm",
+      "file": "models/ellipsoid-capsule_backslash_1to500.3dm",
       "guid": "0ca6dc44-9747-42b1-af71-127effd56ffd",
       "tags": [
         "model/vnd.3dm",
@@ -137,7 +137,7 @@
     },
     {
       "description": "",
-      "file": "representations/ellipsoid-capsule_backslash_1to200.3dm",
+      "file": "models/ellipsoid-capsule_backslash_1to200.3dm",
       "guid": "230012c2-b80a-4b47-bb4a-e61cd657193a",
       "tags": [
         "model/vnd.3dm",
@@ -167,7 +167,7 @@
     },
     {
       "description": "",
-      "file": "representations/ellipsoid-capsule_backslash_collider.glb",
+      "file": "models/ellipsoid-capsule_backslash_collider.glb",
       "guid": "525d0303-ddd0-4015-beaf-51b87412cff5",
       "tags": [
         "model/gltf-binary",

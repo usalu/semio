@@ -1,12 +1,3 @@
----
-title: Model Brick Set
-description: Define your brick molds and their connection logic
-icon: 🧱
-order: 2
----
-
-import { Aside, Tabs, TabsContent, TabsList, TabsTrigger } from "@semio/js";
-
 As mentioned earlier in **[Thinking in Semio](/think-in-semio/)**,  
 A **Type** is your brick mold 🧱 The Blueprint behind each Brick  
 It defines not just the shape, but also the design meaning and connection logic 🔧
@@ -60,7 +51,7 @@ This will serve as the base for generating its **Variants** 🧩
 Before we start building, let’s go over the essential elements that define a **Type** 🧱:
 
 - 🏷️ **Name** → A unique name to identify your Type and reuse it in different designs
-- 🧱 **Geometry (Representation)** → The 3D shape attached to the Type — it gives the piece its visual form ✨
+- 🧱 **Geometry (Model)** → The 3D shape attached to the Type — it gives the piece its visual form ✨
 - 🧲 **Connection Points (Ports)** → The snap points where the piece connects to others in the system 🔗
 
 Now let's take a closer look at how these elements come together — and start modeling our first **brick mold** 🛠️
@@ -91,10 +82,10 @@ because the shape we're modeling is based on a **standard manufactured wood prof
 
 <li>
 
-### 🧊 Attach Geometry (Representation – Rp)
+### 🧊 Attach Geometry (Model – Rp)
 
-In Semio, the process of adding geometry to a Type is called **modeling its Representation** 🛠️
-A **Representation** is anything that visually or symbolically **represents a Type** 🧱
+In Semio, the process of adding geometry to a Type is called **modeling its Model** 🛠️
+A **Model** is anything that visually or symbolically **represents a Type** 🧱
 It helps you **see or recognize** the Type — without defining its logic or behavior 🧠
 
 In most cases, this will be a **3D geometry**, like in our example
@@ -104,7 +95,7 @@ But it can also be:
 - A symbolic icon or block 🔳
 - A label, file, or reference 🔖
 
-💡 Because Representations are separate from the logic of the system, they’re fully flexible:
+💡 Because Models are separate from the logic of the system, they’re fully flexible:
 
 - You can start modeling your system without one 🚧
 - You can add or update it later 🛠️
@@ -114,9 +105,9 @@ In this example, we’ll use a **simple 3D shape** to represent our brick molds 
 
 ---
 
-##### 🔧 Modeling Representation
+##### 🔧 Modeling Model
 
-There are two simple steps to create a **Representation**:
+There are two simple steps to create a **Model**:
 
 - 🛠️ **Build the Geometry**  
   Model the physical form of your brick — the shape that will appear in your design
@@ -148,7 +139,7 @@ Let's take a look at how that works in practice 👇
 
 <TabsContent value="file">
 
-In **Semio**, Representations are typically referenced through **external geometry files** 🗂️  
+In **Semio**, Models are typically referenced through **external geometry files** 🗂️  
 — even when those files are generated inside **Grasshopper**
 
 This approach keeps your workflow **clean**, **modular**, and **easy to update** 🧼  
@@ -156,7 +147,7 @@ It also makes your design system more **reusable** and **scalable** 🔁
 
 While the modeling process itself isn’t the focus of this tutorial,  
 here’s the key takeaway:  
-You’ll need to follow **three simple steps** to attach your geometry as a **Representation** 🧱
+You’ll need to follow **three simple steps** to attach your geometry as a **Model** 🧱
 
 ---
 
@@ -176,7 +167,7 @@ which define the brick’s length and width 📏
 #### 💾 Geometry Export
 
 After generating the geometry,  
-we need to **export it as a `.glb` file** so it can be attached as a **Representation** 💾
+we need to **export it as a `.glb` file** so it can be attached as a **Model** 💾
 
 We’ll use a **simple workflow** that automates this export 🦾  
 You can place it **directly after** your geometry generation step in Grasshopper 🦗
@@ -207,7 +198,7 @@ Another `Concat` merges directory + file name:
 ##### 📐 Prepare the Geometry
 
 > 🛠️ You've already modeled the geometry earlier in your Grasshopper definition.  
-> Now it's time to **export** it — so Semio can use it as a **referenced Representation** 💾
+> Now it's time to **export** it — so Semio can use it as a **referenced Model** 💾
 
 - ✅ Convert the geometry into the required format (e.g. **Mesh** for `.glb`)
 - 📤 Pass it into the `iGeo` component to export it as a `.glb` file
@@ -224,13 +215,13 @@ Your file directory should now look like this:
 
 #### 🔗 Referencing the Exported File
 
-The exported file (e.g. `profile_2.glb`) is linked to the **`Ur` input** of the **Model Representation** component (`~Rep`)  
+The exported file (e.g. `profile_2.glb`) is linked to the **`Ur` input** of the **Model Model** component (`~Rep`)  
 This tells Semio **where to find the geometry** that represents your Type.
 
-- 🧩 The **`~Rep` (Model Representation)** component takes the `Ur` file path and creates a Representation:  
+- 🧩 The **`~Rep` (Model Model)** component takes the `Ur` file path and creates a Model:  
   → `Rep(model/gltf-binary)`
 
-- 🔗 This Representation is later connected to the **`Typ` (Model Type)** component —  
+- 🔗 This Model is later connected to the **`Typ` (Model Type)** component —  
   so that your Type is linked to its visual form
 
 ![📁 Reference Geometry](/reference-geometry.png)
@@ -270,13 +261,13 @@ This lets you visualize your Design using custom shapes without embedding them i
 
 ---
 
-#### 🧪 Switching the Representation
+#### 🧪 Switching the Model
 
-As introduced earlier, when you give a **Type** its shape in Semio, you're attaching a **Representation** —  
+As introduced earlier, when you give a **Type** its shape in Semio, you're attaching a **Model** —  
 a piece of geometry that shows what the brick looks like visually 👁️
 
 But this geometry isn’t fixed — it acts more like a **placeholder** 🧠  
-That means you can **change or swap** the Representation at any time **without breaking your design logic** 🔁
+That means you can **change or swap** the Model at any time **without breaking your design logic** 🔁
 
 You can think of it like a **costume** for your Type 🎭  
 The name, role, and connections stay the same — you're just changing how it looks on stage 🎬
@@ -288,7 +279,7 @@ and **detailed profiles** for close-ups or fabrication 🪟
 Semio lets you swap the **look** without changing the **logic** 🔄  
 Same brick — different shell 💡
 
-##### 🎬 One Brick, various Representations
+##### 🎬 One Brick, various Models
 
 To illustrate this concept, we created **two geometry files** for the **same brick mold Type**:
 
@@ -307,7 +298,7 @@ This version uses the **fully detailed geometry** of the piece 🪵
 A rectangle cut at an angle and extruded into a realistic wooden profile ✏️  
 It includes every visible detail in 3D: full depth, edges, and joinery-ready shapes 🔍
 
-![📁 Switch Representation](/Switch-Representation.png)  
+![📁 Switch Model](/Switch-Model.png)  
 ![📁 Filename](/Profile-2-detailed.png)
 
 Best for:
@@ -324,7 +315,7 @@ This version is a **flat sheet simplification** 📄
 A single-surface geometry that represents the general size of the piece 📐  
 It captures only **one dimension** and skips all 3D detail 🚫
 
-![📁 Switch Representation](/switch-representation-sheet.png)  
+![📁 Switch Model](/switch-model-sheet.png)  
 ![📁 Filename](/Profile-2-simplified.png)
 
 Use this when:
@@ -341,7 +332,7 @@ This version is a **bounding box simplification** 📦
 A simple block that approximates the piece's volume ➕  
 It includes **two dimensions** but omits exact geometry 🧊
 
-![📁 Switch Representation](/switch-representation-Block.png)  
+![📁 Switch Model](/switch-model-Block.png)  
 ![📁 Filename](/Profile-2-simplified.png)
 
 Best for:
@@ -356,7 +347,7 @@ Best for:
 
 ---
 
-Even though these two Representations **look very different**  
+Even though these two Models **look very different**  
 They both belong to the **same Type** ✅
 
 The **Name**, **Variant**, **Ports**, and **logic** stay exactly the same  
@@ -374,7 +365,7 @@ From early concept to detailed design to collaborative development 🤝
 
 ### ⚓ Add Snapping Points ([Ports](/think-in-semio/#port) - Po)
 
-Once your brick mold has a visual shape — its **Representation** —  
+Once your brick mold has a visual shape — its **Model** —  
 the next step is to define **how it connects to other bricks**
 
 That’s what **Ports** are for 🧲  
@@ -490,7 +481,7 @@ This ensures that every snapping point has a matching ID, position, and directio
 ### 🧱 Assemble the Mold (Model [Type](/think-in-semio/#type))
 
 Once you’ve defined all parts of your brick mold  
-the **Name**, **Variant**, **Ports**, and **Representation**  
+the **Name**, **Variant**, **Ports**, and **Model**  
 you can assemble them using the `Model Type` component (`Typ`) 🧰
 
 Here's what you plug in:
@@ -498,7 +489,7 @@ Here's what you plug in:
 - 🏷️ **Name** — the shared identity of the mold (e.g. `"Profile"`)
 - 🔢 **Variant** — the specific version number (e.g. `"2"`)
 - 🧲 **Ports** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
-- 🧊 **Representation** — the geometry that defines the brick's shape
+- 🧊 **Model** — the geometry that defines the brick's shape
 
 ![📁 Model Type](/model-type.png)  
 ![📁 Model Type](/model-type-geo.png)
@@ -547,7 +538,7 @@ Examples from our sketch:
 ##### 🔄 What Changes?
 
 - 🔢 **Variant name** — a unique label like `2`, `4`, or `5` to distinguish the version
-- 🧊 **Representation** — new geometry that reflects the Variant’s shape or size
+- 🧊 **Model** — new geometry that reflects the Variant’s shape or size
 - 🧲 **Ports** — same logic, but positioned relative to the new shape
 
 ---
@@ -556,7 +547,7 @@ Examples from our sketch:
 
 1. 🏷️ Set the **Type name** (same as the original mold)
 2. 🔢 Assign a new **Variant name**
-3. 🧊 Attach the **Representation** — the geometry for this Variant
+3. 🧊 Attach the **Model** — the geometry for this Variant
 4. 🧲 Add the **Ports** — positioned consistently
 5. 🧱 Use the `Model Type` component to combine everything into a complete Variant
 
@@ -593,7 +584,7 @@ Since most Variants share the same logic and differ by only one or two parameter
 You define the full logic:
 
 - 🧊 Generate and export geometry
-- 📎 Link the exported file via `Model Representation`
+- 📎 Link the exported file via `Model Model`
 - 🧲 Place Ports using `Model Port`
 - 🧱 Create the Variant using `Model Type`
 

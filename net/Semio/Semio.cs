@@ -76,7 +76,7 @@ public static class Constants
     public const int AttributesMax = 64;
     public const int QualityMax = 1024;
     public const int TagsMax = 8;
-    public const int RepresentationsMax = 32;
+    public const int ModelsMax = 32;
     public const int TypesMax = 256;
     public const int PiecesMax = 512;
     public const int DesignsMax = 128;
@@ -2537,38 +2537,38 @@ public class Prop : Model<Prop>
 
 #endregion Prop
 
-#region Representation
+#region Model
 
-[Model("💾", "Rp", "Rep", "The identifier of a representation.")]
-public class RepresentationId : Model<RepresentationId>
+[Model("💾", "Rp", "Rep", "The identifier of a model.")]
+public class ModelId : Model<ModelId>
 {
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.ID, skipValidation: true)]
     public List<string> Tags { get; set; } = new();
-    public static implicit operator RepresentationId(Representation representation) => new() { Tags = representation.Tags };
-    public static implicit operator RepresentationId(RepresentationDiff diff) => new() { Tags = diff.Tags };
+    public static implicit operator ModelId(Model model) => new() { Tags = model.Tags };
+    public static implicit operator ModelId(ModelDiff diff) => new() { Tags = diff.Tags };
     public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
     public string ToHumanIdString() => string.Join(", ", Tags);
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-[Model("📊", "RD", "RDf", "A diff for representations.")]
-public class RepresentationDiff : Model<RepresentationDiff>
+[Model("📊", "RD", "RDf", "A diff for models.")]
+public class ModelDiff : Model<ModelDiff>
 {
-    [Name("📄", "Fl?", "Fil?", "The optional file path to the resource of the representation.")]
+    [Name("📄", "Fl?", "Fil?", "The optional file path to the resource of the model.")]
     public string File { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
     public string Description { get; set; } = "";
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations.", PropImportance.OPTIONAL)]
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group models.", PropImportance.OPTIONAL)]
     public List<string> Tags { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator RepresentationDiff(RepresentationId id) => new() { Tags = id.Tags };
-    public static implicit operator RepresentationDiff(Representation representation) => new() { File = representation.File, Description = representation.Description, Tags = representation.Tags, Attributes = representation.Attributes };
+    public static implicit operator ModelDiff(ModelId id) => new() { Tags = id.Tags };
+    public static implicit operator ModelDiff(Model model) => new() { File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
 
-    public RepresentationDiff MergeDiff(RepresentationDiff other)
+    public ModelDiff MergeDiff(ModelDiff other)
     {
-        return new RepresentationDiff
+        return new ModelDiff
         {
             File = string.IsNullOrEmpty(other.File) ? File : other.File,
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
@@ -2578,44 +2578,44 @@ public class RepresentationDiff : Model<RepresentationDiff>
     }
 }
 
-[Model("📊", "RsD", "RsDf", "A diff for multiple representations.")]
-public class RepresentationsDiff : Model<RepresentationsDiff>
+[Model("📊", "RsD", "RsDf", "A diff for multiple models.")]
+public class ModelsDiff : Model<ModelsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed representations.", PropImportance.OPTIONAL)]
-    public List<RepresentationId> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added representations.", PropImportance.OPTIONAL)]
-    public List<RepresentationDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified representations.", PropImportance.OPTIONAL)]
-    public List<RepresentationDiff> Modified { get; set; } = new();
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed models.", PropImportance.OPTIONAL)]
+    public List<ModelId> Removed { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added models.", PropImportance.OPTIONAL)]
+    public List<ModelDiff> Added { get; set; } = new();
+    [ModelProp("✏️", "Md*", "Mod*", "The optional modified models.", PropImportance.OPTIONAL)]
+    public List<ModelDiff> Modified { get; set; } = new();
 
-    public static implicit operator RepresentationsDiff(List<Representation> representations) => new() { Modified = representations.Select(r => (RepresentationDiff)r).ToList() };
+    public static implicit operator ModelsDiff(List<Model> models) => new() { Modified = models.Select(r => (ModelDiff)r).ToList() };
 }
 
 /// <summary>
-/// <see href="https://github.com/usalu/semio#-representation-"/>
+/// <see href="https://github.com/usalu/semio#-model-"/>
 /// </summary>
 [Model("💾", "Rp", "Rep",
-    "A representation is a link to a resource that describes a type for a certain level of detail and tags.")]
-public class Representation : Model<Representation>
+    "A model is a link to a resource that describes a type for a certain level of detail and tags.")]
+public class Model : Model<Model>
 {
-    [Name("📄", "Fl", "Fil", "The file path to the resource of the representation.", PropImportance.REQUIRED)]
+    [Name("📄", "Fl", "Fil", "The file path to the resource of the model.", PropImportance.REQUIRED)]
     public string File { get; set; } = "";
 
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
     public string Description { get; set; } = "";
 
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.ID, skipValidation: true)]
     public List<string> Tags { get; set; } = new();
 
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator Representation(RepresentationId id) => new() { Tags = id.Tags };
-    public static implicit operator Representation(RepresentationDiff diff) => new() { File = diff.File, Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
+    public static implicit operator Model(ModelId id) => new() { Tags = id.Tags };
+    public static implicit operator Model(ModelDiff diff) => new() { File = diff.File, Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
 
-    public Representation ApplyDiff(RepresentationDiff diff)
+    public Model ApplyDiff(ModelDiff diff)
     {
-        return new Representation
+        return new Model
         {
             File = string.IsNullOrEmpty(diff.File) ? File : diff.File,
             Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
@@ -2624,9 +2624,9 @@ public class Representation : Model<Representation>
         };
     }
 
-    public RepresentationDiff CreateDiff()
+    public ModelDiff CreateDiff()
     {
-        return new RepresentationDiff
+        return new ModelDiff
         {
             File = File,
             Description = Description,
@@ -2635,9 +2635,9 @@ public class Representation : Model<Representation>
         };
     }
 
-    public RepresentationDiff InverseDiff(RepresentationDiff appliedDiff)
+    public ModelDiff InverseDiff(ModelDiff appliedDiff)
     {
-        return new RepresentationDiff
+        return new ModelDiff
         {
             File = !string.IsNullOrEmpty(appliedDiff.File) ? File : "",
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : "",
@@ -2686,7 +2686,7 @@ public class Representation : Model<Representation>
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-#endregion Representation
+#endregion Model
 
 #region Port
 
@@ -2976,8 +2976,8 @@ public class TypeDiff : Model<TypeDiff>
     public string Unit { get; set; } = "";
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [ModelProp("💾", "Rp*", "Reps*", "The optional representations of the type.", PropImportance.OPTIONAL)]
-    public List<Representation> Representations { get; set; } = new();
+    [ModelProp("💾", "Rp*", "Reps*", "The optional models of the type.", PropImportance.OPTIONAL)]
+    public List<Model> Models { get; set; } = new();
     [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
@@ -3004,7 +3004,7 @@ public class TypeDiff : Model<TypeDiff>
             Uri = string.IsNullOrEmpty(other.Uri) ? Uri : other.Uri,
             Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
             Location = other.Location ?? Location,
-            Representations = other.Representations.Any() ? other.Representations : Representations,
+            Models = other.Models.Any() ? other.Models : Models,
             Ports = other.Ports.Any() ? other.Ports : Ports,
             Authors = other.Authors.Any() ? other.Authors : Authors,
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes,
@@ -3013,7 +3013,7 @@ public class TypeDiff : Model<TypeDiff>
     }
 
     public static implicit operator TypeDiff(TypeId id) => new() { Guid = id.Guid };
-    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = type.Models, Ports = type.Ports, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
 [Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
@@ -3061,8 +3061,8 @@ public class Type : Model<Type>
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
-    [ModelProp("💾", "Rp*", "Reps*", "The optional representations of the type.", PropImportance.OPTIONAL)]
-    public List<Representation> Representations { get; set; } = new();
+    [ModelProp("💾", "Rp*", "Reps*", "The optional models of the type.", PropImportance.OPTIONAL)]
+    public List<Model> Models { get; set; } = new();
     [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
@@ -3085,7 +3085,7 @@ public class Type : Model<Type>
     public override string ToString() => $"Typ({ToHumanIdString()})";
 
     public static implicit operator Type(TypeId id) => new() { Guid = id.Guid, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
-    public static implicit operator Type(TypeDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
+    public static implicit operator Type(TypeDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Models = diff.Models ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
     public static implicit operator string(Type type) => type.Name;
     public static implicit operator Type(string name) => new() { Name = name, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
@@ -3102,7 +3102,7 @@ public class Type : Model<Type>
             Uri = string.IsNullOrEmpty(diff.Uri) ? Uri : diff.Uri,
             Unit = string.IsNullOrEmpty(diff.Unit) ? Unit : diff.Unit,
             Location = diff.Location ?? Location,
-            Representations = diff.Representations?.Any() == true ? diff.Representations : Representations,
+            Models = diff.Models?.Any() == true ? diff.Models : Models,
             Ports = diff.Ports?.Any() == true ? diff.Ports : Ports,
             Authors = diff.Authors?.Any() == true ? diff.Authors : Authors,
             Attributes = diff.Attributes?.Any() == true ? diff.Attributes : Attributes,
@@ -3124,7 +3124,7 @@ public class Type : Model<Type>
             Uri = Uri,
             Unit = Unit,
             Location = Location,
-            Representations = Representations,
+            Models = Models,
             Ports = Ports,
             Authors = Authors,
             Attributes = Attributes,
@@ -3145,7 +3145,7 @@ public class Type : Model<Type>
             Uri = !string.IsNullOrEmpty(appliedDiff.Uri) ? Uri : "",
             Unit = !string.IsNullOrEmpty(appliedDiff.Unit) ? Unit : "",
             Location = appliedDiff.Location is not null ? Location : null,
-            Representations = appliedDiff.Representations.Any() ? Representations : new List<Representation>(),
+            Models = appliedDiff.Models.Any() ? Models : new List<Model>(),
             Ports = appliedDiff.Ports.Any() ? Ports : new List<Port>(),
             Authors = appliedDiff.Authors.Any() ? Authors : new List<AuthorId>(),
             Attributes = appliedDiff.Attributes.Any() ? Attributes : new List<Attribute>()
@@ -3163,12 +3163,12 @@ public class Type : Model<Type>
             errors.AddRange(errorsPort.Select(e => $"A port({port.ToHumanIdString()}) is invalid: " + e));
         }
 
-        foreach (var representation in Representations)
+        foreach (var model in Models)
         {
-            var (isValidRepresentation, errorsRepresentation) = representation.Validate();
-            isValid = isValid && isValidRepresentation;
-            errors.AddRange(errorsRepresentation.Select(e =>
-                $"A representation({representation.ToHumanIdString()}) is invalid: " + e));
+            var (isValidModel, errorsModel) = model.Validate();
+            isValid = isValid && isValidModel;
+            errors.AddRange(errorsModel.Select(e =>
+                $"A model({model.ToHumanIdString()}) is invalid: " + e));
         }
 
         foreach (var author in Authors)
@@ -3211,15 +3211,15 @@ public class Type : Model<Type>
         return port;
     }
 
-    public Representation FindRepresentation(List<string> tags)
+    public Model FindModel(List<string> tags)
     {
-        if (Representations == null || Representations.Count == 0)
-            throw new ArgumentException($"No representations available in type {Name}");
+        if (Models == null || Models.Count == 0)
+            throw new ArgumentException($"No models available in type {Name}");
 
-        var indices = Representations.Select(r => Utility.Jaccard(r.Tags, tags)).ToList();
+        var indices = Models.Select(r => Utility.Jaccard(r.Tags, tags)).ToList();
         var maxIndex = indices.Max();
         var maxIndexIndex = indices.IndexOf(maxIndex);
-        return Representations[maxIndexIndex];
+        return Models[maxIndexIndex];
     }
 
     public string FindAttributeValue(string name, string defaultValue = "")
@@ -3250,7 +3250,7 @@ public class Type : Model<Type>
             Virtual = Virtual,
             Location = Location,
             Unit = Unit,
-            Representations = Representations,
+            Models = Models,
             Ports = Ports,
             Props = Props,
             Authors = Authors,
@@ -5010,7 +5010,7 @@ public class Kit : Model<Kit>
             Virtual = a.Virtual ?? false,
             Unit = a.Unit,
             Location = a.Location,
-            Representations = a.Representations,
+            Models = a.Models,
             Ports = a.Ports,
             Authors = a.Authors.Select(auth => new AuthorId { Email = auth.Email }).ToList(),
             Attributes = a.Attributes ?? new List<Attribute>()
@@ -5045,7 +5045,7 @@ public class Kit : Model<Kit>
                 Virtual = t.Virtual,
                 Unit = t.Unit,
                 Location = t.Location,
-                Representations = t.Representations,
+                Models = t.Models,
                 Ports = t.Ports,
                 Authors = t.Authors,
                 Attributes = t.Attributes

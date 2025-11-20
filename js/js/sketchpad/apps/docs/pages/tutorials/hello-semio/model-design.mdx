@@ -1,12 +1,3 @@
----
-title: Build Your Design
-description: Combine pieces and connections into a complete modular design
-icon: 🏗️
-order: 3
----
-
-import { Aside } from "@semio/js";
-
 This section shows how to **turn your brick molds** - the **Types** and **Variants** you've defined - into real, usable building blocks 🧱
 
 As explained in _[Think in Semio]_, a Type is just a **blueprint**. It defines how a brick should look and behave — but it’s not a brick yet 📐
@@ -29,7 +20,7 @@ _"Take this specific mold (Type + Variant) and make a real, usable brick from it
 
 Each **Piece** automatically includes everything from its mold:
 
-- **Geometry (Representation)** — the shape defined by the Variant’s geometry file 🧱
+- **Geometry (Model)** — the shape defined by the Variant’s geometry file 🧱
 - **Ports** — the snap points and their directions from the Type ⚓
 - **Semantic Data** — the Type name, Variant identity, and design role 🧠
 - **Metadata** — any extra info like function, material, or tags 📄
@@ -416,7 +407,7 @@ This makes it easy to fine-tune how two Pieces are connected without rebuilding 
 #### 🧱 Update a Type
 
 You can update a **Type** by feeding its `Ty` output back into the same `Model Type` component 🔁  
-This lets you modify its **Representation**, **Ports**, or **metadata** — without changing anything else.
+This lets you modify its **Model**, **Ports**, or **metadata** — without changing anything else.
 
 > _E.g. Swapping a simplified geometry file for a detailed one, or updating tags like material or category._
 

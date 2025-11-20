@@ -107,16 +107,16 @@
     },
     "t": 0.0
   },
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/trapezoid-capsule_L.glb",
+      "file": "models/trapezoid-capsule_L.glb",
       "guid": "c07223b9-5221-4f79-be86-2b164ec72340",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/trapezoid-capsule_L_1to500.3dm",
+      "file": "models/trapezoid-capsule_L_1to500.3dm",
       "guid": "2b077963-b10f-4ec4-b9ed-4312b78463dd",
       "tags": [
         "model/vnd.3dm",
@@ -125,7 +125,7 @@
     },
     {
       "description": "",
-      "file": "representations/trapezoid-capsule_L_1to200.3dm",
+      "file": "models/trapezoid-capsule_L_1to200.3dm",
       "guid": "c6d91393-2ca9-4ccd-80af-7e942bdef97e",
       "tags": [
         "model/vnd.3dm",
@@ -154,7 +154,7 @@
     },
     {
       "description": "",
-      "file": "representations/trapezoid-capsule_L_collider.glb",
+      "file": "models/trapezoid-capsule_L_collider.glb",
       "guid": "ec686c94-f397-4dd5-87a4-4a182821ffb9",
       "tags": [
         "model/gltf-binary",

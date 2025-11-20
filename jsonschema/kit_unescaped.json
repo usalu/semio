@@ -460,30 +460,30 @@
       "title": "Attribute",
       "type": "object"
     },
-    "Representation": {
-      "description": "💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+    "Model": {
+      "description": "💾 A model is a link to a resource that describes a type for a certain level of detail and tags.",
       "properties": {
         "url": {
-          "description": "🔗 The Unique Resource Locator (URL) to the resource of the representation.",
+          "description": "🔗 The Unique Resource Locator (URL) to the resource of the model.",
           "maxLength": 1024,
           "title": "Url",
           "type": "string"
         },
         "description": {
           "default": "",
-          "description": "💬 The optional human-readable description of the representation.",
+          "description": "💬 The optional human-readable description of the model.",
           "maxLength": 2560,
           "title": "Description",
           "type": "string"
         },
         "mime": {
-          "description": "✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
+          "description": "✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.",
           "maxLength": 64,
           "title": "Mime",
           "type": "string"
         },
         "tags": {
-          "description": "🏷️ The optional tags to group representations. No tags means default.",
+          "description": "🏷️ The optional tags to group models. No tags means default.",
           "items": {
             "type": "string"
           },
@@ -491,7 +491,7 @@
           "type": "array"
         },
         "attributes": {
-          "description": "🏷️ The attributes of the representation.",
+          "description": "🏷️ The attributes of the model.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -503,7 +503,7 @@
         "url",
         "mime"
       ],
-      "title": "Representation",
+      "title": "Model",
       "type": "object"
     },
     "Side": {
@@ -602,11 +602,11 @@
           "title": "Updated",
           "type": "string"
         },
-        "representations": {
+        "models": {
           "items": {
-            "$ref": "#/$defs/Representation"
+            "$ref": "#/$defs/Model"
           },
-          "title": "Representations",
+          "title": "Models",
           "type": "array"
         },
         "ports": {

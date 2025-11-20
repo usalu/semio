@@ -1775,12 +1775,12 @@ public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo,
 
 #endregion Prop
 
-#region Representation
+#region Model
 
-public class RepresentationGoo : ModelGoo<Representation>
+public class ModelGoo : ModelGoo<Model>
 {
-    public RepresentationGoo() { }
-    public RepresentationGoo(Representation value) : base(value) { }
+    public ModelGoo() { }
+    public ModelGoo(Model value) : base(value) { }
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -1795,23 +1795,23 @@ public class RepresentationGoo : ModelGoo<Representation>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Representation { Tags = new List<string> { str } };
+            Value = new Model { Tags = new List<string> { str } };
             return true;
         }
         return false;
     }
 }
 
-public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
+public class ModelParam : ModelParam<ModelGoo, Model>
 {
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
 }
 
-public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
+public class ModelComponent : ModelComponent<ModelParam, ModelGoo, Model>
 {
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
 
-    protected override Representation ProcessModel(Representation model)
+    protected override Model ProcessModel(Model model)
     {
         var mime = Semio.Utility.ParseMimeFromUrl(model.File);
         var firstTag = model.Tags.FirstOrDefault();
@@ -1822,33 +1822,33 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     }
 }
 
-public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
+public class SerializeModelComponent : SerializeComponent<ModelParam, ModelGoo, Model>
 {
-    public SerializeRepresentationComponent() { }
+    public SerializeModelComponent() { }
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
 }
 
-public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
+public class DeserializeModelComponent : DeserializeComponent<ModelParam, ModelGoo, Model>
 {
-    public DeserializeRepresentationComponent() { }
+    public DeserializeModelComponent() { }
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
 }
 
-public class RepresentationIdGoo : IdGoo<RepresentationId>
+public class ModelIdGoo : IdGoo<ModelId>
 {
-    public RepresentationIdGoo() { }
-    public RepresentationIdGoo(RepresentationId value) : base(value) { }
+    public ModelIdGoo() { }
+    public ModelIdGoo(ModelId value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(RepresentationDiffGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ModelDiffGoo)))
         {
-            target = (Q)(object)new RepresentationDiffGoo(Value);
+            target = (Q)(object)new ModelDiffGoo(Value);
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(RepresentationGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ModelGoo)))
         {
-            target = (Q)(object)new RepresentationGoo(Value);
+            target = (Q)(object)new ModelGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -1862,39 +1862,39 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
-        if (source is RepresentationDiffGoo diffGoo)
+        if (source is ModelDiffGoo diffGoo)
         {
             Value = diffGoo.Value;
             return true;
         }
-        if (source is RepresentationGoo reprGoo)
+        if (source is ModelGoo reprGoo)
         {
             Value = reprGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new RepresentationId { Tags = new List<string> { str } };
+            Value = new ModelId { Tags = new List<string> { str } };
             return true;
         }
         return false;
     }
 }
 
-public class RepresentationIdParam : IdParam<RepresentationIdGoo, RepresentationId>
+public class ModelIdParam : IdParam<ModelIdGoo, ModelId>
 {
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
 }
 
-public class RepresentationIdComponent : IdComponent<RepresentationIdParam, RepresentationIdGoo, RepresentationId>
+public class ModelIdComponent : IdComponent<ModelIdParam, ModelIdGoo, ModelId>
 {
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
-public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
+public class ModelDiffGoo : DiffGoo<ModelDiff>
 {
-    public RepresentationDiffGoo() { }
-    public RepresentationDiffGoo(RepresentationDiff value) : base(value) { }
+    public ModelDiffGoo() { }
+    public ModelDiffGoo(ModelDiff value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -1913,7 +1913,7 @@ public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
         {
             try
             {
-                var deserialized = str.Deserialize<RepresentationDiff>();
+                var deserialized = str.Deserialize<ModelDiff>();
                 if (deserialized is null) return false;
                 Value = deserialized;
                 return true;
@@ -1924,38 +1924,38 @@ public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
     }
 }
 
-public class RepresentationDiffParam : DiffParam<RepresentationDiffGoo, RepresentationDiff>
+public class ModelDiffParam : DiffParam<ModelDiffGoo, ModelDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
 }
 
-public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+public class ModelDiffComponent : DiffComponent<ModelDiffParam, ModelDiffGoo, ModelDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
 }
 
-public class SerializeRepresentationDiffComponent : SerializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+public class SerializeModelDiffComponent : SerializeComponent<ModelDiffParam, ModelDiffGoo, ModelDiff>
 {
-    public SerializeRepresentationDiffComponent() { }
+    public SerializeModelDiffComponent() { }
     public override Guid ComponentGuid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
 }
 
-public class DeserializeRepresentationDiffComponent : DeserializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+public class DeserializeModelDiffComponent : DeserializeComponent<ModelDiffParam, ModelDiffGoo, ModelDiff>
 {
-    public DeserializeRepresentationDiffComponent() { }
+    public DeserializeModelDiffComponent() { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
 }
 
-public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
+public class ModelsDiffGoo : DiffGoo<ModelsDiff>
 {
-    public RepresentationsDiffGoo() { }
-    public RepresentationsDiffGoo(RepresentationsDiff value) : base(value) { }
+    public ModelsDiffGoo() { }
+    public ModelsDiffGoo(ModelsDiff value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String("RepresentationsDiff");
+            target = (Q)(object)new GH_String("ModelsDiff");
             return true;
         }
         return false;
@@ -1968,7 +1968,7 @@ public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
         {
             try
             {
-                var deserialized = str.Deserialize<RepresentationsDiff>();
+                var deserialized = str.Deserialize<ModelsDiff>();
                 if (deserialized is null) return false;
                 Value = deserialized;
                 return true;
@@ -1979,29 +1979,29 @@ public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
     }
 }
 
-public class RepresentationsDiffParam : DiffParam<RepresentationsDiffGoo, RepresentationsDiff>
+public class ModelsDiffParam : DiffParam<ModelsDiffGoo, ModelsDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
 }
 
-public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+public class ModelsDiffComponent : DiffComponent<ModelsDiffParam, ModelsDiffGoo, ModelsDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
 }
 
-public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+public class SerializeModelsDiffComponent : SerializeComponent<ModelsDiffParam, ModelsDiffGoo, ModelsDiff>
 {
-    public SerializeRepresentationsDiffComponent() { }
+    public SerializeModelsDiffComponent() { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
 }
 
-public class DeserializeRepresentationsDiffComponent : DeserializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+public class DeserializeModelsDiffComponent : DeserializeComponent<ModelsDiffParam, ModelsDiffGoo, ModelsDiff>
 {
-    public DeserializeRepresentationsDiffComponent() { }
+    public DeserializeModelsDiffComponent() { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
 }
 
-#endregion Representation
+#endregion Model
 
 #region Port
 

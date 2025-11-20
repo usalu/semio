@@ -4,7 +4,7 @@ kit : !Kit{
     types : *Type[
         name : !String
         variant : ?String // empty is default
-        representations : +Representation[
+        models : +Model[
             tags : *String[] // default is empty list (meaning default LOD)
             url : !String
             description : ?String

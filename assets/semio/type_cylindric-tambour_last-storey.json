@@ -313,16 +313,16 @@
       "t": 0.3
     }
   ],
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/cylindric-tambour_last-storey.glb",
+      "file": "models/cylindric-tambour_last-storey.glb",
       "guid": "befc43ea-c79a-4862-86a3-fc52cfb93bd9",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/cylindric-tambour_last-storey_1to500.3dm",
+      "file": "models/cylindric-tambour_last-storey_1to500.3dm",
       "guid": "ad876706-4a7e-42e2-9045-ac5fdbb9f1b6",
       "tags": [
         "model/vnd.3dm",
@@ -331,7 +331,7 @@
     },
     {
       "description": "",
-      "file": "representations/cylindric-tambour_last-storey_1to200.3dm",
+      "file": "models/cylindric-tambour_last-storey_1to200.3dm",
       "guid": "18f1fb30-4437-47aa-971e-4a30090d5096",
       "tags": [
         "model/vnd.3dm",
@@ -360,7 +360,7 @@
     },
     {
       "description": "",
-      "file": "representations/cylindric-tambour_last-storey_collider.glb",
+      "file": "models/cylindric-tambour_last-storey_collider.glb",
       "guid": "58eb3563-362d-4752-ac62-bfc078f12c11",
       "tags": [
         "model/gltf-binary",

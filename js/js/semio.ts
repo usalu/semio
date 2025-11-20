@@ -160,7 +160,7 @@ export type FolderId = { guid: Guid };
 export type BenchmarkId = { guid: Guid };
 export type QualityId = { guid: Guid };
 export type PropId = { guid: Guid };
-export type RepresentationId = { guid: Guid };
+export type ModelId = { guid: Guid };
 export type PortId = { guid: Guid };
 export type TypeId = { guid: Guid };
 export type LayerId = { guid: Guid };
@@ -180,7 +180,7 @@ export const FolderIdSchema = z.object({ guid: z.string() });
 export const BenchmarkIdSchema = z.object({ guid: z.string() });
 export const QualityIdSchema = z.object({ guid: z.string() });
 export const PropIdSchema = z.object({ guid: z.string() });
-export const RepresentationIdSchema = z.object({ guid: z.string() });
+export const ModelIdSchema = z.object({ guid: z.string() });
 export const PortIdSchema = z.object({ guid: z.string() });
 export const TypeIdSchema = z.object({ guid: z.string() });
 export const LayerIdSchema = z.object({ guid: z.string() });
@@ -200,7 +200,7 @@ export const createFolderId = (guid: Guid): FolderId => ({ guid });
 export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
 export const createQualityId = (guid: Guid): QualityId => ({ guid });
 export const createPropId = (guid: Guid): PropId => ({ guid });
-export const createRepresentationId = (guid: Guid): RepresentationId => ({ guid });
+export const createModelId = (guid: Guid): ModelId => ({ guid });
 export const createPortId = (guid: Guid): PortId => ({ guid });
 export const createTypeId = (guid: Guid): TypeId => ({ guid });
 export const createLayerId = (guid: Guid): LayerId => ({ guid });
@@ -220,7 +220,7 @@ export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid ===
 export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
 export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
-export const areSameRepresentationId = (a: RepresentationId, b: RepresentationId): boolean => a.guid === b.guid;
+export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
 export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
 export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
 export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
@@ -240,7 +240,7 @@ export const getFolderGuid = (id: FolderId): Guid => id.guid;
 export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
 export const getQualityGuid = (id: QualityId): Guid => id.guid;
 export const getPropGuid = (id: PropId): Guid => id.guid;
-export const getRepresentationGuid = (id: RepresentationId): Guid => id.guid;
+export const getModelGuid = (id: ModelId): Guid => id.guid;
 export const getPortGuid = (id: PortId): Guid => id.guid;
 export const getTypeGuid = (id: TypeId): Guid => id.guid;
 export const getLayerGuid = (id: LayerId): Guid => id.guid;
@@ -1315,44 +1315,44 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 
 // #endregion Prop
 
-// #region Representation
-// https://github.com/usalu/semio#-representation-
+// #region Model
+// https://github.com/usalu/semio#-model-
 
-export const RepresentationSchema = z.object({
+export const ModelSchema = z.object({
   guid: z.string(),
   tags: z.array(z.string()).optional(),
   file: z.string(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
-export type Representation = z.infer<typeof RepresentationSchema>;
-export const serializeRepresentation = (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation));
-export const deserializeRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
+export type Model = z.infer<typeof ModelSchema>;
+export const serializeModel = (model: Model): string => JSON.stringify(ModelSchema.parse(model));
+export const deserializeModel = (json: string): Model => ModelSchema.parse(JSON.parse(json));
 
-export const RepresentationDiffSchema = RepresentationSchema.partial().omit({ attributes: true }).extend({
+export const ModelDiffSchema = ModelSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
-export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
-export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => {
-  const diff: RepresentationDiff = {};
+export type ModelDiff = z.infer<typeof ModelDiffSchema>;
+export const getModelDiff = (before: Model, after: Model): ModelDiff => {
+  const diff: ModelDiff = {};
   if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
   if (before.file !== after.file) diff.file = after.file;
   if (before.description !== after.description) diff.description = after.description;
   if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
-export const inverseRepresentationDiff = (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
-  const inverse: RepresentationDiff = {};
+export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
+  const inverse: ModelDiff = {};
   if (appliedDiff.tags !== undefined) inverse.tags = original.tags;
   if (appliedDiff.file !== undefined) inverse.file = original.file;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
-export const mergeRepresentationDiff = (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => {
+export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
-export const applyRepresentationDiff = (base: Representation, diff: RepresentationDiff): Representation => {
+export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
   return {
     ...base,
     tags: diff.tags ?? base.tags,
@@ -1362,57 +1362,57 @@ export const applyRepresentationDiff = (base: Representation, diff: Representati
   };
 };
 
-export const RepresentationsDiffSchema = z.object({
+export const ModelsDiffSchema = z.object({
   removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: RepresentationDiffSchema })).optional(),
-  added: z.array(RepresentationSchema).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: ModelDiffSchema })).optional(),
+  added: z.array(ModelSchema).optional(),
 });
 
-export const areSameRepresentation = (representation: Representation, other: Representation): boolean => {
-  return representation.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
+export const areSameModel = (model: Model, other: Model): boolean => {
+  return model.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
 };
 
-export const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
-  const indices = representations.map((r) => jaccard(r.tags, tags));
+export const findModel = (models: Model[], tags: string[]): Model => {
+  const indices = models.map((r) => jaccard(r.tags, tags));
   const maxIndex = Math.max(...indices);
   const maxIndexIndex = indices.indexOf(maxIndex);
-  return representations[maxIndexIndex];
+  return models[maxIndexIndex];
 };
 
-export const getAllTagsFromRepresentations = (representations: Representation[]): string[] => {
+export const getAllTagsFromModels = (models: Model[]): string[] => {
   const tagsSet = new Set<string>();
-  representations.forEach((r) => {
+  models.forEach((r) => {
     r.tags?.forEach((tag) => tagsSet.add(tag));
   });
   return Array.from(tagsSet).sort();
 };
 
-export const filterRepresentationsByTags = (representations: Representation[], selectedTags: string[]): Representation[] => {
-  if (!selectedTags || selectedTags.length === 0) return representations;
-  return representations.filter((r) => {
+export const filterModelsByTags = (models: Model[], selectedTags: string[]): Model[] => {
+  if (!selectedTags || selectedTags.length === 0) return models;
+  return models.filter((r) => {
     if (!r.tags || r.tags.length === 0) return false;
     return selectedTags.every((tag) => r.tags?.includes(tag));
   });
 };
 
-export const getAvailableTagsForRepresentations = (representations: Representation[], selectedTags: string[]): string[] => {
-  const filteredReps = filterRepresentationsByTags(representations, selectedTags);
-  const availableTags = getAllTagsFromRepresentations(filteredReps);
+export const getAvailableTagsForModels = (models: Model[], selectedTags: string[]): string[] => {
+  const filteredReps = filterModelsByTags(models, selectedTags);
+  const availableTags = getAllTagsFromModels(filteredReps);
   return availableTags.filter((tag) => !selectedTags.includes(tag));
 };
 
-export const selectBestRepresentation = (representations: Representation[], selectedTags: string[]): Representation | undefined => {
-  if (representations.length === 0) return undefined;
+export const selectBestModel = (models: Model[], selectedTags: string[]): Model | undefined => {
+  if (models.length === 0) return undefined;
   if (selectedTags.length === 0) {
-    const defaultRep = representations.find((r) => !r.tags || r.tags.length === 0);
-    return defaultRep ?? representations[0];
+    const defaultRep = models.find((r) => !r.tags || r.tags.length === 0);
+    return defaultRep ?? models[0];
   }
-  const filteredReps = filterRepresentationsByTags(representations, selectedTags);
+  const filteredReps = filterModelsByTags(models, selectedTags);
   if (filteredReps.length === 0) return undefined;
-  return findRepresentation(filteredReps, selectedTags);
+  return findModel(filteredReps, selectedTags);
 };
 
-// #endregion Representation
+// #endregion Model
 
 // #region Port
 // https://github.com/usalu/semio#-port-
@@ -1666,7 +1666,7 @@ export const TypeSchema = z.object({
   parent: TypeIdSchema.optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
-  representations: z.array(RepresentationSchema).optional(),
+  models: z.array(ModelSchema).optional(),
   ports: z.array(PortSchema).optional(),
   props: z.array(PropSchema).optional(),
   stock: z.number().optional(),
@@ -1686,15 +1686,15 @@ export type Type = z.infer<typeof TypeSchema>;
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
-export const TypeShallowSchema = TypeSchema.omit({ representations: true, ports: true }).extend({
-  representations: z.array(z.string()).optional(),
+export const TypeShallowSchema = TypeSchema.omit({ models: true, ports: true }).extend({
+  models: z.array(z.string()).optional(),
   ports: z.array(z.string()).optional(),
 });
 export type TypeShallow = z.infer<typeof TypeShallowSchema>;
 export const serializeTypeShallow = (type: TypeShallow): string => JSON.stringify(TypeShallowSchema.parse(type));
 export const deserializeTypeShallow = (json: string): TypeShallow => TypeShallowSchema.parse(JSON.parse(json));
-export const TypeDiffSchema = TypeSchema.partial().omit({ representations: true, ports: true, props: true, attributes: true }).extend({
-  representations: RepresentationsDiffSchema.optional(),
+export const TypeDiffSchema = TypeSchema.partial().omit({ models: true, ports: true, props: true, attributes: true }).extend({
+  models: ModelsDiffSchema.optional(),
   ports: PortsDiffSchema.optional(),
   props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
@@ -1706,7 +1706,7 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
 };
 
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
-  // TODO: Implement full Type apply diff logic including ports, representations, props
+  // TODO: Implement full Type apply diff logic including ports, models, props
   return base;
 };
 
@@ -1867,45 +1867,45 @@ export const PiecesDiffSchema = z.object({
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 
 /**
- * 🔗 Returns a map of piece ids to representation file guids for the given design and types.
- * @param design - The design with the pieces to get the representation file guids for.
- * @param types - The types of the pieces with the representations.
- * @returns A map of piece ids to representation file guids.
+ * 🔗 Returns a map of piece ids to model file guids for the given design and types.
+ * @param design - The design with the pieces to get the model file guids for.
+ * @param types - The types of the pieces with the models.
+ * @returns A map of piece ids to model file guids.
  */
-export const getPieceRepresentationFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
-  const representationFileGuids = new Map<string, string>();
+export const getPieceModelFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
+  const modelFileGuids = new Map<string, string>();
   design.pieces?.forEach((p) => {
     if (!p.type) return;
     const type = types.find((t) => t.guid === p.type.guid);
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
-    if (!type.representations) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no representations`);
-    const representation = findRepresentation(type.representations, tags);
-    representationFileGuids.set(p.guid, representation.file);
+    if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
+    const model = findModel(type.models, tags);
+    modelFileGuids.set(p.guid, model.file);
   });
-  return representationFileGuids;
+  return modelFileGuids;
 };
 
 /**
- * 🔗 Returns a map of piece ids to representation urls for the given design, types, and files.
- * @param design - The design with the pieces to get the representation urls for.
- * @param types - The types of the pieces with the representations.
+ * 🔗 Returns a map of piece ids to model urls for the given design, types, and files.
+ * @param design - The design with the pieces to get the model urls for.
+ * @param types - The types of the pieces with the models.
  * @param files - The files in the kit to resolve urls from.
  * @param getFileUrl - Function to get the url for a file (from file provider).
- * @returns A map of piece ids to representation urls.
+ * @returns A map of piece ids to model urls.
  */
-export const getPieceRepresentationUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
-  const representationUrls = new Map<string, string>();
+export const getPieceModelUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
+  const modelUrls = new Map<string, string>();
   design.pieces?.forEach((p) => {
     if (!p.type) return;
     const type = types.find((t) => t.guid === p.type.guid);
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
-    if (!type.representations) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no representations`);
-    const representation = findRepresentation(type.representations, tags);
-    const file = files.find((f) => f.guid === representation.file);
-    if (!file) throw new Error(`File ${representation.file} for representation ${representation.guid} not found`);
-    representationUrls.set(p.guid, getFileUrl(file.guid));
+    if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
+    const model = findModel(type.models, tags);
+    const file = files.find((f) => f.guid === model.file);
+    if (!file) throw new Error(`File ${model.file} for model ${model.guid} not found`);
+    modelUrls.set(p.guid, getFileUrl(file.guid));
   });
-  return representationUrls;
+  return modelUrls;
 };
 export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): DesignDiff => {
   const parentConnection = findParentConnectionForPieceInDesign(kit, designId, pieceId);
@@ -3401,7 +3401,7 @@ export const piecesMetadata = (
   );
 };
 
-export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
+export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Port, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
   if (attribute?.value === undefined && defaultValue === null) return null;

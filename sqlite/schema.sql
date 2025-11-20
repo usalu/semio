@@ -74,7 +74,7 @@ CREATE TABLE design (
 	FOREIGN KEY(parent_id) REFERENCES design (id), 
 	FOREIGN KEY(kit_id) REFERENCES kit (id)
 );
-CREATE TABLE representation (
+CREATE TABLE model (
 	url VARCHAR(1024) NOT NULL, 
 	description VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
@@ -130,9 +130,9 @@ CREATE TABLE tag (
 	name VARCHAR(64) NOT NULL, 
 	"order" INTEGER NOT NULL, 
 	id INTEGER NOT NULL, 
-	representation_id INTEGER, 
+	model_id INTEGER, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(representation_id) REFERENCES representation (id)
+	FOREIGN KEY(model_id) REFERENCES model (id)
 );
 CREATE TABLE compatible_interface (
 	name VARCHAR(64) NOT NULL, 
@@ -180,7 +180,7 @@ CREATE TABLE attribute (
 	unit VARCHAR(64) NOT NULL, 
 	definition VARCHAR(512) NOT NULL, 
 	id INTEGER NOT NULL, 
-	representation_id INTEGER, 
+	model_id INTEGER, 
 	port_id INTEGER, 
 	type_id INTEGER, 
 	piece_id INTEGER, 
@@ -188,7 +188,7 @@ CREATE TABLE attribute (
 	design_id INTEGER, 
 	kit_id INTEGER, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(representation_id) REFERENCES representation (id), 
+	FOREIGN KEY(model_id) REFERENCES model (id), 
 	FOREIGN KEY(port_id) REFERENCES port (id), 
 	FOREIGN KEY(type_id) REFERENCES type (id), 
 	FOREIGN KEY(piece_id) REFERENCES piece (id), 

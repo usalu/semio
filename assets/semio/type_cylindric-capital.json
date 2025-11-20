@@ -90,16 +90,16 @@
     },
     "t": 0.0
   },
-  "representations": [
+  "models": [
     {
       "description": "",
-      "file": "representations/cylindric-capital.glb",
+      "file": "models/cylindric-capital.glb",
       "guid": "5243f5ca-fccd-404e-8438-8dcb2dc734ee",
       "tags": "model/gltf-binary"
     },
     {
       "description": "",
-      "file": "representations/cylindric-capital_1to500.3dm",
+      "file": "models/cylindric-capital_1to500.3dm",
       "guid": "91af92a1-0141-451c-90e9-4c45c4d15e9b",
       "tags": [
         "model/vnd.3dm",
@@ -118,7 +118,7 @@
     },
     {
       "description": "",
-      "file": "representations/cylindric-capital_1to200.3dm",
+      "file": "models/cylindric-capital_1to200.3dm",
       "guid": "cf709e85-8dd3-48a0-bf1c-e8547ef6d8de",
       "tags": [
         "model/vnd.3dm",
@@ -137,7 +137,7 @@
     },
     {
       "description": "",
-      "file": "representations/cylindric-capital_collider.glb",
+      "file": "models/cylindric-capital_collider.glb",
       "guid": "f6f29049-31f3-4395-bf98-d962dff77198",
       "tags": [
         "model/gltf-binary",
