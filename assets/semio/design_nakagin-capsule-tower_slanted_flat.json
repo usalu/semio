@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "a8bbee2d-117e-4cd1-ac63-33b8f6ca54a8",
+      "guid": "dee152c1-aa5c-4227-9dd4-bb6ea456cf1e",
       "key": "effective floor area",
       "value": "2583.27"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "58bb1d9f-68fd-457c-871d-fea9537578a1",
+      "guid": "bb5eca26-8ab0-4b5e-a0d2-1dfb927bfdcc",
       "key": "specific operational global warming potential",
       "value": "20.819268"
     },
     {
       "definition": "",
-      "guid": "4eddeefa-629f-445d-8a56-3b99f32669cb",
+      "guid": "8a9906ed-b404-40bb-8863-878856c0d6f5",
       "key": "construction cost",
       "value": "2.0311e+7"
     },
     {
       "definition": "",
-      "guid": "4016d501-b1b1-41bb-bff1-63d38012255c",
+      "guid": "a1bf35f8-c705-4124-905f-5b9287b6393c",
       "key": "return",
       "value": "2.2088e+6"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "2d0b2ef8-847c-4485-b196-08cca8db6ccf",
+      "guid": "a4dd7ecd-d80c-4edc-8e15-b6c3ec3c09c6",
       "key": "construction global warming potential",
       "value": "1.818e+6"
     },
     {
       "definition": "",
-      "guid": "f24aac03-3e6e-44c2-be50-a45bdfe30ae7",
+      "guid": "49da59fd-4797-44f6-b0bc-e961cb90fdca",
       "key": "operational cost",
       "value": "276616.911111"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "7e11a96e-dc8e-4a47-82a5-fe7363978b44",
+      "guid": "44ad51a5-9cfe-40bc-827e-76d1590cd826",
       "key": "operational global warming potential",
       "value": "53781.79"
     },
     {
       "definition": "",
-      "guid": "c2323f3f-130d-439f-a1cc-16c3cc8cc14a",
+      "guid": "06a1fe6e-3cb0-4e22-ad0d-a3a68ded10b9",
       "key": "income",
       "value": "2.4854e+6"
     },
     {
       "definition": "",
-      "guid": "dd5afcd3-6940-4250-84ac-b71dda761088",
+      "guid": "7810b40f-34b1-40ae-bebd-a166fa15cb50",
       "key": "maintenance expenses",
       "value": "232534"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "61229986-6a4e-482d-a641-1a6531dabf6f",
+      "guid": "d970fe50-7efa-4fa8-b638-cb3bb32cec02",
       "key": "specific energy demand",
       "value": "90.442561"
     },
     {
       "definition": "",
-      "guid": "cc5d3be8-345c-48da-a17c-bf4e4b7cdf10",
+      "guid": "da1b870e-c549-478a-a400-5364be7bbd55",
       "key": "operational energy cost",
       "value": "44082.911111"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "cc23d5bc-f1cf-4f22-a501-27134e7919da",
+      "guid": "abb385c4-8d69-4430-a41c-e2afa5874b7c",
       "key": "heating energy demand",
       "value": "83186"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "ed1d75f4-4a9a-4f37-8585-66d5586e94c4",
+      "guid": "12d382ce-7a64-4e12-93b9-8a16368619c0",
       "key": "cooling energy demand",
       "value": "63366"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "167eca3c-372a-49df-a5a9-d7f7d0a8a6f9",
+      "guid": "f1e98554-1760-4ba1-baff-283c8249512d",
       "key": "technical equipment energy demand",
       "value": "70802"
     }
   ],
   "authors": {
-    "guid": "4aff94a0-602f-4c5c-b2f1-e71e8980931c"
+    "guid": "2b4e46aa-08aa-4848-af81-ecbbce832bae"
   },
-  "createdAt": "2025-11-20T18:18:22.302Z",
+  "createdAt": "2025-11-20T22:47:24.46Z",
   "description": "A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
-  "guid": "92bc1c39-363d-4dc1-9dbe-47814ea1bf38",
+  "guid": "7d80c235-f323-4cca-a993-8f0f204039b4",
   "icon": "icons/nakagin-capsule-tower_slanted.svg",
   "image": "images/nakagin-capsule-tower_slanted.png",
   "name": "Slanted",
@@ -98,11 +98,11 @@
   "pieces": [
     {
       "center": {
-        "x": 0.0,
-        "y": 0.0
+        "u": 0.0,
+        "v": 0.0
       },
       "description": "",
-      "guid": "dd591d73-6b3c-4d9c-8bb4-1cfd735a75ed",
+      "guid": "4feb60b6-7900-427d-a46f-433b19211f72",
       "isHidden": false,
       "isLocked": false,
       "name": "b",
@@ -124,22 +124,22 @@
         }
       },
       "type": {
-        "guid": "1f087dff-1da7-4869-898d-88c2c7e334ba"
+        "guid": "06538b82-7a6a-4f97-b8cc-5292039171bb"
       }
     },
     {
       "attributes": {
         "definition": "",
-        "guid": "2f9dc333-d4cf-4b92-a28d-60b4e89dc8bf",
+        "guid": "3b19b0b6-226a-4ec2-bc7a-e3fc11a8935d",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 36.187103
+        "u": -1.9071069,
+        "v": 36.187103
       },
       "description": "",
-      "guid": "3a74b9e2-42b8-4de7-a78d-b78886dc4acb",
+      "guid": "79a7f3e7-c196-4406-ae54-1ed965c1cb79",
       "isHidden": false,
       "isLocked": false,
       "name": "ci_t_f8_b_c0",
@@ -161,22 +161,22 @@
         }
       },
       "type": {
-        "guid": "1b70246e-df12-4892-9667-c9cddb5dc7cd"
+        "guid": "e7991813-6b56-4178-ae16-753464eaf4d1"
       }
     },
     {
       "attributes": {
         "definition": "",
-        "guid": "2177739d-5b2f-4e2f-8c44-7150343003fc",
+        "guid": "aee9105d-d9f1-4ac2-9e18-7654ccb6fd5e",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 44.1071
+        "u": 1.9071069,
+        "v": 44.1071
       },
       "description": "",
-      "guid": "dc253931-31f2-4fb9-adf7-383f2203c82c",
+      "guid": "cde87ac4-c6ae-4dc0-ac8b-a5e8714db4cd",
       "isHidden": false,
       "isLocked": false,
       "name": "ci_t_f10_b_c1",
@@ -198,22 +198,22 @@
         }
       },
       "type": {
-        "guid": "1b70246e-df12-4892-9667-c9cddb5dc7cd"
+        "guid": "e7991813-6b56-4178-ae16-753464eaf4d1"
       }
     },
     {
       "attributes": {
         "definition": "",
-        "guid": "48c13583-3ce9-4de5-a893-8ad86d9e776f",
+        "guid": "d8c82d27-4a7d-449c-83c4-936b7b206984",
         "key": "semio.parent",
         "value": "b"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 1.9071069
+        "u": -1.9071069,
+        "v": 1.9071069
       },
       "description": "",
-      "guid": "7e611803-7f94-4d95-a867-5764f9975b55",
+      "guid": "1a309c05-e57a-4e26-ad05-f33b0022bede",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f0_b_c0",
@@ -241,16 +241,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "47b912be-4e63-4e46-8cb9-4517d463fc2d",
+        "guid": "b9ad9dcd-f420-428a-9f2e-c6bebd75b121",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 5.867107
+        "u": -1.9071069,
+        "v": 5.867107
       },
       "description": "",
-      "guid": "ac9fa0c4-9787-4f52-9210-94e8d0834746",
+      "guid": "86a8429c-ce21-4407-8d92-448799938409",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f1_b_c0",
@@ -278,16 +278,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "2d7095c3-26f1-4122-b187-27138ce2e99d",
+        "guid": "12619738-d655-401d-aa38-b8610379c7b3",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 9.827106
+        "u": -1.9071069,
+        "v": 9.827106
       },
       "description": "",
-      "guid": "e51b5523-316e-40ce-8132-c14c014264c6",
+      "guid": "0c941a95-053c-46ba-8143-42799f1661ed",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f2_b_c0",
@@ -315,16 +315,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "73673e64-4666-48f9-85ad-8cb0b4edcfd4",
+        "guid": "21369a3f-6233-462c-bc44-af18b6294ea2",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 13.7871065
+        "u": -1.9071069,
+        "v": 13.7871065
       },
       "description": "",
-      "guid": "df02ea4a-8975-4b5c-912b-2f7ce1784154",
+      "guid": "eb7ccd64-f179-42dd-84da-cf7668d28723",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f3_b_c0",
@@ -352,16 +352,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "6c7e6c4a-8c58-4919-9b19-e839d25089e0",
+        "guid": "7626cedf-4be4-46e8-8f80-c55ecfc709e6",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 17.747107
+        "u": -1.9071069,
+        "v": 17.747107
       },
       "description": "",
-      "guid": "932abcff-362b-46c2-9205-5189340fe295",
+      "guid": "3bb0f9c9-6e8f-4080-a7f0-fae0c6f8bbe1",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f4_b_c0",
@@ -389,16 +389,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f042f3de-9ba9-45a8-b99f-eab8f9e3fd9e",
+        "guid": "95be433f-bd03-449d-9e19-33a34ccaf05b",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 21.707108
+        "u": -1.9071069,
+        "v": 21.707108
       },
       "description": "",
-      "guid": "abaf8d41-fda6-412a-9f28-bd197220335d",
+      "guid": "6b02f472-fa6f-457a-883f-c531c433e4cc",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f5_b_c0",
@@ -426,16 +426,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5d926562-4c14-415d-ade6-829a83efd346",
+        "guid": "4bd22f06-207e-49ad-9757-691b2253bee9",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 25.667107
+        "u": -1.9071069,
+        "v": 25.667107
       },
       "description": "",
-      "guid": "e5ca1840-cb33-4177-a72f-5603c7478af9",
+      "guid": "c09f12d8-9b3d-41d8-bca4-f3474c6ceead",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f6_b_c0",
@@ -463,16 +463,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a33ed84e-c24c-4185-a6c9-0dbb461690dc",
+        "guid": "7a0b1379-a1b6-4cab-ae80-43089ceb8c91",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 29.627106
+        "u": -1.9071069,
+        "v": 29.627106
       },
       "description": "",
-      "guid": "5430a3e7-5057-49b7-8dea-348cb712f3fb",
+      "guid": "40db2f05-f783-41f9-a17d-97cd7cebd734",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f7_b_c0",
@@ -500,16 +500,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "3d302bf4-2185-44f4-a760-d3b8a0717bbc",
+        "guid": "ab610d40-b211-4a0e-9732-e31c6869d296",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -1.9071069,
-        "y": 33.587105
+        "u": -1.9071069,
+        "v": 33.587105
       },
       "description": "",
-      "guid": "c6a5f082-1d5f-4963-963c-f7e5a1979b98",
+      "guid": "4cbb299c-3123-4670-93ac-06876cf4567a",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f8_b_c0",
@@ -537,16 +537,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e744594f-d9dd-4d9e-a7c9-f55bc2c1fd24",
+        "guid": "f3df1797-a020-4b18-bc36-7bf56dad0533",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 0.52863014
+        "u": -1.3557161,
+        "v": 0.52863014
       },
       "description": "",
-      "guid": "bfed43cd-c472-41d7-af55-9dfa4be232f4",
+      "guid": "3effcf83-d51c-4997-b806-53c90fb2bf9e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f0_b_c0",
@@ -571,16 +571,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "55c695dc-a300-437a-8c38-0470600068eb",
+        "guid": "46fc4d96-b5a1-41ca-8204-3fb9dffa65ba",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 4.4886303
+        "u": -1.3557161,
+        "v": 4.4886303
       },
       "description": "",
-      "guid": "cf420ad0-8b01-4034-9210-5cc26191f824",
+      "guid": "697e2169-ae0d-4334-bdf9-406a88b9d2c1",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f1_b_c0",
@@ -605,16 +605,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b3570524-60c6-444d-a1e8-a5230545bb40",
+        "guid": "0efffdfd-3c8f-4526-bba1-1590317a8f3d",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 8.44863
+        "u": -1.3557161,
+        "v": 8.44863
       },
       "description": "",
-      "guid": "4d94cd55-ae26-41b8-8ff3-fb5dbe4896cb",
+      "guid": "806801e0-5770-456a-aa9e-8f00b9c8428a",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f2_b_c0",
@@ -639,16 +639,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "18b6ad47-1727-4222-876c-793941dd86a4",
+        "guid": "e5d6cc81-7510-44c0-9ff5-f2e7b43acf3a",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 12.40863
+        "u": -1.3557161,
+        "v": 12.40863
       },
       "description": "",
-      "guid": "5a28ffa7-3e25-4670-92ca-d46ad1202150",
+      "guid": "3f7456ba-8b49-4d01-9f14-abe1136dd73a",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f3_b_c0",
@@ -673,16 +673,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "2acd29a6-a443-4511-9659-04089303e82f",
+        "guid": "f393f26b-c399-4db0-8082-a17039fb0052",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 16.36863
+        "u": -1.3557161,
+        "v": 16.36863
       },
       "description": "",
-      "guid": "c050a1bf-d770-4222-839b-8a7642ce4382",
+      "guid": "65dee5d2-8f3e-4fd5-a1ca-421abe08de7e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f4_b_c0",
@@ -707,16 +707,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "46150dba-5f32-4f6e-847b-1f499c25b21b",
+        "guid": "3aa4d44c-4738-422d-ad90-e71685066a42",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 20.32863
+        "u": -1.3557161,
+        "v": 20.32863
       },
       "description": "",
-      "guid": "d6eedd1f-3e6c-4ca8-886f-7c0920e2dd7f",
+      "guid": "b5bce50a-e58f-4ab8-8c2f-3f034e316de3",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f5_b_c0",
@@ -741,16 +741,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5b97f4f1-00bc-4ac3-8373-ae598f2abcd8",
+        "guid": "2e0ca2a3-c651-4d21-aa4c-e63d54e4f317",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 24.28863
+        "u": -1.3557161,
+        "v": 24.28863
       },
       "description": "",
-      "guid": "10379d6a-bc3c-4a6c-b544-065677b5e938",
+      "guid": "745ee520-0076-4847-a918-379e6ab10779",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f6_b_c0",
@@ -775,16 +775,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "34c38979-3fd0-475f-9a45-580e605f0159",
+        "guid": "23f3289a-13ad-4083-8c33-cc3b2b82e1d5",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 28.248629
+        "u": -1.3557161,
+        "v": 28.248629
       },
       "description": "",
-      "guid": "598fc518-f543-4ad8-b5e5-89663f94d9f7",
+      "guid": "24dcc630-28f2-44f9-8a11-192d53e0c1d4",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f7_b_c0",
@@ -809,16 +809,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "34890517-29ae-447f-8859-dc7bc24f6138",
+        "guid": "cf7d4bf1-1d30-4974-9be7-d5daff063f1c",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 32.208626
+        "u": -1.3557161,
+        "v": 32.208626
       },
       "description": "",
-      "guid": "4d671da9-5e42-4c54-a423-eaa76f427653",
+      "guid": "5ae3bafc-3d33-4a46-90f1-dfe4035759b3",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f8_b_c0",
@@ -843,16 +843,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "801113e9-655f-41b5-b758-34024160eae3",
+        "guid": "73ed67f4-9ef0-4b21-865c-2d2f11b9cc0b",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 1.3557161
+        "u": -0.52863014,
+        "v": 1.3557161
       },
       "description": "",
-      "guid": "1d1b8b18-6c27-406a-8380-51876fcde41b",
+      "guid": "c550d8ba-9725-4509-a2ef-f83b080817f7",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f0_b_c0",
@@ -877,16 +877,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7a9c9519-8d04-41e4-ace0-a22a67b25334",
+        "guid": "71be877c-5304-46dc-a8e3-53154b3f852b",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 5.3157163
+        "u": -0.52863014,
+        "v": 5.3157163
       },
       "description": "",
-      "guid": "0d001707-5bc7-4379-977f-6fd1c4110fa6",
+      "guid": "5b832113-3c1d-4145-8d22-f6eac0e9fcff",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f1_b_c0",
@@ -911,16 +911,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "71393660-b66c-419d-a42f-bb8ac83a203d",
+        "guid": "f1ec2242-fd8f-4240-9955-40cc55b9679d",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 9.275716
+        "u": -0.52863014,
+        "v": 9.275716
       },
       "description": "",
-      "guid": "5ce81ae9-e8f3-4e68-ae17-0460f838ff90",
+      "guid": "faab0a9b-c532-4f4d-8fda-1b7ea574d2b8",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f2_b_c0",
@@ -945,16 +945,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "67aee157-8b3f-44d3-b0b3-e3ae005934d9",
+        "guid": "2e80a781-e9cf-4e15-b184-ec20eac5e279",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 13.235716
+        "u": -0.52863014,
+        "v": 13.235716
       },
       "description": "",
-      "guid": "9fddfa22-d043-40f4-8800-64a24d6de257",
+      "guid": "fbbb8b88-ceee-4755-8ac4-56944f5360aa",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f3_b_c0",
@@ -979,16 +979,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "8aebed47-99fe-4c68-ba2e-e791ae5a5226",
+        "guid": "af776200-63ef-4da7-b982-b3571fe406bf",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 17.195715
+        "u": -0.52863014,
+        "v": 17.195715
       },
       "description": "",
-      "guid": "7716b15c-31e2-487b-a64f-7c7df2379074",
+      "guid": "50751d6c-699c-4045-811c-5faebdc4be88",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f4_b_c0",
@@ -1013,16 +1013,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "1851ef9c-8d51-49ef-86c5-ca6bcb32b0e6",
+        "guid": "1f5a565e-6f56-49a3-8017-790bd883b80d",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 21.155716
+        "u": -0.52863014,
+        "v": 21.155716
       },
       "description": "",
-      "guid": "09af8c81-2b35-45f4-b06a-1151a79493c6",
+      "guid": "144f3f19-5d8b-4f47-9951-8a0e1c290d94",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f5_b_c0",
@@ -1047,16 +1047,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "0e5b767a-7e66-438f-b8d8-6a2cd3725d37",
+        "guid": "29c1bafb-0bfb-45b7-996f-585a1d881e48",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 25.115715
+        "u": -0.52863014,
+        "v": 25.115715
       },
       "description": "",
-      "guid": "7cdfe2c2-6ec2-40d9-89de-d310bce21eb6",
+      "guid": "3f0d9ce2-88cf-4434-9244-bd081884c46a",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f6_b_c0",
@@ -1081,16 +1081,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "025c17d1-bb7d-4939-bd41-a865c78488c8",
+        "guid": "470450f4-c9d6-4331-a8df-961e81322547",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 29.075714
+        "u": -0.52863014,
+        "v": 29.075714
       },
       "description": "",
-      "guid": "60a0e436-726f-4b0b-b281-4faa8a6dbf5e",
+      "guid": "4199d76f-c9fe-4b74-bbe7-7cb345e96d1c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f7_b_c0",
@@ -1115,16 +1115,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c05edcb6-b652-49e5-80b7-7dc9ae6626a7",
+        "guid": "37cbc4a6-e522-4292-9f8e-4682d6498410",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 33.035713
+        "u": -0.52863014,
+        "v": 33.035713
       },
       "description": "",
-      "guid": "57c7b4c7-bdb8-48b2-98ff-6aba7bac7b77",
+      "guid": "c8316bbb-2af1-494e-ba86-309580fdc081",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f8_b_c0",
@@ -1149,16 +1149,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f8667902-e98e-4928-b861-8c94c2bebbaa",
+        "guid": "396037b7-94c1-4a32-84f4-3dc05c6a1695",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 2.4584975
+        "u": -0.52863014,
+        "v": 2.4584975
       },
       "description": "",
-      "guid": "13344552-203a-464d-b8a2-40e2ce948ca3",
+      "guid": "d8f6078b-9548-4d3b-b1d3-0ed551bd0492",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f0_b_c0",
@@ -1183,16 +1183,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c168b21b-b321-4d1f-b99e-4dd2092532d8",
+        "guid": "79aeb5d1-c1d5-45b8-a01b-fd98c0fbb7e4",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 6.4184976
+        "u": -0.52863014,
+        "v": 6.4184976
       },
       "description": "",
-      "guid": "d5acd2b9-4b12-4bf6-8eef-82e648e8fd10",
+      "guid": "3e88250d-0460-42ba-85f5-a0548e5ecbb6",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f1_b_c0",
@@ -1217,16 +1217,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "8c10967b-8a08-42f7-a8c4-f4aa82c9954a",
+        "guid": "bfecbbbb-dce5-452a-ba3f-476f0e60f9ad",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 14.338497
+        "u": -0.52863014,
+        "v": 14.338497
       },
       "description": "",
-      "guid": "7898d79b-d9a8-43f5-9070-5461cf6f1dd7",
+      "guid": "0962acab-c68a-4943-bd41-174506fb4799",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f3_b_c0",
@@ -1251,16 +1251,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "2615b11b-a4d9-47d6-981f-946e8262d542",
+        "guid": "adf97d72-d771-4e01-8d5c-cd223b7191e1",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 18.298498
+        "u": -0.52863014,
+        "v": 18.298498
       },
       "description": "",
-      "guid": "7d8f6acb-ff2b-4113-b63f-ca67f2b3354c",
+      "guid": "ba34c2ea-a82f-4452-9aca-06846df9302c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f4_b_c0",
@@ -1285,16 +1285,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "545e6be0-9660-4cc2-88ee-47476cb2764a",
+        "guid": "cd7ae68c-82e3-42df-9681-0f50c4762c43",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 26.218498
+        "u": -0.52863014,
+        "v": 26.218498
       },
       "description": "",
-      "guid": "c2bd4418-1a2d-4a32-9f28-ac52075da58e",
+      "guid": "c651a6d1-4e26-40be-a03d-0e52ef199e67",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f6_b_c0",
@@ -1319,16 +1319,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "fb4587d7-5061-47e9-89cc-a70949812159",
+        "guid": "d0adce84-067a-440b-a90f-c25cf7622983",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -0.52863014,
-        "y": 30.178497
+        "u": -0.52863014,
+        "v": 30.178497
       },
       "description": "",
-      "guid": "7140df72-1bce-4ce2-b492-e0a61cc9eff4",
+      "guid": "7722827a-55a2-42c1-9d5c-d95c9b56b85d",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f7_b_c0",
@@ -1353,16 +1353,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "3e2a4222-415c-4c5e-b5cd-bb364400435b",
+        "guid": "fcf30bfb-a6a2-4eef-be78-8d9bae987150",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 3.2855835
+        "u": -1.3557161,
+        "v": 3.2855835
       },
       "description": "",
-      "guid": "ef26c84a-5e58-4363-aafc-f57c210c9248",
+      "guid": "3af8d11b-e2b9-4b29-b9ba-5341a85c58a7",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f0_b_c0",
@@ -1387,16 +1387,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "4f518984-fc8e-4087-a4d5-f48886a93a85",
+        "guid": "c4f1eabb-bc53-4f29-ae90-d006d5b0a8cf",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 7.2455835
+        "u": -1.3557161,
+        "v": 7.2455835
       },
       "description": "",
-      "guid": "8ba05883-bf96-4db3-8bcd-329b5cde0caf",
+      "guid": "792afa1a-ce66-42c9-a6cd-11d677a50c7b",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f1_b_c0",
@@ -1421,16 +1421,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d023ead8-7c60-45c8-9b82-8dcbd831a955",
+        "guid": "b0793d98-a4a2-49aa-8133-543c53dc1417",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 11.205583
+        "u": -1.3557161,
+        "v": 11.205583
       },
       "description": "",
-      "guid": "4de881c4-fbdc-4c5a-b5e0-0c40350dd403",
+      "guid": "e3a6a515-6cd9-478f-a415-b72a623c0b57",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f2_b_c0",
@@ -1455,16 +1455,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "fc9e0d91-0fc0-4fb6-ad3f-a8e135fd099a",
+        "guid": "ef286002-08a9-4d0e-814c-0304989fda20",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 15.165583
+        "u": -1.3557161,
+        "v": 15.165583
       },
       "description": "",
-      "guid": "ab32af58-e5f4-48f5-b697-a291bc0d2a03",
+      "guid": "540485a2-6169-480b-8104-7ceba7ea82c4",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f3_b_c0",
@@ -1489,16 +1489,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "63651b65-5c39-423b-a522-20b8bb26de6b",
+        "guid": "7448db04-12f4-443c-884c-4a13eeab3cfc",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 19.125584
+        "u": -1.3557161,
+        "v": 19.125584
       },
       "description": "",
-      "guid": "f310f3d4-8e8c-4a71-a30b-f2e292a0b602",
+      "guid": "5b846b03-7e77-4c2a-a205-42fedad40de5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f4_b_c0",
@@ -1523,16 +1523,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "ddb8914a-21d6-4b3b-a3b0-45f408b2f8cc",
+        "guid": "9ec1c777-0562-43e4-af6c-bac75ee74a6c",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 23.085585
+        "u": -1.3557161,
+        "v": 23.085585
       },
       "description": "",
-      "guid": "b80daaa2-3174-4dac-b228-be00b243c6eb",
+      "guid": "a3623161-1e3c-4e28-a20e-f5af29a0145e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f5_b_c0",
@@ -1557,16 +1557,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e8f21920-a955-430e-9ab0-2701146404d6",
+        "guid": "f506b566-6fc7-4445-a582-976c93ffb0c1",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 27.045584
+        "u": -1.3557161,
+        "v": 27.045584
       },
       "description": "",
-      "guid": "e7b3ff7e-5c7c-44e9-bba5-bcb1c59387f2",
+      "guid": "93d60ca3-18c0-4d49-8662-3065bd58cc9a",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f6_b_c0",
@@ -1591,16 +1591,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "1c0db408-be38-420e-83c7-761d486badac",
+        "guid": "e96dd4e2-2698-469f-9ba3-10edf6d1a947",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 31.005583
+        "u": -1.3557161,
+        "v": 31.005583
       },
       "description": "",
-      "guid": "80ddcae4-c675-43a7-91b0-3dc4bb90eed0",
+      "guid": "021b7ebe-51c8-4b42-af0b-c694c0595b38",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f7_b_c0",
@@ -1625,16 +1625,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "9d99a780-ea6f-40db-8f1c-213a9039244c",
+        "guid": "5f3be830-9bf5-4f3c-8d22-ee18812c86e7",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -1.3557161,
-        "y": 34.965584
+        "u": -1.3557161,
+        "v": 34.965584
       },
       "description": "",
-      "guid": "407e1a8a-6ffd-4d3d-92bb-6ad861c76020",
+      "guid": "5f2d470b-45a0-4453-b909-b9df40351197",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f8_b_c0",
@@ -1659,16 +1659,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d02ddbf7-b5ea-4e3c-89e1-278733cde9a3",
+        "guid": "31ac4194-1484-417b-995d-1622061ac056",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 3.2855835
+        "u": -2.4584975,
+        "v": 3.2855835
       },
       "description": "",
-      "guid": "33a90aa9-2de3-4d26-887b-703e5b77bf35",
+      "guid": "57570415-2db3-4918-a5f9-0cdfc744969c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f0_b_c0",
@@ -1693,16 +1693,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "6368b878-d39a-4415-b909-485d8a4a0be0",
+        "guid": "0aa66752-1381-4f12-b139-8f037e383949",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 7.2455835
+        "u": -2.4584975,
+        "v": 7.2455835
       },
       "description": "",
-      "guid": "00cb6c1b-25cf-44fe-a3dd-60053e3ad56d",
+      "guid": "9cb698f9-ec75-4022-b4f0-773d5929d37c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f1_b_c0",
@@ -1727,16 +1727,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "0d1efba5-4f5d-427a-baf9-ca9b82ce3256",
+        "guid": "c30c32db-d92a-401d-81f1-32d6c0160fe4",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 11.205583
+        "u": -2.4584975,
+        "v": 11.205583
       },
       "description": "",
-      "guid": "9c042edc-df9b-4327-888f-ed821276ba92",
+      "guid": "3bd47e3a-0e63-42e7-8d66-4290f7cd595e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f2_b_c0",
@@ -1761,16 +1761,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e23e365a-5eb8-4fa1-98c1-94bf269d604c",
+        "guid": "ceaa9bc4-b775-42ce-a494-4f0acec7900a",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 15.165583
+        "u": -2.4584975,
+        "v": 15.165583
       },
       "description": "",
-      "guid": "c43af644-8c1c-42f9-aae7-e64600dfbf1e",
+      "guid": "20f94e10-67e7-4c4d-b798-02588057ee42",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f3_b_c0",
@@ -1795,16 +1795,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5158e12e-f391-4db9-9bd3-d54667a31694",
+        "guid": "bc06bed7-36e0-4fa4-9ccd-aa5e99b8734c",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 19.125584
+        "u": -2.4584975,
+        "v": 19.125584
       },
       "description": "",
-      "guid": "e1a41603-ce9b-4734-9045-c0fd78a7b752",
+      "guid": "6a950e12-8068-42d1-b50e-2ee1ecf63396",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f4_b_c0",
@@ -1829,16 +1829,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a21fe038-6960-4e20-95c8-958d863207ce",
+        "guid": "e08057ed-e9a2-4a57-80ec-0efe8e8b6818",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 23.085585
+        "u": -2.4584975,
+        "v": 23.085585
       },
       "description": "",
-      "guid": "ef17f7f3-90a1-411b-aea0-1ea24a697b29",
+      "guid": "ae1173c5-d00a-4bd5-b4b7-5440ea0341c0",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f5_b_c0",
@@ -1863,16 +1863,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "33a02da3-9f9e-4606-9e7c-f81036059b45",
+        "guid": "c30963e5-8b64-45bf-ba0f-569f0614a1e7",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 27.045584
+        "u": -2.4584975,
+        "v": 27.045584
       },
       "description": "",
-      "guid": "d83c1c40-6039-4bb7-9d18-3359b517c46a",
+      "guid": "0f7e0951-11be-4992-8d9d-56c8aadaa8fe",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f6_b_c0",
@@ -1897,16 +1897,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e682790d-d7d2-4f2b-91d8-b4b721eb3974",
+        "guid": "68f997da-18d1-4166-9cb1-27883a1de3a3",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 31.005583
+        "u": -2.4584975,
+        "v": 31.005583
       },
       "description": "",
-      "guid": "a11a2eae-9917-41a3-8d24-a649514e0760",
+      "guid": "4ec1d6f5-68b6-484b-9390-34723d527659",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f7_b_c0",
@@ -1931,16 +1931,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d5f2a245-e7aa-402d-bd5a-9f030a964a30",
+        "guid": "a9a522a9-36f0-4c21-9b49-19228ec02ecb",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 34.965584
+        "u": -2.4584975,
+        "v": 34.965584
       },
       "description": "",
-      "guid": "489b8082-7b68-466f-9a82-3023f238dc29",
+      "guid": "cb4c3feb-deba-4927-bc07-615be921ccfa",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f8_b_c0",
@@ -1965,16 +1965,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "bc5eed5e-b4c1-4326-a1c7-b185017dbe25",
+        "guid": "11687fcb-a05c-46a4-962f-0c53801e75b3",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 2.4584975
+        "u": -3.2855835,
+        "v": 2.4584975
       },
       "description": "",
-      "guid": "746948f0-6bef-48a5-a8cc-1ca7028a242a",
+      "guid": "3a81687d-d02b-4653-b590-2b2208ef4173",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f0_b_c0",
@@ -1999,16 +1999,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c85071fb-7a95-4a8a-b4eb-e16a81c7a8b5",
+        "guid": "98ef1cde-884e-497a-84f8-2b4acc9b1002",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 6.4184976
+        "u": -3.2855835,
+        "v": 6.4184976
       },
       "description": "",
-      "guid": "5f5a2cc7-0294-4ad6-932f-0dc7e132eb8f",
+      "guid": "f4050f42-34cf-4dfe-82ca-a5d574d783b1",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f1_b_c0",
@@ -2033,16 +2033,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "60e7c7e7-9c83-4d74-90dc-429f2dc6753d",
+        "guid": "aad2ce2c-c848-4afa-8cb5-fa2c76dcb475",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 10.378497
+        "u": -3.2855835,
+        "v": 10.378497
       },
       "description": "",
-      "guid": "528434bb-6092-4e4d-8338-8284b373136c",
+      "guid": "99dced61-9338-4fae-9baf-bd057bc03bca",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f2_b_c0",
@@ -2067,16 +2067,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "52b44c38-b7d9-4d45-b3db-7a74cfcefcba",
+        "guid": "f8e02082-e5d6-4a40-b52d-bf5c39dda287",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 14.338497
+        "u": -3.2855835,
+        "v": 14.338497
       },
       "description": "",
-      "guid": "b5c4c533-0cf3-4bec-8697-5f43a0319829",
+      "guid": "017cc8db-1dbc-40f8-8a4c-78e91477f584",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f3_b_c0",
@@ -2101,16 +2101,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "cf939b55-cc43-4bff-a726-a2ac76f3062e",
+        "guid": "85a3bc7f-36c4-4ae1-aa57-545376d765a0",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 18.298498
+        "u": -3.2855835,
+        "v": 18.298498
       },
       "description": "",
-      "guid": "a9d3a1ef-1452-4e15-b2f3-dcdf72853a4c",
+      "guid": "4fe44c3a-2210-41f0-a1e3-eb45f466c1dd",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f4_b_c0",
@@ -2135,16 +2135,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "961230eb-769d-45ef-b016-43cae08db4fb",
+        "guid": "2d3bbfd5-9c7b-4e73-ba21-cd7909902504",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 22.2585
+        "u": -3.2855835,
+        "v": 22.2585
       },
       "description": "",
-      "guid": "d4fe66b4-85be-4169-9fb3-15cba160418a",
+      "guid": "d8c6d2da-980b-47dd-a670-a78d53065833",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f5_b_c0",
@@ -2169,16 +2169,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d32c1255-d10a-43a6-ad35-86226bfd967c",
+        "guid": "32d400cc-3423-49d6-811c-a4968e230af4",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 26.218498
+        "u": -3.2855835,
+        "v": 26.218498
       },
       "description": "",
-      "guid": "544fbe04-8ddf-4c3b-84f5-05ab87ad804e",
+      "guid": "e89fefdf-c29f-4f4c-87ba-23591f7d535e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f6_b_c0",
@@ -2203,16 +2203,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "ec6c54af-3eb1-4410-a61f-b299a844b46a",
+        "guid": "feed6e60-6651-425f-81aa-9bc13b1e1361",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 30.178497
+        "u": -3.2855835,
+        "v": 30.178497
       },
       "description": "",
-      "guid": "c8b0fcfd-6d62-4a3a-8de4-d67e1875a1d4",
+      "guid": "61bebaaa-e2cf-4d1f-9e8b-c4e292df3dd5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f7_b_c0",
@@ -2237,16 +2237,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "45d70ca4-6141-4dd9-a659-68887fbf5b73",
+        "guid": "90da4e0b-a984-42fd-b0b5-3ef3ea57f45c",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 34.138496
+        "u": -3.2855835,
+        "v": 34.138496
       },
       "description": "",
-      "guid": "5ef36183-10b7-414e-899e-e9741763875a",
+      "guid": "190a0ea0-9fb2-4551-b8e3-3d5dafb43407",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f8_b_c0",
@@ -2271,16 +2271,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "9a374921-b88e-487e-9e86-c532e0abee52",
+        "guid": "ffd8a0b6-9f37-4c84-b7d5-90a3ed634588",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 1.3557161
+        "u": -3.2855835,
+        "v": 1.3557161
       },
       "description": "",
-      "guid": "de5fea29-68a9-4321-9009-ce69924adfe4",
+      "guid": "33cc4bcd-be99-4136-9429-3efc31cc928d",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f0_b_c0",
@@ -2305,16 +2305,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "1cb1bf7e-6ed0-407a-ba5f-fa4f80db39aa",
+        "guid": "e4aab8c8-c3f7-4b2a-814e-fd8250478d3a",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 5.3157163
+        "u": -3.2855835,
+        "v": 5.3157163
       },
       "description": "",
-      "guid": "c1033cf1-6bb5-488d-824a-e9a96ae25255",
+      "guid": "2b4e17b7-ca0d-4d81-8d0a-57d296c491a7",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f1_b_c0",
@@ -2339,16 +2339,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "fbdd6071-a50c-45e0-864f-f94416cd1879",
+        "guid": "466d6020-ae16-450d-8377-340edee9141c",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 9.275716
+        "u": -3.2855835,
+        "v": 9.275716
       },
       "description": "",
-      "guid": "b64fcd43-6acc-4eaf-9171-1f8cb3552583",
+      "guid": "b7047670-ff33-4ec9-ba5c-fa1224ec40a2",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f2_b_c0",
@@ -2373,16 +2373,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b11ecdb9-f821-4605-8517-74a22a538fef",
+        "guid": "2e393f25-0138-4316-af90-7b19f6017a23",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 13.235716
+        "u": -3.2855835,
+        "v": 13.235716
       },
       "description": "",
-      "guid": "8ca4e308-cb8f-40f0-8549-9cd0d2bb3bb7",
+      "guid": "5760f303-6553-49b6-bee4-be472cf4f819",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f3_b_c0",
@@ -2407,16 +2407,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "772e3504-4d18-4e4d-8815-2e89499b129e",
+        "guid": "997dd6ec-fdbf-421d-b801-13663b0a342a",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 17.195715
+        "u": -3.2855835,
+        "v": 17.195715
       },
       "description": "",
-      "guid": "26ba8fee-9598-450e-ba74-42a028260f32",
+      "guid": "8d65364b-7295-4d75-a7f8-a5495158e2f1",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f4_b_c0",
@@ -2441,16 +2441,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "eec6dc75-b96a-4544-9cd2-6964fc25b47f",
+        "guid": "9379b5a2-076a-4790-bf55-247fd6ebf291",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 21.155716
+        "u": -3.2855835,
+        "v": 21.155716
       },
       "description": "",
-      "guid": "de38910c-9f85-48f1-a9ef-072d0013be3e",
+      "guid": "581b25a2-de6a-46e7-89a9-301d40141d18",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f5_b_c0",
@@ -2475,16 +2475,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "99c8311f-c2ac-4766-a9cd-148eb1b2db10",
+        "guid": "e1b0582e-51a8-4c43-97b8-e55a0b31fc86",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 25.115715
+        "u": -3.2855835,
+        "v": 25.115715
       },
       "description": "",
-      "guid": "daeefbbc-dec6-4054-a4a0-ec767e71cb66",
+      "guid": "b0f5a015-8110-4214-a226-b23c3329fc04",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f6_b_c0",
@@ -2509,16 +2509,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a46dfd5f-99d8-4968-86f5-5ee12e728cac",
+        "guid": "49befcad-c73b-409d-9143-ca69aa0bc0be",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 29.075714
+        "u": -3.2855835,
+        "v": 29.075714
       },
       "description": "",
-      "guid": "e961708e-86ea-4e44-a0e7-ac4a877e694d",
+      "guid": "e6deedd5-162c-4f8b-a8f9-b8e576de33e7",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f7_b_c0",
@@ -2543,16 +2543,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "53945d9f-6166-4d6e-944b-4fee30f2637e",
+        "guid": "228c4433-43e3-4c68-9416-b71fc20a1b95",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -3.2855835,
-        "y": 33.035713
+        "u": -3.2855835,
+        "v": 33.035713
       },
       "description": "",
-      "guid": "81952af2-f4db-449c-8ac5-b6d5348d0032",
+      "guid": "f0283d3a-2078-48ed-b428-bf1da0d8766c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f8_b_c0",
@@ -2577,16 +2577,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "eebfbe75-5b96-4abb-9043-b56760646bcc",
+        "guid": "a5da0fb5-5272-46a1-abb8-850d1a8c89fc",
         "key": "semio.parent",
         "value": "t_f0_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 0.52863014
+        "u": -2.4584975,
+        "v": 0.52863014
       },
       "description": "",
-      "guid": "94eb4edc-7698-4e9b-852d-95f289b87904",
+      "guid": "719ca07a-0e1a-4525-b04b-74a330c3c6ab",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f0_b_c0",
@@ -2611,16 +2611,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "71b2625b-c37d-4936-839f-08d0cc62179f",
+        "guid": "f6b0c0de-ded4-42b2-b2de-98434ac06781",
         "key": "semio.parent",
         "value": "t_f1_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 4.4886303
+        "u": -2.4584975,
+        "v": 4.4886303
       },
       "description": "",
-      "guid": "0c0a3a50-08a1-414e-bc53-0d72c606aa90",
+      "guid": "303e34ef-0206-4aec-97c5-33e939e17e83",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f1_b_c0",
@@ -2645,16 +2645,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a11cf3b3-f7e8-4233-ad2c-62f828ea7758",
+        "guid": "f5849300-996b-4d1a-b6b8-7888f675a221",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 8.44863
+        "u": -2.4584975,
+        "v": 8.44863
       },
       "description": "",
-      "guid": "8981081e-489a-4d09-ad78-12831aea748c",
+      "guid": "9b3d6148-4500-4a9b-8ba7-3151112db2ec",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f2_b_c0",
@@ -2679,16 +2679,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "2e45dae8-c892-4207-916f-c386cc8530df",
+        "guid": "9194b7b8-6804-498b-b95f-a1bd3bf6e769",
         "key": "semio.parent",
         "value": "t_f3_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 12.40863
+        "u": -2.4584975,
+        "v": 12.40863
       },
       "description": "",
-      "guid": "243209b6-44b6-4b48-8eff-0e4d13323b32",
+      "guid": "225f3c2d-a86d-47dd-a26d-fbe7d65b9e41",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f3_b_c0",
@@ -2713,16 +2713,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7429dabb-205d-4835-a8fb-d3c762aed80c",
+        "guid": "d4d214d7-6793-4857-a544-65e9bd2db454",
         "key": "semio.parent",
         "value": "t_f4_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 16.36863
+        "u": -2.4584975,
+        "v": 16.36863
       },
       "description": "",
-      "guid": "af095963-31d0-4ead-91ae-549c3d393950",
+      "guid": "1187f298-6180-49fc-8793-c1481cd91b8e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f4_b_c0",
@@ -2747,16 +2747,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5d467ac2-5f70-463c-b31c-4a384c08a424",
+        "guid": "67e0108c-fe4b-4d8b-904f-d0698d32b440",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 20.32863
+        "u": -2.4584975,
+        "v": 20.32863
       },
       "description": "",
-      "guid": "c638255e-166c-40a0-96fa-06c45ba8123c",
+      "guid": "033327dc-625f-4b5e-99f2-1b51f2b2358a",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f5_b_c0",
@@ -2781,16 +2781,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7e72d752-32af-4791-927e-b826ae726a6d",
+        "guid": "13d72383-dadd-423d-9baf-5604426aa408",
         "key": "semio.parent",
         "value": "t_f6_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 24.28863
+        "u": -2.4584975,
+        "v": 24.28863
       },
       "description": "",
-      "guid": "ff9a7abd-c074-427e-9d20-b7ce6bd61bb2",
+      "guid": "273cc9e3-5580-4baf-98d8-4ff8927a5004",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f6_b_c0",
@@ -2815,16 +2815,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "15c93056-a5b2-455e-9aa4-3db7eb0af2ae",
+        "guid": "90956610-8c8b-420d-aff5-61be857b277a",
         "key": "semio.parent",
         "value": "t_f7_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 28.248629
+        "u": -2.4584975,
+        "v": 28.248629
       },
       "description": "",
-      "guid": "5fb970b2-7acc-40e9-922f-f44464596269",
+      "guid": "eb81e7fa-598b-461e-97f5-4bbeaae09633",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f7_b_c0",
@@ -2849,16 +2849,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7e8057db-c678-4be6-ac48-ffbfb998ac8e",
+        "guid": "ab3a07e5-701c-4148-87f6-5c8cd33cec4f",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": -2.4584975,
-        "y": 32.208626
+        "u": -2.4584975,
+        "v": 32.208626
       },
       "description": "",
-      "guid": "fe0878c8-369c-4d69-b745-91324dfa1ac1",
+      "guid": "ce0dcbe0-9f96-46a3-b3a2-52a1ee327ad5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f8_b_c0",
@@ -2883,16 +2883,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c161dd84-d0c8-4b06-ae7b-d74352e5e805",
+        "guid": "6362f106-a47b-42c9-ba96-bc2f57e4d09c",
         "key": "semio.parent",
         "value": "b"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 1.9071069
+        "u": 1.9071069,
+        "v": 1.9071069
       },
       "description": "",
-      "guid": "31ce6ca3-fa48-43f9-9b75-50f6162947f6",
+      "guid": "27514c3e-92c9-4d0f-a15e-eb9c7174bcd6",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f0_b_c1",
@@ -2920,16 +2920,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f182c11c-ac50-4c53-967e-ca1570db856e",
+        "guid": "8bed860a-9e1d-4706-bf62-006b04ea508c",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 5.867107
+        "u": 1.9071069,
+        "v": 5.867107
       },
       "description": "",
-      "guid": "71dee791-d264-4bef-a1e2-219376b0319c",
+      "guid": "f9e24d85-54df-4c84-8594-960d1a24da19",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f1_b_c1",
@@ -2957,16 +2957,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "bc8bd9bc-a0ae-4a56-9ff5-cb0ea7e5e841",
+        "guid": "a74d2e36-44f5-4fc8-90d8-f0c94eab213e",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 9.827106
+        "u": 1.9071069,
+        "v": 9.827106
       },
       "description": "",
-      "guid": "055b83ba-d4c3-4622-b501-ce6d90910490",
+      "guid": "fc64b9f5-25af-4303-9169-f509b393e2f0",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f2_b_c1",
@@ -2994,16 +2994,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c4236d74-dd2d-4000-bdb9-d4f08bd5be13",
+        "guid": "0d5fe34a-c591-43b7-9db6-66da51bf779c",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 13.7871065
+        "u": 1.9071069,
+        "v": 13.7871065
       },
       "description": "",
-      "guid": "dad7b6fb-3337-4924-a244-85c3c1416282",
+      "guid": "a0f98865-35d2-42b8-8925-2ecadeb4a87b",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f3_b_c1",
@@ -3031,16 +3031,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "629b31d4-96bf-455b-a7e9-1e39287f271d",
+        "guid": "81cb2115-ac61-4ef2-89b8-54ec5c9b94e3",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 17.747107
+        "u": 1.9071069,
+        "v": 17.747107
       },
       "description": "",
-      "guid": "8f2f4e89-2ada-4a9b-a64e-51b4f9220a70",
+      "guid": "69564596-5c26-4664-80e3-079bc6ee7918",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f4_b_c1",
@@ -3068,16 +3068,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e5375bad-51e6-445e-a456-21f0cf10fa7f",
+        "guid": "08533bfa-fc4d-40b0-961a-c9e5dcbc3374",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 21.707108
+        "u": 1.9071069,
+        "v": 21.707108
       },
       "description": "",
-      "guid": "e6246591-2f04-4a9b-ab4b-11e81c7037a7",
+      "guid": "8f5b14b9-b3b7-4326-b294-02d6480aae21",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f5_b_c1",
@@ -3105,16 +3105,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "fc10604c-2e08-47f7-952d-345af831d30d",
+        "guid": "822f6f75-2c5e-4b64-95e9-84e99b275b29",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 25.667107
+        "u": 1.9071069,
+        "v": 25.667107
       },
       "description": "",
-      "guid": "1786da38-efef-4cc6-8c50-d34b3dd650aa",
+      "guid": "f09de62a-760a-428c-a260-7a80a957a553",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f6_b_c1",
@@ -3142,16 +3142,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "1c0bd827-4e47-4ed7-9d4b-774617512638",
+        "guid": "b06e0f44-c703-493f-8aa8-a18f972be175",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 29.627106
+        "u": 1.9071069,
+        "v": 29.627106
       },
       "description": "",
-      "guid": "7a69c091-fb80-466d-abfa-c25d46f7d8d8",
+      "guid": "d1ded428-f70f-4bc6-a12d-402835f17110",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f7_b_c1",
@@ -3179,16 +3179,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "06a194fa-aaa7-454e-a9a9-355fa81528de",
+        "guid": "6c7b9a90-27f9-47a1-8d05-f95d87b68e0f",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 33.587105
+        "u": 1.9071069,
+        "v": 33.587105
       },
       "description": "",
-      "guid": "415c9090-89c4-496f-aaff-00a29e0aae44",
+      "guid": "7819670d-f67a-410f-92ce-1754d3216e71",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f8_b_c1",
@@ -3216,16 +3216,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c2cbcb3d-0319-4e25-a0d5-2d7c425fae2c",
+        "guid": "02f3343c-9bdf-4a33-974d-46f8fbda5d17",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 37.547104
+        "u": 1.9071069,
+        "v": 37.547104
       },
       "description": "",
-      "guid": "cd6ceca2-b0cf-451f-8d40-ed05f8c3ca46",
+      "guid": "1a5b8342-61c9-4da9-9937-9f3d66a98329",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f9_b_c1",
@@ -3253,16 +3253,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c7fddb7e-5bd5-406d-a3fe-bd804046c14d",
+        "guid": "10e5cd26-9b5d-4d94-a627-c7f538c9ca5d",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 1.9071069,
-        "y": 41.507103
+        "u": 1.9071069,
+        "v": 41.507103
       },
       "description": "",
-      "guid": "05852494-c159-42e6-97d3-c24ef338882e",
+      "guid": "6c92df7d-98e1-4981-b1ac-c0fa4c6530e8",
       "isHidden": false,
       "isLocked": false,
       "name": "t_f10_b_c1",
@@ -3290,16 +3290,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d9b5ef4f-f216-4e8f-8f51-0f1c118675a3",
+        "guid": "667acc06-b166-466f-9d49-f32c63440e4c",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 3.2855835
+        "u": 1.3557161,
+        "v": 3.2855835
       },
       "description": "",
-      "guid": "28862038-a541-48fd-93a0-8277a24ddc0d",
+      "guid": "625fa960-89a6-4d29-a340-59e94c23cd0f",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f0_b_c1",
@@ -3324,16 +3324,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "92c85a6b-cfbb-4a07-8a25-422839e7082a",
+        "guid": "9ae02092-ffc0-4a53-a825-66a6e4d500f0",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 7.2455835
+        "u": 1.3557161,
+        "v": 7.2455835
       },
       "description": "",
-      "guid": "7e721e09-38ad-4f78-b565-f8f03df8cbd1",
+      "guid": "87be419f-4962-4fd1-9c94-0040b1d45c44",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f1_b_c1",
@@ -3358,16 +3358,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5d95b50d-bcb4-465a-93e7-fe5f5164ab7b",
+        "guid": "376a93e4-6cf0-4254-ae21-e9937df34884",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 11.205583
+        "u": 1.3557161,
+        "v": 11.205583
       },
       "description": "",
-      "guid": "9e00080d-d615-4cbc-a874-677b31c2f742",
+      "guid": "6994ddb6-9f92-45e6-937a-7490d5ff9580",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f2_b_c1",
@@ -3392,16 +3392,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e930cfa5-b401-4899-a654-f33f84dcd2d0",
+        "guid": "f8bd37bd-08cd-4f4c-b1b4-8c98bad7a881",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 15.165583
+        "u": 1.3557161,
+        "v": 15.165583
       },
       "description": "",
-      "guid": "bdb5a87b-eabe-4288-9f4b-7852adafe38c",
+      "guid": "431a2072-23df-4409-a7b8-a991eb019b90",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f3_b_c1",
@@ -3426,16 +3426,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "79536530-dfd8-4ce6-b1c5-855a74e292c3",
+        "guid": "f61ddd3a-2276-4b5c-a2bd-7e433437aaf3",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 19.125584
+        "u": 1.3557161,
+        "v": 19.125584
       },
       "description": "",
-      "guid": "70e79743-7819-47e3-ac13-d4822dfb6d19",
+      "guid": "98f9e000-018c-4e34-b922-6f18ad61aed3",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f4_b_c1",
@@ -3460,16 +3460,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "1c53b5b1-4c36-4500-84da-9d1a2573809b",
+        "guid": "0943e664-e5c8-4c2e-b9ef-56f0a60486b2",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 23.085585
+        "u": 1.3557161,
+        "v": 23.085585
       },
       "description": "",
-      "guid": "43077f3b-f1eb-4459-97c7-a8e8da62ba79",
+      "guid": "9d25b25f-d16f-4ac1-b7ac-f073d69ab4fe",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f5_b_c1",
@@ -3494,16 +3494,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d56a509a-424f-4feb-985b-b0656ecbd0e8",
+        "guid": "3484927f-c11a-4b05-9850-d871e952d18e",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 27.045584
+        "u": 1.3557161,
+        "v": 27.045584
       },
       "description": "",
-      "guid": "0db8713d-1152-4ff6-b387-354e17bea54d",
+      "guid": "43b77777-8f7c-458f-ada8-07bd2b98999d",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f6_b_c1",
@@ -3528,16 +3528,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "27671dec-d3cd-480e-a530-d5e0a096ba72",
+        "guid": "e57f9a49-735e-4b13-a4c8-446cef2d1934",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 31.005583
+        "u": 1.3557161,
+        "v": 31.005583
       },
       "description": "",
-      "guid": "3fc44275-1d40-4da9-8202-2052fc0babc0",
+      "guid": "022dbb5b-2566-425e-a20b-080e2c3c0983",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f7_b_c1",
@@ -3562,16 +3562,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "bb0329e1-a133-40e1-bae9-cfb3572b2cde",
+        "guid": "2c8aa0a1-bc62-4728-bb40-44e3a15119e7",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 34.965584
+        "u": 1.3557161,
+        "v": 34.965584
       },
       "description": "",
-      "guid": "62e03d94-2b63-4acf-8598-d6242d67e30a",
+      "guid": "c84647ed-1b15-48cd-a82d-878b86b871c4",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f8_b_c1",
@@ -3596,16 +3596,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "085443a0-32e7-4711-ae52-486ed6503a2d",
+        "guid": "fa6599c4-0ce8-4668-866f-f943caa7e1df",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 38.925583
+        "u": 1.3557161,
+        "v": 38.925583
       },
       "description": "",
-      "guid": "d0f7ca56-7a91-4406-8ae0-eedb2f015cdd",
+      "guid": "5425a947-7f27-4759-9e37-7b6f8a7eefbd",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f9_b_c1",
@@ -3630,16 +3630,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "23a3718f-e752-4fd5-adc7-ce06d27640ee",
+        "guid": "ec1bc689-2ecc-4742-9458-ee57928f055e",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 42.885582
+        "u": 1.3557161,
+        "v": 42.885582
       },
       "description": "",
-      "guid": "75f4ba5f-0102-4595-b88f-6a9567a36935",
+      "guid": "b94f5289-b2c5-4d70-b664-168aa47ea862",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d0_t_f10_b_c1",
@@ -3664,16 +3664,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "63ef577a-cb18-4a54-879f-4f5c041e4193",
+        "guid": "5f1b981b-f635-49e7-94f1-c49e854a0df7",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 2.4584975
+        "u": 0.52863014,
+        "v": 2.4584975
       },
       "description": "",
-      "guid": "9e1bc87f-2793-4983-9f52-afdf175e6134",
+      "guid": "beb36133-d68c-49e2-92be-3621d5312aa4",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f0_b_c1",
@@ -3698,16 +3698,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "71fb78b9-89c5-4902-b698-6f3a6415dcba",
+        "guid": "99d05ec5-f848-46bd-8437-1a675f3fd09d",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 6.4184976
+        "u": 0.52863014,
+        "v": 6.4184976
       },
       "description": "",
-      "guid": "3dbb73a4-bb4b-4ab7-b6f6-aaa23c7a1c7d",
+      "guid": "72f10183-e834-4e42-aef7-252c8903dabb",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f1_b_c1",
@@ -3732,16 +3732,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "277fde0a-84e1-4d02-be2b-918b2e51d5f6",
+        "guid": "9f61383b-ab98-44aa-a5ba-fb91a3c7e5f0",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 14.338497
+        "u": 0.52863014,
+        "v": 14.338497
       },
       "description": "",
-      "guid": "2bce9fcc-e2eb-4dd7-8ec9-ffc69836da81",
+      "guid": "1afd203c-8c07-4859-b768-54c09a04860e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f3_b_c1",
@@ -3766,16 +3766,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7d4add95-4855-4cbb-b722-57870be48489",
+        "guid": "c6603a0f-e522-4fbd-8b54-d7be3b63984b",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 18.298498
+        "u": 0.52863014,
+        "v": 18.298498
       },
       "description": "",
-      "guid": "5a01494d-f9df-47c7-881d-37610af0948d",
+      "guid": "38cedd86-d3de-4016-a093-3c54b6577cdf",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f4_b_c1",
@@ -3800,16 +3800,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "144a5436-fcaa-4acb-b901-6dcf51f9ccb4",
+        "guid": "10ae9f9b-9817-4277-92c4-0a30559dffc1",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 26.218498
+        "u": 0.52863014,
+        "v": 26.218498
       },
       "description": "",
-      "guid": "517128ab-f325-40d8-a843-ecfd6cc589c5",
+      "guid": "c914a943-fff3-4a2c-a0af-cc235783fc17",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f6_b_c1",
@@ -3834,16 +3834,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "77ed87b3-4952-46b1-aae4-02ad3de52596",
+        "guid": "a9741fd7-e845-4154-a5a2-3b543bfe5f30",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 30.178497
+        "u": 0.52863014,
+        "v": 30.178497
       },
       "description": "",
-      "guid": "d7aeed03-c179-47df-8728-ef52b3c8233e",
+      "guid": "fb98c941-ba43-4df5-8967-706b91267b92",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f7_b_c1",
@@ -3868,16 +3868,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "56ae148b-0831-4901-82c5-70bace886863",
+        "guid": "1834ef4a-5001-4e11-83d7-eae4ce08c376",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 38.098495
+        "u": 0.52863014,
+        "v": 38.098495
       },
       "description": "",
-      "guid": "cab5a4ba-d940-4b66-ba59-6fdf6baf57fc",
+      "guid": "b9bb2634-4360-48b6-aff2-788ec6d0bb09",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f9_b_c1",
@@ -3902,16 +3902,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "087a37ea-85f2-4c9c-a8a9-d3c072a07e38",
+        "guid": "b47cd794-4a31-40c5-a3a8-01b5d14d3a05",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 42.058495
+        "u": 0.52863014,
+        "v": 42.058495
       },
       "description": "",
-      "guid": "8443a5b2-c922-47ae-818c-410d0e8ad9bd",
+      "guid": "753cc323-f86f-4be6-93ae-edf4df06d462",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d1_t_f10_b_c1",
@@ -3936,16 +3936,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e0cdeb08-56ef-42c8-83dc-39f89a99f441",
+        "guid": "a16259c0-cf56-4099-8818-55557cce5937",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 1.3557161
+        "u": 0.52863014,
+        "v": 1.3557161
       },
       "description": "",
-      "guid": "7d59f316-5205-45dd-812d-3316b77220e0",
+      "guid": "f0e11c50-4dec-4243-a263-718a23e31a36",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f0_b_c1",
@@ -3970,16 +3970,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "40ed4005-ec40-445d-b00d-2f418ee4bf58",
+        "guid": "3c70023c-ad36-4742-aa0d-cd89a4afea19",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 5.3157163
+        "u": 0.52863014,
+        "v": 5.3157163
       },
       "description": "",
-      "guid": "7b51a89a-333a-4519-97e9-4ca915abb66e",
+      "guid": "e2a69b0e-c0b1-4bc1-96dc-64f870fdd44c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f1_b_c1",
@@ -4004,16 +4004,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "33f697b9-bdc7-453d-a9be-7c9aa6d6b543",
+        "guid": "784a8883-08d5-49d7-a177-5b92f666667e",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 9.275716
+        "u": 0.52863014,
+        "v": 9.275716
       },
       "description": "",
-      "guid": "0b2cb9f5-9e7b-4576-bfdd-f9d44f5b72e5",
+      "guid": "e99e1aa8-5a6b-4051-ada5-a73a67022f15",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f2_b_c1",
@@ -4038,16 +4038,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "81b5b011-cac3-4a22-8907-6b78e4c710e9",
+        "guid": "015bbef2-2b0f-48c7-b29e-2b2823b49446",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 13.235716
+        "u": 0.52863014,
+        "v": 13.235716
       },
       "description": "",
-      "guid": "52bbe1cd-b615-45e7-8e06-1b49743e4645",
+      "guid": "4e4e846b-47ce-4596-a602-0f0a26a4aed0",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f3_b_c1",
@@ -4072,16 +4072,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "6a660b7d-0962-4247-b710-37fbd8fbad1c",
+        "guid": "13d7169c-8a49-4f87-9827-02ff5d23a948",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 17.195715
+        "u": 0.52863014,
+        "v": 17.195715
       },
       "description": "",
-      "guid": "332012a5-8c41-4303-907b-5ac7a4a01380",
+      "guid": "fe604684-3c0c-48b3-9044-60abb50afab6",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f4_b_c1",
@@ -4106,16 +4106,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c8fc3fd2-c1e0-41f8-b3e8-9131ba035957",
+        "guid": "0b907eb8-e850-4770-b972-aabae244bf04",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 21.155716
+        "u": 0.52863014,
+        "v": 21.155716
       },
       "description": "",
-      "guid": "c589437f-c31b-43d5-a47f-d72e3b6ee470",
+      "guid": "a843772d-dfbe-4eb0-836a-c20ee8cf7acf",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f5_b_c1",
@@ -4140,16 +4140,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "462830f0-9144-4f93-97f4-abc00d38132c",
+        "guid": "39533f71-069d-4bdf-a6ae-96855eded469",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 25.115715
+        "u": 0.52863014,
+        "v": 25.115715
       },
       "description": "",
-      "guid": "e45e2daa-61a6-4ba9-b3bb-1efd363f1147",
+      "guid": "ea91fc1e-02a9-470f-9637-583bff93d3ae",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f6_b_c1",
@@ -4174,16 +4174,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c2e342db-a532-4d8c-846e-0d12e628a1c7",
+        "guid": "2c47c353-87fd-4c0d-8961-1fd1fed37e79",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 29.075714
+        "u": 0.52863014,
+        "v": 29.075714
       },
       "description": "",
-      "guid": "a4411b02-f1e5-48e1-9f62-1c86170ee2d3",
+      "guid": "b5e6c69f-744a-4d4b-8ce3-d9ed7f3db1a5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f7_b_c1",
@@ -4208,16 +4208,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "9435f78d-2fa2-4b35-91c5-84c15b939ccd",
+        "guid": "23a3729e-8e70-4805-8955-bb3a3ba36103",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 33.035713
+        "u": 0.52863014,
+        "v": 33.035713
       },
       "description": "",
-      "guid": "a06654b6-1afc-47ef-b3ad-d95761e2e135",
+      "guid": "8caac360-a269-4c6b-98d4-92f0792c4f80",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f8_b_c1",
@@ -4242,16 +4242,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c9247415-a72a-4872-8af1-0319aaf105a1",
+        "guid": "6a6084fa-6363-402c-9f6e-a7e58567dced",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 36.995712
+        "u": 0.52863014,
+        "v": 36.995712
       },
       "description": "",
-      "guid": "947b8949-5d61-4a01-913d-e09456e89ebe",
+      "guid": "e6adce9c-fb86-4bc4-a110-6a90869cfa72",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f9_b_c1",
@@ -4276,16 +4276,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c6c86a2d-1832-4c61-a916-aa54be714a34",
+        "guid": "dae3024e-69b8-46b3-865e-95f9425df1a2",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 0.52863014,
-        "y": 40.95571
+        "u": 0.52863014,
+        "v": 40.95571
       },
       "description": "",
-      "guid": "5e219701-be79-4ea5-8846-8064ada80575",
+      "guid": "eb554733-5608-4c84-a7fe-44b76cbb0517",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d2_t_f10_b_c1",
@@ -4310,16 +4310,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "42753b7e-5682-4e69-8083-1d604aa5adc3",
+        "guid": "1c93b6ab-9c47-4fea-a814-dd72e9d6ebc8",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 0.52863014
+        "u": 1.3557161,
+        "v": 0.52863014
       },
       "description": "",
-      "guid": "fa5c5680-2800-4f6f-a2eb-262a0a2c1dc0",
+      "guid": "5b0854a3-a254-4fae-8f32-64c715282cff",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f0_b_c1",
@@ -4344,16 +4344,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "bf043fab-17fe-41f5-9467-2ab3e151841b",
+        "guid": "a17d7276-b5e4-4c49-9957-ac7a21a8e708",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 4.4886303
+        "u": 1.3557161,
+        "v": 4.4886303
       },
       "description": "",
-      "guid": "9aa17d7d-56ad-46e5-ba92-f22dd8ee1e0e",
+      "guid": "e4048a48-f9ab-4f89-b94a-5438beae88c0",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f1_b_c1",
@@ -4378,16 +4378,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "9c81c4db-2285-4b1b-a152-81881f115f9d",
+        "guid": "5f05e2a6-48b8-439a-a91e-e6be669545bd",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 8.44863
+        "u": 1.3557161,
+        "v": 8.44863
       },
       "description": "",
-      "guid": "f979b095-19b0-4e8f-a007-040ca2bb3068",
+      "guid": "7ba52c41-f130-487d-ae26-29c32fb05a59",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f2_b_c1",
@@ -4412,16 +4412,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "59c93973-6dea-405b-aaba-d195fa53631c",
+        "guid": "610510dc-3d29-437b-baac-cdff03ea86dc",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 12.40863
+        "u": 1.3557161,
+        "v": 12.40863
       },
       "description": "",
-      "guid": "4d8216ed-3164-4f2f-8250-5d7e173119ee",
+      "guid": "802a0102-f323-4249-9b22-08c9c107e972",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f3_b_c1",
@@ -4446,16 +4446,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "1d6bc302-8164-4e60-8798-e6ab051d4c63",
+        "guid": "6655901b-618c-4afe-943d-501e783ea2d3",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 16.36863
+        "u": 1.3557161,
+        "v": 16.36863
       },
       "description": "",
-      "guid": "abbb8152-a21c-4864-ae86-64fedc4ff8c6",
+      "guid": "477d004a-471a-4d6c-9c38-c2f9f983a151",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f4_b_c1",
@@ -4480,16 +4480,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "fb0049b3-630f-4022-9ece-207a78164623",
+        "guid": "9c5c5139-b14c-48d8-80a9-11dd3c04a690",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 20.32863
+        "u": 1.3557161,
+        "v": 20.32863
       },
       "description": "",
-      "guid": "2662501a-06d7-4986-a1f5-fc642910cf99",
+      "guid": "0a9816d5-df90-4b22-a5a7-91db3e33d31b",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f5_b_c1",
@@ -4514,16 +4514,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f18d355d-7cce-421b-9dc5-7cf416f6d7e4",
+        "guid": "2c3ac426-e7df-49b8-81a4-ffd552650e52",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 24.28863
+        "u": 1.3557161,
+        "v": 24.28863
       },
       "description": "",
-      "guid": "53af167d-f3da-47b3-9eb1-f7f092f597c0",
+      "guid": "fec6eab5-7a09-455a-b371-05e02148aa2c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f6_b_c1",
@@ -4548,16 +4548,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "4b58f331-9235-478d-b16c-c6d804b4c089",
+        "guid": "c816c8f2-73c6-4ba9-a797-6780b0fe0685",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 28.248629
+        "u": 1.3557161,
+        "v": 28.248629
       },
       "description": "",
-      "guid": "ab17bcde-eb23-4f68-b628-ae1aad8d572d",
+      "guid": "7f9329c1-1996-4252-985a-757c0d058230",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f7_b_c1",
@@ -4582,16 +4582,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c716df6a-4de8-4cfa-adb3-d70a45da45ef",
+        "guid": "7bb27f6e-a7fa-4ac8-8e18-d50b5b3aff3b",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 32.208626
+        "u": 1.3557161,
+        "v": 32.208626
       },
       "description": "",
-      "guid": "a2f2be5b-164a-47ef-ab23-27009e5881b6",
+      "guid": "fbf695ff-0fbc-4f06-a116-43b08c62f9a4",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f8_b_c1",
@@ -4616,16 +4616,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b766a5d6-567a-4ef9-9257-28a6b773cf8c",
+        "guid": "d9ac331a-a30b-4a2c-82c2-6adc8fb3786d",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 36.168625
+        "u": 1.3557161,
+        "v": 36.168625
       },
       "description": "",
-      "guid": "61a75422-fa55-4824-b814-23fd7d6375e7",
+      "guid": "eb693997-5617-483e-b9e9-cc2a27283f1f",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f9_b_c1",
@@ -4650,16 +4650,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "0e669616-28b8-441d-814e-8fbc3c03fc53",
+        "guid": "68444854-791b-4490-afb5-6d27ee9a1082",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 1.3557161,
-        "y": 40.128624
+        "u": 1.3557161,
+        "v": 40.128624
       },
       "description": "",
-      "guid": "ea11bbe4-9a70-4498-852a-ef4fb1414131",
+      "guid": "cfc95d28-bda3-4bc4-8d3a-3f87a2603e82",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl0_d3_t_f10_b_c1",
@@ -4684,16 +4684,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "ba242d7f-363e-431b-9e6f-e4af87ec5ef3",
+        "guid": "6aac8695-2d43-4db2-9c49-7165c0eb9c15",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 0.52863014
+        "u": 2.4584975,
+        "v": 0.52863014
       },
       "description": "",
-      "guid": "48035509-3570-4cf5-9aaf-14b0f361fb43",
+      "guid": "35725f03-51f9-4406-8a0e-e20e4a5cfbc5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f0_b_c1",
@@ -4718,16 +4718,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "37f01ccc-0b75-4344-a91c-1bb0ae0c35c9",
+        "guid": "a6cb6a50-747f-4c0b-954d-a20e33f9cd5f",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 4.4886303
+        "u": 2.4584975,
+        "v": 4.4886303
       },
       "description": "",
-      "guid": "9b5f389c-b779-4eaf-aa0e-62dd2b557954",
+      "guid": "09fea507-bb30-4d4c-bc0e-36ebc82b9136",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f1_b_c1",
@@ -4752,16 +4752,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f3eb30f1-085c-4d39-8078-181992a6cce6",
+        "guid": "346e428b-df0a-4368-947d-8fe8e44ce6ef",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 8.44863
+        "u": 2.4584975,
+        "v": 8.44863
       },
       "description": "",
-      "guid": "e43fe757-5c5e-4cff-b28b-c2496eb996a1",
+      "guid": "acdec8e5-7708-4590-8664-c29bf7411a9b",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f2_b_c1",
@@ -4786,16 +4786,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "992164fa-e425-42b7-91dc-d7ef33233940",
+        "guid": "51d5bba5-655c-4bb7-af67-fd596aa81359",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 12.40863
+        "u": 2.4584975,
+        "v": 12.40863
       },
       "description": "",
-      "guid": "b31db55f-4390-436c-9b1d-bbdaabf0b196",
+      "guid": "668d64b3-89f7-49c6-915c-66e1ffe524c3",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f3_b_c1",
@@ -4820,16 +4820,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f296a23f-4ee1-420d-83f9-014981fadc45",
+        "guid": "d0091515-1b43-4bb3-9e12-19022d466b76",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 16.36863
+        "u": 2.4584975,
+        "v": 16.36863
       },
       "description": "",
-      "guid": "8b3252c1-60e7-4353-a938-e9c5d1971087",
+      "guid": "7090664c-8ca3-40fa-a758-a469d137cd98",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f4_b_c1",
@@ -4854,16 +4854,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "4e3db8d5-e7bf-42bf-a56e-07f4872a4a9d",
+        "guid": "305a1d83-298f-4de5-ba32-3007dba48125",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 20.32863
+        "u": 2.4584975,
+        "v": 20.32863
       },
       "description": "",
-      "guid": "9b306460-e03d-4826-a65d-7b681534e682",
+      "guid": "35484fc7-5da1-409e-b0eb-18702fc78e95",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f5_b_c1",
@@ -4888,16 +4888,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "4ec539eb-9296-48a5-a2ca-89dcb86a7304",
+        "guid": "6e3e3f25-8c6f-4e9b-93f9-24686b3336ef",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 24.28863
+        "u": 2.4584975,
+        "v": 24.28863
       },
       "description": "",
-      "guid": "88c6d56e-0f3c-4e1e-b34e-73c67bfdf264",
+      "guid": "616584b8-79d4-442e-95ad-4ec7b01fd98b",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f6_b_c1",
@@ -4922,16 +4922,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "cbb81da9-db46-436e-aea4-74ec2db13d02",
+        "guid": "41444ac4-1ac0-42e4-9bb6-155d4b3064de",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 28.248629
+        "u": 2.4584975,
+        "v": 28.248629
       },
       "description": "",
-      "guid": "b6d955cc-4761-45bd-8b4a-38c20b727cf4",
+      "guid": "2ab37391-da32-4a0c-8cbb-2d4e53587fa7",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f7_b_c1",
@@ -4956,16 +4956,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f34fb053-fc73-4cf8-bc87-e765e48ca4a2",
+        "guid": "03abcf47-9623-4e91-83b8-1a4e0514e30e",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 32.208626
+        "u": 2.4584975,
+        "v": 32.208626
       },
       "description": "",
-      "guid": "6ac66754-0a5e-4895-aac7-02fe16f83fb6",
+      "guid": "4a640ce6-70e1-48d9-9e99-15bc8fe90ff6",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f8_b_c1",
@@ -4990,16 +4990,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "6fd62e6c-ec10-4dc6-9b76-c2c8f3f926b8",
+        "guid": "2d88073b-3f27-436a-b227-ce4bf1b9d510",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 36.168625
+        "u": 2.4584975,
+        "v": 36.168625
       },
       "description": "",
-      "guid": "f745dd67-6edd-4339-b7f9-1497cad8fbcc",
+      "guid": "c5a2206b-3186-486a-b910-9ba031514091",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f9_b_c1",
@@ -5024,16 +5024,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "856f6e07-a3af-4189-b7e2-67a558b138cf",
+        "guid": "3cf1dadd-2597-404b-afdc-f57b50f1f86a",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 40.128624
+        "u": 2.4584975,
+        "v": 40.128624
       },
       "description": "",
-      "guid": "fa3165df-b76d-4b44-b94b-6f69b10b3756",
+      "guid": "c0bc8922-bbd6-4f87-ab74-a2ec243b8803",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d0_t_f10_b_c1",
@@ -5058,16 +5058,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "e185f33d-915e-402a-a22a-9ab90625b5f2",
+        "guid": "44a56bc7-86d6-45e9-add9-2fb8bd0bc78b",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 1.3557161
+        "u": 3.2855835,
+        "v": 1.3557161
       },
       "description": "",
-      "guid": "2e7346be-c39c-4284-a56b-519d9d89a00e",
+      "guid": "7f84246f-082d-4a4f-92e6-1632c759ab13",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f0_b_c1",
@@ -5092,16 +5092,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a1585b5d-6659-4eb3-af60-5bbddf4a2331",
+        "guid": "378c6bfa-8117-42de-a824-a68f652411d9",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 5.3157163
+        "u": 3.2855835,
+        "v": 5.3157163
       },
       "description": "",
-      "guid": "c3efb538-1185-4c8c-b6ec-5499fb94116f",
+      "guid": "16e21c9a-e0ea-46e6-8003-c7554cb19982",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f1_b_c1",
@@ -5126,16 +5126,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "23d209a6-6c57-4318-9b88-00651197f144",
+        "guid": "8fbf9cd0-1918-4891-a1c4-6302b63986ff",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 9.275716
+        "u": 3.2855835,
+        "v": 9.275716
       },
       "description": "",
-      "guid": "6082f3e1-1141-4c21-baca-b3ef18ca2c59",
+      "guid": "c67d591b-606c-4811-b90a-d7e33cd174de",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f2_b_c1",
@@ -5160,16 +5160,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "67782347-d326-4bd0-ae88-db8369da07a0",
+        "guid": "86b793df-9037-4361-bc55-62c39435d338",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 13.235716
+        "u": 3.2855835,
+        "v": 13.235716
       },
       "description": "",
-      "guid": "f4c64e1c-88ea-4b48-94de-d0102a137826",
+      "guid": "a02ff1ce-1962-4f59-a38f-620f846ddf96",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f3_b_c1",
@@ -5194,16 +5194,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b8b29634-25f8-4b4b-960b-c95664c45095",
+        "guid": "446fb4f4-0345-4e6b-9bbd-011c7c4d6e59",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 17.195715
+        "u": 3.2855835,
+        "v": 17.195715
       },
       "description": "",
-      "guid": "5402fc4e-facf-492b-a09d-98553edc8e1d",
+      "guid": "68ff05e7-e91a-45e4-84e9-f72ab2f0a082",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f4_b_c1",
@@ -5228,16 +5228,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b5440d69-4ab4-45b5-afc7-dd9d5dadb191",
+        "guid": "453aa331-d554-421d-a25f-297a9593391c",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 21.155716
+        "u": 3.2855835,
+        "v": 21.155716
       },
       "description": "",
-      "guid": "c962f47f-76a1-41f1-a810-982e573cf7b4",
+      "guid": "f5e93325-8242-4f24-8018-05a79c21f032",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f5_b_c1",
@@ -5262,16 +5262,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d3bcc0b2-34cb-4087-8d3c-397c8fe74abc",
+        "guid": "df459f59-1f1d-43b5-bd05-3db733fc4b45",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 25.115715
+        "u": 3.2855835,
+        "v": 25.115715
       },
       "description": "",
-      "guid": "2b920239-fd8d-4743-a2a2-9b481a55b4ec",
+      "guid": "337f6918-1884-49de-8087-02989c6f2734",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f6_b_c1",
@@ -5296,16 +5296,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "efb79898-f4b6-49a3-89a8-87e290235e53",
+        "guid": "fc77f575-cfb9-42cd-8627-95538b634fe5",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 29.075714
+        "u": 3.2855835,
+        "v": 29.075714
       },
       "description": "",
-      "guid": "563ce86c-aa17-4943-9163-c9f4d159260f",
+      "guid": "4cd253f0-e61c-4079-8d73-8a557aa74973",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f7_b_c1",
@@ -5330,16 +5330,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5f26f5d0-7292-4a33-b876-15b77c4a7f51",
+        "guid": "6c8cca30-00a2-497a-b43a-a3a9f5190a0b",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 33.035713
+        "u": 3.2855835,
+        "v": 33.035713
       },
       "description": "",
-      "guid": "5b90dce3-ce8a-424f-8665-540d40c4e24b",
+      "guid": "e9ade14e-4c98-4cf9-a7cd-1755e686ee89",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f8_b_c1",
@@ -5364,16 +5364,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "efbf47aa-6d8d-44d5-9a83-8a09330a0c8a",
+        "guid": "5ebb4c4b-544d-48b3-b46f-dd0eb9bbff84",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 36.995712
+        "u": 3.2855835,
+        "v": 36.995712
       },
       "description": "",
-      "guid": "f9e04cbb-4e52-4075-bdf5-992ffaa6e975",
+      "guid": "57a6ad52-10cf-4c67-8b5f-1491c6296c8d",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f9_b_c1",
@@ -5398,16 +5398,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "654c9a83-ddfe-4435-963b-43660e9c63f9",
+        "guid": "b7b53337-f789-4672-9d0d-0569ab57d2c9",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 40.95571
+        "u": 3.2855835,
+        "v": 40.95571
       },
       "description": "",
-      "guid": "d0957c76-0783-4155-a515-f00f61fb0ff6",
+      "guid": "8c67f142-b64c-4a9f-8c97-1d949a3f32a3",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl1_d1_t_f10_b_c1",
@@ -5432,16 +5432,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "ac967d9c-71fe-4501-b3ff-344f0bbb029f",
+        "guid": "eeaf7375-e60b-4a4f-86ea-8c6b993a91c1",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 2.4584975
+        "u": 3.2855835,
+        "v": 2.4584975
       },
       "description": "",
-      "guid": "b747d4bc-a09b-4e5b-b0f0-234f7d43041d",
+      "guid": "99effac0-9af1-4bc6-9240-26d75259e8f7",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f0_b_c1",
@@ -5466,16 +5466,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b64face6-5d28-4a97-9fd3-37847a9db9d5",
+        "guid": "3ea8336d-96fb-4854-9a8b-31a5716d1ff8",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 6.4184976
+        "u": 3.2855835,
+        "v": 6.4184976
       },
       "description": "",
-      "guid": "c4442a72-8c68-445a-8ba4-aa2fd1ebd011",
+      "guid": "1b4f4488-3737-4701-a8ce-85c645c145ce",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f1_b_c1",
@@ -5500,16 +5500,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d1e6ee53-1d4c-4896-9d50-34d62758f6aa",
+        "guid": "55928174-d18c-49f3-bbca-24b537727f1e",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 10.378497
+        "u": 3.2855835,
+        "v": 10.378497
       },
       "description": "",
-      "guid": "14b15468-0f69-4e3c-9c88-ada173a93523",
+      "guid": "c9e580c0-ddaf-4919-a897-bee1d599125b",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f2_b_c1",
@@ -5534,16 +5534,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "37dc738d-57f0-4fa5-bd55-91850f67d43e",
+        "guid": "854ed48a-9f73-4fef-9443-2446d08e0e7f",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 14.338497
+        "u": 3.2855835,
+        "v": 14.338497
       },
       "description": "",
-      "guid": "d59125d9-7426-4d76-9031-42a6c3f49786",
+      "guid": "7ab2ba84-8cfc-4c9c-9a1f-7369d215d401",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f3_b_c1",
@@ -5568,16 +5568,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d9b28421-7b31-4bdc-b2e7-ce65b6ea908d",
+        "guid": "25455c3a-310c-4c01-b92b-5c7ac2581063",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 18.298498
+        "u": 3.2855835,
+        "v": 18.298498
       },
       "description": "",
-      "guid": "7cd741b7-c541-4273-8fd3-b3ab7b64c358",
+      "guid": "0cb06ab0-91b2-4945-babe-255d15927350",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f4_b_c1",
@@ -5602,16 +5602,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "eaab701e-7a07-41df-9efb-33565ed39bf7",
+        "guid": "f0819d60-b22b-46f8-bbe7-2f6cf2499097",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 22.2585
+        "u": 3.2855835,
+        "v": 22.2585
       },
       "description": "",
-      "guid": "5af2f89e-ace5-4c62-9d5b-6479a5c664ee",
+      "guid": "857dd451-57d5-4fa4-b93b-7e08e027fc45",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f5_b_c1",
@@ -5636,16 +5636,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "6e3a5ec4-d869-4707-8175-f5a8ab2ef410",
+        "guid": "f286435d-c5c1-4cbb-b2a4-0bf720d0d24d",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 26.218498
+        "u": 3.2855835,
+        "v": 26.218498
       },
       "description": "",
-      "guid": "2b028862-8a0e-4caa-9f39-19d226b521fe",
+      "guid": "9199064f-b2a4-479a-ad48-bfec3790bec4",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f6_b_c1",
@@ -5670,16 +5670,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "124041e7-ace4-4ca4-bc30-b8d12a648b75",
+        "guid": "314bb065-5234-4714-be8a-aecaaa8d84f9",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 30.178497
+        "u": 3.2855835,
+        "v": 30.178497
       },
       "description": "",
-      "guid": "03cd32d4-2d92-4e21-a2bb-4dc9210fdc07",
+      "guid": "5a28a6bb-2622-4455-a465-ae805172d2c5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f7_b_c1",
@@ -5704,16 +5704,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "f103af76-9e10-4aa0-b63f-feedbf21bee4",
+        "guid": "a1853e46-79d5-4ed6-b3cf-1539203a7599",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 34.138496
+        "u": 3.2855835,
+        "v": 34.138496
       },
       "description": "",
-      "guid": "91b1f8e2-2d8e-46a4-8f7b-c2e310f236de",
+      "guid": "0c322cb1-dcf0-42db-b899-eab6c33e528c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f8_b_c1",
@@ -5738,16 +5738,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "b7bdcad0-a40a-48b5-b653-2c97ef8183ff",
+        "guid": "96e1fc3d-9176-4cca-acfb-a0fdc55f5648",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 38.098495
+        "u": 3.2855835,
+        "v": 38.098495
       },
       "description": "",
-      "guid": "627eff5d-f99d-403f-af30-e7d1f92526ba",
+      "guid": "1987c5d7-ebad-452b-9ada-88eebc5af137",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f9_b_c1",
@@ -5772,16 +5772,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d90b0416-0929-4c72-959f-960feb1f6f43",
+        "guid": "4e2052cb-9668-45bf-9462-e4415cbb3d9c",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 3.2855835,
-        "y": 42.058495
+        "u": 3.2855835,
+        "v": 42.058495
       },
       "description": "",
-      "guid": "04f95900-dd76-4576-b833-926a32f3bb7c",
+      "guid": "9edbd83f-c06f-4ad7-a1de-7f6a11078e28",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d0_t_f10_b_c1",
@@ -5806,16 +5806,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "960e1eb0-0599-4c62-87d7-67c564073dff",
+        "guid": "12617eda-b814-43f5-9403-45336bfb696c",
         "key": "semio.parent",
         "value": "t_f0_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 3.2855835
+        "u": 2.4584975,
+        "v": 3.2855835
       },
       "description": "",
-      "guid": "dfa93097-8c6c-4353-b212-ae6573c48079",
+      "guid": "a89902c4-163a-44eb-b40d-ff3e954ccc8d",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f0_b_c1",
@@ -5840,16 +5840,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d3e27d1b-cc53-432f-a577-59f1387b6d68",
+        "guid": "198316d8-22d4-4793-b816-ecf475cd4c97",
         "key": "semio.parent",
         "value": "t_f1_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 7.2455835
+        "u": 2.4584975,
+        "v": 7.2455835
       },
       "description": "",
-      "guid": "5e833c00-7b77-44fd-ab7c-9bd85c549d8c",
+      "guid": "641dc056-32a4-4bf5-96e2-2a4685d4b243",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f1_b_c1",
@@ -5874,16 +5874,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "2729dd39-9132-48a9-a682-405749ece391",
+        "guid": "49b4a588-3e49-43a4-b956-82fe43b8078f",
         "key": "semio.parent",
         "value": "t_f2_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 11.205583
+        "u": 2.4584975,
+        "v": 11.205583
       },
       "description": "",
-      "guid": "95245300-4e62-47f0-b348-9806850c38d6",
+      "guid": "59898bad-8246-4270-891f-51bcf8c8fa55",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f2_b_c1",
@@ -5908,16 +5908,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "c1e2a9f8-7f3c-438f-89a6-72dba3d2d0ce",
+        "guid": "cfd2d7e4-fa3e-4602-a964-078d172a0fe1",
         "key": "semio.parent",
         "value": "t_f3_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 15.165583
+        "u": 2.4584975,
+        "v": 15.165583
       },
       "description": "",
-      "guid": "780f7a58-56cf-45a6-9f90-f9af5fdf14a3",
+      "guid": "573f3afb-1926-492b-a174-3150951dab13",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f3_b_c1",
@@ -5942,16 +5942,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "023d7731-b273-439b-ba58-3698d71f39f4",
+        "guid": "90865c7a-cf9d-4b7a-91a6-ccadebbfd078",
         "key": "semio.parent",
         "value": "t_f4_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 19.125584
+        "u": 2.4584975,
+        "v": 19.125584
       },
       "description": "",
-      "guid": "d4a36566-4536-4088-a4a8-35cc8747a8c7",
+      "guid": "fc8f1a9b-0407-4c7f-ad2e-5f91384bdc22",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f4_b_c1",
@@ -5976,16 +5976,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "22ccbc70-be81-4402-a4b5-5c5221e4e755",
+        "guid": "11a63624-2850-48d6-8bcf-ea6c5c9c5710",
         "key": "semio.parent",
         "value": "t_f5_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 23.085585
+        "u": 2.4584975,
+        "v": 23.085585
       },
       "description": "",
-      "guid": "da636943-f951-47c9-83c8-f8728d44e77c",
+      "guid": "3cad6062-5a9d-48c6-9b14-10497868440e",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f5_b_c1",
@@ -6010,16 +6010,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "67026d9b-b339-435e-8bae-b08ae38ef8eb",
+        "guid": "f91c56d2-b1d4-4cec-83d1-d9bf54a2f5d7",
         "key": "semio.parent",
         "value": "t_f6_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 27.045584
+        "u": 2.4584975,
+        "v": 27.045584
       },
       "description": "",
-      "guid": "32b699a7-45e5-41bf-a645-e81115122693",
+      "guid": "2d8c69ed-851b-4f41-b0b5-d3f776a3bbf9",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f6_b_c1",
@@ -6044,16 +6044,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "9a9cb6fc-f53c-495e-b0a5-db19bb1e0e32",
+        "guid": "7b945d8c-989a-481a-bc32-e91c701fe10f",
         "key": "semio.parent",
         "value": "t_f7_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 31.005583
+        "u": 2.4584975,
+        "v": 31.005583
       },
       "description": "",
-      "guid": "71568f72-3339-4222-98eb-6fa7a73a9cf4",
+      "guid": "96a09adb-7a0a-4f9f-8e6c-12d3ea4bdb2c",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f7_b_c1",
@@ -6078,16 +6078,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a6ca5ae9-6091-48c2-94cd-61c1a35197e8",
+        "guid": "2d738d94-5168-44b7-8e08-32764a25a717",
         "key": "semio.parent",
         "value": "t_f8_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 34.965584
+        "u": 2.4584975,
+        "v": 34.965584
       },
       "description": "",
-      "guid": "4bb85e8e-6df1-44dd-a9d3-d56e4af0735a",
+      "guid": "9b91556e-634c-4029-80ca-653331a8808a",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f8_b_c1",
@@ -6112,16 +6112,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "7150a6c8-fadf-42dd-8612-b6b4498396c6",
+        "guid": "c55549de-9a8f-4d0b-a88e-e0dc3babdf43",
         "key": "semio.parent",
         "value": "t_f9_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 38.925583
+        "u": 2.4584975,
+        "v": 38.925583
       },
       "description": "",
-      "guid": "08ddf3a5-252e-43f4-bf99-6ca8cd6ed722",
+      "guid": "aa92cf91-a1ef-4884-8ad4-54d15f108664",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f9_b_c1",
@@ -6146,16 +6146,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d1030f09-88c8-4c52-a00e-0ed0d90bb11c",
+        "guid": "ae221a58-eb3e-4bdb-a43d-a06ba636d47b",
         "key": "semio.parent",
         "value": "t_f10_b_c1"
       },
       "center": {
-        "x": 2.4584975,
-        "y": 42.885582
+        "u": 2.4584975,
+        "v": 42.885582
       },
       "description": "",
-      "guid": "f77ac696-c7dd-4275-a125-dd2bcf1a832f",
+      "guid": "e27905e1-8324-4392-823d-2735b06383f5",
       "isHidden": false,
       "isLocked": false,
       "name": "cs_sl2_d1_t_f10_b_c1",
@@ -6180,16 +6180,16 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "85da5b3d-570c-4369-b993-76625a7d938a",
+        "guid": "d1d0e6b3-395c-4d9c-a913-48e266985124",
         "key": "semio.parent",
         "value": "t_f2_b_c0"
       },
       "center": {
-        "x": 0.004673004,
-        "y": 10.197128
+        "u": 0.004673004,
+        "v": 10.197128
       },
       "description": "",
-      "guid": "ecfe2c76-3a46-438b-b84a-5c8fd3ffa06b",
+      "guid": "5fd3d2ac-86b7-4d77-ad1b-6a880d07f9c4",
       "isHidden": false,
       "isLocked": false,
       "name": "br_sl0_d2_t_f2_b_c0",
@@ -6211,22 +6211,22 @@
         }
       },
       "type": {
-        "guid": "886859d4-e798-48a1-a020-8fff21251952"
+        "guid": "e48effad-e3c6-478b-b3bd-307f638764fc"
       }
     },
     {
       "attributes": {
         "definition": "",
-        "guid": "48294192-958c-4a45-aa8f-4fc758052291",
+        "guid": "10dc3874-5416-4366-b6b8-2d7459f144ba",
         "key": "semio.parent",
         "value": "t_f5_b_c0"
       },
       "center": {
-        "x": 0.004673004,
-        "y": 22.07713
+        "u": 0.004673004,
+        "v": 22.07713
       },
       "description": "",
-      "guid": "bfa980e4-399a-403c-8115-819491d3edfa",
+      "guid": "72fe9e49-5b5d-40ac-a063-98757a0039dc",
       "isHidden": false,
       "isLocked": false,
       "name": "br_sl0_d2_t_f5_b_c0",
@@ -6248,22 +6248,22 @@
         }
       },
       "type": {
-        "guid": "886859d4-e798-48a1-a020-8fff21251952"
+        "guid": "e48effad-e3c6-478b-b3bd-307f638764fc"
       }
     },
     {
       "attributes": {
         "definition": "",
-        "guid": "1a9e5cfb-3301-4140-aad9-1e737f49ce9a",
+        "guid": "e2113435-6e4e-4118-83c9-cfbe6473c50b",
         "key": "semio.parent",
         "value": "t_f8_b_c0"
       },
       "center": {
-        "x": 0.004673004,
-        "y": 33.957127
+        "u": 0.004673004,
+        "v": 33.957127
       },
       "description": "",
-      "guid": "ea293508-e0aa-4f1d-a145-2c9901f3517d",
+      "guid": "a3137a42-037c-40fe-b1c1-59f63269cbe3",
       "isHidden": false,
       "isLocked": false,
       "name": "br_sl0_d2_t_f8_b_c0",
@@ -6285,10 +6285,10 @@
         }
       },
       "type": {
-        "guid": "886859d4-e798-48a1-a020-8fff21251952"
+        "guid": "e48effad-e3c6-478b-b3bd-307f638764fc"
       }
     }
   ],
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:22.302Z"
+  "updatedAt": "2025-11-20T22:47:24.46Z"
 }

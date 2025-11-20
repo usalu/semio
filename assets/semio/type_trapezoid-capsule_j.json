@@ -2,77 +2,77 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "0f1f1d18-1102-40ff-a3de-ae3764bc0524",
+      "guid": "0c6ef91e-8e8c-4fca-9b3c-5abd59863070",
       "key": "entrance",
       "value": "side"
     },
     {
       "definition": "",
-      "guid": "0db458eb-69b0-42b6-bb57-cfaf501db7d1",
+      "guid": "b7c890bd-92d4-4b6d-8455-979043c6af30",
       "key": "view",
       "value": "front"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "fed4851b-7aa4-45f6-a7f5-ebc59ccf5ea5",
+      "guid": "db89dfbb-3f08-4938-89b1-2f151d63b774",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "83f27e50-3b66-4265-a229-8e355d9f0355",
+      "guid": "c4f6912b-f9c0-40eb-aa19-a446001a7517",
       "key": "effective floor area",
       "value": "7.19"
     },
     {
       "definition": "",
-      "guid": "840f260d-51ef-4706-bc0b-4e5e8757800c",
+      "guid": "6e991d25-d47b-4c6b-8cfa-ccd77552461c",
       "key": "construction cost",
       "value": "68272"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "209af50c-f91a-4917-8798-92bae1fa714f",
+      "guid": "d63ec2b9-6e3a-43be-b223-58bc1bde7153",
       "key": "heating energy demand",
       "value": "323"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "ac051108-4e6a-4667-9c5c-54db5d5c50bf",
+      "guid": "0bde5964-b31d-41c9-b20a-8f1f3c8f68f4",
       "key": "cooling energy demand",
       "value": "216"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "19afe634-19ea-4beb-a2f1-31c64a372d67",
+      "guid": "e64b6cf2-1613-4d36-bbb4-5dd503c200c5",
       "key": "technical equipment energy demand",
       "value": "216"
     },
     {
       "definition": "",
-      "guid": "713050d0-a564-40ca-b738-fe5d98316c32",
+      "guid": "ecb825d8-ec1a-459f-bf6f-9466db6b39bd",
       "key": "income",
       "value": "10780"
     },
     {
       "definition": "",
-      "guid": "7146860b-0758-443d-88a0-a12e7bb4d9a1",
+      "guid": "d96e4e45-d96a-4862-b757-77324cd3a5d4",
       "key": "maintenance expenses",
       "value": "862"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "685e74ba-d306-4bcd-9946-25c82f20cc70",
+      "guid": "dd64e3b2-7107-42bf-b59a-d834e8a9d509",
       "key": "construction global warming potential",
       "value": "7186.53"
     }
   ],
   "authors": {
-    "guid": "6d406b1a-2451-4f3c-b8ce-34abefedc574"
+    "guid": "07db2c3e-d1d8-4fcf-968e-c83a46515a2a"
   },
-  "createdAt": "2025-11-20T18:18:39.649Z",
+  "createdAt": "2025-11-20T22:47:48.226Z",
   "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
-  "guid": "19b7d7a9-9c12-4369-8ab8-bdfd9c6690fe",
+  "guid": "9f59e13a-5c96-4615-9e25-d9e75b51aeb8",
   "icon": "icons/trapezoid-capsule_J.svg",
   "image": "images/trapezoid-capsule_J.png",
   "name": "J",
@@ -80,7 +80,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "5073624f-2f89-4a8a-9f74-c906b2fa6371",
+      "guid": "9080ce9b-f37b-473e-b461-50a658efa106",
       "key": "entrance",
       "value": ""
     },
@@ -90,7 +90,7 @@
       "y": -0.9890159,
       "z": 0.0
     },
-    "guid": "9b3299a2-6088-49dc-b221-c654d63d9660",
+    "guid": "27213133-e69d-4073-9301-a69dd092acb4",
     "mandatory": false,
     "point": {
       "x": 0.42,
@@ -101,6 +101,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:39.649Z",
+  "updatedAt": "2025-11-20T22:47:48.226Z",
   "virtual": false
 }

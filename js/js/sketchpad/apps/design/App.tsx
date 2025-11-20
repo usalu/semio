@@ -6394,7 +6394,7 @@ const App: FC<AppProps> = () => {
       const newType: Type = {
         guid: guid(),
         name: uniqueName,
-        parent: parentType.guid,
+        parent: { guid: parentType.guid },
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -6485,7 +6485,7 @@ const App: FC<AppProps> = () => {
       const newDesign: Design = {
         guid: guid(),
         name: uniqueName,
-        parent: parentDesign.guid,
+        parent: { guid: parentDesign.guid },
         createdAt: new Date(),
         updatedAt: new Date(),
       };

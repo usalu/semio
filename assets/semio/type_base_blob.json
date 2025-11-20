@@ -2,89 +2,89 @@
   "attributes": [
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey",
-      "guid": "2c5c58ed-549a-4ac6-a329-ece196cfc35f",
+      "guid": "d524d35b-eba7-485a-9444-27b40d8b5d3b",
       "key": "storey",
       "value": "2"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-      "guid": "bea40f08-b31f-43ad-8e64-92d28a8388f9",
+      "guid": "4b972a87-78ae-4430-8ce1-2402317cf113",
       "key": "floor height",
       "value": "3.5"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-      "guid": "d5172d87-30e6-442c-96e0-e9959afefc3a",
+      "guid": "36312dca-eb52-4eee-af28-b799b40cc9ac",
       "key": "ground floor height",
       "value": "4"
     },
     {
       "definition": "",
-      "guid": "17bdb198-3009-43d7-acf9-31e02156de77",
+      "guid": "8e16fbd5-2ec9-42af-b72f-87fe4080a0a0",
       "key": "cores",
       "value": "2"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter",
-      "guid": "062575a4-475a-4c04-bd2d-f99509c73668",
+      "guid": "a7deaef9-3dbb-4c14-abab-634c80712fbd",
       "key": "core diameter",
       "value": "6.5"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "fbf045af-f134-4987-89a3-b9e5bf95a51b",
+      "guid": "e202a357-6724-456c-9a2d-d2dfa3040440",
       "key": "effective floor area",
       "value": "532.12"
     },
     {
       "definition": "",
-      "guid": "3999e610-374a-43a4-b0ad-5a6409174aa2",
+      "guid": "59f0d71e-a586-4316-964e-ba87c937532a",
       "key": "construction cost",
       "value": "3990871"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "bbfcc8be-43d1-4ef2-9625-8f2ae6c67ce1",
+      "guid": "b143a540-d2f5-49da-9a1c-ef166592d082",
       "key": "heating energy demand",
       "value": "15963"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "80b2e948-8014-4ee0-9ec8-ebb601803bf3",
+      "guid": "747bdf2f-700a-40bf-a842-1fa6163cb543",
       "key": "cooling energy demand",
       "value": "21285"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "7fc8003f-c432-46c4-a86c-a46eb68f1502",
+      "guid": "4347aee5-0bd6-43a5-890f-bdeb1de5f3c1",
       "key": "technical equipment energy demand",
       "value": "21285"
     },
     {
       "definition": "",
-      "guid": "881d5eb2-b439-47c8-b045-bacc70ebeffb",
+      "guid": "a811029a-6af5-490c-8671-649bf77aef86",
       "key": "income",
       "value": "542759"
     },
     {
       "definition": "",
-      "guid": "42966458-37e3-4817-989c-499313166ce5",
+      "guid": "a901945b-8e02-46a9-bc1f-e412777b6066",
       "key": "maintenance expenses",
       "value": "54276"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "0a54e802-9ae1-46fb-ba5b-486085f66b39",
+      "guid": "20cd018e-0c8f-40c1-9ca2-fb3186d0301b",
       "key": "construction global warming potential",
       "value": "478905"
     }
   ],
   "authors": {
-    "guid": "8b45a59b-9fd6-4e37-8187-cedf79c131d6"
+    "guid": "e05fff52-18c1-43f7-9c5d-c8db803d50ea"
   },
-  "createdAt": "2025-11-20T18:18:25.809Z",
+  "createdAt": "2025-11-20T22:47:29.295Z",
   "description": "A blobby two storey office building with an entrance hall and access to the staircases and elevators of the round cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-  "guid": "59c02e1c-4e34-463f-b359-2120898f065c",
+  "guid": "aa5e2c5f-c3b3-4a91-9901-26b6f026e4b9",
   "icon": "icons/base_blob.svg",
   "image": "images/base_blob.png",
   "name": "Blob",
@@ -93,7 +93,7 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "df49ee46-f716-4bc7-8a4e-3d503bfc0b60",
+        "guid": "42852f8d-704f-402c-be55-606fe7e8021d",
         "key": "core",
         "value": "east"
       },
@@ -103,7 +103,7 @@
         "y": 0.0,
         "z": 1.0
       },
-      "guid": "76e20ea4-7ddc-4089-93bc-c29db9090909",
+      "guid": "1b0ac1a2-4d41-48fa-91b0-f3ce6b9a3ac0",
       "mandatory": false,
       "name": "c0",
       "point": {
@@ -116,7 +116,7 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "432a5d5e-d50e-4f25-b649-935079e2ae50",
+        "guid": "de3c9e1d-ca51-4b9a-931f-4784948f620b",
         "key": "core",
         "value": "west"
       },
@@ -126,7 +126,7 @@
         "y": 0.0,
         "z": 1.0
       },
-      "guid": "36bffe9f-e577-433b-a7a7-12873b2ce25b",
+      "guid": "95b3183c-d0ad-483c-98e4-6873445ee080",
       "mandatory": false,
       "name": "c1",
       "point": {
@@ -139,6 +139,6 @@
   ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:25.809Z",
+  "updatedAt": "2025-11-20T22:47:29.295Z",
   "virtual": false
 }

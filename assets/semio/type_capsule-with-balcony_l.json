@@ -2,101 +2,101 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "0caadc7b-f13f-4e0d-9a9d-7dfd3cc0975a",
+      "guid": "526f4699-6f62-4a10-bced-273707649b0e",
       "key": "entrance",
       "value": "side"
     },
     {
       "definition": "",
-      "guid": "522237ff-00b0-4f6d-9ede-cd54aa5b1a85",
+      "guid": "d94818cc-6518-4f3d-8134-e6d8ecf611e4",
       "key": "view",
       "value": "front"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "ca9f9ad7-62c8-432e-a831-2b625266224a",
+      "guid": "58ee5bac-195a-4d59-a5e0-23e4033e2fc4",
       "key": "length",
       "value": "5.7"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "40023955-d789-413b-aa65-98fe497ec8ee",
+      "guid": "675844b9-1ceb-4bb6-aebe-d94c1a1694ce",
       "key": "width",
       "value": "2.6"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "4f807e7a-367a-4291-b73d-fbc6653519ba",
+      "guid": "db4388a8-bdec-42ea-883b-c71dea531abe",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "038c95b0-7e5a-478c-a96e-a985a737b729",
+      "guid": "3639f1a0-5ea3-4d61-95d1-d97099b5b828",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "e9cd5736-95ab-4d20-8b1c-ab3c9352e611",
+      "guid": "d280f98b-a729-4eb5-b34f-49ee9fdfdb6e",
       "key": "effective floor area",
       "value": "10.17"
     },
     {
       "definition": "",
-      "guid": "842bc7f6-9a42-48e7-8327-6bec2e1a6e83",
+      "guid": "bb6dc44e-73de-4776-aae3-2e1f1e8c8d85",
       "key": "construction cost",
       "value": "82992"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "e108dea2-1fe6-4e50-bb96-cbd5f4640b9a",
+      "guid": "6cfc6ce9-1ba9-4cc1-8646-fa4ebce0fe85",
       "key": "heating energy demand",
       "value": "393"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "573b70d6-8304-474c-9a14-e807dcce919b",
+      "guid": "1167f2df-fe07-4f8a-8294-c2665e46b44e",
       "key": "cooling energy demand",
       "value": "262"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "bc75584f-97b3-4a81-b39b-270b7f3f3cbc",
+      "guid": "abfc59b1-c36b-4d2c-8a32-f736a6d8dbde",
       "key": "technical equipment energy demand",
       "value": "262"
     },
     {
       "definition": "",
-      "guid": "68a87ac8-c7b2-4149-8848-9cdec94da690",
+      "guid": "bec6b00d-5439-4770-99c2-d08477bba2a8",
       "key": "income",
       "value": "13104"
     },
     {
       "definition": "",
-      "guid": "da171e66-aecb-433b-a403-8ba319fb59d4",
+      "guid": "15f79ac3-ce12-4741-b73b-376ed379a12e",
       "key": "maintenance expenses",
       "value": "1048"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "f63a5064-2f70-4018-b69c-9c86be4cea50",
+      "guid": "94621233-e05b-4583-bd96-7470903618ee",
       "key": "construction global warming potential",
       "value": "8736.01"
     },
     {
       "definition": "",
-      "guid": "0e3d5678-6059-4bb2-a226-a1f4b08e46cb",
+      "guid": "d7bcecba-0a6c-4fab-a0fe-efefd6cf918f",
       "key": "mirrored",
       "value": ""
     }
   ],
   "authors": {
-    "guid": "9cf77fcf-f024-4c01-bb66-cb1abd83621a"
+    "guid": "94695e1a-1ee5-4b5e-bda3-ddd3dab84f97"
   },
-  "createdAt": "2025-11-20T18:18:30.757Z",
+  "createdAt": "2025-11-20T22:47:36.077Z",
   "description": "An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
-  "guid": "e9a821d3-e3d6-4b6a-8b93-1d788bd799e5",
+  "guid": "c3313b0d-2872-416b-91bb-ad83f667817b",
   "icon": "icons/capsule-with-balcony_L.svg",
   "image": "images/capsule-with-balcony_L.png",
   "name": "L",
@@ -104,7 +104,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "a23bbda4-77b0-463a-b12a-ff77f6c8340a",
+      "guid": "a2ee8d0e-2675-403d-822d-038148f1d40c",
       "key": "entrance",
       "value": ""
     },
@@ -114,7 +114,7 @@
       "y": 0.0,
       "z": 0.0
     },
-    "guid": "ab19b7ac-c053-414c-a1f6-bb9e3dbceced",
+    "guid": "f7e2d43b-6587-4546-8614-6b50fd8cb46c",
     "mandatory": false,
     "point": {
       "x": 1.3,
@@ -125,6 +125,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:30.757Z",
+  "updatedAt": "2025-11-20T22:47:36.077Z",
   "virtual": false
 }

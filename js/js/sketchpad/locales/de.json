@@ -1193,6 +1193,12 @@
                 "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
               }
             },
+            "language": {
+              "label": {
+                "normal": "Sprache",
+                "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+              }
+            },
             "mode": {
               "label": {
                 "normal": "Modus",

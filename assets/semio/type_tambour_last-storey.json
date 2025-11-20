@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width ",
-      "guid": "efd8578a-0c53-47ce-8c20-a19ddd10c47e",
+      "guid": "b1ca0fb6-e6bf-4abf-b497-1ce82e28debd",
       "key": "width",
       "value": "5.5"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey",
-      "guid": "e4921e89-1407-460e-86e9-4c02d363f6ce",
+      "guid": "b3ae4052-dd60-4ade-b6f9-5c3465f476f1",
       "key": "storeys",
       "value": "1"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-      "guid": "d3f4108b-6a96-476f-bd7b-d2575c76bc68",
+      "guid": "c05a3ad5-3517-48e8-b375-0d207d208c5f",
       "key": "floor height",
       "value": "2.75"
     },
     {
       "definition": "",
-      "guid": "86de9614-e4af-440c-8283-8b03c39722f5",
+      "guid": "3c7bd26e-39a2-4d09-b3f0-d22f0331022c",
       "key": "platform",
       "value": "north"
     },
     {
       "definition": "",
-      "guid": "bdbafe41-5abf-462c-9394-9f659d539637",
+      "guid": "f97fd197-da71-4d0d-964c-0604b16f4613",
       "key": "door width",
       "value": "0.8"
     },
     {
       "definition": "",
-      "guid": "70eecc1e-5079-4730-9e1f-f56c425b6d01",
+      "guid": "757ea2bd-ebc0-49d7-b5b1-da568246c8e7",
       "key": "door height",
       "value": "2"
     },
     {
       "definition": "",
-      "guid": "7f4109ed-409a-4a84-bf83-cd41f49b0e1d",
+      "guid": "0a58200c-2f7b-407c-91f8-f49ad8a93ed4",
       "key": "door offset",
       "value": "1.15"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "c4e3840e-3bf8-40f0-b8ae-56175d95c3c8",
+      "guid": "a2e5f8b8-5fe0-49f6-bbfd-12262058a1a8",
       "key": "effective floor area",
       "value": "24.21"
     },
     {
       "definition": "",
-      "guid": "23d34d5b-5b68-42d0-a8bd-b2ad28bcabf2",
+      "guid": "ab627000-f715-4eef-b2ac-ca3111fec9aa",
       "key": "construction cost",
       "value": "217800"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "805a35b3-8be5-4ec3-96ef-fcf8e71f22e9",
+      "guid": "74ca6f2f-5335-426c-aa86-f48c49b5e979",
       "key": "heating energy demand",
       "value": "484"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "fb2b6976-e92f-4f33-9f38-7a409673079b",
+      "guid": "bc937b4b-8a4f-4e79-b951-f4bc4061c1a7",
       "key": "cooling energy demand",
       "value": "242"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "9930ed14-5f55-4626-9843-5958b17ed2fa",
+      "guid": "2c9b9ac9-5754-48af-be2c-7699f982d445",
       "key": "technical equipment energy demand",
       "value": "484"
     },
     {
       "definition": "",
-      "guid": "10062aba-d4d1-4cc6-951a-f79cbed59fd6",
+      "guid": "9741ca21-ed22-45df-8b6c-0f3c978cc3e4",
       "key": "maintenance expenses",
       "value": "1016"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "d316550e-20a9-46b1-9141-221829032c8e",
+      "guid": "13c71d07-3cd9-4f8a-8df5-acb5020f00fa",
       "key": "construction global warming potential",
       "value": "1500"
     }
   ],
   "authors": {
-    "guid": "069eb010-7be8-4ad7-acf2-57486c2ccaca"
+    "guid": "5c2fc68e-48c5-4d76-ac23-16d102a0025c"
   },
-  "createdAt": "2025-11-20T18:18:38.216Z",
+  "createdAt": "2025-11-20T22:47:46.386Z",
   "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
-  "guid": "b5dbdc20-9d61-4446-9d9c-86be2e6ed6a4",
+  "guid": "5a9f32e0-de5e-47b1-be30-0393027d040a",
   "icon": "icons/tambour_last-storey.svg",
   "image": "images/tambour_last-storey.svg",
   "name": "Last Storey",
@@ -100,13 +100,13 @@
       "attributes": [
         {
           "definition": "",
-          "guid": "4da51e8b-fa1b-4b3b-8b63-18550cf8a312",
+          "guid": "9437fb27-c398-4471-9c3b-0759f29eaa82",
           "key": "bottom",
           "value": ""
         },
         {
           "definition": "",
-          "guid": "7e5d974d-2345-4398-b33f-c2cc93038958",
+          "guid": "3d4d791d-17ca-45d8-8857-e90529b2923d",
           "key": "wasp rotation",
           "value": "180"
         }
@@ -117,7 +117,7 @@
         "y": 0.0,
         "z": -1.0
       },
-      "guid": "72de3e81-562b-4744-b849-37d881fe6be4",
+      "guid": "010fbc44-efe8-4e7a-afc9-aaa9e7b5ed1e",
       "mandatory": false,
       "name": "b",
       "point": {
@@ -130,7 +130,7 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "a315de0a-5fa4-4fd6-9992-e389b4f6b339",
+        "guid": "e879624b-a1ea-42e4-bcca-137ee1cf6a34",
         "key": "top",
         "value": ""
       },
@@ -140,7 +140,7 @@
         "y": 0.0,
         "z": 1.0
       },
-      "guid": "55d570c4-afc9-46e6-9f80-6f8475d168e2",
+      "guid": "c03e2ef0-bf41-4199-911c-9af922f8a9a3",
       "mandatory": false,
       "name": "t",
       "point": {
@@ -157,7 +157,7 @@
         "y": 0.0,
         "z": 0.0
       },
-      "guid": "af331824-b98a-4fd3-9fc3-82d386460053",
+      "guid": "14aef849-8b82-439e-9a79-47a5af8be09d",
       "mandatory": false,
       "name": "sl0_d0",
       "point": {
@@ -174,7 +174,7 @@
         "y": 1.0,
         "z": 0.0
       },
-      "guid": "987e7901-52b0-4306-bf8c-c223381e2b1c",
+      "guid": "c2446670-8d5b-4625-be61-03eac997e8c7",
       "mandatory": false,
       "name": "sl0_d1",
       "point": {
@@ -191,7 +191,7 @@
         "y": 1.0,
         "z": 0.0
       },
-      "guid": "cc22da80-747c-4925-9b9f-ca9f89fb0f73",
+      "guid": "a553092e-a742-48f2-a51b-81371309d14b",
       "mandatory": false,
       "name": "sl0_d2",
       "point": {
@@ -208,7 +208,7 @@
         "y": 0.0,
         "z": 0.0
       },
-      "guid": "997f7d2c-42bd-49a3-b743-6a2021263404",
+      "guid": "0bcd8796-6bf0-4c09-bfb3-50c3a3c709e6",
       "mandatory": false,
       "name": "sl0_d3",
       "point": {
@@ -225,7 +225,7 @@
         "y": 0.0,
         "z": 0.0
       },
-      "guid": "b453f3d7-6c55-45e6-81aa-880bf5ceb560",
+      "guid": "065ed4bf-120b-40f1-8ae6-81226897ad5b",
       "mandatory": false,
       "name": "sl1_d0",
       "point": {
@@ -242,7 +242,7 @@
         "y": -1.0,
         "z": 0.0
       },
-      "guid": "c227be67-4a47-485d-a6b5-dc739bea1a7d",
+      "guid": "b42db01f-0970-4326-803b-124406ad9118",
       "mandatory": false,
       "name": "sl1_d1",
       "point": {
@@ -259,7 +259,7 @@
         "y": -1.0,
         "z": 0.0
       },
-      "guid": "cbfbc22f-9af8-4cc5-baef-9f8c5e138cc2",
+      "guid": "50dd1237-a3b0-44ca-807f-23c3c8d81f66",
       "mandatory": false,
       "name": "sl2_d0",
       "point": {
@@ -276,7 +276,7 @@
         "y": 0.0,
         "z": 0.0
       },
-      "guid": "30cc8a13-2c94-490d-9b0e-73cdb34f2f3f",
+      "guid": "7d871576-f43f-4d7e-85dc-c95270e73035",
       "mandatory": false,
       "name": "sl2_d1",
       "point": {
@@ -289,6 +289,6 @@
   ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:38.216Z",
+  "updatedAt": "2025-11-20T22:47:46.386Z",
   "virtual": false
 }

@@ -403,21 +403,37 @@ function Migrate-Type {
 }
 
 function Migrate-Piece {
-    param($piece, $typeNameToGuidMap, $designNameToGuidMap)
+    param($piece, $typeNameToGuidMap, $designNameToGuidMap, $pieceNameToGuidMap = $null)
     
     if ($null -eq $piece) { return $null }
     
-    $migrated = @{
-        guid = if ($piece.PSObject.Properties.Name -contains 'guid') { $piece.guid } else { New-Guid }
+    # Determine piece name first
+    $pieceName = $null
+    if ($piece.PSObject.Properties.Name -contains 'name' -and $null -ne $piece.name -and $piece.name -ne '') {
+        $pieceName = $piece.name
+    } elseif ($piece.PSObject.Properties.Name -contains 'id_' -and $null -ne $piece.id_ -and $piece.id_ -ne '') {
+        $pieceName = $piece.id_
+    } elseif ($piece.PSObject.Properties.Name -contains 'id' -and $null -ne $piece.id -and $piece.id -ne '') {
+        $pieceName = $piece.id
     }
     
-    # Name field - migrate from id_ or id
-    if ($piece.PSObject.Properties.Name -contains 'name' -and $null -ne $piece.name -and $piece.name -ne '') {
-        $migrated.name = $piece.name
-    } elseif ($piece.PSObject.Properties.Name -contains 'id_' -and $null -ne $piece.id_ -and $piece.id_ -ne '') {
-        $migrated.name = $piece.id_
-    } elseif ($piece.PSObject.Properties.Name -contains 'id' -and $null -ne $piece.id -and $piece.id -ne '') {
-        $migrated.name = $piece.id
+    # Generate GUID: use mapped GUID if available (for flat designs), otherwise existing or new
+    $pieceGuid = $null
+    if ($null -ne $pieceNameToGuidMap -and $null -ne $pieceName -and $pieceNameToGuidMap.ContainsKey($pieceName)) {
+        $pieceGuid = $pieceNameToGuidMap[$pieceName]
+    } elseif ($piece.PSObject.Properties.Name -contains 'guid') {
+        $pieceGuid = $piece.guid
+    } else {
+        $pieceGuid = New-Guid
+    }
+    
+    $migrated = @{
+        guid = $pieceGuid
+    }
+    
+    # Name field
+    if ($null -ne $pieceName) {
+        $migrated.name = $pieceName
     }
     
     # Type reference - convert name to guid reference
@@ -484,8 +500,8 @@ function Migrate-Piece {
     }
     if ($piece.PSObject.Properties.Name -contains 'center' -and $null -ne $piece.center) {
         $migrated.center = @{
-            x = $piece.center.x
-            y = $piece.center.y
+            u = if ($piece.center.PSObject.Properties.Name -contains 'u') { $piece.center.u } else { $piece.center.x }
+            v = if ($piece.center.PSObject.Properties.Name -contains 'v') { $piece.center.v } else { $piece.center.y }
         }
     }
     if ($piece.PSObject.Properties.Name -contains 'scale' -and $null -ne $piece.scale) {
@@ -532,20 +548,15 @@ function Migrate-Piece {
 }
 
 function Migrate-Pieces {
-    param($pieces, $typeNameToGuidMap, $designNameToGuidMap)
+    param($pieces, $typeNameToGuidMap, $designNameToGuidMap, $pieceNameToGuidMap = $null)
     
     if ($null -eq $pieces -or $pieces.Count -eq 0) { return $null }
     
-    # Keep as hashtables - do NOT convert to PSCustomObject
-    $migratedPieces = @($pieces | ForEach-Object { 
-        Migrate-Piece $_ $typeNameToGuidMap $designNameToGuidMap
-    })
-    
-    return $migratedPieces
+    return @($pieces | ForEach-Object { Migrate-Piece $_ $typeNameToGuidMap $designNameToGuidMap $pieceNameToGuidMap })
 }
 
 function Migrate-Connection {
-    param($conn, $pieceIdToGuidMap, $portIdToGuidMap)
+    param($conn, $pieceIdToGuidMap, $portIdToGuidMap, $pieces = $null, $kitTypes = $null)
     
     if ($null -eq $conn) { return $null }
     
@@ -589,11 +600,32 @@ function Migrate-Connection {
                     $portId = $conn.connected.port.id_
                 } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id') {
                     $portId = $conn.connected.port.id
+                } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'guid') {
+                    # Already has GUID, use it
+                    $connectedSide.port = @{ guid = $conn.connected.port.guid }
+                    $portId = $null
                 }
-                if ($null -ne $portId -and $portIdToGuidMap.ContainsKey($portId)) {
-                    $connectedSide.port = @{ guid = $portIdToGuidMap[$portId] }
-                } else {
-                    Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connected side)"
+                if ($null -ne $portId) {
+                    # Look up port GUID on the piece's type
+                    if ($null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectedSide.piece) {
+                        $pieceGuid = $connectedSide.piece.guid
+                        $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
+                        if ($null -ne $piece -and $null -ne $piece.type) {
+                            $type = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
+                            if ($null -ne $type -and $null -ne $type.ports) {
+                                $port = $type.ports | Where-Object { $_.name -eq $portId } | Select-Object -First 1
+                                if ($null -ne $port) {
+                                    $connectedSide.port = @{ guid = $port.guid }
+                                } else {
+                                    Write-Warning "  [CONNECTION] Port '$portId' not found on type '$($type.name)' (connected side)"
+                                }
+                            }
+                        }
+                    } elseif ($portIdToGuidMap.ContainsKey($portId)) {
+                        $connectedSide.port = @{ guid = $portIdToGuidMap[$portId] }
+                    } else {
+                        Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connected side)"
+                    }
                 }
             }
             if ($conn.connected.PSObject.Properties.Name -contains 'designPiece' -and $null -ne $conn.connected.designPiece) {
@@ -648,9 +680,32 @@ function Migrate-Connection {
                     $portId = $conn.connecting.port.id_
                 } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id') {
                     $portId = $conn.connecting.port.id
+                } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'guid') {
+                    # Already has GUID, use it
+                    $connectingSide.port = @{ guid = $conn.connecting.port.guid }
+                    $portId = $null
                 }
-                if ($null -ne $portId -and $portIdToGuidMap.ContainsKey($portId)) {
-                    $connectingSide.port = @{ guid = $portIdToGuidMap[$portId] }
+                if ($null -ne $portId) {
+                    # Look up port GUID on the piece's type
+                    if ($null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectingSide.piece) {
+                        $pieceGuid = $connectingSide.piece.guid
+                        $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
+                        if ($null -ne $piece -and $null -ne $piece.type) {
+                            $type = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
+                            if ($null -ne $type -and $null -ne $type.ports) {
+                                $port = $type.ports | Where-Object { $_.name -eq $portId } | Select-Object -First 1
+                                if ($null -ne $port) {
+                                    $connectingSide.port = @{ guid = $port.guid }
+                                } else {
+                                    Write-Warning "  [CONNECTION] Port '$portId' not found on type '$($type.name)' (connecting side)"
+                                }
+                            }
+                        }
+                    } elseif ($portIdToGuidMap.ContainsKey($portId)) {
+                        $connectingSide.port = @{ guid = $portIdToGuidMap[$portId] }
+                    } else {
+                        Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connecting side)"
+                    }
                 }
             }
             if ($conn.connecting.PSObject.Properties.Name -contains 'designPiece' -and $null -ne $conn.connecting.designPiece) {
@@ -712,15 +767,15 @@ function Migrate-Connection {
 }
 
 function Migrate-Connections {
-    param($connections, $pieceIdToGuidMap, $portIdToGuidMap)
+    param($connections, $pieceIdToGuidMap, $portIdToGuidMap, $pieces = $null, $kitTypes = $null)
     
     if ($null -eq $connections -or $connections.Count -eq 0) { return $null }
     
-    return @($connections | ForEach-Object { Migrate-Connection $_ $pieceIdToGuidMap $portIdToGuidMap })
+    return @($connections | ForEach-Object { Migrate-Connection $_ $pieceIdToGuidMap $portIdToGuidMap $pieces $kitTypes })
 }
 
 function Migrate-Design {
-    param($design, $designNameToGuidMap, $typeNameToGuidMap, $portIdToGuidMap, $authorEmailToObjectMap)
+    param($design, $designNameToGuidMap, $typeNameToGuidMap, $portIdToGuidMap, $authorEmailToObjectMap, $pieceNameToGuidMap = $null, $kitTypes = $null)
     
     if ($null -eq $design) { return $null }
     
@@ -835,7 +890,7 @@ function Migrate-Design {
     
     # First pass: migrate pieces and build piece ID to GUID map
     $pieceIdToGuidMap = @{}
-    $pieces = Migrate-Pieces $design.pieces $typeNameToGuidMap $designNameToGuidMap
+    $pieces = Migrate-Pieces $design.pieces $typeNameToGuidMap $designNameToGuidMap $pieceNameToGuidMap
     if ($null -ne $pieces) {
         $migrated.pieces = $pieces
         # Build mapping from old piece IDs to new GUIDs
@@ -847,9 +902,9 @@ function Migrate-Design {
         }
     }
     
-    # Migrate connections using the piece and port mappings
-    $connections = Migrate-Connections $design.connections $pieceIdToGuidMap $portIdToGuidMap
-    if ($null -ne $connections) {
+    # Second pass: migrate connections using the piece ID map and kit types for port lookup
+    $connections = Migrate-Connections $design.connections $pieceIdToGuidMap $portIdToGuidMap $pieces $kitTypes
+    if ($null -ne $connections -and $connections.Count -gt 0) {
         $migrated.connections = $connections
     }
     
@@ -1095,9 +1150,9 @@ function Migrate-Kit {
         })
     }
     
-    # Second pass: migrate designs with type/design/port maps
+    # Second pass: migrate designs with type/design/port maps, passing migrated types for port lookup
     if ($kit.PSObject.Properties.Name -contains 'designs' -and $null -ne $kit.designs -and $kit.designs.Count -gt 0) {
-        $migrated.designs = @($kit.designs | ForEach-Object { Migrate-Design $_ $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap })
+        $migrated.designs = @($kit.designs | ForEach-Object { Migrate-Design $_ $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap $null $migrated.types })
     }
     
     # 2.5 pass: Create abstract parent types/designs for bases that have children but don't exist
@@ -1367,15 +1422,22 @@ function Migrate-JsonFile {
         }
         elseif ($FilePath -match 'design_') {
             Write-Host "  Detected: Design" -ForegroundColor Gray
-            # For standalone design files, load design/type/port GUIDs from kit (authoritative source)
+            # For standalone design files, load design/type/port/piece GUIDs from kit (authoritative source)
             $designNameToGuidMap = @{}
             $typeNameToGuidMap = @{}
             $portIdToGuidMap = @{}
+            $pieceNameToGuidMap = @{}
             $authorEmailToObjectMap = $null
             
             # Find kit file in the same directory
             $directory = Split-Path -Path $FilePath
             $kitPath = Join-Path $directory "kit_metabolism.json"
+            
+            # Extract design name from filename (e.g., "design_nakagin-capsule-tower_flat.json")
+            $filename = Split-Path -Leaf $FilePath
+            $designFileName = ($filename -replace 'design_', '' -replace '.json', '')
+            $isFlatDesign = $designFileName -match '_flat$'
+            $baseDesignName = if ($isFlatDesign) { $designFileName -replace '_flat$', '' } else { $designFileName }
             
             if (Test-Path $kitPath) {
                 try {
@@ -1386,6 +1448,24 @@ function Migrate-JsonFile {
                         foreach ($kitDesign in $kitContent.designs) {
                             if ($kitDesign.PSObject.Properties.Name -contains 'name' -and $kitDesign.PSObject.Properties.Name -contains 'guid') {
                                 $designNameToGuidMap[$kitDesign.name] = $kitDesign.guid
+                                
+                                # If this is a flat design, load piece name->GUID mapping from the base design
+                                if ($isFlatDesign) {
+                                    # Match base design name (e.g., "Nakagin Capsule Tower" for "nakagin-capsule-tower_flat")
+                                    $normalizedKitName = $kitDesign.name -replace '[^a-zA-Z0-9]', '' -replace ' ', ''
+                                    $normalizedBaseName = $baseDesignName -replace '[^a-zA-Z0-9]', '' -replace '-', '' -replace '_', ''
+                                    
+                                    if ($normalizedKitName -eq $normalizedBaseName) {
+                                        # Load piece name->GUID mapping from this design
+                                        if ($kitDesign.PSObject.Properties.Name -contains 'pieces' -and $null -ne $kitDesign.pieces) {
+                                            foreach ($piece in $kitDesign.pieces) {
+                                                if ($piece.PSObject.Properties.Name -contains 'name' -and $null -ne $piece.name -and $piece.name -ne '' -and $piece.PSObject.Properties.Name -contains 'guid') {
+                                                    $pieceNameToGuidMap[$piece.name] = $piece.guid
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1398,19 +1478,22 @@ function Migrate-JsonFile {
                                 $typeGuid = $kitType.guid
                                 $typeNameToGuidMap[$typeName] = $typeGuid
                                 
-                                # Load ports from this type - map port GUID to itself for lookup
+                                # Load ports from this type - create mapping from old port id_ to new GUID
                                 if ($kitType.PSObject.Properties.Name -contains 'ports' -and $null -ne $kitType.ports) {
                                     foreach ($port in $kitType.ports) {
-                                        if ($port.PSObject.Properties.Name -contains 'guid') {
-                                            # Since kit is already migrated, port GUIDs are final
-                                            # We map guid->guid so connections can reference them
-                                            $portIdToGuidMap[$port.guid] = $port.guid
+                                        if ($port.PSObject.Properties.Name -contains 'guid' -and $port.PSObject.Properties.Name -contains 'name' -and $null -ne $port.name -and $port.name -ne '') {
+                                            # Map old port name (which comes from id_) to new port GUID
+                                            $portIdToGuidMap[$port.name] = $port.guid
                                         }
                                     }
                                 }
                             }
                         }
-                        Write-Host "  Pre-loaded $($designNameToGuidMap.Count) designs, $($typeNameToGuidMap.Count) types, and $($portIdToGuidMap.Count) ports from kit" -ForegroundColor DarkGray
+                        if ($isFlatDesign) {
+                            Write-Host "  Pre-loaded $($designNameToGuidMap.Count) designs, $($typeNameToGuidMap.Count) types, $($portIdToGuidMap.Count) ports, and $($pieceNameToGuidMap.Count) pieces from kit" -ForegroundColor DarkGray
+                        } else {
+                            Write-Host "  Pre-loaded $($designNameToGuidMap.Count) designs, $($typeNameToGuidMap.Count) types, and $($portIdToGuidMap.Count) ports from kit" -ForegroundColor DarkGray
+                        }
                     }
                 } catch {
                     Write-Warning "  Could not pre-load from kit: $_"
@@ -1431,7 +1514,9 @@ function Migrate-JsonFile {
                 }
             }
             
-            $migrated = Migrate-Design $content $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap
+            # Load kit types for port lookup during connection migration
+            $kitTypes = if ($null -ne $kitContent -and $kitContent.PSObject.Properties.Name -contains 'types') { $kitContent.types } else { $null }
+            $migrated = Migrate-Design $content $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap $pieceNameToGuidMap $kitTypes
         }
         else {
             Write-Warning "  Unknown file type, skipping"

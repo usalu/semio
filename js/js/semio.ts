@@ -2699,9 +2699,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   }
   const types = kit.types ?? [];
 
-  let expandedDesign = expandDesignPieces(design, kit);
-
-  if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return {};
+  if (!design.pieces || design.pieces.length === 0) return {};
 
   const typesDict: { [key: string]: Type } = {};
   types.forEach((t) => {
@@ -2724,7 +2722,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     return undefined;
   };
 
-  const flatDesign: Design = JSON.parse(JSON.stringify(expandedDesign));
+  const flatDesign: Design = JSON.parse(JSON.stringify(design));
   if (!flatDesign.pieces) flatDesign.pieces = [];
 
   const piecePlanes: { [pieceGuid: string]: Plane } = {};
@@ -2896,10 +2894,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.guid ?? ""]);
   flatDesign.connections = [];
 
-  // Return the diff between original expanded design and flattened design
+  // Return the diff between original design and flattened design
   const updatedPieces = flatDesign.pieces
     ?.map((flatPiece) => {
-      const originalPiece = expandedDesign.pieces?.find((p) => p.guid === flatPiece.guid);
+      const originalPiece = design.pieces?.find((p) => p.guid === flatPiece.guid);
       if (!originalPiece) return null;
 
       // Build piece diff for pieces that changed
@@ -2920,7 +2918,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     })
     .filter((update) => update !== null) as Array<{ id: string; diff: PieceDiff }>;
 
-  const removedConnections = expandedDesign.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
+  const removedConnections = design.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
 
   return {
     pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,

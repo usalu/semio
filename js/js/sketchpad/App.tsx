@@ -9457,7 +9457,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const guid = crypto.randomUUID();
       const existingNames = allDesigns.map((d) => d.name);
       const uniqueName = name || generateUniqueName(defaultDesignName, existingNames);
-      kitCommands.createDesign(origin, { guid, name: uniqueName, parent, pieces: [], connections: [] });
+      kitCommands.createDesign(origin, { guid, name: uniqueName, parent: parent ? { guid: parent } : undefined, pieces: [], connections: [] });
       sketchpadCommands.navigateToDesign(kitGuid, guid);
     },
     [kitCommands, kitGuid, sketchpadCommands, allDesigns, defaultDesignName],
@@ -9470,7 +9470,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const guid = crypto.randomUUID();
       const existingNames = allTypes.map((t) => t.name);
       const uniqueName = name || generateUniqueName(defaultTypeName, existingNames);
-      kitCommands.createType(origin, { guid, name: uniqueName, parent, ports: [] });
+      kitCommands.createType(origin, { guid, name: uniqueName, parent: parent ? { guid: parent } : undefined, ports: [] });
       sketchpadCommands.navigateToType(kitGuid, guid);
     },
     [kitCommands, kitGuid, sketchpadCommands, allTypes, defaultTypeName],
@@ -9482,24 +9482,24 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const guid = crypto.randomUUID();
       if (!isType) {
         const d = designOrType as Design;
-        const existingNames = allDesigns.filter((design) => design.parent === d.guid).map((design) => design.name);
+        const existingNames = allDesigns.filter((design) => design.parent?.guid === d.guid).map((design) => design.name);
         const uniqueName = generateUniqueName(d.name, existingNames);
         kitCommands.createDesign(origin, {
           guid,
           name: uniqueName,
-          parent: d.guid,
+          parent: { guid: d.guid },
           pieces: [],
           connections: [],
         });
         if (kitGuid) sketchpadCommands.navigateToDesign(kitGuid, guid);
       } else {
         const typeObj = designOrType as Type;
-        const existingNames = allTypes.filter((type) => type.parent === typeObj.guid).map((type) => type.name);
+        const existingNames = allTypes.filter((type) => type.parent?.guid === typeObj.guid).map((type) => type.name);
         const uniqueName = generateUniqueName(typeObj.name, existingNames);
         kitCommands.createType(origin, {
           guid,
           name: uniqueName,
-          parent: typeObj.guid,
+          parent: { guid: typeObj.guid },
           ports: [],
         });
         navigate(`/kits/${kitGuid}/types/${guid}`);

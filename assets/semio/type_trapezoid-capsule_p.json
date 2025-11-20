@@ -2,83 +2,83 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "681f5553-1519-4133-8614-914176a4569b",
+      "guid": "7c41df5c-aaf5-4041-848b-e87e82b2b6f7",
       "key": "entrance",
       "value": "back"
     },
     {
       "definition": "",
-      "guid": "14994ad7-9c6c-46dc-9e9c-2535c5326c4a",
+      "guid": "b7a0c7c3-4cfe-4291-b523-31a345d15244",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "1e832c8a-1b38-4056-8ea4-370886758ae6",
+      "guid": "697a5a55-b6a1-4571-a199-12f7cf898969",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "af4caf68-0c3a-4962-b55b-f1dbdcc51ea5",
+      "guid": "bf705f67-db95-4c60-aba0-625731cbb744",
       "key": "effective floor area",
       "value": "7.19"
     },
     {
       "definition": "",
-      "guid": "ee956758-99e2-480b-af5f-dfb3e468522d",
+      "guid": "be8bf57f-0d47-47c2-b776-60f4bde37b36",
       "key": "construction cost",
       "value": "68272"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "536031eb-1bb1-4c9b-b7eb-5d55f33a9113",
+      "guid": "bddb753d-a621-43b4-a208-8046ecb0ead8",
       "key": "heating energy demand",
       "value": "323"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "7a5e8f17-ec09-4a51-bdcb-c356705808ee",
+      "guid": "b495723d-c854-4226-9ae3-c6aced18b131",
       "key": "cooling energy demand",
       "value": "216"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "266ac405-9f33-47a0-b239-04a1a356c35f",
+      "guid": "843d8614-30d2-4bfd-b181-dab0cb83eb26",
       "key": "technical equipment energy demand",
       "value": "216"
     },
     {
       "definition": "",
-      "guid": "d8f1b764-6299-4056-a03d-4d4ab8d72239",
+      "guid": "47d360b4-5a13-4c8d-90a3-6d804b2334c8",
       "key": "income",
       "value": "10780"
     },
     {
       "definition": "",
-      "guid": "ca7b5e35-425a-4b6b-81d7-ff4b62c01b6f",
+      "guid": "f929995e-b85c-439d-8079-fcc901e51b03",
       "key": "maintenance expenses",
       "value": "862"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "f28c00c1-b736-46c9-93c1-a42200fc735b",
+      "guid": "02fdeb30-10b8-404f-a79e-399cfa6c1153",
       "key": "construction global warming potential",
       "value": "7186.53"
     },
     {
       "definition": "",
-      "guid": "ed13f9e0-d9ee-4ca1-afc2-9850d1dcdf65",
+      "guid": "08920274-a46f-4d49-8244-6f6402d2fc12",
       "key": "mirrored",
       "value": ""
     }
   ],
   "authors": {
-    "guid": "6c7cb15e-c63a-474d-912d-9deb8e6a1450"
+    "guid": "158155e5-a711-4725-83ee-9b97c638e763"
   },
-  "createdAt": "2025-11-20T18:18:40.325Z",
+  "createdAt": "2025-11-20T22:47:49.143Z",
   "description": "An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
-  "guid": "48283ead-2914-42a7-b3d5-abc5437160e9",
+  "guid": "201cdad6-6db7-4226-9ea6-f699f3f257ff",
   "icon": "icons/trapezoid-capsule_p.svg",
   "image": "images/trapezoid-capsule_p.png",
   "name": "p",
@@ -86,7 +86,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "6d263f58-a863-42c5-b582-ae346c3098b8",
+      "guid": "42919c79-a357-4399-939f-fddbdccb8bbf",
       "key": "entrance",
       "value": ""
     },
@@ -96,7 +96,7 @@
       "y": -0.9890159,
       "z": 0.0
     },
-    "guid": "21d14a77-012a-4e91-aa84-2848ec59e3ff",
+    "guid": "b9e6ce9a-b7ba-491f-88b2-255ea3a8b858",
     "mandatory": false,
     "point": {
       "x": -0.42,
@@ -107,6 +107,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:40.325Z",
+  "updatedAt": "2025-11-20T22:47:49.143Z",
   "virtual": false
 }

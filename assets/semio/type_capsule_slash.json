@@ -2,101 +2,101 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "a9f46a90-8ce8-42a6-a673-508bd667c3cd",
+      "guid": "bc34dfb6-ce66-43ee-8388-6e1f5264e2cb",
       "key": "entrance",
       "value": "back"
     },
     {
       "definition": "",
-      "guid": "d06c6bf4-73d0-4c17-8d2f-3f94c18953cd",
+      "guid": "cd3a6f8a-4bf5-42f1-b3cc-7e338163b822",
       "key": "view",
       "value": "front"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "30ac4660-4caa-4ba8-b84b-bf7a5d5c6f87",
+      "guid": "d23a3e7a-022f-4f27-90e1-3a974e3871b3",
       "key": "length",
       "value": "4.2"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "7139d2a1-7e87-4073-a382-0cff3de45b6f",
+      "guid": "40a3769d-7732-488c-9503-9fd660241f54",
       "key": "width",
       "value": "2.6"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "706833e8-9f07-4b91-a986-1394ecc68144",
+      "guid": "d710f45f-fb4d-45f5-bd1a-a77fd4302fca",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "61b86a79-c474-48b2-a1b0-43c4785222ab",
+      "guid": "176d0eda-4f8a-45da-847d-0b561fd5e7f8",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "39b80977-3128-4059-b7d4-fbb6f4b7c9ba",
+      "guid": "c906b775-4f9c-46ff-b2c6-4fc17543262b",
       "key": "effective floor area",
       "value": "8.74"
     },
     {
       "definition": "",
-      "guid": "a779c01e-3aad-4108-87f8-fc2628af35ba",
+      "guid": "14e8c854-0725-41d7-8029-bc654815a3c5",
       "key": "construction cost",
       "value": "82992"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "35089229-8391-4dc2-b6fc-9e443d8f1938",
+      "guid": "935abce7-24df-4f2b-aa8f-10b831958802",
       "key": "heating energy demand",
       "value": "393"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "f1e56141-d08f-4e64-8157-fa099275baea",
+      "guid": "f0b22e09-f9db-4edd-b6d2-3f95ce6485f4",
       "key": "cooling energy demand",
       "value": "262"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "f182bd7a-fb91-4d73-be66-f40efe9debb1",
+      "guid": "bdae836f-a708-4e35-90e3-ecf967f358a6",
       "key": "technical equipment energy demand",
       "value": "262"
     },
     {
       "definition": "",
-      "guid": "ef5f5acc-c2cc-4f9c-803c-5d6767268794",
+      "guid": "fa1ce71c-beef-47fe-860e-0beabafd9ead",
       "key": "income",
       "value": "13104"
     },
     {
       "definition": "",
-      "guid": "2aabdb27-0a04-435f-98d5-a44d2a0e8dc1",
+      "guid": "d1de0e38-81ed-4d0a-8617-453c2c1e3069",
       "key": "maintenance expenses",
       "value": "1048"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "585f9992-ff44-4c14-93c7-f86c59253612",
+      "guid": "52efc5e5-7fa7-427c-92b7-a5e8a1973246",
       "key": "construction global warming potential",
       "value": "8736.01"
     },
     {
       "definition": "",
-      "guid": "2ff1c48e-a547-48e0-8b1e-ae8c1b1a3e8d",
+      "guid": "93c13d68-dbf1-4de5-9da0-ab9615ca42e0",
       "key": "mirrored",
       "value": ""
     }
   ],
   "authors": {
-    "guid": "99829f30-c49d-43df-b763-bf828db08262"
+    "guid": "8d2148f5-a084-4c81-9ae5-fa6f3bea9ece"
   },
-  "createdAt": "2025-11-20T18:18:29.314Z",
+  "createdAt": "2025-11-20T22:47:33.935Z",
   "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
-  "guid": "e15fb992-e0fd-409a-a1c7-4d963d281b1f",
+  "guid": "7be82977-32d4-4e4d-9858-e8cb4323f91f",
   "icon": "icons/capsule_slash.svg",
   "image": "images/capsule_slash.png",
   "name": "/",
@@ -104,7 +104,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "4d502854-dde9-4bf7-a6c7-4364db5b46e2",
+      "guid": "336a71fd-ff96-4422-b1c0-9c6431fcce70",
       "key": "entrance",
       "value": ""
     },
@@ -114,7 +114,7 @@
       "y": -1.0,
       "z": 0.0
     },
-    "guid": "c8fa2b28-e74c-4c55-b5e6-77d1b1c323c7",
+    "guid": "243cb5da-e878-4e11-841d-10e940f1d358",
     "mandatory": false,
     "point": {
       "x": -0.45,
@@ -125,6 +125,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:29.314Z",
+  "updatedAt": "2025-11-20T22:47:33.935Z",
   "virtual": false
 }

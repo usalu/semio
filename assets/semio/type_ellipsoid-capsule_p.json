@@ -2,101 +2,101 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "24e18ffe-e825-4225-a274-cd57e2e5ae31",
+      "guid": "ba1421e1-af12-4999-9eb9-9a720e39f4c9",
       "key": "entrance",
       "value": "back"
     },
     {
       "definition": "",
-      "guid": "3d298f08-3c45-47b1-8173-12240d7733bb",
+      "guid": "7762d732-7c66-4671-aa1d-db1885dd139a",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "777176d0-71c3-43c9-be02-9b2ed4041327",
+      "guid": "7acdc51b-12fa-467f-87c2-ca80e3b4b120",
       "key": "length",
       "value": "3.6"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "a6a23e14-0dbf-46e3-ace2-ae1c005e4cbd",
+      "guid": "65c06341-8bdb-42d1-9429-eb8d4acca3f6",
       "key": "width",
       "value": "4"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "18dbd1d7-c3e4-421f-8d38-4aa551d8012d",
+      "guid": "78a2729c-8dba-49e3-b7cc-0d615e359564",
       "key": "heigth",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "b6429ddb-e218-410b-8a0f-099c081bb0ef",
+      "guid": "886fc2dd-b2e1-414f-82b5-a00d7d7d4b14",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "15402099-015b-485e-9bbb-7838cab3e422",
+      "guid": "8d78499a-5566-4769-b018-e75caec48d47",
       "key": "effective floor area",
       "value": "6.92"
     },
     {
       "definition": "",
-      "guid": "b43f4745-48c3-4dc2-90f3-d5d2eccaafd9",
+      "guid": "730033a0-2211-4acc-b616-041100efc7c2",
       "key": "construction cost",
       "value": "79488"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "9496e2ff-ea5f-4608-9c7d-ff94ce9a11d4",
+      "guid": "3f2f7759-80d1-4fd9-b357-7d7031aa5a8f",
       "key": "heating energy demand",
       "value": "276"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "d66b855f-366d-4c96-a307-f6ef663b35ca",
+      "guid": "d02bddd7-e5d9-4e84-823f-d7af8e2f7fb6",
       "key": "cooling energy demand",
       "value": "173"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "a0c666b3-7f05-4d21-b7fe-83d048a46339",
+      "guid": "40f8d15e-9667-400c-9659-bfd8a2fe6740",
       "key": "technical equipment energy demand",
       "value": "242"
     },
     {
       "definition": "",
-      "guid": "bd2e6326-02d1-4590-a3a0-e3b40c60b387",
+      "guid": "f0e8982e-82fb-4d6b-a42f-17c68caffe57",
       "key": "income",
       "value": "24883"
     },
     {
       "definition": "",
-      "guid": "bd83c51f-9031-4440-bb3e-add356e81eac",
+      "guid": "07dec7ca-3560-44e6-b599-7a367342535c",
       "key": "maintenance expenses",
       "value": "1659"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "7d133040-8e13-40d0-b1c3-04dcc476b00d",
+      "guid": "3b1a742b-2e9e-4e15-8fe4-69a623419fee",
       "key": "construction global warming potential",
       "value": "1200"
     },
     {
       "definition": "",
-      "guid": "364835c3-add9-4168-accc-1dac7822d911",
+      "guid": "30f9c96d-f320-4222-8892-ffb5374ee9bd",
       "key": "mirrored",
       "value": ""
     }
   ],
   "authors": {
-    "guid": "041c3ba9-154d-489a-bb1a-bba90f832968"
+    "guid": "694d129f-443a-479e-9776-01cb15b231a3"
   },
-  "createdAt": "2025-11-20T18:18:36.086Z",
+  "createdAt": "2025-11-20T22:47:43.445Z",
   "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
-  "guid": "48283ead-2914-42a7-b3d5-abc5437160e9",
+  "guid": "201cdad6-6db7-4226-9ea6-f699f3f257ff",
   "icon": "icons/ellipsoid-capsule_p.svg",
   "image": "images/ellipsoid-capsule_p.png",
   "name": "p",
@@ -104,7 +104,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "a299f11c-e471-406b-b3e7-4188ce7aceaa",
+      "guid": "2a3a9afb-3590-4203-afc0-c735c384b48e",
       "key": "entrance",
       "value": ""
     },
@@ -114,7 +114,7 @@
       "y": -1.0,
       "z": 0.0
     },
-    "guid": "63c094e3-fbd6-4b3a-8775-1681b510ca26",
+    "guid": "d7f5a863-7b36-4b27-a69c-0ceccdfe9a19",
     "mandatory": false,
     "point": {
       "x": -0.87,
@@ -125,6 +125,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:36.086Z",
+  "updatedAt": "2025-11-20T22:47:43.445Z",
   "virtual": false
 }

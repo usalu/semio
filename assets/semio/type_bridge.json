@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "be4dd115-4e4f-43ac-b108-249c440fd355",
+      "guid": "49e6d45b-6a3d-4890-9e73-a297cdf0e2ae",
       "key": "length",
       "value": "5.6"
     },
     {
       "definition": "",
-      "guid": "5a68de30-7967-45a6-852e-869a0bfc8150",
+      "guid": "f7581c43-877e-487e-8061-43137a668204",
       "key": "platform west length",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "dee15593-940c-44fd-bb3a-6605da39c366",
+      "guid": "665b9cb0-523f-4afc-92cb-b8c84e0c3ce8",
       "key": "platform east length",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "f7723fd2-72dc-495d-a2cb-29fa2d756466",
+      "guid": "d04ee4e1-21a0-4548-8667-bf0a423d2f85",
       "key": "gap",
       "value": "0.4"
     },
     {
       "definition": "",
-      "guid": "3e88d3ca-375e-4392-82e4-960251f717da",
+      "guid": "75034f6a-a36f-406f-8df4-fb1b3d35b043",
       "key": "width",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "4e5576ff-fc64-4d58-ad1e-6ca0fad095c8",
+      "guid": "69e9829f-4bd3-430e-aaa6-e8f1c0ec8492",
       "key": "height",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "3ce5633b-5b25-428a-9cdb-7b7784212b05",
+      "guid": "244caaa8-a15c-4a11-856a-3f7f7b1e8b70",
       "key": "base height",
       "value": "20"
     },
     {
       "definition": "",
-      "guid": "3f9e83c4-33e1-4f1c-967b-8c28b4ec0a3b",
+      "guid": "ce3a3267-05a4-44e0-a4a9-cfd243323bc8",
       "key": "primary rod diameter",
       "value": "10"
     },
     {
       "definition": "",
-      "guid": "644fa77c-2ac0-40b8-a753-ac98b3bf0150",
+      "guid": "fd1c94c1-ca7f-4b40-b8c3-b256cddf9d26",
       "key": "secondary rod diameter",
       "value": "8"
     },
     {
       "definition": "",
-      "guid": "db4c2d7a-0e55-4a65-825f-ab4dd4b92c95",
+      "guid": "59946098-ba02-48da-bfc7-4714517c3eff",
       "key": "tertiary rod diameter",
       "value": "6"
     },
     {
       "definition": "",
-      "guid": "57189d3f-7b6e-42b6-98bf-2617a1d1e879",
+      "guid": "3417f81d-b210-47f3-bce6-7aec80995c90",
       "key": "parapet height",
       "value": "125"
     },
     {
       "definition": "",
-      "guid": "05f2ec2d-7ca3-49f1-91f6-b7dc93764170",
+      "guid": "235fd432-9192-4c2e-be52-930295eb763b",
       "key": "construction cost",
       "value": "65973"
     },
     {
       "definition": "",
-      "guid": "ebddae57-419d-456a-a0f4-bd5f84749b61",
+      "guid": "84466c58-3a8a-48a8-a8c9-93de3307c905",
       "key": "maintenance expenses",
       "value": "880"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "c2e2453d-f6c1-4212-b9b3-7960a259eddf",
+      "guid": "af3ba006-3426-4041-b362-4c5067422b90",
       "key": "construction global warming potential",
       "value": "5864"
     }
   ],
   "authors": {
-    "guid": "4cb036f6-5fa9-4af9-95ee-701f160238c5"
+    "guid": "2479b816-093b-4a86-b272-d0451aaeb546"
   },
-  "createdAt": "2025-11-20T18:18:26.445Z",
+  "createdAt": "2025-11-20T22:47:30.154Z",
   "description": "A bridge with two segments an addition on the west along the main path.",
-  "guid": "886859d4-e798-48a1-a020-8fff21251952",
+  "guid": "e48effad-e3c6-478b-b3bd-307f638764fc",
   "icon": "",
   "image": "images/bridge.png",
   "name": "Bridge",
@@ -98,7 +98,7 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "d2076409-249f-47cd-9345-27a4bf8406be",
+        "guid": "9c3d5418-22cf-4ea4-b3e2-93d0c060380e",
         "key": "east",
         "value": ""
       },
@@ -108,7 +108,7 @@
         "y": 0.0,
         "z": 0.0
       },
-      "guid": "32f2172f-e124-441c-8a4d-55bc76e17808",
+      "guid": "1056465f-66c5-47fc-8c38-b66cacc6cf67",
       "mandatory": false,
       "name": "e",
       "point": {
@@ -121,7 +121,7 @@
     {
       "attributes": {
         "definition": "",
-        "guid": "5b41544d-820a-4b99-beb0-fae1d5b24413",
+        "guid": "eb9a17d8-c3c4-44b7-88e1-b1ef9805f659",
         "key": "west",
         "value": ""
       },
@@ -131,7 +131,7 @@
         "y": 0.0,
         "z": 0.0
       },
-      "guid": "2c560f04-9d57-4e97-9165-2552745c292d",
+      "guid": "336c15d6-b9fd-4660-9948-1bc1b748da2a",
       "mandatory": false,
       "name": "w",
       "point": {
@@ -144,6 +144,6 @@
   ],
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:26.445Z",
+  "updatedAt": "2025-11-20T22:47:30.154Z",
   "virtual": false
 }

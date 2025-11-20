@@ -1848,7 +1848,7 @@ const AppContent: FC = () => {
         // Name is selected - show children names of all entities with that name
         const matchingEntities = entities.filter((e) => e.name === selectedName);
         matchingEntities.forEach((parent) => {
-          const children = entities.filter((e) => e.parent === parent.guid);
+          const children = entities.filter((e) => e.parent?.guid === parent.guid);
           children.forEach((child) => nameSet.add(child.name));
         });
       }
@@ -2024,7 +2024,7 @@ const AppContent: FC = () => {
 
       // Helper function to recursively build design hierarchy
       const buildDesignHierarchy = (designs: Design[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
-        const childDesigns = designs.filter((d) => d.parent === parentGuid);
+        const childDesigns = designs.filter((d) => d.parent?.guid === parentGuid);
 
         childDesigns.forEach((design) => {
           if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c))) return;
@@ -2034,7 +2034,7 @@ const AppContent: FC = () => {
           if (!selectedKind && parentGuid === undefined && design.folder) return;
 
           const rowId = `design-${design.guid}`;
-          const children = designs.filter((d) => d.parent === design.guid);
+          const children = designs.filter((d) => d.parent?.guid === design.guid);
           const hasChildren = children.length > 0;
 
           result.push({
@@ -2066,7 +2066,7 @@ const AppContent: FC = () => {
         // Collect all descendants of matching designs
         const includeGuids = new Set(matchingDesignGuids);
         const collectDescendants = (parentGuid: string) => {
-          const children = allDesignsArray.filter((d) => d.parent === parentGuid);
+          const children = allDesignsArray.filter((d) => d.parent?.guid === parentGuid);
           children.forEach((child) => {
             includeGuids.add(child.guid);
             collectDescendants(child.guid);
@@ -2088,7 +2088,7 @@ const AppContent: FC = () => {
     if (!selectedKind || selectedKind === "types") {
       // Helper function to recursively build type hierarchy
       const buildTypeHierarchy = (types: Type[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
-        const childTypes = types.filter((t) => t.parent === parentGuid);
+        const childTypes = types.filter((t) => t.parent?.guid === parentGuid);
 
         childTypes.forEach((type) => {
           if (searchQuery && !type.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
@@ -2097,7 +2097,7 @@ const AppContent: FC = () => {
           if (!selectedKind && parentGuid === undefined && type.folder) return;
 
           const rowId = `type-${type.guid}`;
-          const children = types.filter((t) => t.parent === type.guid);
+          const children = types.filter((t) => t.parent?.guid === type.guid);
           const hasChildren = children.length > 0;
 
           result.push({
@@ -2129,7 +2129,7 @@ const AppContent: FC = () => {
         // Collect all descendants of matching types
         const includeGuids = new Set(matchingTypeGuids);
         const collectDescendants = (parentGuid: string) => {
-          const children = allTypesArray.filter((t) => t.parent === parentGuid);
+          const children = allTypesArray.filter((t) => t.parent?.guid === parentGuid);
           children.forEach((child) => {
             includeGuids.add(child.guid);
             collectDescendants(child.guid);
@@ -2233,7 +2233,7 @@ const AppContent: FC = () => {
               if (!design.guid) return;
               const rowId = `design-${design.guid}`;
               const allDesigns = kit.designs || [];
-              const children = allDesigns.filter((d) => d.parent === design.guid);
+              const children = allDesigns.filter((d) => d.parent?.guid === design.guid);
               const hasChildren = children.length > 0;
 
               result.push({
@@ -2254,10 +2254,10 @@ const AppContent: FC = () => {
               // Recursively add design children
               if (expandedRows.has(rowId) && hasChildren) {
                 const buildDesignChildrenInFolder = (parentDesignGuid: string, childLevel: number, parentRowId: string): void => {
-                  const childDesigns = allDesigns.filter((d) => d.parent === parentDesignGuid);
+                  const childDesigns = allDesigns.filter((d) => d.parent?.guid === parentDesignGuid);
                   childDesigns.forEach((childDesign) => {
                     const childRowId = `design-${childDesign.guid}`;
-                    const grandChildren = allDesigns.filter((d) => d.parent === childDesign.guid);
+                    const grandChildren = allDesigns.filter((d) => d.parent?.guid === childDesign.guid);
                     const hasGrandChildren = grandChildren.length > 0;
 
                     result.push({
@@ -2290,7 +2290,7 @@ const AppContent: FC = () => {
               if (!type.guid) return;
               const rowId = `type-${type.guid}`;
               const allTypes = kit.types || [];
-              const children = allTypes.filter((t) => t.parent === type.guid);
+              const children = allTypes.filter((t) => t.parent?.guid === type.guid);
               const hasChildren = children.length > 0;
 
               result.push({
@@ -2311,10 +2311,10 @@ const AppContent: FC = () => {
               // Recursively add type children
               if (expandedRows.has(rowId) && hasChildren) {
                 const buildTypeChildrenInFolder = (parentTypeGuid: string, childLevel: number, parentRowId: string): void => {
-                  const childTypes = allTypes.filter((t) => t.parent === parentTypeGuid);
+                  const childTypes = allTypes.filter((t) => t.parent?.guid === parentTypeGuid);
                   childTypes.forEach((childType) => {
                     const childRowId = `type-${childType.guid}`;
-                    const grandChildren = allTypes.filter((t) => t.parent === childType.guid);
+                    const grandChildren = allTypes.filter((t) => t.parent?.guid === childType.guid);
                     const hasGrandChildren = grandChildren.length > 0;
 
                     result.push({
@@ -2664,8 +2664,8 @@ const AppContent: FC = () => {
       // Handle parent reassignment
       if (targetParentId !== undefined) {
         // Dropped onto another design - set as parent
-        if (design.parent !== targetParentId) {
-          kitCommands.updateDesign("semio.sketchpad.app.kit.canvas.table.setDesignParent", design.guid, { parent: targetParentId });
+        if (design.parent?.guid !== targetParentId) {
+          kitCommands.updateDesign("semio.sketchpad.app.kit.canvas.table.setDesignParent", design.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (design.parent || design.folder)) {
         // Dropped on root - unparent and remove from folder
@@ -2683,8 +2683,8 @@ const AppContent: FC = () => {
       // Handle parent reassignment
       if (targetParentId !== undefined) {
         // Dropped onto another type - set as parent
-        if (type.parent !== targetParentId) {
-          kitCommands.updateType("semio.sketchpad.app.kit.canvas.table.setTypeParent", type.guid, { parent: targetParentId });
+        if (type.parent?.guid !== targetParentId) {
+          kitCommands.updateType("semio.sketchpad.app.kit.canvas.table.setTypeParent", type.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (type.parent || type.folder)) {
         // Dropped on root - unparent and remove from folder
@@ -2789,12 +2789,12 @@ const AppContent: FC = () => {
   const handleCreateChildForRow = (row: TableRow) => {
     if (row.kind === "designs") {
       const design = row.data as Design;
-      const existingNames = (kit.designs || []).filter((d: Design) => d.parent === design.guid).map((d: Design) => d.name);
+      const existingNames = (kit.designs || []).filter((d: Design) => d.parent?.guid === design.guid).map((d: Design) => d.name);
       const uniqueName = generateUniqueName(design.name, existingNames);
       const newDesign: Design = {
         guid: guid(),
         name: uniqueName,
-        parent: design.guid,
+        parent: { guid: design.guid },
         pieces: [],
         connections: [],
       };
@@ -2802,12 +2802,12 @@ const AppContent: FC = () => {
       sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
     } else if (row.kind === "types") {
       const type = row.data as Type;
-      const existingNames = (kit.types || []).filter((t: Type) => t.parent === type.guid).map((t: Type) => t.name);
+      const existingNames = (kit.types || []).filter((t: Type) => t.parent?.guid === type.guid).map((t: Type) => t.name);
       const uniqueName = generateUniqueName(type.name, existingNames);
       const newType: Type = {
         guid: guid(),
         name: uniqueName,
-        parent: type.guid,
+        parent: { guid: type.guid },
         ports: [],
       };
       if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createChild", newType);
@@ -3273,6 +3273,7 @@ const AppContent: FC = () => {
 
         {/* Mobile table using general Table component */}
         <Table
+          className="flex-1 min-h-0"
           columns={[
             {
               id: "artifact",
@@ -3470,7 +3471,7 @@ const AppContent: FC = () => {
       ]}
     />
       <ConceptFilter allConcepts={allConcepts} paramName="c" />
-      <Scrollable ref={scrollAreaRef} className="flex-1" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
+        <Scrollable ref={scrollAreaRef} className="flex-1 min-h-0" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
         {isDragOver && (
           <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-panel">
             <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>

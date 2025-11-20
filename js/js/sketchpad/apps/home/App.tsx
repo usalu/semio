@@ -79,7 +79,7 @@ import {
   useTooltip,
   Window,
 } from "../../App";
-import { Action, Input, Scrollable, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "../../elements";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "../../elements";
 import type { AppEdit, PanelDefinition, PanelVisibility } from "../../sketchpad";
 import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "../../sketchpad";
 import { docsRegistry } from "../docs/App";
@@ -595,17 +595,15 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <ToggleGroup
-            id="semio.sketchpad.app.home.settings.language"
-            value={language}
-            onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)}
-            showLabel
-            kind="single"
-            items={[
-              { value: "en", id: "semio.sketchpad.settings.language.en", icon: <GlobeIcon className="size-small" /> },
-              { value: "de", id: "semio.sketchpad.settings.language.de", icon: <GlobeIcon className="size-small" /> },
-            ]}
-          />
+          <Select id="semio.sketchpad.app.home.settings.language" value={language} onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)} showLabel>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">{useLabel("semio.sketchpad.settings.language.en")}</SelectItem>
+              <SelectItem value="de">{useLabel("semio.sketchpad.settings.language.de")}</SelectItem>
+            </SelectContent>
+          </Select>
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -1439,6 +1437,7 @@ const Home: FC = ({}) => {
             {/* Concept Filter */}
             <ConceptFilter allConcepts={allConcepts} />
             <Table<TableRow>
+              className="flex-1 min-h-0"
               columns={[
                 ...(!selectedKind
                   ? [

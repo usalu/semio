@@ -20,35 +20,65 @@
 
 // #endregion
 
-import { MetabolismKit, NakaginCapsuleTowerDancingFlatDesign, NakaginCapsuleTowerFlatDesign, NakaginCapsuleTowerSlantedFlatDesign, NakaginCapsuleTowerTwistedFlatDesign } from "@semio/assets";
+import { CapsuleDreamFlatDesign, MetabolismKit, NakaginCapsuleTowerDancingFlatDesign, NakaginCapsuleTowerFlatDesign, NakaginCapsuleTowerSlantedFlatDesign, NakaginCapsuleTowerTwistedFlatDesign } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import { Design, flattenDesign, Kit } from "./semio";
-
-const designShouldHaveSamePiecePlanesAndCenters = (kit: Kit, design: Design, expectedDesign: Design) => {
-    it("should have same piece planes and centers as the expected design", () => {
-        const flatDesign = flattenDesign(kit, design.guid);
-        // every piece with the same guid needs to have same plane
-        expect(flatDesign.updated?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.id)?.plane)).toBe(true);
-        // every piece with the same guid needs to have same center
-        expect(flatDesign.updated?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.id)?.center)).toBe(true);
-    });
-}
+import { applyDesignDiff, Design, flattenDesign, Kit } from "./semio";
 
 describe("flattenDesign", () => {
     const kit = MetabolismKit as unknown as Kit;
+
     describe("Nakagin Capsule Tower", () => {
-        designShouldHaveSamePiecePlanesAndCenters(kit, kit.designs?.find((d) => d.name === "Nakagin Capsule Tower"), NakaginCapsuleTowerFlatDesign);
+        it("should have same piece planes and centers as the expected design", () => {
+            const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower")!;
+            const expectedDesign = NakaginCapsuleTowerFlatDesign as unknown as Design;
+            const flatDesignDiff = flattenDesign(kit, design.guid);
+            const flatDesign = applyDesignDiff(design, flatDesignDiff);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.plane)).toBe(true);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.center)).toBe(true);
+        });
     });
+
     describe("Nakagin Capsule Tower Slanted", () => {
-        designShouldHaveSamePiecePlanesAndCenters(kit, kit.designs?.find((d) => d.name === "Slanted"), NakaginCapsuleTowerSlantedFlatDesign);
+        it("should have same piece planes and centers as the expected design", () => {
+            const design = kit.designs?.find((d) => d.name === "Slanted")!;
+            const expectedDesign = NakaginCapsuleTowerSlantedFlatDesign as unknown as Design;
+            const flatDesignDiff = flattenDesign(kit, design.guid);
+            const flatDesign = applyDesignDiff(design, flatDesignDiff);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.plane)).toBe(true);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.center)).toBe(true);
+        });
     });
+
     describe("Nakagin Capsule Tower Twisted", () => {
-        designShouldHaveSamePiecePlanesAndCenters(kit, kit.designs?.find((d) => d.name === "Twisted"), NakaginCapsuleTowerTwistedFlatDesign);
+        it("should have same piece planes and centers as the expected design", () => {
+            const design = kit.designs?.find((d) => d.name === "Twisted")!;
+            const expectedDesign = NakaginCapsuleTowerTwistedFlatDesign as unknown as Design;
+            const flatDesignDiff = flattenDesign(kit, design.guid);
+            const flatDesign = applyDesignDiff(design, flatDesignDiff);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.plane)).toBe(true);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.center)).toBe(true);
+        });
     });
+
     describe("Nakagin Capsule Tower Dancing", () => {
-        designShouldHaveSamePiecePlanesAndCenters(kit, kit.designs?.find((d) => d.name === "Dancing"), NakaginCapsuleTowerDancingFlatDesign);
+        it("should have same piece planes and centers as the expected design", () => {
+            const design = kit.designs?.find((d) => d.name === "Dancing")!;
+            const expectedDesign = NakaginCapsuleTowerDancingFlatDesign as unknown as Design;
+            const flatDesignDiff = flattenDesign(kit, design.guid);
+            const flatDesign = applyDesignDiff(design, flatDesignDiff);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.plane)).toBe(true);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.center)).toBe(true);
+        });
     });
+
     describe("Capsule Dream", () => {
-        designShouldHaveSamePiecePlanesAndCenters(kit, kit.designs?.find((d) => d.name === "Capsule Dream"), CapsuleDreamFlatDesign);
+        it("should have same piece planes and centers as the expected design", () => {
+            const design = kit.designs?.find((d) => d.name === "Capsule Dream")!;
+            const expectedDesign = CapsuleDreamFlatDesign as unknown as Design;
+            const flatDesignDiff = flattenDesign(kit, design.guid);
+            const flatDesign = applyDesignDiff(design, flatDesignDiff);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.plane)).toBe(true);
+            expect(flatDesign.pieces?.every((p) => expectedDesign.pieces?.find((ep) => ep.guid === p.guid)?.center)).toBe(true);
+        });
     });
 });

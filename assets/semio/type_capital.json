@@ -2,71 +2,71 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "80bba32e-0315-438f-b957-94f3685ec912",
+      "guid": "d99ec3ea-a544-4c35-9f41-2d5c43e258ed",
       "key": "peak",
       "value": "north west"
     },
     {
       "definition": "",
-      "guid": "409a9631-74fb-4b5a-8b0e-9b8af31f47e4",
+      "guid": "8d0b2930-81dc-4001-9a72-47aff14aeab2",
       "key": "length",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "1459fa5d-35b9-41ba-93a8-fde11a1b8369",
+      "guid": "c6159abf-c196-4a1a-a9fc-08bc7a5780d1",
       "key": "width",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "327a2e03-c7fa-41e9-854a-d707b4499aad",
+      "guid": "82aa17ca-3385-4ab0-bdfb-5f5e656f8b0c",
       "key": "height",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "1c86da88-6034-4b4a-a4b4-3d34614a0756",
+      "guid": "87a65728-c687-44f5-b469-540be36ba77d",
       "key": "height side",
       "value": "5.5"
     },
     {
       "definition": "",
-      "guid": "0f4fd68e-8921-4aa9-b25c-02120d467e83",
+      "guid": "03ff04a1-1911-4279-b706-958b7af01ac7",
       "key": "height low",
       "value": "1"
     },
     {
       "definition": "",
-      "guid": "f2bb5d1a-fd4e-470b-8659-14610152d696",
+      "guid": "45195ef6-ea71-4536-9ad1-bc39ca091618",
       "key": "wall thickness",
       "value": "0.3"
     },
     {
       "definition": "",
-      "guid": "d1f06e40-2b8c-40cb-8722-9632c0639fec",
+      "guid": "59c1ee23-32e0-4048-8c8f-63e6f4657d4f",
       "key": "construction cost",
       "value": "60025"
     },
     {
       "definition": "",
-      "guid": "ec4b92e7-7ff3-4b32-979b-f56cf2d778a8",
+      "guid": "e240a456-315f-42ec-a3e7-acbf8b80f1e8",
       "key": "maintenance expenses",
       "value": "720"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "f4845ca0-1748-43aa-9900-1879d8ab59d5",
+      "guid": "152528bb-d173-4a64-9d99-961d271c795c",
       "key": "construction global warming potential",
       "value": "4802"
     }
   ],
   "authors": {
-    "guid": "c3a23ba2-8859-4305-853e-57f49605465f"
+    "guid": "50388d23-dd64-420e-98fc-d5d3bd33ebe0"
   },
-  "createdAt": "2025-11-20T18:18:26.779Z",
+  "createdAt": "2025-11-20T22:47:30.566Z",
   "description": "A roof that has the skin of a cut extruded cuboid.",
-  "guid": "1b70246e-df12-4892-9667-c9cddb5dc7cd",
+  "guid": "e7991813-6b56-4178-ae16-753464eaf4d1",
   "icon": "icons/capital.svg",
   "image": "images/capital.png",
   "name": "Capital",
@@ -74,13 +74,13 @@
     "attributes": [
       {
         "definition": "",
-        "guid": "1d50e682-8dd9-4677-b1d4-0e695ccfa9c6",
+        "guid": "eb087046-883a-42c1-88c8-64127afd65ef",
         "key": "bottom",
         "value": ""
       },
       {
         "definition": "",
-        "guid": "e331d83e-aabb-403f-931e-a69f48b9bc2f",
+        "guid": "9746e12d-ef88-4090-a906-41ab17d5a932",
         "key": "wasp rotation",
         "value": "180"
       }
@@ -91,7 +91,7 @@
       "y": 0.0,
       "z": -1.0
     },
-    "guid": "9e547c66-8676-4a2a-bda3-3c6227af2e35",
+    "guid": "b1f748ef-00f6-492b-a75b-231d15fba1e5",
     "mandatory": false,
     "point": {
       "x": 0.0,
@@ -102,6 +102,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:26.779Z",
+  "updatedAt": "2025-11-20T22:47:30.566Z",
   "virtual": false
 }

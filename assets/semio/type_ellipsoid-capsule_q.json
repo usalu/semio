@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "5fabdd89-0720-454b-96c1-cba44c131b73",
+      "guid": "e2b03c12-bbd1-42fa-88d1-ccf1a010df8f",
       "key": "entrance",
       "value": "back"
     },
     {
       "definition": "",
-      "guid": "a211097c-ceb1-4a44-b5b7-ac0aee33ca41",
+      "guid": "b017c6aa-b485-4a31-bee0-c466b869eb02",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "f92a598c-4e05-4c6e-85ea-25dc1606d525",
+      "guid": "6185b7e9-90c0-4921-8b3c-0d4d44827901",
       "key": "length",
       "value": "3.6"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "bfd28509-6b8b-411e-b3db-1f3aef8e1c52",
+      "guid": "7a25e3c9-133f-47a0-aac4-e2cdadb97a46",
       "key": "width",
       "value": "4"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "c7d61edb-6af9-4f24-aad0-a3112de6448d",
+      "guid": "c3724e27-81ef-4c74-af95-2f0da51c1c59",
       "key": "heigth",
       "value": "2.6"
     },
     {
       "definition": "",
-      "guid": "12c14607-ef7a-4bc5-9322-31964cbb85ef",
+      "guid": "cf0565e7-7d43-4159-9ce3-be8e9a6f5e12",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "79c1b01c-2140-4c96-80f8-f0e8aebf1325",
+      "guid": "927082d6-54ff-4d09-aa8b-9190b980fac1",
       "key": "effective floor area",
       "value": "6.92"
     },
     {
       "definition": "",
-      "guid": "eae240de-0782-4dae-be18-7fb421a09752",
+      "guid": "378392de-4c18-41b0-a61a-7a136a80699a",
       "key": "construction cost",
       "value": "79488"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "33a293af-141f-4e56-8820-c09755d863c9",
+      "guid": "9198bd0e-0ee2-4f2f-8b48-f1a1dd2deb12",
       "key": "heating energy demand",
       "value": "276"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "2ca41e0e-2875-4173-8a4f-7b1dfe33e962",
+      "guid": "b784b593-c541-4195-b231-7857ea43919b",
       "key": "cooling energy demand",
       "value": "173"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "abcfff9e-4271-4929-ad7a-01e08fe7c50a",
+      "guid": "db06ea17-5cf0-48e2-a174-71350b32a577",
       "key": "technical equipment energy demand",
       "value": "242"
     },
     {
       "definition": "",
-      "guid": "38d5b3ba-35b1-46ce-9a35-addcbcc8d34a",
+      "guid": "7147d9e7-61db-4dea-bfdf-a818d585c9e1",
       "key": "income",
       "value": "24883"
     },
     {
       "definition": "",
-      "guid": "52dfaebf-080a-4e05-ba08-8f30da5a037c",
+      "guid": "212747f9-53e7-429c-8473-cee9bf42cf6d",
       "key": "maintenance expenses",
       "value": "1659"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "80418394-4308-4c84-96e0-695ea6bbff83",
+      "guid": "8a282439-434f-436c-b838-b659cc36e850",
       "key": "construction global warming potential",
       "value": "1200"
     }
   ],
   "authors": {
-    "guid": "30b0e5b8-18de-4454-896a-b27286a152ff"
+    "guid": "6fc0f619-e6f1-40d7-8ad0-e296cdb41e0a"
   },
-  "createdAt": "2025-11-20T18:18:36.347Z",
+  "createdAt": "2025-11-20T22:47:43.861Z",
   "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
-  "guid": "0bda0965-a441-4f25-bcea-e725f9746d63",
+  "guid": "86297d1b-901d-4b18-b242-24f15949cef8",
   "icon": "icons/ellipsoid-capsule_q.svg",
   "image": "images/ellipsoid-capsule_q.png",
   "name": "q",
@@ -98,7 +98,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "993e6e18-b2f1-4cc1-8a81-9e5b25f785ff",
+      "guid": "442c15af-44aa-49ad-8786-3f243d5f0498",
       "key": "entrance",
       "value": ""
     },
@@ -108,7 +108,7 @@
       "y": -1.0,
       "z": 0.0
     },
-    "guid": "0a66b0e7-81b9-4c4b-ae33-d4b64ff26974",
+    "guid": "82e3ee6b-6ade-4dbd-914a-93b28f793af7",
     "mandatory": false,
     "point": {
       "x": 0.87,
@@ -119,6 +119,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:36.347Z",
+  "updatedAt": "2025-11-20T22:47:43.861Z",
   "virtual": false
 }

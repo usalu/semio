@@ -2417,6 +2417,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
             value: "on",
             icon: addIconSize(icon),
             action: <Action as="div" id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />,
+            id: id,
           },
         ]}
       />
@@ -2483,6 +2484,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           value: selectedItem.value,
           icon: addIconSize(selectedItem.label),
           action: dropdownAction,
+          id: selectedItem.id ?? id,
         },
       ],
     };
@@ -2513,6 +2515,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         {
           value: "on",
           icon: addIconSize(icon),
+          id: id,
         },
       ]}
     />

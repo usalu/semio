@@ -2,95 +2,95 @@
   "attributes": [
     {
       "definition": "",
-      "guid": "f48c6d39-7b47-47ee-882b-5a8065db5886",
+      "guid": "6532b49f-39c8-4b03-b0fe-191193280d60",
       "key": "entrance",
       "value": "side"
     },
     {
       "definition": "",
-      "guid": "104d8bdc-627a-46ad-bc19-8ee9c6e423e2",
+      "guid": "191e82df-0b08-4398-8eed-6187520a364a",
       "key": "view",
       "value": "side"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "588a9685-65f6-42cd-8480-5fb4e317de71",
+      "guid": "fcdf07e0-408d-449c-883d-f398f64cfe29",
       "key": "length",
       "value": "4.2"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "f97bb3e2-8d24-4766-91f2-6d828a8feda5",
+      "guid": "c2ff5f8f-67dd-447d-b173-e114d7058086",
       "key": "width",
       "value": "4.1"
     },
     {
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "672fa90b-7685-43cf-9051-abe237209a67",
+      "guid": "b96e8492-a631-4f56-91d9-98bee54710b1",
       "key": "heigth",
       "value": "2.5"
     },
     {
       "definition": "",
-      "guid": "299a969e-7c5d-4624-9ad0-0c164627631e",
+      "guid": "38a91a3c-a416-45a6-9a78-040cb76bbebf",
       "key": "window shape",
       "value": "round"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "c3dbd2d7-388d-4b40-ab02-f16f2155033d",
+      "guid": "514f8761-10c6-47d9-99dd-b77635b39882",
       "key": "effective floor area",
       "value": "11.21"
     },
     {
       "definition": "",
-      "guid": "c750ce6d-9944-4e07-948c-16ff129c0c42",
+      "guid": "5db37b46-6381-4e7b-9ff4-39e6ae517ef0",
       "key": "construction cost",
       "value": "82992"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "bf5f1528-f16b-40f5-b55a-87b79e48d342",
+      "guid": "a2b2dcaf-8892-4c1b-a286-149ac70507af",
       "key": "heating energy demand",
       "value": "393"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "62eff947-695f-418f-9e63-37105fa5d550",
+      "guid": "d2670e2b-379f-4c27-8d23-7a71e522bcbe",
       "key": "cooling energy demand",
       "value": "262"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "5df0625a-23bf-4d24-aaa3-2e070e57c0d2",
+      "guid": "fe233fe2-2728-4b62-a187-4782ab8ea50e",
       "key": "technical equipment energy demand",
       "value": "262"
     },
     {
       "definition": "",
-      "guid": "add45934-e938-49ce-a725-63c06b4ddd78",
+      "guid": "6f6abbfb-c431-4bd6-a312-5cefc59cae5a",
       "key": "income",
       "value": "13104"
     },
     {
       "definition": "",
-      "guid": "a3d4aab8-2b95-4b1c-95ac-af706520b0d4",
+      "guid": "22ae7205-7408-4b1b-b653-22e9e795dbb1",
       "key": "maintenance expenses",
       "value": "1048"
     },
     {
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "1bb98548-d56a-473c-85cc-727e6600ff1b",
+      "guid": "1b0d855e-6593-4806-a785-314afe282d97",
       "key": "construction global warming potential",
       "value": "8736.01"
     }
   ],
   "authors": {
-    "guid": "6b823763-b98b-421d-8f30-3ec43630a594"
+    "guid": "b11abbc4-af9b-4030-8be6-134e336cdcc6"
   },
-  "createdAt": "2025-11-20T18:18:31.769Z",
+  "createdAt": "2025-11-20T22:47:37.813Z",
   "description": "An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
-  "guid": "456ef8a9-1e6a-428a-89aa-670b6184620f",
+  "guid": "8d802512-175e-4cbc-be91-b05bdd6a0cc1",
   "icon": "icons/capsule-with-balcony_s.svg",
   "image": "images/capsule-with-balcony_s.png",
   "name": "s",
@@ -98,7 +98,7 @@
   "ports": {
     "attributes": {
       "definition": "",
-      "guid": "09926c1b-b294-4740-ad49-5b1b4fb8a13e",
+      "guid": "c86c1203-4418-4a27-9464-42e4d5f496ba",
       "key": "entrance",
       "value": ""
     },
@@ -108,7 +108,7 @@
       "y": 0.0,
       "z": 0.0
     },
-    "guid": "b8b16c14-c127-4643-818e-c211b496758b",
+    "guid": "f424ff69-ccfd-4f57-876d-f3d4b49d6285",
     "mandatory": false,
     "point": {
       "x": -1.3,
@@ -119,6 +119,6 @@
   },
   "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T18:18:31.769Z",
+  "updatedAt": "2025-11-20T22:47:37.813Z",
   "virtual": false
 }
