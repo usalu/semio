@@ -102,14 +102,14 @@
         "key": "east",
         "value": ""
       },
-      "compatibleFamilies": "door tambour west",
+      "compatibleInterfaces": "door tambour west",
       "description": "The middle of the east side of the plattform.",
       "direction": {
         "x": 1.0,
         "y": 0.0,
         "z": 0.0
       },
-      "family": "platform east",
+      "interface": "platform east",
       "guid": "f02aeb9c-1370-46ee-9fb6-addc64c5dd63",
       "mandatory": false,
       "point": {
@@ -126,14 +126,14 @@
         "key": "west",
         "value": ""
       },
-      "compatibleFamilies": "door tambour east",
+      "compatibleInterfaces": "door tambour east",
       "description": "The middle of the west side of the plattform.",
       "direction": {
         "x": -1.0,
         "y": 0.0,
         "z": 0.0
       },
-      "family": "platform west",
+      "interface": "platform west",
       "guid": "6c7badc1-e671-4adf-ae7d-20858fba142e",
       "mandatory": false,
       "point": {

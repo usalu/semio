@@ -475,7 +475,7 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary max-w-[300px] origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance",
+          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance w-max max-w-fit",
           className,
         )}
         {...props}
@@ -570,8 +570,9 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   if (typeof value === "object" && value?.hotkey) {
     hotkey = typeof value.hotkey === "string" ? value.hotkey : undefined;
   } else {
-    const hotkeyValue = t(`${id}.hotkey`);
-    if (typeof hotkeyValue === "string") {
+    const hotkeyKey = `${id}.hotkey`;
+    const hotkeyValue = t(hotkeyKey);
+    if (typeof hotkeyValue === "string" && hotkeyValue !== hotkeyKey) {
       hotkey = hotkeyValue;
     } else if (hotkeyValue && typeof hotkeyValue === "object" && hotkeyValue.hotkey) {
       hotkey = typeof hotkeyValue.hotkey === "string" ? hotkeyValue.hotkey : undefined;
@@ -598,29 +599,23 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
     <div className="flex flex-col gap-single">
       <span>{displayText}</span>
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
-        <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single">
-          {showManual && fullManualPath ? (
+        <div className="flex w-full items-center border-t border-accent-foreground pt-single gap-single">
+          {showManual && fullManualPath && (
             <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <BookIcon className="size-3" />
               <span>{manualLabel}</span>
             </Link>
-          ) : (
-            <span className="block" />
           )}
-          {showTutorial && fullTutorialPath ? (
+          {showTutorial && fullTutorialPath && (
             <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
               <TutorialIcon className="size-3" />
               <span className="block text-center">{tutorialLabel}</span>
             </Link>
-          ) : (
-            <span className="block" />
           )}
-          {hotkey ? (
-            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground p-single text-2xs font-mono justify-self-end cursor-pointer hover:bg-hover-panel">
+          {hotkey && (
+            <kbd onClick={handleHotkeyClick} className="bg-panel border border-accent-foreground text-muted-foreground p-single text-2xs font-mono ml-auto cursor-pointer hover:bg-hover-panel">
               {hotkey}
             </kbd>
-          ) : (
-            <span className="block" />
           )}
         </div>
       ) : null}

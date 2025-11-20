@@ -11,37 +11,54 @@
     {
       "url": "representations/tambour.glb",
       "description": "",
-      "tags": ["model/gltf-binary"],
+      "tags": [
+        "model/gltf-binary"
+      ],
       "attributes": []
     },
     {
       "url": "representations/tambour_1to500.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm"],
+      "tags": [
+        "model/vnd.3dm"
+      ],
       "attributes": []
     },
     {
       "url": "representations/tambour_1to200.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f9222724e5",
       "description": "",
-      "tags": ["model/vnd.3dm", "model/vnd.speckle+json"],
+      "tags": [
+        "model/vnd.3dm",
+        "model/vnd.speckle+json"
+      ],
       "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b27c179b7d",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
       "attributes": []
     },
     {
       "url": "representations/tambour_collider.glb",
       "description": "",
-      "tags": ["model/gltf-binary", "collider"],
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
       "attributes": []
     }
   ],
@@ -50,8 +67,10 @@
       "id_": "b",
       "description": "The bottom system center of the elevator.",
       "mandatory": false,
-      "family": "tambour rectangular bottom",
-      "compatibleFamilies": ["tambour rectangular top"],
+      "interface": "tambour rectangular bottom",
+      "compatibleInterfaces": [
+        "tambour rectangular top"
+      ],
       "point": {
         "x": 0.0,
         "y": 0.0,
@@ -82,8 +101,10 @@
       "id_": "t",
       "description": "The top system center of the elevator.",
       "mandatory": false,
-      "family": "tambour rectangular top",
-      "compatibleFamilies": ["tambour rectangular bottom"],
+      "interface": "tambour rectangular top",
+      "compatibleInterfaces": [
+        "tambour rectangular bottom"
+      ],
       "point": {
         "x": 0.0,
         "y": 0.0,
@@ -108,8 +129,11 @@
       "id_": "sl0_d0",
       "description": "The first door of the side plattform in the east facade.",
       "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
+      "interface": "door tambour west",
+      "compatibleInterfaces": [
+        "door capsule east",
+        "platform west"
+      ],
       "point": {
         "x": 2.75,
         "y": 0.9,
@@ -127,8 +151,11 @@
       "id_": "sl0_d1",
       "description": "The second door of the side plattform in the north facade.",
       "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
+      "interface": "door tambour east",
+      "compatibleInterfaces": [
+        "door capsule west",
+        "platform east"
+      ],
       "point": {
         "x": 0.9,
         "y": 2.75,
@@ -146,8 +173,11 @@
       "id_": "sl0_d2",
       "description": "The third door of the side plattform in the north facade.",
       "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
+      "interface": "door tambour west",
+      "compatibleInterfaces": [
+        "door capsule east",
+        "platform west"
+      ],
       "point": {
         "x": -0.9,
         "y": 2.75,
@@ -165,8 +195,11 @@
       "id_": "sl0_d3",
       "description": "The fourth door of the side plattform in the west facade.",
       "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
+      "interface": "door tambour east",
+      "compatibleInterfaces": [
+        "door capsule west",
+        "platform east"
+      ],
       "point": {
         "x": -2.75,
         "y": 0.9,
@@ -184,8 +217,11 @@
       "id_": "sl1_d0",
       "description": "The first door of the main plattform in the west facade.",
       "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
+      "interface": "door tambour west",
+      "compatibleInterfaces": [
+        "door capsule east",
+        "platform west"
+      ],
       "point": {
         "x": -2.75,
         "y": -0.9,
@@ -203,8 +239,11 @@
       "id_": "sl1_d1",
       "description": "The second door of the main plattform in the south facade.",
       "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
+      "interface": "door tambour east",
+      "compatibleInterfaces": [
+        "door capsule west",
+        "platform east"
+      ],
       "point": {
         "x": -0.9,
         "y": -2.75,
@@ -222,8 +261,11 @@
       "id_": "sl2_d0",
       "description": "The first door of the main plattform in the south facade.",
       "mandatory": false,
-      "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
+      "interface": "door tambour west",
+      "compatibleInterfaces": [
+        "door capsule east",
+        "platform west"
+      ],
       "point": {
         "x": 0.9,
         "y": -2.75,
@@ -241,8 +283,11 @@
       "id_": "sl2_d1",
       "description": "The second door of the main plattform in the east facade.",
       "mandatory": false,
-      "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
+      "interface": "door tambour east",
+      "compatibleInterfaces": [
+        "door capsule west",
+        "platform east"
+      ],
       "point": {
         "x": 2.75,
         "y": -0.9,

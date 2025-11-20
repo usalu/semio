@@ -15,8 +15,8 @@ The kit data has **severe type/port mismatches**:
 ### Example 1: Base Type Mismatch
 
 - Piece `4b51bc5d-2fc2-40d6-9908-a2cee7911799` has type `c4bf196e-84dd-4af4-9a01-8f4f961d8932` (Base)
-- Connection parent port: `b1da11ce-75b2-4d60-9eaf-1f43e3100c2c` (family: "core circular bottom") - belongs to Blob type (child of Base)
-- Connection child port: `e0fc8147-34ce-4d7c-85c3-2858654167fc` (family: "core circular top") - belongs to type `d31a1b54-194e-4969-8efc-24146f138909` (Single Storey, child of Cylindric Tambour)
+- Connection parent port: `b1da11ce-75b2-4d60-9eaf-1f43e3100c2c` (interface: "core circular bottom") - belongs to Blob type (child of Base)
+- Connection child port: `e0fc8147-34ce-4d7c-85c3-2858654167fc` (interface: "core circular top") - belongs to type `d31a1b54-194e-4969-8efc-24146f138909` (Single Storey, child of Cylindric Tambour)
 
 ### The Problem
 
@@ -42,12 +42,12 @@ The **kit JSON files must be corrected**:
 - OR connections must use ports that exist in the piece types
 - This is a data generation/export issue that needs to be fixed at the source
 
-### Option 2: Workaround - Port Family Matching (NOT RECOMMENDED)
+### Option 2: Workaround - Port Interface Matching (NOT RECOMMENDED)
 
-Match ports by family instead of GUID:
+Match ports by interface instead of GUID:
 
-- Find a port with compatible family in piece type
-- Risky - may connect incompatible ports with same family
+- Find a port with compatible interface in piece type
+- Risky - may connect incompatible ports with same interface
 
 ### Option 3: Skip Invalid Connections (TEMP WORKAROUND)
 

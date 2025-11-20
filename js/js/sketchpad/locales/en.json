@@ -1400,6 +1400,12 @@
                 "beginner": "Choose the color theme for the application"
               }
             },
+            "language": {
+              "label": {
+                "normal": "Language",
+                "beginner": "Select the language for the application interface"
+              }
+            },
             "mode": {
               "label": {
                 "normal": "Mode",
@@ -3276,16 +3282,16 @@
                       "beginner": "Whether this port must be connected"
                     }
                   },
-                  "family": {
+                  "interface": {
                     "label": {
-                      "normal": "Family",
-                      "beginner": "The port family for compatibility checking"
+                      "normal": "Interface",
+                      "beginner": "The port interface for compatibility checking"
                     }
                   },
-                  "compatibleFamily": {
+                  "compatibleInterface": {
                     "label": {
-                      "normal": "Compatible Family",
-                      "beginner": "The families this port is compatible with"
+                      "normal": "Compatible Interface",
+                      "beginner": "The interfaces this port is compatible with"
                     }
                   },
                   "description": {
@@ -3510,7 +3516,7 @@
               }
             }
           },
-          "portFamilyPlaceholder": {
+          "portInterfacePlaceholder": {
             "label": "e.g., electrical, mechanical"
           },
           "portDescriptionPlaceholder": {
@@ -3538,8 +3544,8 @@
             "manual": "type#ports",
             "tutorial": "hello-semio/model-brick-set#ports"
           },
-          "portCompatibleFamiliesPlaceholder": {
-            "label": "family1, family2"
+          "portCompatibleInterfacesPlaceholder": {
+            "label": "interface1, interface2"
           },
           "portNotFound": {
             "label": {
@@ -3731,18 +3737,18 @@
                     "manual": "type#ports",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "family": {
+                  "interface": {
                     "label": {
-                      "normal": "Family",
-                      "beginner": "Port family name. Ports of the same family can connect to each other."
+                      "normal": "Interface",
+                      "beginner": "Port interface name. Ports of the same interface can connect to each other."
                     },
                     "manual": "type#ports",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "compatibleFamilies": {
+                  "compatibleInterfaces": {
                     "label": {
-                      "normal": "Compatible Families",
-                      "beginner": "List of other port families this port can connect to. Leave empty to allow all families."
+                      "normal": "Compatible Interfaces",
+                      "beginner": "List of other port interfaces this port can connect to. Leave empty to allow all interfaces."
                     },
                     "manual": "type#ports",
                     "tutorial": "hello-semio/model-brick-set"

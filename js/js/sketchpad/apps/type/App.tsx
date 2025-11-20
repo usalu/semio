@@ -29,7 +29,7 @@ import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
-import i18n, { useLabel } from "../../../i18n";
+import { useLabel } from "../../../i18n";
 import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Point, Port, Representation, selectBestRepresentation, File as SemioFile, Type, TypeDiff, Vector } from "../../../semio";
 import type { KitStore, SketchpadStore, TypeStore } from "../../App";
 import {
@@ -1900,7 +1900,7 @@ const PortsListSectionForm: FC = () => {
                   <TreeItem
                     key={`port-${index}`}
                     id="semio.sketchpad.app.type.port"
-                    label={port.family}
+                    label={port.interface}
                     sortable={true}
                     sortableId={`port-${index}`}
                     isDragHandle={true}
@@ -1924,11 +1924,11 @@ const PortsListSectionForm: FC = () => {
                       <TreeContent>
                         <Input
                           lazy
-                          id="semio.sketchpad.app.type.panel.details.section.ports.family"
-                          value={port.family || ""}
-                          placeholderId="semio.sketchpad.app.type.portFamilyPlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.ports.interface"
+                          value={port.interface || ""}
+                          placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.family", port.guid, { family: value });
+                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.interface", port.guid, { interface: value });
                           }}
                           showLabel
                         />
@@ -2078,15 +2078,15 @@ const PortsListSectionForm: FC = () => {
                       <TreeContent>
                         <Input
                           lazy
-                          id="semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies"
-                          value={(port.compatibleFamilies || []).join(", ")}
-                          placeholderId="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces"
+                          value={(port.compatibleInterfaces || []).join(", ")}
+                          placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies", port.guid, {
-                              compatibleFamilies: value
+                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces", port.guid, {
+                              compatibleInterfaces: value
                                 .split(",")
-                                .map((family) => family.trim())
-                                .filter((family) => family),
+                                .map((interface_) => interface_.trim())
+                                .filter((interface_) => interface_),
                             });
                           }}
                           showLabel
@@ -2117,7 +2117,7 @@ const AuthorsSectionForm: FC = () => {
   const kit = useKit() as Kit;
 
   const updateAuthors = (origin: string, authors: string[]) => {
-    kitCommands?.updateType(origin, type.guid, { authors: authors.map(a => ({ guid: a })) });
+    kitCommands?.updateType(origin, type.guid, { authors: authors.map((a) => ({ guid: a })) });
   };
 
   const hasAuthors = type.authors && type.authors.length > 0;
@@ -2137,7 +2137,7 @@ const AuthorsSectionForm: FC = () => {
                 name: "",
                 email: "",
               });
-              updateAuthors(origin, [...(type.authors || []).map(a => a.guid), newAuthorGuid]);
+              updateAuthors(origin, [...(type.authors || []).map((a) => a.guid), newAuthorGuid]);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -2157,7 +2157,10 @@ const AuthorsSectionForm: FC = () => {
             })}
             onReorder={(oldIndex, newIndex) => {
               const origin = "semio.sketchpad.app.type.panel.details.authors.reorder";
-              updateAuthors(origin, arrayMove(type.authors!, oldIndex, newIndex).map(a => a.guid));
+              updateAuthors(
+                origin,
+                arrayMove(type.authors!, oldIndex, newIndex).map((a) => a.guid),
+              );
             }}
           >
             {(item, index) => (
@@ -2175,7 +2178,7 @@ const AuthorsSectionForm: FC = () => {
                       const origin = "semio.sketchpad.app.type.panel.details.authors.remove";
                       updateAuthors(
                         origin,
-                        (type.authors || []).filter((_, i: number) => i !== index).map(a => a.guid),
+                        (type.authors || []).filter((_, i: number) => i !== index).map((a) => a.guid),
                       );
                     },
                     id: "semio.sketchpad.common.remove",
@@ -2401,11 +2404,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.family"
-            value={port.family || ""}
-            placeholderId="semio.sketchpad.app.type.portFamilyPlaceholder.label"
+            id="semio.sketchpad.app.type.panel.details.section.ports.interface"
+            value={port.interface || ""}
+            placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.family", port.guid, { family: value });
+              updatePort("semio.sketchpad.app.type.panel.details.section.ports.interface", port.guid, { interface: value });
             }}
             showLabel
           />
@@ -2555,15 +2558,15 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies"
-            value={(port.compatibleFamilies || []).join(", ")}
-            placeholderId="semio.sketchpad.app.type.portCompatibleFamiliesPlaceholder.label"
+            id="semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces"
+            value={(port.compatibleInterfaces || []).join(", ")}
+            placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleFamilies", port.guid, {
-                compatibleFamilies: value
+              updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces", port.guid, {
+                compatibleInterfaces: value
                   .split(",")
-                  .map((family) => family.trim())
-                  .filter((family) => family),
+                  .map((interface_) => interface_.trim())
+                  .filter((interface_) => interface_),
               });
             }}
             showLabel
@@ -2628,7 +2631,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
     });
   };
 
-  const commonFamily = getCommonValue((p) => p.family);
+  const commonInterface = getCommonValue((p) => p.interface);
   const commonT = getCommonValue((p) => p.t);
   const commonPointX = getCommonValue((p) => p.point?.x);
   const commonPointY = getCommonValue((p) => p.point?.y);
@@ -2643,10 +2646,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.family"
-            value={commonFamily || ""}
-            placeholderId={commonFamily === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portFamilyPlaceholder.label"}
-            onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.ports.family", { family: value })}
+            id="semio.sketchpad.app.type.panel.details.section.ports.interface"
+            value={commonInterface || ""}
+            placeholderId={commonInterface === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portInterfacePlaceholder.label"}
+            onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.ports.interface", { interface: value })}
             showLabel
           />
         </TreeContent>

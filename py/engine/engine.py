@@ -1921,26 +1921,26 @@ class RepresentationInputNode(InputNode):
 # https://github.com/usalu/semio-port-
 
 
-# region CompatibleFamily
-# https://github.com/usalu/semio-compatiblefamily-
+# region CompatibleInterface
+# https://github.com/usalu/semio-compatibleinterface-
 
 
-class CompatibleFamilyNameField(RealField, abc.ABC):
+class CompatibleInterfaceNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
-class CompatibleFamilyOrderField(RealField, abc.ABC):
+class CompatibleInterfaceOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field()
 
 
-class CompatibleFamily(CompatibleFamilyOrderField, CompatibleFamilyNameField, Table, table=True):
-    __tablename__ = "compatible_families"
+class CompatibleInterface(CompatibleInterfaceOrderField, CompatibleInterfaceNameField, Table, table=True):
+    __tablename__ = "compatible_interfaces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="compatibleFamilies_")
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="compatibleInterfaces_")
 
 
-# endregion CompatibleFamily
+# endregion CompatibleInterface
 
 
 class PortIdField(MaskedField, abc.ABC):
@@ -1955,12 +1955,12 @@ class PortMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = sqlmodel.Field(default=False)
 
 
-class PortFamilyField(RealField, abc.ABC):
-    family: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+class PortInterfaceField(RealField, abc.ABC):
+    interface: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class PortCompatibleFamiliesField(MaskedField, abc.ABC):
-    compatibleFamilies: list[str] = sqlmodel.Field(default_factory=list)
+class PortCompatibleInterfacesField(MaskedField, abc.ABC):
+    compatibleInterfaces: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class PortPointField(MaskedField, abc.ABC):
@@ -1979,25 +1979,25 @@ class PortId(PortIdField, Id):
     pass
 
 
-class PortProps(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Props):
+class PortProps(PortTField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Props):
     pass
 
 
-class PortInput(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Input):
+class PortInput(PortTField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Input):
     point: PointInput = sqlmodel.Field()
     direction: VectorInput = sqlmodel.Field()
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class PortContext(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Context):
+class PortContext(PortTField, PortDirectionField, PortPointField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class PortOutput(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Output):
+class PortOutput(PortTField, PortDirectionField, PortPointField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField, TableEntity, table=True):
+class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionField, TableEntity, table=True):
     PLURAL = "ports"
     __tablename__ = "ports"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -2007,7 +2007,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
         sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
         default="",
     )
-    compatibleFamilies_: list[CompatibleFamily] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    compatibleInterfaces_: list[CompatibleInterface] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
     pointX: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_x", sqlalchemy.String(ID_LENGTH_LIMIT)), exclude=True)
     pointY: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_y", sqlalchemy.Float()), exclude=True)
     pointZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_z", sqlalchemy.Float()), exclude=True)
@@ -2024,12 +2024,12 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
     __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="uq_ports_local_id_type_id"),)
 
     @property
-    def compatibleFamilies(self) -> list[str]:
-        return sorted([cf.name for cf in self.compatibleFamilies_], key=lambda cf: cf.order)
+    def compatibleInterfaces(self) -> list[str]:
+        return sorted([cf.name for cf in self.compatibleInterfaces_], key=lambda cf: cf.order)
 
-    @compatibleFamilies.setter
-    def compatibleFamilies(self, compatibleFamilies: list[str]):
-        self.compatibleFamilies_ = [CompatibleFamily(name=cf, order=i) for i, cf in enumerate(compatibleFamilies)]
+    @compatibleInterfaces.setter
+    def compatibleInterfaces(self, compatibleInterfaces: list[str]):
+        self.compatibleInterfaces_ = [CompatibleInterface(name=cf, order=i) for i, cf in enumerate(compatibleInterfaces)]
 
     @property
     def point(self) -> Point:
@@ -2073,7 +2073,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
         entity.point = point
         entity.direction = direction
         try:
-            entity.compatibleFamilies = obj["compatibleFamilies"]
+            entity.compatibleInterfaces = obj["compatibleInterfaces"]
         except KeyError:
             pass
         try:
@@ -2086,7 +2086,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
         entity = {**PortProps.model_validate(self).model_dump()}
         entity["point"] = self.point.dump()
         entity["direction"] = self.direction.dump()
-        entity["compatibleFamilies"] = self.compatibleFamilies
+        entity["compatibleInterfaces"] = self.compatibleInterfaces
         entity["attributes"] = [q.dump() for q in self.attributes]
         return PortOutput(**entity)
 
@@ -4505,7 +4505,7 @@ Two types are different when they have a different name or different variant.
 Every connected and connecting piece MUST be part of the pieces of the design. The ids MUST match.
 The port of connected and connecting pieces MUST exist in the type of the piece. The ids MUST match.
 The port of connected and connecting pieces SHOULD match.
-If the ports of connected and connecting pieces have a family, they should be compatible.
+If the ports of connected and connecting pieces have a interface, they should be compatible.
 If one port has the other port as ocompatible that's enough.
 Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
@@ -4528,10 +4528,10 @@ Available types:
 {% raw %}{{% endraw -%}
 {{ type.name }};{{ type.variant }};{{ type.description }};
 {%- for port in type.ports %}
-{%- raw %}{{% endraw -%}{{ port.id_ }};{{ port.description }};{{ port.family }}
-{%- for compatibleFamily in port.compatibleFamilies %}
+{%- raw %}{{% endraw -%}{{ port.id_ }};{{ port.description }};{{ port.interface }}
+{%- for compatibleInterface in port.compatibleInterfaces %}
 {%- raw %}{{% endraw -%}
-{{ compatibleFamily }}
+{{ compatibleInterface }}
 {%- endfor -%}
 {%- raw %}}{% endraw -%}
 {%- endfor -%}

@@ -177,7 +177,7 @@ entity planes {
     *y_axis_z : float
 }
 
-entity compatible_families {
+entity compatible_interfaces {
   *id : int <<PK,generated>>
   *name : string
   *order : int
@@ -189,7 +189,7 @@ entity ports {
     *id : int <<PK,generated>>
     *port_id : string
     *description : string
-    *family : string
+    *interface : string
     *is_mandatory : boolean
     *point_x : float
     *point_y : float
@@ -371,7 +371,7 @@ representations ||--o{ tags : "has" >
 representations ||--o{ attributes : "has" >
 representations -- files : "might reference" >
 
-ports ||--o{ compatible_families : "has" >
+ports ||--o{ compatible_interfaces : "has" >
 ports ||--o{ attributes : "has" >
 ports ||--o{ props : "has" >
 

@@ -102,14 +102,14 @@
         "key": "core",
         "value": "east"
       },
-      "compatibleFamilies": "core rectangular top",
+      "compatibleInterfaces": "core rectangular top",
       "description": "The center of the east rectangular core (an elevator and a staircase around it).",
       "direction": {
         "x": 0.0,
         "y": 0.0,
         "z": 1.0
       },
-      "family": "core rectangular bottom",
+      "interface": "core rectangular bottom",
       "guid": "59516447-8159-4ac7-a145-83d3cd73d2f9",
       "mandatory": false,
       "point": {
@@ -126,14 +126,14 @@
         "key": "core",
         "value": "west"
       },
-      "compatibleFamilies": "core rectangular top",
+      "compatibleInterfaces": "core rectangular top",
       "description": "The center of the west rectangular core (an elevator and a staircase around it).",
       "direction": {
         "x": 0.0,
         "y": 0.0,
         "z": 1.0
       },
-      "family": "core rectangular bottom",
+      "interface": "core rectangular bottom",
       "guid": "0b82ad1c-511a-4842-9588-49b4d52ebd8e",
       "mandatory": false,
       "point": {

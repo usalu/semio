@@ -3055,13 +3055,13 @@
                       "beginner": "Ob dieser Port verbunden sein muss"
                     }
                   },
-                  "family": {
+                  "interface": {
                     "label": {
                       "normal": "Familie",
                       "beginner": "Die Portfamilie für Kompatibilitätsprüfung"
                     }
                   },
-                  "compatibleFamily": {
+                  "compatibleInterface": {
                     "label": {
                       "normal": "Kompatible Familie",
                       "beginner": "Die Familien, mit denen dieser Port kompatibel ist"
@@ -3367,7 +3367,7 @@
               }
             }
           },
-          "portFamilyPlaceholder": {
+          "portInterfacePlaceholder": {
             "label": "z.B. elektrisch, mechanisch"
           },
           "portDescriptionPlaceholder": {
@@ -3395,7 +3395,7 @@
             "manual": "type#ports",
             "tutorial": "hello-semio/model-brick-set#ports"
           },
-          "portCompatibleFamiliesPlaceholder": {
+          "portCompatibleInterfacesPlaceholder": {
             "label": "familie1, familie2"
           },
           "portNotFound": {
@@ -3588,7 +3588,7 @@
                     "manual": "type#ports",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "family": {
+                  "interface": {
                     "label": {
                       "normal": "Familie",
                       "beginner": "Port-Familienname. Ports derselben Familie koennen miteinander verbunden werden."
@@ -3596,7 +3596,7 @@
                     "manual": "type#ports",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "compatibleFamilies": {
+                  "compatibleInterfaces": {
                     "label": {
                       "normal": "Kompatible Familien",
                       "beginner": "Liste anderer Port-Familien, mit denen dieser Port verbunden werden kann. Leer lassen, um alle Familien zuzulassen."

@@ -108,14 +108,14 @@
       "key": "entrance",
       "value": ""
     },
-    "compatibleFamilies": "door tambour west",
+    "compatibleInterfaces": "door tambour west",
     "description": "The middle of the main entrance door of the upper entrance floor.",
     "direction": {
       "x": 1.0,
       "y": 0.0,
       "z": 0.0
     },
-    "family": "door capsule west",
+    "interface": "door capsule west",
     "guid": "453ce6aa-326e-4569-a869-f298809a6b14",
     "mandatory": false,
     "point": {

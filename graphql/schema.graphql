@@ -214,7 +214,7 @@ type Attribute implements Node {
 type Port implements Node {
   description: String!
   mandatory: Boolean!
-  family: String!
+  interface: String!
   t: Float!
   id_: String
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
@@ -224,7 +224,7 @@ type Port implements Node {
   The ID of the object
   """
   id: ID!
-  compatibleFamilies: [String!]!
+  compatibleInterfaces: [String!]!
   point: Point!
   direction: Vector!
   connections: [Connection!]!
@@ -712,14 +712,14 @@ input PortInputNode {
   mandatory: Boolean = false
 
   """
-  👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
+  👨‍👩‍👧‍👦 The optional interface of the port. This allows to define explicit compatibility with other ports.
   """
-  family: String = ""
+  interface: String = ""
 
   """
-  ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.
+  ✅ The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.
   """
-  compatibleFamilies: [String] = null
+  compatibleInterfaces: [String] = null
 
   """
   💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.

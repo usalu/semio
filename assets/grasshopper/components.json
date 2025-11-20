@@ -2694,15 +2694,15 @@
           },
           {
             "description": "The optional family of the port. This allows to define explicit compatibility with other ports.",
-            "name": "Family",
+            "name": "Interface",
             "nickname": "Fa?",
-            "kind": "Family"
+            "kind": "Interface"
           },
           {
-            "description": "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
-            "name": "CompatibleFamilies",
+            "description": "The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
+            "name": "CompatibleInterfaces",
             "nickname": "CF*",
-            "kind": "CompatibleFamilies"
+            "kind": "CompatibleInterfaces"
           },
           {
             "description": "The connection point of the port that is attracted to another connection point.",
@@ -2762,15 +2762,15 @@
           },
           {
             "description": "The optional family of the port. This allows to define explicit compatibility with other ports.",
-            "name": "Family",
+            "name": "Interface",
             "nickname": "Fa?",
-            "kind": "Family"
+            "kind": "Interface"
           },
           {
-            "description": "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
-            "name": "CompatibleFamilies",
+            "description": "The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
+            "name": "CompatibleInterfaces",
             "nickname": "CF*",
-            "kind": "CompatibleFamilies"
+            "kind": "CompatibleInterfaces"
           },
           {
             "description": "The connection point of the port that is attracted to another connection point.",
@@ -3747,7 +3747,7 @@
       },
       {
         "name": "Preview Port",
-        "description": "Preview a port by showing the point and direction and if exists: id, family and compatible families.",
+        "description": "Preview a port by showing the point and direction and if exists: id, family and compatible interfaces.",
         "icon": "icon",
         "nickname": ":Prv",
         "inputs": [

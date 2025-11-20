@@ -41,7 +41,7 @@
 // #region Store
 
 import * as Y from "yjs";
-import { areSameKit, Guid, KitDiff, PieceDiff } from "../../../semio";
+import { Guid, KitDiff, PieceDiff } from "../../../semio";
 import type { DesignStore, KitStore, SketchpadStore } from "../../App";
 import { identitySelector, KitDiffAppStore, registerDesignAppStoreFactory, useDesignScope, useKitScope, useSketchpadStore, useSync, useSyncDeep } from "../../App";
 import type { AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
@@ -2852,8 +2852,8 @@ const PiecesSectionForm: FC = () => {
   const availableDesigns = isDesignPiece && isSingle && piece ? replacableDesignsRaw : [];
   const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
 
-  const pieceType = piece?.type && 'guid' in piece.type ? findTypeInKit(kit, piece.type.guid) : null;
-  const pieceDesign = piece && (piece as any).design && 'guid' in (piece as any).design ? findDesignInKit(kit, (piece as any).design.guid) : null;
+  const pieceType = piece?.type && "guid" in piece.type ? findTypeInKit(kit, piece.type.guid) : null;
+  const pieceDesign = piece && (piece as any).design && "guid" in (piece as any).design ? findDesignInKit(kit, (piece as any).design.guid) : null;
 
   const availableDesignVariants = pieceDesign
     ? [
@@ -2962,7 +2962,7 @@ const PiecesSectionForm: FC = () => {
                       value: name,
                       label: name,
                     }))}
-                    value={isSingle && piece && piece.type && 'guid' in piece.type ? findTypeInKit(kit, piece.type.guid)?.name || "" : commonTypeName || ""}
+                    value={isSingle && piece && piece.type && "guid" in piece.type ? findTypeInKit(kit, piece.type.guid)?.name || "" : commonTypeName || ""}
                     placeholder={!isSingle && commonTypeName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.common.selectType")}
                     onValueChange={handleTypeNameChange}
                   />
@@ -2977,7 +2977,7 @@ const PiecesSectionForm: FC = () => {
                         value: variant,
                         label: variant,
                       }))}
-                      value={isSingle && piece && piece.type && 'guid' in piece.type ? (findTypeInKit(kit, piece.type.guid) as any)?.variant || "" : commonTypeVariant || ""}
+                      value={isSingle && piece && piece.type && "guid" in piece.type ? (findTypeInKit(kit, piece.type.guid) as any)?.variant || "" : commonTypeVariant || ""}
                       placeholder={!isSingle && commonTypeVariant === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.common.selectVariant")}
                       onValueChange={handleTypeVariantChange}
                       allowClear={true}
@@ -3302,7 +3302,7 @@ const ConnectionsSectionForm: FC<{
           {connection!.connecting.designPiece && (
             <TreeItem>
               <TreeContent>
-                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection!.connecting.designPiece?.guid ?? ''} disabled showLabel />
+                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection!.connecting.designPiece?.guid ?? ""} disabled showLabel />
               </TreeContent>
             </TreeItem>
           )}
@@ -3319,7 +3319,7 @@ const ConnectionsSectionForm: FC<{
           {connection!.connected.designPiece && (
             <TreeItem>
               <TreeContent>
-                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection!.connected.designPiece?.guid ?? ''} disabled showLabel />
+                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection!.connected.designPiece?.guid ?? ""} disabled showLabel />
               </TreeContent>
             </TreeItem>
           )}
@@ -3517,10 +3517,10 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
           </TreeContent>
         </TreeItem>
       )}
-      {port.family && (
+      {port.interface && (
         <TreeItem>
           <TreeContent>
-            <Input id="semio.sketchpad.app.design.panel.details.section.port.family" value={port.family} disabled showLabel />
+            <Input id="semio.sketchpad.app.design.panel.details.section.port.interface" value={port.interface} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
@@ -3541,11 +3541,11 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
           <Input id="semio.sketchpad.app.design.panel.details.section.port.direction" value={`(${port.direction.x.toFixed(2)}, ${port.direction.y.toFixed(2)}, ${port.direction.z.toFixed(2)})`} disabled showLabel />
         </TreeContent>
       </TreeItem>
-      {port.compatibleFamilies &&
-        port.compatibleFamilies.map((family: string, index: number) => (
-          <TreeItem key={`compatible-family-${index}`}>
+      {port.compatibleInterfaces &&
+        port.compatibleInterfaces.map((interface_: string, index: number) => (
+          <TreeItem key={`compatible-interface-${index}`}>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.port.compatibleFamily" value={family} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.port.compatibleInterface" value={interface_} disabled showLabel />
             </TreeContent>
           </TreeItem>
         ))}
@@ -4148,7 +4148,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     return {
       guid: `port-${portIndex}`,
       description: `Port for SemioConnection to ${originalSide.piece}:${originalSide.port}`,
-      family: "default",
+      interface: "default",
       mandatory: false,
       t: t,
       point: { x: portX, y: portY, z: portZ },
@@ -4574,9 +4574,9 @@ const connectionToEdge = (
     type: "SemioConnection",
     id: SemioConnection.guid,
     source: sourceNodeId,
-    sourceHandle: typeof sourcePortId === 'string' ? sourcePortId : sourcePortId.guid,
+    sourceHandle: typeof sourcePortId === "string" ? sourcePortId : sourcePortId.guid,
     target: targetNodeId,
-    targetHandle: typeof targetPortId === 'string' ? targetPortId : targetPortId.guid,
+    targetHandle: typeof targetPortId === "string" ? targetPortId : targetPortId.guid,
     data: { SemioConnection, isParentConnection },
     selected,
   };
@@ -4626,7 +4626,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
           return null;
         }
 
-        const type = findTypeInKit(kit, typeof piece.type === 'string' ? piece.type : piece.type?.guid);
+        const type = findTypeInKit(kit, typeof piece.type === "string" ? piece.type : piece.type?.guid);
         if (!type) {
           const fallbackType: Type = {
             guid: `fallback-${piece.type}`,
@@ -4924,8 +4924,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     const kitData = kit as Kit;
     if (!kitData?.guid) return;
     const piece = node.data.piece;
-    if (piece.type) sketchpadCommands.navigateToType(kitData.guid, typeof piece.type === 'string' ? piece.type : piece.type.guid);
-    else if (piece.design) sketchpadCommands.navigateToDesign(kitData.guid, typeof piece.design === 'string' ? piece.design : piece.design.guid);
+    if (piece.type) sketchpadCommands.navigateToType(kitData.guid, typeof piece.type === "string" ? piece.type : piece.type.guid);
+    else if (piece.design) sketchpadCommands.navigateToDesign(kitData.guid, typeof piece.design === "string" ? piece.design : piece.design.guid);
   };
 
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
@@ -5451,9 +5451,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design?.connections?.find((c) =>
               areSameConnection(c, {
-                guid: '',
-                connected: { guid: '', piece: { guid: selectedNode.data.piece.guid }, port: { guid: '' } },
-                connecting: { guid: '', piece: { guid: otherNode.data.piece.guid }, port: { guid: '' } },
+                guid: "",
+                connected: { guid: "", piece: { guid: selectedNode.data.piece.guid }, port: { guid: "" } },
+                connecting: { guid: "", piece: { guid: otherNode.data.piece.guid }, port: { guid: "" } },
               } as SemioConnection),
             );
             if (existingConnection) continue;
@@ -5802,7 +5802,7 @@ const LoadedPieceMesh: FC<{ url: string; fileExtension: string }> = ({ url, file
 
 const PieceMesh: FC = () => {
   const piece = usePiece() as Piece;
-  const type = useType(undefined, typeof piece.type === 'string' ? piece.type : piece.type?.guid) as Type | undefined;
+  const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.guid) as Type | undefined;
   const kit = useKit(undefined, undefined, true) as Kit | undefined;
   const kitStore = useKitStore() as KitStore;
   const selectedRepresentationTags = useDesignAppSelectedRepresentationTags();
@@ -6440,17 +6440,17 @@ const App: FC<AppProps> = () => {
       <TreeItem
         label={
           <div className="flex items-center gap-single min-w-0">
-              <DraggableAvatar
-                ref={setNodeRef}
-                dragRef={setNodeRef}
-                dragListeners={listeners}
-                dragAttributes={attributes}
-                content={type.name.substring(0, 2).toUpperCase()}
-                isSelected={false}
-                isHovered={false}
-                shouldFade={isDragging}
-                title={type.name}
-              />
+            <DraggableAvatar
+              ref={setNodeRef}
+              dragRef={setNodeRef}
+              dragListeners={listeners}
+              dragAttributes={attributes}
+              content={type.name.substring(0, 2).toUpperCase()}
+              isSelected={false}
+              isHovered={false}
+              shouldFade={isDragging}
+              title={type.name}
+            />
             <span className="truncate">{type.name}</span>
           </div>
         }

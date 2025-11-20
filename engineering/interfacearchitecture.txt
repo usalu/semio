@@ -24,8 +24,8 @@ kit : !Kit{
             }
             t : !Float // [0,1[ for diagram ring position
             mandatory : ?Boolean // default false
-            family : ?String // For explicit compatibility
-            compatibleFamilies : *String[] // Empty list means compatible with all
+            interface : ?String // For explicit compatibility
+            compatibleInterfaces : *String[] // Empty list means compatible with all
             description : ?String
             attributes : *Attribute[]
         ]

@@ -73,14 +73,14 @@
         "value": "180"
       }
     ],
-    "compatibleFamilies": "roof circular bottom",
+    "compatibleInterfaces": "roof circular bottom",
     "description": "The center of the bottom.",
     "direction": {
       "x": 0.0,
       "y": 0.0,
       "z": -1.0
     },
-    "family": "roof circular top",
+    "interface": "roof circular top",
     "guid": "1993cb2b-e24e-4d48-b3a7-1bea2a18f88a",
     "mandatory": false,
     "point": {

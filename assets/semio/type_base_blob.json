@@ -97,14 +97,14 @@
         "key": "core",
         "value": "east"
       },
-      "compatibleFamilies": "core circular top",
+      "compatibleInterfaces": "core circular top",
       "description": "The center of the east round core (an elevator and a staircase around it).",
       "direction": {
         "x": 0.0,
         "y": 0.0,
         "z": 1.0
       },
-      "family": "core circular bottom",
+      "interface": "core circular bottom",
       "guid": "11ceaeb9-3a3d-4dc5-b712-3a96ce1e5cbf",
       "mandatory": false,
       "point": {
@@ -121,14 +121,14 @@
         "key": "core",
         "value": "west"
       },
-      "compatibleFamilies": "core circular top",
+      "compatibleInterfaces": "core circular top",
       "description": "The center of the west round core (an elevator and a staircase around it).",
       "direction": {
         "x": 0.0,
         "y": 0.0,
         "z": 1.0
       },
-      "family": "core circular bottom",
+      "interface": "core circular bottom",
       "guid": "82945493-312c-4622-8a40-bb30867e886e",
       "mandatory": false,
       "point": {

@@ -363,20 +363,20 @@ class Port {
   direction: Vector
   t: float
   mandatory: bool
-  family: str
-  compatibleFamilies: list[str]
+  interface: str
+  compatibleInterfaces: list[str]
   description: str
   attributes: list[Attribute]
   --
   context Port inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
-    family->notEmpty() or family->isEmpty()
+    interface->notEmpty() or interface->isEmpty()
   context Port inv tInValidRange:
     t >= 0 and t < 1
   context Port inv directionIsUnitVector:
     direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
-  context Port inv compatibleFamiliesIncludesOwnFamily:
-    family->notEmpty() implies compatibleFamilies->includes(family)
+  context Port inv compatibleInterfacesIncludesOwnInterface:
+    interface->notEmpty() implies compatibleInterfaces->includes(interface)
 }
 
 class PortId {
@@ -389,8 +389,8 @@ class PortDiff {
   direction?: Vector
   t?: float
   mandatory?: bool
-  family?: str
-  compatibleFamilies?: list[str]
+  interface?: str
+  compatibleInterfaces?: list[str]
   description?: str
   attributes?: AttributesDiff
 }
@@ -620,8 +620,8 @@ class Connection {
   context Connection inv descriptionCanBeEmpty:
     description->notEmpty() or description->isEmpty()
   context Connection inv portsAreCompatible:
-    connecting.port.compatibleFamilies->includes(connected.port.family) or
-    connected.port.compatibleFamilies->includes(connecting.port.family)
+    connecting.port.compatibleInterfaces->includes(connected.port.interface) or
+    connected.port.compatibleInterfaces->includes(connecting.port.interface)
   context Connection inv noDuplicateConnections:
     connecting <> connected
   context Connection inv rotationInValidRange:
@@ -839,8 +839,8 @@ Representation *-- "0..*" Attribute : has >
 Port *-- "0..*" Attribute : has >
 Port *-- "1" Point : at >
 Port *-- "1" Vector : oriented by >
-Port *-- "1" Family : has >
-Port *-- "0..*" Family : compatible with >
+Port *-- "1" Interface : has >
+Port *-- "0..*" Interface : compatible with >
 
 Layer *-- "0..*" Attribute : has >
 

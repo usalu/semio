@@ -40,10 +40,10 @@ module Semio
   Port = Struct.new(
     :id_,
     :description,
-    :family,
+    :interface,
     :mandatory,
     :t,
-    :compatible_families,
+    :compatible_interfaces,
     :point,
     :direction,
     :attributes,

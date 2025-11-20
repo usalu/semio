@@ -196,14 +196,14 @@ function Migrate-Port {
     if ($port.PSObject.Properties.Name -contains 'description' -and $null -ne $port.description) {
         $migrated.description = $port.description
     }
-    if ($port.PSObject.Properties.Name -contains 'family' -and $null -ne $port.family) {
-        $migrated.family = $port.family
+    if ($port.PSObject.Properties.Name -contains 'interface' -and $null -ne $port.interface) {
+        $migrated.interface = $port.interface
     }
     if ($port.PSObject.Properties.Name -contains 'mandatory' -and $null -ne $port.mandatory) {
         $migrated.mandatory = $port.mandatory
     }
-    if ($port.PSObject.Properties.Name -contains 'compatibleFamilies' -and $null -ne $port.compatibleFamilies -and $port.compatibleFamilies.Count -gt 0) {
-        $migrated.compatibleFamilies = $port.compatibleFamilies
+    if ($port.PSObject.Properties.Name -contains 'compatibleInterfaces' -and $null -ne $port.compatibleInterfaces -and $port.compatibleInterfaces.Count -gt 0) {
+        $migrated.compatibleInterfaces = $port.compatibleInterfaces
     }
     
     $props = Migrate-Props $port.props

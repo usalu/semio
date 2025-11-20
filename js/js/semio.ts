@@ -1423,9 +1423,9 @@ export const PortSchema = z.object({
   point: PointSchema,
   direction: VectorSchema,
   description: z.string().optional(),
-  family: z.string().optional(),
+  interface: z.string().optional(),
   mandatory: z.boolean().optional(),
-  compatibleFamilies: z.array(z.string()).optional(),
+  compatibleInterfaces: z.array(z.string()).optional(),
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -1444,10 +1444,10 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
   const diff: PortDiff = {};
   if (before.guid !== after.guid) diff.guid = after.guid;
   if (before.description !== after.description) diff.description = after.description;
-  if (before.family !== after.family) diff.family = after.family;
+  if (before.interface !== after.interface) diff.interface = after.interface;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
   if (before.t !== after.t) diff.t = after.t - before.t;
-  if (JSON.stringify(before.compatibleFamilies) !== JSON.stringify(after.compatibleFamilies)) diff.compatibleFamilies = after.compatibleFamilies;
+  if (JSON.stringify(before.compatibleInterfaces) !== JSON.stringify(after.compatibleInterfaces)) diff.compatibleInterfaces = after.compatibleInterfaces;
   if (before.point !== after.point) diff.point = getPointDiff(before.point, after.point);
   if (before.direction !== after.direction) diff.direction = getVectorDiff(before.direction, after.direction);
   if (before.props !== after.props) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
@@ -1468,10 +1468,10 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
   const inverse: PortDiff = {};
   if (appliedDiff.guid !== undefined) inverse.guid = original.guid;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.family !== undefined) inverse.family = original.family;
+  if (appliedDiff.interface !== undefined) inverse.interface = original.interface;
   if (appliedDiff.mandatory !== undefined) inverse.mandatory = original.mandatory;
   if (appliedDiff.t !== undefined) inverse.t = original.t;
-  if (appliedDiff.compatibleFamilies !== undefined) inverse.compatibleFamilies = original.compatibleFamilies;
+  if (appliedDiff.compatibleInterfaces !== undefined) inverse.compatibleInterfaces = original.compatibleInterfaces;
   if (appliedDiff.point !== undefined) inverse.point = inversePointDiff(original.point, appliedDiff.point);
   if (appliedDiff.direction !== undefined) inverse.direction = inverseVectorDiff(original.direction, appliedDiff.direction);
   if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(original.props ?? [], appliedDiff.props);
@@ -1483,10 +1483,10 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
     ...base,
     guid: diff.guid ?? base.guid,
     description: diff.description ?? base.description,
-    family: diff.family ?? base.family,
+    interface: diff.interface ?? base.interface,
     mandatory: diff.mandatory ?? base.mandatory,
     t: diff.t ?? base.t,
-    compatibleFamilies: diff.compatibleFamilies ?? base.compatibleFamilies,
+    compatibleInterfaces: diff.compatibleInterfaces ?? base.compatibleInterfaces,
     point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
     direction: diff.direction ? applyVectorDiff(base.direction, diff.direction) : base.direction,
     props: diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props,
@@ -1516,13 +1516,13 @@ const getPortsDiff = (before: Port[], after: Port[]): { removed?: string[]; upda
   return { removed, added, updated };
 };
 
-export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): TypesDiff => {
-  const allFamilies = new Set<string>();
+export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]): TypesDiff => {
+  const allInterfaces = new Set<string>();
   for (const type of types) {
     for (const port of type.ports || []) {
-      if (port.family && port.family !== "") allFamilies.add(port.family);
-      for (const compatibleFamily of port.compatibleFamilies || []) {
-        if (compatibleFamily && compatibleFamily !== "") allFamilies.add(compatibleFamily);
+      if (port.interface && port.interface !== "") allInterfaces.add(port.interface);
+      for (const compatibleInterface of port.compatibleInterfaces || []) {
+        if (compatibleInterface && compatibleInterface !== "") allInterfaces.add(compatibleInterface);
       }
     }
   }
@@ -1531,22 +1531,22 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   const parent = new Map<string, string>();
   const rank = new Map<string, number>();
 
-  // Initialize each family as its own parent
-  for (const family of Array.from(allFamilies)) {
-    parent.set(family, family);
-    rank.set(family, 0);
+  // Initialize each interface as its own parent
+  for (const interface_ of Array.from(allInterfaces)) {
+    parent.set(interface_, interface_);
+    rank.set(interface_, 0);
   }
 
   // Find with path compression
-  const find = (family: string): string => {
-    if (parent.get(family) !== family) parent.set(family, find(parent.get(family)!));
-    return parent.get(family)!;
+  const find = (interface_: string): string => {
+    if (parent.get(interface_) !== interface_) parent.set(interface_, find(parent.get(interface_)!));
+    return parent.get(interface_)!;
   };
 
   // Union by rank
-  const union = (family1: string, family2: string): void => {
-    const root1 = find(family1);
-    const root2 = find(family2);
+  const union = (interface1: string, interface2: string): void => {
+    const root1 = find(interface1);
+    const root2 = find(interface2);
 
     if (root1 === root2) return;
 
@@ -1566,66 +1566,66 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   // Build compatibility groups by examining all ports
   for (const type of types) {
     for (const port of type.ports || []) {
-      const portFamily = port.family;
-      const compatibleFamilies = port.compatibleFamilies || [];
+      const portInterface = port.interface;
+      const compatibleInterfaces = port.compatibleInterfaces || [];
 
-      if (portFamily && portFamily !== "") {
-        // Union port's family with all its compatible families
-        for (const compatibleFamily of compatibleFamilies) {
-          if (compatibleFamily && compatibleFamily !== "") {
-            union(portFamily, compatibleFamily);
+      if (portInterface && portInterface !== "") {
+        // Union port's interface with all its compatible interfaces
+        for (const compatibleInterface of compatibleInterfaces) {
+          if (compatibleInterface && compatibleInterface !== "") {
+            union(portInterface, compatibleInterface);
           }
         }
       }
 
-      // Also union all compatible families with each other
-      for (let i = 0; i < compatibleFamilies.length; i++) {
-        for (let j = i + 1; j < compatibleFamilies.length; j++) {
-          const family1 = compatibleFamilies[i];
-          const family2 = compatibleFamilies[j];
-          if (family1 && family1 !== "" && family2 && family2 !== "") {
-            union(family1, family2);
+      // Also union all compatible interfaces with each other
+      for (let i = 0; i < compatibleInterfaces.length; i++) {
+        for (let j = i + 1; j < compatibleInterfaces.length; j++) {
+          const interface1 = compatibleInterfaces[i];
+          const interface2 = compatibleInterfaces[j];
+          if (interface1 && interface1 !== "" && interface2 && interface2 !== "") {
+            union(interface1, interface2);
           }
         }
       }
     }
   }
 
-  // Create mapping from any family to its representative
-  const familyToRepresentative = new Map<string, string>();
-  for (const family of Array.from(allFamilies)) {
-    familyToRepresentative.set(family, find(family));
+  // Create mapping from any interface to its representative
+  const interfaceToRepresentative = new Map<string, string>();
+  for (const interface_ of Array.from(allInterfaces)) {
+    interfaceToRepresentative.set(interface_, find(interface_));
   }
 
-  // Update all types with unified port families
+  // Update all types with unified port interfaces
   const updated: { id: string; diff: TypeDiff }[] = [];
 
   for (const type of types) {
     const updatedPorts = type.ports?.map((port) => {
-      const portFamily = port.family;
-      const compatibleFamilies = port.compatibleFamilies || [];
+      const portInterface = port.interface;
+      const compatibleInterfaces = port.compatibleInterfaces || [];
 
-      // Determine the representative family for this port
+      // Determine the representative interface for this port
       let representative: string | undefined;
 
-      if (portFamily && portFamily !== "") {
-        representative = familyToRepresentative.get(portFamily);
-      } else if (compatibleFamilies.length > 0) {
-        // If no family but has compatible families, use the first one's representative
-        const firstCompatible = compatibleFamilies.find((f) => f && f !== "");
+      if (portInterface && portInterface !== "") {
+        representative = interfaceToRepresentative.get(portInterface);
+      } else if (compatibleInterfaces.length > 0) {
+        // If no interface but has compatible interfaces, use the first one's representative
+        const firstCompatible = compatibleInterfaces.find((f) => f && f !== "");
         if (firstCompatible) {
-          representative = familyToRepresentative.get(firstCompatible);
+          representative = interfaceToRepresentative.get(firstCompatible);
         }
       }
 
       if (representative) {
         return {
           ...port,
-          family: representative,
-          compatibleFamilies: [representative],
+          interface: representative,
+          compatibleInterfaces: [representative],
         };
       } else {
-        // No family information, keep as is
+        // No interface information, keep as is
         return port;
       }
     });
@@ -1644,10 +1644,10 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   return { updated };
 };
 export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
-  const normalizedPortFamily = normalize(port.family);
-  const normalizedOtherPortFamily = normalize(otherPort.family);
-  if (normalizedPortFamily === "" || normalizedOtherPortFamily === "") return true;
-  return (port.compatibleFamilies ?? []).includes(normalizedOtherPortFamily) || (otherPort.compatibleFamilies ?? []).includes(normalizedPortFamily);
+  const normalizedPortInterface = normalize(port.interface);
+  const normalizedOtherPortInterface = normalize(otherPort.interface);
+  if (normalizedPortInterface === "" || normalizedOtherPortInterface === "") return true;
+  return (port.compatibleInterfaces ?? []).includes(normalizedOtherPortInterface) || (otherPort.compatibleInterfaces ?? []).includes(normalizedPortInterface);
 };
 
 export const findPort = (ports: Port[], portGuid: string): Port => {
@@ -3411,7 +3411,7 @@ export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connect
 const getColorForText = (text?: string): string => {
   if (!text || text === "") return "var(--foreground)";
 
-  // Create a simple hash from the family string
+  // Create a simple hash from the interface string
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     const char = text.charCodeAt(i);
@@ -3494,7 +3494,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
         {
           guid: guid(),
           key: "semio.color",
-          value: getColorForText(port.family),
+          value: getColorForText(port.interface),
         },
       ],
     }));

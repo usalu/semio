@@ -103,14 +103,14 @@
         "key": "wasp rotation",
         "value": "180"
       },
-      "compatibleFamilies": "tambour circular top",
+      "compatibleInterfaces": "tambour circular top",
       "description": "The bottom system center of the elevator.",
       "direction": {
         "x": 0.0,
         "y": 0.0,
         "z": -1.0
       },
-      "family": "tambour circular bottom",
+      "interface": "tambour circular bottom",
       "guid": "8cf99de1-d86d-426a-8d00-227a5b8f331e",
       "mandatory": false,
       "point": {
@@ -127,14 +127,14 @@
         "key": "top",
         "value": ""
       },
-      "compatibleFamilies": "roof circular top",
+      "compatibleInterfaces": "roof circular top",
       "description": "The top system center of the elevator.",
       "direction": {
         "x": 0.0,
         "y": 0.0,
         "z": 1.0
       },
-      "family": "roof circular bottom",
+      "interface": "roof circular bottom",
       "guid": "15e0d787-dbbb-42e5-b14c-e6b504542f25",
       "mandatory": false,
       "point": {
@@ -145,7 +145,7 @@
       "t": 0.0
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule east",
         "platform west"
       ],
@@ -155,7 +155,7 @@
         "y": 0.23901905,
         "z": 0.0
       },
-      "family": "door tambour west",
+      "interface": "door tambour west",
       "guid": "9e3ee42b-86ab-4b29-a6c9-3db855f1187e",
       "mandatory": false,
       "point": {
@@ -166,7 +166,7 @@
       "t": 0.2
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule west",
         "platform east"
       ],
@@ -176,7 +176,7 @@
         "y": 0.97101486,
         "z": 0.0
       },
-      "family": "door tambour east",
+      "interface": "door tambour east",
       "guid": "29932041-3cab-428e-ab17-abb1c21b7f14",
       "mandatory": false,
       "point": {
@@ -187,7 +187,7 @@
       "t": 0.05
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule east",
         "platform west"
       ],
@@ -197,7 +197,7 @@
         "y": 0.97101486,
         "z": 0.0
       },
-      "family": "door tambour west",
+      "interface": "door tambour west",
       "guid": "89c7a6f2-4cc6-4e03-b260-caeaa3fe44fb",
       "mandatory": false,
       "point": {
@@ -208,7 +208,7 @@
       "t": 0.95
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule west",
         "platform east"
       ],
@@ -218,7 +218,7 @@
         "y": 0.23901905,
         "z": 0.0
       },
-      "family": "door tambour east",
+      "interface": "door tambour east",
       "guid": "826dba0f-c9ca-4207-8b8a-76af269d6795",
       "mandatory": false,
       "point": {
@@ -229,7 +229,7 @@
       "t": 0.8
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule east",
         "platform west"
       ],
@@ -239,7 +239,7 @@
         "y": -0.23901905,
         "z": 0.0
       },
-      "family": "door tambour west",
+      "interface": "door tambour west",
       "guid": "5ac3a9f1-cb8c-44c7-b9aa-6bac416395f8",
       "mandatory": false,
       "point": {
@@ -250,7 +250,7 @@
       "t": 0.7
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule west",
         "platform east"
       ],
@@ -260,7 +260,7 @@
         "y": -0.97101486,
         "z": 0.0
       },
-      "family": "door tambour east",
+      "interface": "door tambour east",
       "guid": "a1ba7c01-f53f-4dec-8f2e-0612ee91f7f5",
       "mandatory": false,
       "point": {
@@ -271,7 +271,7 @@
       "t": 0.55
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule east",
         "platform west"
       ],
@@ -281,7 +281,7 @@
         "y": -0.97101486,
         "z": 0.0
       },
-      "family": "door tambour west",
+      "interface": "door tambour west",
       "guid": "513a1429-a356-481f-8f11-542b1b0522b9",
       "mandatory": false,
       "point": {
@@ -292,7 +292,7 @@
       "t": 0.45
     },
     {
-      "compatibleFamilies": [
+      "compatibleInterfaces": [
         "door capsule west",
         "platform east"
       ],
@@ -302,7 +302,7 @@
         "y": -0.23901905,
         "z": 0.0
       },
-      "family": "door tambour east",
+      "interface": "door tambour east",
       "guid": "ec51339f-a1d3-4375-a5f4-470997d65e4f",
       "mandatory": false,
       "point": {

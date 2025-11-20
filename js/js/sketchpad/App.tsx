@@ -53,7 +53,7 @@ import { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, usePar
 import initSqlJs, { Database, SqlJsStatic } from "sql.js";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
-import { useHotkey, useLabel } from "../i18n";
+import i18n, { useHotkey, useLabel } from "../i18n";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -2591,7 +2591,7 @@ class PortStore {
     this.guid = port.guid;
     this.localId = port.guid;
     this.description = port.description;
-    this.family = port.family;
+    this.interface = port.interface;
     this.mandatory = port.mandatory;
     this.t = port.t;
 
@@ -2625,11 +2625,11 @@ class PortStore {
     this.yPort.set("description", description || "");
   }
 
-  get family(): string | undefined {
-    return this.yPort.get("family") as string | undefined;
+  get interface(): string | undefined {
+    return this.yPort.get("interface") as string | undefined;
   }
-  set family(family: string | undefined) {
-    this.yPort.set("family", family || "");
+  set interface(interface_: string | undefined) {
+    this.yPort.set("interface", interface_ || "");
   }
 
   get mandatory(): boolean | undefined {
@@ -2655,7 +2655,7 @@ class PortStore {
       guid: this.guid,
       id_: this.localId,
       description: this.description,
-      family: this.family,
+      interface: this.interface,
       mandatory: this.mandatory,
       t: this.t,
       point: this.point.snapshot(),
@@ -2674,7 +2674,7 @@ class PortStore {
   apply(diff: PortDiff): void {
     if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.family !== undefined) this.family = diff.family;
+    if (diff.interface !== undefined) this.interface = diff.interface;
     if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
     if (diff.t !== undefined) this.t = diff.t;
   }
@@ -6240,8 +6240,8 @@ export const kitCommands = {
         CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
         CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
         CREATE TABLE concept ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, type_id INTEGER, design_id INTEGER, FOREIGN KEY(kit_id) REFERENCES kit (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-        CREATE TABLE port ( description VARCHAR(512) NOT NULL, family VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
-        CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
+        CREATE TABLE port ( description VARCHAR(512) NOT NULL, interface VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
+        CREATE TABLE compatible_interface ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
         CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
         CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
         CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
@@ -6287,13 +6287,13 @@ export const kitCommands = {
           const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, parent_id, is_abstract, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
           const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
-          const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const portStmt = db.prepare("INSERT INTO port (local_id, description, interface, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
           for (const type of kit.types) {
             typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.parent || null, type.isAbstract ? 1 : 0, type.unit || "", nowIso, nowIso, Guid]);
             const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
             insertQualities(type.attributes, "type_id", typeDbId);
-            insertAuthors(type.authors?.map(a => a.guid) || [], "type_id", typeDbId);
+            insertAuthors(type.authors?.map((a) => a.guid) || [], "type_id", typeDbId);
 
             if (type.representations) {
               for (const rep of type.representations) {
@@ -6320,7 +6320,7 @@ export const kitCommands = {
                 portStmt.run([
                   port.guid || "",
                   port.description || "",
-                  port.family || "default",
+                  port.interface || "default",
                   port.t || 0,
                   port.point?.x || 0,
                   port.point?.y || 0,
@@ -6509,7 +6509,7 @@ export const kitCommands = {
           updated: [
             {
               id: guid,
-              diff: { connections: { removed: connectionsToRemove.map(c => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) } },
+              diff: { connections: { removed: connectionsToRemove.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) } },
             },
           ],
         },
@@ -8668,7 +8668,6 @@ export const commands = {
     };
   },
   "semio.sketchpad.setLanguage": (context: SketchpadCommandContext, language: string): SketchpadCommandResult => {
-    i18n.changeLanguage(language);
     return {
       diff: { language },
     };
@@ -9830,7 +9829,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         onNavigate: (href) => navigate(href),
       });
       if (homeVersion !== null) {
-
         breadcrumbItems.push({
           id: "semio.sketchpad.navbar.kitVersion",
           content: <span className="text-foreground px-single flex items-center gap-single h-full">{homeVersion || <span className="italic opacity-70">{defaultVersionLabel}</span>}</span>,
@@ -12068,12 +12066,12 @@ const LayoutWrapper: FC = () => {
     if (activeDragData.type === "type") {
       const kitId = activeDragData.typeGuid?.split("-")[0];
       const kit = kitShallows.find((k) => k.guid.startsWith(kitId));
-      const type = kit?.types?.find((t: any) => typeof t === 'object' && t.guid === activeDragData.typeGuid) as any;
+      const type = kit?.types?.find((t: any) => typeof t === "object" && t.guid === activeDragData.typeGuid) as any;
       return type?.name || "Type";
     } else if (activeDragData.type === "design") {
       const kitId = activeDragData.designGuid?.split("-")[0];
       const kit = kitShallows.find((k) => k.guid.startsWith(kitId));
-      const design = kit?.designs?.find((d: any) => typeof d === 'object' && d.guid === activeDragData.designGuid) as any;
+      const design = kit?.designs?.find((d: any) => typeof d === "object" && d.guid === activeDragData.designGuid) as any;
       return design?.name || "Design";
     }
     return null;

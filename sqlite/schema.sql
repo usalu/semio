@@ -85,7 +85,7 @@ CREATE TABLE representation (
 CREATE TABLE port (
 	description VARCHAR(512) NOT NULL, 
 	mandatory BOOLEAN NOT NULL, 
-	family VARCHAR(64) NOT NULL, 
+	interface VARCHAR(64) NOT NULL, 
 	t FLOAT NOT NULL, 
 	id INTEGER NOT NULL, 
 	local_id VARCHAR(128), 
@@ -134,7 +134,7 @@ CREATE TABLE tag (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(representation_id) REFERENCES representation (id)
 );
-CREATE TABLE compatible_family (
+CREATE TABLE compatible_interface (
 	name VARCHAR(64) NOT NULL, 
 	"order" INTEGER NOT NULL, 
 	id INTEGER NOT NULL, 

@@ -85,14 +85,14 @@
         "value": "180"
       }
     ],
-    "compatibleFamilies": "roof rectangular bottom",
+    "compatibleInterfaces": "roof rectangular bottom",
     "description": "The center of the bottom.",
     "direction": {
       "x": 0.0,
       "y": 0.0,
       "z": -1.0
     },
-    "family": "roof rectangular top",
+    "interface": "roof rectangular top",
     "guid": "977e987b-d8ca-4a2e-a520-87d92b15d69c",
     "mandatory": false,
     "point": {

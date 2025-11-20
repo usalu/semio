@@ -66,9 +66,9 @@ A `port` is a conceptual connection **point** with an outwards **direction**, **
 
 A `port` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
 
-A `port` can have a port **family** and a list of **compatible families** for explicit compatibility control.
+A `port` can have a port **interface** and a list of **compatible interfaces** for explicit compatibility control.
 
-No **family** means the _default_ family and no **compatible families** means the port is compatible with all other ports.
+No **interface** means the _default_ interface and no **compatible interfaces** means the port is compatible with all other ports.
 
 It is enough for one `port` to be compatible with another `port` to be compatible with each other.
 
@@ -1429,8 +1429,8 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 3. Direction
 4. T
 5. Mandatory
-6. Family
-7. CompatibleFamilies
+6. Interface
+7. CompatibleInterfaces
 8. Description
 9. Attributes
 

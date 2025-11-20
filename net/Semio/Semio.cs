@@ -2711,14 +2711,14 @@ public class PortDiff : Model<PortDiff>
     public string? Guid { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string? Description { get; set; }
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port.")]
-    public string? Family { get; set; }
+    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional interface of the port.")]
+    public string? Interface { get; set; }
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
     public bool? Mandatory { get; set; }
     [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
     public float? T { get; set; }
-    [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port.", PropImportance.OPTIONAL)]
-    public List<string>? CompatibleFamilies { get; set; }
+    [Name("✅", "CF*", "CFas*", "The optional other compatible interfaces of the port.", PropImportance.OPTIONAL)]
+    public List<string>? CompatibleInterfaces { get; set; }
     [ModelProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
     public Point? Point { get; set; }
     [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
@@ -2729,7 +2729,7 @@ public class PortDiff : Model<PortDiff>
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator PortDiff(Port port) => new() { Guid = port.Guid, Description = port.Description, Family = port.Family, Mandatory = port.Mandatory, T = port.T, CompatibleFamilies = port.CompatibleFamilies, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
+    public static implicit operator PortDiff(Port port) => new() { Guid = port.Guid, Description = port.Description, Interface = port.Interface, Mandatory = port.Mandatory, T = port.T, CompatibleInterfaces = port.CompatibleInterfaces, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
 
     public PortDiff MergeDiff(PortDiff other)
     {
@@ -2737,10 +2737,10 @@ public class PortDiff : Model<PortDiff>
         {
             Guid = other.Guid ?? Guid,
             Description = other.Description ?? Description,
-            Family = other.Family ?? Family,
+            Interface = other.Interface ?? Interface,
             Mandatory = other.Mandatory ?? Mandatory,
             T = other.T ?? T,
-            CompatibleFamilies = other.CompatibleFamilies ?? CompatibleFamilies,
+            CompatibleInterfaces = other.CompatibleInterfaces ?? CompatibleInterfaces,
             Point = other.Point ?? Point,
             Direction = other.Direction ?? Direction,
             Props = other.Props ?? Props,
@@ -2774,10 +2774,10 @@ public class Port : Model<Port>
     public string Description { get; set; } = "";
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
     public bool Mandatory { get; set; } = false;
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port. This allows to define explicit compatibility with other ports.")]
-    public string Family { get; set; } = "";
-    [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.")]
-    public List<string> CompatibleFamilies { get; set; } = new();
+    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional interface of the port. This allows to define explicit compatibility with other ports.")]
+    public string Interface { get; set; } = "";
+    [Name("✅", "CF*", "CFas*", "The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.")]
+    public List<string> CompatibleInterfaces { get; set; } = new();
     [ModelProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
     [ModelProp("➡️", "Dr", "Drn", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
@@ -2793,7 +2793,7 @@ public class Port : Model<Port>
     public override string ToString() => $"Por({ToHumanIdString()})";
 
     public static implicit operator Port(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator Port(PortDiff diff) => new() { Guid = diff.Guid ?? "", Description = diff.Description ?? "", Family = diff.Family ?? "", Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, CompatibleFamilies = diff.CompatibleFamilies ?? new(), Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Port(PortDiff diff) => new() { Guid = diff.Guid ?? "", Description = diff.Description ?? "", Interface = diff.Interface ?? "", Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, CompatibleInterfaces = diff.CompatibleInterfaces ?? new(), Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Port port) => port.Guid;
     public static implicit operator Port(string guid) => new() { Guid = guid };
 
@@ -2803,10 +2803,10 @@ public class Port : Model<Port>
         {
             Guid = diff.Guid ?? Guid,
             Description = diff.Description ?? Description,
-            Family = diff.Family ?? Family,
+            Interface = diff.Interface ?? Interface,
             Mandatory = diff.Mandatory ?? Mandatory,
             T = diff.T ?? T,
-            CompatibleFamilies = diff.CompatibleFamilies ?? CompatibleFamilies,
+            CompatibleInterfaces = diff.CompatibleInterfaces ?? CompatibleInterfaces,
             Point = diff.Point ?? Point,
             Direction = diff.Direction ?? Direction,
             Props = diff.Props ?? Props,
@@ -2820,10 +2820,10 @@ public class Port : Model<Port>
         {
             Guid = Guid,
             Description = Description,
-            Family = Family,
+            Interface = Interface,
             Mandatory = Mandatory,
             T = T,
-            CompatibleFamilies = CompatibleFamilies,
+            CompatibleInterfaces = CompatibleInterfaces,
             Point = Point,
             Direction = Direction,
             Props = Props,
@@ -2837,10 +2837,10 @@ public class Port : Model<Port>
         {
             Guid = !string.IsNullOrEmpty(appliedDiff.Guid) ? Guid : "",
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : "",
-            Family = !string.IsNullOrEmpty(appliedDiff.Family) ? Family : "",
+            Interface = !string.IsNullOrEmpty(appliedDiff.Interface) ? Interface : "",
             Mandatory = appliedDiff.Mandatory.HasValue ? Mandatory : null,
             T = appliedDiff.T.HasValue ? T : null,
-            CompatibleFamilies = appliedDiff.CompatibleFamilies?.Any() == true ? CompatibleFamilies : new List<string>(),
+            CompatibleInterfaces = appliedDiff.CompatibleInterfaces?.Any() == true ? CompatibleInterfaces : new List<string>(),
             Point = appliedDiff.Point is not null ? Point : null,
             Direction = appliedDiff.Direction is not null ? Direction : null,
             Props = appliedDiff.Props?.Any() == true ? Props : new List<Prop>(),
@@ -2885,11 +2885,11 @@ public class Port : Model<Port>
 
     public bool IsCompatibleWith(Port otherPort)
     {
-        var normalizedPortFamily = Utility.Normalize(Family);
-        var normalizedOtherPortFamily = Utility.Normalize(otherPort.Family);
-        if (normalizedPortFamily == "" || normalizedOtherPortFamily == "") return true;
-        return (CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) ||
-               (otherPort.CompatibleFamilies ?? new List<string>()).Contains(normalizedPortFamily);
+        var normalizedPortInterface = Utility.Normalize(Interface);
+        var normalizedOtherPortInterface = Utility.Normalize(otherPort.Interface);
+        if (normalizedPortInterface == "" || normalizedOtherPortInterface == "") return true;
+        return (CompatibleInterfaces ?? new List<string>()).Contains(normalizedOtherPortInterface) ||
+               (otherPort.CompatibleInterfaces ?? new List<string>()).Contains(normalizedPortInterface);
     }
 
     public bool IsSameAs(Port other)
@@ -2920,8 +2920,8 @@ public class Port : Model<Port>
             Guid = Guid,
             Description = Description,
             Mandatory = Mandatory,
-            Family = Family,
-            CompatibleFamilies = CompatibleFamilies,
+            Interface = Interface,
+            CompatibleInterfaces = CompatibleInterfaces,
             Point = Point,
             Direction = Direction,
             T = T,

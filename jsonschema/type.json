@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -34,7 +37,10 @@
           "type": "number"
         }
       },
-      "required": ["longitude", "latitude"],
+      "required": [
+        "longitude",
+        "latitude"
+      ],
       "title": "Location",
       "type": "object"
     },
@@ -57,7 +63,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
@@ -84,19 +94,19 @@
           "title": "Mandatory",
           "type": "boolean"
         },
-        "family": {
+        "interface": {
           "default": "",
-          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the port. This allows to define explicit compatibility with other ports.",
           "maxLength": 64,
-          "title": "Family",
+          "title": "Interface",
           "type": "string"
         },
-        "compatibleFamilies": {
-          "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
+        "compatibleInterfaces": {
+          "description": "\u2705 The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
           "items": {
             "type": "string"
           },
-          "title": "Compatiblefamilies",
+          "title": "Compatibleinterfaces",
           "type": "array"
         },
         "point": {
@@ -122,7 +132,10 @@
           "type": "array"
         }
       },
-      "required": ["point", "direction"],
+      "required": [
+        "point",
+        "direction"
+      ],
       "title": "Port",
       "type": "object"
     },
@@ -157,7 +170,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
@@ -194,7 +209,9 @@
           "type": "array"
         }
       },
-      "required": ["url"],
+      "required": [
+        "url"
+      ],
       "title": "Representation",
       "type": "object"
     },
@@ -217,7 +234,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -329,7 +350,9 @@
       "type": "array"
     }
   },
-  "required": ["name"],
+  "required": [
+    "name"
+  ],
   "title": "Type",
   "type": "object"
 }

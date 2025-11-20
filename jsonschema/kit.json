@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -93,7 +96,10 @@
           "description": "\ud83e\uddf2 The connecting side of the connection."
         }
       },
-      "required": ["connected", "connecting"],
+      "required": [
+        "connected",
+        "connecting"
+      ],
       "title": "Connection",
       "type": "object"
     },
@@ -199,7 +205,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Design",
       "type": "object"
     },
@@ -217,7 +225,10 @@
           "type": "number"
         }
       },
-      "required": ["u", "v"],
+      "required": [
+        "u",
+        "v"
+      ],
       "title": "Coord",
       "type": "object"
     },
@@ -235,7 +246,10 @@
           "type": "number"
         }
       },
-      "required": ["longitude", "latitude"],
+      "required": [
+        "longitude",
+        "latitude"
+      ],
       "title": "Location",
       "type": "object"
     },
@@ -307,7 +321,9 @@
           "type": "array"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "title": "Piece",
       "type": "object"
     },
@@ -327,7 +343,11 @@
           "description": "\u27a1\ufe0f The y-axis of the plane."
         }
       },
-      "required": ["origin", "xAxis", "yAxis"],
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
       "title": "Plane",
       "type": "object"
     },
@@ -350,7 +370,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
@@ -391,19 +415,19 @@
           "title": "Mandatory",
           "type": "boolean"
         },
-        "family": {
+        "interface": {
           "default": "",
-          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
+          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the port. This allows to define explicit compatibility with other ports.",
           "maxLength": 64,
-          "title": "Family",
+          "title": "Interface",
           "type": "string"
         },
-        "compatibleFamilies": {
-          "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
+        "compatibleInterfaces": {
+          "description": "\u2705 The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
           "items": {
             "type": "string"
           },
-          "title": "Compatiblefamilies",
+          "title": "Compatibleinterfaces",
           "type": "array"
         },
         "point": {
@@ -429,7 +453,10 @@
           "type": "array"
         }
       },
-      "required": ["point", "direction"],
+      "required": [
+        "point",
+        "direction"
+      ],
       "title": "Port",
       "type": "object"
     },
@@ -464,7 +491,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
@@ -501,7 +530,9 @@
           "type": "array"
         }
       },
-      "required": ["url"],
+      "required": [
+        "url"
+      ],
       "title": "Representation",
       "type": "object"
     },
@@ -515,7 +546,10 @@
           "$ref": "#/$defs/PortId"
         }
       },
-      "required": ["piece", "port"],
+      "required": [
+        "piece",
+        "port"
+      ],
       "title": "Side",
       "type": "object"
     },
@@ -536,7 +570,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "TypeId",
       "type": "object"
     },
@@ -654,7 +690,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Type",
       "type": "object"
     },
@@ -677,7 +715,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -789,7 +831,10 @@
       "type": "array"
     }
   },
-  "required": ["uri", "name"],
+  "required": [
+    "uri",
+    "name"
+  ],
   "title": "Kit",
   "type": "object"
 }
