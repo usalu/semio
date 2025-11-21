@@ -25,6 +25,9 @@ export { createCompositeFileProvider, createLocalFileProvider, createMemoryFileP
 export type { TooltipConfig } from "./sketchpad/elements";
 export type { CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/sketchpad";
 
+export { areKitsEqual, exportKit, importKit } from "./semio";
+export type { KitImportResult } from "./semio";
+
 // Export docs elements for MDX
 export { Action, ActionDropdown, ActionGroup, ActionGroupItem, Aside, Avatar, AvatarFallback, AvatarImage, Card, CardGrid, DraggableAvatar, FileTree, Section, Steps, TableAvatar, Tabs, TabsContent, TabsList, TabsTrigger } from "./sketchpad/elements";
 export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps, CardGridProps, CardProps, DraggableAvatarProps, FileTreeNode, SectionProps, StepsProps, TableAvatarProps } from "./sketchpad/elements";

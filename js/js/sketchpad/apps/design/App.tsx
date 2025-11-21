@@ -1932,6 +1932,24 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
   return { fill, stroke, opacity };
 }
 
+export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord | undefined {
+  const scope = useDesignAppScope();
+  const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
+  const pieceScope = usePieceScope();
+  const finalPieceId = pieceId ?? pieceScope?.guid;
+  const metadata = usePiecesMetadata();
+  return finalPieceId ? metadata.get(finalPieceId)?.center : undefined;
+}
+
+export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane | undefined {
+  const scope = useDesignAppScope();
+  const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
+  const pieceScope = usePieceScope();
+  const finalPieceId = pieceId ?? pieceScope?.guid;
+  const metadata = usePiecesMetadata();
+  return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
+}
+
 // #endregion Store
 
 // #region Footer
@@ -6197,10 +6215,23 @@ const App: FC<AppProps> = () => {
 
     const hasSceneWindow = (layout: any): boolean => {
       if (!layout) return false;
+
+      // Check if this is a component with Scene
       if (layout.type === "component" && layout.componentName === DesignAppWindowKind.Scene) return true;
+
+      // Check GoldenLayout root structure
+      if (layout.root && typeof layout.root === "object") {
+        return hasSceneWindow(layout.root);
+      }
+
+      // Check content arrays (both regular and GoldenLayout contentItems)
       if (layout.content && Array.isArray(layout.content)) {
         return layout.content.some((item: any) => hasSceneWindow(item));
       }
+      if (layout.contentItems && Array.isArray(layout.contentItems)) {
+        return layout.contentItems.some((item: any) => hasSceneWindow(item));
+      }
+
       return false;
     };
 
@@ -6218,9 +6249,24 @@ const App: FC<AppProps> = () => {
   // Clear invalid layout from store
   useEffect(() => {
     if (store && storedWindowLayout && windowLayout === undefined) {
-      store.change({ windowLayout: undefined });
+      console.log("[DesignApp] Clearing invalid layout from store");
+      // Use try-catch to ensure it doesn't fail silently
+      try {
+        store.change({ windowLayout: undefined });
+      } catch (error) {
+        console.error("[DesignApp] Failed to clear layout:", error);
+      }
     }
   }, [store, storedWindowLayout, windowLayout]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("[DesignApp] Passing to LayoutCanvas:", {
+      windowLayout,
+      defaultLayout,
+      willUseDefault: windowLayout === undefined,
+    });
+  }, [windowLayout, defaultLayout]);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {

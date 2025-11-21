@@ -20,9 +20,22 @@
 
 // #endregion
 
-import { CapsuleDreamFlatDesign, MetabolismKit, NakaginCapsuleTowerDancingFlatDesign, NakaginCapsuleTowerFlatDesign, NakaginCapsuleTowerSlantedFlatDesign, NakaginCapsuleTowerTwistedFlatDesign } from "@semio/assets";
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, Design, flattenDesign, Kit, Plane } from "./semio";
+import { applyDesignDiff, areKitsEqual, Design, exportKit, flattenDesign, importKit, Kit, Plane } from "./semio";
+
+// Load JSON files directly
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const assetsPath = path.join(__dirname, "../../assets/semio");
+const MetabolismKit = JSON.parse(fs.readFileSync(path.join(assetsPath, "kit_metabolism.json"), "utf-8"));
+const CapsuleDreamFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_capsule-dream_flat.json"), "utf-8"));
+const NakaginCapsuleTowerFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_flat.json"), "utf-8"));
+const NakaginCapsuleTowerDancingFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_dancing_flat.json"), "utf-8"));
+const NakaginCapsuleTowerSlantedFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_slanted_flat.json"), "utf-8"));
+const NakaginCapsuleTowerTwistedFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_twisted_flat.json"), "utf-8"));
 
 const TOLERANCE = 0.0001;
 
@@ -138,5 +151,56 @@ describe("flattenDesign", () => {
                 return centersEqual(p.center, expectedPiece?.center);
             })).toBe(true);
         });
+    });
+});
+
+describe("Kit Import/Export", () => {
+    it("should successfully roundtrip export and import a kit", async () => {
+        const originalKit = MetabolismKit as unknown as Kit;
+        const files = new Map<string, Blob>();
+
+        const zipBlob = await exportKit(originalKit, files);
+
+        expect(zipBlob).toBeInstanceOf(Blob);
+        expect(zipBlob.size).toBeGreaterThan(0);
+
+        const url = URL.createObjectURL(zipBlob);
+
+        const { kit: importedKit, files: importedFiles } = await importKit(url);
+
+        URL.revokeObjectURL(url);
+
+        console.log("[DEBUG] [KIT-ROUNDTRIP] Original types count:", originalKit.types?.length);
+        console.log("[DEBUG] [KIT-ROUNDTRIP] Imported types count:", importedKit.types?.length);
+        console.log("[DEBUG] [KIT-ROUNDTRIP] Original designs count:", originalKit.designs?.length);
+        console.log("[DEBUG] [KIT-ROUNDTRIP] Imported designs count:", importedKit.designs?.length);
+        
+        if (originalKit.types?.[0]) {
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First original type models:", originalKit.types[0].models?.length);
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported type models:", importedKit.types?.[0]?.models?.length);
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First original type ports:", originalKit.types[0].ports?.length);
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported type ports:", importedKit.types?.[0]?.ports?.length);
+        }
+        
+        if (originalKit.designs?.[0]) {
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First original design pieces:", originalKit.designs[0].pieces?.length);
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported design pieces:", importedKit.designs?.[0]?.pieces?.length);
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First original design connections:", originalKit.designs[0].connections?.length);
+            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported design connections:", importedKit.designs?.[0]?.connections?.length);
+        }
+
+        expect(areKitsEqual(originalKit, importedKit)).toBe(true);
+
+        expect(importedFiles.size).toBe(files.size);
+        
+        // Export to assets folder if running in export mode
+        if (process.env.EXPORT_TO_ASSETS === "true") {
+            const fs = await import("fs/promises");
+            const path = await import("path");
+            const buffer = Buffer.from(await zipBlob.arrayBuffer());
+            const outputPath = path.join(process.cwd(), "assets", "metabolism.zip");
+            await fs.writeFile(outputPath, buffer);
+            console.log(`[EXPORT] Wrote ${outputPath} (${(buffer.length / 1024).toFixed(2)} KB)`);
+        }
     });
 });

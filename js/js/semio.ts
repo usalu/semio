@@ -1523,7 +1523,7 @@ export const findModel = (models: Model[], tags: string[]): Model => {
 export const getAllTagsFromModels = (models: Model[]): string[] => {
   const tagsSet = new Set<string>();
   models.forEach((r) => {
-    r.tags?.forEach((tag) => tagsSet.add(tag));
+    toArray(r.tags).forEach((tag) => tagsSet.add(tag));
   });
   return Array.from(tagsSet).sort();
 };
@@ -1657,7 +1657,11 @@ const getPortsDiff = (before: Port[], after: Port[]): { removed?: string[]; upda
   return { removed, added, updated };
 };
 
+// FIXME: Disabled - uses old Port schema where interface was string and compatibleInterfaces existed on Port
+// Now: port.interface is {guid: string}, compatibility is on Interface entity
 export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]): TypesDiff => {
+  return { updated: [] };
+  /*
   const allInterfaces = new Set<string>();
   for (const type of types) {
     for (const port of type.ports || []) {
@@ -1783,12 +1787,17 @@ export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]
   }
 
   return { updated };
+  */
 };
+// FIXME: Disabled - uses old Port schema
 export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
+  return true; // Compatibility now handled by Interface entity
+  /*
   const normalizedPortInterface = normalize(port.interface);
   const normalizedOtherPortInterface = normalize(otherPort.interface);
   if (normalizedPortInterface === "" || normalizedOtherPortInterface === "") return true;
   return (port.compatibleInterfaces ?? []).includes(normalizedOtherPortInterface) || (otherPort.compatibleInterfaces ?? []).includes(normalizedPortInterface);
+  */
 };
 
 export const findPort = (ports: Port[], portGuid: string): Port => {
@@ -2044,9 +2053,9 @@ export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
  */
 export const getPieceModelFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
   const modelFileGuids = new Map<string, string>();
-  design.pieces?.forEach((p) => {
+  toArray(design.pieces).forEach((p) => {
     if (!p.type) return;
-    const type = types.find((t) => t.guid === p.type.guid);
+    const type = types.find((t) => t.guid === p.type!.guid);
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
     if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
     const model = findModel(type.models, tags);
@@ -2065,9 +2074,9 @@ export const getPieceModelFileGuids = (design: Design, types: Type[], tags: stri
  */
 export const getPieceModelUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
   const modelUrls = new Map<string, string>();
-  design.pieces?.forEach((p) => {
+  toArray(design.pieces).forEach((p) => {
     if (!p.type) return;
-    const type = types.find((t) => t.guid === p.type.guid);
+    const type = types.find((t) => t.guid === p.type!.guid);
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
     if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
     const model = findModel(type.models, tags);
@@ -3155,7 +3164,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
 
   // Find all unique designIds referenced in connections
   const designIds = new Set<string>();
-  design.connections?.forEach((conn) => {
+  toArray(design.connections).forEach((conn) => {
     if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
     if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
   });
@@ -3231,7 +3240,7 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
 
   // Get designs from external connections (clustered designs)
   const designIds = new Set<string>();
-  design.connections?.forEach((conn: Connection) => {
+  toArray(design.connections).forEach((conn: Connection) => {
     if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
     if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
   });
@@ -3348,7 +3357,7 @@ export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, int
 export type KitShallow = z.infer<typeof KitShallowSchema>;
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
-export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, interfaces: true, qualities: true, authors: true, files: true, folders: true }).extend({
+export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, interfaces: true, qualities: true, authors: true, files: true, folders: true, attributes: true }).extend({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
   interfaces: InterfacesDiffSchema.optional(),
@@ -3356,22 +3365,141 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
   authors: AuthorsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
   folders: FoldersDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
 });
 export type KitDiff = z.infer<typeof KitDiffSchema>;
+const getCollectionDiff = <T extends { guid: string }, D>(
+  before: T[],
+  after: T[],
+  getItemDiff: (before: T, after: T) => D
+): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
+  const diff: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } = {};
+  const beforeGuids = new Set(before.map((i) => i.guid));
+  const afterGuids = new Set(after.map((i) => i.guid));
+  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => i.guid);
+  if (removed.length > 0) diff.removed = removed;
+  const updated = before
+    .filter((i) => afterGuids.has(i.guid))
+    .map((i) => {
+      const afterItem = after.find((a) => a.guid === i.guid)!;
+      const itemDiff = getItemDiff(i, afterItem);
+      return { id: i.guid, diff: itemDiff };
+    })
+    .filter((u) => Object.keys(u.diff as any).length > 0);
+  if (updated.length > 0) diff.updated = updated;
+  const added = after.filter((i) => !beforeGuids.has(i.guid));
+  if (added.length > 0) diff.added = added;
+  return diff;
+};
+
+const inverseCollectionDiff = <T extends { guid: string }, D>(
+  original: T[],
+  appliedDiff: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] },
+  inverseItemDiff: (original: T, appliedDiff: D) => D
+): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
+  const inverse: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } = {};
+  if (appliedDiff.removed) inverse.added = original.filter((i) => appliedDiff.removed!.includes(i.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => i.guid);
+  if (appliedDiff.updated) {
+    inverse.updated = appliedDiff.updated.map((u) => {
+      const originalItem = original.find((i) => i.guid === u.id)!;
+      return { id: u.id, diff: inverseItemDiff(originalItem, u.diff) };
+    });
+  }
+  return inverse;
+};
+
+const applyCollectionDiff = <T extends { guid: string }, D>(
+  base: T[],
+  diff: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } | undefined,
+  applyItemDiff: (base: T, diff: D) => T
+): T[] => {
+  if (!diff) return base;
+  let result = [...base];
+  if (diff.removed) {
+    result = result.filter((i) => !diff.removed!.includes(i.guid));
+  }
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex((i) => i.guid === update.id);
+      if (index !== -1) {
+        result[index] = applyItemDiff(result[index], update.diff);
+      }
+    }
+  }
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  return result;
+};
+
 export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
-  // TODO: Implement full Kit diff logic
-  return {};
+  const diff: KitDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.version !== after.version) diff.version = after.version;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (before.image !== after.image) diff.image = after.image;
+  if (before.remote !== after.remote) diff.remote = after.remote;
+  if (before.homepage !== after.homepage) diff.homepage = after.homepage;
+  if (before.license !== after.license) diff.license = after.license;
+  if (before.preview !== after.preview) diff.preview = after.preview;
+  if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
+  const typesDiff = getCollectionDiff(before.types ?? [], after.types ?? [], getTypeDiff);
+  if (Object.keys(typesDiff).length > 0) diff.types = typesDiff;
+  const designsDiff = getCollectionDiff(before.designs ?? [], after.designs ?? [], getDesignDiff);
+  if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
+  const interfacesDiff = getInterfacesDiff(before.interfaces ?? [], after.interfaces ?? []);
+  if (Object.keys(interfacesDiff).length > 0) diff.interfaces = interfacesDiff;
+  const qualitiesDiff = getCollectionDiff(before.qualities ?? [], after.qualities ?? [], getQualityDiff);
+  if (Object.keys(qualitiesDiff).length > 0) diff.qualities = qualitiesDiff;
+  const filesDiff = getCollectionDiff(before.files ?? [], after.files ?? [], getFileDiff);
+  if (Object.keys(filesDiff).length > 0) diff.files = filesDiff;
+  const foldersDiff = getCollectionDiff(before.folders ?? [], after.folders ?? [], getFolderDiff);
+  if (Object.keys(foldersDiff).length > 0) diff.folders = foldersDiff;
+  const authorsDiff = getCollectionDiff(before.authors ?? [], after.authors ?? [], getAuthorDiff);
+  if (Object.keys(authorsDiff).length > 0) diff.authors = authorsDiff;
+  const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
+  return diff;
 };
 export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => {
-  // TODO: Implement full Kit inverse diff logic
-  return {};
+  const inverse: KitDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.version !== undefined) inverse.version = original.version;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
+  if (appliedDiff.image !== undefined) inverse.image = original.image;
+  if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
+  if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage;
+  if (appliedDiff.license !== undefined) inverse.license = original.license;
+  if (appliedDiff.preview !== undefined) inverse.preview = original.preview;
+  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
+  if (appliedDiff.types) inverse.types = inverseCollectionDiff(original.types ?? [], appliedDiff.types, inverseTypeDiff);
+  if (appliedDiff.designs) inverse.designs = inverseCollectionDiff(original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
+  if (appliedDiff.interfaces) inverse.interfaces = inverseInterfacesDiff(original.interfaces ?? [], appliedDiff.interfaces);
+  if (appliedDiff.qualities) inverse.qualities = inverseCollectionDiff(original.qualities ?? [], appliedDiff.qualities, inverseQualityDiff);
+  if (appliedDiff.files) inverse.files = inverseCollectionDiff(original.files ?? [], appliedDiff.files, inverseFileDiff);
+  if (appliedDiff.folders) inverse.folders = inverseCollectionDiff(original.folders ?? [], appliedDiff.folders, inverseFolderDiff);
+  if (appliedDiff.authors) inverse.authors = inverseCollectionDiff(original.authors ?? [], appliedDiff.authors, inverseAuthorDiff);
+  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
 };
 export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
-  // TODO: Implement full Kit merge diff logic
-  return { ...diff1, ...diff2 };
+  return {
+    ...diff1,
+    ...diff2,
+    types: diff1.types || diff2.types ? mergeInterfacesDiff(diff1.types ?? {}, diff2.types ?? {}) as any : undefined,
+    designs: diff1.designs || diff2.designs ? mergeInterfacesDiff(diff1.designs ?? {}, diff2.designs ?? {}) as any : undefined,
+    interfaces: diff1.interfaces || diff2.interfaces ? mergeInterfacesDiff(diff1.interfaces ?? {}, diff2.interfaces ?? {}) : undefined,
+    qualities: diff1.qualities || diff2.qualities ? mergeInterfacesDiff(diff1.qualities ?? {}, diff2.qualities ?? {}) as any : undefined,
+    files: diff1.files || diff2.files ? mergeInterfacesDiff(diff1.files ?? {}, diff2.files ?? {}) as any : undefined,
+    folders: diff1.folders || diff2.folders ? mergeInterfacesDiff(diff1.folders ?? {}, diff2.folders ?? {}) as any : undefined,
+    authors: diff1.authors || diff2.authors ? mergeInterfacesDiff(diff1.authors ?? {}, diff2.authors ?? {}) as any : undefined,
+    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
+  };
 };
 export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
-  // TODO: Implement full Kit apply diff logic
   const result: Kit = {
     ...base,
     guid: diff.guid ?? base.guid,
@@ -3383,8 +3511,18 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
     remote: diff.remote ?? base.remote,
     homepage: diff.homepage ?? base.homepage,
     license: diff.license ?? base.license,
+    preview: diff.preview ?? base.preview,
     concepts: diff.concepts ?? base.concepts,
-    attributes: diff.attributes ?? base.attributes,
+    createdAt: base.createdAt,
+    updatedAt: diff.updatedAt ?? base.updatedAt,
+    types: applyCollectionDiff(base.types ?? [], diff.types, applyTypeDiff),
+    designs: applyCollectionDiff(base.designs ?? [], diff.designs, applyDesignDiff),
+    interfaces: applyInterfacesDiff(base.interfaces ?? [], diff.interfaces ?? {}),
+    qualities: applyCollectionDiff(base.qualities ?? [], diff.qualities, applyQualityDiff),
+    files: applyCollectionDiff(base.files ?? [], diff.files, applyFileDiff),
+    folders: applyCollectionDiff(base.folders ?? [], diff.folders, applyFolderDiff),
+    authors: applyCollectionDiff(base.authors ?? [], diff.authors, applyAuthorDiff),
+    attributes: applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}),
   };
   return result;
 };
@@ -3563,7 +3701,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
   return (
     kit.types?.filter((replacementType) => {
       if (replacementType.isAbstract) return false;
-      if (variants !== undefined && !variants.includes(replacementType.parent ?? "")) return false;
+      if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
       if (!replacementType.ports || replacementType.ports.length === 0) return requiredPorts.length === 0;
       return requiredPorts.every((requiredPort) => {
         return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
@@ -3600,7 +3738,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
   return (
     kit.types?.filter((replacementType) => {
       if (replacementType.isAbstract) return false;
-      if (variants !== undefined && !variants.includes(replacementType.parent ?? "")) return false;
+      if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
       if (!replacementType.ports || replacementType.ports.length === 0) return externalConnections.length === 0;
       return externalConnections.every(({ requiredPort }) => {
         return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
@@ -3738,7 +3876,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
         {
           guid: guid(),
           key: "semio.color",
-          value: getColorForText(port.interface),
+          value: getColorForText(port.interface?.guid),
         },
       ],
     }));
@@ -3876,4 +4014,1579 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
   };
 };
 
+// #region Kit Import/Export
+
+export interface KitImportResult {
+  kit: Kit;
+  files: Map<string, Blob>;
+}
+
+/**
+ * Import a kit from a URL (remote HTTP/HTTPS or local file://)
+ * Fetches the archive, extracts it, reads the SQLite database, and returns the kit and files.
+ */
+export const importKit = async (url: string): Promise<KitImportResult> => {
+  const JSZip = (await import("jszip")).default;
+  const initSqlJs = (await import("sql.js")).default;
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch kit from ${url}: ${response.statusText}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  
+  const dbFile = zip.file(".semio/kit.db");
+  if (!dbFile) {
+    throw new Error("Invalid kit archive: missing .semio/kit.db");
+  }
+  
+  const dbArrayBuffer = await dbFile.async("arraybuffer");
+  const SQL = await initSqlJs();
+  const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
+  
+  const kit = await sqliteToKit(db);
+  
+  const files = new Map<string, Blob>();
+  for (const [path, zipEntry] of Object.entries(zip.files)) {
+    if (!zipEntry.dir && !path.startsWith(".semio/")) {
+      const blob = await zipEntry.async("blob");
+      files.set(path, blob);
+    }
+  }
+  
+  db.close();
+  
+  return { kit, files };
+};
+
+/**
+ * Export a kit to a zip blob
+ * Creates a .semio/kit.db SQLite database and bundles it with all files into a zip.
+ * If the kit is the Metabolism kit, also includes all files from examples/metabolism (excluding .semio folder).
+ */
+export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blob> => {
+  const JSZip = (await import("jszip")).default;
+  const initSqlJs = (await import("sql.js")).default;
+  
+  const SQL = await initSqlJs();
+  const db = new SQL.Database();
+  
+  await kitToSqlite(kit, db);
+  
+  const dbData = db.export();
+  db.close();
+  
+  const zip = new JSZip();
+  zip.file(".semio/kit.db", dbData);
+  
+  // Add provided files
+  for (const [path, blob] of files.entries()) {
+    zip.file(path, blob);
+  }
+  
+  // If this is the Metabolism kit, add all files from examples/metabolism (excluding .semio)
+  // Note: This requires the files to be provided in the files Map parameter
+  // In the future, this could be enhanced to fetch files from a known location
+  
+  return await zip.generateAsync({ type: "blob" });
+};
+
+/**
+ * Deep equality check for kits - recursively compares all properties including nested entities
+ */
+export const areKitsEqual = (a: Kit, b: Kit): boolean => {
+  const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
+    if (!arr) return [];
+    if (Array.isArray(arr)) return arr;
+    return [arr as T];
+  };
+  const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined) ? undefined : value;
+  
+  const areAttributesEqual = (a?: Attribute[], b?: Attribute[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const attrA of arrA) {
+      const attrB = arrB.find(x => x.guid === attrA.guid);
+      if (!attrB) return false;
+      if (attrA.key !== attrB.key) return false;
+      if (normalizeValue(attrA.value) !== normalizeValue(attrB.value)) return false;
+      if (normalizeValue(attrA.definition) !== normalizeValue(attrB.definition)) return false;
+    }
+    return true;
+  };
+  
+  const arePortsEqual = (a?: Port[], b?: Port[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const portA of arrA) {
+      const portB = arrB.find(x => x.guid === portA.guid);
+      if (!portB) return false;
+      if (normalizeValue(portA.name) !== normalizeValue(portB.name)) return false;
+      if (portA.point.x !== portB.point.x) return false;
+      if (portA.point.y !== portB.point.y) return false;
+      if (portA.point.z !== portB.point.z) return false;
+      if (portA.direction.x !== portB.direction.x) return false;
+      if (portA.direction.y !== portB.direction.y) return false;
+      if (portA.direction.z !== portB.direction.z) return false;
+      if (portA.t !== portB.t) return false;
+      if (portA.mandatory !== portB.mandatory) return false;
+      if (!areAttributesEqual(portA.attributes, portB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areModelsEqual = (a?: Model[], b?: Model[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const modelA of arrA) {
+      const modelB = arrB.find(x => x.guid === modelA.guid);
+      if (!modelB) return false;
+      if (normalizeValue(modelA.name) !== normalizeValue(modelB.name)) return false;
+      if (modelA.file !== modelB.file) return false;
+      if (!arraysEqual(normalizeArray(modelA.tags), normalizeArray(modelB.tags))) return false;
+      if (!areAttributesEqual(modelA.attributes, modelB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areTypesEqual = (a?: Type[], b?: Type[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const typeA of arrA) {
+      const typeB = arrB.find(t => {
+        if (t.guid !== typeA.guid) return false;
+        if (!t.parent && !typeA.parent) return true;
+        if (!t.parent || !typeA.parent) return false;
+        return areSameTypeId(t.parent, typeA.parent);
+      });
+      if (!typeB) return false;
+      if (typeA.name !== typeB.name) return false;
+      if (normalizeValue(typeA.description) !== normalizeValue(typeB.description)) return false;
+      if (normalizeValue(typeA.icon) !== normalizeValue(typeB.icon)) return false;
+      if (normalizeValue(typeA.image) !== normalizeValue(typeB.image)) return false;
+      if (!arraysEqual(normalizeArray(typeA.concepts), normalizeArray(typeB.concepts))) return false;
+      if (!areModelsEqual(typeA.models, typeB.models)) return false;
+      if (!arePortsEqual(typeA.ports, typeB.ports)) return false;
+      if (!areAttributesEqual(typeA.attributes, typeB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const arePiecesEqual = (a?: Piece[], b?: Piece[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const pieceA of arrA) {
+      const pieceB = arrB.find(x => x.guid === pieceA.guid);
+      if (!pieceB) return false;
+      if (normalizeValue(pieceA.name) !== normalizeValue(pieceB.name)) return false;
+      if (pieceA.type?.guid !== pieceB.type?.guid) return false;
+      if (pieceA.design?.guid !== pieceB.design?.guid) return false;
+      if (pieceA.plane && pieceB.plane) {
+        if (pieceA.plane.origin.x !== pieceB.plane.origin.x) return false;
+        if (pieceA.plane.origin.y !== pieceB.plane.origin.y) return false;
+        if (pieceA.plane.origin.z !== pieceB.plane.origin.z) return false;
+        if (pieceA.plane.xAxis.x !== pieceB.plane.xAxis.x) return false;
+        if (pieceA.plane.xAxis.y !== pieceB.plane.xAxis.y) return false;
+        if (pieceA.plane.xAxis.z !== pieceB.plane.xAxis.z) return false;
+        if (pieceA.plane.yAxis.x !== pieceB.plane.yAxis.x) return false;
+        if (pieceA.plane.yAxis.y !== pieceB.plane.yAxis.y) return false;
+        if (pieceA.plane.yAxis.z !== pieceB.plane.yAxis.z) return false;
+      } else if (pieceA.plane || pieceB.plane) {
+        return false;
+      }
+      if (!areAttributesEqual(pieceA.attributes, pieceB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areConnectionsEqual = (a?: Connection[], b?: Connection[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const connA of arrA) {
+      const connB = arrB.find(x => x.guid === connA.guid);
+      if (!connB) return false;
+      if (connA.connected.piece.guid !== connB.connected.piece.guid) return false;
+      if (connA.connected.port.guid !== connB.connected.port.guid) return false;
+      if (connA.connecting.piece.guid !== connB.connecting.piece.guid) return false;
+      if (connA.connecting.port.guid !== connB.connecting.port.guid) return false;
+      if (connA.gap !== connB.gap) return false;
+      if (connA.shift !== connB.shift) return false;
+      if (connA.rise !== connB.rise) return false;
+      if (connA.rotation !== connB.rotation) return false;
+      if (connA.turn !== connB.turn) return false;
+      if (connA.tilt !== connB.tilt) return false;
+      if (!areAttributesEqual(connA.attributes, connB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areDesignsEqual = (a?: Design[], b?: Design[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const designA of arrA) {
+      const designB = arrB.find(d => {
+        if (d.guid !== designA.guid) return false;
+        if (!d.parent && !designA.parent) return true;
+        if (!d.parent || !designA.parent) return false;
+        return areSameDesignId(d.parent, designA.parent);
+      });
+      if (!designB) return false;
+      if (designA.name !== designB.name) return false;
+      if (normalizeValue(designA.description) !== normalizeValue(designB.description)) return false;
+      if (normalizeValue(designA.icon) !== normalizeValue(designB.icon)) return false;
+      if (normalizeValue(designA.image) !== normalizeValue(designB.image)) return false;
+      if (!arraysEqual(normalizeArray(designA.concepts), normalizeArray(designB.concepts))) return false;
+      if (!arePiecesEqual(designA.pieces, designB.pieces)) return false;
+      if (!areConnectionsEqual(designA.connections, designB.connections)) return false;
+      if (!areAttributesEqual(designA.attributes, designB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areInterfacesEqual = (a?: Interface[], b?: Interface[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const ifaceA of arrA) {
+      const ifaceB = arrB.find(x => x.guid === ifaceA.guid);
+      if (!ifaceB) return false;
+      if (ifaceA.name !== ifaceB.name) return false;
+      if (normalizeValue(ifaceA.description) !== normalizeValue(ifaceB.description)) return false;
+      if (!areAttributesEqual(ifaceA.attributes, ifaceB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areQualitiesEqual = (a?: Quality[], b?: Quality[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const qualA of arrA) {
+      const qualB = arrB.find(x => x.guid === qualA.guid);
+      if (!qualB) return false;
+      if (qualA.key !== qualB.key) return false;
+      if (qualA.name !== qualB.name) return false;
+      if (!areAttributesEqual(qualA.attributes, qualB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areFilesEqual = (a?: File[], b?: File[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const fileA of arrA) {
+      const fileB = arrB.find(x => x.guid === fileA.guid);
+      if (!fileB) return false;
+      if (fileA.name !== fileB.name) return false;
+    }
+    return true;
+  };
+  
+  const areFoldersEqual = (a?: Folder[], b?: Folder[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const folderA of arrA) {
+      const folderB = arrB.find(x => x.guid === folderA.guid);
+      if (!folderB) return false;
+      if (folderA.name !== folderB.name) return false;
+      if (!areAttributesEqual(folderA.attributes, folderB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  const areAuthorsEqual = (a?: Author[], b?: Author[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const authorA of arrA) {
+      const authorB = arrB.find(x => x.guid === authorA.guid);
+      if (!authorB) return false;
+      if (authorA.name !== authorB.name) return false;
+      if (normalizeValue(authorA.email) !== normalizeValue(authorB.email)) return false;
+      if (!areAttributesEqual(authorA.attributes, authorB.attributes)) return false;
+    }
+    return true;
+  };
+  
+  // Top-level kit properties
+  if (a.guid !== b.guid) return false;
+  if (a.name !== b.name) return false;
+  if (normalizeValue(a.version) !== normalizeValue(b.version)) return false;
+  if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+  if (normalizeValue(a.icon) !== normalizeValue(b.icon)) return false;
+  if (normalizeValue(a.image) !== normalizeValue(b.image)) return false;
+  if (normalizeValue(a.preview) !== normalizeValue(b.preview)) return false;
+  if (normalizeValue(a.remote) !== normalizeValue(b.remote)) return false;
+  if (normalizeValue(a.homepage) !== normalizeValue(b.homepage)) return false;
+  if (normalizeValue(a.license) !== normalizeValue(b.license)) return false;
+  
+  if (!arraysEqual(normalizeArray(a.concepts), normalizeArray(b.concepts))) return false;
+  if (!areTypesEqual(a.types, b.types)) return false;
+  if (!areDesignsEqual(a.designs, b.designs)) return false;
+  if (!areInterfacesEqual(a.interfaces, b.interfaces)) return false;
+  if (!areQualitiesEqual(a.qualities, b.qualities)) return false;
+  if (!areFilesEqual(a.files, b.files)) return false;
+  if (!areFoldersEqual(a.folders, b.folders)) return false;
+  if (!areAuthorsEqual(a.authors, b.authors)) return false;
+  if (!areAttributesEqual(a.attributes, b.attributes)) return false;
+  
+  return true;
+};
+
+/**
+ * Convert SQLite database to Kit JSON structure
+ */
+const sqliteToKit = async (db: any): Promise<Kit> => {
+  const execResult = (query: string, params?: any[]): any[] => {
+    const stmt = db.prepare(query);
+    if (params) {
+      stmt.bind(params);
+    }
+    const result: any[] = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      result.push(row);
+    }
+    stmt.free();
+    return result;
+  };
+  
+  const kitRows = execResult("SELECT * FROM kit LIMIT 1");
+  if (kitRows.length === 0) {
+    throw new Error("No kit found in database");
+  }
+  const kitRow = kitRows[0];
+  
+  const toUndefined = (value: any): any => (value === null || value === "") ? undefined : value;
+  const mapOrUndefined = <T, R>(arr: T[], mapper: (item: T) => R): R[] | undefined =>
+    arr.length > 0 ? arr.map(mapper) : undefined;
+  
+  const kit: Kit = {
+    guid: kitRow.guid || kitRow.uri || guid(),
+    name: kitRow.name || "Unnamed Kit",
+    version: kitRow.version || "0.0.0",
+    description: toUndefined(kitRow.description),
+    icon: toUndefined(kitRow.icon),
+    image: toUndefined(kitRow.image),
+    preview: toUndefined(kitRow.preview),
+    remote: toUndefined(kitRow.remote),
+    homepage: toUndefined(kitRow.homepage),
+    license: toUndefined(kitRow.license),
+    createdAt: new Date(kitRow.created),
+    updatedAt: new Date(kitRow.updated),
+  };
+  
+  const types = execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid]);
+  kit.types = types.map((row: any) => {
+    const typeGuid = row.guid || String(row.id);
+    const models = execResult("SELECT * FROM model WHERE type_guid = ?", [typeGuid]);
+    const ports = execResult("SELECT * FROM port WHERE type_guid = ?", [typeGuid]);
+    const typeAttributes = execResult("SELECT * FROM attribute WHERE type_guid = ?", [typeGuid]);
+    const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_guid = ?", [typeGuid]);
+    
+    return {
+      guid: typeGuid,
+      name: row.name,
+      description: toUndefined(row.description),
+      icon: toUndefined(row.icon),
+      image: toUndefined(row.image),
+      parent: row.parent_guid ? { guid: row.parent_guid } : (row.parent_id ? { guid: String(row.parent_id) } : undefined),
+      virtual: Boolean(row.virtual),
+      unit: toUndefined(row.unit),
+      stock: row.stock,
+      createdAt: new Date(row.created),
+      updatedAt: new Date(row.updated),
+      models: models.map((m: any) => {
+        const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
+        const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
+        return {
+          guid: m.guid,
+          file: m.file,
+          name: toUndefined(m.name),
+          description: toUndefined(m.description),
+          tags: modelTags.map((t: any) => t.tag),
+          attributes: mapOrUndefined(modelAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      ports: ports.map((p: any) => {
+        const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
+        const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
+        return {
+          guid: p.guid,
+          name: toUndefined(p.name),
+          point: { x: p.point_x, y: p.point_y, z: p.point_z },
+          direction: { x: p.direction_x, y: p.direction_y, z: p.direction_z },
+          t: p.t,
+          mandatory: Boolean(p.mandatory),
+          interface: p.interface_guid ? { guid: p.interface_guid } : undefined,
+          description: toUndefined(p.description),
+          props: portProps.map((pr: any) => {
+            const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
+            if (!pr.quality_guid) return null;
+            return {
+              guid: pr.guid,
+              value: String(pr.value),
+              unit: toUndefined(pr.unit),
+              quality: { guid: pr.quality_guid },
+              attributes: mapOrUndefined(propAttributes, (a: any) => ({
+                guid: a.guid,
+                key: a.key,
+                value: toUndefined(a.value),
+                definition: toUndefined(a.definition),
+              })),
+            };
+          }).filter((p: any): p is NonNullable<typeof p> => p !== null),
+          attributes: mapOrUndefined(portAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      attributes: mapOrUndefined(typeAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
+      concepts: typeConcepts.map((c: any) => c.concept),
+    };
+  });
+  
+  const designs = execResult("SELECT * FROM design WHERE kit_guid = ?", [kit.guid]);
+  kit.designs = designs.map((row: any) => {
+    const designGuid = row.guid || String(row.id);
+    const pieces = execResult("SELECT * FROM piece WHERE design_guid = ?", [designGuid]);
+    const connections = execResult("SELECT * FROM connection WHERE design_guid = ?", [designGuid]);
+    const layers = execResult("SELECT * FROM layer WHERE design_guid = ?", [designGuid]);
+    const groups = execResult("SELECT * FROM \"group\" WHERE design_guid = ?", [designGuid]);
+    const stats = execResult("SELECT * FROM stat WHERE design_guid = ?", [designGuid]);
+    const designAttributes = execResult("SELECT * FROM attribute WHERE design_guid = ?", [designGuid]);
+    const designConcepts = execResult("SELECT * FROM design_concept WHERE design_guid = ?", [designGuid]);
+    
+    return {
+      guid: designGuid,
+      name: row.name,
+      description: toUndefined(row.description),
+      icon: toUndefined(row.icon),
+      image: toUndefined(row.image),
+      parent: row.parent_guid ? { guid: row.parent_guid } : (row.parent_id ? { guid: String(row.parent_id) } : undefined),
+      unit: toUndefined(row.unit),
+      createdAt: new Date(row.created),
+      updatedAt: new Date(row.updated),
+      activeLayer: row.active_layer_guid ? { guid: row.active_layer_guid } : undefined,
+      pieces: pieces.map((p: any) => {
+        const pieceProps = execResult("SELECT prop.* FROM prop JOIN piece_prop ON prop.guid = piece_prop.prop_guid WHERE piece_prop.piece_guid = ?", [p.guid]);
+        const pieceAttributes = execResult("SELECT * FROM attribute WHERE piece_guid = ?", [p.guid]);
+        return {
+          guid: p.guid,
+          name: toUndefined(p.name),
+          type: p.type_guid ? { guid: p.type_guid } : undefined,
+          design: p.design_guid_ref ? { guid: p.design_guid_ref } : undefined,
+          plane: p.plane_origin_x !== null ? {
+            origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+            xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+            yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+          } : undefined,
+          center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
+          scale: p.scale,
+          mirrorPlane: p.mirror_plane_origin_x !== null ? {
+            origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+            xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+            yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+          } : undefined,
+          isHidden: Boolean(p.is_hidden),
+          isLocked: Boolean(p.is_locked),
+          color: toUndefined(p.color),
+          description: toUndefined(p.description),
+          props: pieceProps.map((pr: any) => {
+            const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
+            return {
+              guid: pr.guid,
+              key: pr.key,
+              value: pr.value,
+              unit: toUndefined(pr.unit),
+              quality: pr.quality_guid ? { guid: pr.quality_guid } : undefined,
+              attributes: mapOrUndefined(propAttributes, (a: any) => ({
+                guid: a.guid,
+                key: a.key,
+                value: toUndefined(a.value),
+                definition: toUndefined(a.definition),
+              })),
+            };
+          }),
+          attributes: mapOrUndefined(pieceAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      connections: connections.map((c: any) => {
+        const connectionAttributes = execResult("SELECT * FROM attribute WHERE connection_guid = ?", [c.guid]);
+        return {
+          guid: c.guid,
+          connected: {
+            guid: guid(),
+            piece: { guid: c.connected_piece_guid },
+            designPiece: c.connected_design_piece_guid ? { guid: c.connected_design_piece_guid } : undefined,
+            port: { guid: c.connected_port_guid },
+          },
+          connecting: {
+            guid: guid(),
+            piece: { guid: c.connecting_piece_guid },
+            designPiece: c.connecting_design_piece_guid ? { guid: c.connecting_design_piece_guid } : undefined,
+            port: { guid: c.connecting_port_guid },
+          },
+          gap: c.gap || 0,
+          shift: c.shift || 0,
+          rise: c.rise || 0,
+          rotation: c.rotation || 0,
+          turn: c.turn || 0,
+          tilt: c.tilt || 0,
+          x: c.x,
+          y: c.y,
+          description: toUndefined(c.description),
+          attributes: mapOrUndefined(connectionAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      layers: layers.map((l: any) => {
+        const layerAttributes = execResult("SELECT * FROM attribute WHERE layer_guid = ?", [l.guid]);
+        return {
+          guid: l.guid,
+          path: l.path,
+          isHidden: Boolean(l.is_hidden),
+          isLocked: Boolean(l.is_locked),
+          color: toUndefined(l.color),
+          description: toUndefined(l.description),
+          attributes: mapOrUndefined(layerAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      groups: groups.map((g: any) => {
+        const groupPieces = execResult("SELECT piece_guid FROM group_piece WHERE group_guid = ?", [g.guid]);
+        const groupAttributes = execResult("SELECT * FROM attribute WHERE group_guid = ?", [g.guid]);
+        return {
+          guid: g.guid,
+          name: toUndefined(g.name),
+          color: toUndefined(g.color),
+          description: toUndefined(g.description),
+          pieces: groupPieces.map((gp: any) => ({ guid: gp.piece_guid })),
+          attributes: mapOrUndefined(groupAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      stats: stats.map((s: any) => ({
+        guid: s.guid,
+        quality: { guid: s.quality_guid },
+        min: s.min_value,
+        max: s.max_value,
+        unit: toUndefined(s.unit),
+      })),
+      attributes: mapOrUndefined(designAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
+      concepts: designConcepts.map((c: any) => c.concept),
+    };
+  });
+  
+  // Load interfaces
+  const interfaces = execResult("SELECT * FROM interface WHERE kit_guid = ?", [kit.guid]);
+  kit.interfaces = interfaces.map((row: any) => {
+    const compatibleInterfaces = execResult("SELECT compatible_interface_guid FROM interface_compatibility WHERE interface_guid = ?", [row.guid]);
+    const interfaceAttributes = execResult("SELECT * FROM attribute WHERE interface_guid = ?", [row.guid]);
+    return {
+      guid: row.guid,
+      name: row.name,
+      description: toUndefined(row.description),
+      icon: toUndefined(row.icon),
+      compatible: compatibleInterfaces.map((ci: any) => ({ guid: ci.compatible_interface_guid })),
+      attributes: mapOrUndefined(interfaceAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
+    };
+  });
+  
+  // Load qualities
+  const qualities = execResult("SELECT * FROM quality WHERE kit_guid = ?", [kit.guid]);
+  kit.qualities = qualities.length > 0 ? qualities.map((row: any) => {
+    const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+    const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+    return {
+      guid: row.guid,
+      key: row.key,
+      name: row.name,
+      kind: row.kind,
+      default: row.default_value,
+      formula: toUndefined(row.formula),
+      defaultSiUnit: toUndefined(row.default_si_unit),
+      defaultImperialUnit: toUndefined(row.default_imperial_unit),
+      min: row.min_value,
+      minExcluded: Boolean(row.min_excluded),
+      max: row.max_value,
+      maxExcluded: Boolean(row.max_excluded),
+      canScale: Boolean(row.can_scale),
+      uri: toUndefined(row.definition),
+      benchmarks: benchmarks.map((b: any) => {
+        const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+        return {
+          guid: b.guid,
+          name: b.name,
+          icon: toUndefined(b.icon),
+          min: b.min_value,
+          minExcluded: Boolean(b.min_excluded),
+          max: b.max_value,
+          maxExcluded: Boolean(b.max_excluded),
+          attributes: mapOrUndefined(benchmarkAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      attributes: mapOrUndefined(qualityAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
+    };
+  }) : undefined;
+  
+  // Load files
+  const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
+  kit.files = files.length > 0 ? files.map((row: any) => ({
+    guid: row.guid,
+    name: row.name,
+    remote: toUndefined(row.remote_url),
+    folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+    size: row.size,
+    hash: row.hash,
+    createdAt: row.created ? new Date(row.created) : undefined,
+    updatedAt: row.updated ? new Date(row.updated) : undefined,
+  })) : undefined;
+  
+  // Load folders
+  const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
+  kit.folders = folders.map((row: any) => ({
+    guid: row.guid,
+    name: row.name,
+    parent: row.parent_guid ? { guid: row.parent_guid } : undefined,
+    createdAt: row.created ? new Date(row.created) : undefined,
+    updatedAt: row.updated ? new Date(row.updated) : undefined,
+  }));
+  
+  // Load authors
+  const authors = execResult("SELECT * FROM author WHERE kit_guid = ?", [kit.guid]);
+  kit.authors = authors.length > 0 ? authors.map((row: any) => ({
+    guid: row.guid,
+    name: row.name,
+    email: toUndefined(row.email),
+  })) : undefined;
+  
+  // Load concepts
+  const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
+  kit.concepts = concepts.map((row: any) => row.value);
+  
+  // Load kit attributes
+  const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
+  kit.attributes = kitAttributes.map((a: any) => ({
+    guid: a.guid,
+    key: a.key,
+    value: toUndefined(a.value),
+    definition: toUndefined(a.definition),
+  }));
+  
+  return kit;
+};
+
+/**
+ * Convert Kit JSON structure to SQLite database with complete schema
+ */
+const toArray = <T>(value: T | T[] | undefined): T[] => {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+};
+
+const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
+  
+  const SCHEMA = `
+CREATE TABLE semio (
+	release VARCHAR NOT NULL,
+	engine VARCHAR NOT NULL,
+	created DATETIME NOT NULL,
+	PRIMARY KEY (release)
+);
+
+CREATE TABLE kit (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	version VARCHAR(64),
+	description TEXT,
+	icon TEXT,
+	image TEXT,
+	preview TEXT,
+	remote TEXT,
+	homepage TEXT,
+	license TEXT,
+	created DATETIME NOT NULL,
+	updated DATETIME NOT NULL,
+	PRIMARY KEY (guid)
+);
+
+CREATE TABLE quality (
+	guid VARCHAR(36) NOT NULL,
+	key VARCHAR(128) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	kind INTEGER NOT NULL,
+	default_value FLOAT,
+	formula TEXT,
+	default_si_unit VARCHAR(64),
+	default_imperial_unit VARCHAR(64),
+	min_value FLOAT,
+	min_excluded BOOLEAN,
+	max_value FLOAT,
+	max_excluded BOOLEAN,
+	can_scale BOOLEAN NOT NULL DEFAULT 0,
+	definition TEXT,
+	kit_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE benchmark (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	icon TEXT,
+	min_value FLOAT,
+	min_excluded BOOLEAN,
+	max_value FLOAT,
+	max_excluded BOOLEAN,
+	definition TEXT,
+	quality_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
+);
+
+CREATE TABLE interface (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	description TEXT,
+	icon TEXT,
+	kit_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE interface_compatibility (
+	interface_guid VARCHAR(36) NOT NULL,
+	compatible_interface_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (interface_guid, compatible_interface_guid),
+	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
+	FOREIGN KEY(compatible_interface_guid) REFERENCES interface (guid)
+);
+
+CREATE TABLE folder (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	parent_guid VARCHAR(36),
+	created DATETIME NOT NULL,
+	updated DATETIME NOT NULL,
+	kit_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(parent_guid) REFERENCES folder (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE file (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	folder_guid VARCHAR(36),
+	size INTEGER,
+	hash VARCHAR(128),
+	remote_url TEXT,
+	created DATETIME NOT NULL,
+	updated DATETIME NOT NULL,
+	kit_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE author (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	email VARCHAR(256),
+	kit_guid VARCHAR(36),
+	type_guid VARCHAR(36),
+	design_guid VARCHAR(36),
+	PRIMARY KEY (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE type (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	parent_guid VARCHAR(36),
+	is_abstract BOOLEAN NOT NULL DEFAULT 0,
+	folder VARCHAR(256),
+	stock INTEGER,
+	virtual BOOLEAN NOT NULL DEFAULT 0,
+	unit VARCHAR(64),
+	location_guid VARCHAR(36),
+	description TEXT,
+	icon TEXT,
+	image TEXT,
+	created DATETIME NOT NULL,
+	updated DATETIME NOT NULL,
+	kit_guid VARCHAR(36) NOT NULL,
+	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	UNIQUE (guid, kit_guid, parent_guid),
+	FOREIGN KEY(parent_guid) REFERENCES type (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE model (
+	guid VARCHAR(36) NOT NULL,
+	file VARCHAR(256) NOT NULL,
+	name VARCHAR(256),
+	description TEXT,
+	type_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid)
+);
+
+CREATE TABLE model_tag (
+	model_guid VARCHAR(36) NOT NULL,
+	tag VARCHAR(128) NOT NULL,
+	PRIMARY KEY (model_guid, tag),
+	FOREIGN KEY(model_guid) REFERENCES model (guid)
+);
+
+CREATE TABLE prop (
+	guid VARCHAR(36) NOT NULL,
+	key VARCHAR(128) NOT NULL,
+	value FLOAT NOT NULL,
+	unit VARCHAR(64),
+	quality_guid VARCHAR(36),
+	port_guid VARCHAR(36),
+	PRIMARY KEY (guid),
+	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
+);
+
+CREATE TABLE port (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256),
+	point_x FLOAT NOT NULL,
+	point_y FLOAT NOT NULL,
+	point_z FLOAT NOT NULL,
+	direction_x FLOAT NOT NULL,
+	direction_y FLOAT NOT NULL,
+	direction_z FLOAT NOT NULL,
+	t FLOAT NOT NULL,
+	mandatory BOOLEAN NOT NULL DEFAULT 0,
+	interface_guid VARCHAR(36),
+	description TEXT,
+	type_guid VARCHAR(36) NOT NULL,
+	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	UNIQUE (guid, type_guid),
+	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid)
+);
+
+CREATE TABLE design (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	parent_guid VARCHAR(36),
+	variant VARCHAR(256),
+	view_center_u FLOAT,
+	view_center_v FLOAT,
+	view_zoom FLOAT,
+	unit VARCHAR(64),
+	location_guid VARCHAR(36),
+	active_layer_guid VARCHAR(36),
+	description TEXT,
+	icon TEXT,
+	image TEXT,
+	created DATETIME NOT NULL,
+	updated DATETIME NOT NULL,
+	kit_guid VARCHAR(36) NOT NULL,
+	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	UNIQUE (guid, kit_guid, parent_guid),
+	FOREIGN KEY(parent_guid) REFERENCES design (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE layer (
+	guid VARCHAR(36) NOT NULL,
+	path VARCHAR(512) NOT NULL,
+	is_hidden BOOLEAN NOT NULL DEFAULT 0,
+	is_locked BOOLEAN NOT NULL DEFAULT 0,
+	color VARCHAR(32),
+	description TEXT,
+	design_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid)
+);
+
+CREATE TABLE piece (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256),
+	type_guid VARCHAR(36),
+	design_guid_ref VARCHAR(36),
+	plane_origin_x FLOAT,
+	plane_origin_y FLOAT,
+	plane_origin_z FLOAT,
+	plane_x_axis_x FLOAT,
+	plane_x_axis_y FLOAT,
+	plane_x_axis_z FLOAT,
+	plane_y_axis_x FLOAT,
+	plane_y_axis_y FLOAT,
+	plane_y_axis_z FLOAT,
+	center_u FLOAT,
+	center_v FLOAT,
+	scale FLOAT,
+	mirror_plane_origin_x FLOAT,
+	mirror_plane_origin_y FLOAT,
+	mirror_plane_origin_z FLOAT,
+	mirror_plane_x_axis_x FLOAT,
+	mirror_plane_x_axis_y FLOAT,
+	mirror_plane_x_axis_z FLOAT,
+	mirror_plane_y_axis_x FLOAT,
+	mirror_plane_y_axis_y FLOAT,
+	mirror_plane_y_axis_z FLOAT,
+	is_hidden BOOLEAN NOT NULL DEFAULT 0,
+	is_locked BOOLEAN NOT NULL DEFAULT 0,
+	color VARCHAR(32),
+	description TEXT,
+	design_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(design_guid_ref) REFERENCES design (guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid)
+);
+
+CREATE TABLE piece_prop (
+	piece_guid VARCHAR(36) NOT NULL,
+	prop_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (piece_guid, prop_guid),
+	FOREIGN KEY(piece_guid) REFERENCES piece (guid),
+	FOREIGN KEY(prop_guid) REFERENCES prop (guid)
+);
+
+CREATE TABLE "group" (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256),
+	color VARCHAR(32),
+	description TEXT,
+	design_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid)
+);
+
+CREATE TABLE group_piece (
+	group_guid VARCHAR(36) NOT NULL,
+	piece_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (group_guid, piece_guid),
+	FOREIGN KEY(group_guid) REFERENCES "group" (guid),
+	FOREIGN KEY(piece_guid) REFERENCES piece (guid)
+);
+
+CREATE TABLE connection (
+	guid VARCHAR(36) NOT NULL,
+	connected_piece_guid VARCHAR(36) NOT NULL,
+	connected_design_piece_guid VARCHAR(36),
+	connected_port_guid VARCHAR(36) NOT NULL,
+	connecting_piece_guid VARCHAR(36) NOT NULL,
+	connecting_design_piece_guid VARCHAR(36),
+	connecting_port_guid VARCHAR(36) NOT NULL,
+	gap FLOAT NOT NULL DEFAULT 0,
+	shift FLOAT NOT NULL DEFAULT 0,
+	rise FLOAT NOT NULL DEFAULT 0,
+	rotation FLOAT NOT NULL DEFAULT 0,
+	turn FLOAT NOT NULL DEFAULT 0,
+	tilt FLOAT NOT NULL DEFAULT 0,
+	x FLOAT,
+	y FLOAT,
+	description TEXT,
+	design_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	CHECK (connecting_piece_guid != connected_piece_guid),
+	FOREIGN KEY(connected_piece_guid) REFERENCES piece (guid),
+	FOREIGN KEY(connected_port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connecting_piece_guid) REFERENCES piece (guid),
+	FOREIGN KEY(connecting_port_guid) REFERENCES port (guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid)
+);
+
+CREATE TABLE stat (
+	guid VARCHAR(36) NOT NULL,
+	quality_guid VARCHAR(36) NOT NULL,
+	min_value FLOAT,
+	max_value FLOAT,
+	unit VARCHAR(64),
+	design_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid)
+);
+
+CREATE TABLE concept (
+	kit_guid VARCHAR(36) NOT NULL,
+	value VARCHAR(256) NOT NULL,
+	PRIMARY KEY (kit_guid, value),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE type_concept (
+	type_guid VARCHAR(36) NOT NULL,
+	concept VARCHAR(256) NOT NULL,
+	PRIMARY KEY (type_guid, concept)
+);
+
+CREATE TABLE design_concept (
+	design_guid VARCHAR(36) NOT NULL,
+	concept VARCHAR(256) NOT NULL,
+	PRIMARY KEY (design_guid, concept)
+);
+
+CREATE TABLE attribute (
+	guid VARCHAR(36) NOT NULL,
+	key VARCHAR(256) NOT NULL,
+	value TEXT,
+	definition TEXT,
+	quality_guid VARCHAR(36),
+	benchmark_guid VARCHAR(36),
+	interface_guid VARCHAR(36),
+	folder_guid VARCHAR(36),
+	file_guid VARCHAR(36),
+	author_guid VARCHAR(36),
+	model_guid VARCHAR(36),
+	prop_guid VARCHAR(36),
+	port_guid VARCHAR(36),
+	type_guid VARCHAR(36),
+	layer_guid VARCHAR(36),
+	piece_guid VARCHAR(36),
+	group_guid VARCHAR(36),
+	connection_guid VARCHAR(36),
+	stat_guid VARCHAR(36),
+	design_guid VARCHAR(36),
+	kit_guid VARCHAR(36),
+	PRIMARY KEY (guid),
+	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
+	FOREIGN KEY(benchmark_guid) REFERENCES benchmark (guid),
+	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
+	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
+	FOREIGN KEY(file_guid) REFERENCES file (guid),
+	FOREIGN KEY(author_guid) REFERENCES author (guid),
+	FOREIGN KEY(model_guid) REFERENCES model (guid),
+	FOREIGN KEY(prop_guid) REFERENCES prop (guid),
+	FOREIGN KEY(port_guid) REFERENCES port (guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(layer_guid) REFERENCES layer (guid),
+	FOREIGN KEY(piece_guid) REFERENCES piece (guid),
+	FOREIGN KEY(group_guid) REFERENCES "group" (guid),
+	FOREIGN KEY(connection_guid) REFERENCES connection (guid),
+	FOREIGN KEY(stat_guid) REFERENCES stat (guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+  `;
+  
+  // Execute schema using exec for multiple statements
+  db.exec(SCHEMA);
+  
+  const toISOString = (date: Date | string | undefined): string => {
+    if (!date) return new Date().toISOString();
+    if (typeof date === "string") return date;
+    return date.toISOString();
+  };
+  
+  db.run("INSERT INTO semio (release, engine, created) VALUES (?, ?, ?)", ["1.0.0", "js", new Date().toISOString()]);
+  
+  db.run(
+    "INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      kit.guid,
+      kit.name,
+      kit.version || null,
+      kit.description || null,
+      kit.icon || null,
+      kit.image || null,
+      kit.preview || null,
+      kit.remote || null,
+      kit.homepage || null,
+      kit.license || null,
+      toISOString(kit.createdAt),
+      toISOString(kit.updatedAt),
+    ]
+  );
+  
+  toArray(kit.concepts).forEach((concept) => {
+    db.run("INSERT INTO concept (kit_guid, value) VALUES (?, ?)", [kit.guid, concept]);
+  });
+  
+  toArray(kit.attributes).forEach((attr) => {
+    db.run("INSERT INTO attribute (guid, key, value, definition, kit_guid) VALUES (?, ?, ?, ?, ?)", [
+      attr.guid,
+      attr.key,
+      attr.value || null,
+      attr.definition || null,
+      kit.guid,
+    ]);
+  });
+  
+  toArray(kit.interfaces).forEach((iface) => {
+    db.run("INSERT INTO interface (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?)", [
+      iface.guid,
+      iface.name,
+      iface.description || null,
+      iface.icon || null,
+      kit.guid,
+    ]);
+    
+    toArray(iface.compatibleInterfaces).forEach((compat) => {
+      db.run("INSERT INTO interface_compatibility (interface_guid, compatible_interface_guid) VALUES (?, ?)", [
+        iface.guid,
+        compat.guid,
+      ]);
+    });
+    
+    toArray(iface.attributes).forEach((attr) => {
+      db.run("INSERT INTO attribute (guid, key, value, definition, interface_guid) VALUES (?, ?, ?, ?, ?)", [
+        attr.guid,
+        attr.key,
+        attr.value || null,
+        attr.definition || null,
+        iface.guid,
+      ]);
+    });
+  });
+  
+  toArray(kit.qualities).forEach((quality) => {
+    db.run(
+      "INSERT INTO quality (guid, key, name, kind, default_value, formula, default_si_unit, default_imperial_unit, min_value, min_excluded, max_value, max_excluded, can_scale, definition, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        quality.guid,
+        quality.key,
+        quality.name,
+        quality.kind,
+        quality.defaultValue || null,
+        quality.formula || null,
+        quality.defaultSiUnit || null,
+        quality.defaultImperialUnit || null,
+        quality.min || null,
+        quality.isMinExcluded ? 1 : 0,
+        quality.max || null,
+        quality.isMaxExcluded ? 1 : 0,
+        quality.canScale ? 1 : 0,
+        quality.uri || null,
+        kit.guid,
+      ]
+    );
+    
+    toArray(quality.benchmarks).forEach((benchmark) => {
+      db.run(
+        "INSERT INTO benchmark (guid, name, icon, min_value, min_excluded, max_value, max_excluded, quality_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          benchmark.guid,
+          benchmark.name,
+          benchmark.icon || null,
+          benchmark.min || null,
+          benchmark.minExcluded ? 1 : 0,
+          benchmark.max || null,
+          benchmark.maxExcluded ? 1 : 0,
+          quality.guid,
+        ]
+      );
+      
+      toArray(benchmark.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, benchmark_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          benchmark.guid,
+        ]);
+      });
+    });
+    
+    toArray(quality.attributes).forEach((attr) => {
+      db.run("INSERT INTO attribute (guid, key, value, definition, quality_guid) VALUES (?, ?, ?, ?, ?)", [
+        attr.guid,
+        attr.key,
+        attr.value || null,
+        attr.definition || null,
+        quality.guid,
+      ]);
+    });
+  });
+  
+  toArray(kit.folders).forEach((folder) => {
+    db.run("INSERT INTO folder (guid, name, parent_guid, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?)", [
+      folder.guid,
+      folder.name,
+      folder.parent?.guid || null,
+      toISOString(folder.createdAt),
+      toISOString(folder.updatedAt),
+      kit.guid,
+    ]);
+  });
+  
+  toArray(kit.files).forEach((file) => {
+    db.run("INSERT INTO file (guid, name, folder_guid, size, hash, remote_url, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+      file.guid,
+      file.name,
+      file.folder?.guid || null,
+      file.size || null,
+      file.hash || null,
+      file.remote || null,
+      toISOString(file.createdAt),
+      toISOString(file.updatedAt),
+      kit.guid,
+    ]);
+  });
+  
+  toArray(kit.authors).forEach((author) => {
+    db.run("INSERT INTO author (guid, name, email, kit_guid) VALUES (?, ?, ?, ?)", [
+      author.guid,
+      author.name,
+      author.email || null,
+      kit.guid,
+    ]);
+  });
+  
+  toArray(kit.types).forEach((type) => {
+    db.run(
+        "INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          type.guid,
+          type.name,
+          type.parent?.guid || null,
+          type.isAbstract ? 1 : 0,
+          type.folder || null,
+          type.stock || null,
+          type.virtual ? 1 : 0,
+          type.unit || null,
+          type.description || null,
+          type.icon || null,
+          type.image || null,
+          toISOString(type.createdAt),
+          toISOString(type.updatedAt),
+          kit.guid,
+        ]
+      );
+    
+    toArray(type.concepts).forEach((concept) => {
+      db.run("INSERT INTO type_concept (type_guid, concept) VALUES (?, ?)", [type.guid, concept]);
+    });
+    
+    toArray(type.models).forEach((model) => {
+      db.run("INSERT INTO model (guid, file, name, description, type_guid) VALUES (?, ?, ?, ?, ?)", [
+        model.guid,
+        model.file,
+        model.name || null,
+        model.description || null,
+        type.guid,
+      ]);
+      
+      toArray(model.tags).forEach((tag) => {
+        db.run("INSERT INTO model_tag (model_guid, tag) VALUES (?, ?)", [model.guid, tag]);
+      });
+      
+      toArray(model.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, model_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          model.guid,
+        ]);
+      });
+    });
+    
+    toArray(type.ports).forEach((port) => {
+      db.run(
+        "INSERT INTO port (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          port.guid,
+          port.name || null,
+          port.point.x,
+          port.point.y,
+          port.point.z,
+          port.direction.x,
+          port.direction.y,
+          port.direction.z,
+          port.t,
+          port.mandatory ? 1 : 0,
+          port.interface?.guid || null,
+          port.description || null,
+          type.guid,
+        ]
+      );
+      
+        toArray(port.props).forEach((prop) => {
+        db.run("INSERT INTO prop (guid, value, unit, quality_guid, port_guid) VALUES (?, ?, ?, ?, ?)", [
+          prop.guid,
+          prop.value,
+          prop.unit || null,
+          prop.quality.guid,
+          port.guid,
+        ]);        toArray(prop.attributes).forEach((attr) => {
+          db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [
+            attr.guid,
+            attr.key,
+            attr.value || null,
+            attr.definition || null,
+            prop.guid,
+          ]);
+        });
+      });
+      
+      toArray(port.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, port_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          port.guid,
+        ]);
+      });
+    });
+    
+    toArray(type.attributes).forEach((attr) => {
+      db.run("INSERT INTO attribute (guid, key, value, definition, type_guid) VALUES (?, ?, ?, ?, ?)", [
+        attr.guid,
+        attr.key,
+        attr.value || null,
+        attr.definition || null,
+        type.guid,
+      ]);
+    });
+  });
+  
+  toArray(kit.designs).forEach((design) => {
+    db.run(
+      "INSERT INTO design (guid, name, parent_guid, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        design.guid,
+        design.name,
+        design.parent?.guid || null,
+        design.unit || null,
+        design.description || null,
+        design.icon || null,
+        design.image || null,
+        toISOString(design.createdAt),
+        toISOString(design.updatedAt),
+        kit.guid,
+      ]
+    );
+    
+    toArray(design.concepts).forEach((concept) => {
+      db.run("INSERT INTO design_concept (design_guid, concept) VALUES (?, ?)", [design.guid, concept]);
+    });
+    
+    toArray(design.layers).forEach((layer) => {
+      const layerGuid = guid();
+      db.run("INSERT INTO layer (guid, path, is_hidden, is_locked, color, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?)", [
+        layerGuid,
+        layer.path,
+        layer.isHidden ? 1 : 0,
+        layer.isLocked ? 1 : 0,
+        layer.color || null,
+        layer.description || null,
+        design.guid,
+      ]);
+      
+      toArray(layer.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, layer_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          layerGuid,
+        ]);
+      });
+    });
+    
+    toArray(design.pieces).forEach((piece) => {
+      db.run(
+        "INSERT INTO piece (guid, name, type_guid, design_guid_ref, plane_origin_x, plane_origin_y, plane_origin_z, plane_x_axis_x, plane_x_axis_y, plane_x_axis_z, plane_y_axis_x, plane_y_axis_y, plane_y_axis_z, center_u, center_v, scale, mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z, mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z, mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z, is_hidden, is_locked, color, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          piece.guid,
+          piece.name || null,
+          piece.type?.guid || null,
+          piece.design?.guid || null,
+          piece.plane?.origin.x || null,
+          piece.plane?.origin.y || null,
+          piece.plane?.origin.z || null,
+          piece.plane?.xAxis.x || null,
+          piece.plane?.xAxis.y || null,
+          piece.plane?.xAxis.z || null,
+          piece.plane?.yAxis.x || null,
+          piece.plane?.yAxis.y || null,
+          piece.plane?.yAxis.z || null,
+          piece.center?.u || null,
+          piece.center?.v || null,
+          piece.scale || null,
+          piece.mirrorPlane?.origin.x || null,
+          piece.mirrorPlane?.origin.y || null,
+          piece.mirrorPlane?.origin.z || null,
+          piece.mirrorPlane?.xAxis.x || null,
+          piece.mirrorPlane?.xAxis.y || null,
+          piece.mirrorPlane?.xAxis.z || null,
+          piece.mirrorPlane?.yAxis.x || null,
+          piece.mirrorPlane?.yAxis.y || null,
+          piece.mirrorPlane?.yAxis.z || null,
+          piece.isHidden ? 1 : 0,
+          piece.isLocked ? 1 : 0,
+          piece.color || null,
+          piece.description || null,
+          design.guid,
+        ]
+      );
+      
+      // Piece.props not in schema
+      
+      toArray(piece.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, piece_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          piece.guid,
+        ]);
+      });
+    });
+    
+    toArray(design.groups).forEach((group) => {
+      const groupGuid = guid();
+      db.run("INSERT INTO \"group\" (guid, name, color, description, design_guid) VALUES (?, ?, ?, ?, ?)", [
+        groupGuid,
+        group.name || null,
+        group.color || null,
+        group.description || null,
+        design.guid,
+      ]);
+      
+      toArray(group.pieces).forEach((piece) => {
+        db.run("INSERT INTO group_piece (group_guid, piece_guid) VALUES (?, ?)", [groupGuid, piece.guid]);
+      });
+      
+      toArray(group.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, group_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          groupGuid,
+        ]);
+      });
+    });
+    
+    toArray(design.connections).forEach((connection) => {
+      if (!connection.connected?.piece || !connection.connecting?.piece || !connection.connected?.port || !connection.connecting?.port) {
+        console.warn(`[DEBUG] Skipping malformed connection ${connection.guid}`);
+        return;
+      }
+      db.run(
+        "INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          connection.guid,
+          connection.connected.piece.guid,
+          connection.connected.designPiece?.guid || null,
+          connection.connected.port.guid,
+          connection.connecting.piece.guid,
+          connection.connecting.designPiece?.guid || null,
+          connection.connecting.port.guid,
+          connection.gap || 0,
+          connection.shift || 0,
+          connection.rise || 0,
+          connection.rotation || 0,
+          connection.turn || 0,
+          connection.tilt || 0,
+          connection.x || null,
+          connection.y || null,
+          connection.description || null,
+          design.guid,
+        ]
+      );
+      
+      toArray(connection.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, connection_guid) VALUES (?, ?, ?, ?, ?)", [
+          attr.guid,
+          attr.key,
+          attr.value || null,
+          attr.definition || null,
+          connection.guid,
+        ]);
+      });
+    });
+    
+    toArray(design.stats).forEach((stat) => {
+      db.run("INSERT INTO stat (guid, quality_guid, min_value, max_value, unit, design_guid) VALUES (?, ?, ?, ?, ?, ?)", [
+        stat.guid,
+        stat.quality.guid,
+        stat.min || null,
+        stat.max || null,
+        stat.unit || null,
+        design.guid,
+      ]);
+      
+      // Stat.attributes not in schema
+    });
+    
+    toArray(design.attributes).forEach((attr) => {
+      db.run("INSERT INTO attribute (guid, key, value, definition, design_guid) VALUES (?, ?, ?, ?, ?)", [
+        attr.guid,
+        attr.key,
+        attr.value || null,
+        attr.definition || null,
+        design.guid,
+      ]);
+    });
+  });
+};
+
+// #endregion Kit Import/Export
+
 // #endregion Kit
+

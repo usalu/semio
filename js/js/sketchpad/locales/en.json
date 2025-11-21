@@ -267,18 +267,78 @@
             "label": {
               "normal": "Toggle Workbench",
               "beginner": "Toggle the Workbench panel on the left side"
+            },
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
             }
           },
           "hud": {
             "label": {
               "normal": "Toggle HUD",
               "beginner": "Toggle the HUD panel in the middle"
+            },
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
             }
           },
           "right": {
             "label": {
               "normal": "Toggle Right Panel",
               "beginner": "Toggle the right panel for details and settings"
+            }
+          },
+          "tools": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "toolbar": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "stats": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "details": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "chat": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "settings": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
             }
           }
         },
@@ -1008,6 +1068,30 @@
             "label": {
               "normal": "Chat",
               "beginner": "Chat"
+            }
+          },
+          "createKit": {
+            "label": {
+              "normal": "Create Kit",
+              "beginner": "Create Kit"
+            }
+          },
+          "createTemporary": {
+            "label": {
+              "normal": "Create Temporary",
+              "beginner": "Create Temporary"
+            }
+          },
+          "createLocal": {
+            "label": {
+              "normal": "Create Local",
+              "beginner": "Create Local"
+            }
+          },
+          "createRemote": {
+            "label": {
+              "normal": "Create Remote",
+              "beginner": "Create Remote"
             }
           }
         },
@@ -3177,6 +3261,20 @@
           "normal": "Expert",
           "beginner": "Hide guidance."
         }
+      }
+    }
+  },
+  "tooltip": {
+    "manual": {
+      "label": {
+        "normal": "Manual",
+        "beginner": "Manual"
+      }
+    },
+    "tutorial": {
+      "label": {
+        "normal": "Tutorial",
+        "beginner": "Tutorial"
       }
     }
   }

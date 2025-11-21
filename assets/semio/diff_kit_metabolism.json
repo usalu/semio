@@ -1,0 +1,114 @@
+{
+  "name": "Metabolism (Modified)",
+  "version": "2.0.0",
+  "description": "Modified version for testing",
+  "icon": "modified-icon.svg",
+  "image": "modified-image.png",
+  "homepage": "https://modified.example.com",
+  "license": "MIT-Modified",
+  "attributes": {
+    "added": [
+      {
+        "guid": "5381uzvb-z2zl-0896-gex3-fplrybt1p0e6",
+        "key": "test.added",
+        "value": "new-attribute"
+      }
+    ]
+  },
+  "types": {
+    "added": [
+      {
+        "guid": "rg5gm1kb-9gx7-lxcc-p25n-rf7vltu2u19q",
+        "name": "New Test Type",
+        "description": "Added for testing",
+        "canScale": true,
+        "canMirror": false,
+        "models": [
+          {
+            "guid": "wlwugrab-qnj8-clos-ugdq-1kpsq46cfkr1",
+            "name": "Default Model",
+            "url": "models/test.obj",
+            "tags": [
+              "default"
+            ]
+          }
+        ],
+        "ports": [
+          {
+            "guid": "efd4rt36-ur3u-jx7t-3e20-so2t1qwmdgsg",
+            "point": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "direction": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            },
+            "t": 0,
+            "isMandatory": false
+          }
+        ],
+        "createdAt": "2025-11-21T20:43:24.876Z",
+        "updatedAt": "2025-11-21T20:43:24.877Z"
+      }
+    ],
+    "updated": [
+      {
+        "id": "be2e638c-8baf-4cae-9eba-e2e1e81221e1",
+        "diff": {
+          "name": "Capsule (Updated)",
+          "description": "Updated description",
+          "ports": {
+            "added": [
+              {
+                "guid": "w0cnnh45-aqx6-wek0-zvj3-iu4wejfkqks3",
+                "point": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0
+                },
+                "direction": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0
+                },
+                "t": 0.25,
+                "isMandatory": false
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "removed": [
+      "f806382a-d5fc-47cf-9b71-254bd7388b4e"
+    ]
+  },
+  "designs": {
+    "added": [
+      {
+        "guid": "oh3823ly-j7ku-hbfu-lppv-3hj0lzvgn2gz",
+        "name": "New Test Design",
+        "description": "Added for testing",
+        "pieces": [],
+        "connections": [],
+        "createdAt": "2025-11-21T20:43:24.877Z",
+        "updatedAt": "2025-11-21T20:43:24.877Z"
+      }
+    ],
+    "updated": [
+      {
+        "id": "117c8e5b-cd14-4821-bb0b-16334d53162d",
+        "diff": {
+          "name": "Nakagin Capsule Tower (Updated)",
+          "description": "Updated design description"
+        }
+      }
+    ],
+    "removed": [
+      "2d5d24e8-74ca-4459-ad5a-d596bb33d6a2"
+    ]
+  }
+}

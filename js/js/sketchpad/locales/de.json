@@ -267,18 +267,78 @@
             "label": {
               "normal": "Workbench umschalten",
               "beginner": "Das Workbench-Panel auf der linken Seite ein- oder ausblenden"
+            },
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
             }
           },
           "hud": {
             "label": {
               "normal": "HUD umschalten",
               "beginner": "Das HUD-Panel in der Mitte ein- oder ausblenden"
+            },
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
             }
           },
           "right": {
             "label": {
               "normal": "Rechtes Panel umschalten",
               "beginner": "Das rechte Panel fuer Details und Einstellungen ein- oder ausblenden"
+            }
+          },
+          "tools": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "toolbar": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "stats": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "details": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "chat": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
+          "settings": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
             }
           }
         },
@@ -760,6 +820,30 @@
             "label": {
               "normal": "Chat",
               "beginner": "Chat"
+            }
+          },
+          "createKit": {
+            "label": {
+              "normal": "Create Kit",
+              "beginner": "Create Kit"
+            }
+          },
+          "createTemporary": {
+            "label": {
+              "normal": "Create Temporary",
+              "beginner": "Create Temporary"
+            }
+          },
+          "createLocal": {
+            "label": {
+              "normal": "Create Local",
+              "beginner": "Create Local"
+            }
+          },
+          "createRemote": {
+            "label": {
+              "normal": "Create Remote",
+              "beginner": "Create Remote"
             }
           }
         },
@@ -2973,6 +3057,20 @@
             "beginner": "Descending"
           }
         }
+      }
+    }
+  },
+  "tooltip": {
+    "manual": {
+      "label": {
+        "normal": "Manual",
+        "beginner": "Manual"
+      }
+    },
+    "tutorial": {
+      "label": {
+        "normal": "Tutorial",
+        "beginner": "Tutorial"
       }
     }
   }
