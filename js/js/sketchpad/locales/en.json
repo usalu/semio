@@ -41,47 +41,10 @@
           "tutorial": "getting-started/intro",
           "hotkey": "Alt+Up"
         },
-        "home": {
-          "label": {
-            "normal": "Home",
-            "beginner": "Click to go to home"
-          },
-          "hotkey": "Ctrl+Shift+H"
-        },
-        "kitKinds": {
-          "label": {
-            "normal": "Kit Kinds",
-            "beginner": "Click to expand kit kinds"
-          }
-        },
         "kits": {
           "label": {
             "normal": "Kits",
             "beginner": "Click to see all kits"
-          }
-        },
-        "kitName": {
-          "label": {
-            "normal": "Kit Name",
-            "beginner": "The name of the kit"
-          }
-        },
-        "kitVersion": {
-          "label": {
-            "normal": "Version",
-            "beginner": "The version of the kit"
-          }
-        },
-        "kit": {
-          "label": {
-            "normal": "Kit",
-            "beginner": "The current kit"
-          }
-        },
-        "name": {
-          "label": {
-            "normal": "Name",
-            "beginner": "The name of the artifact"
           }
         },
         "navigationButtons": {
@@ -90,78 +53,12 @@
             "beginner": "Navigation buttons"
           }
         },
-        "versions": {
-          "label": {
-            "normal": "Versions",
-            "beginner": "Click to see all versions"
-          }
-        },
-        "artifacts": {
-          "label": {
-            "normal": "Artifacts",
-            "beginner": "Click to see all artifacts"
-          }
-        },
-        "selectName": {
-          "label": {
-            "normal": "Select Name",
-            "beginner": "Click to select a name"
-          }
-        },
-        "selectDesign": {
-          "label": {
-            "normal": "Select Design",
-            "beginner": "Click to select a design"
-          }
-        },
-        "design": {
-          "label": {
-            "normal": "Design",
-            "beginner": "Go to design"
-          }
-        },
-        "selectType": {
-          "label": {
-            "normal": "Select Type",
-            "beginner": "Click to select a type"
-          }
-        },
-        "type": {
-          "label": {
-            "normal": "Type",
-            "beginner": "Go to type"
-          }
-        },
-        "quality": {
-          "label": {
-            "normal": "Quality",
-            "beginner": "Go to quality"
-          }
-        },
-        "parent": {
-          "label": {
-            "normal": "Parent",
-            "beginner": "The parent of the artifact"
-          }
-        },
-        "abstract": {
-          "label": {
-            "normal": "Abstract",
-            "beginner": "Whether the artifact is abstract"
-          }
-        },
         "docs": {
           "label": {
             "normal": "Documentation",
             "beginner": "Click to view documentation"
           },
           "hotkey": "Ctrl+Shift+D"
-        },
-        "sections": {
-          "label": {
-            "normal": "Sections",
-            "beginner": "Click to see all sections"
-          }
         },
         "search": {
           "label": {
@@ -265,107 +162,10 @@
             }
           }
         },
-        "fullscreen": {
-          "label": {
-            "normal": "Fullscreen",
-            "beginner": "Click to enter fullscreen mode for maximum workspace"
-          },
-          "manual": "navigation#fullscreen",
-          "tutorial": "getting-started/intro#fullscreen",
-          "hotkey": "F11"
-        },
-        "fullscreenToggle": {
-          "label": {
-            "normal": "Toggle Fullscreen",
-            "beginner": "Toggle fullscreen mode on or off"
-          },
-          "manual": "navigation#fullscreen",
-          "tutorial": "getting-started/intro#fullscreen",
-          "hotkey": "F11"
-        },
-        "exitFullscreen": {
-          "label": {
-            "normal": "Exit Fullscreen",
-            "beginner": "Click to exit fullscreen mode"
-          },
-          "manual": "navigation#fullscreen",
-          "tutorial": "getting-started/intro#fullscreen",
-          "hotkey": "F11"
-        },
-        "expand": {
-          "label": {
-            "normal": "Expand Navbar",
-            "beginner": "Click to expand the navigation bar and show additional options"
-          },
-          "hotkey": "Ctrl+Shift+E"
-        },
-        "collapse": {
-          "label": {
-            "normal": "Collapse Navbar",
-            "beginner": "Click to collapse the navigation bar to save space"
-          },
-          "hotkey": "Ctrl+Shift+E"
-        },
-        "minimize": {
-          "label": {
-            "normal": "Minimize",
-            "beginner": "Click to minimize window"
-          },
-          "hotkey": "Ctrl+M"
-        },
-        "maximize": {
-          "label": {
-            "normal": "Maximize",
-            "beginner": "Click to maximize window"
-          }
-        },
-        "close": {
-          "label": {
-            "normal": "Close",
-            "beginner": "Click to close window"
-          },
-          "hotkey": "Ctrl+W"
-        },
-        "changePanelType": {
-          "label": {
-            "normal": "Change Panel Type",
-            "beginner": "Click to change the panel type"
-          }
-        },
         "breadcrumb": {
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "home": {
-            "label": {
-              "normal": "Home",
-              "beginner": "Home"
-            }
-          },
-          "kits": {
-            "label": {
-              "normal": "Kits",
-              "beginner": "Kits"
-            }
-          },
-          "temporary": {
-            "label": {
-              "normal": "Temporary Kits",
-              "beginner": "Kits stored in browser memory"
-            }
-          },
-          "local": {
-            "label": {
-              "normal": "Local Kits",
-              "beginner": "Kits stored on your device"
-            }
-          },
-          "remote": {
-            "label": {
-              "normal": "Remote Kits",
-              "beginner": "Kits synced with remote storage"
-            }
           },
           "designs": {
             "label": {
@@ -385,6 +185,24 @@
               "beginner": "Qualities"
             }
           },
+          "temporary": {
+            "label": {
+              "normal": "Temporary",
+              "beginner": "Temporary"
+            }
+          },
+          "local": {
+            "label": {
+              "normal": "Local",
+              "beginner": "Local"
+            }
+          },
+          "remote": {
+            "label": {
+              "normal": "Remote",
+              "beginner": "Remote"
+            }
+          },
           "files": {
             "label": {
               "normal": "Files",
@@ -396,30 +214,12 @@
               "normal": "Authors",
               "beginner": "Authors"
             }
-          },
-          "docs": {
-            "label": {
-              "normal": "Documentation",
-              "beginner": "Documentation"
-            }
-          },
-          "tutorials": {
-            "label": {
-              "normal": "Tutorials",
-              "beginner": "Tutorials"
-            }
           }
         },
         "tutorials": {
           "label": {
             "normal": "Tutorials",
             "beginner": "Tutorials"
-          }
-        },
-        "selectChild": {
-          "label": {
-            "normal": "Select Child",
-            "beginner": "Click to select a child artifact"
           }
         },
         "createKit": {
@@ -458,236 +258,88 @@
             "beginner": "Type to search for elements"
           }
         },
-        "navigation": {
-          "label": {
-            "normal": "Navigation",
-            "beginner": "Navigation controls"
-          }
-        },
-        "panelToggles": {
-          "label": {
-            "normal": "Panel Toggles",
-            "beginner": "Toggle panels on and off"
-          }
-        },
         "panelToggle": {
           "label": {
             "normal": "",
             "beginner": ""
           },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Show Toolbar",
-                "beginner": "Click to show the Toolbar panel"
-              },
-              "manual": "panels/toolbar",
-              "tutorial": "hello-semio/sketch-setup#toolbar"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Toolbar",
-                "beginner": "Click to hide the Toolbar panel"
-              },
-              "manual": "panels/toolbar",
-              "tutorial": "hello-semio/sketch-setup#toolbar"
-            }
-          },
           "workbench": {
             "label": {
               "normal": "Toggle Workbench",
               "beginner": "Toggle the Workbench panel on the left side"
-            },
-            "show": {
-              "label": {
-                "normal": "Show Workbench",
-                "beginner": "Click to show the Workbench panel on the left"
-              },
-              "manual": "panels/workbench",
-              "tutorial": "hello-semio/sketch-setup#workbench",
-              "hotkey": "Ctrl+J"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Workbench",
-                "beginner": "Click to hide the Workbench panel on the left"
-              },
-              "manual": "panels/workbench",
-              "tutorial": "hello-semio/sketch-setup#workbench",
-              "hotkey": "Ctrl+J"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Show Tools",
-                "beginner": "Click to show the Tools panel on the left"
-              },
-              "manual": "panels/tools",
-              "tutorial": "hello-semio/sketch-setup#tools",
-              "hotkey": "Ctrl+J"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Tools",
-                "beginner": "Click to hide the Tools panel on the left"
-              },
-              "manual": "panels/tools",
-              "tutorial": "hello-semio/sketch-setup#tools",
-              "hotkey": "Ctrl+J"
             }
           },
           "hud": {
             "label": {
               "normal": "Toggle HUD",
               "beginner": "Toggle the HUD panel in the middle"
-            },
-            "show": {
-              "label": {
-                "normal": "Show HUD",
-                "beginner": "Click to show the HUD panel in the middle"
-              },
-              "manual": "panels/hud",
-              "tutorial": "hello-semio/sketch-setup#hud",
-              "hotkey": "Ctrl+K"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide HUD",
-                "beginner": "Click to hide the HUD panel in the middle"
-              },
-              "manual": "panels/hud",
-              "tutorial": "hello-semio/sketch-setup#hud",
-              "hotkey": "Ctrl+K"
-            }
-          },
-          "stats": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Show Stats",
-                "beginner": "Click to show the Stats panel in the middle"
-              },
-              "manual": "panels/stats",
-              "tutorial": "hello-semio/sketch-setup#stats",
-              "hotkey": "Ctrl+K"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Stats",
-                "beginner": "Click to hide the Stats panel in the middle"
-              },
-              "manual": "panels/stats",
-              "tutorial": "hello-semio/sketch-setup#stats",
-              "hotkey": "Ctrl+K"
-            }
-          },
-          "details": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Show Details",
-                "beginner": "Click to show the Details panel on the right"
-              },
-              "manual": "panels/details",
-              "tutorial": "hello-semio/sketch-setup#details",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Details",
-                "beginner": "Click to hide the Details panel on the right"
-              },
-              "manual": "panels/details",
-              "tutorial": "hello-semio/sketch-setup#details",
-              "hotkey": "Ctrl+L"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Show Chat",
-                "beginner": "Click to show the Chat panel on the right"
-              },
-              "manual": "panels/chat",
-              "tutorial": "hello-semio/sketch-setup#chat",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Chat",
-                "beginner": "Click to hide the Chat panel on the right"
-              },
-              "manual": "panels/chat",
-              "tutorial": "hello-semio/sketch-setup#chat",
-              "hotkey": "Ctrl+L"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Show Settings",
-                "beginner": "Click to show the Settings panel on the right"
-              },
-              "manual": "panels/settings",
-              "tutorial": "hello-semio/sketch-setup#settings",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Settings",
-                "beginner": "Click to hide the Settings panel on the right"
-              },
-              "manual": "panels/settings",
-              "tutorial": "hello-semio/sketch-setup#settings",
-              "hotkey": "Ctrl+L"
             }
           },
           "right": {
             "label": {
               "normal": "Toggle Right Panel",
               "beginner": "Toggle the right panel for details and settings"
-            },
-            "show": {
-              "label": {
-                "normal": "Show Right Panel",
-                "beginner": "Click to show the right panel"
-              },
-              "manual": "panels",
-              "tutorial": "hello-semio/sketch-setup",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Hide Right Panel",
-                "beginner": "Click to hide the right panel"
-              },
-              "manual": "panels",
-              "tutorial": "hello-semio/sketch-setup",
-              "hotkey": "Ctrl+L"
             }
+          }
+        },
+        "home": {
+          "label": {
+            "normal": "Home",
+            "beginner": "Home"
+          }
+        },
+        "kitName": {
+          "label": {
+            "normal": "Kit Name",
+            "beginner": "Kit Name"
+          }
+        },
+        "kitVersion": {
+          "label": {
+            "normal": "Kit Version",
+            "beginner": "Kit Version"
+          }
+        },
+        "name": {
+          "label": {
+            "normal": "Name",
+            "beginner": "Name"
+          }
+        },
+        "design": {
+          "label": {
+            "normal": "Design",
+            "beginner": "Design"
+          }
+        },
+        "type": {
+          "label": {
+            "normal": "Type",
+            "beginner": "Type"
+          }
+        },
+        "quality": {
+          "label": {
+            "normal": "Quality",
+            "beginner": "Quality"
+          }
+        },
+        "navigation": {
+          "label": {
+            "normal": "Navigation",
+            "beginner": "Navigation"
+          }
+        },
+        "panelToggles": {
+          "label": {
+            "normal": "Panel Toggles",
+            "beginner": "Panel Toggles"
+          }
+        },
+        "fullscreenToggle": {
+          "label": {
+            "normal": "Fullscreen Toggle",
+            "beginner": "Fullscreen Toggle"
           }
         }
       },
@@ -696,82 +348,10 @@
           "normal": "",
           "beginner": ""
         },
-        "toolbar": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Toolbar panel",
-              "beginner": "Toggle the toolbar panel to access common tools and actions for the current workspace"
-            }
-          },
-          "noTools": {
-            "label": {
-              "normal": "No tools",
-              "beginner": "No tools"
-            }
-          }
-        },
-        "details": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Details panel",
-              "beginner": "Toggle the details panel to view and edit properties of the selected item in depth"
-            }
-          }
-        },
-        "workbench": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Workbench panel",
-              "beginner": "Toggle the workbench panel to access your main workspace with available tools and options"
-            }
-          },
-          "noSections": {
-            "label": {
-              "normal": "No workbench sections available",
-              "beginner": "No workbench sections available"
-            }
-          }
-        },
-        "console": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Console panel",
-              "beginner": "Toggle the console panel to view logs and debug information"
-            }
-          }
-        },
         "chat": {
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Chat panel",
-              "beginner": "Toggle the chat panel to get AI assistance and context-aware help"
-            }
-          },
-          "input": {
-            "label": {
-              "normal": "Message",
-              "beginner": "Type your question or message here. Press Enter to send, Shift+Enter for a new line."
-            }
           },
           "placeholder": {
             "label": {
@@ -784,36 +364,6 @@
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Settings panel",
-              "beginner": "Toggle the settings panel to configure application preferences and workspace options"
-            }
-          },
-          "language": {
-            "label": {
-              "normal": "Language",
-              "beginner": "Select the language for the application interface"
-            },
-            "en": {
-              "label": {
-                "normal": "English",
-                "beginner": "English"
-              }
-            },
-            "de": {
-              "label": {
-                "normal": "German",
-                "beginner": "German"
-              }
-            }
-          },
-          "general": {
-            "label": {
-              "normal": "General Settings",
-              "beginner": "Configure general application preferences"
-            }
           },
           "theme": {
             "label": {
@@ -905,76 +455,6 @@
               }
             }
           }
-        },
-        "tools": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "noSections": {
-            "label": {
-              "normal": "No tools sections available",
-              "beginner": "No tools sections available"
-            }
-          }
-        },
-        "hud": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "noSections": {
-            "label": {
-              "normal": "No hud sections available",
-              "beginner": "No hud sections available"
-            }
-          }
-        },
-        "freeze": {
-          "label": {
-            "normal": "Freeze State",
-            "beginner": "Export the complete application state as a JSON file for backup or debugging"
-          },
-          "manual": "dev/timetravel",
-          "tutorial": "advanced/timetravel",
-          "normal": {
-            "label": {
-              "normal": "Download a complete snapshot of the current state",
-              "beginner": "Download a complete snapshot of the current state"
-            }
-          },
-          "expert": {
-            "label": {
-              "normal": "Dump complete state to JSON",
-              "beginner": "Dump complete state to JSON"
-            }
-          }
-        },
-        "timetravel": {
-          "label": {
-            "normal": "Timetravel",
-            "beginner": "Load a previously saved state from a JSON file to restore the application to that point"
-          },
-          "manual": "dev/timetravel",
-          "tutorial": "advanced/timetravel",
-          "normal": {
-            "label": {
-              "normal": "Load state from a JSON file",
-              "beginner": "Load state from a JSON file"
-            }
-          },
-          "expert": {
-            "label": {
-              "normal": "Load state from JSON",
-              "beginner": "Load state from JSON"
-            }
-          }
-        }
-      },
-      "footer": {
-        "label": {
-          "normal": "",
-          "beginner": ""
         }
       },
       "common": {
@@ -984,40 +464,10 @@
         },
         "selectVariant": "Select variant...",
         "selectView": "Select view...",
-        "add": {
-          "label": {
-            "normal": "Add",
-            "beginner": "Click to add a new item"
-          }
-        },
-        "remove": {
-          "label": {
-            "normal": "Remove",
-            "beginner": "Click to remove this item"
-          }
-        },
         "search": {
           "label": {
             "normal": "Search",
             "beginner": "Search"
-          }
-        },
-        "x": {
-          "label": {
-            "normal": "X",
-            "beginner": "X"
-          }
-        },
-        "y": {
-          "label": {
-            "normal": "Y",
-            "beginner": "Y"
-          }
-        },
-        "z": {
-          "label": {
-            "normal": "Z",
-            "beginner": "Z"
           }
         },
         "mixedValues": {
@@ -1036,46 +486,6 @@
           "label": {
             "normal": "Select type",
             "beginner": "Select type"
-          }
-        },
-        "addType": {
-          "label": {
-            "normal": "Add Type",
-            "beginner": "Click to add a new type to the current context"
-          },
-          "manual": "manuals/semio/kit#types",
-          "tutorial": "hello-semio/model-brick-set"
-        },
-        "addDesign": {
-          "label": {
-            "normal": "Add Design",
-            "beginner": "Click to add a new design to the current context"
-          },
-          "manual": "manuals/semio/kit#designs",
-          "tutorial": "hello-semio/model-design"
-        },
-        "addChild": {
-          "label": {
-            "normal": "Add Child",
-            "beginner": "Click to create a new child artifact"
-          }
-        },
-        "sort": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "ascending": {
-            "label": {
-              "normal": "Sort ascending",
-              "beginner": "Sort items from A to Z or smallest to largest."
-            }
-          },
-          "descending": {
-            "label": {
-              "normal": "Sort descending",
-              "beginner": "Sort items from Z to A or largest to smallest."
-            }
           }
         },
         "settings": {
@@ -1107,6 +517,48 @@
               "beginner": "Choose your expertise level"
             }
           }
+        },
+        "no": {
+          "label": {
+            "normal": "No",
+            "beginner": "No"
+          }
+        },
+        "yes": {
+          "label": {
+            "normal": "Yes",
+            "beginner": "Yes"
+          }
+        },
+        "add": {
+          "label": {
+            "normal": "Add",
+            "beginner": "Add"
+          }
+        },
+        "remove": {
+          "label": {
+            "normal": "Remove",
+            "beginner": "Remove"
+          }
+        },
+        "addChild": {
+          "label": {
+            "normal": "Add Child",
+            "beginner": "Add Child"
+          }
+        },
+        "addType": {
+          "label": {
+            "normal": "Add Type",
+            "beginner": "Add Type"
+          }
+        },
+        "addDesign": {
+          "label": {
+            "normal": "Add Design",
+            "beginner": "Add Design"
+          }
         }
       },
       "settings": {
@@ -1119,22 +571,22 @@
             "normal": "Theme",
             "beginner": "Color scheme for the interface"
           },
-          "dark": {
+          "system": {
             "label": {
-              "normal": "Dark",
-              "beginner": "Use dark color scheme"
+              "normal": "System",
+              "beginner": "System"
             }
           },
           "light": {
             "label": {
               "normal": "Light",
-              "beginner": "Use light color scheme"
+              "beginner": "Light"
             }
           },
-          "system": {
+          "dark": {
             "label": {
-              "normal": "System",
-              "beginner": "Follow system theme preference"
+              "normal": "Dark",
+              "beginner": "Dark"
             }
           }
         },
@@ -1146,19 +598,13 @@
           "desktop": {
             "label": {
               "normal": "Desktop",
-              "beginner": "Optimized for desktop computers"
+              "beginner": "Desktop"
             }
           },
           "tablet": {
             "label": {
               "normal": "Tablet",
-              "beginner": "Optimized for tablets"
-            }
-          },
-          "mobile": {
-            "label": {
-              "normal": "Mobile",
-              "beginner": "Optimized for mobile devices"
+              "beginner": "Tablet"
             }
           }
         },
@@ -1167,16 +613,16 @@
             "normal": "Mode",
             "beginner": "Interface mode"
           },
-          "dev": {
-            "label": {
-              "normal": "Developer",
-              "beginner": "Developer mode with advanced tools"
-            }
-          },
           "user": {
             "label": {
               "normal": "User",
-              "beginner": "Standard user mode"
+              "beginner": "User"
+            }
+          },
+          "dev": {
+            "label": {
+              "normal": "Dev",
+              "beginner": "Dev"
             }
           }
         },
@@ -1200,7 +646,21 @@
           "expert": {
             "label": {
               "normal": "Expert",
-              "beginner": "Minimal tooltips"
+              "beginner": "Expert"
+            }
+          }
+        },
+        "language": {
+          "de": {
+            "label": {
+              "normal": "De",
+              "beginner": "De"
+            }
+          },
+          "en": {
+            "label": {
+              "normal": "En",
+              "beginner": "En"
             }
           }
         }
@@ -1212,14 +672,14 @@
         },
         "ascending": {
           "label": {
-            "normal": "Sort ascending",
-            "beginner": "Sort from A to Z or smallest to largest"
+            "normal": "Ascending",
+            "beginner": "Ascending"
           }
         },
         "descending": {
           "label": {
-            "normal": "Sort descending",
-            "beginner": "Sort from Z to A or largest to smallest"
+            "normal": "Descending",
+            "beginner": "Descending"
           }
         }
       },
@@ -1232,25 +692,6 @@
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Open chat for assistance"
-            },
-            "hotkey": "Ctrl+Shift+C"
-          },
-          "title": {
-            "label": {
-              "normal": "Home",
-              "beginner": "Home"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Browse and manage your kits",
-              "beginner": "Browse and manage your kits"
-            }
           },
           "searchPlaceholder": {
             "label": {
@@ -1280,18 +721,6 @@
             "label": {
               "normal": "Created",
               "beginner": "Created"
-            }
-          },
-          "kits": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multiple": {
-              "label": {
-                "normal": "{{count}} Kits",
-                "beginner": "{{count}} Kits"
-              }
             }
           },
           "filter": {
@@ -1508,6 +937,78 @@
                 }
               }
             }
+          },
+          "noKits": {
+            "label": {
+              "normal": "No Kits",
+              "beginner": "No Kits"
+            }
+          },
+          "sortByName": {
+            "label": {
+              "normal": "Sort By Name",
+              "beginner": "Sort By Name"
+            }
+          },
+          "toggleRow": {
+            "label": {
+              "normal": "Toggle Row",
+              "beginner": "Toggle Row"
+            }
+          },
+          "createVersion": {
+            "label": {
+              "normal": "Create Version",
+              "beginner": "Create Version"
+            }
+          },
+          "hideKind": {
+            "label": {
+              "normal": "Hide Kind",
+              "beginner": "Hide Kind"
+            }
+          },
+          "showTemporary": {
+            "label": {
+              "normal": "Show Temporary",
+              "beginner": "Show Temporary"
+            }
+          },
+          "showLocal": {
+            "label": {
+              "normal": "Show Local",
+              "beginner": "Show Local"
+            }
+          },
+          "showRemote": {
+            "label": {
+              "normal": "Show Remote",
+              "beginner": "Show Remote"
+            }
+          },
+          "sortByType": {
+            "label": {
+              "normal": "Sort By Type",
+              "beginner": "Sort By Type"
+            }
+          },
+          "sortByUpdatedAt": {
+            "label": {
+              "normal": "Sort By Updated At",
+              "beginner": "Sort By Updated At"
+            }
+          },
+          "sortByCreatedAt": {
+            "label": {
+              "normal": "Sort By Created At",
+              "beginner": "Sort By Created At"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Chat"
+            }
           }
         },
         "kit": {
@@ -1519,18 +1020,6 @@
             "label": {
               "normal": "Kit not found",
               "beginner": "The requested kit could not be found"
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Kit",
-              "beginner": "Kit"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "View and edit kit metadata",
-              "beginner": "View and edit kit metadata"
             }
           },
           "noKitLoaded": {
@@ -1551,47 +1040,53 @@
               "beginner": "Kit not available"
             }
           },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Name"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Kind",
-              "beginner": "Kind"
-            }
-          },
-          "version": {
-            "label": {
-              "normal": "Version",
-              "beginner": "Version"
-            }
-          },
           "versionPlaceholder": {
-            "label": "e.g., 1.0.0"
-          },
-          "descriptionLabel": {
             "label": {
-              "normal": "Description",
-              "beginner": "Description"
+              "label": {
+                "normal": "e.g., 1.0.0",
+                "beginner": "e.g., 1.0.0"
+              }
             }
           },
           "descriptionPlaceholder": {
-            "label": "Describe what this kit contains..."
+            "label": {
+              "label": {
+                "normal": "Describe what this kit contains...",
+                "beginner": "Describe what this kit contains..."
+              }
+            }
           },
           "iconPlaceholder": {
-            "label": "🎨 or URL to icon"
+            "label": {
+              "label": {
+                "normal": "🎨 or URL to icon",
+                "beginner": "🎨 or URL to icon"
+              }
+            }
           },
           "imagePlaceholder": {
-            "label": "URL to preview image"
+            "label": {
+              "label": {
+                "normal": "URL to preview image",
+                "beginner": "URL to preview image"
+              }
+            }
           },
           "homepagePlaceholder": {
-            "label": "https://example.com"
+            "label": {
+              "label": {
+                "normal": "https://example.com",
+                "beginner": "https://example.com"
+              }
+            }
           },
           "licensePlaceholder": {
-            "label": "e.g., MIT, GPL-3.0, Apache-2.0"
+            "label": {
+              "label": {
+                "normal": "e.g., MIT, GPL-3.0, Apache-2.0",
+                "beginner": "e.g., MIT, GPL-3.0, Apache-2.0"
+              }
+            }
           },
           "defaultName": {
             "label": {
@@ -1611,42 +1106,10 @@
               "beginner": "Default"
             }
           },
-          "lastUpdated": {
-            "label": {
-              "normal": "Last Updated",
-              "beginner": "Last Updated"
-            }
-          },
-          "created": {
-            "label": {
-              "normal": "Created",
-              "beginner": "Created"
-            }
-          },
           "filter": {
             "label": {
               "normal": "",
               "beginner": ""
-            },
-            "concept": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "show": {
-                "label": {
-                  "normal": "Show this concept",
-                  "beginner": "Click to show artifacts with this concept"
-                },
-                "hotkey": "Ctrl+C"
-              },
-              "hide": {
-                "label": {
-                  "normal": "Hide this concept",
-                  "beginner": "Click to hide artifacts with this concept"
-                },
-                "hotkey": "Ctrl+Shift+C"
-              }
             },
             "name": {
               "label": {
@@ -1686,34 +1149,16 @@
             },
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
+            "multipleSelected": {
+              "label": {
+                "normal": "Multiple Selected",
+                "beginner": "Multiple Selected"
+              }
+            },
             "multipleTitle": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Design",
-                  "beginner": "{{count}} Design"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Designs",
-                  "beginner": "{{count}} Designs"
-                }
-              }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Design",
-                "beginner": "{{count}} Design"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Designs",
-                "beginner": "{{count}} Designs"
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
               }
             }
           },
@@ -1724,82 +1169,16 @@
             },
             "manual": "manuals/semio/kit#types",
             "tutorial": "hello-semio/model-brick-set",
-            "multipleTitle": {
+            "multipleSelected": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Type",
-                  "beginner": "{{count}} Type"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Types",
-                  "beginner": "{{count}} Types"
-                }
+                "normal": "Multiple Selected",
+                "beginner": "Multiple Selected"
               }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Type",
-                "beginner": "{{count}} Type"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Types",
-                "beginner": "{{count}} Types"
-              }
-            }
-          },
-          "file": {
-            "label": {
-              "normal": "File",
-              "beginner": "File"
-            },
-            "title": {
-              "label": {
-                "normal": "File",
-                "beginner": "File"
-              }
-            }
-          },
-          "files": {
-            "label": {
-              "normal": "",
-              "beginner": ""
             },
             "multipleTitle": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} File",
-                  "beginner": "{{count}} File"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Files",
-                  "beginner": "{{count}} Files"
-                }
-              }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} File",
-                "beginner": "{{count}} File"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Files",
-                "beginner": "{{count}} Files"
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
               }
             }
           },
@@ -1809,120 +1188,11 @@
               "beginner": "Folder"
             },
             "descriptionPlaceholder": {
-              "label": "Describe this folder..."
-            },
-            "title": {
               "label": {
-                "normal": "Folder",
-                "beginner": "Folder"
-              }
-            }
-          },
-          "folders": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
                 "label": {
-                  "normal": "{{count}} Folder",
-                  "beginner": "{{count}} Folder"
+                  "normal": "Describe this folder...",
+                  "beginner": "Describe this folder..."
                 }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Folders",
-                  "beginner": "{{count}} Folders"
-                }
-              }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Folder",
-                "beginner": "{{count}} Folder"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Folders",
-                "beginner": "{{count}} Folders"
-              }
-            }
-          },
-          "qualities": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Quality",
-                "beginner": "{{count}} Quality"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Qualities",
-                "beginner": "{{count}} Qualities"
-              }
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Author",
-                "beginner": "{{count}} Author"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Authors",
-                "beginner": "{{count}} Authors"
-              }
-            }
-          },
-          "artifacts": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multiple": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Artifact Kind",
-                  "beginner": "{{count}} Artifact Kind"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Artifact Kinds",
-                  "beginner": "{{count}} Artifact Kinds"
-                }
-              }
-            },
-            "multiple_one": {
-              "label": {
-                "normal": "{{count}} Artifact Kind",
-                "beginner": "{{count}} Artifact Kind"
-              }
-            },
-            "multiple_other": {
-              "label": {
-                "normal": "{{count}} Artifact Kinds",
-                "beginner": "{{count}} Artifact Kinds"
               }
             }
           },
@@ -2007,6 +1277,22 @@
               "manual": "manuals/semio/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
+            "showInterfaces": {
+              "label": {
+                "normal": "Show Interfaces",
+                "beginner": "Click to show all interfaces in this kit"
+              },
+              "manual": "manuals/semio/kit#interfaces",
+              "tutorial": "getting-started/intro#interface"
+            },
+            "createInterface": {
+              "label": {
+                "normal": "Create Interface",
+                "beginner": "Click to create a new interface definition in this kit"
+              },
+              "manual": "manuals/semio/kit#interfaces",
+              "tutorial": "getting-started/intro#interface"
+            },
             "showFiles": {
               "label": {
                 "normal": "Show Files",
@@ -2071,47 +1357,6 @@
               "label": {
                 "normal": "Create Child",
                 "beginner": "Create a child element"
-              }
-            },
-            "sortByName": {
-              "label": {
-                "normal": "Sort by name",
-                "beginner": "Click to sort artifacts alphabetically by name"
-              },
-              "hotkey": "Ctrl+Shift+N"
-            },
-            "createVariant": {
-              "label": {
-                "normal": "Create variant",
-                "beginner": "Click to create a new variant of this artifact"
-              },
-              "manual": "manuals/semio#variants",
-              "tutorial": "hello-semio/model-design"
-            },
-            "createView": {
-              "label": {
-                "normal": "Create view",
-                "beginner": "Click to create a new view for this design"
-              },
-              "manual": "manuals/semio/design#views",
-              "tutorial": "hello-semio/model-design"
-            }
-          },
-          "sort": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "ascending": {
-              "label": {
-                "normal": "Sort ascending",
-                "beginner": "Sort from A to Z or smallest to largest"
-              }
-            },
-            "descending": {
-              "label": {
-                "normal": "Sort descending",
-                "beginner": "Sort from Z to A or largest to smallest"
               }
             }
           },
@@ -2184,12 +1429,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Kit Details",
-                      "beginner": "Kit Details"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Kit name",
@@ -2252,12 +1491,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Folder",
-                      "beginner": "Folder"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -2274,57 +1507,88 @@
                     "manual": "kit#folders",
                     "tutorial": "hello-semio/save-kit"
                   }
+                },
+                "interface": {
+                  "compatible": {
+                    "label": {
+                      "normal": "Compatible",
+                      "beginner": "Compatible"
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Description",
+                      "beginner": "Description"
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Name"
+                    }
+                  }
                 }
+              }
+            }
+          },
+          "interface": {
+            "allCompatible": {
+              "label": {
+                "normal": "All Compatible",
+                "beginner": "All Compatible"
               }
             },
-            "workbench": {
+            "compatibleInterfaces": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
+                "normal": "Compatible Interfaces",
+                "beginner": "Compatible Interfaces"
+              }
+            },
+            "descriptionPlaceholder": {
+              "label": {
                 "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "types": {
-                  "label": {
-                    "normal": "Types",
-                    "beginner": "Browse and manage all type definitions in this kit."
-                  },
-                  "manual": "kit#types",
-                  "tutorial": "hello-semio/model-brick-set"
-                },
-                "designs": {
-                  "label": {
-                    "normal": "Designs",
-                    "beginner": "Browse and manage all design compositions in this kit."
-                  },
-                  "manual": "kit#designs",
-                  "tutorial": "hello-semio/model-design"
-                },
-                "qualities": {
-                  "label": {
-                    "normal": "Qualities",
-                    "beginner": "Browse and manage all quality definitions in this kit."
-                  },
-                  "manual": "kit#qualities"
-                },
-                "files": {
-                  "label": {
-                    "normal": "Files",
-                    "beginner": "Browse and manage all files included in this kit."
-                  },
-                  "manual": "kit#files"
-                },
-                "authors": {
-                  "label": {
-                    "normal": "Authors",
-                    "beginner": "Browse and manage all authors who contributed to this kit."
-                  },
-                  "manual": "kit#authors"
+                  "normal": "Label",
+                  "beginner": "Label"
                 }
               }
+            }
+          },
+          "interfaces": {
+            "multipleSelected": {
+              "label": {
+                "normal": "Multiple Selected",
+                "beginner": "Multiple Selected"
+              }
+            }
+          },
+          "qualities": {
+            "multipleTitle": {
+              "label": {
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
+              }
+            }
+          },
+          "files": {
+            "multipleTitle": {
+              "label": {
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
+              }
+            }
+          },
+          "authors": {
+            "multipleTitle": {
+              "label": {
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
+              }
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
             }
           }
         },
@@ -2340,7 +1604,12 @@
             }
           },
           "descriptionPlaceholder": {
-            "label": "Describe this folder..."
+            "label": {
+              "label": {
+                "normal": "Describe this folder...",
+                "beginner": "Describe this folder..."
+              }
+            }
           }
         },
         "design": {
@@ -2348,88 +1617,10 @@
             "normal": "Design",
             "beginner": "Design"
           },
-          "appTitle": {
-            "label": {
-              "normal": "Design",
-              "beginner": "Design editor for creating and modifying designs"
-            }
-          },
-          "windows": {
-            "label": {
-              "normal": "Windows",
-              "beginner": "Manage design windows (scene, diagram, table)"
-            }
-          },
-          "canvas": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "diagram": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "designNode": {
-                "label": {
-                  "normal": "Design",
-                  "beginner": "A design piece in the diagram"
-                }
-              },
-              "pieceNode": {
-                "label": {
-                  "normal": "Piece",
-                  "beginner": "A piece instance in the diagram"
-                }
-              }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Design",
-              "beginner": "Design"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Edit design compositions",
-              "beginner": "Edit design compositions"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
-            }
-          },
           "defaultName": {
             "label": {
               "normal": "New Design",
               "beginner": "New Design"
-            }
-          },
-          "newVariant": {
-            "label": {
-              "normal": "New Variant",
-              "beginner": "New Variant"
-            }
-          },
-          "newView": {
-            "label": {
-              "normal": "New View",
-              "beginner": "New View"
-            }
-          },
-          "defaultVariant": {
-            "label": {
-              "normal": "Default",
-              "beginner": "Default"
-            }
-          },
-          "defaultView": {
-            "label": {
-              "normal": "Default",
-              "beginner": "Default"
             }
           },
           "windowLibrary": {
@@ -2440,26 +1631,20 @@
             "scene": {
               "label": {
                 "normal": "Scene Windows",
-                "beginner": "Browse and add 3D scene windows for viewing your design in 3D space."
-              },
-              "manual": "design#windows",
-              "tutorial": "hello-semio/model-design#scene"
+                "beginner": "Scene Windows"
+              }
             },
             "diagram": {
               "label": {
                 "normal": "Diagram Windows",
-                "beginner": "Browse and add 2D diagram windows for viewing connection topology."
-              },
-              "manual": "design#windows",
-              "tutorial": "hello-semio/model-design#diagram"
+                "beginner": "Diagram Windows"
+              }
             },
             "table": {
               "label": {
                 "normal": "Table Windows",
-                "beginner": "Browse and add table windows for viewing design data in tabular format."
-              },
-              "manual": "design#windows",
-              "tutorial": "hello-semio/model-design#table"
+                "beginner": "Table Windows"
+              }
             }
           },
           "descriptionPlaceholder": {
@@ -2624,30 +1809,6 @@
               }
             }
           },
-          "windowLibrary": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "scene": {
-              "label": {
-                "normal": "Scene Windows",
-                "beginner": "Scene Windows"
-              }
-            },
-            "diagram": {
-              "label": {
-                "normal": "Diagram Windows",
-                "beginner": "Diagram Windows"
-              }
-            },
-            "table": {
-              "label": {
-                "normal": "Table Windows",
-                "beginner": "Table Windows"
-              }
-            }
-          },
           "panel": {
             "label": {
               "normal": "",
@@ -2658,148 +1819,6 @@
                 "normal": "",
                 "beginner": ""
               },
-              "name": {
-                "label": {
-                  "normal": "Name",
-                  "beginner": "The name of the design. This is the primary identifier for your composition."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "description": {
-                "label": {
-                  "normal": "Description",
-                  "beginner": "A detailed description of what this design represents and how it should be used."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "icon": {
-                "label": {
-                  "normal": "Icon",
-                  "beginner": "URL or path to an icon that represents this design in listings and previews."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "image": {
-                "label": {
-                  "normal": "Image",
-                  "beginner": "URL or path to a preview image that showcases this design."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "variant": {
-                "label": {
-                  "normal": "Variant",
-                  "beginner": "A variant identifier for different versions or configurations of this design."
-                },
-                "manual": "design#variants",
-                "tutorial": "hello-semio/model-design"
-              },
-              "view": {
-                "label": {
-                  "normal": "View",
-                  "beginner": "The viewing perspective or camera angle for displaying this design."
-                },
-                "manual": "design#views",
-                "tutorial": "hello-semio/model-design"
-              },
-              "unit": {
-                "label": {
-                  "normal": "Unit",
-                  "beginner": "The measurement unit used for all dimensions in this design (e.g., mm, cm, m)."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "createdAt": {
-                "label": {
-                  "normal": "Created At",
-                  "beginner": "The date and time when this design was first created."
-                }
-              },
-              "updatedAt": {
-                "label": {
-                  "normal": "Updated At",
-                  "beginner": "The date and time when this design was last modified."
-                }
-              },
-              "location": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "longitude": {
-                  "label": {
-                    "normal": "Longitude",
-                    "beginner": "The east-west position of this design's location in decimal degrees."
-                  },
-                  "manual": "design#location"
-                },
-                "latitude": {
-                  "label": {
-                    "normal": "Latitude",
-                    "beginner": "The north-south position of this design's location in decimal degrees."
-                  },
-                  "manual": "design#location"
-                }
-              },
-              "author": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "The full name of the person who contributed to this design."
-                  },
-                  "manual": "design#authors"
-                },
-                "email": {
-                  "label": {
-                    "normal": "Email",
-                    "beginner": "Contact email address for this author."
-                  },
-                  "manual": "design#authors"
-                }
-              },
-              "attribute": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "The unique identifier for this attribute in kebab-case format (e.g., 'material.type')."
-                  },
-                  "manual": "design#attributes"
-                },
-                "value": {
-                  "label": {
-                    "normal": "Value",
-                    "beginner": "The value associated with this attribute. Leave empty to use as a category flag."
-                  },
-                  "manual": "design#attributes"
-                },
-                "unit": {
-                  "label": {
-                    "normal": "Unit",
-                    "beginner": "The measurement unit for this attribute's value (e.g., mm, kg, °C)."
-                  },
-                  "manual": "design#attributes"
-                },
-                "definition": {
-                  "label": {
-                    "normal": "Definition",
-                    "beginner": "A URL or text that defines what this attribute means and how it should be interpreted."
-                  },
-                  "manual": "design#attributes"
-                }
-              },
               "section": {
                 "label": {
                   "normal": "",
@@ -2809,12 +1828,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Design",
-                      "beginner": "Design"
-                    }
                   },
                   "name": {
                     "label": {
@@ -2890,12 +1903,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Location",
-                      "beginner": "Location"
-                    }
-                  },
                   "longitude": {
                     "label": {
                       "normal": "Longitude",
@@ -2916,12 +1923,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Authors",
-                      "beginner": "Authors"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -2941,12 +1942,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Attributes",
-                      "beginner": "Attributes"
-                    }
                   },
                   "name": {
                     "label": {
@@ -2981,34 +1976,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Piece",
-                      "beginner": "Piece"
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "{{count}} Pieces",
-                      "beginner": "{{count}} Pieces"
-                    }
-                  },
-                  "id": {
-                    "label": {
-                      "normal": "ID",
-                      "beginner": "Unique identifier for this piece instance in the design."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
-                  },
-                  "type": {
-                    "label": {
-                      "normal": "Type",
-                      "beginner": "The type definition this piece is based on. Determines geometry and available ports."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
                   },
                   "center": {
                     "label": {
@@ -3113,48 +2080,12 @@
                         }
                       }
                     }
-                  },
-                  "planeOrigin": {
-                    "label": {
-                      "normal": "Origin",
-                      "beginner": "The origin point of the piece's placement plane in 3D space."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
-                  },
-                  "planeXAxis": {
-                    "label": {
-                      "normal": "X Axis",
-                      "beginner": "The X-axis direction vector of the piece's placement plane."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
-                  },
-                  "planeYAxis": {
-                    "label": {
-                      "normal": "Y Axis",
-                      "beginner": "The Y-axis direction vector of the piece's placement plane."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
                   }
                 },
                 "connection": {
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Connection",
-                      "beginner": "Connection"
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "{{count}} Connections",
-                      "beginner": "{{count}} Connections"
-                    }
                   },
                   "multipleEditing": {
                     "label": {
@@ -3252,12 +2183,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Port",
-                      "beginner": "Port"
-                    }
-                  },
                   "id": {
                     "label": {
                       "normal": "Port ID",
@@ -3305,73 +2230,89 @@
                       "normal": "Attribute",
                       "beginner": "Custom attributes of the port"
                     }
-                  }
-                },
-                "selection": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
                   },
-                  "multipleTitle": {
+                  "notFound": {
                     "label": {
-                      "normal": "Multiple Selection",
-                      "beginner": "Multiple Selection"
+                      "normal": "Not Found",
+                      "beginner": "Not Found"
                     }
                   }
                 }
+              },
+              "parentConnection": {
+                "label": {
+                  "normal": "Parent Connection",
+                  "beginner": "Parent Connection"
+                }
+              },
+              "parentConnections": {
+                "label": {
+                  "normal": "Parent Connections",
+                  "beginner": "Parent Connections"
+                }
+              }
+            }
+          },
+          "gridSize": {
+            "label": {
+              "normal": "Grid Size",
+              "beginner": "Grid Size"
+            }
+          },
+          "proximityConnectDistance": {
+            "label": {
+              "normal": "Proximity Connect Distance",
+              "beginner": "Proximity Connect Distance"
+            }
+          },
+          "selectOnlyPiecesOrConnections": {
+            "label": {
+              "normal": "Select Only Pieces Or Connections",
+              "beginner": "Select Only Pieces Or Connections"
+            }
+          },
+          "connection": {
+            "rotation": {
+              "label": {
+                "normal": "Rotation",
+                "beginner": "Rotation"
               }
             },
-            "workbench": {
+            "tilt": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "types": {
-                  "label": {
-                    "normal": "Types",
-                    "beginner": "Browse and select from available types to add to your design."
-                  },
-                  "manual": "design#types",
-                  "tutorial": "hello-semio/model-design#adding-pieces"
-                },
-                "designs": {
-                  "label": {
-                    "normal": "Designs",
-                    "beginner": "Browse and select from available designs to nest in your current design."
-                  },
-                  "manual": "design#nested-designs",
-                  "tutorial": "hello-semio/model-design#nested-designs"
-                }
-              },
-              "windowLibrary": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "scene": {
-                  "label": {
-                    "normal": "Scene Windows",
-                    "beginner": "Scene Windows"
-                  }
-                },
-                "diagram": {
-                  "label": {
-                    "normal": "Diagram Windows",
-                    "beginner": "Diagram Windows"
-                  }
-                },
-                "table": {
-                  "label": {
-                    "normal": "Table Windows",
-                    "beginner": "Table Windows"
-                  }
-                }
+                "normal": "Tilt",
+                "beginner": "Tilt"
               }
+            },
+            "turn": {
+              "label": {
+                "normal": "Turn",
+                "beginner": "Turn"
+              }
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
+            }
+          },
+          "tools": {
+            "label": {
+              "normal": "Tools",
+              "beginner": "Tools"
+            }
+          },
+          "windows": {
+            "label": {
+              "normal": "Windows",
+              "beginner": "Windows"
+            }
+          },
+          "appTitle": {
+            "label": {
+              "normal": "App Title",
+              "beginner": "App Title"
             }
           }
         },
@@ -3387,51 +2328,9 @@
             },
             "someAction": {
               "label": {
-                "normal": "Action",
-                "beginner": "Perform an action on the type"
+                "normal": "Some Action",
+                "beginner": "Some Action"
               }
-            }
-          },
-          "title": {
-            "label": {
-              "normal": "Type",
-              "beginner": "Type"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Edit type definitions",
-              "beginner": "Edit type definitions"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
-            }
-          },
-          "noModels": {
-            "label": {
-              "normal": "No models available",
-              "beginner": "No models available"
-            }
-          },
-          "selectModel": {
-            "label": {
-              "normal": "Select model",
-              "beginner": "Select model"
-            }
-          },
-          "noTags": {
-            "label": {
-              "normal": "No tags available",
-              "beginner": "No tags available"
-            }
-          },
-          "clearTags": {
-            "label": {
-              "normal": "Clear all",
-              "beginner": "Clear all"
             }
           },
           "defaultName": {
@@ -3440,35 +2339,45 @@
               "beginner": "New Type"
             }
           },
-          "newVariant": {
-            "label": {
-              "normal": "New Variant",
-              "beginner": "New Variant"
-            }
-          },
-          "defaultVariant": {
-            "label": {
-              "normal": "Default",
-              "beginner": "Default"
-            }
-          },
           "descriptionPlaceholder": {
-            "label": "Describe this type..."
+            "label": {
+              "label": {
+                "normal": "Describe this type...",
+                "beginner": "Describe this type..."
+              }
+            }
           },
           "iconPlaceholder": {
-            "label": "??"
+            "label": {
+              "label": {
+                "normal": "??",
+                "beginner": "??"
+              }
+            }
           },
           "imagePlaceholder": {
-            "label": "https://example.com/image.png"
+            "label": {
+              "label": {
+                "normal": "https://example.com/image.png",
+                "beginner": "https://example.com/image.png"
+              }
+            }
           },
           "variantPlaceholder": {
             "label": {
-              "normal": "e.g., large, small",
-              "beginner": "e.g., large, small"
+              "label": {
+                "normal": "e.g., large, small",
+                "beginner": "e.g., large, small"
+              }
             }
           },
           "parentPlaceholder": {
-            "label": "Select parent type..."
+            "label": {
+              "label": {
+                "normal": "Select parent type...",
+                "beginner": "Select parent type..."
+              }
+            }
           },
           "variant": {
             "label": {
@@ -3491,10 +2400,20 @@
             }
           },
           "modelDescriptionPlaceholder": {
-            "label": "Describe this model..."
+            "label": {
+              "label": {
+                "normal": "Describe this model...",
+                "beginner": "Describe this model..."
+              }
+            }
           },
           "modelTagsPlaceholder": {
-            "label": "tag1, tag2, tag3"
+            "label": {
+              "label": {
+                "normal": "tag1, tag2, tag3",
+                "beginner": "tag1, tag2, tag3"
+              }
+            }
           },
           "ports": {
             "label": {
@@ -3511,21 +2430,25 @@
             },
             "title": {
               "label": {
-                "normal": "Port",
-                "beginner": "Port"
+                "normal": "Title",
+                "beginner": "Title"
               }
             }
           },
           "portInterfacePlaceholder": {
-            "label": "e.g., electrical, mechanical"
+            "label": {
+              "label": {
+                "normal": "e.g., electrical, mechanical",
+                "beginner": "e.g., electrical, mechanical"
+              }
+            }
           },
           "portDescriptionPlaceholder": {
-            "label": "Describe this port..."
-          },
-          "portT": {
             "label": {
-              "normal": "T (diagram position)",
-              "beginner": "T (diagram position)"
+              "label": {
+                "normal": "Describe this port...",
+                "beginner": "Describe this port..."
+              }
             }
           },
           "portPoint": {
@@ -3545,7 +2468,12 @@
             "tutorial": "hello-semio/model-brick-set#ports"
           },
           "portCompatibleInterfacesPlaceholder": {
-            "label": "interface1, interface2"
+            "label": {
+              "label": {
+                "normal": "interface1, interface2",
+                "beginner": "interface1, interface2"
+              }
+            }
           },
           "portNotFound": {
             "label": {
@@ -3584,10 +2512,20 @@
             }
           },
           "attributeValuePlaceholder": {
-            "label": "Value..."
+            "label": {
+              "label": {
+                "normal": "Value...",
+                "beginner": "Value..."
+              }
+            }
           },
           "attributeDefinitionPlaceholder": {
-            "label": "Definition or URL..."
+            "label": {
+              "label": {
+                "normal": "Definition or URL...",
+                "beginner": "Definition or URL..."
+              }
+            }
           },
           "panel": {
             "label": {
@@ -3608,12 +2546,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Type",
-                      "beginner": "Type"
-                    }
                   },
                   "name": {
                     "label": {
@@ -3647,14 +2579,6 @@
                     "manual": "type#metadata",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "variant": {
-                    "label": {
-                      "normal": "Variant",
-                      "beginner": "Variant name for this type. Variants allow multiple configurations of the same type."
-                    },
-                    "manual": "type#variants",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
                   "unit": {
                     "label": {
                       "normal": "Unit",
@@ -3680,12 +2604,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Models",
-                      "beginner": "Models"
-                    }
                   },
                   "url": {
                     "label": {
@@ -3716,26 +2634,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Ports",
-                      "beginner": "Ports"
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "{{count}} Ports",
-                      "beginner": "{{count}} Ports"
-                    }
-                  },
-                  "id": {
-                    "label": {
-                      "normal": "ID",
-                      "beginner": "Unique identifier for this port. Used to reference the port in connections."
-                    },
-                    "manual": "type#ports",
-                    "tutorial": "hello-semio/model-brick-set"
                   },
                   "interface": {
                     "label": {
@@ -3835,12 +2733,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Attributes",
-                      "beginner": "Attributes"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -3871,12 +2763,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Authors",
-                      "beginner": "Authors"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -3896,18 +2782,24 @@
                 }
               }
             }
+          },
+          "tools": {
+            "label": {
+              "normal": "Tools",
+              "beginner": "Tools"
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
+            }
           }
         },
         "quality": {
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "title": {
-            "label": {
-              "normal": "Quality",
-              "beginner": "Quality"
-            }
           },
           "description": {
             "label": {
@@ -3920,22 +2812,6 @@
               "normal": "New Quality",
               "beginner": "New Quality"
             }
-          },
-          "functions": {
-            "label": {
-              "normal": "Functions",
-              "beginner": "Available functions for quality formulas"
-            },
-            "manual": "manuals/semio/quality#functions",
-            "tutorial": "getting-started/intro#quality"
-          },
-          "qualities": {
-            "label": {
-              "normal": "Qualities",
-              "beginner": "Quality definitions in this kit"
-            },
-            "manual": "manuals/semio/quality",
-            "tutorial": "getting-started/intro#quality"
           },
           "numericFunctions": {
             "label": {
@@ -4171,6 +3047,24 @@
                 }
               }
             }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
+            }
+          },
+          "functions": {
+            "label": {
+              "normal": "Functions",
+              "beginner": "Functions"
+            }
+          },
+          "qualities": {
+            "label": {
+              "normal": "Qualities",
+              "beginner": "Qualities"
+            }
           }
         },
         "docs": {
@@ -4178,16 +3072,10 @@
             "normal": "",
             "beginner": ""
           },
-          "title": {
+          "noHeadings": {
             "label": {
-              "normal": "Documentation",
-              "beginner": "Documentation"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Browse documentation and tutorials",
-              "beginner": "Browse documentation and tutorials"
+              "normal": "No headings found",
+              "beginner": "No headings found"
             }
           },
           "docs": {
@@ -4213,111 +3101,12 @@
               "normal": "Settings",
               "beginner": "Settings"
             }
-          },
-          "noPages": {
-            "label": {
-              "normal": "No pages available",
-              "beginner": "No pages available"
-            }
-          },
-          "noHeadings": {
-            "label": {
-              "normal": "No headings found",
-              "beginner": "No headings found"
-            }
           }
         }
       }
     }
   },
-  "tooltip": {
-    "manual": "Manual",
-    "tutorial": "Tutorial"
-  },
-  "sort": {
-    "ascending": {
-      "label": "Sort ascending",
-      "beginner": "Order items from lowest to highest."
-    },
-    "descending": {
-      "label": "Sort descending",
-      "beginner": "Order items from highest to lowest."
-    }
-  },
-  "home": {
-    "sortByName": {
-      "label": "Sort by name",
-      "beginner": "Sort kits alphabetically by their name."
-    },
-    "createVersion": {
-      "label": "Create version",
-      "beginner": "Create a new version for this kit."
-    },
-    "toggleRow": {
-      "label": "Expand or collapse",
-      "beginner": "Show or hide the versions nested under this kit."
-    },
-    "hideKind": {
-      "label": "Hide kind filter",
-      "beginner": "Show all kits regardless of storage type."
-    },
-    "createKit": {
-      "label": "Create kit",
-      "beginner": "Create a new kit for the selected storage type.",
-      "hotkey": "Ctrl+Shift+K"
-    },
-    "showTemporary": {
-      "label": "Show temporary kits",
-      "beginner": "Show kits stored in browser memory (lost on refresh).",
-      "hotkey": "Ctrl+1"
-    },
-    "createTemporary": {
-      "label": "Create temporary kit",
-      "beginner": "Create a new temporary kit stored in browser memory.",
-      "hotkey": "Ctrl+Shift+1"
-    },
-    "showLocal": {
-      "label": "Show local kits",
-      "beginner": "Show kits stored locally on your device.",
-      "hotkey": "Ctrl+2"
-    },
-    "createLocal": {
-      "label": "Create local kit",
-      "beginner": "Create a new kit stored locally on your device.",
-      "hotkey": "Ctrl+Shift+2"
-    },
-    "showRemote": {
-      "label": "Show remote kits",
-      "beginner": "Show kits synced with remote storage.",
-      "hotkey": "Ctrl+3"
-    },
-    "createRemote": {
-      "label": "Create remote kit",
-      "beginner": "Create a new kit synced with remote storage.",
-      "hotkey": "Ctrl+Shift+3"
-    }
-  },
   "settings": {
-    "theme": {
-      "system": {
-        "label": {
-          "normal": "System theme",
-          "beginner": "Match the interface theme with your operating system."
-        }
-      },
-      "light": {
-        "label": {
-          "normal": "Light theme",
-          "beginner": "Use the light theme regardless of the system setting."
-        }
-      },
-      "dark": {
-        "label": {
-          "normal": "Dark theme",
-          "beginner": "Use the dark theme regardless of the system setting."
-        }
-      }
-    },
     "layout": {
       "normal": {
         "label": {
@@ -4341,12 +3130,6 @@
         "label": {
           "normal": "Mobile layout",
           "beginner": "Use the mobile layout optimized for small screens."
-        }
-      },
-      "touch": {
-        "label": {
-          "normal": "Touch layout",
-          "beginner": "Use the layout optimized for touch input."
         }
       }
     },
@@ -4374,12 +3157,6 @@
           "normal": "Normal mode",
           "beginner": "Show contextual help without tutorials."
         }
-      },
-      "expert": {
-        "label": {
-          "normal": "Expert mode",
-          "beginner": "Hide guidance and tutorials for a distraction-free workflow."
-        }
       }
     },
     "expertise": {
@@ -4402,124 +3179,5 @@
         }
       }
     }
-  },
-  "diagram": {
-    "placeholder": {
-      "label": "+ Drop here",
-      "beginner": "Drop pieces here to add them to the design."
-    }
-  },
-  "folder": {
-    "created": "Created",
-    "updated": "Updated"
-  },
-  "action-group-default": {
-    "label": "Actions"
-  },
-  "action-group-default-copy": {
-    "label": "Copy",
-    "beginner": "Copy selected items to clipboard"
-  },
-  "action-group-default-download": {
-    "label": "Download",
-    "beginner": "Download the current content"
-  },
-  "action-group-default-external": {
-    "label": "Open in new window",
-    "beginner": "Open this content in a new window"
-  },
-  "action-group-window-controls": {
-    "label": "Window controls"
-  },
-  "action-group-window-controls-external": {
-    "label": "Open in new window",
-    "beginner": "Open this window in a separate browser window"
-  },
-  "action-group-window-controls-maximize": {
-    "label": "Maximize/Minimize",
-    "beginner": "Toggle fullscreen for this window"
-  },
-  "action-group-window-controls-close": {
-    "label": "Close",
-    "beginner": "Close this window"
-  },
-  "action-group-destructive": {
-    "label": "Actions"
-  },
-  "action-group-destructive-copy": {
-    "label": "Copy",
-    "beginner": "Copy selected items"
-  },
-  "action-group-destructive-download": {
-    "label": "Download",
-    "beginner": "Download the content"
-  },
-  "action-group-destructive-delete": {
-    "label": "Delete",
-    "beginner": "Delete the selected items"
-  },
-  "action-group-with-label": {
-    "label": "Actions"
-  },
-  "action-group-with-label-copy": {
-    "label": "Copy",
-    "beginner": "Copy selected items"
-  },
-  "action-group-with-label-download": {
-    "label": "Download",
-    "beginner": "Download the content"
-  },
-  "action-group-with-label-external": {
-    "label": "Open externally",
-    "beginner": "Open in a new window"
-  },
-  "action-group-level-base": {
-    "label": "Base actions"
-  },
-  "action-group-level-base-copy": {
-    "label": "Copy",
-    "beginner": "Copy to clipboard"
-  },
-  "action-group-level-base-download": {
-    "label": "Download",
-    "beginner": "Download content"
-  },
-  "action-group-level-base-external": {
-    "label": "Open externally",
-    "beginner": "Open in new window"
-  },
-  "action-group-level-panel": {
-    "label": "Panel actions"
-  },
-  "action-group-level-panel-copy": {
-    "label": "Copy",
-    "beginner": "Copy to clipboard"
-  },
-  "action-group-level-panel-download": {
-    "label": "Download",
-    "beginner": "Download content"
-  },
-  "action-group-level-panel-external": {
-    "label": "Open externally",
-    "beginner": "Open in new window"
-  },
-  "action-group-level-temporary": {
-    "label": "Temporary actions"
-  },
-  "action-group-level-temporary-copy": {
-    "label": "Copy",
-    "beginner": "Copy to clipboard"
-  },
-  "action-group-level-temporary-download": {
-    "label": "Download",
-    "beginner": "Download content"
-  },
-  "action-group-level-temporary-external": {
-    "label": "Open externally",
-    "beginner": "Open in new window"
-  },
-  "scene-projection": {
-    "label": "Projection mode",
-    "beginner": "Switch between camera and orthographic projection"
   }
 }

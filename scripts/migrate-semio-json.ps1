@@ -596,29 +596,44 @@ function Migrate-Connection {
                 $portId = $null
                 if ($conn.connected.port -is [string]) {
                     $portId = $conn.connected.port
-                } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id_') {
-                    $portId = $conn.connected.port.id_
-                } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id') {
-                    $portId = $conn.connected.port.id
                 } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'guid') {
                     # Already has GUID, use it
                     $connectedSide.port = @{ guid = $conn.connected.port.guid }
                     $portId = $null
+                } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id_') {
+                    $portId = $conn.connected.port.id_
+                } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id') {
+                    $portId = $conn.connected.port.id
                 }
                 if ($null -ne $portId) {
-                    # Look up port GUID on the piece's type
+                    # Look up port GUID on the piece's type (with parent type recursion)
                     if ($null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectedSide.piece) {
                         $pieceGuid = $connectedSide.piece.guid
                         $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
                         if ($null -ne $piece -and $null -ne $piece.type) {
-                            $type = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
-                            if ($null -ne $type -and $null -ne $type.ports) {
-                                $port = $type.ports | Where-Object { $_.name -eq $portId } | Select-Object -First 1
-                                if ($null -ne $port) {
-                                    $connectedSide.port = @{ guid = $port.guid }
-                                } else {
-                                    Write-Warning "  [CONNECTION] Port '$portId' not found on type '$($type.name)' (connected side)"
+                            $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
+                            $port = $null
+                            $visited = @{}
+                            while ($null -ne $currentType -and $null -eq $port -and -not $visited.ContainsKey($currentType.guid)) {
+                                $visited[$currentType.guid] = $true
+                                if ($null -ne $currentType.ports) {
+                                    $port = $currentType.ports | Where-Object { 
+                                        ($_.PSObject.Properties.Name -contains 'name' -and $_.name -eq $portId) -or
+                                        ($_.PSObject.Properties.Name -contains 'id_' -and $_.id_ -eq $portId) -or
+                                        ($_.PSObject.Properties.Name -contains 'id' -and $_.id -eq $portId)
+                                    } | Select-Object -First 1
                                 }
+                                if ($null -eq $port -and $null -ne $currentType.parent) {
+                                    $parentGuid = if ($currentType.parent -is [string]) { $currentType.parent } else { $currentType.parent.guid }
+                                    $currentType = $kitTypes | Where-Object { $_.guid -eq $parentGuid } | Select-Object -First 1
+                                } else {
+                                    break
+                                }
+                            }
+                            if ($null -ne $port) {
+                                $connectedSide.port = @{ guid = $port.guid }
+                            } else {
+                                Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connected side, piece: $pieceGuid)"
                             }
                         }
                     } elseif ($portIdToGuidMap.ContainsKey($portId)) {
@@ -676,29 +691,44 @@ function Migrate-Connection {
                 $portId = $null
                 if ($conn.connecting.port -is [string]) {
                     $portId = $conn.connecting.port
-                } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id_') {
-                    $portId = $conn.connecting.port.id_
-                } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id') {
-                    $portId = $conn.connecting.port.id
                 } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'guid') {
                     # Already has GUID, use it
                     $connectingSide.port = @{ guid = $conn.connecting.port.guid }
                     $portId = $null
+                } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id_') {
+                    $portId = $conn.connecting.port.id_
+                } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id') {
+                    $portId = $conn.connecting.port.id
                 }
                 if ($null -ne $portId) {
-                    # Look up port GUID on the piece's type
+                    # Look up port GUID on the piece's type (with parent type recursion)
                     if ($null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectingSide.piece) {
                         $pieceGuid = $connectingSide.piece.guid
                         $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
                         if ($null -ne $piece -and $null -ne $piece.type) {
-                            $type = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
-                            if ($null -ne $type -and $null -ne $type.ports) {
-                                $port = $type.ports | Where-Object { $_.name -eq $portId } | Select-Object -First 1
-                                if ($null -ne $port) {
-                                    $connectingSide.port = @{ guid = $port.guid }
-                                } else {
-                                    Write-Warning "  [CONNECTION] Port '$portId' not found on type '$($type.name)' (connecting side)"
+                            $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
+                            $port = $null
+                            $visited = @{}
+                            while ($null -ne $currentType -and $null -eq $port -and -not $visited.ContainsKey($currentType.guid)) {
+                                $visited[$currentType.guid] = $true
+                                if ($null -ne $currentType.ports) {
+                                    $port = $currentType.ports | Where-Object { 
+                                        ($_.PSObject.Properties.Name -contains 'name' -and $_.name -eq $portId) -or
+                                        ($_.PSObject.Properties.Name -contains 'id_' -and $_.id_ -eq $portId) -or
+                                        ($_.PSObject.Properties.Name -contains 'id' -and $_.id -eq $portId)
+                                    } | Select-Object -First 1
                                 }
+                                if ($null -eq $port -and $null -ne $currentType.parent) {
+                                    $parentGuid = if ($currentType.parent -is [string]) { $currentType.parent } else { $currentType.parent.guid }
+                                    $currentType = $kitTypes | Where-Object { $_.guid -eq $parentGuid } | Select-Object -First 1
+                                } else {
+                                    break
+                                }
+                            }
+                            if ($null -ne $port) {
+                                $connectingSide.port = @{ guid = $port.guid }
+                            } else {
+                                Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connecting side, piece: $pieceGuid)"
                             }
                         }
                     } elseif ($portIdToGuidMap.ContainsKey($portId)) {
@@ -1135,6 +1165,7 @@ function Migrate-Kit {
     
     # First pass: migrate types and build type name map and port ID map
     if ($kit.PSObject.Properties.Name -contains 'types' -and $null -ne $kit.types -and $kit.types.Count -gt 0) {
+        $typesByGuid = @{}
         $migrated.types = @($kit.types | ForEach-Object { 
             $migratedType = Migrate-Type $_ $typeNameToGuidMap $authorEmailToObjectMap
             # Build port ID to GUID map from this type's ports
@@ -1146,7 +1177,11 @@ function Migrate-Kit {
                     }
                 }
             }
-            $migratedType
+            # Deduplicate by GUID - only keep first occurrence
+            if ($null -ne $migratedType.guid -and -not $typesByGuid.ContainsKey($migratedType.guid)) {
+                $typesByGuid[$migratedType.guid] = $true
+                $migratedType
+            }
         })
     }
     

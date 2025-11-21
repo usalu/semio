@@ -2517,6 +2517,126 @@ public class Quality : Model<Quality>
 
 #endregion Quality
 
+#region Interface
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-interface-"/>
+/// </summary>
+[Model("🔑", "If", "Ifc", "An interface id is a guid for an interface.")]
+public class InterfaceId : Model<InterfaceId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
+    public string Guid { get; set; } = "";
+
+    public static implicit operator InterfaceId(Interface iface) => new() { Guid = iface.Guid };
+    public static implicit operator InterfaceId(InterfaceDiff diff) => new() { Guid = diff.Guid };
+}
+
+[Model("📊", "IfD", "IfDf", "A diff for interfaces.")]
+public class InterfaceDiff : Model<InterfaceDiff>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Nm?", "Name?", "The optional name of the interface.")]
+    public string? Name { get; set; }
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the interface.")]
+    public string? Description { get; set; }
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the interface.")]
+    public string? Icon { get; set; }
+    [ModelProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
+    public List<InterfaceId>? CompatibleInterfaces { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
+    public List<Attribute>? Attributes { get; set; }
+
+    public static implicit operator InterfaceDiff(InterfaceId id) => new() { Guid = id.Guid };
+    public static implicit operator InterfaceDiff(Interface iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatibleInterfaces = iface.CompatibleInterfaces?.Select(i => (InterfaceId)i).ToList(), Attributes = iface.Attributes };
+}
+
+[Model("📊", "IfsD", "IfsDf", "A diff for multiple interfaces.")]
+public class InterfacesDiff : Model<InterfacesDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed interfaces.", PropImportance.OPTIONAL)]
+    public List<InterfaceId> Removed { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added interfaces.", PropImportance.OPTIONAL)]
+    public List<Interface> Added { get; set; } = new();
+    [ModelProp("✏️", "Md*", "Mod*", "The optional modified interfaces.", PropImportance.OPTIONAL)]
+    public List<InterfaceDiff> Modified { get; set; } = new();
+
+    public static implicit operator InterfacesDiff(List<Interface> interfaces) => new() { Modified = interfaces.Select(i => (InterfaceDiff)i).ToList() };
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-interface-"/>
+/// </summary>
+[Model("🔌", "If", "Ifc", "An interface defines port compatibility.")]
+public class Interface : Model<Interface>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Nm", "Name", "The name of the interface.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the interface.")]
+    public string Description { get; set; } = "";
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the interface.")]
+    public string Icon { get; set; } = "";
+    [ModelProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
+    public List<InterfaceId> CompatibleInterfaces { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Interface(InterfaceId id) => new() { Guid = id.Guid };
+    public static implicit operator Interface(InterfaceDiff diff) => new()
+    {
+        Guid = diff.Guid,
+        Name = diff.Name ?? "",
+        Description = diff.Description ?? "",
+        Icon = diff.Icon ?? "",
+        CompatibleInterfaces = diff.CompatibleInterfaces ?? new(),
+        Attributes = diff.Attributes ?? new()
+    };
+
+    public Interface ApplyDiff(InterfaceDiff diff)
+    {
+        return new Interface
+        {
+            Guid = diff.Guid ?? Guid,
+            Name = diff.Name ?? Name,
+            Description = diff.Description ?? Description,
+            Icon = diff.Icon ?? Icon,
+            CompatibleInterfaces = diff.CompatibleInterfaces ?? CompatibleInterfaces,
+            Attributes = diff.Attributes ?? Attributes
+        };
+    }
+
+    public InterfaceDiff CreateDiff()
+    {
+        return new InterfaceDiff
+        {
+            Guid = Guid,
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            CompatibleInterfaces = CompatibleInterfaces,
+            Attributes = Attributes
+        };
+    }
+
+    public InterfaceDiff InverseDiff(InterfaceDiff appliedDiff)
+    {
+        return new InterfaceDiff
+        {
+            Guid = !string.IsNullOrEmpty(appliedDiff.Guid) ? Guid : "",
+            Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
+            Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : null,
+            Icon = !string.IsNullOrEmpty(appliedDiff.Icon) ? Icon : null,
+            CompatibleInterfaces = appliedDiff.CompatibleInterfaces?.Any() == true ? CompatibleInterfaces : null,
+            Attributes = appliedDiff.Attributes?.Any() == true ? Attributes : null
+        };
+    }
+}
+
+#endregion Interface
+
 #region Prop
 
 /// <summary>
@@ -2554,6 +2674,8 @@ public class ModelId : Model<ModelId>
 [Model("📊", "RD", "RDf", "A diff for models.")]
 public class ModelDiff : Model<ModelDiff>
 {
+    [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
+    public string? Name { get; set; }
     [Name("📄", "Fl?", "Fil?", "The optional file path to the resource of the model.")]
     public string File { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
@@ -2564,12 +2686,13 @@ public class ModelDiff : Model<ModelDiff>
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator ModelDiff(ModelId id) => new() { Tags = id.Tags };
-    public static implicit operator ModelDiff(Model model) => new() { File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
+    public static implicit operator ModelDiff(Model model) => new() { Name = model.Name, File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
 
     public ModelDiff MergeDiff(ModelDiff other)
     {
         return new ModelDiff
         {
+            Name = string.IsNullOrEmpty(other.Name) ? Name : other.Name,
             File = string.IsNullOrEmpty(other.File) ? File : other.File,
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
             Tags = other.Tags.Any() ? other.Tags : Tags,
@@ -2598,6 +2721,8 @@ public class ModelsDiff : Model<ModelsDiff>
     "A model is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Model : Model<Model>
 {
+    [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
+    public string Name { get; set; } = "";
     [Name("📄", "Fl", "Fil", "The file path to the resource of the model.", PropImportance.REQUIRED)]
     public string File { get; set; } = "";
 
@@ -2611,12 +2736,13 @@ public class Model : Model<Model>
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Model(ModelId id) => new() { Tags = id.Tags };
-    public static implicit operator Model(ModelDiff diff) => new() { File = diff.File, Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
+    public static implicit operator Model(ModelDiff diff) => new() { Name = diff.Name ?? "", File = diff.File, Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
 
     public Model ApplyDiff(ModelDiff diff)
     {
         return new Model
         {
+            Name = string.IsNullOrEmpty(diff.Name) ? Name : diff.Name,
             File = string.IsNullOrEmpty(diff.File) ? File : diff.File,
             Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
             Tags = diff.Tags?.Any() == true ? diff.Tags : Tags,
@@ -2628,6 +2754,7 @@ public class Model : Model<Model>
     {
         return new ModelDiff
         {
+            Name = Name,
             File = File,
             Description = Description,
             Tags = Tags,
@@ -2639,6 +2766,7 @@ public class Model : Model<Model>
     {
         return new ModelDiff
         {
+            Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
             File = !string.IsNullOrEmpty(appliedDiff.File) ? File : "",
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : "",
             Tags = appliedDiff.Tags.Any() ? Tags : new List<string>(),
@@ -2709,16 +2837,16 @@ public class PortDiff : Model<PortDiff>
 {
     [Id("🆔", "Gd?", "Gui?", "The optional guid of the port.")]
     public string? Guid { get; set; }
+    [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
+    public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string? Description { get; set; }
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional interface of the port.")]
-    public string? Interface { get; set; }
+    [ModelProp("🔌", "If?", "Ifc?", "The optional interface of the port.")]
+    public InterfaceId? Interface { get; set; }
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
     public bool? Mandatory { get; set; }
     [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
     public float? T { get; set; }
-    [Name("✅", "CF*", "CFas*", "The optional other compatible interfaces of the port.", PropImportance.OPTIONAL)]
-    public List<string>? CompatibleInterfaces { get; set; }
     [ModelProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
     public Point? Point { get; set; }
     [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
@@ -2770,14 +2898,14 @@ public class Port : Model<Port>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
     public string Guid { get; set; } = "";
+    [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
+    public string Name { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string Description { get; set; } = "";
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
     public bool Mandatory { get; set; } = false;
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional interface of the port. This allows to define explicit compatibility with other ports.")]
-    public string Interface { get; set; } = "";
-    [Name("✅", "CF*", "CFas*", "The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.")]
-    public List<string> CompatibleInterfaces { get; set; } = new();
+    [ModelProp("🔌", "If?", "Ifc?", "The optional interface of the port. This allows to define explicit compatibility with other ports.")]
+    public InterfaceId? Interface { get; set; }
     [ModelProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
     [ModelProp("➡️", "Dr", "Drn", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
@@ -2793,7 +2921,7 @@ public class Port : Model<Port>
     public override string ToString() => $"Por({ToHumanIdString()})";
 
     public static implicit operator Port(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator Port(PortDiff diff) => new() { Guid = diff.Guid ?? "", Description = diff.Description ?? "", Interface = diff.Interface ?? "", Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, CompatibleInterfaces = diff.CompatibleInterfaces ?? new(), Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Port(PortDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Interface = diff.Interface, Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Port port) => port.Guid;
     public static implicit operator Port(string guid) => new() { Guid = guid };
 
@@ -2802,11 +2930,11 @@ public class Port : Model<Port>
         return new Port
         {
             Guid = diff.Guid ?? Guid,
+            Name = diff.Name ?? Name,
             Description = diff.Description ?? Description,
             Interface = diff.Interface ?? Interface,
             Mandatory = diff.Mandatory ?? Mandatory,
             T = diff.T ?? T,
-            CompatibleInterfaces = diff.CompatibleInterfaces ?? CompatibleInterfaces,
             Point = diff.Point ?? Point,
             Direction = diff.Direction ?? Direction,
             Props = diff.Props ?? Props,
@@ -2819,11 +2947,11 @@ public class Port : Model<Port>
         return new PortDiff
         {
             Guid = Guid,
+            Name = Name,
             Description = Description,
             Interface = Interface,
             Mandatory = Mandatory,
             T = T,
-            CompatibleInterfaces = CompatibleInterfaces,
             Point = Point,
             Direction = Direction,
             Props = Props,
@@ -2836,11 +2964,11 @@ public class Port : Model<Port>
         return new PortDiff
         {
             Guid = !string.IsNullOrEmpty(appliedDiff.Guid) ? Guid : "",
+            Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : "",
-            Interface = !string.IsNullOrEmpty(appliedDiff.Interface) ? Interface : "",
+            Interface = appliedDiff.Interface is not null ? Interface : null,
             Mandatory = appliedDiff.Mandatory.HasValue ? Mandatory : null,
             T = appliedDiff.T.HasValue ? T : null,
-            CompatibleInterfaces = appliedDiff.CompatibleInterfaces?.Any() == true ? CompatibleInterfaces : new List<string>(),
             Point = appliedDiff.Point is not null ? Point : null,
             Direction = appliedDiff.Direction is not null ? Direction : null,
             Props = appliedDiff.Props?.Any() == true ? Props : new List<Prop>(),
@@ -2885,11 +3013,25 @@ public class Port : Model<Port>
 
     public bool IsCompatibleWith(Port otherPort)
     {
-        var normalizedPortInterface = Utility.Normalize(Interface);
-        var normalizedOtherPortInterface = Utility.Normalize(otherPort.Interface);
-        if (normalizedPortInterface == "" || normalizedOtherPortInterface == "") return true;
-        return (CompatibleInterfaces ?? new List<string>()).Contains(normalizedOtherPortInterface) ||
-               (otherPort.CompatibleInterfaces ?? new List<string>()).Contains(normalizedPortInterface);
+        if (Interface is null || otherPort.Interface is null) return true;
+        if (Interface.Guid == otherPort.Interface.Guid) return true;
+        return false;
+    }
+
+    public bool IsCompatibleWith(Port otherPort, Kit kit)
+    {
+        if (Interface is null || otherPort.Interface is null) return true;
+        if (Interface.Guid == otherPort.Interface.Guid) return true;
+        
+        var thisInterface = kit.Interfaces?.FirstOrDefault(i => i.Guid == Interface.Guid);
+        var otherInterface = kit.Interfaces?.FirstOrDefault(i => i.Guid == otherPort.Interface.Guid);
+        
+        if (thisInterface is null || otherInterface is null) return false;
+        
+        if (thisInterface.CompatibleInterfaces?.Count == 0 || otherInterface.CompatibleInterfaces?.Count == 0) return true;
+        
+        return thisInterface.CompatibleInterfaces?.Any(ci => ci.Guid == otherPort.Interface.Guid) == true ||
+               otherInterface.CompatibleInterfaces?.Any(ci => ci.Guid == Interface.Guid) == true;
     }
 
     public bool IsSameAs(Port other)
@@ -3352,6 +3494,8 @@ public class PieceDiff : Model<PieceDiff>
 {
     [Id("🆔", "Gd?", "Gui?", "The optional guid of the piece.")]
     public string? Guid { get; set; }
+    [Name("📛", "Nm?", "Name?", "The optional name of the piece.")]
+    public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
     public string? Description { get; set; }
     [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
@@ -3364,7 +3508,7 @@ public class PieceDiff : Model<PieceDiff>
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator PieceDiff(PieceId id) => new() { Guid = id.Guid };
-    public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Description = piece.Description, Type = piece.Type, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
+    public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Name = piece.Name, Description = piece.Description, Type = piece.Type, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
 }
 
 /// <summary>
@@ -3375,6 +3519,8 @@ public class Piece : Model<Piece>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
     public string Guid { get; set; } = "";
+    [Name("📛", "Nm?", "Name?", "The optional name of the piece.")]
+    public string Name { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
     public string Description { get; set; } = "";
     [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
@@ -3391,13 +3537,14 @@ public class Piece : Model<Piece>
     public override string ToString() => $"Pce({ToHumanIdString()})";
 
     public static implicit operator Piece(PieceId id) => new() { Guid = id.Guid };
-    public static implicit operator Piece(PieceDiff diff) => new() { Guid = diff.Guid ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Piece(PieceDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Attributes = diff.Attributes ?? new() };
 
     public Piece ApplyDiff(PieceDiff diff)
     {
         return new Piece
         {
             Guid = diff.Guid ?? Guid,
+            Name = diff.Name ?? Name,
             Description = diff.Description ?? Description,
             Type = diff.Type ?? Type,
             Plane = diff.Plane ?? Plane,
@@ -3411,6 +3558,7 @@ public class Piece : Model<Piece>
         return new PieceDiff
         {
             Guid = Guid,
+            Name = Name,
             Description = Description,
             Type = Type,
             Plane = Plane,
@@ -4900,6 +5048,8 @@ public class Kit : Model<Kit>
     public string Preview { get; set; } = "";
     [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("🔌", "If*", "Ifc*", "The optional interfaces of the kit.", PropImportance.OPTIONAL)]
+    public List<Interface> Interfaces { get; set; } = new();
     [ModelProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
     public List<File> Files { get; set; } = new();
     [ModelProp("📁", "Fo*", "Fol*", "The optional folders of the kit.", PropImportance.OPTIONAL)]

@@ -1139,7 +1139,7 @@ function ActionDropdown({ className, level: propLevel, id, options, value, onVal
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <ActionGroup id={id} level={level} className={className}>
-          <ActionGroupItem {...props}>{selectedOption?.icon}</ActionGroupItem>
+          <ActionGroupItem id={id} {...props}>{selectedOption?.icon}</ActionGroupItem>
         </ActionGroup>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
@@ -1175,7 +1175,7 @@ function Action({ className, level: propLevel, id, icon, as = "button", ...props
   const level = useElementLevel(propLevel);
   return (
     <ActionGroup id={id || "action"} level={level} className={className}>
-      <ActionGroupItem as={as} {...props}>
+      <ActionGroupItem as={as} id={id} {...props}>
         {icon}
       </ActionGroupItem>
     </ActionGroup>
@@ -1249,7 +1249,7 @@ function ButtonGroupItem({
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
 
-  return (
+  const buttonGroupItemElement = (
     <Comp
       data-slot="button-group-item"
       data-level={context.level || level}
@@ -1265,6 +1265,21 @@ function ButtonGroupItem({
       {icon || children}
     </Comp>
   );
+
+  if (id) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>{buttonGroupItemElement}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <DescriptionTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return buttonGroupItemElement;
 }
 
 type ButtonProps = React.ComponentProps<"button"> &
@@ -1423,9 +1438,12 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   interactionId?: string;
   placeholderId?: string;
   showLabel?: boolean;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  abortTransaction?: () => void;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction, startTransaction, finalizeTransaction, abortTransaction, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const commands = useInteractionCommands();
@@ -1449,7 +1467,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (lazy) {
       setIsEditing(true);
-      transaction?.start?.();
+      (startTransaction || transaction?.start)?.();
     }
     props.onFocus?.(e);
   };
@@ -1459,7 +1477,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      transaction?.finalize?.();
+      (finalizeTransaction || transaction?.finalize)?.();
     }
     props.onBlur?.(e);
   };
@@ -1470,13 +1488,13 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         onLazyChange?.(localValue);
-        transaction?.finalize?.();
+        (finalizeTransaction || transaction?.finalize)?.();
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        transaction?.abort?.();
+        (abortTransaction || transaction?.abort)?.();
         (e.target as HTMLInputElement).blur();
       }
     }
@@ -1529,7 +1547,7 @@ export { Input };
 
 // #region Select
 
-function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
+function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction, startTransaction, finalizeTransaction, abortTransaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean; startTransaction?: () => void; finalizeTransaction?: () => void; abortTransaction?: () => void }) {
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -1555,9 +1573,9 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, tr
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      transaction?.start?.();
+      (startTransaction || transaction?.start)?.();
     } else {
-      transaction?.finalize?.();
+      (finalizeTransaction || transaction?.finalize)?.();
     }
     onOpenChange?.(open);
   };
@@ -2151,9 +2169,12 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   onLazyChange?: (value: string) => void;
   showLabel?: boolean;
   placeholderId?: string;
+  startTransaction?: () => void;
+  finalizeTransaction?: () => void;
+  abortTransaction?: () => void;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction, startTransaction, finalizeTransaction, abortTransaction, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
@@ -2173,7 +2194,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     if (lazy) {
       setIsEditing(true);
-      transaction?.start?.();
+      (startTransaction || transaction?.start)?.();
     }
     props.onFocus?.(e);
   };
@@ -2182,7 +2203,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      transaction?.finalize?.();
+      (finalizeTransaction || transaction?.finalize)?.();
     }
     props.onBlur?.(e);
   };
@@ -2192,7 +2213,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       if (e.key === "Escape") {
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        transaction?.abort?.();
+        (abortTransaction || transaction?.abort)?.();
         (e.target as HTMLTextAreaElement).blur();
       }
     }
@@ -2460,11 +2481,26 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         </PopoverTrigger>
         <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
           <div className="flex flex-col">
-            {availableItems.map((item) => (
-              <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}>
-                <span className="flex-1 text-left">{addIconSize(item.label)}</span>
-              </button>
-            ))}
+            {availableItems.map((item) => {
+              const buttonElement = (
+                <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}>
+                  <span className="flex-1 text-left">{addIconSize(item.label)}</span>
+                </button>
+              );
+
+              if (item.id) {
+                return (
+                  <Tooltip key={item.value}>
+                    <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+                    <TooltipContent side="left">
+                      <DescriptionTooltipContent id={item.id} />
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              return buttonElement;
+            })}
           </div>
         </PopoverContent>
       </Popover>

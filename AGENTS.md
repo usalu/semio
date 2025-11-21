@@ -223,6 +223,8 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER build or run the code.
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
 - NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
+- Whenever creating a markdown file, ALWAYS create it under `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for the task). When working on existing tasks, ALWAYS update the existing file.
+- When fixing issues, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
 
 ### Keywords
 

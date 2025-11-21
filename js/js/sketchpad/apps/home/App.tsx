@@ -449,22 +449,22 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder")} readOnly showLabel />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder")} readOnly showLabel />
+          <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder")} readOnly showLabel />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder")} readOnly showLabel />
+          <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
         </TreeContent>
       </TreeItem>
     </>
@@ -501,7 +501,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.version"
             value={commonVersion || ""}
-            placeholder={commonVersion === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.versionPlaceholder")}
+            placeholder={commonVersion === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
             readOnly
             showLabel
           />
@@ -512,7 +512,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
           <Textarea
             id="semio.sketchpad.app.home.panel.details.kits.description"
             value={commonDescription || ""}
-            placeholder={commonDescription === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.descriptionPlaceholder")}
+            placeholder={commonDescription === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
             readOnly
             showLabel
           />
@@ -523,7 +523,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.icon"
             value={commonIcon || ""}
-            placeholder={commonIcon === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.iconPlaceholder")}
+            placeholder={commonIcon === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
             readOnly
             showLabel
           />
@@ -534,7 +534,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.image"
             value={commonImage || ""}
-            placeholder={commonImage === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.imagePlaceholder")}
+            placeholder={commonImage === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
             readOnly
             showLabel
           />
@@ -575,6 +575,9 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
   const expertise = useExpertise();
   const mode = useMode();
 
+  const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
+  const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
+
   return (
     <>
       <TreeItem>
@@ -595,13 +598,13 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Select id="semio.sketchpad.app.home.settings.language" value={language} onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)} showLabel>
+          <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)} showLabel>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select language..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="en">{useLabel("semio.sketchpad.settings.language.en")}</SelectItem>
-              <SelectItem value="de">{useLabel("semio.sketchpad.settings.language.de")}</SelectItem>
+              <SelectItem value="en">{languageEnLabel}</SelectItem>
+              <SelectItem value="de">{languageDeLabel}</SelectItem>
             </SelectContent>
           </Select>
         </TreeContent>

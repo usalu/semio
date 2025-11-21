@@ -6032,6 +6032,21 @@ export const kitCommands = {
       diff: { qualities: { removed: [guid] } },
     };
   },
+  "semio.kit.createInterface": (context: KitCommandContext, iface: Interface): KitCommandResult => {
+    return {
+      diff: { interfaces: { added: [iface] } },
+    };
+  },
+  "semio.kit.updateInterface": (context: KitCommandContext, guid: Guid, diff: InterfaceDiff): KitCommandResult => {
+    return {
+      diff: { interfaces: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteInterface": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { interfaces: { removed: [guid] } },
+    };
+  },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
     const files: File[] = blob ? [new File([blob], file.name)] : [];
     return {
@@ -7409,6 +7424,10 @@ export class SketchpadStore {
         this.ySketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
       }
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
+      if (diff.language !== undefined) {
+        console.log("[Store Change] Setting language in yMap to:", diff.language);
+        this.ySketchpad.set("language", diff.language);
+      }
       if (diff.layout) this.ySketchpad.set("layout", JSON.stringify(diff.layout));
       if (diff.expertise) this.ySketchpad.set("expertise", diff.expertise);
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
@@ -8668,6 +8687,7 @@ export const commands = {
     };
   },
   "semio.sketchpad.setLanguage": (context: SketchpadCommandContext, language: string): SketchpadCommandResult => {
+    console.log("[setLanguage Command] Setting language to:", language, "Previous language:", context.sketchpad.language);
     return {
       diff: { language },
     };
@@ -8808,6 +8828,7 @@ export const commands = {
     if (state.recentSearches !== undefined) diff.recentSearches = state.recentSearches;
     if (state.recentFocusItems !== undefined) diff.recentFocusItems = state.recentFocusItems;
     if (state.theme !== undefined) diff.theme = state.theme;
+    if (state.language !== undefined) diff.language = state.language;
     if (state.layout !== undefined) diff.layout = state.layout;
     if (state.expertise !== undefined) diff.expertise = state.expertise;
     if (state.mode !== undefined) diff.mode = state.mode;
@@ -11771,8 +11792,16 @@ const LayoutWrapper: FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    if (language && i18n.language !== language) {
-      i18n.changeLanguage(language);
+    if (language) {
+      console.log("[Language Sync] Current i18n language:", i18n.language, "Store language:", language);
+      if (i18n.language !== language) {
+        console.log("[Language Sync] Changing language to:", language);
+        i18n.changeLanguage(language).then(() => {
+          console.log("[Language Sync] Language changed successfully to:", language);
+        }).catch((err) => {
+          console.error("[Language Sync] Failed to change language:", err);
+        });
+      }
     }
   }, [language]);
 

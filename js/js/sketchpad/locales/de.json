@@ -41,47 +41,10 @@
           "tutorial": "getting-started/intro",
           "hotkey": "Alt+Oben"
         },
-        "home": {
-          "label": {
-            "normal": "Startseite",
-            "beginner": "Klicken, um zur Startseite zu gehen"
-          },
-          "hotkey": "Ctrl+Shift+H"
-        },
-        "kitKinds": {
-          "label": {
-            "normal": "Kit-Arten",
-            "beginner": "Klicken, um Kit-Arten zu erweitern"
-          }
-        },
         "kits": {
           "label": {
             "normal": "Kits",
             "beginner": "Klicken, um alle Kits zu sehen"
-          }
-        },
-        "kitName": {
-          "label": {
-            "normal": "Kit-Name",
-            "beginner": "Der Name des Kits"
-          }
-        },
-        "kitVersion": {
-          "label": {
-            "normal": "Version",
-            "beginner": "Die Version des Kits"
-          }
-        },
-        "kit": {
-          "label": {
-            "normal": "Kit",
-            "beginner": "Das aktuelle Kit"
-          }
-        },
-        "name": {
-          "label": {
-            "normal": "Name",
-            "beginner": "Der Name des Artefakts"
           }
         },
         "navigationButtons": {
@@ -90,78 +53,12 @@
             "beginner": "Navigationsknoepfe"
           }
         },
-        "versions": {
-          "label": {
-            "normal": "Versionen",
-            "beginner": "Klicken, um alle Versionen zu sehen"
-          }
-        },
-        "artifacts": {
-          "label": {
-            "normal": "Artefakte",
-            "beginner": "Klicken, um alle Artefakte zu sehen"
-          }
-        },
-        "selectName": {
-          "label": {
-            "normal": "Namen auswaehlen",
-            "beginner": "Klicken, um einen Namen auszuwaehlen"
-          }
-        },
-        "selectDesign": {
-          "label": {
-            "normal": "Entwurf auswaehlen",
-            "beginner": "Klicken, um einen Entwurf auszuwaehlen"
-          }
-        },
-        "design": {
-          "label": {
-            "normal": "Entwurf",
-            "beginner": "Zum Entwurf gehen"
-          }
-        },
-        "selectType": {
-          "label": {
-            "normal": "Typ auswaehlen",
-            "beginner": "Klicken, um einen Typ auszuwaehlen"
-          }
-        },
-        "type": {
-          "label": {
-            "normal": "Typ",
-            "beginner": "Zum Typ gehen"
-          }
-        },
-        "quality": {
-          "label": {
-            "normal": "Qualitaet",
-            "beginner": "Zur Qualitaet gehen"
-          }
-        },
-        "parent": {
-          "label": {
-            "normal": "Elternteil",
-            "beginner": "Das Elternteil des Artefakts"
-          }
-        },
-        "abstract": {
-          "label": {
-            "normal": "Abstrakt",
-            "beginner": "Ob das Artefakt abstrakt ist"
-          }
-        },
         "docs": {
           "label": {
             "normal": "Dokumentation",
             "beginner": "Klicken, um Dokumentation anzuzeigen"
           },
           "hotkey": "Ctrl+Shift+D"
-        },
-        "sections": {
-          "label": {
-            "normal": "Bereiche",
-            "beginner": "Klicken, um alle Bereiche zu sehen"
-          }
         },
         "search": {
           "label": {
@@ -265,98 +162,10 @@
             }
           }
         },
-        "fullscreen": {
-          "label": {
-            "normal": "Vollbild",
-            "beginner": "Klicken, um in den Vollbildmodus fuer maximalen Arbeitsbereich zu wechseln"
-          },
-          "manual": "navigation#fullscreen",
-          "tutorial": "getting-started/intro#fullscreen",
-          "hotkey": "F11"
-        },
-        "exitFullscreen": {
-          "label": {
-            "normal": "Vollbild verlassen",
-            "beginner": "Klicken, um den Vollbildmodus zu verlassen"
-          },
-          "manual": "navigation#fullscreen",
-          "tutorial": "getting-started/intro#fullscreen",
-          "hotkey": "F11"
-        },
-        "expand": {
-          "label": {
-            "normal": "Navigationsleiste erweitern",
-            "beginner": "Klicken, um die Navigationsleiste zu erweitern und zusaetzliche Optionen anzuzeigen"
-          },
-          "hotkey": "Ctrl+Shift+E"
-        },
-        "collapse": {
-          "label": {
-            "normal": "Navigationsleiste einklappen",
-            "beginner": "Klicken, um die Navigationsleiste einzuklappen und Platz zu sparen"
-          },
-          "hotkey": "Ctrl+Shift+E"
-        },
-        "minimize": {
-          "label": {
-            "normal": "Minimieren",
-            "beginner": "Klicken, um Fenster zu minimieren"
-          },
-          "hotkey": "Ctrl+M"
-        },
-        "maximize": {
-          "label": {
-            "normal": "Maximieren",
-            "beginner": "Klicken, um Fenster zu maximieren"
-          }
-        },
-        "close": {
-          "label": {
-            "normal": "Schliessen",
-            "beginner": "Klicken, um Fenster zu schliessen"
-          },
-          "hotkey": "Ctrl+W"
-        },
-        "changePanelType": {
-          "label": {
-            "normal": "Panel-Typ aendern",
-            "beginner": "Klicken, um den Panel-Typ zu aendern"
-          }
-        },
         "breadcrumb": {
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "home": {
-            "label": {
-              "normal": "Startseite",
-              "beginner": "Startseite"
-            }
-          },
-          "kits": {
-            "label": {
-              "normal": "Kits",
-              "beginner": "Kits"
-            }
-          },
-          "temporary": {
-            "label": {
-              "normal": "Temporaere Kits",
-              "beginner": "Im Browser-Speicher gespeicherte Kits"
-            }
-          },
-          "local": {
-            "label": {
-              "normal": "Lokale Kits",
-              "beginner": "Auf Ihrem Geraet gespeicherte Kits"
-            }
-          },
-          "remote": {
-            "label": {
-              "normal": "Remote-Kits",
-              "beginner": "Mit Remote-Speicher synchronisierte Kits"
-            }
           },
           "designs": {
             "label": {
@@ -376,28 +185,34 @@
               "beginner": "Qualitaeten"
             }
           },
+          "temporary": {
+            "label": {
+              "normal": "Temporary",
+              "beginner": "Temporary"
+            }
+          },
+          "local": {
+            "label": {
+              "normal": "Local",
+              "beginner": "Local"
+            }
+          },
+          "remote": {
+            "label": {
+              "normal": "Remote",
+              "beginner": "Remote"
+            }
+          },
           "files": {
             "label": {
-              "normal": "Dateien",
-              "beginner": "Dateien"
+              "normal": "Files",
+              "beginner": "Files"
             }
           },
           "authors": {
             "label": {
-              "normal": "Autoren",
-              "beginner": "Autoren"
-            }
-          },
-          "docs": {
-            "label": {
-              "normal": "Dokumentation",
-              "beginner": "Dokumentation"
-            }
-          },
-          "tutorials": {
-            "label": {
-              "normal": "Tutorials",
-              "beginner": "Tutorials"
+              "normal": "Authors",
+              "beginner": "Authors"
             }
           }
         },
@@ -405,12 +220,6 @@
           "label": {
             "normal": "Tutorials",
             "beginner": "Tutorials"
-          }
-        },
-        "selectChild": {
-          "label": {
-            "normal": "Kind auswaehlen",
-            "beginner": "Klicken, um ein Kind-Artefakt auszuwaehlen"
           }
         },
         "createKit": {
@@ -454,238 +263,83 @@
             "normal": "",
             "beginner": ""
           },
-          "toolbar": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Werkzeugleiste anzeigen",
-                "beginner": "Klicken, um das Werkzeugleiste-Panel anzuzeigen"
-              },
-              "manual": "panels/toolbar",
-              "tutorial": "hello-semio/sketch-setup#toolbar"
-            },
-            "hide": {
-              "label": {
-                "normal": "Werkzeugleiste ausblenden",
-                "beginner": "Klicken, um das Werkzeugleiste-Panel auszublenden"
-              },
-              "manual": "panels/toolbar",
-              "tutorial": "hello-semio/sketch-setup#toolbar"
-            }
-          },
           "workbench": {
             "label": {
               "normal": "Workbench umschalten",
               "beginner": "Das Workbench-Panel auf der linken Seite ein- oder ausblenden"
-            },
-            "show": {
-              "label": {
-                "normal": "Werkbank anzeigen",
-                "beginner": "Klicken, um das Werkbank-Panel auf der linken Seite anzuzeigen"
-              },
-              "manual": "panels/workbench",
-              "tutorial": "hello-semio/sketch-setup#workbench",
-              "hotkey": "Ctrl+J"
-            },
-            "hide": {
-              "label": {
-                "normal": "Werkbank ausblenden",
-                "beginner": "Klicken, um das Werkbank-Panel auf der linken Seite auszublenden"
-              },
-              "manual": "panels/workbench",
-              "tutorial": "hello-semio/sketch-setup#workbench",
-              "hotkey": "Ctrl+J"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Werkzeuge anzeigen",
-                "beginner": "Klicken, um das Werkzeuge-Panel auf der linken Seite anzuzeigen"
-              },
-              "manual": "panels/tools",
-              "tutorial": "hello-semio/sketch-setup#tools",
-              "hotkey": "Ctrl+J"
-            },
-            "hide": {
-              "label": {
-                "normal": "Werkzeuge ausblenden",
-                "beginner": "Klicken, um das Werkzeuge-Panel auf der linken Seite auszublenden"
-              },
-              "manual": "panels/tools",
-              "tutorial": "hello-semio/sketch-setup#tools",
-              "hotkey": "Ctrl+J"
             }
           },
           "hud": {
             "label": {
               "normal": "HUD umschalten",
               "beginner": "Das HUD-Panel in der Mitte ein- oder ausblenden"
-            },
-            "show": {
-              "label": {
-                "normal": "HUD anzeigen",
-                "beginner": "Klicken, um das HUD-Panel in der Mitte anzuzeigen"
-              },
-              "manual": "panels/hud",
-              "tutorial": "hello-semio/sketch-setup#hud",
-              "hotkey": "Ctrl+K"
-            },
-            "hide": {
-              "label": {
-                "normal": "HUD ausblenden",
-                "beginner": "Klicken, um das HUD-Panel in der Mitte auszublenden"
-              },
-              "manual": "panels/hud",
-              "tutorial": "hello-semio/sketch-setup#hud",
-              "hotkey": "Ctrl+K"
-            }
-          },
-          "stats": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Statistiken anzeigen",
-                "beginner": "Klicken, um das Statistiken-Panel in der Mitte anzuzeigen"
-              },
-              "manual": "panels/stats",
-              "tutorial": "hello-semio/sketch-setup#stats",
-              "hotkey": "Ctrl+K"
-            },
-            "hide": {
-              "label": {
-                "normal": "Statistiken ausblenden",
-                "beginner": "Klicken, um das Statistiken-Panel in der Mitte auszublenden"
-              },
-              "manual": "panels/stats",
-              "tutorial": "hello-semio/sketch-setup#stats",
-              "hotkey": "Ctrl+K"
-            }
-          },
-          "details": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Details anzeigen",
-                "beginner": "Klicken, um das Details-Panel auf der rechten Seite anzuzeigen"
-              },
-              "manual": "panels/details",
-              "tutorial": "hello-semio/sketch-setup#details",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Details ausblenden",
-                "beginner": "Klicken, um das Details-Panel auf der rechten Seite auszublenden"
-              },
-              "manual": "panels/details",
-              "tutorial": "hello-semio/sketch-setup#details",
-              "hotkey": "Ctrl+L"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Chat anzeigen",
-                "beginner": "Klicken, um das Chat-Panel auf der rechten Seite anzuzeigen"
-              },
-              "manual": "panels/chat",
-              "tutorial": "hello-semio/sketch-setup#chat",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Chat ausblenden",
-                "beginner": "Klicken, um das Chat-Panel auf der rechten Seite auszublenden"
-              },
-              "manual": "panels/chat",
-              "tutorial": "hello-semio/sketch-setup#chat",
-              "hotkey": "Ctrl+L"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "show": {
-              "label": {
-                "normal": "Einstellungen anzeigen",
-                "beginner": "Klicken, um das Einstellungen-Panel auf der rechten Seite anzuzeigen"
-              },
-              "manual": "panels/settings",
-              "tutorial": "hello-semio/sketch-setup#settings",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Einstellungen ausblenden",
-                "beginner": "Klicken, um das Einstellungen-Panel auf der rechten Seite auszublenden"
-              },
-              "manual": "panels/settings",
-              "tutorial": "hello-semio/sketch-setup#settings",
-              "hotkey": "Ctrl+L"
             }
           },
           "right": {
             "label": {
               "normal": "Rechtes Panel umschalten",
               "beginner": "Das rechte Panel fuer Details und Einstellungen ein- oder ausblenden"
-            },
-            "show": {
-              "label": {
-                "normal": "Rechtes Panel anzeigen",
-                "beginner": "Klicken, um das rechte Panel anzuzeigen"
-              },
-              "manual": "panels",
-              "tutorial": "hello-semio/sketch-setup",
-              "hotkey": "Ctrl+L"
-            },
-            "hide": {
-              "label": {
-                "normal": "Rechtes Panel ausblenden",
-                "beginner": "Klicken, um das rechte Panel auszublenden"
-              },
-              "manual": "panels",
-              "tutorial": "hello-semio/sketch-setup",
-              "hotkey": "Ctrl+L"
             }
           }
         },
-        "fullscreenToggle": {
+        "home": {
           "label": {
-            "normal": "Vollbild",
-            "beginner": "Vollbildmodus umschalten"
-          },
-          "hotkey": "F11"
+            "normal": "Home",
+            "beginner": "Home"
+          }
+        },
+        "kitName": {
+          "label": {
+            "normal": "Kit Name",
+            "beginner": "Kit Name"
+          }
+        },
+        "kitVersion": {
+          "label": {
+            "normal": "Kit Version",
+            "beginner": "Kit Version"
+          }
+        },
+        "name": {
+          "label": {
+            "normal": "Name",
+            "beginner": "Name"
+          }
+        },
+        "design": {
+          "label": {
+            "normal": "Design",
+            "beginner": "Design"
+          }
+        },
+        "type": {
+          "label": {
+            "normal": "Type",
+            "beginner": "Type"
+          }
+        },
+        "quality": {
+          "label": {
+            "normal": "Quality",
+            "beginner": "Quality"
+          }
         },
         "navigation": {
           "label": {
             "normal": "Navigation",
-            "beginner": "Navigationselemente"
+            "beginner": "Navigation"
           }
         },
         "panelToggles": {
           "label": {
-            "normal": "Panel-Schalter",
-            "beginner": "Panel-Schalter"
+            "normal": "Panel Toggles",
+            "beginner": "Panel Toggles"
+          }
+        },
+        "fullscreenToggle": {
+          "label": {
+            "normal": "Fullscreen Toggle",
+            "beginner": "Fullscreen Toggle"
           }
         }
       },
@@ -694,82 +348,10 @@
           "normal": "",
           "beginner": ""
         },
-        "toolbar": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Werkzeugleiste-Panel",
-              "beginner": "Werkzeugleiste-Panel umschalten, um auf gaengige Werkzeuge und Aktionen fuer den aktuellen Arbeitsbereich zuzugreifen"
-            }
-          },
-          "noTools": {
-            "label": {
-              "normal": "Keine Werkzeuge",
-              "beginner": "Keine Werkzeuge"
-            }
-          }
-        },
-        "details": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Details-Panel",
-              "beginner": "Details-Panel umschalten, um Eigenschaften des ausgewaehlten Elements ausfuehrlich anzuzeigen und zu bearbeiten"
-            }
-          }
-        },
-        "workbench": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Werkbank-Panel",
-              "beginner": "Werkbank-Panel umschalten, um auf Ihren Hauptarbeitsbereich mit verfuegbaren Werkzeugen und Optionen zuzugreifen"
-            }
-          },
-          "noSections": {
-            "label": {
-              "normal": "Keine Werkbank-Bereiche verfuegbar",
-              "beginner": "Keine Werkbank-Bereiche verfuegbar"
-            }
-          }
-        },
-        "console": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Konsole-Panel",
-              "beginner": "Konsole-Panel umschalten, um Logs und Debug-Informationen anzuzeigen"
-            }
-          }
-        },
         "chat": {
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Chat-Panel",
-              "beginner": "Chat-Panel umschalten, um KI-Unterstuetzung und kontextbezogene Hilfe zu erhalten"
-            }
-          },
-          "input": {
-            "label": {
-              "normal": "Nachricht",
-              "beginner": "Geben Sie hier Ihre Frage oder Nachricht ein. Druecken Sie Enter zum Senden, Shift+Enter fuer eine neue Zeile."
-            }
           },
           "placeholder": {
             "label": {
@@ -777,130 +359,6 @@
               "beginner": "Fragen Sie etwas..."
             }
           }
-        },
-        "settings": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "toggle": {
-            "label": {
-              "normal": "Einstellungen-Panel",
-              "beginner": "Einstellungen-Panel umschalten, um Anwendungseinstellungen und Arbeitsbereichsoptionen zu konfigurieren"
-            }
-          },
-          "language": {
-            "label": {
-              "normal": "Sprache",
-              "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
-            },
-            "en": {
-              "label": {
-                "normal": "Englisch",
-                "beginner": "Englisch"
-              }
-            },
-            "de": {
-              "label": {
-                "normal": "Deutsch",
-                "beginner": "Deutsch"
-              }
-            }
-          },
-          "general": {
-            "label": {
-              "normal": "Allgemeine Einstellungen",
-              "beginner": "Allgemeine Anwendungseinstellungen konfigurieren"
-            }
-          },
-          "theme": {
-            "label": {
-              "normal": "Theme",
-              "beginner": "Waehlen Sie das Farbthema fuer die Anwendung"
-            }
-          },
-          "layout": {
-            "label": {
-              "normal": "Layout",
-              "beginner": "Konfigurieren Sie das Fensterlayout und die Panel-Anordnung"
-            }
-          },
-          "mode": {
-            "label": {
-              "normal": "Modus",
-              "beginner": "Waehlen Sie den Benutzeroberflaechen-Modus: Experte (minimale Tooltips), Normal (standard) oder Anfaenger (detaillierte Hilfe)"
-            }
-          }
-        },
-        "tools": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "noSections": {
-            "label": {
-              "normal": "Keine Werkzeug-Bereiche verfuegbar",
-              "beginner": "Keine Werkzeug-Bereiche verfuegbar"
-            }
-          }
-        },
-        "hud": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "noSections": {
-            "label": {
-              "normal": "Keine HUD-Bereiche verfuegbar",
-              "beginner": "Keine HUD-Bereiche verfuegbar"
-            }
-          }
-        },
-        "freeze": {
-          "label": {
-            "normal": "Zustand einfrieren",
-            "beginner": "Exportieren Sie den kompletten Anwendungszustand als JSON-Datei fuer Backup oder Debugging"
-          },
-          "manual": "dev/timetravel",
-          "tutorial": "advanced/timetravel",
-          "normal": {
-            "label": {
-              "normal": "Vollstaendigen Schnappschuss des aktuellen Zustands herunterladen",
-              "beginner": "Vollstaendigen Schnappschuss des aktuellen Zustands herunterladen"
-            }
-          },
-          "expert": {
-            "label": {
-              "normal": "Kompletten Zustand in JSON ausgeben",
-              "beginner": "Kompletten Zustand in JSON ausgeben"
-            }
-          }
-        },
-        "timetravel": {
-          "label": {
-            "normal": "Zeitreise",
-            "beginner": "Laden Sie einen zuvor gespeicherten Zustand aus einer JSON-Datei, um die Anwendung zu diesem Zeitpunkt wiederherzustellen"
-          },
-          "manual": "dev/timetravel",
-          "tutorial": "advanced/timetravel",
-          "normal": {
-            "label": {
-              "normal": "Zustand aus JSON-Datei laden",
-              "beginner": "Zustand aus JSON-Datei laden"
-            }
-          },
-          "expert": {
-            "label": {
-              "normal": "Zustand aus JSON laden",
-              "beginner": "Zustand aus JSON laden"
-            }
-          }
-        }
-      },
-      "footer": {
-        "label": {
-          "normal": "",
-          "beginner": ""
         }
       },
       "common": {
@@ -910,40 +368,10 @@
         },
         "selectVariant": "Variante auswaehlen...",
         "selectView": "Ansicht auswaehlen...",
-        "add": {
-          "label": {
-            "normal": "Hinzufuegen",
-            "beginner": "Klicken, um ein neues Element hinzuzufuegen"
-          }
-        },
-        "remove": {
-          "label": {
-            "normal": "Entfernen",
-            "beginner": "Klicken, um dieses Element zu entfernen"
-          }
-        },
         "search": {
           "label": {
             "normal": "Suche",
             "beginner": "Suche"
-          }
-        },
-        "x": {
-          "label": {
-            "normal": "X",
-            "beginner": "X"
-          }
-        },
-        "y": {
-          "label": {
-            "normal": "Y",
-            "beginner": "Y"
-          }
-        },
-        "z": {
-          "label": {
-            "normal": "Z",
-            "beginner": "Z"
           }
         },
         "mixedValues": {
@@ -964,44 +392,46 @@
             "beginner": "Typ auswaehlen"
           }
         },
-        "addType": {
+        "no": {
           "label": {
-            "normal": "Typ hinzufuegen",
-            "beginner": "Klicken, um einen neuen Typ zum aktuellen Kontext hinzuzufuegen"
-          },
-          "manual": "manuals/semio/kit#types",
-          "tutorial": "hello-semio/model-brick-set"
+            "normal": "No",
+            "beginner": "No"
+          }
         },
-        "addDesign": {
+        "yes": {
           "label": {
-            "normal": "Entwurf hinzufuegen",
-            "beginner": "Klicken, um einen neuen Entwurf zum aktuellen Kontext hinzuzufuegen"
-          },
-          "manual": "manuals/semio/kit#designs",
-          "tutorial": "hello-semio/model-design"
+            "normal": "Yes",
+            "beginner": "Yes"
+          }
+        },
+        "add": {
+          "label": {
+            "normal": "Add",
+            "beginner": "Add"
+          }
+        },
+        "remove": {
+          "label": {
+            "normal": "Remove",
+            "beginner": "Remove"
+          }
         },
         "addChild": {
           "label": {
-            "normal": "Kind hinzufuegen",
-            "beginner": "Klicken, um ein neues Kind-Artefakt zu erstellen"
+            "normal": "Add Child",
+            "beginner": "Add Child"
           }
         },
-        "sort": {
+        "addType": {
           "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "ascending": {
-            "label": {
-              "normal": "Aufsteigend sortieren",
-              "beginner": "Elemente von A bis Z oder von klein nach gross sortieren."
-            }
-          },
-          "descending": {
-            "label": {
-              "normal": "Absteigend sortieren",
-              "beginner": "Elemente von Z bis A oder von gross nach klein sortieren."
-            }
+            "normal": "Add Type",
+            "beginner": "Add Type"
+          }
+        },
+        "addDesign": {
+          "label": {
+            "normal": "Add Design",
+            "beginner": "Add Design"
           }
         }
       },
@@ -1010,40 +440,10 @@
           "normal": "",
           "beginner": ""
         },
-        "sort": {
-          "label": {
-            "normal": "",
-            "beginner": ""
-          },
-          "ascending": {
-            "label": {
-              "normal": "Aufsteigend sortieren",
-              "beginner": "Artefakte von A bis Z sortieren."
-            }
-          },
-          "descending": {
-            "label": {
-              "normal": "Absteigend sortieren",
-              "beginner": "Artefakte von Z bis A sortieren."
-            }
-          }
-        },
         "home": {
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "title": {
-            "label": {
-              "normal": "Startseite",
-              "beginner": "Startseite"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Kits durchsuchen und verwalten",
-              "beginner": "Kits durchsuchen und verwalten"
-            }
           },
           "searchPlaceholder": {
             "label": {
@@ -1073,18 +473,6 @@
             "label": {
               "normal": "Erstellt",
               "beginner": "Erstellt"
-            }
-          },
-          "kits": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multiple": {
-              "label": {
-                "normal": "{{count}} Kits",
-                "beginner": "{{count}} Kits"
-              }
             }
           },
           "filter": {
@@ -1302,30 +690,83 @@
               }
             }
           },
+          "noKits": {
+            "label": {
+              "normal": "No Kits",
+              "beginner": "No Kits"
+            }
+          },
+          "sortByName": {
+            "label": {
+              "normal": "Sort By Name",
+              "beginner": "Sort By Name"
+            }
+          },
+          "toggleRow": {
+            "label": {
+              "normal": "Toggle Row",
+              "beginner": "Toggle Row"
+            }
+          },
+          "createVersion": {
+            "label": {
+              "normal": "Create Version",
+              "beginner": "Create Version"
+            }
+          },
+          "hideKind": {
+            "label": {
+              "normal": "Hide Kind",
+              "beginner": "Hide Kind"
+            }
+          },
+          "showTemporary": {
+            "label": {
+              "normal": "Show Temporary",
+              "beginner": "Show Temporary"
+            }
+          },
+          "showLocal": {
+            "label": {
+              "normal": "Show Local",
+              "beginner": "Show Local"
+            }
+          },
+          "showRemote": {
+            "label": {
+              "normal": "Show Remote",
+              "beginner": "Show Remote"
+            }
+          },
+          "sortByType": {
+            "label": {
+              "normal": "Sort By Type",
+              "beginner": "Sort By Type"
+            }
+          },
+          "sortByUpdatedAt": {
+            "label": {
+              "normal": "Sort By Updated At",
+              "beginner": "Sort By Updated At"
+            }
+          },
+          "sortByCreatedAt": {
+            "label": {
+              "normal": "Sort By Created At",
+              "beginner": "Sort By Created At"
+            }
+          },
           "chat": {
             "label": {
               "normal": "Chat",
-              "beginner": "Open chat for assistance"
-            },
-            "hotkey": "Ctrl+Shift+C"
+              "beginner": "Chat"
+            }
           }
         },
         "kit": {
           "label": {
             "normal": "Kit",
             "beginner": "Kit"
-          },
-          "title": {
-            "label": {
-              "normal": "Kit",
-              "beginner": "Kit"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Kit-Metadaten anzeigen und bearbeiten",
-              "beginner": "Kit-Metadaten anzeigen und bearbeiten"
-            }
           },
           "noKitLoaded": {
             "label": {
@@ -1345,47 +786,53 @@
               "beginner": "Kit nicht verfuegbar"
             }
           },
-          "name": {
-            "label": {
-              "normal": "Name",
-              "beginner": "Name"
-            }
-          },
-          "kind": {
-            "label": {
-              "normal": "Art",
-              "beginner": "Art"
-            }
-          },
-          "version": {
-            "label": {
-              "normal": "Version",
-              "beginner": "Version"
-            }
-          },
           "versionPlaceholder": {
-            "label": "z.B., 1.0.0"
-          },
-          "descriptionLabel": {
             "label": {
-              "normal": "Beschreibung",
-              "beginner": "Beschreibung"
+              "label": {
+                "normal": "z.B., 1.0.0",
+                "beginner": "z.B., 1.0.0"
+              }
             }
           },
           "descriptionPlaceholder": {
-            "label": "Beschreiben Sie den Inhalt dieses Kits..."
+            "label": {
+              "label": {
+                "normal": "Beschreiben Sie den Inhalt dieses Kits...",
+                "beginner": "Beschreiben Sie den Inhalt dieses Kits..."
+              }
+            }
           },
           "iconPlaceholder": {
-            "label": "🎨 oder URL zum Icon"
+            "label": {
+              "label": {
+                "normal": "🎨 oder URL zum Icon",
+                "beginner": "🎨 oder URL zum Icon"
+              }
+            }
           },
           "imagePlaceholder": {
-            "label": "URL zum Vorschaubild"
+            "label": {
+              "label": {
+                "normal": "URL zum Vorschaubild",
+                "beginner": "URL zum Vorschaubild"
+              }
+            }
           },
           "homepagePlaceholder": {
-            "label": "https://beispiel.de"
+            "label": {
+              "label": {
+                "normal": "https://beispiel.de",
+                "beginner": "https://beispiel.de"
+              }
+            }
           },
           "licensePlaceholder": {
-            "label": "z.B., MIT, GPL-3.0, Apache-2.0"
+            "label": {
+              "label": {
+                "normal": "z.B., MIT, GPL-3.0, Apache-2.0",
+                "beginner": "z.B., MIT, GPL-3.0, Apache-2.0"
+              }
+            }
           },
           "defaultName": {
             "label": {
@@ -1405,42 +852,10 @@
               "beginner": "Standard"
             }
           },
-          "lastUpdated": {
-            "label": {
-              "normal": "Zuletzt aktualisiert",
-              "beginner": "Zuletzt aktualisiert"
-            }
-          },
-          "created": {
-            "label": {
-              "normal": "Erstellt",
-              "beginner": "Erstellt"
-            }
-          },
           "filter": {
             "label": {
               "normal": "",
               "beginner": ""
-            },
-            "concept": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "show": {
-                "label": {
-                  "normal": "Dieses Konzept anzeigen",
-                  "beginner": "Klicken, um Artefakte mit diesem Konzept anzuzeigen"
-                },
-                "hotkey": "Ctrl+C"
-              },
-              "hide": {
-                "label": {
-                  "normal": "Dieses Konzept ausblenden",
-                  "beginner": "Klicken, um Artefakte mit diesem Konzept auszublenden"
-                },
-                "hotkey": "Ctrl+Shift+C"
-              }
             },
             "name": {
               "label": {
@@ -1480,34 +895,16 @@
             },
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
+            "multipleSelected": {
+              "label": {
+                "normal": "Multiple Selected",
+                "beginner": "Multiple Selected"
+              }
+            },
             "multipleTitle": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Entwurf",
-                  "beginner": "{{count}} Entwurf"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Entwuerfe",
-                  "beginner": "{{count}} Entwuerfe"
-                }
-              }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Entwurf",
-                "beginner": "{{count}} Entwurf"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Entwuerfe",
-                "beginner": "{{count}} Entwuerfe"
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
               }
             }
           },
@@ -1518,202 +915,16 @@
             },
             "manual": "manuals/semio/kit#types",
             "tutorial": "hello-semio/model-brick-set",
-            "multipleTitle": {
+            "multipleSelected": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Typ",
-                  "beginner": "{{count}} Typ"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Typen",
-                  "beginner": "{{count}} Typen"
-                }
+                "normal": "Multiple Selected",
+                "beginner": "Multiple Selected"
               }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Typ",
-                "beginner": "{{count}} Typ"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Typen",
-                "beginner": "{{count}} Typen"
-              }
-            }
-          },
-          "file": {
-            "label": {
-              "normal": "Datei",
-              "beginner": "Datei"
-            },
-            "title": {
-              "label": {
-                "normal": "Datei",
-                "beginner": "Datei"
-              }
-            }
-          },
-          "files": {
-            "label": {
-              "normal": "",
-              "beginner": ""
             },
             "multipleTitle": {
               "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Datei",
-                  "beginner": "{{count}} Datei"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Dateien",
-                  "beginner": "{{count}} Dateien"
-                }
-              }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Datei",
-                "beginner": "{{count}} Datei"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Dateien",
-                "beginner": "{{count}} Dateien"
-              }
-            }
-          },
-          "folder": {
-            "label": {
-              "normal": "Ordner",
-              "beginner": "Ordner"
-            },
-            "title": {
-              "label": {
-                "normal": "Ordner",
-                "beginner": "Ordner"
-              }
-            }
-          },
-          "folders": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multipleTitle": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Ordner",
-                  "beginner": "{{count}} Ordner"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Ordner",
-                  "beginner": "{{count}} Ordner"
-                }
-              }
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Ordner",
-                "beginner": "{{count}} Ordner"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Ordner",
-                "beginner": "{{count}} Ordner"
-              }
-            }
-          },
-          "qualities": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Qualitaet",
-                "beginner": "{{count}} Qualitaet"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Qualitaeten",
-                "beginner": "{{count}} Qualitaeten"
-              }
-            }
-          },
-          "authors": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multipleTitle_one": {
-              "label": {
-                "normal": "{{count}} Autor",
-                "beginner": "{{count}} Autor"
-              }
-            },
-            "multipleTitle_other": {
-              "label": {
-                "normal": "{{count}} Autoren",
-                "beginner": "{{count}} Autoren"
-              }
-            }
-          },
-          "artifacts": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "multiple": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "label_one": {
-                "label": {
-                  "normal": "{{count}} Artefaktkategorie",
-                  "beginner": "{{count}} Artefaktkategorie"
-                }
-              },
-              "label_other": {
-                "label": {
-                  "normal": "{{count}} Artefaktkategorien",
-                  "beginner": "{{count}} Artefaktkategorien"
-                }
-              }
-            },
-            "multiple_one": {
-              "label": {
-                "normal": "{{count}} Artefaktkategorie",
-                "beginner": "{{count}} Artefaktkategorie"
-              }
-            },
-            "multiple_other": {
-              "label": {
-                "normal": "{{count}} Artefaktkategorien",
-                "beginner": "{{count}} Artefaktkategorien"
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
               }
             }
           },
@@ -1798,6 +1009,22 @@
               "manual": "manuals/semio/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
+            "showInterfaces": {
+              "label": {
+                "normal": "Schnittstellen anzeigen",
+                "beginner": "Klicken, um alle Schnittstellen in diesem Kit anzuzeigen"
+              },
+              "manual": "manuals/semio/kit#interfaces",
+              "tutorial": "getting-started/intro#interface"
+            },
+            "createInterface": {
+              "label": {
+                "normal": "Schnittstelle erstellen",
+                "beginner": "Klicken, um eine neue Schnittstellendefinition in diesem Kit zu erstellen"
+              },
+              "manual": "manuals/semio/kit#interfaces",
+              "tutorial": "getting-started/intro#interface"
+            },
             "showFiles": {
               "label": {
                 "normal": "Dateien anzeigen",
@@ -1862,47 +1089,6 @@
               "label": {
                 "normal": "Kind erstellen",
                 "beginner": "Ein Kindelement erstellen"
-              }
-            },
-            "sortByName": {
-              "label": {
-                "normal": "Nach Name sortieren",
-                "beginner": "Klicken, um Artefakte alphabetisch nach Namen zu sortieren"
-              },
-              "hotkey": "Ctrl+Shift+N"
-            },
-            "createVariant": {
-              "label": {
-                "normal": "Variante erstellen",
-                "beginner": "Klicken, um eine neue Variante dieses Artefakts zu erstellen"
-              },
-              "manual": "manuals/semio#variants",
-              "tutorial": "hello-semio/model-design"
-            },
-            "createView": {
-              "label": {
-                "normal": "Ansicht erstellen",
-                "beginner": "Klicken, um eine neue Ansicht fuer diesen Entwurf zu erstellen"
-              },
-              "manual": "manuals/semio/design#views",
-              "tutorial": "hello-semio/model-design"
-            }
-          },
-          "sort": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "ascending": {
-              "label": {
-                "normal": "Aufsteigend sortieren",
-                "beginner": "Von A bis Z oder von klein nach gross sortieren"
-              }
-            },
-            "descending": {
-              "label": {
-                "normal": "Absteigend sortieren",
-                "beginner": "Von Z bis A oder von gross nach klein sortieren"
               }
             }
           },
@@ -1975,12 +1161,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Kit-Details",
-                      "beginner": "Kit-Details"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Kit-Name",
@@ -2043,12 +1223,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Ordner",
-                      "beginner": "Ordner"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -2065,55 +1239,26 @@
                     "manual": "kit#folders",
                     "tutorial": "hello-semio/save-kit"
                   }
-                }
-              }
-            },
-            "workbench": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "section": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
                 },
-                "types": {
-                  "label": {
-                    "normal": "Typen",
-                    "beginner": "Alle Typdefinitionen in diesem Kit durchsuchen und verwalten."
+                "interface": {
+                  "compatible": {
+                    "label": {
+                      "normal": "Compatible",
+                      "beginner": "Compatible"
+                    }
                   },
-                  "manual": "kit#types",
-                  "tutorial": "hello-semio/model-brick-set"
-                },
-                "designs": {
-                  "label": {
-                    "normal": "Entwuerfe",
-                    "beginner": "Alle Entwurfskompositionen in diesem Kit durchsuchen und verwalten."
+                  "description": {
+                    "label": {
+                      "normal": "Description",
+                      "beginner": "Description"
+                    }
                   },
-                  "manual": "kit#designs",
-                  "tutorial": "hello-semio/model-design"
-                },
-                "qualities": {
-                  "label": {
-                    "normal": "Qualitaeten",
-                    "beginner": "Alle Qualitaetsdefinitionen in diesem Kit durchsuchen und verwalten."
-                  },
-                  "manual": "kit#qualities"
-                },
-                "files": {
-                  "label": {
-                    "normal": "Dateien",
-                    "beginner": "Alle in diesem Kit enthaltenen Dateien durchsuchen und verwalten."
-                  },
-                  "manual": "kit#files"
-                },
-                "authors": {
-                  "label": {
-                    "normal": "Autoren",
-                    "beginner": "Alle Autoren durchsuchen und verwalten, die zu diesem Kit beigetragen haben."
-                  },
-                  "manual": "kit#authors"
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Name"
+                    }
+                  }
                 }
               }
             }
@@ -2122,6 +1267,66 @@
             "label": {
               "normal": "Kit nicht gefunden",
               "beginner": "Das angeforderte Kit wurde nicht gefunden"
+            }
+          },
+          "interface": {
+            "allCompatible": {
+              "label": {
+                "normal": "All Compatible",
+                "beginner": "All Compatible"
+              }
+            },
+            "compatibleInterfaces": {
+              "label": {
+                "normal": "Compatible Interfaces",
+                "beginner": "Compatible Interfaces"
+              }
+            },
+            "descriptionPlaceholder": {
+              "label": {
+                "label": {
+                  "normal": "Label",
+                  "beginner": "Label"
+                }
+              }
+            }
+          },
+          "interfaces": {
+            "multipleSelected": {
+              "label": {
+                "normal": "Multiple Selected",
+                "beginner": "Multiple Selected"
+              }
+            }
+          },
+          "qualities": {
+            "multipleTitle": {
+              "label": {
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
+              }
+            }
+          },
+          "files": {
+            "multipleTitle": {
+              "label": {
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
+              }
+            }
+          },
+          "authors": {
+            "multipleTitle": {
+              "label": {
+                "normal": "Multiple Title",
+                "beginner": "Multiple Title"
+              }
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
             }
           }
         },
@@ -2137,7 +1342,12 @@
             }
           },
           "descriptionPlaceholder": {
-            "label": "Beschreiben Sie diesen Ordner..."
+            "label": {
+              "label": {
+                "normal": "Beschreiben Sie diesen Ordner...",
+                "beginner": "Beschreiben Sie diesen Ordner..."
+              }
+            }
           }
         },
         "design": {
@@ -2145,52 +1355,10 @@
             "normal": "Entwurf",
             "beginner": "Entwurf"
           },
-          "title": {
-            "label": {
-              "normal": "Entwurf",
-              "beginner": "Entwurf"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Entwurfskompositionen bearbeiten",
-              "beginner": "Entwurfskompositionen bearbeiten"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
-            }
-          },
           "defaultName": {
             "label": {
               "normal": "Neuer Entwurf",
               "beginner": "Neuer Entwurf"
-            }
-          },
-          "newVariant": {
-            "label": {
-              "normal": "Neue Variante",
-              "beginner": "Neue Variante"
-            }
-          },
-          "newView": {
-            "label": {
-              "normal": "Neue Ansicht",
-              "beginner": "Neue Ansicht"
-            }
-          },
-          "defaultVariant": {
-            "label": {
-              "normal": "Standard",
-              "beginner": "Standard"
-            }
-          },
-          "defaultView": {
-            "label": {
-              "normal": "Standard",
-              "beginner": "Standard"
             }
           },
           "windowLibrary": {
@@ -2390,24 +1558,6 @@
               "normal": "",
               "beginner": ""
             },
-            "gap": {
-              "label": {
-                "normal": "Gap",
-                "beginner": "Gap"
-              }
-            },
-            "shift": {
-              "label": {
-                "normal": "Shift",
-                "beginner": "Shift"
-              }
-            },
-            "rise": {
-              "label": {
-                "normal": "Rise",
-                "beginner": "Rise"
-              }
-            },
             "rotation": {
               "label": {
                 "normal": "Rotation",
@@ -2437,148 +1587,6 @@
                 "normal": "",
                 "beginner": ""
               },
-              "name": {
-                "label": {
-                  "normal": "Name",
-                  "beginner": "Der Name des Entwurfs. Dies ist die primaere Kennung fuer Ihre Komposition."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "description": {
-                "label": {
-                  "normal": "Beschreibung",
-                  "beginner": "Eine detaillierte Beschreibung dessen, was dieser Entwurf darstellt und wie er verwendet werden sollte."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "icon": {
-                "label": {
-                  "normal": "Icon",
-                  "beginner": "URL oder Pfad zu einem Icon, das diesen Entwurf in Listen und Vorschauen darstellt."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "image": {
-                "label": {
-                  "normal": "Bild",
-                  "beginner": "URL oder Pfad zu einem Vorschaubild, das diesen Entwurf praesentiert."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "variant": {
-                "label": {
-                  "normal": "Variante",
-                  "beginner": "Eine Variantenkennung fuer verschiedene Versionen oder Konfigurationen dieses Entwurfs."
-                },
-                "manual": "design#variants",
-                "tutorial": "hello-semio/model-design"
-              },
-              "view": {
-                "label": {
-                  "normal": "Ansicht",
-                  "beginner": "Die Ansichtsperspektive oder Kamerawinkel zur Anzeige dieses Entwurfs."
-                },
-                "manual": "design#views",
-                "tutorial": "hello-semio/model-design"
-              },
-              "unit": {
-                "label": {
-                  "normal": "Einheit",
-                  "beginner": "Die Masseinheit fuer alle Abmessungen in diesem Entwurf (z.B. mm, cm, m)."
-                },
-                "manual": "design#metadata",
-                "tutorial": "hello-semio/model-design"
-              },
-              "createdAt": {
-                "label": {
-                  "normal": "Erstellt am",
-                  "beginner": "Das Datum und die Uhrzeit, wann dieser Entwurf erstmals erstellt wurde."
-                }
-              },
-              "updatedAt": {
-                "label": {
-                  "normal": "Aktualisiert am",
-                  "beginner": "Das Datum und die Uhrzeit, wann dieser Entwurf zuletzt geaendert wurde."
-                }
-              },
-              "location": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "longitude": {
-                  "label": {
-                    "normal": "Laengengrad",
-                    "beginner": "Die Ost-West-Position dieses Entwurfsstandorts in Dezimalgrad."
-                  },
-                  "manual": "design#location"
-                },
-                "latitude": {
-                  "label": {
-                    "normal": "Breitengrad",
-                    "beginner": "Die Nord-Sued-Position dieses Entwurfsstandorts in Dezimalgrad."
-                  },
-                  "manual": "design#location"
-                }
-              },
-              "author": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "Der vollstaendige Name der Person, die zu diesem Entwurf beigetragen hat."
-                  },
-                  "manual": "design#authors"
-                },
-                "email": {
-                  "label": {
-                    "normal": "E-Mail",
-                    "beginner": "Kontakt-E-Mail-Adresse fuer diesen Autor."
-                  },
-                  "manual": "design#authors"
-                }
-              },
-              "attribute": {
-                "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "name": {
-                  "label": {
-                    "normal": "Name",
-                    "beginner": "Die eindeutige Kennung fuer dieses Attribut im Kebab-Case-Format (z.B. 'material.type')."
-                  },
-                  "manual": "design#attributes"
-                },
-                "value": {
-                  "label": {
-                    "normal": "Wert",
-                    "beginner": "Der Wert, der mit diesem Attribut verbunden ist. Leer lassen, um als Kategorie-Flag zu verwenden."
-                  },
-                  "manual": "design#attributes"
-                },
-                "unit": {
-                  "label": {
-                    "normal": "Einheit",
-                    "beginner": "Die Masseinheit fuer den Wert dieses Attributs (z.B. mm, kg, °C)."
-                  },
-                  "manual": "design#attributes"
-                },
-                "definition": {
-                  "label": {
-                    "normal": "Definition",
-                    "beginner": "Eine URL oder ein Text, der definiert, was dieses Attribut bedeutet und wie es interpretiert werden sollte."
-                  },
-                  "manual": "design#attributes"
-                }
-              },
               "section": {
                 "label": {
                   "normal": "",
@@ -2588,12 +1596,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Entwurf",
-                      "beginner": "Entwurf"
-                    }
                   },
                   "name": {
                     "label": {
@@ -2669,12 +1671,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Standort",
-                      "beginner": "Standort"
-                    }
-                  },
                   "longitude": {
                     "label": {
                       "normal": "Laengengrad",
@@ -2695,12 +1691,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Autoren",
-                      "beginner": "Autoren"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -2720,12 +1710,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Attribute",
-                      "beginner": "Attribute"
-                    }
                   },
                   "name": {
                     "label": {
@@ -2760,34 +1744,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Bauteil",
-                      "beginner": "Bauteil"
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "{{count}} Bauteile",
-                      "beginner": "{{count}} Bauteile"
-                    }
-                  },
-                  "id": {
-                    "label": {
-                      "normal": "ID",
-                      "beginner": "Eindeutige Kennung fuer diese Bauteil-Instanz im Entwurf."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
-                  },
-                  "type": {
-                    "label": {
-                      "normal": "Typ",
-                      "beginner": "Die Typdefinition, auf der dieses Bauteil basiert. Bestimmt Geometrie und verfuegbare Ports."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
                   },
                   "center": {
                     "label": {
@@ -2892,48 +1848,12 @@
                         }
                       }
                     }
-                  },
-                  "planeOrigin": {
-                    "label": {
-                      "normal": "Ursprung",
-                      "beginner": "Der Ursprungspunkt der Platzierungsebene des Bauteils im 3D-Raum."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
-                  },
-                  "planeXAxis": {
-                    "label": {
-                      "normal": "X-Achse",
-                      "beginner": "Der X-Achsen-Richtungsvektor der Platzierungsebene des Bauteils."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
-                  },
-                  "planeYAxis": {
-                    "label": {
-                      "normal": "Y-Achse",
-                      "beginner": "Der Y-Achsen-Richtungsvektor der Platzierungsebene des Bauteils."
-                    },
-                    "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces"
                   }
                 },
                 "connection": {
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Verbindung",
-                      "beginner": "Verbindung"
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "{{count}} Verbindungen",
-                      "beginner": "{{count}} Verbindungen"
-                    }
                   },
                   "multipleEditing": {
                     "label": {
@@ -3031,12 +1951,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Port",
-                      "beginner": "Port"
-                    }
-                  },
                   "id": {
                     "label": {
                       "normal": "Port-ID",
@@ -3084,109 +1998,69 @@
                       "normal": "Attribut",
                       "beginner": "Benutzerdefinierte Attribute des Ports"
                     }
-                  }
-                },
-                "selection": {
-                  "label": {
-                    "normal": "",
-                    "beginner": ""
                   },
-                  "multipleTitle": {
+                  "notFound": {
                     "label": {
-                      "normal": "Mehrfachauswahl",
-                      "beginner": "Mehrfachauswahl"
+                      "normal": "Not Found",
+                      "beginner": "Not Found"
                     }
                   }
                 }
-              }
-            },
-            "workbench": {
-              "label": {
-                "normal": "",
-                "beginner": ""
               },
-              "section": {
+              "parentConnection": {
                 "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "types": {
-                  "label": {
-                    "normal": "Typen",
-                    "beginner": "Durchsuchen und auswaehlen Sie aus verfuegbaren Typen, die Sie zu Ihrem Entwurf hinzufuegen moechten."
-                  },
-                  "manual": "design#types",
-                  "tutorial": "hello-semio/model-design#adding-pieces"
-                },
-                "designs": {
-                  "label": {
-                    "normal": "Entwuerfe",
-                    "beginner": "Durchsuchen und auswaehlen Sie aus verfuegbaren Entwuerfen, die Sie in Ihren aktuellen Entwurf verschachteln moechten."
-                  },
-                  "manual": "design#nested-designs",
-                  "tutorial": "hello-semio/model-design#nested-designs"
+                  "normal": "Parent Connection",
+                  "beginner": "Parent Connection"
                 }
               },
-              "windowLibrary": {
+              "parentConnections": {
                 "label": {
-                  "normal": "",
-                  "beginner": ""
-                },
-                "scene": {
-                  "label": {
-                    "normal": "Szenen-Fenster",
-                    "beginner": "Szenen-Fenster"
-                  }
-                },
-                "diagram": {
-                  "label": {
-                    "normal": "Diagramm-Fenster",
-                    "beginner": "Diagramm-Fenster"
-                  }
-                },
-                "table": {
-                  "label": {
-                    "normal": "Tabellen-Fenster",
-                    "beginner": "Tabellen-Fenster"
-                  }
+                  "normal": "Parent Connections",
+                  "beginner": "Parent Connections"
                 }
               }
             }
           },
-          "appTitle": {
+          "gridSize": {
             "label": {
-              "normal": "Design",
-              "beginner": "Design-Editor"
+              "normal": "Grid Size",
+              "beginner": "Grid Size"
+            }
+          },
+          "proximityConnectDistance": {
+            "label": {
+              "normal": "Proximity Connect Distance",
+              "beginner": "Proximity Connect Distance"
+            }
+          },
+          "selectOnlyPiecesOrConnections": {
+            "label": {
+              "normal": "Select Only Pieces Or Connections",
+              "beginner": "Select Only Pieces Or Connections"
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
+            }
+          },
+          "tools": {
+            "label": {
+              "normal": "Tools",
+              "beginner": "Tools"
             }
           },
           "windows": {
             "label": {
-              "normal": "Fenster",
-              "beginner": "Design-Fenster verwalten"
+              "normal": "Windows",
+              "beginner": "Windows"
             }
           },
-          "canvas": {
+          "appTitle": {
             "label": {
-              "normal": "",
-              "beginner": ""
-            },
-            "diagram": {
-              "label": {
-                "normal": "",
-                "beginner": ""
-              },
-              "designNode": {
-                "label": {
-                  "normal": "Design",
-                  "beginner": "Design-Stueck im Diagramm"
-                }
-              },
-              "pieceNode": {
-                "label": {
-                  "normal": "Stueck",
-                  "beginner": "Stueck-Instanz im Diagramm"
-                }
-              }
+              "normal": "App Title",
+              "beginner": "App Title"
             }
           }
         },
@@ -3195,52 +2069,34 @@
             "normal": "",
             "beginner": ""
           },
-          "title": {
-            "label": {
-              "normal": "Dokumentation",
-              "beginner": "Dokumentation"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Dokumentation und Tutorials durchsuchen",
-              "beginner": "Dokumentation und Tutorials durchsuchen"
-            }
-          },
-          "docs": {
-            "label": {
-              "normal": "Dokumentation",
-              "beginner": "Dokumentation"
-            }
-          },
-          "overview": {
-            "label": {
-              "normal": "Übersicht",
-              "beginner": "Übersicht"
-            }
-          },
-          "page": {
-            "label": {
-              "normal": "Seite",
-              "beginner": "Seite"
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Einstellungen",
-              "beginner": "Einstellungen"
-            }
-          },
-          "noPages": {
-            "label": {
-              "normal": "Keine Seiten verfuegbar",
-              "beginner": "Keine Seiten verfuegbar"
-            }
-          },
           "noHeadings": {
             "label": {
               "normal": "Keine Ueberschriften gefunden",
               "beginner": "Keine Ueberschriften gefunden"
+            }
+          },
+          "docs": {
+            "label": {
+              "normal": "Docs",
+              "beginner": "Docs"
+            }
+          },
+          "overview": {
+            "label": {
+              "normal": "Overview",
+              "beginner": "Overview"
+            }
+          },
+          "page": {
+            "label": {
+              "normal": "Page",
+              "beginner": "Page"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Settings"
             }
           }
         },
@@ -3249,83 +2105,51 @@
             "normal": "Typ",
             "beginner": "Typ"
           },
-          "title": {
-            "label": {
-              "normal": "Typ",
-              "beginner": "Typ"
-            }
-          },
-          "description": {
-            "label": {
-              "normal": "Typdefinitionen bearbeiten",
-              "beginner": "Typdefinitionen bearbeiten"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
-            }
-          },
-          "noModels": {
-            "label": {
-              "normal": "Keine Darstellungen verfuegbar",
-              "beginner": "Keine Darstellungen verfuegbar"
-            }
-          },
-          "selectModel": {
-            "label": {
-              "normal": "Darstellung auswaehlen",
-              "beginner": "Darstellung auswaehlen"
-            }
-          },
-          "noTags": {
-            "label": {
-              "normal": "Keine Tags verfuegbar",
-              "beginner": "Keine Tags verfuegbar"
-            }
-          },
-          "clearTags": {
-            "label": {
-              "normal": "Alle loeschen",
-              "beginner": "Alle loeschen"
-            }
-          },
           "defaultName": {
             "label": {
               "normal": "Neuer Typ",
               "beginner": "Neuer Typ"
             }
           },
-          "newVariant": {
-            "label": {
-              "normal": "Neue Variante",
-              "beginner": "Neue Variante"
-            }
-          },
-          "defaultVariant": {
-            "label": {
-              "normal": "Standard",
-              "beginner": "Standard"
-            }
-          },
           "descriptionPlaceholder": {
-            "label": "Beschreiben Sie diesen Typ..."
+            "label": {
+              "label": {
+                "normal": "Beschreiben Sie diesen Typ...",
+                "beginner": "Beschreiben Sie diesen Typ..."
+              }
+            }
           },
           "iconPlaceholder": {
-            "label": "??"
+            "label": {
+              "label": {
+                "normal": "??",
+                "beginner": "??"
+              }
+            }
           },
           "imagePlaceholder": {
-            "label": "https://example.com/image.png"
+            "label": {
+              "label": {
+                "normal": "https://example.com/image.png",
+                "beginner": "https://example.com/image.png"
+              }
+            }
           },
           "variantPlaceholder": {
             "label": {
-              "normal": "z.B. gross, klein",
-              "beginner": "z.B. gross, klein"
+              "label": {
+                "normal": "z.B. gross, klein",
+                "beginner": "z.B. gross, klein"
+              }
             }
           },
           "parentPlaceholder": {
-            "label": "Elterntyp auswaehlen..."
+            "label": {
+              "label": {
+                "normal": "Elterntyp auswaehlen...",
+                "beginner": "Elterntyp auswaehlen..."
+              }
+            }
           },
           "variant": {
             "label": {
@@ -3348,10 +2172,20 @@
             }
           },
           "modelDescriptionPlaceholder": {
-            "label": "Beschreiben Sie diese Darstellung..."
+            "label": {
+              "label": {
+                "normal": "Beschreiben Sie diese Darstellung...",
+                "beginner": "Beschreiben Sie diese Darstellung..."
+              }
+            }
           },
           "modelTagsPlaceholder": {
-            "label": "tag1, tag2, tag3"
+            "label": {
+              "label": {
+                "normal": "tag1, tag2, tag3",
+                "beginner": "tag1, tag2, tag3"
+              }
+            }
           },
           "ports": {
             "label": {
@@ -3368,21 +2202,25 @@
             },
             "title": {
               "label": {
-                "normal": "Port",
-                "beginner": "Port"
+                "normal": "Title",
+                "beginner": "Title"
               }
             }
           },
           "portInterfacePlaceholder": {
-            "label": "z.B. elektrisch, mechanisch"
+            "label": {
+              "label": {
+                "normal": "z.B. elektrisch, mechanisch",
+                "beginner": "z.B. elektrisch, mechanisch"
+              }
+            }
           },
           "portDescriptionPlaceholder": {
-            "label": "Beschreiben Sie diesen Port..."
-          },
-          "portT": {
             "label": {
-              "normal": "T (Diagrammposition)",
-              "beginner": "T (Diagrammposition)"
+              "label": {
+                "normal": "Beschreiben Sie diesen Port...",
+                "beginner": "Beschreiben Sie diesen Port..."
+              }
             }
           },
           "portPoint": {
@@ -3402,7 +2240,12 @@
             "tutorial": "hello-semio/model-brick-set#ports"
           },
           "portCompatibleInterfacesPlaceholder": {
-            "label": "familie1, familie2"
+            "label": {
+              "label": {
+                "normal": "familie1, familie2",
+                "beginner": "familie1, familie2"
+              }
+            }
           },
           "portNotFound": {
             "label": {
@@ -3441,10 +2284,20 @@
             }
           },
           "attributeValuePlaceholder": {
-            "label": "Wert..."
+            "label": {
+              "label": {
+                "normal": "Wert...",
+                "beginner": "Wert..."
+              }
+            }
           },
           "attributeDefinitionPlaceholder": {
-            "label": "Definition oder URL..."
+            "label": {
+              "label": {
+                "normal": "Definition oder URL...",
+                "beginner": "Definition oder URL..."
+              }
+            }
           },
           "panel": {
             "label": {
@@ -3465,12 +2318,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Typ",
-                      "beginner": "Typ"
-                    }
                   },
                   "name": {
                     "label": {
@@ -3504,14 +2351,6 @@
                     "manual": "type#metadata",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "variant": {
-                    "label": {
-                      "normal": "Variante",
-                      "beginner": "Variantenname fuer diesen Typ. Varianten erlauben mehrere Konfigurationen desselben Typs."
-                    },
-                    "manual": "type#variants",
-                    "tutorial": "hello-semio/model-brick-set"
-                  },
                   "unit": {
                     "label": {
                       "normal": "Einheit",
@@ -3537,12 +2376,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Darstellungen",
-                      "beginner": "Darstellungen"
-                    }
                   },
                   "url": {
                     "label": {
@@ -3573,26 +2406,6 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
-                  },
-                  "title": {
-                    "label": {
-                      "normal": "Ports",
-                      "beginner": "Ports"
-                    }
-                  },
-                  "multipleTitle": {
-                    "label": {
-                      "normal": "{{count}} Ports",
-                      "beginner": "{{count}} Ports"
-                    }
-                  },
-                  "id": {
-                    "label": {
-                      "normal": "ID",
-                      "beginner": "Eindeutige Kennung fuer diesen Port. Wird verwendet, um den Port in Verbindungen zu referenzieren."
-                    },
-                    "manual": "type#ports",
-                    "tutorial": "hello-semio/model-brick-set"
                   },
                   "interface": {
                     "label": {
@@ -3692,12 +2505,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Attribute",
-                      "beginner": "Attribute"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -3728,12 +2535,6 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "title": {
-                    "label": {
-                      "normal": "Autoren",
-                      "beginner": "Autoren"
-                    }
-                  },
                   "name": {
                     "label": {
                       "normal": "Name",
@@ -3761,9 +2562,21 @@
             },
             "someAction": {
               "label": {
-                "normal": "Aktion",
-                "beginner": "Aktion auf Typ ausfuehren"
+                "normal": "Some Action",
+                "beginner": "Some Action"
               }
+            }
+          },
+          "tools": {
+            "label": {
+              "normal": "Tools",
+              "beginner": "Tools"
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
             }
           }
         },
@@ -3771,12 +2584,6 @@
           "label": {
             "normal": "",
             "beginner": ""
-          },
-          "title": {
-            "label": {
-              "normal": "Qualitaet",
-              "beginner": "Qualitaet"
-            }
           },
           "description": {
             "label": {
@@ -3789,22 +2596,6 @@
               "normal": "Neue Qualitaet",
               "beginner": "Neue Qualitaet"
             }
-          },
-          "functions": {
-            "label": {
-              "normal": "Funktionen",
-              "beginner": "Verfuegbare Funktionen fuer Qualitaetsformeln"
-            },
-            "manual": "manuals/semio/quality#functions",
-            "tutorial": "getting-started/intro#quality"
-          },
-          "qualities": {
-            "label": {
-              "normal": "Qualitaeten",
-              "beginner": "Qualitaetsdefinitionen in diesem Kit"
-            },
-            "manual": "manuals/semio/quality",
-            "tutorial": "getting-started/intro#quality"
           },
           "numericFunctions": {
             "label": {
@@ -4040,6 +2831,24 @@
                 }
               }
             }
+          },
+          "title": {
+            "label": {
+              "normal": "Title",
+              "beginner": "Title"
+            }
+          },
+          "functions": {
+            "label": {
+              "normal": "Functions",
+              "beginner": "Functions"
+            }
+          },
+          "qualities": {
+            "label": {
+              "normal": "Qualities",
+              "beginner": "Qualities"
+            }
           }
         }
       },
@@ -4053,22 +2862,22 @@
             "normal": "Theme",
             "beginner": "Color scheme for the interface"
           },
-          "dark": {
+          "system": {
             "label": {
-              "normal": "Dark",
-              "beginner": "Use dark color scheme"
+              "normal": "System",
+              "beginner": "System"
             }
           },
           "light": {
             "label": {
               "normal": "Light",
-              "beginner": "Use light color scheme"
+              "beginner": "Light"
             }
           },
-          "system": {
+          "dark": {
             "label": {
-              "normal": "System",
-              "beginner": "Follow system theme preference"
+              "normal": "Dark",
+              "beginner": "Dark"
             }
           }
         },
@@ -4080,19 +2889,13 @@
           "desktop": {
             "label": {
               "normal": "Desktop",
-              "beginner": "Optimized for desktop computers"
+              "beginner": "Desktop"
             }
           },
           "tablet": {
             "label": {
               "normal": "Tablet",
-              "beginner": "Optimized for tablets"
-            }
-          },
-          "mobile": {
-            "label": {
-              "normal": "Mobile",
-              "beginner": "Optimized for mobile devices"
+              "beginner": "Tablet"
             }
           }
         },
@@ -4101,16 +2904,16 @@
             "normal": "Mode",
             "beginner": "Interface mode"
           },
-          "dev": {
-            "label": {
-              "normal": "Developer",
-              "beginner": "Developer mode with advanced tools"
-            }
-          },
           "user": {
             "label": {
               "normal": "User",
-              "beginner": "Standard user mode"
+              "beginner": "User"
+            }
+          },
+          "dev": {
+            "label": {
+              "normal": "Dev",
+              "beginner": "Dev"
             }
           }
         },
@@ -4134,7 +2937,21 @@
           "expert": {
             "label": {
               "normal": "Expert",
-              "beginner": "Minimal tooltips"
+              "beginner": "Expert"
+            }
+          }
+        },
+        "language": {
+          "de": {
+            "label": {
+              "normal": "De",
+              "beginner": "De"
+            }
+          },
+          "en": {
+            "label": {
+              "normal": "En",
+              "beginner": "En"
             }
           }
         }
@@ -4146,243 +2963,17 @@
         },
         "ascending": {
           "label": {
-            "normal": "Sort ascending",
-            "beginner": "Sort from A to Z or smallest to largest"
+            "normal": "Ascending",
+            "beginner": "Ascending"
           }
         },
         "descending": {
           "label": {
-            "normal": "Sort descending",
-            "beginner": "Sort from Z to A or largest to smallest"
+            "normal": "Descending",
+            "beginner": "Descending"
           }
         }
       }
     }
-  },
-  "tooltip": {
-    "manual": "Handbuch",
-    "tutorial": "Tutorial"
-  },
-  "sort": {
-    "ascending": {
-      "label": "Aufsteigend sortieren",
-      "beginner": "Elemente vom niedrigsten zum hoechsten ordnen."
-    },
-    "descending": {
-      "label": "Absteigend sortieren",
-      "beginner": "Elemente vom hoechsten zum niedrigsten ordnen."
-    }
-  },
-  "home": {
-    "sortByName": {
-      "label": "Nach Name sortieren",
-      "beginner": "Kits alphabetisch nach ihrem Namen sortieren."
-    },
-    "createVersion": {
-      "label": "Version erstellen",
-      "beginner": "Eine neue Version fuer dieses Kit erstellen."
-    },
-    "toggleRow": {
-      "label": "Auf- oder zuklappen",
-      "beginner": "Versionen dieses Kits ein- oder ausblenden."
-    },
-    "hideKind": {
-      "label": "Art-Filter ausblenden",
-      "beginner": "Alle Kits unabhaengig vom Speichertyp anzeigen."
-    },
-    "createKit": {
-      "label": "Kit erstellen",
-      "beginner": "Ein neues Kit fuer den ausgewaehlten Speichertyp erstellen.",
-      "hotkey": "Ctrl+Shift+K"
-    },
-    "showTemporary": {
-      "label": "Temporaere Kits anzeigen",
-      "beginner": "Kits anzeigen, die im Browser-Speicher gespeichert sind (gehen beim Neuladen verloren).",
-      "hotkey": "Ctrl+1"
-    },
-    "createTemporary": {
-      "label": "Temporaeres Kit erstellen",
-      "beginner": "Ein neues temporaeres Kit erstellen, das im Browser-Speicher gespeichert wird.",
-      "hotkey": "Ctrl+Shift+1"
-    },
-    "showLocal": {
-      "label": "Lokale Kits anzeigen",
-      "beginner": "Kits anzeigen, die lokal auf Ihrem Geraet gespeichert sind.",
-      "hotkey": "Ctrl+2"
-    },
-    "createLocal": {
-      "label": "Lokales Kit erstellen",
-      "beginner": "Ein neues Kit erstellen, das lokal auf Ihrem Geraet gespeichert wird.",
-      "hotkey": "Ctrl+Shift+2"
-    },
-    "showRemote": {
-      "label": "Remote-Kits anzeigen",
-      "beginner": "Kits anzeigen, die mit Remote-Speicher synchronisiert sind.",
-      "hotkey": "Ctrl+3"
-    },
-    "createRemote": {
-      "label": "Remote-Kit erstellen",
-      "beginner": "Ein neues Kit erstellen, das mit Remote-Speicher synchronisiert wird.",
-      "hotkey": "Ctrl+Shift+3"
-    }
-  },
-  "settings": {
-    "theme": {
-      "system": {
-        "label": "System-Theme",
-        "beginner": "Das Oberflaechen-Theme mit Ihrem Betriebssystem abgleichen."
-      },
-      "light": {
-        "label": "Helles Theme",
-        "beginner": "Das helle Theme unabhaengig von der Systemeinstellung verwenden."
-      },
-      "dark": {
-        "label": "Dunkles Theme",
-        "beginner": "Das dunkle Theme unabhaengig von der Systemeinstellung verwenden."
-      }
-    },
-    "layout": {
-      "normal": {
-        "label": "Normales Layout",
-        "beginner": "Das Standard-Layout verwenden, optimiert fuer Maus und Tastatur."
-      },
-      "touch": {
-        "label": "Touch-Layout",
-        "beginner": "Das Layout verwenden, optimiert fuer Touch-Eingabe."
-      }
-    },
-    "mode": {
-      "beginner": {
-        "label": "Anfaenger-Modus",
-        "beginner": "Vollstaendige Anleitung, Tutorials und detaillierte Tooltips anzeigen."
-      },
-      "normal": {
-        "label": "Normaler Modus",
-        "beginner": "Kontextbezogene Hilfe ohne Tutorials anzeigen."
-      },
-      "expert": {
-        "label": "Experten-Modus",
-        "beginner": "Anleitung und Tutorials ausblenden fuer einen ablenkungsfreien Workflow."
-      }
-    }
-  },
-  "diagram": {
-    "placeholder": {
-      "label": "+ Hier ablegen",
-      "beginner": "Teile hier ablegen, um sie dem Entwurf hinzuzufuegen."
-    }
-  },
-  "folder": {
-    "created": "Erstellt",
-    "updated": "Aktualisiert"
-  },
-  "action-group-default": {
-    "label": "Aktionen"
-  },
-  "action-group-default-copy": {
-    "label": "Kopieren",
-    "beginner": "Ausgewaehlte Elemente in die Zwischenablage kopieren"
-  },
-  "action-group-default-download": {
-    "label": "Herunterladen",
-    "beginner": "Den aktuellen Inhalt herunterladen"
-  },
-  "action-group-default-external": {
-    "label": "In neuem Fenster oeffnen",
-    "beginner": "Diesen Inhalt in einem neuen Fenster oeffnen"
-  },
-  "action-group-window-controls": {
-    "label": "Fenstersteuerung"
-  },
-  "action-group-window-controls-external": {
-    "label": "In neuem Fenster oeffnen",
-    "beginner": "Dieses Fenster in einem separaten Browserfenster oeffnen"
-  },
-  "action-group-window-controls-maximize": {
-    "label": "Maximieren/Minimieren",
-    "beginner": "Vollbild fuer dieses Fenster umschalten"
-  },
-  "action-group-window-controls-close": {
-    "label": "Schliessen",
-    "beginner": "Dieses Fenster schliessen"
-  },
-  "action-group-destructive": {
-    "label": "Aktionen"
-  },
-  "action-group-destructive-copy": {
-    "label": "Kopieren",
-    "beginner": "Ausgewaehlte Elemente kopieren"
-  },
-  "action-group-destructive-download": {
-    "label": "Herunterladen",
-    "beginner": "Den Inhalt herunterladen"
-  },
-  "action-group-destructive-delete": {
-    "label": "Loeschen",
-    "beginner": "Ausgewaehlte Elemente loeschen"
-  },
-  "action-group-with-label": {
-    "label": "Aktionen"
-  },
-  "action-group-with-label-copy": {
-    "label": "Kopieren",
-    "beginner": "Ausgewaehlte Elemente kopieren"
-  },
-  "action-group-with-label-download": {
-    "label": "Herunterladen",
-    "beginner": "Den Inhalt herunterladen"
-  },
-  "action-group-with-label-external": {
-    "label": "Extern oeffnen",
-    "beginner": "In einem neuen Fenster oeffnen"
-  },
-  "action-group-level-base": {
-    "label": "Basis-Aktionen"
-  },
-  "action-group-level-base-copy": {
-    "label": "Kopieren",
-    "beginner": "In die Zwischenablage kopieren"
-  },
-  "action-group-level-base-download": {
-    "label": "Herunterladen",
-    "beginner": "Inhalt herunterladen"
-  },
-  "action-group-level-base-external": {
-    "label": "Extern oeffnen",
-    "beginner": "In neuem Fenster oeffnen"
-  },
-  "action-group-level-panel": {
-    "label": "Panel-Aktionen"
-  },
-  "action-group-level-panel-copy": {
-    "label": "Kopieren",
-    "beginner": "In die Zwischenablage kopieren"
-  },
-  "action-group-level-panel-download": {
-    "label": "Herunterladen",
-    "beginner": "Inhalt herunterladen"
-  },
-  "action-group-level-panel-external": {
-    "label": "Extern oeffnen",
-    "beginner": "In neuem Fenster oeffnen"
-  },
-  "action-group-level-temporary": {
-    "label": "Temporaere Aktionen"
-  },
-  "action-group-level-temporary-copy": {
-    "label": "Kopieren",
-    "beginner": "In die Zwischenablage kopieren"
-  },
-  "action-group-level-temporary-download": {
-    "label": "Herunterladen",
-    "beginner": "Inhalt herunterladen"
-  },
-  "action-group-level-temporary-external": {
-    "label": "Extern oeffnen",
-    "beginner": "In neuem Fenster oeffnen"
-  },
-  "scene-projection": {
-    "label": "Projektionsmodus",
-    "beginner": "Zwischen Kamera- und orthographischer Projektion wechseln"
   }
 }

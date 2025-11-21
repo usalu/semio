@@ -2710,15 +2710,38 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   };
   const getPort = (type: Type | undefined, portGuid: string | undefined): Port | undefined => {
     if (!type) return undefined;
-    if (type.ports) {
-      const port = portGuid ? type.ports.find((p) => p.guid === portGuid) : type.ports[0];
+
+    // If no port GUID specified, return first port
+    if (!portGuid) {
+      if (type.ports && type.ports.length > 0) {
+        return type.ports[0];
+      }
+      // Check parent
+      if (type.parent?.guid) {
+        const parentType = getType(type.parent.guid);
+        return getPort(parentType, portGuid);
+      }
+      return undefined;
+    }
+
+    // Port GUID specified - try to find it in type hierarchy
+    if (type.ports && type.ports.length > 0) {
+      const port = type.ports.find((p) => p.guid === portGuid);
       if (port) return port;
     }
-    const childTypes = types.filter((t) => t.parent?.guid === type.guid);
-    for (const childType of childTypes) {
-      const port = getPort(childType, portGuid);
+
+    // Not found in current type, check parent
+    if (type.parent?.guid) {
+      const parentType = getType(type.parent.guid);
+      const port = getPort(parentType, portGuid);
       if (port) return port;
     }
+
+    // Port GUID specified but not found anywhere in hierarchy - fall back to first port
+    if (type.ports && type.ports.length > 0) {
+      return type.ports[0];
+    }
+
     return undefined;
   };
 
@@ -2732,39 +2755,40 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   });
 
 
+  const filteredConnections = flatDesign.connections?.filter((connection) => {
+    const sourceId = connection.connected.piece.guid;
+    const targetId = connection.connecting.piece.guid;
+    const sourceExists = pieceMap[sourceId];
+    const targetExists = pieceMap[targetId];
+    if (!sourceExists) {
+      console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - source piece ${sourceId} not found`);
+      return false;
+    }
+    if (!targetExists) {
+      console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - target piece ${targetId} not found`);
+      return false;
+    }
+    return true;
+  }) || [];
+
+
   const cy = cytoscape({
     elements: {
       nodes: flatDesign.pieces!.map((piece) => ({
         data: { id: piece.guid, label: piece.guid },
       })),
-      edges: flatDesign.connections
-        ?.filter((connection) => {
-          const sourceId = connection.connected.piece.guid;
-          const targetId = connection.connecting.piece.guid;
-          const sourceExists = pieceMap[sourceId];
-          const targetExists = pieceMap[targetId];
-          if (!sourceExists) {
-            console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - source piece ${sourceId} not found`);
-            return false;
-          }
-          if (!targetExists) {
-            console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - target piece ${targetId} not found`);
-            return false;
-          }
-          return true;
-        })
-        .map((connection, index) => {
-          const sourceId = connection.connected.piece.guid;
-          const targetId = connection.connecting.piece.guid;
-          return {
-            data: {
-              id: connection.guid,
-              source: sourceId,
-              target: targetId,
-              connectionData: connection,
-            },
-          };
-        }),
+      edges: filteredConnections.map((connection, index) => {
+        const sourceId = connection.connected.piece.guid;
+        const targetId = connection.connecting.piece.guid;
+        return {
+          data: {
+            id: connection.guid,
+            source: sourceId,
+            target: targetId,
+            connectionData: connection,
+          },
+        };
+      }),
     } as any,
     headless: true,
   });
@@ -2824,34 +2848,51 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
       }
     }
 
-    const bfs = cy.elements().bfs({
+    let visitCount = 0;
+    let skipCount = 0;
+    const bfs = component.bfs({
       roots: `#${rootNode.id()}`,
       visit: (v, e, u, i, depth) => {
         if (!e) return;
+        visitCount++;
         const edgeData = e.data();
         const connection: Connection | undefined = edgeData.connectionData;
-        if (!connection) return;
+        if (!connection) {
+          skipCount++;
+          return;
+        }
         const parentNode = u;
         const childNode = v;
         const parentId = parentNode.id();
         const childId = childNode.id();
         const parentPiece = pieceMap[parentId];
         const childPiece = pieceMap[childId];
-        if (!parentPiece || !childPiece || !parentPiece.guid || !childPiece.guid) return;
+        if (!parentPiece || !childPiece || !parentPiece.guid || !childPiece.guid) {
+          skipCount++;
+          return;
+        }
         if (piecePlanes[childPiece.guid]) return;
         const parentPlane = piecePlanes[parentPiece.guid];
         if (!parentPlane) {
           console.error(`Error during flatten: Parent piece ${parentPiece.guid} plane not found.`);
+          skipCount++;
           return;
         }
         const parentSide = connection.connected.piece.guid === parentId ? connection.connected : connection.connecting;
         const childSide = connection.connecting.piece.guid === childId ? connection.connecting : connection.connected;
         const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
         const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
-        const parentPort = getPort(parentType, parentSide.port.guid);
-        const childPort = getPort(childType, childSide.port.guid);
+
+        // Get ports - use recursive parent type lookup via getPort
+        // If no explicit port GUID, getPort will return the first available port
+        const parentPortGuid = parentSide.port?.guid;
+        const childPortGuid = childSide.port?.guid;
+        const parentPort = getPort(parentType, parentPortGuid);
+        const childPort = getPort(childType, childPortGuid);
+
         if (!parentPort || !childPort) {
-          console.error(`Error during flatten: Ports not found for connection between ${parentId} and ${childId}. Parent Port: ${parentSide.port.guid}, Child Port: ${childSide.port.guid}`);
+          console.error(`Error during flatten: Ports not found for connection between ${parentId} and ${childId}. Parent Port: ${parentPortGuid}, Child Port: ${childPortGuid}`);
+          skipCount++;
           return;
         }
         const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
@@ -2895,15 +2936,21 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   flatDesign.connections = [];
 
   // Return the diff between original design and flattened design
+  let piecesWithPlanes = 0;
+  let piecesWithoutPlanes = 0;
   const updatedPieces = flatDesign.pieces
     ?.map((flatPiece) => {
+      if (flatPiece.plane) piecesWithPlanes++;
+      else piecesWithoutPlanes++;
+
       const originalPiece = design.pieces?.find((p) => p.guid === flatPiece.guid);
       if (!originalPiece) return null;
 
       // Build piece diff for pieces that changed
       const pieceDiff: PieceDiff = {};
-      if (flatPiece.plane !== originalPiece.plane) pieceDiff.plane = flatPiece.plane;
-      if (flatPiece.center !== originalPiece.center) pieceDiff.center = flatPiece.center;
+      // Always include plane and center from flatPiece (these are what flattenDesign computed)
+      if (flatPiece.plane) pieceDiff.plane = flatPiece.plane;
+      if (flatPiece.center) pieceDiff.center = flatPiece.center;
       if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) {
         pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
       }
@@ -2917,6 +2964,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
       };
     })
     .filter((update) => update !== null) as Array<{ id: string; diff: PieceDiff }>;
+
 
   const removedConnections = design.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
 

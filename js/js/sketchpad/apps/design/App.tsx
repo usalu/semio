@@ -6182,11 +6182,45 @@ const App: FC<AppProps> = () => {
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
   const store = useDesignAppStore() as DesignAppStore | null;
-  const windowLayout = useDesignApp((s) => s.windowLayout);
+  const storedWindowLayout = useDesignApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
     return createDefaultLayout([DesignAppWindowKind.Diagram, DesignAppWindowKind.Scene], "row", [70, 30]);
   }, []);
+
+  // Validate layout has Scene window - if not, use undefined to trigger default
+  const windowLayout = useMemo(() => {
+    if (!storedWindowLayout) {
+      console.log("[DesignApp] No stored layout, will use default");
+      return storedWindowLayout;
+    }
+
+    const hasSceneWindow = (layout: any): boolean => {
+      if (!layout) return false;
+      if (layout.type === "component" && layout.componentName === DesignAppWindowKind.Scene) return true;
+      if (layout.content && Array.isArray(layout.content)) {
+        return layout.content.some((item: any) => hasSceneWindow(item));
+      }
+      return false;
+    };
+
+    const hasScene = hasSceneWindow(storedWindowLayout);
+    console.log("[DesignApp] Stored layout check:", { hasScene, layout: storedWindowLayout });
+
+    if (!hasScene) {
+      console.log("[DesignApp] Scene window not found in saved layout, resetting to default");
+      return undefined;
+    }
+
+    return storedWindowLayout;
+  }, [storedWindowLayout]);
+
+  // Clear invalid layout from store
+  useEffect(() => {
+    if (store && storedWindowLayout && windowLayout === undefined) {
+      store.change({ windowLayout: undefined });
+    }
+  }, [store, storedWindowLayout, windowLayout]);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {

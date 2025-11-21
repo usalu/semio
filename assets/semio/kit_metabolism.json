@@ -135563,36 +135563,38 @@
       "icon": "icons/capital.svg",
       "image": "images/capital.png",
       "name": "Capital",
-      "ports": {
-        "attributes": [
-          {
-            "definition": "",
-            "guid": "1735ea45-2807-4701-bb07-db79d8c182cf",
-            "key": "bottom",
-            "value": ""
+      "ports": [
+        {
+          "attributes": [
+            {
+              "definition": "",
+              "guid": "1735ea45-2807-4701-bb07-db79d8c182cf",
+              "key": "bottom",
+              "value": ""
+            },
+            {
+              "definition": "",
+              "guid": "ca60796b-537a-4f30-9992-e23f717e2546",
+              "key": "wasp rotation",
+              "value": "180"
+            }
+          ],
+          "description": "The center of the bottom.",
+          "direction": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.0
           },
-          {
-            "definition": "",
-            "guid": "ca60796b-537a-4f30-9992-e23f717e2546",
-            "key": "wasp rotation",
-            "value": "180"
-          }
-        ],
-        "description": "The center of the bottom.",
-        "direction": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": -1.0
-        },
-        "guid": "93deaf24-165c-47b6-b6ed-19aa4d844578",
-        "mandatory": false,
-        "point": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+          "guid": "93deaf24-165c-47b6-b6ed-19aa4d844578",
+          "mandatory": false,
+          "point": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.335Z",
@@ -135658,36 +135660,38 @@
       "icon": "icons/cylindric-capital.svg",
       "image": "images/cylindric-capital.png",
       "name": "Cylindric Capital",
-      "ports": {
-        "attributes": [
-          {
-            "definition": "",
-            "guid": "fcab6e8d-5589-4861-9933-bdfd8f4c3176",
-            "key": "bottom",
-            "value": ""
+      "ports": [
+        {
+          "attributes": [
+            {
+              "definition": "",
+              "guid": "fcab6e8d-5589-4861-9933-bdfd8f4c3176",
+              "key": "bottom",
+              "value": ""
+            },
+            {
+              "definition": "",
+              "guid": "519566b7-6e15-4742-89bf-41dd670b595c",
+              "key": "wasp rotation",
+              "value": "180"
+            }
+          ],
+          "description": "The center of the bottom.",
+          "direction": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.0
           },
-          {
-            "definition": "",
-            "guid": "519566b7-6e15-4742-89bf-41dd670b595c",
-            "key": "wasp rotation",
-            "value": "180"
-          }
-        ],
-        "description": "The center of the bottom.",
-        "direction": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": -1.0
-        },
-        "guid": "251b746f-6e67-47ae-b40c-287d8015c948",
-        "mandatory": false,
-        "point": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+          "guid": "251b746f-6e67-47ae-b40c-287d8015c948",
+          "mandatory": false,
+          "point": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.336Z",
@@ -135792,28 +135796,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "83575b51-53d3-42c5-a15a-4947daf392f1",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "bf8e46bf-7468-409c-808d-179bc259e8bc",
-        "mandatory": false,
-        "point": {
-          "x": 0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "83575b51-53d3-42c5-a15a-4947daf392f1",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "bf8e46bf-7468-409c-808d-179bc259e8bc",
+          "mandatory": false,
+          "point": {
+            "x": 0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.338Z",
@@ -135924,28 +135930,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "c232f93b-022f-4e89-bb8f-dea8d4d8ea06",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "59545dab-d760-4a0e-b408-e41a5b36baf4",
-        "mandatory": false,
-        "point": {
-          "x": -0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "c232f93b-022f-4e89-bb8f-dea8d4d8ea06",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "59545dab-d760-4a0e-b408-e41a5b36baf4",
+          "mandatory": false,
+          "point": {
+            "x": -0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.339Z",
@@ -136050,28 +136058,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "a78bcecc-d9c2-43f6-b3b4-dbdd37c210ca",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "68471fa2-ba31-4801-a650-1f4010187b71",
-        "mandatory": false,
-        "point": {
-          "x": 0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "a78bcecc-d9c2-43f6-b3b4-dbdd37c210ca",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "68471fa2-ba31-4801-a650-1f4010187b71",
+          "mandatory": false,
+          "point": {
+            "x": 0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.341Z",
@@ -136182,28 +136192,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "81cdb765-e7a4-4a2f-890e-8bfd562498b1",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "1de6742b-c2c3-463c-9adf-ad75683a4071",
-        "mandatory": false,
-        "point": {
-          "x": -0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "81cdb765-e7a4-4a2f-890e-8bfd562498b1",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "1de6742b-c2c3-463c-9adf-ad75683a4071",
+          "mandatory": false,
+          "point": {
+            "x": -0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.342Z",
@@ -136308,28 +136320,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "38e84f37-40cc-4ce0-b8ed-0b7e9a00f523",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "1a8ceb46-01f4-47e4-a1bb-632b1a694aa8",
-        "mandatory": false,
-        "point": {
-          "x": -1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "38e84f37-40cc-4ce0-b8ed-0b7e9a00f523",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "1a8ceb46-01f4-47e4-a1bb-632b1a694aa8",
+          "mandatory": false,
+          "point": {
+            "x": -1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.343Z",
@@ -136440,28 +136454,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "3c1cc39f-23b8-4d03-a504-7e554214db63",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "f9774218-ed26-4df3-8464-ee8849564817",
-        "mandatory": false,
-        "point": {
-          "x": 1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "3c1cc39f-23b8-4d03-a504-7e554214db63",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "f9774218-ed26-4df3-8464-ee8849564817",
+          "mandatory": false,
+          "point": {
+            "x": 1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.345Z",
@@ -136566,28 +136582,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "4e9e66d4-f9f7-449a-8e20-3fc45241a0cf",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "a094d1c8-23aa-48a0-964f-9f2db6918461",
-        "mandatory": false,
-        "point": {
-          "x": -1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "4e9e66d4-f9f7-449a-8e20-3fc45241a0cf",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "a094d1c8-23aa-48a0-964f-9f2db6918461",
+          "mandatory": false,
+          "point": {
+            "x": -1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.347Z",
@@ -136698,28 +136716,30 @@
       "parent": {
         "guid": "89c72163-3ba1-43c4-a172-8d94aac72f9f"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "6643f774-1b06-419b-a36f-cb0344892cdf",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "65326d13-ea83-488f-bddf-3927da4e1d6a",
-        "mandatory": false,
-        "point": {
-          "x": 1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "6643f774-1b06-419b-a36f-cb0344892cdf",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "65326d13-ea83-488f-bddf-3927da4e1d6a",
+          "mandatory": false,
+          "point": {
+            "x": 1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.348Z",
@@ -136824,28 +136844,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "870af9c9-6001-402b-84e7-9195c1b5f680",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "099f04d0-964a-4ece-ae24-3a949c72fc46",
-        "mandatory": false,
-        "point": {
-          "x": 0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "870af9c9-6001-402b-84e7-9195c1b5f680",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "099f04d0-964a-4ece-ae24-3a949c72fc46",
+          "mandatory": false,
+          "point": {
+            "x": 0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.35Z",
@@ -136956,28 +136978,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "b619a4cf-d141-4614-8e48-b40f7844ee36",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "b008abe5-7f9b-4b6e-bd4c-35375e83a340",
-        "mandatory": false,
-        "point": {
-          "x": -0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "b619a4cf-d141-4614-8e48-b40f7844ee36",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "b008abe5-7f9b-4b6e-bd4c-35375e83a340",
+          "mandatory": false,
+          "point": {
+            "x": -0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.352Z",
@@ -137082,28 +137106,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "0cc5eb26-2429-48fe-a34c-c4ff39323b3c",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "f3a9e941-002b-450d-8f52-8dd5ed9c6c03",
-        "mandatory": false,
-        "point": {
-          "x": 0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "0cc5eb26-2429-48fe-a34c-c4ff39323b3c",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "f3a9e941-002b-450d-8f52-8dd5ed9c6c03",
+          "mandatory": false,
+          "point": {
+            "x": 0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.353Z",
@@ -137214,28 +137240,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "61cce1a6-a7b4-4275-a63b-344fb586db57",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "4a18718b-4346-4e36-a64e-accc6d8e5fcf",
-        "mandatory": false,
-        "point": {
-          "x": -0.45,
-          "y": -2.1,
-          "z": 2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "61cce1a6-a7b4-4275-a63b-344fb586db57",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "4a18718b-4346-4e36-a64e-accc6d8e5fcf",
+          "mandatory": false,
+          "point": {
+            "x": -0.45,
+            "y": -2.1,
+            "z": 2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.356Z",
@@ -137340,28 +137368,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "5989a7e3-ed61-4e47-9f74-e849225af783",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "f9c9c09f-1d65-492d-b56a-3a1357e1295d",
-        "mandatory": false,
-        "point": {
-          "x": -1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "5989a7e3-ed61-4e47-9f74-e849225af783",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "f9c9c09f-1d65-492d-b56a-3a1357e1295d",
+          "mandatory": false,
+          "point": {
+            "x": -1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.358Z",
@@ -137472,28 +137502,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "01f0f28c-2d7d-48f4-af27-fa89c9c328ef",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "8d49b2e1-d675-413d-8029-e829da9ef060",
-        "mandatory": false,
-        "point": {
-          "x": 1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "01f0f28c-2d7d-48f4-af27-fa89c9c328ef",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "8d49b2e1-d675-413d-8029-e829da9ef060",
+          "mandatory": false,
+          "point": {
+            "x": 1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.359Z",
@@ -137598,28 +137630,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "56fa14e4-ad33-4f52-bf57-b9a12cde9c0c",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "8f59b68a-bec3-4660-ac2d-51dc3cfad5b1",
-        "mandatory": false,
-        "point": {
-          "x": -1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "56fa14e4-ad33-4f52-bf57-b9a12cde9c0c",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "8f59b68a-bec3-4660-ac2d-51dc3cfad5b1",
+          "mandatory": false,
+          "point": {
+            "x": -1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.364Z",
@@ -137730,28 +137764,30 @@
       "parent": {
         "guid": "cd391d68-3676-4da9-8621-21241d2cadec"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "3776fee3-3269-453e-a8ae-98f8c05d2940",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "d57b7289-a137-4347-9d8b-8f967f1257ae",
-        "mandatory": false,
-        "point": {
-          "x": 1.3,
-          "y": -1.25,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "3776fee3-3269-453e-a8ae-98f8c05d2940",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "d57b7289-a137-4347-9d8b-8f967f1257ae",
+          "mandatory": false,
+          "point": {
+            "x": 1.3,
+            "y": -1.25,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.365Z",
@@ -137856,28 +137892,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "c4f519f6-4549-4307-b69c-7ed522ec3b7b",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "d0e0d4ec-acaf-4600-973e-f6c4b3dd6c11",
-        "mandatory": false,
-        "point": {
-          "x": 0.87,
-          "y": -1.8,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "c4f519f6-4549-4307-b69c-7ed522ec3b7b",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "d0e0d4ec-acaf-4600-973e-f6c4b3dd6c11",
+          "mandatory": false,
+          "point": {
+            "x": 0.87,
+            "y": -1.8,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.366Z",
@@ -137988,28 +138026,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "18e3849e-cd7c-446b-b750-8565ea472860",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "7af134b4-b961-410f-8ec5-162925c6467f",
-        "mandatory": false,
-        "point": {
-          "x": -0.87,
-          "y": -1.8,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "18e3849e-cd7c-446b-b750-8565ea472860",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "7af134b4-b961-410f-8ec5-162925c6467f",
+          "mandatory": false,
+          "point": {
+            "x": -0.87,
+            "y": -1.8,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.367Z",
@@ -138114,28 +138154,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "68bb65c7-b760-4b9b-a61e-25783f596270",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "b9f215ce-56d2-450c-a665-f0f90b8a093e",
-        "mandatory": false,
-        "point": {
-          "x": 0.87,
-          "y": -1.8,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "68bb65c7-b760-4b9b-a61e-25783f596270",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "b9f215ce-56d2-450c-a665-f0f90b8a093e",
+          "mandatory": false,
+          "point": {
+            "x": 0.87,
+            "y": -1.8,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.369Z",
@@ -138246,28 +138288,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "dd6dc78d-d99d-4198-84ba-c4e872e64342",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.0,
-          "y": -1.0,
-          "z": 0.0
-        },
-        "guid": "c724d07e-26b3-4cde-afe6-59a5fd7ede18",
-        "mandatory": false,
-        "point": {
-          "x": -0.87,
-          "y": -1.8,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "dd6dc78d-d99d-4198-84ba-c4e872e64342",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "guid": "c724d07e-26b3-4cde-afe6-59a5fd7ede18",
+          "mandatory": false,
+          "point": {
+            "x": -0.87,
+            "y": -1.8,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.37Z",
@@ -138372,28 +138416,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "575a8d2a-4dd3-4283-b2e3-062495037d63",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "f83c4592-577d-4145-8d2a-e5dad5e995c9",
-        "mandatory": false,
-        "point": {
-          "x": -2.0,
-          "y": -0.67,
-          "z": -2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "575a8d2a-4dd3-4283-b2e3-062495037d63",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "f83c4592-577d-4145-8d2a-e5dad5e995c9",
+          "mandatory": false,
+          "point": {
+            "x": -2.0,
+            "y": -0.67,
+            "z": -2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.372Z",
@@ -138504,28 +138550,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "c8430bd7-9a7f-49ac-9f10-1a9d44a9af1a",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "6ce1afd6-1430-48ee-b810-5da8535659d6",
-        "mandatory": false,
-        "point": {
-          "x": 2.0,
-          "y": -0.67,
-          "z": -2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "c8430bd7-9a7f-49ac-9f10-1a9d44a9af1a",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "6ce1afd6-1430-48ee-b810-5da8535659d6",
+          "mandatory": false,
+          "point": {
+            "x": 2.0,
+            "y": -0.67,
+            "z": -2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.373Z",
@@ -138630,28 +138678,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "55f57d1b-0d3a-4970-b5d9-c9b52dd6f534",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "2285877b-5984-4101-90a4-c502469793ed",
-        "mandatory": false,
-        "point": {
-          "x": -2.0,
-          "y": -0.67,
-          "z": -2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "55f57d1b-0d3a-4970-b5d9-c9b52dd6f534",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "2285877b-5984-4101-90a4-c502469793ed",
+          "mandatory": false,
+          "point": {
+            "x": -2.0,
+            "y": -0.67,
+            "z": -2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.375Z",
@@ -138762,28 +138812,30 @@
       "parent": {
         "guid": "228c9d4a-d7fd-410c-9323-51216a64f518"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "2f90ecc7-0c13-478b-8440-d375e5e6f58a",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 1.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "guid": "f595b43b-dff2-4a6f-8c44-61525cba17a1",
-        "mandatory": false,
-        "point": {
-          "x": 2.0,
-          "y": -0.67,
-          "z": -2.7755576E-17
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "2f90ecc7-0c13-478b-8440-d375e5e6f58a",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "guid": "f595b43b-dff2-4a6f-8c44-61525cba17a1",
+          "mandatory": false,
+          "point": {
+            "x": 2.0,
+            "y": -0.67,
+            "z": -2.7755576E-17
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.376Z",
@@ -138870,28 +138922,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "3cd088f0-71b7-4d9c-93d2-6c70346dbc9b",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "0d967944-7707-426d-bb04-e8b28ff5a468",
-        "mandatory": false,
-        "point": {
-          "x": 0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "3cd088f0-71b7-4d9c-93d2-6c70346dbc9b",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "0d967944-7707-426d-bb04-e8b28ff5a468",
+          "mandatory": false,
+          "point": {
+            "x": 0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.377Z",
@@ -138984,28 +139038,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "2e8603c5-2dbc-46c6-816c-1517857a8c64",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "2a452d99-3a78-4313-bc33-3683963d7246",
-        "mandatory": false,
-        "point": {
-          "x": -0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "2e8603c5-2dbc-46c6-816c-1517857a8c64",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "2a452d99-3a78-4313-bc33-3683963d7246",
+          "mandatory": false,
+          "point": {
+            "x": -0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.379Z",
@@ -139092,28 +139148,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "16b2f3aa-dbc6-4940-ac0d-71ae578a2619",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "a8e5c514-969d-4a79-a05a-2366b0d1d762",
-        "mandatory": false,
-        "point": {
-          "x": 0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "16b2f3aa-dbc6-4940-ac0d-71ae578a2619",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "a8e5c514-969d-4a79-a05a-2366b0d1d762",
+          "mandatory": false,
+          "point": {
+            "x": 0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.381Z",
@@ -139206,28 +139264,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "870d6996-cce3-4036-a29a-3f7945e2fe8f",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "e6121a9c-0c4e-45a3-9e75-513ee940c842",
-        "mandatory": false,
-        "point": {
-          "x": -0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "870d6996-cce3-4036-a29a-3f7945e2fe8f",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "e6121a9c-0c4e-45a3-9e75-513ee940c842",
+          "mandatory": false,
+          "point": {
+            "x": -0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.383Z",
@@ -139314,28 +139374,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "74740efb-58aa-4216-a74c-fd7aee2ed0f5",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "7dbd35a6-fe91-41df-a088-d658c2da0b3b",
-        "mandatory": false,
-        "point": {
-          "x": 0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "74740efb-58aa-4216-a74c-fd7aee2ed0f5",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "7dbd35a6-fe91-41df-a088-d658c2da0b3b",
+          "mandatory": false,
+          "point": {
+            "x": 0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.388Z",
@@ -139428,28 +139490,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "55b70f32-6a50-4abb-8689-f94284feabb0",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "d1b1cef6-1314-4780-8ab9-c58f5d8c72e1",
-        "mandatory": false,
-        "point": {
-          "x": -0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "55b70f32-6a50-4abb-8689-f94284feabb0",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "d1b1cef6-1314-4780-8ab9-c58f5d8c72e1",
+          "mandatory": false,
+          "point": {
+            "x": -0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.39Z",
@@ -139536,28 +139600,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "0f6e6a51-a885-42fe-ab8f-b450ce535c1b",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": -0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "44499726-46c1-4c7c-af20-59bd738d9714",
-        "mandatory": false,
-        "point": {
-          "x": 0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "0f6e6a51-a885-42fe-ab8f-b450ce535c1b",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": -0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "44499726-46c1-4c7c-af20-59bd738d9714",
+          "mandatory": false,
+          "point": {
+            "x": 0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.392Z",
@@ -139650,28 +139716,30 @@
       "parent": {
         "guid": "054f8829-80e4-4843-8768-6aa5b5cd07b7"
       },
-      "ports": {
-        "attributes": {
-          "definition": "",
-          "guid": "903cb55d-3f6d-4594-82c5-62d0adc624d3",
-          "key": "entrance",
-          "value": ""
-        },
-        "description": "The middle of the main entrance door of the upper entrance floor.",
-        "direction": {
-          "x": 0.14780942,
-          "y": -0.9890159,
-          "z": 0.0
-        },
-        "guid": "930b1007-8884-4a9a-b454-f15c4e457139",
-        "mandatory": false,
-        "point": {
-          "x": -0.42,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "t": 0.0
-      },
+      "ports": [
+        {
+          "attributes": {
+            "definition": "",
+            "guid": "903cb55d-3f6d-4594-82c5-62d0adc624d3",
+            "key": "entrance",
+            "value": ""
+          },
+          "description": "The middle of the main entrance door of the upper entrance floor.",
+          "direction": {
+            "x": 0.14780942,
+            "y": -0.9890159,
+            "z": 0.0
+          },
+          "guid": "930b1007-8884-4a9a-b454-f15c4e457139",
+          "mandatory": false,
+          "point": {
+            "x": -0.42,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "t": 0.0
+        }
+      ],
       "stock": 2147483647,
       "unit": "m",
       "updatedAt": "2025-11-20T22:45:30.408Z",

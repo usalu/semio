@@ -22,7 +22,7 @@
 // #region Imports
 
 import { DragEndEvent, useDroppable } from "@dnd-kit/core";
-import { AddIcon, AwardIcon, ChevronDownIcon, ChevronRightIcon, DocumentIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FolderIcon, LayoutIcon, SortAscendingIcon, SortDescendingIcon, TypeIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, ChevronDownIcon, ChevronRightIcon, DocumentIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FolderIcon, InterfaceIcon, LayoutIcon, SortAscendingIcon, SortDescendingIcon, TypeIcon, UserIcon } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
@@ -78,6 +78,7 @@ export interface KitAppSelection {
   types?: Guid[];
   designs?: Guid[];
   qualities?: string[];
+  interfaces?: Guid[];
   files?: string[];
   folders?: Guid[];
   authors?: string[];
@@ -95,6 +96,10 @@ export interface KitAppSelectionQualitiesDiff {
   added?: string[];
   removed?: string[];
 }
+export interface KitAppSelectionInterfacesDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
 export interface KitAppSelectionFilesDiff {
   added?: string[];
   removed?: string[];
@@ -111,6 +116,7 @@ export interface KitAppSelectionDiff {
   types?: KitAppSelectionTypesDiff;
   designs?: KitAppSelectionDesignsDiff;
   qualities?: KitAppSelectionQualitiesDiff;
+  interfaces?: KitAppSelectionInterfacesDiff;
   files?: KitAppSelectionFilesDiff;
   folders?: KitAppSelectionFoldersDiff;
   authors?: KitAppSelectionAuthorsDiff;
@@ -774,6 +780,10 @@ export function useKitAppCommands(id?: KitAppId) {
       selectQualities: noOp,
       addQualityToSelection: noOp,
       removeQualityFromSelection: noOp,
+      selectInterface: noOp,
+      selectInterfaces: noOp,
+      addInterfaceToSelection: noOp,
+      removeInterfaceFromSelection: noOp,
       selectFile: noOp,
       selectFiles: noOp,
       addFileToSelection: noOp,
@@ -831,6 +841,10 @@ export function useKitAppCommands(id?: KitAppId) {
     selectQualities: (origin: string, keys: string[]) => store.execute("semio.kitApp.selectQualities", origin, keys),
     addQualityToSelection: (origin: string, key: string) => store.execute("semio.kitApp.addQualityToSelection", origin, key),
     removeQualityFromSelection: (origin: string, key: string) => store.execute("semio.kitApp.removeQualityFromSelection", origin, key),
+    selectInterface: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectInterface", origin, guid),
+    selectInterfaces: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectInterfaces", origin, guids),
+    addInterfaceToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addInterfaceToSelection", origin, guid),
+    removeInterfaceFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeInterfaceFromSelection", origin, guid),
     selectFile: (origin: string, path: string) => store.execute("semio.kitApp.selectFile", origin, path),
     selectFiles: (origin: string, paths: string[]) => store.execute("semio.kitApp.selectFiles", origin, paths),
     addFileToSelection: (origin: string, path: string) => store.execute("semio.kitApp.addFileToSelection", origin, path),
@@ -1166,6 +1180,11 @@ export const commands = {
             added: [Guid],
           },
           designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
@@ -1180,6 +1199,11 @@ export const commands = {
             added: typeIds,
           },
           designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
@@ -1212,6 +1236,11 @@ export const commands = {
             removed: currentSelection?.designs ?? [],
             added: [Guid],
           },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
@@ -1226,6 +1255,11 @@ export const commands = {
             removed: currentSelection?.designs ?? [],
             added: designIds,
           },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
@@ -1259,7 +1293,9 @@ export const commands = {
             removed: currentSelection?.qualities ?? [],
             added: [key],
           },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
           authors: { removed: currentSelection?.authors ?? [] },
         },
       },
@@ -1276,7 +1312,9 @@ export const commands = {
             removed: currentSelection?.qualities ?? [],
             added: keys,
           },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
           authors: { removed: currentSelection?.authors ?? [] },
         },
       },
@@ -1300,6 +1338,62 @@ export const commands = {
       },
     };
   },
+  "semio.kitApp.selectInterface": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: {
+            removed: currentSelection?.interfaces ?? [],
+            added: [guid],
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectInterfaces": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: {
+            removed: currentSelection?.interfaces ?? [],
+            added: guids,
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addInterfaceToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          interfaces: { added: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeInterfaceFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          interfaces: { removed: [guid] },
+        },
+      },
+    };
+  },
   "semio.kitApp.selectFile": (context: KitAppCommandContext, guid: string): KitAppCommandResult => {
     const currentSelection = context.kitApp.selection;
     return {
@@ -1308,10 +1402,12 @@ export const commands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
           qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: {
             removed: currentSelection?.files ?? [],
             added: [guid],
           },
+          folders: { removed: currentSelection?.folders ?? [] },
           authors: { removed: currentSelection?.authors ?? [] },
         },
       },
@@ -1325,10 +1421,12 @@ export const commands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
           qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: {
             removed: currentSelection?.files ?? [],
             added: guids,
           },
+          folders: { removed: currentSelection?.folders ?? [] },
           authors: { removed: currentSelection?.authors ?? [] },
         },
       },
@@ -1360,6 +1458,7 @@ export const commands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
           qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: { removed: currentSelection?.files ?? [] },
           folders: {
             removed: currentSelection?.folders ?? [],
@@ -1378,6 +1477,7 @@ export const commands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
           qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: { removed: currentSelection?.files ?? [] },
           folders: {
             removed: currentSelection?.folders ?? [],
@@ -1414,7 +1514,9 @@ export const commands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
           qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
           authors: {
             removed: currentSelection?.authors ?? [],
             added: [name],
@@ -1431,7 +1533,9 @@ export const commands = {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
           qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
           files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
           authors: {
             removed: currentSelection?.authors ?? [],
             added: names,
@@ -1636,7 +1740,7 @@ export const commands = {
 
 // #region Table
 
-type ArtifactKind = "designs" | "types" | "qualities" | "files" | "folders" | "authors";
+type ArtifactKind = "designs" | "types" | "qualities" | "interfaces" | "files" | "folders" | "authors";
 
 type TableRow = {
   id: string;
@@ -1649,7 +1753,7 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  data: Design | Type | Quality | SemioFile | Author | Folder;
+  data: Design | Type | Quality | Interface | SemioFile | Author | Folder;
   folderId?: string;
 };
 
@@ -1882,10 +1986,11 @@ const AppContent: FC = () => {
     const typesCount = selection?.types?.length || 0;
     const designsCount = selection?.designs?.length || 0;
     const qualitiesCount = selection?.qualities?.length || 0;
+    const interfacesCount = selection?.interfaces?.length || 0;
     const filesCount = selection?.files?.length || 0;
     const foldersCount = selection?.folders?.length || 0;
     const authorsCount = selection?.authors?.length || 0;
-    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
+    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, interfacesCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
 
     const artifactsMultipleId = "semio.sketchpad.app.kit.artifacts.multiple";
 
@@ -1894,6 +1999,8 @@ const AppContent: FC = () => {
     removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
     removeSection("details", "semio.sketchpad.app.type.title");
     removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
+    removeSection("details", "semio.sketchpad.app.kit.interface.title");
+    removeSection("details", "semio.sketchpad.app.kit.interfaces.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.file.title");
     removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.folder.title");
@@ -1930,6 +2037,15 @@ const AppContent: FC = () => {
         id: typeSectionId,
         order: 20,
         content: () => <TypeSection />,
+      });
+    }
+
+    if (interfacesCount > 0 && totalSelectedKinds === 1) {
+      const interfaceSectionId = interfacesCount === 1 ? "semio.sketchpad.app.kit.interface.title" : "semio.sketchpad.app.kit.interfaces.multipleTitle";
+      addSection("details", {
+        id: interfaceSectionId,
+        order: 25,
+        content: () => <InterfaceSection />,
       });
     }
 
@@ -2164,6 +2280,24 @@ const AppContent: FC = () => {
           hasChildren: false,
           isExpanded: false,
           data: quality,
+        });
+      });
+    }
+
+    if (!selectedKind || selectedKind === "interfaces") {
+      kit.interfaces?.forEach((iface: Interface) => {
+        if (searchQuery && !iface.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+        result.push({
+          id: `interface-${iface.guid}`,
+          kind: "interfaces",
+          artifact: iface.name,
+          authors: iface.compatibleInterfaces?.length ? `${iface.compatibleInterfaces.length} compatible` : "All compatible",
+          updatedAt: "",
+          createdAt: "",
+          level: 0,
+          hasChildren: false,
+          isExpanded: false,
+          data: iface,
         });
       });
     }
@@ -2765,6 +2899,16 @@ const AppContent: FC = () => {
         sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
         break;
       }
+      case "interfaces": {
+        const existingNames = (kit.interfaces || []).map((i: Interface) => i.name);
+        const uniqueName = generateUniqueName("New Interface", existingNames);
+        const newInterface: Interface = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        if (kitCommands) kitCommands.createInterface("semio.sketchpad.app.kit.canvas.table.createInterface", newInterface);
+        break;
+      }
       case "files": {
         // TODO: Implement file creation
         break;
@@ -2943,6 +3087,34 @@ const AppContent: FC = () => {
         }
       } else {
         kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", qualityKey);
+      }
+    } else if (row.kind === "interfaces") {
+      const interfaceId = (row.data as Interface).guid;
+      if (e.shiftKey) {
+        const currentIndex = rows.findIndex((r) => r.kind === "interfaces" && (r.data as Interface).guid === interfaceId);
+        if (selection.interfaces && selection.interfaces.length > 0) {
+          const lastSelectedId = selection.interfaces[selection.interfaces.length - 1];
+          const lastIndex = rows.findIndex((r) => r.kind === "interfaces" && (r.data as Interface).guid === lastSelectedId);
+          if (lastIndex !== -1 && currentIndex !== -1) {
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+            const rangeIds = rows
+              .slice(start, end + 1)
+              .filter((r) => r.kind === "interfaces")
+              .map((r) => (r.data as Interface).guid);
+            kitAppCommands.selectInterfaces("semio.sketchpad.app.kit.canvas.table.selectInterfacesRange", rangeIds);
+          }
+        } else {
+          kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterfaceShift", interfaceId);
+        }
+      } else if (e.metaKey || e.ctrlKey) {
+        if (selection.interfaces && selection.interfaces.includes(interfaceId)) {
+          kitAppCommands.removeInterfaceFromSelection("semio.sketchpad.app.kit.canvas.table.removeInterfaceCtrl", interfaceId);
+        } else {
+          kitAppCommands.addInterfaceToSelection("semio.sketchpad.app.kit.canvas.table.addInterfaceCtrl", interfaceId);
+        }
+      } else {
+        kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", interfaceId);
       }
     } else if (row.kind === "files") {
       const fileGuid = (row.data as SemioFile).guid;
@@ -3229,6 +3401,16 @@ const AppContent: FC = () => {
                   <Toggle
                     kind="withAction"
                     pressed={false}
+                    onPressedChange={() => toggleKind("interfaces")}
+                    actionIcon={<AddIcon />}
+                    onActionClick={() => handleCreateArtifact("interfaces")}
+                    id="semio.sketchpad.app.kit.kitApp.showInterfaces"
+                    actionId="semio.sketchpad.app.kit.kitApp.createInterface"
+                    icon={<InterfaceIcon />}
+                  />,
+                  <Toggle
+                    kind="withAction"
+                    pressed={false}
                     onPressedChange={() => toggleKind("files")}
                     actionIcon={<AddIcon />}
                     onActionClick={() => handleCreateArtifact("files")}
@@ -3297,7 +3479,7 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }}>
                   <div className="flex items-center gap-single flex-1 min-w-0">
                     {row.hasChildren ? (
                       <Action
@@ -3899,6 +4081,65 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
         <TreeItem key={type.guid}>
           <TreeContent>
             <p className="text-sm font-medium">{type.name}</p>
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const InterfaceSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const selection = kitApp?.selection;
+  const selectedInterfaces = selection?.interfaces || [];
+  if (selectedInterfaces.length === 0) return null;
+  if (selectedInterfaces.length === 1) return <SingleInterfaceSection interfaceGuid={selectedInterfaces[0]} />;
+  return <MultipleInterfacesSection interfaceGuids={selectedInterfaces} />;
+};
+
+const SingleInterfaceSection: FC<{ interfaceGuid: string }> = ({ interfaceGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const iface = kit?.interfaces?.find((i) => i.guid === interfaceGuid);
+  if (!iface) return null;
+  const compatibleCount = iface.compatibleInterfaces?.length || 0;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.kit.panel.details.section.interface.name" value={iface.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea id="semio.sketchpad.app.kit.panel.details.section.interface.description" value={iface.description || ""} placeholder={t("semio.sketchpad.app.kit.interface.descriptionPlaceholder.label")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.kit.panel.details.section.interface.compatible" value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.interface.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.interface.compatibleInterfaces")}`} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleInterfacesSection: FC<{ interfaceGuids: string[] }> = ({ interfaceGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const interfaces = interfaceGuids.map((guid) => kit?.interfaces?.find((i) => i.guid === guid)).filter((i) => i !== undefined) as Interface[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.interfaces.multipleSelected")}</p>
+        </TreeContent>
+      </TreeItem>
+      {interfaces.map((iface) => (
+        <TreeItem key={iface.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{iface.name}</p>
           </TreeContent>
         </TreeItem>
       ))}
