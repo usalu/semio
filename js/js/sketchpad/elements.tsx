@@ -84,6 +84,20 @@ import { Camera, cn, Plane, Point, Vector } from "../semio";
 
 // #endregion Imports
 
+// #region Section Specificity
+
+export enum SectionSpecificity {
+  SKETCHPAD = 0,
+  KIT = 10,
+  QUALITY = 20,
+  TYPE = 20,
+  DESIGN = 20,
+  DOCS = 20,
+  SELECTION = 30,
+}
+
+// #endregion Section Specificity
+
 // #region Interaction Context
 // Generic interaction tracking system for UI elements
 // This allows elements to track focus/active states without coupling to specific app logic
@@ -1139,7 +1153,9 @@ function ActionDropdown({ className, level: propLevel, id, options, value, onVal
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <ActionGroup id={id} level={level} className={className}>
-          <ActionGroupItem id={id} {...props}>{selectedOption?.icon}</ActionGroupItem>
+          <ActionGroupItem id={id} {...props}>
+            {selectedOption?.icon}
+          </ActionGroupItem>
         </ActionGroup>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
@@ -1217,7 +1233,7 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 function ButtonGroup({ className, level: propLevel, id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useElementLevel(propLevel);
   const buttonGroupElement = (
-    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x overflow-hidden h-medium", className)} {...props}>
+    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x divide-border overflow-hidden h-medium", className)} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -1438,12 +1454,9 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   interactionId?: string;
   placeholderId?: string;
   showLabel?: boolean;
-  startTransaction?: () => void;
-  finalizeTransaction?: () => void;
-  abortTransaction?: () => void;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction, startTransaction, finalizeTransaction, abortTransaction, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction, ...props }: InputProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const commands = useInteractionCommands();
@@ -1467,7 +1480,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (lazy) {
       setIsEditing(true);
-      (startTransaction || transaction?.start)?.();
+      transaction?.start?.();
     }
     props.onFocus?.(e);
   };
@@ -1477,7 +1490,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      (finalizeTransaction || transaction?.finalize)?.();
+      transaction?.finalize?.();
     }
     props.onBlur?.(e);
   };
@@ -1488,13 +1501,13 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         onLazyChange?.(localValue);
-        (finalizeTransaction || transaction?.finalize)?.();
+        transaction?.finalize?.();
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        (abortTransaction || transaction?.abort)?.();
+        transaction?.abort?.();
         (e.target as HTMLInputElement).blur();
       }
     }
@@ -1547,7 +1560,7 @@ export { Input };
 
 // #region Select
 
-function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction, startTransaction, finalizeTransaction, abortTransaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean; startTransaction?: () => void; finalizeTransaction?: () => void; abortTransaction?: () => void }) {
+function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -1573,9 +1586,9 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, tr
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      (startTransaction || transaction?.start)?.();
+      transaction?.start?.();
     } else {
-      (finalizeTransaction || transaction?.finalize)?.();
+      transaction?.finalize?.();
     }
     onOpenChange?.(open);
   };
@@ -2169,12 +2182,9 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   onLazyChange?: (value: string) => void;
   showLabel?: boolean;
   placeholderId?: string;
-  startTransaction?: () => void;
-  finalizeTransaction?: () => void;
-  abortTransaction?: () => void;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction, startTransaction, finalizeTransaction, abortTransaction, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction, ...props }: TextareaProps) {
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
@@ -2194,7 +2204,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     if (lazy) {
       setIsEditing(true);
-      (startTransaction || transaction?.start)?.();
+      transaction?.start?.();
     }
     props.onFocus?.(e);
   };
@@ -2203,7 +2213,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      (finalizeTransaction || transaction?.finalize)?.();
+      transaction?.finalize?.();
     }
     props.onBlur?.(e);
   };
@@ -2213,7 +2223,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       if (e.key === "Escape") {
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        (abortTransaction || transaction?.abort)?.();
+        transaction?.abort?.();
         (e.target as HTMLTextAreaElement).blur();
       }
     }
@@ -2337,7 +2347,7 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useElementLevel(propLevel);
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x", className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x divide-border", className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -3896,6 +3906,7 @@ export type ResizeSide = "left" | "right" | "top" | "bottom";
 export interface PanelSection {
   id: string;
   content: React.ReactNode | (() => React.ReactNode);
+  specificity: number;
   defaultOpen?: boolean;
   order?: number;
   actions?: Array<{

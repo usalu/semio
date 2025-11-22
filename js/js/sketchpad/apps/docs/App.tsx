@@ -1448,24 +1448,28 @@ const App: FC = () => {
 
     addSection("workbench", {
       id: "semio.sketchpad.app.docs.docs",
+      specificity: 20,
       order: 1,
       content: WorkbenchWrapper,
     });
 
     addSection("workbench", {
       id: "semio.sketchpad.app.docs.overview",
+      specificity: 20,
       order: 2,
       content: OverviewWrapper,
     });
 
     addSection("details", {
       id: "semio.sketchpad.app.docs.page",
+      specificity: 20,
       order: 1,
       content: DetailsWrapper,
     });
 
     addSection("settings", {
       id: "semio.sketchpad.app.docs.settings",
+      specificity: 20,
       order: 1,
       content: SettingsWrapper,
     });

@@ -1,107 +1,111 @@
 {
-  "attributes": [
+  "updatedAt": "2025-11-22T00:53:59.364Z",
+  "ports": [
     {
-      "definition": "",
-      "guid": "d99ec3ea-a544-4c35-9f41-2d5c43e258ed",
-      "key": "peak",
-      "value": "north west"
-    },
-    {
-      "definition": "",
-      "guid": "8d0b2930-81dc-4001-9a72-47aff14aeab2",
-      "key": "length",
-      "value": "5.5"
-    },
-    {
-      "definition": "",
-      "guid": "c6159abf-c196-4a1a-a9fc-08bc7a5780d1",
-      "key": "width",
-      "value": "5.5"
-    },
-    {
-      "definition": "",
-      "guid": "82aa17ca-3385-4ab0-bdfb-5f5e656f8b0c",
-      "key": "height",
-      "value": "5.5"
-    },
-    {
-      "definition": "",
-      "guid": "87a65728-c687-44f5-b469-540be36ba77d",
-      "key": "height side",
-      "value": "5.5"
-    },
-    {
-      "definition": "",
-      "guid": "03ff04a1-1911-4279-b706-958b7af01ac7",
-      "key": "height low",
-      "value": "1"
-    },
-    {
-      "definition": "",
-      "guid": "45195ef6-ea71-4536-9ad1-bc39ca091618",
-      "key": "wall thickness",
-      "value": "0.3"
-    },
-    {
-      "definition": "",
-      "guid": "59c1ee23-32e0-4048-8c8f-63e6f4657d4f",
-      "key": "construction cost",
-      "value": "60025"
-    },
-    {
-      "definition": "",
-      "guid": "e240a456-315f-42ec-a3e7-acbf8b80f1e8",
-      "key": "maintenance expenses",
-      "value": "720"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "152528bb-d173-4a64-9d99-961d271c795c",
-      "key": "construction global warming potential",
-      "value": "4802"
+      "guid": "8a0fddfa-394b-40d1-a97a-a03554a99515",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "198d26ef-a966-4de8-b514-0b5d8f1b4537",
+          "key": "bottom",
+          "definition": ""
+        },
+        {
+          "value": "180",
+          "guid": "125d6f5f-ebf9-43ed-b492-81cb4cd4f41d",
+          "key": "wasp rotation",
+          "definition": ""
+        }
+      ],
+      "point": {
+        "x": 0.0,
+        "z": 0.0,
+        "y": 0.0
+      },
+      "description": "The center of the bottom.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.0,
+        "z": -1.0,
+        "y": 0.0
+      },
+      "t": 0.0
     }
   ],
-  "authors": {
-    "guid": "50388d23-dd64-420e-98fc-d5d3bd33ebe0"
-  },
-  "createdAt": "2025-11-20T22:47:30.566Z",
-  "description": "A roof that has the skin of a cut extruded cuboid.",
-  "guid": "e7991813-6b56-4178-ae16-753464eaf4d1",
-  "icon": "icons/capital.svg",
-  "image": "images/capital.png",
-  "name": "Capital",
-  "ports": {
-    "attributes": [
-      {
-        "definition": "",
-        "guid": "eb087046-883a-42c1-88c8-64127afd65ef",
-        "key": "bottom",
-        "value": ""
-      },
-      {
-        "definition": "",
-        "guid": "9746e12d-ef88-4090-a906-41ab17d5a932",
-        "key": "wasp rotation",
-        "value": "180"
-      }
-    ],
-    "description": "The center of the bottom.",
-    "direction": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": -1.0
-    },
-    "guid": "b1f748ef-00f6-492b-a75b-231d15fba1e5",
-    "mandatory": false,
-    "point": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    "t": 0.0
-  },
-  "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T22:47:30.566Z",
-  "virtual": false
+  "virtual": false,
+  "createdAt": "2025-11-22T00:53:59.364Z",
+  "icon": "icons/capital.svg",
+  "authors": [
+    {
+      "guid": "0494d1f1-07dd-49db-b7c9-f48aa94fb46f"
+    }
+  ],
+  "attributes": [
+    {
+      "value": "north west",
+      "guid": "4957d338-880d-4234-98ac-24ed4bcc3f63",
+      "key": "peak",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "9c7c96de-5aab-4ff0-b8ae-4aa2e53a2c75",
+      "key": "length",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "15214a09-cb23-4683-9e92-8ad59dc297d4",
+      "key": "width",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "e8593ef5-f38d-4f94-9892-3e5893532f90",
+      "key": "height",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "232d8402-c36b-4163-9668-93dde53ccdbf",
+      "key": "height side",
+      "definition": ""
+    },
+    {
+      "value": "1",
+      "guid": "4c3ca400-49c5-49d8-b196-84ecbfb44708",
+      "key": "height low",
+      "definition": ""
+    },
+    {
+      "value": "0.3",
+      "guid": "caed45bd-4d78-4f2e-bf17-adb6a8ec33ed",
+      "key": "wall thickness",
+      "definition": ""
+    },
+    {
+      "value": "60025",
+      "guid": "c145ad71-991e-46ee-b405-3e83da21c28e",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "720",
+      "guid": "cc3882ec-3a23-49d8-94fc-519a639d85ec",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "4802",
+      "guid": "1ffb37d6-e108-499b-a433-694b3f3f2bc7",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    }
+  ],
+  "stock": 2147483647,
+  "name": "Capital",
+  "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+  "image": "images/capital.png",
+  "description": "A roof that has the skin of a cut extruded cuboid."
 }

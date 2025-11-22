@@ -710,20 +710,30 @@
             }
           }
         },
-        "language": {
-          "de": {
+          "language": {
             "label": {
-              "normal": "De",
-              "beginner": "De"
-            }
-          },
-          "en": {
-            "label": {
-              "normal": "En",
-              "beginner": "En"
+              "normal": "Language",
+              "beginner": "Select the language for the application interface"
+            },
+            "placeholder": {
+              "label": {
+                "normal": "Select language...",
+                "beginner": "Select the interface language"
+              }
+            },
+            "de": {
+              "label": {
+                "normal": "Deutsch",
+                "beginner": "Deutsch"
+              }
+            },
+            "en": {
+              "label": {
+                "normal": "English",
+                "beginner": "English"
+              }
             }
           }
-        }
       },
       "sort": {
         "label": {
@@ -893,6 +903,12 @@
               "label": {
                 "normal": "Language",
                 "beginner": "Select the language for the application interface"
+              },
+              "placeholder": {
+                "label": {
+                "normal": "Select language...",
+                "beginner": "Select the interface language"
+                }
               }
             },
             "mode": {

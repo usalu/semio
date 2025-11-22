@@ -1,124 +1,130 @@
 {
-  "attributes": [
+  "updatedAt": "2025-11-22T00:54:02.117Z",
+  "icon": "icons/capsule-with-balcony_J.svg",
+  "parent": "Balcony",
+  "unit": "m",
+  "virtual": false,
+  "createdAt": "2025-11-22T00:54:02.117Z",
+  "authors": [
     {
-      "definition": "",
-      "guid": "bcaa2e65-6b26-48ec-a1fd-ab7ae6eea97d",
-      "key": "entrance",
-      "value": "side"
-    },
-    {
-      "definition": "",
-      "guid": "abbc8c40-a493-4a7c-8142-97471109745d",
-      "key": "view",
-      "value": "front"
-    },
-    {
-      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length",
-      "guid": "bda65aad-6870-4735-809c-01c3d4106c6c",
-      "key": "length",
-      "value": "5.7"
-    },
-    {
-      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width",
-      "guid": "b63557e1-410b-4399-99c7-aa4c3c6732fb",
-      "key": "width",
-      "value": "2.6"
-    },
-    {
-      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "eb75be58-3716-400b-9c27-24fd234375c7",
-      "key": "heigth",
-      "value": "2.5"
-    },
-    {
-      "definition": "",
-      "guid": "fe545d99-6f78-4dd5-ad63-a4bb0930b519",
-      "key": "window shape",
-      "value": "round"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "472e8a13-4941-40e7-b346-fe98bf78160e",
-      "key": "effective floor area",
-      "value": "10.17"
-    },
-    {
-      "definition": "",
-      "guid": "1d490f55-9a69-47a5-8521-0a5baf58c7db",
-      "key": "construction cost",
-      "value": "82992"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "c837db58-d6b9-4ea2-999d-25e97f49f685",
-      "key": "heating energy demand",
-      "value": "393"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "734fb280-07b1-43a6-b334-65d666f3d343",
-      "key": "cooling energy demand",
-      "value": "262"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "16f785f8-eb8a-411b-88f8-492b15813dfc",
-      "key": "technical equipment energy demand",
-      "value": "262"
-    },
-    {
-      "definition": "",
-      "guid": "aa66665f-8292-4c76-91b5-5a73fe98b8c5",
-      "key": "income",
-      "value": "13104"
-    },
-    {
-      "definition": "",
-      "guid": "0b0c56d4-b0fe-4175-9123-12210e9c8878",
-      "key": "maintenance expenses",
-      "value": "1048"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "19603c5a-091f-43c9-b2a4-9c733ab18585",
-      "key": "construction global warming potential",
-      "value": "8736.01"
+      "guid": "8179b3f9-80a9-4180-90b6-8e099a4fa2c7"
     }
   ],
-  "authors": {
-    "guid": "138d7eb4-3b99-43b4-9940-817e5aa25854"
-  },
-  "createdAt": "2025-11-20T22:47:35.444Z",
-  "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
-  "guid": "9f59e13a-5c96-4615-9e25-d9e75b51aeb8",
-  "icon": "icons/capsule-with-balcony_J.svg",
-  "image": "images/capsule-with-balcony_J.png",
-  "name": "J",
-  "parent": "Balcony",
-  "ports": {
-    "attributes": {
-      "definition": "",
-      "guid": "5c892d8c-72da-4325-8561-9520bb681982",
+  "attributes": [
+    {
+      "value": "side",
+      "guid": "1ad6fd7b-a45b-4d72-b9b2-100cf4178729",
       "key": "entrance",
-      "value": ""
+      "definition": ""
     },
-    "description": "The middle of the main entrance door of the upper entrance floor.",
-    "direction": {
-      "x": -1.0,
-      "y": 0.0,
-      "z": 0.0
+    {
+      "value": "front",
+      "guid": "9b5b12f8-3ac1-45de-ba0c-2a90ab6e49ed",
+      "key": "view",
+      "definition": ""
     },
-    "guid": "7f0f87a9-f863-423c-b04a-3d3250e2f8ef",
-    "mandatory": false,
-    "point": {
-      "x": -1.3,
-      "y": -1.25,
-      "z": 0.0
+    {
+      "value": "5.7",
+      "guid": "5be1a3e5-0492-47ae-a929-15da33288f5a",
+      "key": "length",
+      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
-    "t": 0.0
-  },
+    {
+      "value": "2.6",
+      "guid": "c2ce0843-1353-4a34-a5e8-e3ff41664836",
+      "key": "width",
+      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
+    },
+    {
+      "value": "2.5",
+      "guid": "3758aa30-f40f-487b-b227-8c6e9f75e7d1",
+      "key": "heigth",
+      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
+    },
+    {
+      "value": "round",
+      "guid": "577c2901-7bc3-4046-88b4-5c861f1eb23d",
+      "key": "window shape",
+      "definition": ""
+    },
+    {
+      "value": "10.17",
+      "guid": "dcf69f2b-cad1-424c-b08e-82439cd0b5db",
+      "key": "effective floor area",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
+    },
+    {
+      "value": "82992",
+      "guid": "caed6b40-bca0-48ef-9df4-be0e1c6fb02c",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "393",
+      "guid": "c6f36204-e288-4d90-a9c0-ffbb5f37246b",
+      "key": "heating energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "262",
+      "guid": "4ef94df7-8a47-4216-9f62-f3a12a364086",
+      "key": "cooling energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "262",
+      "guid": "c367cd52-3c3b-4b21-9109-b597b3128af1",
+      "key": "technical equipment energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "13104",
+      "guid": "6568a3cf-ab41-4140-814c-dc0fc25585f8",
+      "key": "income",
+      "definition": ""
+    },
+    {
+      "value": "1048",
+      "guid": "e5599c39-e307-40ba-8e3c-ca0a2cd32208",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "8736.01",
+      "guid": "f9bc3bad-a1e1-467a-acca-2e087581b601",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
+    }
+  ],
   "stock": 2147483647,
-  "unit": "m",
-  "updatedAt": "2025-11-20T22:47:35.444Z",
-  "virtual": false
+  "ports": [
+    {
+      "guid": "a287cafc-f08b-4b63-a8c8-a1fd04d7789e",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "b7b082b7-311b-45c4-822f-2dfb399b5293",
+          "key": "entrance",
+          "definition": ""
+        }
+      ],
+      "point": {
+        "x": -1.3,
+        "z": 0.0,
+        "y": -1.25
+      },
+      "description": "The middle of the main entrance door of the upper entrance floor.",
+      "mandatory": false,
+      "direction": {
+        "x": -1.0,
+        "z": 0.0,
+        "y": 0.0
+      },
+      "t": 0.0
+    }
+  ],
+  "name": "J",
+  "guid": "be8abd99-0184-44b4-8408-10d7c77f24d8",
+  "image": "images/capsule-with-balcony_J.png",
+  "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front."
 }

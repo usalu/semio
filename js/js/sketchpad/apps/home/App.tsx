@@ -28,7 +28,6 @@ import {
   ChevronRightIcon,
   CodeIcon,
   DocumentIcon,
-  GlobeIcon,
   HandIcon,
   LocalKitIcon,
   MonitorIcon,
@@ -562,13 +561,13 @@ const ChatPlaceholder: FC = () => {
 
 // #region Settings
 
-const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; setLanguage: (origin: string, language: string) => void; setLayout: (origin: string, layout: Layout) => void; setExpertise: (origin: string, expertise: Expertise) => void; setMode: (origin: string, mode: Mode) => void }> = ({
-  setTheme,
-  setLanguage,
-  setLayout,
-  setExpertise,
-  setMode,
-}) => {
+const SettingsContent: FC<{
+  setTheme: (origin: string, theme: Theme) => void;
+  setLanguage: (origin: string, language: string) => void;
+  setLayout: (origin: string, layout: Layout) => void;
+  setExpertise: (origin: string, expertise: Expertise) => void;
+  setMode: (origin: string, mode: Mode) => void;
+}> = ({ setTheme, setLanguage, setLayout, setExpertise, setMode }) => {
   const theme = useTheme();
   const language = useLanguage();
   const layout = useLayout();
@@ -577,6 +576,7 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
 
   const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
   const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
+  const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
 
   return (
     <>
@@ -600,7 +600,7 @@ const SettingsContent: FC<{ setTheme: (origin: string, theme: Theme) => void; se
         <TreeContent>
           <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)} showLabel>
             <SelectTrigger>
-              <SelectValue placeholder="Select language..." />
+              <SelectValue placeholder={languagePlaceholder} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="en">{languageEnLabel}</SelectItem>
@@ -751,6 +751,7 @@ const Home: FC = ({}) => {
       const sectionId = hasSingleKit ? "semio.sketchpad.app.kit.title" : "semio.sketchpad.app.home.kits.multiple";
       addSection("details", {
         id: sectionId,
+        specificity: 0,
         order: 0,
         content: () => {
           return <KitSection />;
@@ -770,6 +771,7 @@ const Home: FC = ({}) => {
 
     addSection("chat", {
       id: "semio.sketchpad.app.home.chat",
+      specificity: 0,
       order: 0,
       content: () => {
         return <ChatPlaceholder />;
@@ -787,6 +789,7 @@ const Home: FC = ({}) => {
 
     addSection("settings", {
       id: "semio.sketchpad.app.home.settings",
+      specificity: 0,
       order: 0,
       content: () => {
         return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;

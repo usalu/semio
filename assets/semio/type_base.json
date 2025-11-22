@@ -1,149 +1,155 @@
 {
-  "attributes": [
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey",
-      "guid": "6e8d0f94-9af5-40b6-ac0f-7fd6a37a8072",
-      "key": "storey",
-      "value": "2"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-      "guid": "4c996b8a-afc2-4ed1-9184-ec2ca94a8520",
-      "key": "floor height",
-      "value": "3.5"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-      "guid": "7a46f389-618c-4a5d-b1c4-cdda33143ea0",
-      "key": "ground floor height",
-      "value": "4"
-    },
-    {
-      "definition": "",
-      "guid": "1a5b75c0-8c07-4434-b7a3-c6e1694c34c5",
-      "key": "cores",
-      "value": "2"
-    },
-    {
-      "definition": "",
-      "guid": "ab7c3a3b-9fb8-49d0-86b7-dfc93d91699e",
-      "key": "core length",
-      "value": "5.5"
-    },
-    {
-      "definition": "",
-      "guid": "1971202f-8cfe-4f0d-a7e4-76994bd0a622",
-      "key": "core width",
-      "value": "5.5"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "e4ec8ee4-47d6-44ae-8c50-b427f524fb47",
-      "key": "effective floor area",
-      "value": "519.37"
-    },
-    {
-      "definition": "",
-      "guid": "bf079da8-8aa7-40c4-ae84-4e84bb2c8cff",
-      "key": "construction cost",
-      "value": "2856480"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "03856359-9335-4f11-9157-8e203cc7f152",
-      "key": "heating energy demand",
-      "value": "12984"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "3e9edefc-5a36-4e9f-85f9-6e172f310476",
-      "key": "cooling energy demand",
-      "value": "18178"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "140da33f-9892-4abc-9c8b-b8a0d7a62c26",
-      "key": "technical equipment energy demand",
-      "value": "20774"
-    },
-    {
-      "definition": "",
-      "guid": "92102317-8bf1-435b-9f0b-c5029afb71b9",
-      "key": "income",
-      "value": "467424"
-    },
-    {
-      "definition": "",
-      "guid": "b9009f76-efac-4479-a727-47af34f9780b",
-      "key": "maintenance expenses",
-      "value": "46742"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "12009cd8-46ef-4ea0-b799-d9d60727272c",
-      "key": "construction global warming potential",
-      "value": "415488"
-    }
-  ],
-  "authors": {
-    "guid": "fd3da2f1-5c5d-4bbf-ba1e-3ce90d24e08c"
-  },
-  "createdAt": "2025-11-20T22:47:29.75Z",
-  "description": "A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-  "guid": "06538b82-7a6a-4f97-b8cc-5292039171bb",
-  "icon": "icons/base.svg",
-  "image": "images/base.png",
-  "name": "Base",
+  "updatedAt": "2025-11-22T00:53:58.897Z",
   "ports": [
     {
-      "attributes": {
-        "definition": "",
-        "guid": "21fc60d5-00c8-45c5-8beb-52d5c9f9a454",
-        "key": "core",
-        "value": "east"
-      },
-      "description": "The center of the east rectangular core (an elevator and a staircase around it).",
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 1.0
-      },
-      "guid": "12941184-e961-4a7e-978d-8845547cd0d7",
-      "mandatory": false,
-      "name": "c0",
+      "guid": "668faf29-d005-4384-8a54-01555ccde748",
+      "attributes": [
+        {
+          "value": "east",
+          "guid": "df7b493b-7c68-4d3e-82f0-a5dba83b37c2",
+          "key": "core",
+          "definition": ""
+        }
+      ],
       "point": {
         "x": -7.5,
-        "y": -7.7,
-        "z": 7.5
+        "z": 7.5,
+        "y": -7.7
+      },
+      "name": "c0",
+      "description": "The center of the east rectangular core (an elevator and a staircase around it).",
+      "mandatory": false,
+      "direction": {
+        "x": 0.0,
+        "z": 1.0,
+        "y": 0.0
       },
       "t": -0.125
     },
     {
-      "attributes": {
-        "definition": "",
-        "guid": "107dd963-a475-4490-a399-9b4d1f0bc7df",
-        "key": "core",
-        "value": "west"
-      },
-      "description": "The center of the west rectangular core (an elevator and a staircase around it).",
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 1.0
-      },
-      "guid": "58821faa-8f62-45d5-a0af-56f502c3e9de",
-      "mandatory": false,
-      "name": "c1",
+      "guid": "6fbbb01b-572b-433d-ae4d-8594e59e3766",
+      "attributes": [
+        {
+          "value": "west",
+          "guid": "07a35196-a8ec-4b36-bfe7-810b8a9e935b",
+          "key": "core",
+          "definition": ""
+        }
+      ],
       "point": {
         "x": -18.6,
-        "y": -7.7,
-        "z": 7.5
+        "z": 7.5,
+        "y": -7.7
+      },
+      "name": "c1",
+      "description": "The center of the west rectangular core (an elevator and a staircase around it).",
+      "mandatory": false,
+      "direction": {
+        "x": 0.0,
+        "z": 1.0,
+        "y": 0.0
       },
       "t": 0.125
     }
   ],
-  "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T22:47:29.75Z",
-  "virtual": false
+  "virtual": false,
+  "createdAt": "2025-11-22T00:53:58.897Z",
+  "icon": "icons/base.svg",
+  "authors": [
+    {
+      "guid": "74bb4ff4-dc1a-4f8b-a108-a479128e71b4"
+    }
+  ],
+  "attributes": [
+    {
+      "value": "2",
+      "guid": "794b8d43-3ee8-48cf-beeb-434c7eb1f2bf",
+      "key": "storey",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
+    },
+    {
+      "value": "3.5",
+      "guid": "bc166860-433c-422e-a06d-9b06b0952544",
+      "key": "floor height",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
+    },
+    {
+      "value": "4",
+      "guid": "c4976b37-6e05-4c64-9328-1065bfdc4f2a",
+      "key": "ground floor height",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
+    },
+    {
+      "value": "2",
+      "guid": "b51d661a-5abf-4f73-a047-15c7a04cb236",
+      "key": "cores",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "b131f2e8-bc9d-4be9-b81a-a5d2cda9554b",
+      "key": "core length",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "0581f657-b4c8-4613-a812-1f54146e77ed",
+      "key": "core width",
+      "definition": ""
+    },
+    {
+      "value": "519.37",
+      "guid": "5bb0f45a-6131-4c63-a281-cb7292e45d29",
+      "key": "effective floor area",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
+    },
+    {
+      "value": "2856480",
+      "guid": "a6bf0bfe-774f-4b0d-95f9-793d73768822",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "12984",
+      "guid": "62d47763-3fb7-4f91-833d-59ae7ba6d46b",
+      "key": "heating energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "18178",
+      "guid": "cbe30609-8961-40ae-86ae-c084735455c7",
+      "key": "cooling energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "20774",
+      "guid": "d0029177-cb76-487c-abc5-6a124f232d05",
+      "key": "technical equipment energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "467424",
+      "guid": "58308a3f-1987-4334-8c3b-ab04f89d3fd4",
+      "key": "income",
+      "definition": ""
+    },
+    {
+      "value": "46742",
+      "guid": "8c96e9fb-7d0c-4c16-9dd2-3b47046168db",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "415488",
+      "guid": "4349b400-cad5-47ff-bcee-45894b520f63",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    }
+  ],
+  "stock": 2147483647,
+  "name": "Base",
+  "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
+  "image": "images/base.png",
+  "description": "A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms."
 }

@@ -641,12 +641,18 @@
                 "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
               }
             },
-            "language": {
-              "label": {
-                "normal": "Sprache",
-                "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
-              }
+          "language": {
+            "label": {
+              "normal": "Sprache",
+              "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
             },
+            "placeholder": {
+              "label": {
+                "normal": "Sprache waehlen...",
+                "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+              }
+            }
+          },
             "mode": {
               "label": {
                 "normal": "Modus",
@@ -3025,20 +3031,30 @@
             }
           }
         },
-        "language": {
-          "de": {
+          "language": {
             "label": {
-              "normal": "De",
-              "beginner": "De"
-            }
-          },
-          "en": {
-            "label": {
-              "normal": "En",
-              "beginner": "En"
+              "normal": "Sprache",
+              "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+            },
+            "placeholder": {
+              "label": {
+                "normal": "Sprache waehlen...",
+                "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+              }
+            },
+            "de": {
+              "label": {
+                "normal": "Deutsch",
+                "beginner": "Deutsch"
+              }
+            },
+            "en": {
+              "label": {
+                "normal": "English",
+                "beginner": "English"
+              }
             }
           }
-        }
       },
       "sort": {
         "label": {

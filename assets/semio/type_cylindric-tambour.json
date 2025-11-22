@@ -1,285 +1,291 @@
 {
-  "attributes": [
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter",
-      "guid": "e31dcd6b-c056-4154-aa69-feb2209b8206",
-      "key": "diameter",
-      "value": "6.5"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey",
-      "guid": "5386b1a8-cf49-4ded-bf85-33eb03719adb",
-      "key": "storeys",
-      "value": "1"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-      "guid": "d5ae66a9-c2df-4681-b0db-862206beef85",
-      "key": "floor height",
-      "value": "2.75"
-    },
-    {
-      "definition": "",
-      "guid": "0c5cd734-5613-4c03-b6aa-69a62006cb95",
-      "key": "platform",
-      "value": "north"
-    },
-    {
-      "definition": "",
-      "guid": "dca5c361-d706-4bc3-b1bf-0cb8125c604d",
-      "key": "door width",
-      "value": "0.8"
-    },
-    {
-      "definition": "",
-      "guid": "644f972c-780d-49fa-9e4a-4d5f50421044",
-      "key": "door height",
-      "value": "2"
-    },
-    {
-      "definition": "",
-      "guid": "b8da0be9-fa81-43ca-917f-ab222a114096",
-      "key": "door offset",
-      "value": "1.75"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "a3c7102f-0381-409e-bdad-03853ead273b",
-      "key": "effective floor area",
-      "value": "26.55"
-    },
-    {
-      "definition": "",
-      "guid": "14cbd1f8-cfe6-4986-99c2-48d7d0ea7ebc",
-      "key": "construction cost",
-      "value": "278738"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "e8ab8d3a-76bd-4d09-9bef-46c5a2b76ffc",
-      "key": "heating energy demand",
-      "value": "398"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "f8e85b9b-6a56-4438-b7c4-34ef095dc6c0",
-      "key": "cooling energy demand",
-      "value": "133"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "90bcd8f7-931f-4308-a65f-226668036a75",
-      "key": "technical equipment energy demand",
-      "value": "531"
-    },
-    {
-      "definition": "",
-      "guid": "2251d944-5dfa-4609-941a-1a33e671da65",
-      "key": "maintenance expenses",
-      "value": "1115"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "552b9e48-f484-4e3b-b039-59c87ecf115a",
-      "key": "construction global warming potential",
-      "value": "1600"
-    }
-  ],
-  "authors": {
-    "guid": "65b08852-9d33-4168-a97b-5acb231dbee3"
-  },
-  "createdAt": "2025-11-20T22:47:41.536Z",
-  "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
-  "guid": "8545b302-c100-4fbb-af7c-3377db6127ce",
-  "icon": "icons/cylindric-tambour.svg",
-  "image": "images/cylindric-tambour.svg",
-  "name": "Cylindric Tambour",
+  "updatedAt": "2025-11-22T00:54:05.283Z",
   "ports": [
     {
-      "attributes": {
-        "definition": "",
-        "guid": "5853ba00-c8fa-49d5-bff4-b2a11e2710d7",
-        "key": "wasp rotation",
-        "value": "180"
-      },
-      "description": "The bottom system center of the elevator.",
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": -1.0
-      },
-      "guid": "fb79941f-82bc-41e6-b456-9cf83ce918c5",
-      "mandatory": false,
-      "name": "b",
+      "guid": "a5b283d5-47d6-4f00-8534-752b97ccdd6b",
+      "attributes": [
+        {
+          "value": "180",
+          "guid": "4d016901-3654-4a7d-a897-0ec2ae2f3973",
+          "key": "wasp rotation",
+          "definition": ""
+        }
+      ],
       "point": {
         "x": 0.0,
-        "y": 0.0,
-        "z": 0.9166667
+        "z": 0.9166667,
+        "y": 0.0
+      },
+      "name": "b",
+      "description": "The bottom system center of the elevator.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.0,
+        "z": -1.0,
+        "y": 0.0
       },
       "t": 0.5
     },
     {
-      "attributes": {
-        "definition": "",
-        "guid": "675374e9-c233-4afa-be6c-ef9bfdd6b45f",
-        "key": "top",
-        "value": ""
-      },
-      "description": "The top system center of the elevator.",
-      "direction": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 1.0
-      },
-      "guid": "29263646-fac4-4859-9bef-e2e2b783a0ac",
-      "mandatory": false,
-      "name": "t",
+      "guid": "5c7dfcad-7779-4096-8f84-042a82c61853",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "5ba144d5-340d-43b3-9f63-31e55a681211",
+          "key": "top",
+          "definition": ""
+        }
+      ],
       "point": {
         "x": 0.0,
-        "y": 0.0,
-        "z": 3.6666667
+        "z": 3.6666667,
+        "y": 0.0
+      },
+      "name": "t",
+      "description": "The top system center of the elevator.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.0,
+        "z": 1.0,
+        "y": 0.0
       },
       "t": 0.0
     },
     {
-      "description": "The first door of the side plattform in the east facade.",
-      "direction": {
-        "x": 0.97101486,
-        "y": 0.23901905,
-        "z": 0.0
-      },
-      "guid": "2b15d108-f0de-49d8-9ba9-442eefcaa12b",
-      "mandatory": false,
-      "name": "sl0_d0",
+      "guid": "ba458926-393d-483b-a207-ff2e624992ed",
       "point": {
         "x": 3.1557984,
-        "y": 0.7768119,
-        "z": 0.2
+        "z": 0.2,
+        "y": 0.7768119
+      },
+      "name": "sl0_d0",
+      "description": "The first door of the side plattform in the east facade.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.97101486,
+        "z": 0.0,
+        "y": 0.23901905
       },
       "t": 0.2
     },
     {
-      "description": "The second door of the side plattform in the north facade.",
-      "direction": {
-        "x": 0.23901905,
-        "y": 0.97101486,
-        "z": 0.0
-      },
-      "guid": "b9c830c0-82ac-4981-af52-9c259c7fc1b1",
-      "mandatory": false,
-      "name": "sl0_d1",
+      "guid": "0ddb876a-edb2-404d-915a-f476d025b9db",
       "point": {
         "x": 0.7768119,
-        "y": 3.1557984,
-        "z": 0.2
+        "z": 0.2,
+        "y": 3.1557984
+      },
+      "name": "sl0_d1",
+      "description": "The second door of the side plattform in the north facade.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.23901905,
+        "z": 0.0,
+        "y": 0.97101486
       },
       "t": 0.05
     },
     {
-      "description": "The third door of the side plattform in the north facade.",
-      "direction": {
-        "x": -0.23901905,
-        "y": 0.97101486,
-        "z": 0.0
-      },
-      "guid": "2ecf697b-174b-4932-abd2-fb2d2419d3f2",
-      "mandatory": false,
-      "name": "sl0_d2",
+      "guid": "1913f91e-303c-4792-ab6f-4fe2e489d424",
       "point": {
         "x": -0.7768119,
-        "y": 3.1557984,
-        "z": 0.2
+        "z": 0.2,
+        "y": 3.1557984
+      },
+      "name": "sl0_d2",
+      "description": "The third door of the side plattform in the north facade.",
+      "mandatory": false,
+      "direction": {
+        "x": -0.23901905,
+        "z": 0.0,
+        "y": 0.97101486
       },
       "t": 0.95
     },
     {
-      "description": "The fourth door of the side plattform in the west facade.",
-      "direction": {
-        "x": -0.97101486,
-        "y": 0.23901905,
-        "z": 0.0
-      },
-      "guid": "b811b23e-c93a-47cd-892e-1c2bf8e8be2d",
-      "mandatory": false,
-      "name": "sl0_d3",
+      "guid": "94abe724-54c0-491a-b1ca-be953d5c5895",
       "point": {
         "x": -3.1557984,
-        "y": 0.7768119,
-        "z": 0.2
+        "z": 0.2,
+        "y": 0.7768119
+      },
+      "name": "sl0_d3",
+      "description": "The fourth door of the side plattform in the west facade.",
+      "mandatory": false,
+      "direction": {
+        "x": -0.97101486,
+        "z": 0.0,
+        "y": 0.23901905
       },
       "t": 0.8
     },
     {
-      "description": "The first door of the main plattform in the west facade.",
-      "direction": {
-        "x": -0.97101486,
-        "y": -0.23901905,
-        "z": 0.0
-      },
-      "guid": "1ed2796a-8bba-4ae2-adc9-04aaef426f47",
-      "mandatory": false,
-      "name": "sl1_d0",
+      "guid": "4c712a3f-3e2c-44ec-b9c4-e1ed070a23d8",
       "point": {
         "x": -3.1557984,
-        "y": -0.7768119,
-        "z": 1.1166667
+        "z": 1.1166667,
+        "y": -0.7768119
+      },
+      "name": "sl1_d0",
+      "description": "The first door of the main plattform in the west facade.",
+      "mandatory": false,
+      "direction": {
+        "x": -0.97101486,
+        "z": 0.0,
+        "y": -0.23901905
       },
       "t": 0.7
     },
     {
-      "description": "The second door of the main plattform in the south facade.",
-      "direction": {
-        "x": -0.23901905,
-        "y": -0.97101486,
-        "z": 0.0
-      },
-      "guid": "2e6f2d2d-a0cf-4c57-a1af-f256f105a937",
-      "mandatory": false,
-      "name": "sl1_d1",
+      "guid": "314455dc-1901-4073-bf81-14a998b2b001",
       "point": {
         "x": -0.7768119,
-        "y": -3.1557984,
-        "z": 1.1166667
+        "z": 1.1166667,
+        "y": -3.1557984
+      },
+      "name": "sl1_d1",
+      "description": "The second door of the main plattform in the south facade.",
+      "mandatory": false,
+      "direction": {
+        "x": -0.23901905,
+        "z": 0.0,
+        "y": -0.97101486
       },
       "t": 0.55
     },
     {
-      "description": "The first door of the main plattform in the south facade.",
-      "direction": {
-        "x": 0.23901905,
-        "y": -0.97101486,
-        "z": 0.0
-      },
-      "guid": "33edf582-4a78-470c-9637-2fedda054259",
-      "mandatory": false,
-      "name": "sl2_d0",
+      "guid": "c6831bae-fc62-4eb8-ad23-49dc7affabe6",
       "point": {
         "x": 0.7768119,
-        "y": -3.1557984,
-        "z": 2.0333333
+        "z": 2.0333333,
+        "y": -3.1557984
+      },
+      "name": "sl2_d0",
+      "description": "The first door of the main plattform in the south facade.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.23901905,
+        "z": 0.0,
+        "y": -0.97101486
       },
       "t": 0.45
     },
     {
-      "description": "The second door of the main plattform in the east facade.",
-      "direction": {
-        "x": 0.97101486,
-        "y": -0.23901905,
-        "z": 0.0
-      },
-      "guid": "dde6ef6c-3a82-4295-9d30-b63ea8abbb4a",
-      "mandatory": false,
-      "name": "sl2_d1",
+      "guid": "5bc69419-6e5e-412e-80a4-9717af8f8044",
       "point": {
         "x": 3.1557984,
-        "y": -0.7768119,
-        "z": 2.0333333
+        "z": 2.0333333,
+        "y": -0.7768119
+      },
+      "name": "sl2_d1",
+      "description": "The second door of the main plattform in the east facade.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.97101486,
+        "z": 0.0,
+        "y": -0.23901905
       },
       "t": 0.3
     }
   ],
-  "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T22:47:41.536Z",
-  "virtual": false
+  "virtual": false,
+  "createdAt": "2025-11-22T00:54:05.283Z",
+  "icon": "icons/cylindric-tambour.svg",
+  "authors": [
+    {
+      "guid": "bb962412-fde6-4468-8396-b74dfc7698d5"
+    }
+  ],
+  "attributes": [
+    {
+      "value": "6.5",
+      "guid": "331b4fea-0df1-4494-9a83-41ae17571c62",
+      "key": "diameter",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter"
+    },
+    {
+      "value": "1",
+      "guid": "a50e771f-92ad-4501-8018-6cdc98d39243",
+      "key": "storeys",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
+    },
+    {
+      "value": "2.75",
+      "guid": "678fa8fa-4de9-4e7f-b55e-f421dcce8392",
+      "key": "floor height",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
+    },
+    {
+      "value": "north",
+      "guid": "85cf7fb9-b739-4303-b6cb-54f05e69e9c6",
+      "key": "platform",
+      "definition": ""
+    },
+    {
+      "value": "0.8",
+      "guid": "ff3d5472-edfc-4288-94e0-e8b9b4e382e4",
+      "key": "door width",
+      "definition": ""
+    },
+    {
+      "value": "2",
+      "guid": "7280b79d-db9c-4845-8447-883925add47e",
+      "key": "door height",
+      "definition": ""
+    },
+    {
+      "value": "1.75",
+      "guid": "9cc90e13-5192-4fd5-941e-e92a092beede",
+      "key": "door offset",
+      "definition": ""
+    },
+    {
+      "value": "26.55",
+      "guid": "47eaa805-4b0b-4276-bf9e-1869d0c8ea47",
+      "key": "effective floor area",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
+    },
+    {
+      "value": "278738",
+      "guid": "48d6ab61-a221-4812-9999-ee5d24be6fb5",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "398",
+      "guid": "43a93e93-f6f6-4ab5-b6b3-bfa63a976118",
+      "key": "heating energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "133",
+      "guid": "23f1fdee-3560-4355-a291-2505e8abe15e",
+      "key": "cooling energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "531",
+      "guid": "8925e6c3-ccce-4b5e-bf11-db5d09e82675",
+      "key": "technical equipment energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "1115",
+      "guid": "50c76678-fddc-40e5-b1a4-56b81141af6a",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "1600",
+      "guid": "3755949d-ab30-466b-a799-0f3e48c793a4",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    }
+  ],
+  "stock": 2147483647,
+  "name": "Cylindric Tambour",
+  "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
+  "image": "images/cylindric-tambour.svg",
+  "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around."
 }

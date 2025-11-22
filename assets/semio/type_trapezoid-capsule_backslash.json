@@ -1,106 +1,112 @@
 {
-  "attributes": [
+  "updatedAt": "2025-11-22T00:54:09.376Z",
+  "icon": "icons/trapezoid-capsule_backslash.svg",
+  "parent": "Trapezoid",
+  "unit": "m",
+  "virtual": false,
+  "createdAt": "2025-11-22T00:54:09.376Z",
+  "authors": [
     {
-      "definition": "",
-      "guid": "71b74f71-0884-4542-8116-c5bfbc583587",
-      "key": "entrance",
-      "value": "back"
-    },
-    {
-      "definition": "",
-      "guid": "68ee23ab-0424-4b7a-8801-e68b8e2c541b",
-      "key": "view",
-      "value": "front"
-    },
-    {
-      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height",
-      "guid": "e285fadb-4bd0-4154-bf11-9163288def0b",
-      "key": "heigth",
-      "value": "2.5"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-      "guid": "f1f6782e-446d-4f1c-a231-034077ea8acd",
-      "key": "effective floor area",
-      "value": "7.19"
-    },
-    {
-      "definition": "",
-      "guid": "3483b9d2-720a-44e7-b4ff-74655722bf52",
-      "key": "construction cost",
-      "value": "68272"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "608d9782-6f92-484d-bff8-68f8ec754871",
-      "key": "heating energy demand",
-      "value": "323"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "7f561334-ae8c-4400-b3a3-0ca661fd5469",
-      "key": "cooling energy demand",
-      "value": "216"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-      "guid": "f0a0939c-3cfd-4311-bac0-0ab7b88fa696",
-      "key": "technical equipment energy demand",
-      "value": "216"
-    },
-    {
-      "definition": "",
-      "guid": "f4e73ea1-ffbd-4f52-9bcc-2db4dfc3ef45",
-      "key": "income",
-      "value": "10780"
-    },
-    {
-      "definition": "",
-      "guid": "45caf700-76f8-4cc3-9a80-9ab079966e82",
-      "key": "maintenance expenses",
-      "value": "862"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 ",
-      "guid": "e10e041c-a34a-46bc-bdf4-f36576fc1ec9",
-      "key": "construction global warming potential",
-      "value": "7186.53"
+      "guid": "ea11ed32-9d7c-4ae0-8366-c0d304b22ecb"
     }
   ],
-  "authors": {
-    "guid": "7a71ae6c-4534-4b76-86a8-9705cecd9c5a"
-  },
-  "createdAt": "2025-11-20T22:47:47.82Z",
-  "description": "An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
-  "guid": "cb448d7a-b169-4759-9b74-7ff1ba216b8b",
-  "icon": "icons/trapezoid-capsule_backslash.svg",
-  "image": "images/trapezoid-capsule_backslash.png",
-  "name": "\\",
-  "parent": "Trapezoid",
-  "ports": {
-    "attributes": {
-      "definition": "",
-      "guid": "6fc02397-423a-400f-a27b-a0fc2b90bce4",
+  "attributes": [
+    {
+      "value": "back",
+      "guid": "1bde29bf-9758-4d7d-9453-cc8f48e10ff4",
       "key": "entrance",
-      "value": ""
+      "definition": ""
     },
-    "description": "The middle of the main entrance door of the upper entrance floor.",
-    "direction": {
-      "x": -0.14780942,
-      "y": -0.9890159,
-      "z": 0.0
+    {
+      "value": "front",
+      "guid": "83117987-fd33-4e26-b600-2f70a72fe552",
+      "key": "view",
+      "definition": ""
     },
-    "guid": "8257a3c3-03d5-4a44-95b9-452468782d9f",
-    "mandatory": false,
-    "point": {
-      "x": 0.42,
-      "y": 0.0,
-      "z": 0.0
+    {
+      "value": "2.5",
+      "guid": "87b2494c-0e21-4bf8-8f09-0c063b9fefd3",
+      "key": "heigth",
+      "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
-    "t": 0.0
-  },
+    {
+      "value": "7.19",
+      "guid": "e54548fa-fc24-4c22-b8ab-6d2cc08d2a7c",
+      "key": "effective floor area",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
+    },
+    {
+      "value": "68272",
+      "guid": "ae749739-632e-4cdd-a71c-9ac29653454f",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "323",
+      "guid": "c4c5e3c7-76dd-40c3-b198-6c36c9081977",
+      "key": "heating energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "216",
+      "guid": "cc89d97f-5eb5-4cd7-820b-9fcaca61471c",
+      "key": "cooling energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "216",
+      "guid": "0c414114-6d68-468e-ad40-23365ff559ad",
+      "key": "technical equipment energy demand",
+      "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+    },
+    {
+      "value": "10780",
+      "guid": "b2ed30a6-5a01-4b22-8f4d-38ce99cec7b7",
+      "key": "income",
+      "definition": ""
+    },
+    {
+      "value": "862",
+      "guid": "d80cc171-6e58-4860-abc7-c0cb96dac80f",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "7186.53",
+      "guid": "3c23af91-de5c-4b0a-abbd-4ef0fd56cd9f",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
+    }
+  ],
   "stock": 2147483647,
-  "unit": "m",
-  "updatedAt": "2025-11-20T22:47:47.82Z",
-  "virtual": false
+  "ports": [
+    {
+      "guid": "10c40af7-2950-4bfd-9b8d-d06a42ae27f5",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "88825835-10d4-408a-ad2e-37ec9462c458",
+          "key": "entrance",
+          "definition": ""
+        }
+      ],
+      "point": {
+        "x": 0.42,
+        "z": 0.0,
+        "y": 0.0
+      },
+      "description": "The middle of the main entrance door of the upper entrance floor.",
+      "mandatory": false,
+      "direction": {
+        "x": -0.14780942,
+        "z": 0.0,
+        "y": -0.9890159
+      },
+      "t": 0.0
+    }
+  ],
+  "name": "\\",
+  "guid": "6f40b4e9-9e93-4568-82ed-ec5d3e697f98",
+  "image": "images/trapezoid-capsule_backslash.png",
+  "description": "An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front."
 }

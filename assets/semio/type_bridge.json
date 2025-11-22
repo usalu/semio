@@ -1,149 +1,155 @@
 {
-  "attributes": [
-    {
-      "definition": "",
-      "guid": "49e6d45b-6a3d-4890-9e73-a297cdf0e2ae",
-      "key": "length",
-      "value": "5.6"
-    },
-    {
-      "definition": "",
-      "guid": "f7581c43-877e-487e-8061-43137a668204",
-      "key": "platform west length",
-      "value": "2.6"
-    },
-    {
-      "definition": "",
-      "guid": "665b9cb0-523f-4afc-92cb-b8c84e0c3ce8",
-      "key": "platform east length",
-      "value": "2.6"
-    },
-    {
-      "definition": "",
-      "guid": "d04ee4e1-21a0-4548-8667-bf0a423d2f85",
-      "key": "gap",
-      "value": "0.4"
-    },
-    {
-      "definition": "",
-      "guid": "75034f6a-a36f-406f-8df4-fb1b3d35b043",
-      "key": "width",
-      "value": "2.6"
-    },
-    {
-      "definition": "",
-      "guid": "69e9829f-4bd3-430e-aaa6-e8f1c0ec8492",
-      "key": "height",
-      "value": "2.5"
-    },
-    {
-      "definition": "",
-      "guid": "244caaa8-a15c-4a11-856a-3f7f7b1e8b70",
-      "key": "base height",
-      "value": "20"
-    },
-    {
-      "definition": "",
-      "guid": "ce3a3267-05a4-44e0-a4a9-cfd243323bc8",
-      "key": "primary rod diameter",
-      "value": "10"
-    },
-    {
-      "definition": "",
-      "guid": "fd1c94c1-ca7f-4b40-b8c3-b256cddf9d26",
-      "key": "secondary rod diameter",
-      "value": "8"
-    },
-    {
-      "definition": "",
-      "guid": "59946098-ba02-48da-bfc7-4714517c3eff",
-      "key": "tertiary rod diameter",
-      "value": "6"
-    },
-    {
-      "definition": "",
-      "guid": "3417f81d-b210-47f3-bce6-7aec80995c90",
-      "key": "parapet height",
-      "value": "125"
-    },
-    {
-      "definition": "",
-      "guid": "235fd432-9192-4c2e-be52-930295eb763b",
-      "key": "construction cost",
-      "value": "65973"
-    },
-    {
-      "definition": "",
-      "guid": "84466c58-3a8a-48a8-a8c9-93de3307c905",
-      "key": "maintenance expenses",
-      "value": "880"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "af3ba006-3426-4041-b362-4c5067422b90",
-      "key": "construction global warming potential",
-      "value": "5864"
-    }
-  ],
-  "authors": {
-    "guid": "2479b816-093b-4a86-b272-d0451aaeb546"
-  },
-  "createdAt": "2025-11-20T22:47:30.154Z",
-  "description": "A bridge with two segments an addition on the west along the main path.",
-  "guid": "e48effad-e3c6-478b-b3bd-307f638764fc",
-  "icon": "",
-  "image": "images/bridge.png",
-  "name": "Bridge",
+  "updatedAt": "2025-11-22T00:53:59.115Z",
   "ports": [
     {
-      "attributes": {
-        "definition": "",
-        "guid": "9c3d5418-22cf-4ea4-b3e2-93d0c060380e",
-        "key": "east",
-        "value": ""
-      },
-      "description": "The middle of the east side of the plattform.",
-      "direction": {
-        "x": 1.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "guid": "1056465f-66c5-47fc-8c38-b66cacc6cf67",
-      "mandatory": false,
-      "name": "e",
+      "guid": "120a4645-fa3c-4b70-8422-0044b8a46d2f",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "9237e624-dce6-48d9-9798-c924ea35ca63",
+          "key": "east",
+          "definition": ""
+        }
+      ],
       "point": {
         "x": 5.6,
-        "y": -1.3,
-        "z": 0.0
+        "z": 0.0,
+        "y": -1.3
+      },
+      "name": "e",
+      "description": "The middle of the east side of the plattform.",
+      "mandatory": false,
+      "direction": {
+        "x": 1.0,
+        "z": 0.0,
+        "y": 0.0
       },
       "t": 0.25
     },
     {
-      "attributes": {
-        "definition": "",
-        "guid": "eb9a17d8-c3c4-44b7-88e1-b1ef9805f659",
-        "key": "west",
-        "value": ""
-      },
-      "description": "The middle of the west side of the plattform.",
-      "direction": {
-        "x": -1.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "guid": "336c15d6-b9fd-4660-9948-1bc1b748da2a",
-      "mandatory": false,
-      "name": "w",
+      "guid": "ea70a096-4b36-44b8-b2f4-1100dc0901e7",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "8b7ce9ad-dc32-43f6-96e8-129ebaa195dc",
+          "key": "west",
+          "definition": ""
+        }
+      ],
       "point": {
         "x": 0.0,
-        "y": -1.3,
-        "z": 0.0
+        "z": 0.0,
+        "y": -1.3
+      },
+      "name": "w",
+      "description": "The middle of the west side of the plattform.",
+      "mandatory": false,
+      "direction": {
+        "x": -1.0,
+        "z": 0.0,
+        "y": 0.0
       },
       "t": 0.75
     }
   ],
-  "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T22:47:30.154Z",
-  "virtual": false
+  "virtual": false,
+  "createdAt": "2025-11-22T00:53:59.115Z",
+  "icon": "",
+  "authors": [
+    {
+      "guid": "4fc703f7-5523-480a-9473-357eca7c4c43"
+    }
+  ],
+  "attributes": [
+    {
+      "value": "5.6",
+      "guid": "d5e9c4f0-043e-48b3-8d7c-31f4a24a14e7",
+      "key": "length",
+      "definition": ""
+    },
+    {
+      "value": "2.6",
+      "guid": "753372ec-78f3-4ace-ac63-e1ea58e67562",
+      "key": "platform west length",
+      "definition": ""
+    },
+    {
+      "value": "2.6",
+      "guid": "ddc63ac2-c803-4831-b9bf-3d6a5348546b",
+      "key": "platform east length",
+      "definition": ""
+    },
+    {
+      "value": "0.4",
+      "guid": "c032536a-9cb0-45ad-9aaf-7dfd3979d978",
+      "key": "gap",
+      "definition": ""
+    },
+    {
+      "value": "2.6",
+      "guid": "7d3241c4-18f7-4ffc-ac97-f3c33853081a",
+      "key": "width",
+      "definition": ""
+    },
+    {
+      "value": "2.5",
+      "guid": "2762e075-b747-4d0f-9637-e2b5ede29176",
+      "key": "height",
+      "definition": ""
+    },
+    {
+      "value": "20",
+      "guid": "140b5f76-359e-43a4-b736-95553fa91943",
+      "key": "base height",
+      "definition": ""
+    },
+    {
+      "value": "10",
+      "guid": "51db6574-0367-4a35-b9fc-fca46c5164dc",
+      "key": "primary rod diameter",
+      "definition": ""
+    },
+    {
+      "value": "8",
+      "guid": "493690d4-a55c-4986-875f-b92f03e3cded",
+      "key": "secondary rod diameter",
+      "definition": ""
+    },
+    {
+      "value": "6",
+      "guid": "198e82c8-22e1-41fc-a079-5a86e5587671",
+      "key": "tertiary rod diameter",
+      "definition": ""
+    },
+    {
+      "value": "125",
+      "guid": "092cc759-7657-4405-a7db-5a8fb2616ba7",
+      "key": "parapet height",
+      "definition": ""
+    },
+    {
+      "value": "65973",
+      "guid": "cb536a64-873a-4b4b-bd8f-a727f8702a68",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "880",
+      "guid": "ab123e95-7ddc-451d-98df-fd246436116d",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "5864",
+      "guid": "b8177e34-11eb-47c0-9f0b-8c3f4527dd62",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    }
+  ],
+  "stock": 2147483647,
+  "name": "Bridge",
+  "guid": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+  "image": "images/bridge.png",
+  "description": "A bridge with two segments an addition on the west along the main path."
 }

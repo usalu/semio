@@ -20,22 +20,14 @@
 
 // #endregion
 
-import * as fs from "fs";
-import * as path from "path";
-import { fileURLToPath } from "url";
+import { CapsuleDreamFlatDesign, MetabolismKit, NakaginCapsuleTowerDancingFlatDesign, NakaginCapsuleTowerFlatDesign, NakaginCapsuleTowerSlantedFlatDesign, NakaginCapsuleTowerTwistedFlatDesign } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, areKitsEqual, Design, exportKit, flattenDesign, importKit, Kit, Plane } from "./semio";
+import kitDiffData from "../../assets/semio/diff_kit_metabolism.json";
+import kitDiffInvertedData from "../../assets/semio/diff_kit_metabolism_inverted.json";
+import kitOriginalData from "../../assets/semio/kit_metabolism.json";
+import kitDiffedData from "../../assets/semio/kit_metabolism_diffed.json";
+import { applyDesignDiff, applyKitDiff, areKitsEqual, deepEqual, Design, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane } from "./semio";
 
-// Load JSON files directly
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const assetsPath = path.join(__dirname, "../../assets/semio");
-const MetabolismKit = JSON.parse(fs.readFileSync(path.join(assetsPath, "kit_metabolism.json"), "utf-8"));
-const CapsuleDreamFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_capsule-dream_flat.json"), "utf-8"));
-const NakaginCapsuleTowerFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_flat.json"), "utf-8"));
-const NakaginCapsuleTowerDancingFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_dancing_flat.json"), "utf-8"));
-const NakaginCapsuleTowerSlantedFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_slanted_flat.json"), "utf-8"));
-const NakaginCapsuleTowerTwistedFlatDesign = JSON.parse(fs.readFileSync(path.join(assetsPath, "design_nakagin-capsule-tower_twisted_flat.json"), "utf-8"));
 
 const TOLERANCE = 0.0001;
 
@@ -59,6 +51,33 @@ const centersEqual = (c1: { u: number, v: number } | undefined, c2: { u: number,
     if (!c1 || !c2) return c1 === c2;
     return Math.abs(c1.u - c2.u) < TOLERANCE && Math.abs(c1.v - c2.v) < TOLERANCE;
 };
+
+describe("Kit Diff", () => {
+    const kitOriginal = kitOriginalData as any;
+    const kitDiff = kitDiffData as any;
+    const kitDiffInverted = kitDiffInvertedData as any;
+    const kitDiffed = kitDiffedData as any;
+
+    it("should compute identical diffs and apply them correctly with full round-trip integrity", () => {
+        // Import actual diff functions from semio.ts
+
+        // 1. Compute diff from original to diffed and verify it matches the generated diff exactly
+        const computedDiff = getKitDiff(kitOriginal, kitDiffed);
+        expect(deepEqual(computedDiff, kitDiff)).toBe(true);
+
+        // 2. Compute inverse diff from diffed to original and verify it matches the generated inverse exactly
+        const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
+        expect(deepEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
+
+        // 3. Apply forward diff to original and verify result matches diffed kit exactly
+        const appliedForward = applyKitDiff(kitOriginal, kitDiff);
+        expect(deepEqual(appliedForward, kitDiffed)).toBe(true);
+
+        // 4. Apply inverse diff to diffed kit and verify result matches original exactly
+        const appliedInverse = applyKitDiff(kitDiffed, kitDiffInverted);
+        expect(deepEqual(appliedInverse, kitOriginal)).toBe(true);
+    });
+});
 
 describe("flattenDesign", () => {
     const kit = MetabolismKit as unknown as Kit;
@@ -170,29 +189,10 @@ describe("Kit Import/Export", () => {
 
         URL.revokeObjectURL(url);
 
-        console.log("[DEBUG] [KIT-ROUNDTRIP] Original types count:", originalKit.types?.length);
-        console.log("[DEBUG] [KIT-ROUNDTRIP] Imported types count:", importedKit.types?.length);
-        console.log("[DEBUG] [KIT-ROUNDTRIP] Original designs count:", originalKit.designs?.length);
-        console.log("[DEBUG] [KIT-ROUNDTRIP] Imported designs count:", importedKit.designs?.length);
-        
-        if (originalKit.types?.[0]) {
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First original type models:", originalKit.types[0].models?.length);
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported type models:", importedKit.types?.[0]?.models?.length);
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First original type ports:", originalKit.types[0].ports?.length);
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported type ports:", importedKit.types?.[0]?.ports?.length);
-        }
-        
-        if (originalKit.designs?.[0]) {
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First original design pieces:", originalKit.designs[0].pieces?.length);
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported design pieces:", importedKit.designs?.[0]?.pieces?.length);
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First original design connections:", originalKit.designs[0].connections?.length);
-            console.log("[DEBUG] [KIT-ROUNDTRIP] First imported design connections:", importedKit.designs?.[0]?.connections?.length);
-        }
-
         expect(areKitsEqual(originalKit, importedKit)).toBe(true);
 
         expect(importedFiles.size).toBe(files.size);
-        
+
         // Export to assets folder if running in export mode
         if (process.env.EXPORT_TO_ASSETS === "true") {
             const fs = await import("fs/promises");

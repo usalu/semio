@@ -10,6 +10,31 @@ function New-Guid {
     return [System.Guid]::NewGuid().ToString()
 }
 
+function New-DeterministicGuid {
+    param(
+        [string]$Seed
+    )
+    
+    # Replace special characters to handle backslash, slash, and other problematic chars
+    $encodedSeed = $Seed -replace '\\', '_BACKSLASH_' -replace '/', '_SLASH_' -replace '\|', '_PIPE_'
+    
+    # Create deterministic GUID from input string using SHA256
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $hashBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($encodedSeed))
+    
+    # Take first 16 bytes for GUID
+    $guidBytes = $hashBytes[0..15]
+    
+    # Set version (4) and variant bits according to RFC 4122
+    $guidBytes[6] = ($guidBytes[6] -band 0x0F) -bor 0x40  # Version 4
+    $guidBytes[8] = ($guidBytes[8] -band 0x3F) -bor 0x80  # Variant 10
+    
+    # Convert byte array to GUID string format
+    $guidString = "{0:x2}{1:x2}{2:x2}{3:x2}-{4:x2}{5:x2}-{6:x2}{7:x2}-{8:x2}{9:x2}-{10:x2}{11:x2}{12:x2}{13:x2}{14:x2}{15:x2}" -f @($guidBytes)
+    
+    return $guidString
+}
+
 function Get-CurrentTimestamp {
     return (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 }
@@ -245,47 +270,13 @@ function Migrate-Type {
     
     # Determine the actual name (variant becomes the name if present)
     $actualName = $type.name
+    $variant = ''
     if ($type.PSObject.Properties.Name -contains 'variant' -and $null -ne $type.variant -and $type.variant -ne '') {
         $actualName = $type.variant
+        $variant = $type.variant
     }
     
-    # Use pre-loaded GUID if it exists, otherwise use existing GUID or generate new one
-    $typeGuid = $null
-    if ($null -ne $typeNameToGuidMap -and $typeNameToGuidMap.ContainsKey($actualName)) {
-        $typeGuid = $typeNameToGuidMap[$actualName]
-    } elseif ($type.PSObject.Properties.Name -contains 'guid') {
-        $typeGuid = $type.guid
-    } else {
-        $typeGuid = New-Guid
-    }
-    
-    # Store mapping (for pieces to reference)
-    if ($null -ne $typeNameToGuidMap -and -not $typeNameToGuidMap.ContainsKey($actualName)) {
-        $typeNameToGuidMap[$actualName] = $typeGuid
-    }
-    
-    $migrated = @{
-        guid = $typeGuid
-        name = $actualName
-        createdAt = $timestamp
-        updatedAt = $timestamp
-    }
-    
-    # Store mapping for later reference resolution
-    # Store BOTH old format (name|variant) and new format (actualName) for lookups
-    if ($null -ne $typeNameToGuidMap) {
-        $variant = if ($type.PSObject.Properties.Name -contains 'variant') { $type.variant } else { '' }
-        
-        # Store old format: "name|variant" for piece lookups
-        $oldMapKey = "$($type.name)|$variant"
-        $typeNameToGuidMap[$oldMapKey] = $typeGuid
-        
-        # Store new format: actualName for parent lookups and standalone types
-        $typeNameToGuidMap[$actualName] = $typeGuid
-    }
-    
-    # Optional fields
-    # Metabolism-specific hierarchy mapping
+    # Determine parent for unique key
     $parentValue = $null
     if ($type.PSObject.Properties.Name -contains 'variant' -and $null -ne $type.variant -and $type.variant -ne '') {
         # Map metabolism types to new hierarchy
@@ -301,6 +292,42 @@ function Migrate-Type {
     } elseif ($type.PSObject.Properties.Name -contains 'parent' -and $null -ne $type.parent) {
         $parentValue = $type.parent
     }
+    $parentKey = if ($null -ne $parentValue) { $parentValue } else { '' }
+    
+    # Create unique key: name|variant|parent
+    $uniqueKey = "$($type.name)|$variant|$parentKey"
+    
+    # Always generate deterministic GUID to fix duplicate GUID issues
+    $typeGuid = New-DeterministicGuid -Seed "type:$uniqueKey"
+    
+    # Store mapping with unique key (for pieces to reference)
+    if ($null -ne $typeNameToGuidMap -and -not $typeNameToGuidMap.ContainsKey($uniqueKey)) {
+        $typeNameToGuidMap[$uniqueKey] = $typeGuid
+    }
+    
+    $migrated = @{
+        guid = $typeGuid
+        name = $actualName
+        createdAt = $timestamp
+        updatedAt = $timestamp
+    }
+    
+    # Store mapping for later reference resolution
+    # Store BOTH old format (name|variant) and new format (actualName) for lookups
+    if ($null -ne $typeNameToGuidMap) {
+        # Store old format: "name|variant" for piece lookups (backwards compat)
+        $oldMapKey = "$($type.name)|$variant"
+        if (-not $typeNameToGuidMap.ContainsKey($oldMapKey)) {
+            $typeNameToGuidMap[$oldMapKey] = $typeGuid
+        }
+        
+        # Store actualName for parent lookups and standalone types
+        if (-not $typeNameToGuidMap.ContainsKey($actualName)) {
+            $typeNameToGuidMap[$actualName] = $typeGuid
+        }
+    }
+    
+    # Optional fields
     if ($null -ne $parentValue) {
         # Parent will be resolved in third pass (name to GUID)
         $migrated.parent = $parentValue
@@ -537,13 +564,6 @@ function Migrate-Piece {
         $migrated.attributes = $attrs
     }
     
-    Write-Host "[DEBUG-PIECE] Returning piece with keys: $($migrated.Keys -join ', ')" -ForegroundColor Cyan
-    if ($migrated.ContainsKey('type')) {
-        Write-Host "[DEBUG-PIECE] Piece HAS type: $($migrated.type | ConvertTo-Json -Compress)" -ForegroundColor Green
-    } else {
-        Write-Host "[DEBUG-PIECE] Piece MISSING type!" -ForegroundColor Red
-    }
-    
     return $migrated
 }
 
@@ -581,15 +601,20 @@ function Migrate-Connection {
                 $pieceId = $null
                 if ($conn.connected.piece -is [string]) {
                     $pieceId = $conn.connected.piece
+                } elseif ($conn.connected.piece.PSObject.Properties.Name -contains 'guid') {
+                    # Already migrated with guid
+                    $connectedSide.piece = @{ guid = $conn.connected.piece.guid }
                 } elseif ($conn.connected.piece.PSObject.Properties.Name -contains 'id_') {
                     $pieceId = $conn.connected.piece.id_
                 } elseif ($conn.connected.piece.PSObject.Properties.Name -contains 'id') {
                     $pieceId = $conn.connected.piece.id
                 }
-                if ($null -ne $pieceId -and $pieceIdToGuidMap.ContainsKey($pieceId)) {
-                    $connectedSide.piece = @{ guid = $pieceIdToGuidMap[$pieceId] }
-                } else {
-                    Write-Warning "  [CONNECTION] Piece ID '$pieceId' not found in map (connected side)"
+                if ($null -ne $pieceId) {
+                    if ($pieceIdToGuidMap.ContainsKey($pieceId)) {
+                        $connectedSide.piece = @{ guid = $pieceIdToGuidMap[$pieceId] }
+                    } else {
+                        Write-Warning "  [CONNECTION] Piece ID '$pieceId' not found in map (connected side)"
+                    }
                 }
             }
             if ($conn.connected.PSObject.Properties.Name -contains 'port' -and $null -ne $conn.connected.port) {
@@ -678,13 +703,18 @@ function Migrate-Connection {
                 $pieceId = $null
                 if ($conn.connecting.piece -is [string]) {
                     $pieceId = $conn.connecting.piece
+                } elseif ($conn.connecting.piece.PSObject.Properties.Name -contains 'guid') {
+                    # Already migrated with guid
+                    $connectingSide.piece = @{ guid = $conn.connecting.piece.guid }
                 } elseif ($conn.connecting.piece.PSObject.Properties.Name -contains 'id_') {
                     $pieceId = $conn.connecting.piece.id_
                 } elseif ($conn.connecting.piece.PSObject.Properties.Name -contains 'id') {
                     $pieceId = $conn.connecting.piece.id
                 }
-                if ($null -ne $pieceId -and $pieceIdToGuidMap.ContainsKey($pieceId)) {
-                    $connectingSide.piece = @{ guid = $pieceIdToGuidMap[$pieceId] }
+                if ($null -ne $pieceId) {
+                    if ($pieceIdToGuidMap.ContainsKey($pieceId)) {
+                        $connectingSide.piece = @{ guid = $pieceIdToGuidMap[$pieceId] }
+                    }
                 }
             }
             if ($conn.connecting.PSObject.Properties.Name -contains 'port' -and $null -ne $conn.connecting.port) {
@@ -813,23 +843,25 @@ function Migrate-Design {
     
     # Determine the actual name (variant becomes the name if present, view is ignored as it's deprecated)
     $actualName = $design.name
+    $variant = ''
+    $view = ''
     if ($design.PSObject.Properties.Name -contains 'variant' -and $null -ne $design.variant -and $design.variant -ne '') {
         $actualName = $design.variant
+        $variant = $design.variant
+    }
+    if ($design.PSObject.Properties.Name -contains 'view' -and $null -ne $design.view -and $design.view -ne '') {
+        $view = $design.view
     }
     
-    # Use pre-loaded GUID if it exists, otherwise use existing GUID or generate new one
-    $designGuid = $null
-    if ($null -ne $designNameToGuidMap -and $designNameToGuidMap.ContainsKey($actualName)) {
-        $designGuid = $designNameToGuidMap[$actualName]
-    } elseif ($design.PSObject.Properties.Name -contains 'guid') {
-        $designGuid = $design.guid
-    } else {
-        $designGuid = New-Guid
-    }
+    # Create unique key: name|variant|view
+    $uniqueKey = "$($design.name)|$variant|$view"
     
-    # Store mapping (for pieces to reference)
-    if ($null -ne $designNameToGuidMap -and -not $designNameToGuidMap.ContainsKey($actualName)) {
-        $designNameToGuidMap[$actualName] = $designGuid
+    # Always generate deterministic GUID to fix duplicate GUID issues
+    $designGuid = New-DeterministicGuid -Seed "design:$uniqueKey"
+    
+    # Store mapping with unique key (for pieces to reference)
+    if ($null -ne $designNameToGuidMap -and -not $designNameToGuidMap.ContainsKey($uniqueKey)) {
+        $designNameToGuidMap[$uniqueKey] = $designGuid
     }
     
     $migrated = @{
@@ -840,17 +872,12 @@ function Migrate-Design {
     }
     
     # Store mapping for later reference resolution
-    # Store BOTH old format (name|variant|view) and new format (actualName) for lookups
+    # Store actualName for parent lookups and backwards compatibility
     if ($null -ne $designNameToGuidMap) {
-        $variant = if ($design.PSObject.Properties.Name -contains 'variant') { $design.variant } else { '' }
-        $view = if ($design.PSObject.Properties.Name -contains 'view') { $design.view } else { '' }
-        
-        # Store old format: "name|variant|view" for piece lookups
-        $oldMapKey = "$($design.name)|$variant|$view"
-        $designNameToGuidMap[$oldMapKey] = $designGuid
-        
-        # Store new format: actualName for parent lookups and standalone designs
-        $designNameToGuidMap[$actualName] = $designGuid
+        # Store actualName for parent lookups and standalone designs
+        if (-not $designNameToGuidMap.ContainsKey($actualName)) {
+            $designNameToGuidMap[$actualName] = $designGuid
+        }
     }
     
     # NOTE: "view" field is deprecated and not migrated to output

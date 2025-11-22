@@ -43,14 +43,12 @@ import {
 } from "@semio/assets";
 import { ReactFlowProvider } from "@xyflow/react";
 import Fuse, { FuseResult } from "fuse.js";
-import JSZip from "jszip";
 import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { useHotkeys as useReactHotkeys } from "react-hotkeys-hook";
 import { useTranslation as useI18nTranslation } from "react-i18next";
 import { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, useParams, useNavigate as useReactNavigate, useSearchParams } from "react-router";
-import initSqlJs, { Database, SqlJsStatic } from "sql.js";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import i18n, { useHotkey, useLabel } from "../i18n";
@@ -5925,6 +5923,30 @@ export function useFileUrls(): Map<Url, Url> {
   return kitStore.fileUrls;
 }
 
+export function useKitTransaction(origin: string): Transaction {
+  const store = useSketchpadStore();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid;
+
+  if (!kitGuid || !store.hasKit(kitGuid)) {
+    return {};
+  }
+
+  const kitStore = store.kit(kitGuid);
+  return {
+    start: () => {
+      console.group(`[${origin}] Transaction: "kit.startTransaction"`);
+      kitStore.yDoc.transact(() => {}, origin);
+    },
+    finalize: () => {
+      console.groupEnd();
+    },
+    abort: () => {
+      console.groupEnd();
+    },
+  };
+}
+
 export function useKitCommands() {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -5936,16 +5958,6 @@ export function useKitCommands() {
 
   const kitStore = store.kit(kitGuid);
   return {
-    startTransaction: (origin: string) => {
-      console.group(`[${origin}] Transaction: "kit.startTransaction"`);
-      kitStore.yDoc.transact(() => {}, origin);
-    },
-    finalizeTransaction: (origin: string) => {
-      console.groupEnd();
-    },
-    abortTransaction: (origin: string) => {
-      console.groupEnd();
-    },
     importKit: (origin: string, url: string) => kitStore.execute("semio.kit.import", origin, url),
     exportKit: (origin: string) => kitStore.execute("semio.kit.export", origin),
     createAuthor: (origin: string, author: Author) => kitStore.execute("semio.kit.createAuthor", origin, author),
@@ -6172,7 +6184,7 @@ export const kitCommands = {
         } else {
           const { kit, files: importedFiles } = await importKit(url);
           const files: KitCommandResult["files"] = [];
-          
+
           for (const [path, blob] of importedFiles.entries()) {
             files.push(new File([blob], path));
           }
@@ -6200,7 +6212,7 @@ export const kitCommands = {
       try {
         const kit = context.kit;
         const files = new Map<string, Blob>();
-        
+
         for (const [path, url] of context.fileUrls.entries()) {
           try {
             const response = await fetch(url);
@@ -6212,7 +6224,7 @@ export const kitCommands = {
             // File not accessible, skip
           }
         }
-        
+
         const zipBlob = await exportKit(kit, files);
         const url = URL.createObjectURL(zipBlob);
         const a = document.createElement("a");
@@ -8859,7 +8871,11 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
     setSections((prev) => {
       const updated = {
         ...prev,
-        [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => (a.order || 0) - (b.order || 0)),
+        [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => {
+          const specificityDiff = b.specificity - a.specificity;
+          if (specificityDiff !== 0) return specificityDiff;
+          return (a.order || 0) - (b.order || 0);
+        }),
       };
       return updated;
     });
@@ -10792,7 +10808,7 @@ const PanelToggles: FC = ({}) => {
   const ActiveRightIcon = activeRightConfig?.icon;
 
   return (
-    <div className="flex items-stretch border overflow-hidden h-medium divide-x">
+    <div className="flex items-stretch border overflow-hidden h-medium divide-x divide-border">
       {workbenchConfigs.length > 0 && (
         <Toggle
           kind="dropdown"
@@ -11645,11 +11661,14 @@ const LayoutWrapper: FC = () => {
       console.log("[Language Sync] Current i18n language:", i18n.language, "Store language:", language);
       if (i18n.language !== language) {
         console.log("[Language Sync] Changing language to:", language);
-        i18n.changeLanguage(language).then(() => {
-          console.log("[Language Sync] Language changed successfully to:", language);
-        }).catch((err) => {
-          console.error("[Language Sync] Failed to change language:", err);
-        });
+        i18n
+          .changeLanguage(language)
+          .then(() => {
+            console.log("[Language Sync] Language changed successfully to:", language);
+          })
+          .catch((err) => {
+            console.error("[Language Sync] Failed to change language:", err);
+          });
       }
     }
   }, [language]);
@@ -12099,7 +12118,7 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
 
 // #endregion Sketchpad
 
-export { Window } from "./elements";
+export { SectionSpecificity, Window } from "./elements";
 
 export { Sketchpad };
 export default Sketchpad;

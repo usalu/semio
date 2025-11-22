@@ -6362,6 +6362,7 @@ const App: FC<AppProps> = () => {
     if (!hasSelection) {
       addSection("details", {
         id: "semio.sketchpad.app.design.title",
+        specificity: 20,
         order: 50,
         content: () =>
           design ? (
@@ -6375,11 +6376,13 @@ const App: FC<AppProps> = () => {
       const portId = selection.port!.port;
       addSection("details", {
         id: "semio.sketchpad.app.type.port.title",
+        specificity: 30,
         order: 0,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
       });
       addSection("details", {
         id: "semio.sketchpad.app.design.title",
+        specificity: 20,
         order: 50,
         content: () =>
           design ? (
@@ -6394,6 +6397,7 @@ const App: FC<AppProps> = () => {
         const piecesSectionId = piecesCount === 1 ? pieceSingleId : pieceMultipleId;
         addSection("details", {
           id: piecesSectionId,
+          specificity: 30,
           order: 0,
           content: () => <PiecesSection />,
         });
@@ -6404,6 +6408,7 @@ const App: FC<AppProps> = () => {
         const connectionsSectionId = conns.length === 1 ? connectionSingleId : connectionMultipleId;
         addSection("details", {
           id: connectionsSectionId,
+          specificity: 30,
           order: 10,
           content: () => <ConnectionsSection connections={conns} isSingle={conns.length === 1} count={conns.length} />,
         });
@@ -6411,6 +6416,7 @@ const App: FC<AppProps> = () => {
       if (hasPieces && hasConnections) {
         addSection("details", {
           id: selectionMultipleId,
+          specificity: 30,
           order: 20,
           content: () => (
             <TreeItem>
@@ -6423,6 +6429,7 @@ const App: FC<AppProps> = () => {
       }
       addSection("details", {
         id: "semio.sketchpad.app.design.title",
+        specificity: 20,
         order: 50,
         content: () =>
           design ? (
@@ -6435,6 +6442,7 @@ const App: FC<AppProps> = () => {
 
     addSection("details", {
       id: "semio.sketchpad.app.kit.title",
+      specificity: 10,
       order: 100,
       content: () =>
         kit ? (
@@ -6652,6 +6660,7 @@ const App: FC<AppProps> = () => {
 
     addSection("toolbar", {
       id: "semio.sketchpad.app.design.tools",
+      specificity: 20,
       order: 0,
       content: <ToolsToggleGroup />,
     });
@@ -6691,6 +6700,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "semio.sketchpad.app.kit.types",
+      specificity: 20,
       order: 0,
       content: () => <TypesWorkbenchContent />,
       actions: [
@@ -6716,6 +6726,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "semio.sketchpad.app.kit.designs",
+      specificity: 20,
       order: 1,
       content: () => <DesignsWorkbenchContent />,
       actions: [
@@ -6741,6 +6752,7 @@ const App: FC<AppProps> = () => {
 
     addSection("workbench", {
       id: "semio.sketchpad.app.design.windows",
+      specificity: 20,
       order: 2,
       content: () => <WindowLibrary />,
     });
@@ -6757,6 +6769,7 @@ const App: FC<AppProps> = () => {
   useEffect(() => {
     addSection("settings", {
       id: "semio.sketchpad.app.design.appTitle",
+      specificity: 20,
       order: 100,
       content: () => (
         <>

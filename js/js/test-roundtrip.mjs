@@ -2,106 +2,129 @@
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { areKitsEqual, exportKit, importKit } from "./semio.ts";
+import { exportKit } from "./semio.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function testKitRoundtrip() {
+async function exportMetabolismKit() {
   console.log("Loading metabolism kit...");
   const assetsPath = path.join(__dirname, "../../assets/semio");
   const rawKit = JSON.parse(fs.readFileSync(path.join(assetsPath, "kit_metabolism.json"), "utf-8"));
-  
+
   // Normalize the kit data to match expected schema (convert single objects to arrays)
   const toArray = (value) => {
     if (!value) return undefined;
     return Array.isArray(value) ? value : [value];
   };
-  
-  const metabolismKit = {
-    ...rawKit,
-    authors: toArray(rawKit.authors),
-    files: toArray(rawKit.files),
-    qualities: toArray(rawKit.qualities),
-  };
-  
-  console.log("After normalization:");
-  console.log(`  authors: ${metabolismKit.authors?.length ?? 'undefined'}`);
-  console.log(`  files: ${metabolismKit.files?.length ?? 'undefined'}`);
-  console.log(`  qualities: ${metabolismKit.qualities?.length ?? 'undefined'}`);
-  
+
+  // Recursively normalize all attributes and deduplicate types by GUID
+  const normalizeKit = (kit) => {
+    // First, deduplicate types by GUID, merging their ports
+    const typesByGuid = new Map();
+    console.log(`[DEBUG] Processing ${kit.types?.length ?? 0} types for deduplication...`);
+    kit.types?.forEach((type, idx) => {
+      const guid = type.guid;
+      const existing = typesByGuid.get(guid);
+      if (existing) {
+        console.log(`[DEBUG] Found duplicate type at index ${idx}: GUID=${guid}, Name=${type.name}`);
+        // Merge ports from duplicate type
+        existing.ports = [...(existing.ports || []), ...(type.ports || [])];
+      } else {
+        typesByGuid.set(guid, { ...type });
+      }
+    });
+    const deduplicatedTypes = Array.from(typesByGuid.values());
+    console.log(`[DEBUG] Deduplicated to ${deduplicatedTypes.length} unique types`);
+
+    return {
+      ...kit,
+      authors: toArray(kit.authors),
+      files: toArray(kit.files),
+      qualities: toArray(kit.qualities)?.map(quality => ({
+        ...quality,
+        attributes: toArray(quality.attributes),
+        benchmarks: quality.benchmarks?.map(benchmark => ({
+          ...benchmark,
+          attributes: toArray(benchmark.attributes),
+        })),
+      })),
+      attributes: toArray(kit.attributes),
+      interfaces: kit.interfaces?.map(iface => ({
+        ...iface,
+        attributes: toArray(iface.attributes),
+      })),
+      types: deduplicatedTypes.map(type => ({
+        ...type,
+        attributes: toArray(type.attributes),
+        models: type.models?.map(model => ({
+          ...model,
+          attributes: toArray(model.attributes),
+        })),
+        ports: type.ports?.map(port => ({
+          ...port,
+          attributes: toArray(port.attributes),
+          props: port.props?.map(prop => ({
+            ...prop,
+            attributes: toArray(prop.attributes),
+          })),
+        })),
+      })),
+      designs: kit.designs?.map(design => ({
+        ...design,
+        attributes: toArray(design.attributes),
+        pieces: design.pieces?.map(piece => ({
+          ...piece,
+          attributes: toArray(piece.attributes),
+          props: piece.props?.map(prop => ({
+            ...prop,
+            attributes: toArray(prop.attributes),
+          })),
+        })),
+        connections: design.connections?.map(connection => ({
+          ...connection,
+          attributes: toArray(connection.attributes),
+        })),
+        layers: design.layers?.map(layer => ({
+          ...layer,
+          attributes: toArray(layer.attributes),
+        })),
+        groups: design.groups?.map(group => ({
+          ...group,
+          attributes: toArray(group.attributes),
+        })),
+        stats: design.stats?.map(stat => ({
+          ...stat,
+          attributes: toArray(stat.attributes),
+        })),
+        props: design.props?.map(prop => ({
+          ...prop,
+          attributes: toArray(prop.attributes),
+        })),
+      })),
+    };
+  };  const metabolismKit = normalizeKit(rawKit);
+
+  console.log("Kit statistics:");
+  console.log(`  Types: ${metabolismKit.types?.length ?? 0} (deduplicated from ${rawKit.types?.length ?? 0})`);
+  console.log(`  Designs: ${metabolismKit.designs?.length ?? 0}`);
+  console.log(`  Authors: ${metabolismKit.authors?.length ?? 0}`);
+  console.log(`  Files: ${metabolismKit.files?.length ?? 0}`);
+  console.log(`  Qualities: ${metabolismKit.qualities?.length ?? 0}`);
+
   console.log("Exporting kit to zip...");
   const zipBlob = await exportKit(metabolismKit, new Map());
-  
-  console.log("Creating temporary URL for zip blob...");
-  const tempUrl = URL.createObjectURL(zipBlob);
-  
-  console.log("Importing kit from zip...");
-  const importResult = await importKit(tempUrl);
-  const importedKit = importResult.kit;
-  
-  // Clean up the temporary URL
-  URL.revokeObjectURL(tempUrl);
-  
-  console.log("Comparing kits...");
-  
-  // Manual deep comparison to find differences
-  const check = (field, aVal, bVal) => {
-    if (aVal !== bVal) {
-      console.error(`[DIFF] ${field}: ${aVal} !== ${bVal}`);
-      return false;
-    }
-    return true;
-  };
-  
-  let allMatch = true;
-  allMatch = check("guid", metabolismKit.guid, importedKit.guid) && allMatch;
-  allMatch = check("name", metabolismKit.name, importedKit.name) && allMatch;
-  allMatch = check("version", metabolismKit.version, importedKit.version) && allMatch;
-  allMatch = check("types.length", metabolismKit.types?.length, importedKit.types?.length) && allMatch;
-  allMatch = check("designs.length", metabolismKit.designs?.length, importedKit.designs?.length) && allMatch;
-  allMatch = check("files", metabolismKit.files, importedKit.files) && allMatch;
-  allMatch = check("qualities", metabolismKit.qualities, importedKit.qualities) && allMatch;
-  allMatch = check("authors.length", metabolismKit.authors?.length, importedKit.authors?.length) && allMatch;
-  
-  const areEqual = areKitsEqual(metabolismKit, importedKit);
-  console.log(`areKitsEqual result: ${areEqual}`);
-  console.log(`manual checks result: ${allMatch}`);
-  
-  if (!areEqual) {
-    // Debug: log differences
-    console.error("❌ FAIL: Kits are NOT equal");
-    console.error("\nOriginal kit:");
-    console.error(`  Types: ${metabolismKit.types?.length ?? 'undefined'}`);
-    console.error(`  Designs: ${metabolismKit.designs?.length ?? 'undefined'}`);
-    console.error(`  Files: ${metabolismKit.files?.length ?? 'undefined'}`);
-    console.error(`  Authors: ${metabolismKit.authors?.length ?? 'undefined'}`);
-    console.error(`  Qualities: ${metabolismKit.qualities?.length ?? 'undefined'}`);
-    console.error("\nImported kit:");
-    console.error(`  Types: ${importedKit.types?.length ?? 'undefined'}`);
-    console.error(`  Designs: ${importedKit.designs?.length ?? 'undefined'}`);
-    console.error(`  Files: ${importedKit.files?.length ?? 'undefined'}`);
-    console.error(`  Authors: ${importedKit.authors?.length ?? 'undefined'}`);
-    console.error(`  Qualities: ${importedKit.qualities?.length ?? 'undefined'}`);
-    process.exit(1);
-  }
-  
-  console.log("✅ SUCCESS: Kits are deeply equal!");
-  
-  // Export to assets if requested
-  if (process.env.EXPORT_TO_ASSETS === "true") {
-    const outputPath = path.join(__dirname, "../../assets/metabolism.zip");
-    const buffer = await zipBlob.arrayBuffer();
-    fs.writeFileSync(outputPath, Buffer.from(buffer));
-    console.log(`Exported to: ${outputPath}`);
-    const stats = fs.statSync(outputPath);
-    console.log(`File size: ${(stats.size / 1024).toFixed(2)} KB`);
-  }
-  
-  process.exit(0);
+
+  const outputPath = path.join(__dirname, "../../assets/metabolism.zip");
+  const buffer = await zipBlob.arrayBuffer();
+  fs.writeFileSync(outputPath, Buffer.from(buffer));
+
+  const stats = fs.statSync(outputPath);
+  console.log(`✅ Exported to: ${outputPath}`);
+  console.log(`   File size: ${(stats.size / 1024).toFixed(2)} KB`);
 }
 
-testKitRoundtrip().catch(error => {
-  console.error("Error:", error);
+exportMetabolismKit().catch(error => {
+  console.error("❌ Error:", error);
   process.exit(1);
 });

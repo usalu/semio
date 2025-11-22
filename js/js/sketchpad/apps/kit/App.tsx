@@ -756,14 +756,23 @@ export function useKitAppOthers(): KitAppPresenceOther[] {
   return useKitApp((s) => s.others) as KitAppPresenceOther[];
 }
 
+export function useKitAppTransaction(origin: string, id?: KitAppId): Transaction {
+  const store = useKitAppStore(undefined, id) as KitAppStore | null;
+  if (!store) {
+    return {};
+  }
+  return {
+    start: () => store.execute("semio.kitApp.startTransaction", origin),
+    finalize: () => store.execute("semio.kitApp.finalizeTransaction", origin),
+    abort: () => store.execute("semio.kitApp.abortTransaction", origin),
+  };
+}
+
 export function useKitAppCommands(id?: KitAppId) {
   const store = useKitAppStore(undefined, id) as KitAppStore | null;
   const noOp = () => {};
   if (!store) {
     return {
-      startTransaction: noOp,
-      finalizeTransaction: noOp,
-      abortTransaction: noOp,
       undo: noOp,
       redo: noOp,
       selectAll: noOp,
@@ -822,9 +831,6 @@ export function useKitAppCommands(id?: KitAppId) {
     };
   }
   return {
-    startTransaction: (origin: string) => store.execute("semio.kitApp.startTransaction", origin),
-    finalizeTransaction: (origin: string) => store.execute("semio.kitApp.finalizeTransaction", origin),
-    abortTransaction: (origin: string) => store.execute("semio.kitApp.abortTransaction", origin),
     undo: (origin: string) => store.execute("semio.kitApp.undo", origin),
     redo: (origin: string) => store.execute("semio.kitApp.redo", origin),
     selectAll: (origin: string) => store.execute("semio.kitApp.selectAll", origin),
@@ -2010,6 +2016,7 @@ const AppContent: FC = () => {
     if (totalSelectedKinds > 1) {
       addSection("details", {
         id: artifactsMultipleId,
+        specificity: 30,
         order: 0,
         content: () => <MultipleArtifactsSection />,
       });
@@ -2019,6 +2026,7 @@ const AppContent: FC = () => {
       const designSectionId = designsCount === 1 ? "semio.sketchpad.app.design.title" : "semio.sketchpad.app.kit.designs.multipleTitle";
       addSection("details", {
         id: designSectionId,
+        specificity: 30,
         order: 10,
         content: () =>
           kit ? (
@@ -2035,6 +2043,7 @@ const AppContent: FC = () => {
       const typeSectionId = typesCount === 1 ? "semio.sketchpad.app.type.title" : "semio.sketchpad.app.kit.types.multipleTitle";
       addSection("details", {
         id: typeSectionId,
+        specificity: 30,
         order: 20,
         content: () => <TypeSection />,
       });
@@ -2044,6 +2053,7 @@ const AppContent: FC = () => {
       const interfaceSectionId = interfacesCount === 1 ? "semio.sketchpad.app.kit.interface.title" : "semio.sketchpad.app.kit.interfaces.multipleTitle";
       addSection("details", {
         id: interfaceSectionId,
+        specificity: 30,
         order: 25,
         content: () => <InterfaceSection />,
       });
@@ -2053,6 +2063,7 @@ const AppContent: FC = () => {
       const fileSectionId = filesCount === 1 ? "semio.sketchpad.app.kit.file.title" : "semio.sketchpad.app.kit.files.multipleTitle";
       addSection("details", {
         id: fileSectionId,
+        specificity: 30,
         order: 30,
         content: () => <FileSection />,
       });
@@ -2062,6 +2073,7 @@ const AppContent: FC = () => {
       const folderSectionId = foldersCount === 1 ? "semio.sketchpad.app.kit.folder.title" : "semio.sketchpad.app.kit.folders.multipleTitle";
       addSection("details", {
         id: folderSectionId,
+        specificity: 30,
         order: 40,
         content: () => <FolderSection />,
       });
@@ -2069,6 +2081,7 @@ const AppContent: FC = () => {
 
     addSection("details", {
       id: "semio.sketchpad.app.kit.title",
+      specificity: 10,
       order: 100,
       content: () =>
         kit ? (
@@ -3910,7 +3923,6 @@ const KitSectionForm: FC = () => {
       );
     }
     const kitStore = useKitStore() as any;
-    const { startTransaction, finalizeTransaction, abortTransaction } = useKitAppCommands();
     return (
       <>
         <TreeItem>
@@ -3920,9 +3932,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.name"
               value={kit.name}
               onLazyChange={(value) => kitStore.change({ name: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.name")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.name")}
               showLabel
             />
           </TreeContent>
@@ -3935,9 +3945,7 @@ const KitSectionForm: FC = () => {
               value={kit.version || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ version: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.version")}
               showLabel
             />
           </TreeContent>
@@ -3950,9 +3958,7 @@ const KitSectionForm: FC = () => {
               value={kit.description || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ description: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.description")}
               showLabel
             />
           </TreeContent>
@@ -3965,9 +3971,7 @@ const KitSectionForm: FC = () => {
               value={kit.icon || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ icon: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
               showLabel
             />
           </TreeContent>
@@ -3980,9 +3984,7 @@ const KitSectionForm: FC = () => {
               value={kit.image || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ image: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.image")}
               showLabel
             />
           </TreeContent>
@@ -3995,9 +3997,7 @@ const KitSectionForm: FC = () => {
               value={kit.homepage || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ homepage: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
               showLabel
             />
           </TreeContent>
@@ -4010,9 +4010,7 @@ const KitSectionForm: FC = () => {
               value={kit.license || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.licensePlaceholder.label")}
               onLazyChange={(value) => kitStore.change({ license: value })}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.license")}
               showLabel
             />
           </TreeContent>

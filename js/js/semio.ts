@@ -3603,7 +3603,7 @@ export const removeFileFromKit = (fileGuid: string): KitDiff => ({
 });
 
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
-  attributes: [attribute],
+  attributes: { added: [attribute] },
 });
 
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
@@ -5524,7 +5524,6 @@ CREATE TABLE attribute (
     
     toArray(design.connections).forEach((connection) => {
       if (!connection.connected?.piece || !connection.connecting?.piece || !connection.connected?.port || !connection.connecting?.port) {
-        console.warn(`[DEBUG] Skipping malformed connection ${connection.guid}`);
         return;
       }
       db.run(

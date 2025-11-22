@@ -1,95 +1,99 @@
 {
-  "attributes": [
+  "updatedAt": "2025-11-22T00:54:04.144Z",
+  "ports": [
     {
-      "definition": "",
-      "guid": "12749cbe-6bec-40e4-a548-c785ee97ea78",
-      "key": "peak",
-      "value": "south west"
-    },
-    {
-      "definition": "",
-      "guid": "8aef984d-4f1c-4f3e-8963-5a1ef8024983",
-      "key": "diameter",
-      "value": "6.5"
-    },
-    {
-      "definition": "",
-      "guid": "d338cd86-15f2-4fc9-80cf-1a3896f17764",
-      "key": "height side",
-      "value": "5.5"
-    },
-    {
-      "definition": "",
-      "guid": "5cc90e3b-824e-45ab-a835-ff85eba7bf14",
-      "key": "height low",
-      "value": "1"
-    },
-    {
-      "definition": "",
-      "guid": "a7cf9e03-bbca-452a-8819-ee98f42e83f1",
-      "key": "wall thickness",
-      "value": "0.3"
-    },
-    {
-      "definition": "",
-      "guid": "fb5277f3-c159-440e-91fa-a2d3687fdfcf",
-      "key": "construction cost",
-      "value": "123029"
-    },
-    {
-      "definition": "",
-      "guid": "72815621-9c5e-4bbe-9047-99eb81b9aefa",
-      "key": "maintenance expenses",
-      "value": "820"
-    },
-    {
-      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-      "guid": "14796f49-40e4-41c2-92e1-a7a7469e9a96",
-      "key": "construction global warming potential",
-      "value": "8202"
+      "guid": "db5150fe-3c00-4ab8-870f-139377c4416f",
+      "attributes": [
+        {
+          "value": "",
+          "guid": "19f43377-a8ab-49d7-b251-cb79206b8e5a",
+          "key": "bottom",
+          "definition": ""
+        },
+        {
+          "value": "180",
+          "guid": "bfdabb80-0407-4f55-925c-1987c861ece7",
+          "key": "wasp rotation",
+          "definition": ""
+        }
+      ],
+      "point": {
+        "x": 0.0,
+        "z": 0.0,
+        "y": 0.0
+      },
+      "description": "The center of the bottom.",
+      "mandatory": false,
+      "direction": {
+        "x": 0.0,
+        "z": -1.0,
+        "y": 0.0
+      },
+      "t": 0.0
     }
   ],
-  "authors": {
-    "guid": "d1f764e4-cc21-46fb-b5f1-c7c1b55a74ca"
-  },
-  "createdAt": "2025-11-20T22:47:39.568Z",
-  "description": "A roof that has the skin of a cut extruded cylinder.",
-  "guid": "b7221a01-e783-4847-a357-a7b0fc57adc0",
-  "icon": "icons/cylindric-capital.svg",
-  "image": "images/cylindric-capital.png",
-  "name": "Cylindric Capital",
-  "ports": {
-    "attributes": [
-      {
-        "definition": "",
-        "guid": "a59a53a2-1545-4839-8d27-b73e8cf9e6e3",
-        "key": "bottom",
-        "value": ""
-      },
-      {
-        "definition": "",
-        "guid": "13ed6037-54a7-43ea-a53c-2fe9e08fd8fa",
-        "key": "wasp rotation",
-        "value": "180"
-      }
-    ],
-    "description": "The center of the bottom.",
-    "direction": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": -1.0
-    },
-    "guid": "74d68f80-3914-4a10-8195-68f4d68d764a",
-    "mandatory": false,
-    "point": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    "t": 0.0
-  },
-  "stock": 2147483647,
   "unit": "m",
-  "updatedAt": "2025-11-20T22:47:39.568Z",
-  "virtual": false
+  "virtual": false,
+  "createdAt": "2025-11-22T00:54:04.144Z",
+  "icon": "icons/cylindric-capital.svg",
+  "authors": [
+    {
+      "guid": "76a03ba7-43ba-4ff0-8f6f-9dd675acd021"
+    }
+  ],
+  "attributes": [
+    {
+      "value": "south west",
+      "guid": "e6e91c52-166d-433b-8cea-692ac4df2fca",
+      "key": "peak",
+      "definition": ""
+    },
+    {
+      "value": "6.5",
+      "guid": "49fffdc7-d638-402c-b356-285c5458332c",
+      "key": "diameter",
+      "definition": ""
+    },
+    {
+      "value": "5.5",
+      "guid": "14f0a747-ec27-4617-8617-f66c98914013",
+      "key": "height side",
+      "definition": ""
+    },
+    {
+      "value": "1",
+      "guid": "65137c91-bce6-4108-8503-4250d64be24b",
+      "key": "height low",
+      "definition": ""
+    },
+    {
+      "value": "0.3",
+      "guid": "6664af82-814e-4ccc-8bbe-06ebc6f71d12",
+      "key": "wall thickness",
+      "definition": ""
+    },
+    {
+      "value": "123029",
+      "guid": "b91ab5d5-9bc1-4b51-891f-f92ab8ec87df",
+      "key": "construction cost",
+      "definition": ""
+    },
+    {
+      "value": "820",
+      "guid": "3934d664-cc31-4eab-b624-2829d7440f39",
+      "key": "maintenance expenses",
+      "definition": ""
+    },
+    {
+      "value": "8202",
+      "guid": "a42f7680-a649-4437-b250-f18ef1aa6043",
+      "key": "construction global warming potential",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    }
+  ],
+  "stock": 2147483647,
+  "name": "Cylindric Capital",
+  "guid": "cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
+  "image": "images/cylindric-capital.png",
+  "description": "A roof that has the skin of a cut extruded cylinder."
 }
