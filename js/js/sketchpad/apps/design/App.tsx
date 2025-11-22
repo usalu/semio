@@ -4923,8 +4923,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     if (isUpdatingViewportRef.current || !reactFlowInstanceRef.current) return;
     const viewport = reactFlowInstanceRef.current.getViewport();
     setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", { u: viewport.x / ICON_WIDTH, v: -viewport.y / ICON_WIDTH });
-    setDiagramScale("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", viewport.zoom);
-  }, [reactFlowInstanceRef, setDiagramCenter, setDiagramScale]);
+  }, [reactFlowInstanceRef, setDiagramCenter]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     console.log("onNodeClick fired", node.id, "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
@@ -6466,18 +6465,12 @@ const App: FC<AppProps> = () => {
     };
   }, [selection, addSection, removeSection, appType, t, design]);
 
-  const TypesWorkbenchContent: FC = () => {
-    const typesByName = (kit.types || []).reduce((acc: Record<string, Type[]>, type: Type) => {
-      if (!acc[type.name]) acc[type.name] = [];
-      acc[type.name].push(type);
-      return acc;
-    }, {});
-
-    const handleCreateChild = (parentType: Type) => {
-      const existingChildren = kit.types?.filter((t) => t.parent === parentType.guid) || [];
+  const PiecesWorkbenchContent: FC = () => {
+    const handleCreateTypeChild = (parentType: Type) => {
+      const existingChildren = kit.types?.filter((type) => type.parent === parentType.guid) || [];
       const uniqueName = generateUniqueName(
         parentType.name,
-        existingChildren.map((t) => t.name),
+        existingChildren.map((type) => type.name),
       );
       const newType: Type = {
         guid: guid(),
@@ -6490,12 +6483,29 @@ const App: FC<AppProps> = () => {
       navigateToType(kit.guid, newType.guid);
     };
 
+    const handleCreateDesignChild = (parentDesign: Design) => {
+      const existingChildren = kit.designs?.filter((design) => design.parent === parentDesign.guid) || [];
+      const uniqueName = generateUniqueName(
+        parentDesign.name,
+        existingChildren.map((design) => design.name),
+      );
+      const newDesign: Design = {
+        guid: guid(),
+        name: uniqueName,
+        parent: { guid: parentDesign.guid },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createChild", newDesign);
+      if (kit?.guid) navigateToDesign(kit.guid, newDesign.guid);
+    };
+
     const renderTypeTree = (types: Type[]): ReactNode[] => {
       return types.map((type) => {
-        const children = kit.types?.filter((t) => t.parent === type.guid) || [];
+        const children = kit.types?.filter((item) => item.parent === type.guid) || [];
         return (
           <div key={type.guid} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
-            <TypeTreeItem type={type} onCreateChild={handleCreateChild}>
+            <TypeTreeItem type={type} onCreateChild={handleCreateTypeChild}>
               {children.length > 0 && renderTypeTree(children)}
             </TypeTreeItem>
           </div>
@@ -6503,9 +6513,100 @@ const App: FC<AppProps> = () => {
       });
     };
 
-    const rootTypes = kit.types?.filter((t) => !t.parent) || [];
+    const renderDesignTree = (designs: Design[]): ReactNode[] => {
+      return designs.map((design) => {
+        const children = kit.designs?.filter((child) => child.parent === design.guid) || [];
+        return (
+          <div key={design.guid} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [design.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
+            <DesignTreeItem design={design} onCreateChild={handleCreateDesignChild}>
+              {children.length > 0 && renderDesignTree(children)}
+            </DesignTreeItem>
+          </div>
+        );
+      });
+    };
 
-    return <>{renderTypeTree(rootTypes)}</>;
+    const rootTypes = kit.types?.filter((type) => !type.parent) || [];
+    const rootDesigns = kit.designs?.filter((design) => !design.parent) || [];
+
+    const handleCreateType = () => {
+      const existingTypes = kit.types || [];
+      const typeNumber = existingTypes.length + 1;
+      const newType: Type = {
+        guid: guid(),
+        name: `Type ${typeNumber}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.create", newType);
+      if (kit?.guid) navigateToType(kit.guid, newType.guid);
+    };
+
+    const handleCreateDesign = () => {
+      const existingDesigns = kit.designs || [];
+      const designNumber = existingDesigns.length + 1;
+      const newDesign: Design = {
+        guid: guid(),
+        name: `Design ${designNumber}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.create", newDesign);
+      if (kit?.guid) navigateToDesign(kit.guid, newDesign.guid);
+    };
+
+    return (
+      <>
+        <div onPointerEnter={() => {
+          if (!kit.types || kit.types.length === 0) return;
+          hoverTypes(
+            "semio.sketchpad.app.design.panel.workbench.typesSection.hover",
+            kit.types.map((type) => type.guid),
+          );
+        }} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.typesSection.leave")}>
+          <TreeItem
+            id="semio.sketchpad.app.kit.types"
+            actions={[
+              {
+                id: "semio.sketchpad.common.addType",
+                icon: <AddIcon size={12} />,
+                onClick: handleCreateType,
+              },
+            ]}
+            onDoubleClick={() => {
+              if (!kit?.guid) return;
+              navigateToKit(kit.guid, "kind=types");
+            }}
+          >
+            {renderTypeTree(rootTypes)}
+          </TreeItem>
+        </div>
+        <div onPointerEnter={() => {
+          if (!kit.designs || kit.designs.length === 0) return;
+          hoverDesigns(
+            "semio.sketchpad.app.design.panel.workbench.designsSection.hover",
+            kit.designs.map((design) => design.guid),
+          );
+        }} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designsSection.leave")}>
+          <TreeItem
+            id="semio.sketchpad.app.kit.designs"
+            actions={[
+              {
+                id: "semio.sketchpad.common.addDesign",
+                icon: <AddIcon size={12} />,
+                onClick: handleCreateDesign,
+              },
+            ]}
+            onDoubleClick={() => {
+              if (!kit?.guid) return;
+              navigateToKit(kit.guid, "kind=designs");
+            }}
+          >
+            {renderDesignTree(rootDesigns)}
+          </TreeItem>
+        </div>
+      </>
+    );
   };
 
   const TypeTreeItem: FC<{ type: Type; onCreateChild: (type: Type) => void; children?: ReactNode }> = ({ type, onCreateChild, children }) => {
@@ -6561,42 +6662,6 @@ const App: FC<AppProps> = () => {
         {children}
       </TreeItem>
     );
-  };
-
-  const DesignsWorkbenchContent: FC = () => {
-    const handleCreateChild = (parentDesign: Design) => {
-      const existingChildren = kit.designs?.filter((d) => d.parent === parentDesign.guid) || [];
-      const uniqueName = generateUniqueName(
-        parentDesign.name,
-        existingChildren.map((d) => d.name),
-      );
-      const newDesign: Design = {
-        guid: guid(),
-        name: uniqueName,
-        parent: { guid: parentDesign.guid },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createChild", newDesign);
-      if (kit?.guid) navigateToDesign(kit.guid, newDesign.guid);
-    };
-
-    const renderDesignTree = (designs: Design[]): ReactNode[] => {
-      return designs.map((d) => {
-        const children = kit.designs?.filter((child) => child.parent === d.guid) || [];
-        return (
-          <div key={d.guid} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [d.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
-            <DesignTreeItem design={d} onCreateChild={handleCreateChild}>
-              {children.length > 0 && renderDesignTree(children)}
-            </DesignTreeItem>
-          </div>
-        );
-      });
-    };
-
-    const rootDesigns = kit.designs?.filter((d) => !d.parent) || [];
-
-    return <>{renderDesignTree(rootDesigns)}</>;
   };
 
   const DesignTreeItem: FC<{ design: Design; onCreateChild: (design: Design) => void; children?: ReactNode }> = ({ design, onCreateChild, children }) => {
@@ -6672,94 +6737,23 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     if (appType !== "design") return;
-    const handleCreateType = () => {
-      const existingTypes = kit.types || [];
-      const typeNumber = existingTypes.length + 1;
-      const newType: Type = {
-        guid: guid(),
-        name: `Type ${typeNumber}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.create", newType);
-      if (kit?.guid) navigateToType(kit.guid, newType.guid);
-    };
-
-    const handleCreateDesign = () => {
-      const existingDesigns = kit.designs || [];
-      const designNumber = existingDesigns.length + 1;
-      const newDesign: Design = {
-        guid: guid(),
-        name: `Design ${designNumber}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.create", newDesign);
-      if (kit?.guid) navigateToDesign(kit.guid, newDesign.guid);
-    };
 
     addSection("workbench", {
-      id: "semio.sketchpad.app.kit.types",
+      id: "semio.sketchpad.app.kit.pieces",
       specificity: 20,
       order: 0,
-      content: () => <TypesWorkbenchContent />,
-      actions: [
-        {
-          id: "semio.sketchpad.common.addType",
-          icon: <AddIcon size={12} />,
-          onClick: handleCreateType,
-        },
-      ],
-      onPointerEnter: () => {
-        if (!kit.types || kit.types.length === 0) return;
-        hoverTypes(
-          "semio.sketchpad.app.design.panel.workbench.typesSection.hover",
-          kit.types.map((type) => type.guid),
-        );
-      },
-      onPointerLeave: () => clearHover("semio.sketchpad.app.design.panel.workbench.typesSection.leave"),
-      onDoubleClick: () => {
-        if (!kit?.guid) return;
-        navigateToKit(kit.guid, "kind=types");
-      },
-    });
-
-    addSection("workbench", {
-      id: "semio.sketchpad.app.kit.designs",
-      specificity: 20,
-      order: 1,
-      content: () => <DesignsWorkbenchContent />,
-      actions: [
-        {
-          id: "semio.sketchpad.common.addDesign",
-          icon: <AddIcon size={12} />,
-          onClick: handleCreateDesign,
-        },
-      ],
-      onPointerEnter: () => {
-        if (!kit.designs || kit.designs.length === 0) return;
-        hoverDesigns(
-          "semio.sketchpad.app.design.panel.workbench.designsSection.hover",
-          kit.designs.map((design) => design.guid),
-        );
-      },
-      onPointerLeave: () => clearHover("semio.sketchpad.app.design.panel.workbench.designsSection.leave"),
-      onDoubleClick: () => {
-        if (!kit?.guid) return;
-        navigateToKit(kit.guid, "kind=designs");
-      },
+      content: () => <PiecesWorkbenchContent />,
     });
 
     addSection("workbench", {
       id: "semio.sketchpad.app.design.windows",
       specificity: 20,
-      order: 2,
+      order: 1,
       content: () => <WindowLibrary />,
     });
 
     return () => {
-      removeSection("workbench", "semio.sketchpad.app.kit.types");
-      removeSection("workbench", "semio.sketchpad.app.kit.designs");
+      removeSection("workbench", "semio.sketchpad.app.kit.pieces");
       removeSection("workbench", "semio.sketchpad.app.design.windows");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

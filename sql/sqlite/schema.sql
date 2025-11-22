@@ -195,6 +195,10 @@ CREATE TABLE design (
 	unit VARCHAR(64),
 	location_guid VARCHAR(36),
 	active_layer_guid VARCHAR(36),
+	is_abstract BOOLEAN,
+	folder VARCHAR(256),
+	can_scale BOOLEAN,
+	can_mirror BOOLEAN,
 	description TEXT,
 	icon TEXT,
 	image TEXT,
@@ -205,6 +209,25 @@ CREATE TABLE design (
 	UNIQUE (guid, kit_guid, parent_guid),
 	FOREIGN KEY(parent_guid) REFERENCES design (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE design_prop (
+	design_guid VARCHAR(36) NOT NULL,
+	quality_guid VARCHAR(36) NOT NULL,
+	value FLOAT NOT NULL,
+	unit VARCHAR(64),
+	PRIMARY KEY (design_guid, quality_guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid),
+	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
+);
+
+CREATE TABLE design_author (
+	design_guid VARCHAR(36) NOT NULL,
+	author_guid VARCHAR(36) NOT NULL,
+	rank INTEGER NOT NULL,
+	PRIMARY KEY (design_guid, author_guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid),
+	FOREIGN KEY(author_guid) REFERENCES author (guid)
 );
 
 CREATE TABLE layer (
@@ -313,7 +336,9 @@ CREATE TABLE stat (
 	guid VARCHAR(36) NOT NULL,
 	quality_guid VARCHAR(36) NOT NULL,
 	min_value FLOAT,
+	min_excluded BOOLEAN,
 	max_value FLOAT,
+	max_excluded BOOLEAN,
 	unit VARCHAR(64),
 	design_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),

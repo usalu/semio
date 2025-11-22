@@ -1,97 +1,97 @@
 {
-  "updatedAt": "2025-11-22T00:54:03.277Z",
+  "updatedAt": "2025-11-22T15:00:04.082Z",
   "icon": "icons/capsule-with-balcony_s.svg",
   "parent": "Balcony",
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:54:03.277Z",
+  "createdAt": "2025-11-22T15:00:04.082Z",
   "authors": [
     {
-      "guid": "673011c0-cbeb-422e-a72c-945da197f2f2"
+      "guid": "f1bd394b-ea43-4833-b12c-c18a88ef283a"
     }
   ],
   "attributes": [
     {
       "value": "side",
-      "guid": "533a9edc-4d39-4cee-8379-1cd4128472ef",
+      "guid": "e76e038f-426b-4e2b-b3ae-d96b2938b6b1",
       "key": "entrance",
       "definition": ""
     },
     {
       "value": "side",
-      "guid": "caa5cb75-9975-48af-96a5-97f22ee9d8ce",
+      "guid": "140c8015-104a-442d-8282-79b0e3426712",
       "key": "view",
       "definition": ""
     },
     {
       "value": "4.2",
-      "guid": "333a6086-646d-4399-9e65-d709c87414fd",
+      "guid": "74e0f86f-3d48-4bcd-8dfc-e47cab2c57b3",
       "key": "length",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
       "value": "4.1",
-      "guid": "70de6b6b-9cae-40aa-84b3-9b18d76b9ff7",
+      "guid": "2bdfe9ef-7b0d-4336-a274-81ec3d77a985",
       "key": "width",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
       "value": "2.5",
-      "guid": "b9c5e51a-3216-4ab9-a5c7-013fbe17918f",
+      "guid": "654e8186-a437-492f-afa6-62d8d16cb1fb",
       "key": "heigth",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
       "value": "round",
-      "guid": "b809a4af-24ac-4238-901b-3a9c0310140b",
+      "guid": "10289ea3-e5f7-4a8f-9fe8-87be457a8b7e",
       "key": "window shape",
       "definition": ""
     },
     {
       "value": "11.21",
-      "guid": "c33376ef-8dc1-4454-82b8-b17b7137bcf5",
+      "guid": "32b25718-1e6e-446d-adc6-d1e789265e6d",
       "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
       "value": "82992",
-      "guid": "a4f9f157-1265-4472-91b6-299581402d95",
+      "guid": "7cb25d63-5b1f-4151-92ef-cb3dd46858ae",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "393",
-      "guid": "2f543755-770a-458e-a929-83feb6b06379",
+      "guid": "bfd4a673-6ed2-49dd-b363-28a2235f5d60",
       "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "262",
-      "guid": "3aea0966-5dd7-4072-ada8-c32e0c6e4b0b",
+      "guid": "ee2efdd2-0973-4fab-8002-614eaad02570",
       "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "262",
-      "guid": "aea9ddd6-3647-4efa-8c1e-94b97b70650e",
+      "guid": "9b8a5bb4-d751-4d03-ba3e-721c06d68cfe",
       "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "13104",
-      "guid": "01346b95-27a6-427b-9743-d22e884c16ab",
+      "guid": "b401c60d-d2c6-4b91-a0e5-56c29263a6be",
       "key": "income",
       "definition": ""
     },
     {
       "value": "1048",
-      "guid": "e73a274b-6805-4a26-b4be-e18a2c19353b",
+      "guid": "83e89378-85fb-4a0a-bfea-965c0cde442a",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "8736.01",
-      "guid": "6112b781-5b77-4ca1-a007-4ae609b31f41",
+      "guid": "0f75a374-7423-48fa-becd-2a2b5f27f5f2",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     }
@@ -99,11 +99,11 @@
   "stock": 2147483647,
   "ports": [
     {
-      "guid": "bc8c1989-6c11-46c8-8983-2c2a407a74d3",
+      "guid": "b7155189-218b-4616-925f-fe6ddd28c129",
       "attributes": [
         {
           "value": "",
-          "guid": "884d7d5e-94b3-4181-b0de-a62296a40b6c",
+          "guid": "47ab3b1c-ca33-4674-bab0-2d9d8f5a88c6",
           "key": "entrance",
           "definition": ""
         }

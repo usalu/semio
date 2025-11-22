@@ -482,12 +482,8 @@ function Migrate-Piece {
             $mapKey = "$typeName|$typeVariant"
             if ($typeNameToGuidMap.ContainsKey($mapKey)) {
                 $migrated.type = @{ guid = $typeNameToGuidMap[$mapKey] }
-                Write-Host "[DEBUG-PIECE] Assigned type: $($migrated.type | ConvertTo-Json -Compress)" -ForegroundColor Green
             } elseif ($typeNameToGuidMap.ContainsKey($typeName)) {
                 $migrated.type = @{ guid = $typeNameToGuidMap[$typeName] }
-                Write-Host "[DEBUG-PIECE] Assigned type (fallback): $($migrated.type | ConvertTo-Json -Compress)" -ForegroundColor Green
-            } else {
-                Write-Host "[DEBUG-PIECE] Type NOT FOUND: $mapKey" -ForegroundColor Red
             }
         }
     }
@@ -575,6 +571,44 @@ function Migrate-Pieces {
     return @($pieces | ForEach-Object { Migrate-Piece $_ $typeNameToGuidMap $designNameToGuidMap $pieceNameToGuidMap })
 }
 
+function Find-PortOnType {
+    param($type, $portId, $kitTypes)
+    
+    if ($null -eq $type) { return $null }
+    
+    $visited = @{}
+    $currentType = $type
+    
+    while ($null -ne $currentType -and -not $visited.ContainsKey($currentType.guid)) {
+        $visited[$currentType.guid] = $true
+        
+        if ($null -ne $currentType.ports -and $currentType.ports.Count -gt 0) {
+            if ([string]::IsNullOrEmpty($portId)) {
+                return $currentType.ports[0]
+            }
+            
+            $port = $currentType.ports | Where-Object { 
+                ($_.PSObject.Properties.Name -contains 'name' -and $_.name -eq $portId) -or
+                ($_.PSObject.Properties.Name -contains 'id_' -and $_.id_ -eq $portId) -or
+                ($_.PSObject.Properties.Name -contains 'id' -and $_.id -eq $portId)
+            } | Select-Object -First 1
+            
+            if ($null -ne $port) {
+                return $port
+            }
+        }
+        
+        if ($null -ne $currentType.parent) {
+            $parentGuid = if ($currentType.parent -is [string]) { $currentType.parent } else { $currentType.parent.guid }
+            $currentType = $kitTypes | Where-Object { $_.guid -eq $parentGuid } | Select-Object -First 1
+        } else {
+            $currentType = $null
+        }
+    }
+    
+    return $null
+}
+
 function Migrate-Connection {
     param($conn, $pieceIdToGuidMap, $portIdToGuidMap, $pieces = $null, $kitTypes = $null)
     
@@ -617,56 +651,37 @@ function Migrate-Connection {
                     }
                 }
             }
+            $portId = $null
+            $portAlreadySet = $false
             if ($conn.connected.PSObject.Properties.Name -contains 'port' -and $null -ne $conn.connected.port) {
-                $portId = $null
                 if ($conn.connected.port -is [string]) {
                     $portId = $conn.connected.port
                 } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'guid') {
-                    # Already has GUID, use it
                     $connectedSide.port = @{ guid = $conn.connected.port.guid }
-                    $portId = $null
+                    $portAlreadySet = $true
                 } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id_') {
                     $portId = $conn.connected.port.id_
                 } elseif ($conn.connected.port.PSObject.Properties.Name -contains 'id') {
                     $portId = $conn.connected.port.id
                 }
-                if ($null -ne $portId) {
-                    # Look up port GUID on the piece's type (with parent type recursion)
-                    if ($null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectedSide.piece) {
-                        $pieceGuid = $connectedSide.piece.guid
-                        $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
-                        if ($null -ne $piece -and $null -ne $piece.type) {
-                            $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
-                            $port = $null
-                            $visited = @{}
-                            while ($null -ne $currentType -and $null -eq $port -and -not $visited.ContainsKey($currentType.guid)) {
-                                $visited[$currentType.guid] = $true
-                                if ($null -ne $currentType.ports) {
-                                    $port = $currentType.ports | Where-Object { 
-                                        ($_.PSObject.Properties.Name -contains 'name' -and $_.name -eq $portId) -or
-                                        ($_.PSObject.Properties.Name -contains 'id_' -and $_.id_ -eq $portId) -or
-                                        ($_.PSObject.Properties.Name -contains 'id' -and $_.id -eq $portId)
-                                    } | Select-Object -First 1
-                                }
-                                if ($null -eq $port -and $null -ne $currentType.parent) {
-                                    $parentGuid = if ($currentType.parent -is [string]) { $currentType.parent } else { $currentType.parent.guid }
-                                    $currentType = $kitTypes | Where-Object { $_.guid -eq $parentGuid } | Select-Object -First 1
-                                } else {
-                                    break
-                                }
-                            }
-                            if ($null -ne $port) {
-                                $connectedSide.port = @{ guid = $port.guid }
-                            } else {
-                                Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connected side, piece: $pieceGuid)"
-                            }
-                        }
-                    } elseif ($portIdToGuidMap.ContainsKey($portId)) {
-                        $connectedSide.port = @{ guid = $portIdToGuidMap[$portId] }
+            }
+            
+            if (-not $portAlreadySet -and $null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectedSide.piece) {
+                $pieceGuid = $connectedSide.piece.guid
+                $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
+                if ($null -ne $piece -and $null -ne $piece.type) {
+                    $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
+                    $port = Find-PortOnType $currentType $portId $kitTypes
+                    if ($null -ne $port) {
+                        $connectedSide.port = @{ guid = $port.guid }
                     } else {
-                        Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connected side)"
+                        Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connected side, piece: $pieceGuid)"
                     }
                 }
+            } elseif (-not $portAlreadySet -and $null -ne $portId -and $portIdToGuidMap.ContainsKey($portId)) {
+                $connectedSide.port = @{ guid = $portIdToGuidMap[$portId] }
+            } elseif (-not $portAlreadySet -and $null -ne $portId) {
+                Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connected side)"
             }
             if ($conn.connected.PSObject.Properties.Name -contains 'designPiece' -and $null -ne $conn.connected.designPiece) {
                 $designPieceId = $null
@@ -717,56 +732,37 @@ function Migrate-Connection {
                     }
                 }
             }
+            $portId = $null
+            $portAlreadySet = $false
             if ($conn.connecting.PSObject.Properties.Name -contains 'port' -and $null -ne $conn.connecting.port) {
-                $portId = $null
                 if ($conn.connecting.port -is [string]) {
                     $portId = $conn.connecting.port
                 } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'guid') {
-                    # Already has GUID, use it
                     $connectingSide.port = @{ guid = $conn.connecting.port.guid }
-                    $portId = $null
+                    $portAlreadySet = $true
                 } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id_') {
                     $portId = $conn.connecting.port.id_
                 } elseif ($conn.connecting.port.PSObject.Properties.Name -contains 'id') {
                     $portId = $conn.connecting.port.id
                 }
-                if ($null -ne $portId) {
-                    # Look up port GUID on the piece's type (with parent type recursion)
-                    if ($null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectingSide.piece) {
-                        $pieceGuid = $connectingSide.piece.guid
-                        $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
-                        if ($null -ne $piece -and $null -ne $piece.type) {
-                            $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
-                            $port = $null
-                            $visited = @{}
-                            while ($null -ne $currentType -and $null -eq $port -and -not $visited.ContainsKey($currentType.guid)) {
-                                $visited[$currentType.guid] = $true
-                                if ($null -ne $currentType.ports) {
-                                    $port = $currentType.ports | Where-Object { 
-                                        ($_.PSObject.Properties.Name -contains 'name' -and $_.name -eq $portId) -or
-                                        ($_.PSObject.Properties.Name -contains 'id_' -and $_.id_ -eq $portId) -or
-                                        ($_.PSObject.Properties.Name -contains 'id' -and $_.id -eq $portId)
-                                    } | Select-Object -First 1
-                                }
-                                if ($null -eq $port -and $null -ne $currentType.parent) {
-                                    $parentGuid = if ($currentType.parent -is [string]) { $currentType.parent } else { $currentType.parent.guid }
-                                    $currentType = $kitTypes | Where-Object { $_.guid -eq $parentGuid } | Select-Object -First 1
-                                } else {
-                                    break
-                                }
-                            }
-                            if ($null -ne $port) {
-                                $connectingSide.port = @{ guid = $port.guid }
-                            } else {
-                                Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connecting side, piece: $pieceGuid)"
-                            }
-                        }
-                    } elseif ($portIdToGuidMap.ContainsKey($portId)) {
-                        $connectingSide.port = @{ guid = $portIdToGuidMap[$portId] }
+            }
+            
+            if (-not $portAlreadySet -and $null -ne $pieces -and $null -ne $kitTypes -and $null -ne $connectingSide.piece) {
+                $pieceGuid = $connectingSide.piece.guid
+                $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
+                if ($null -ne $piece -and $null -ne $piece.type) {
+                    $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
+                    $port = Find-PortOnType $currentType $portId $kitTypes
+                    if ($null -ne $port) {
+                        $connectingSide.port = @{ guid = $port.guid }
                     } else {
-                        Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connecting side)"
+                        Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connecting side, piece: $pieceGuid)"
                     }
                 }
+            } elseif (-not $portAlreadySet -and $null -ne $portId -and $portIdToGuidMap.ContainsKey($portId)) {
+                $connectingSide.port = @{ guid = $portIdToGuidMap[$portId] }
+            } elseif (-not $portAlreadySet -and $null -ne $portId) {
+                Write-Warning "  [CONNECTION] Port ID '$portId' not found in map (connecting side)"
             }
             if ($conn.connecting.PSObject.Properties.Name -contains 'designPiece' -and $null -ne $conn.connecting.designPiece) {
                 $designPieceId = $null
@@ -1586,38 +1582,7 @@ function Migrate-JsonFile {
         }
         
         if ($null -ne $migrated) {
-            # Debug: Check if pieces have type before serialization
-            if ($migrated.PSObject.Properties.Name -contains 'pieces' -and $null -ne $migrated.pieces -and $migrated.pieces.Count -gt 0) {
-                $firstPiece = $migrated.pieces[0]
-                $pieceType = $firstPiece.GetType().FullName
-                Write-Host "[DEBUG-JSON] First piece type: $pieceType" -ForegroundColor Cyan
-                
-                # Check for type property (works for both hashtable and PSCustomObject)
-                $hasType = $false
-                if ($firstPiece -is [hashtable]) {
-                    $hasType = $firstPiece.ContainsKey('type')
-                    $propNames = $firstPiece.Keys -join ', '
-                } else {
-                    $hasType = $null -ne ($firstPiece.PSObject.Properties.Name -contains 'type')
-                    $propNames = $firstPiece.PSObject.Properties.Name -join ', '
-                }
-                
-                if ($hasType) {
-                    Write-Host "[DEBUG-JSON] First piece HAS type before serialization: $($firstPiece.type | ConvertTo-Json -Compress)" -ForegroundColor Green
-                } else {
-                    Write-Host "[DEBUG-JSON] First piece MISSING type before serialization! Properties: $propNames" -ForegroundColor Red
-                }
-            }
-            
-            # Ensure single-item arrays are preserved
             $json = $migrated | ConvertTo-Json -Depth 100 -Compress:$false -EscapeHandling EscapeNonAscii
-            
-            # Debug: Check if type exists in JSON string
-            if ($json -match '"type"') {
-                Write-Host "[DEBUG-JSON] Type field FOUND in JSON string" -ForegroundColor Green
-            } else {
-                Write-Host "[DEBUG-JSON] Type field MISSING from JSON string!" -ForegroundColor Red
-            }
             
             # Fix single-object arrays that PowerShell might have collapsed
             # This is a workaround for PowerShell's ConvertTo-Json behavior

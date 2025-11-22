@@ -1,103 +1,103 @@
 {
-  "updatedAt": "2025-11-22T00:54:02.747Z",
+  "updatedAt": "2025-11-22T15:00:03.478Z",
   "icon": "icons/capsule-with-balcony_p.svg",
   "parent": "Balcony",
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:54:02.747Z",
+  "createdAt": "2025-11-22T15:00:03.478Z",
   "authors": [
     {
-      "guid": "c55ddc6a-b831-4f06-8682-48bfff0ab094"
+      "guid": "94c7aafc-7b0d-4716-96b8-a0078e75b9a1"
     }
   ],
   "attributes": [
     {
       "value": "back",
-      "guid": "009a4899-dbaf-4095-b711-5307631bc0b4",
+      "guid": "4c6bf0e2-2bc6-4389-902c-014ab5c47b2b",
       "key": "entrance",
       "definition": ""
     },
     {
       "value": "side",
-      "guid": "8ce1ce92-9df2-4b71-9b3d-f0112bc3fe2e",
+      "guid": "9138ac83-a3d5-4567-95f1-e8001ed98264",
       "key": "view",
       "definition": ""
     },
     {
       "value": "4.2",
-      "guid": "e25befbd-04a9-4e39-a25e-ea4451159fd4",
+      "guid": "0aa70d26-316d-4f0c-bdf8-62e5346511cf",
       "key": "length",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
       "value": "4.1",
-      "guid": "a2f6dac1-5461-463f-81b4-7d50917e2bc5",
+      "guid": "a8c0be8d-ce70-43b1-8126-1f4350d5cf45",
       "key": "width",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
       "value": "2.5",
-      "guid": "7fe022b5-0efa-41c9-8041-46750f13b690",
+      "guid": "121494ab-4971-47bd-bb30-2e21cadfa158",
       "key": "heigth",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
       "value": "round",
-      "guid": "09587560-3179-415e-8a38-210e830dc1d8",
+      "guid": "4630b714-5150-4ae5-963c-77677fd95a39",
       "key": "window shape",
       "definition": ""
     },
     {
       "value": "11.21",
-      "guid": "1a3e248c-58e1-483a-a339-9cce12158300",
+      "guid": "340d8291-477c-44fd-ae5e-086996067de3",
       "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
       "value": "82992",
-      "guid": "602dd3de-f934-45d5-bbb0-74ed30d2d9b0",
+      "guid": "8a889640-1c22-4eb8-86c3-0c86422f5b36",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "393",
-      "guid": "e5b2e88c-1438-42d2-b85c-d795a9327098",
+      "guid": "a5480f03-fe79-41bc-a07f-1575c7c02190",
       "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "262",
-      "guid": "a0201992-df34-44bf-a424-4bbbd053c167",
+      "guid": "bd37f8f4-fc8f-4d90-a734-6d12599c7025",
       "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "262",
-      "guid": "9f2ebbf4-2c06-40cd-8d64-f21b4b3019d6",
+      "guid": "1e9c0994-26e1-406e-833e-ba6a4f536d30",
       "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "13104",
-      "guid": "d102e149-ed03-44ec-a811-d354d347029a",
+      "guid": "b5910090-587c-41f0-bee3-76776e91c63d",
       "key": "income",
       "definition": ""
     },
     {
       "value": "1048",
-      "guid": "5327c2e0-77ee-4d37-9a85-44b970304ff7",
+      "guid": "171a7d21-7dc9-4150-8002-f379e0f6b54b",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "8736.01",
-      "guid": "2860bbe6-84c1-494e-b4e7-2ac238609dc1",
+      "guid": "ff645e66-590c-47f8-9951-c4f3e45015c6",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     },
     {
       "value": "",
-      "guid": "996acabc-4d0e-4793-9c6f-7c39e8a76a17",
+      "guid": "733c9689-ac6a-4345-92fb-457a885fc733",
       "key": "mirrored",
       "definition": ""
     }
@@ -105,11 +105,11 @@
   "stock": 2147483647,
   "ports": [
     {
-      "guid": "76341b58-3e72-4889-a672-afa40977b4c4",
+      "guid": "f4d3fe3e-7f21-46ac-b4fc-99d83efd9dc6",
       "attributes": [
         {
           "value": "",
-          "guid": "261f6497-546c-4a85-8402-ba9cab168d76",
+          "guid": "aa12c46a-b2a3-4b18-8ed9-92691f1b7ac2",
           "key": "entrance",
           "definition": ""
         }

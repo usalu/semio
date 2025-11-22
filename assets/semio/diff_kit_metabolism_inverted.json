@@ -1,7 +1,28 @@
 {
   "name": "Metabolism",
+  "version": "r25.07-1",
+  "description": "Everything for metabolistic architecture.",
+  "icon": "icons/metabolism.svg",
+  "image": "images/metabolism.png",
+  "homepage": "https://github.com/usalu/metabolism/tree/r25.07-1",
+  "license": "",
+  "authors": {
+    "removed": [
+      "la5128j2-ajns-ea3k-cnf9-vgg61czkcpiv"
+    ],
+    "updated": [
+      {
+        "id": "361479ba-77e5-4610-a1c5-de23422de443",
+        "diff": {
+          "email": "ueli@semio-tech.org"
+        }
+      }
+    ]
+  },
   "attributes": {
-    "removed": [],
+    "removed": [
+      "test.added"
+    ],
     "updated": [],
     "added": []
   }

@@ -167,7 +167,6 @@ export type TypeId = { guid: Guid };
 export type LayerId = { guid: Guid };
 export type PieceId = { guid: Guid };
 export type GroupId = { guid: Guid };
-export type SideId = { guid: Guid };
 export type ConnectionId = { guid: Guid };
 export type StatId = { guid: Guid };
 export type DesignId = { guid: Guid };
@@ -188,7 +187,6 @@ export const TypeIdSchema = z.object({ guid: z.string() });
 export const LayerIdSchema = z.object({ guid: z.string() });
 export const PieceIdSchema = z.object({ guid: z.string() });
 export const GroupIdSchema = z.object({ guid: z.string() });
-export const SideIdSchema = z.object({ guid: z.string() });
 export const ConnectionIdSchema = z.object({ guid: z.string() });
 export const StatIdSchema = z.object({ guid: z.string() });
 export const DesignIdSchema = z.object({ guid: z.string() });
@@ -209,7 +207,6 @@ export const createTypeId = (guid: Guid): TypeId => ({ guid });
 export const createLayerId = (guid: Guid): LayerId => ({ guid });
 export const createPieceId = (guid: Guid): PieceId => ({ guid });
 export const createGroupId = (guid: Guid): GroupId => ({ guid });
-export const createSideId = (guid: Guid): SideId => ({ guid });
 export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
 export const createStatId = (guid: Guid): StatId => ({ guid });
 export const createDesignId = (guid: Guid): DesignId => ({ guid });
@@ -230,7 +227,6 @@ export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.gui
 export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
 export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
 export const areSameGroupId = (a: GroupId, b: GroupId): boolean => a.guid === b.guid;
-export const areSameSideId = (a: SideId, b: SideId): boolean => a.guid === b.guid;
 export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean => a.guid === b.guid;
 export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.guid;
 export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
@@ -251,7 +247,6 @@ export const getTypeGuid = (id: TypeId): Guid => id.guid;
 export const getLayerGuid = (id: LayerId): Guid => id.guid;
 export const getPieceGuid = (id: PieceId): Guid => id.guid;
 export const getGroupGuid = (id: GroupId): Guid => id.guid;
-export const getSideGuid = (id: SideId): Guid => id.guid;
 export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
 export const getStatGuid = (id: StatId): Guid => id.guid;
 export const getDesignGuid = (id: DesignId): Guid => id.guid;
@@ -315,7 +310,11 @@ const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesD
   const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
   const added = after.filter((a) => !beforeKeys.includes(a.key));
   const updated = after.filter((a) => beforeKeys.includes(a.key)).map((a) => ({ id: a.key, diff: getAttributeDiff(before.find((b) => b.key === a.key)!, a) }));
-  return { removed, updated, added };
+  const diff: AttributesDiff = {};
+  if (removed.length > 0) diff.removed = removed;
+  if (updated.length > 0) diff.updated = updated;
+  if (added.length > 0) diff.added = added;
+  return diff;
 };
 
 export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
@@ -1039,7 +1038,11 @@ const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksD
       return { id: afterBenchmark.name, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
-  return { removed, added, updated };
+  const diff: BenchmarksDiff = {};
+  if (removed.length > 0) diff.removed = removed;
+  if (updated.length > 0) diff.updated = updated;
+  if (added.length > 0) diff.added = added;
+  return diff;
 };
 
 const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
@@ -1409,7 +1412,11 @@ const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
       return { id: afterProp.quality.guid, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
-  return { removed, added, updated };
+  const diff: PropsDiff = {};
+  if (removed.length > 0) diff.removed = removed;
+  if (updated.length > 0) diff.updated = updated;
+  if (added.length > 0) diff.added = added;
+  return diff;
 };
 
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
@@ -1654,7 +1661,11 @@ const getPortsDiff = (before: Port[], after: Port[]): { removed?: string[]; upda
       return { id: afterPort.guid, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
-  return { removed, added, updated };
+  const diff: { removed?: string[]; updated?: { id: string; diff: PortDiff }[]; added?: Port[] } = {};
+  if (removed.length > 0) diff.removed = removed;
+  if (updated.length > 0) diff.updated = updated;
+  if (added.length > 0) diff.added = added;
+  return diff;
 };
 
 // FIXME: Disabled - uses old Port schema where interface was string and compatibleInterfaces existed on Port
@@ -2154,7 +2165,6 @@ export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.
 // https://github.com/usalu/semio#-side-
 
 export const SideSchema = z.object({
-  guid: z.string(),
   piece: PieceIdSchema,
   designPiece: PieceIdSchema.optional(),
   port: PortIdSchema,
@@ -2163,8 +2173,8 @@ export type Side = z.infer<typeof SideSchema>;
 export const SideDiffSchema = SideSchema.partial();
 export type SideDiff = z.infer<typeof SideDiffSchema>;
 export const SidesDiffSchema = z.object({
-  removed: z.array(z.object({ piece: z.string(), designPiece: z.string().optional() })).optional(),
-  updated: z.array(z.object({ id: z.object({ piece: z.string(), designPiece: z.string().optional() }), diff: SideDiffSchema })).optional(),
+  removed: z.array(z.object({ piece: z.string(), designPiece: z.string().optional(), port: z.string() })).optional(),
+  updated: z.array(z.object({ id: z.object({ piece: z.string(), designPiece: z.string().optional(), port: z.string() }), diff: SideDiffSchema })).optional(),
   added: z.array(SideSchema).optional(),
 });
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
@@ -2193,6 +2203,7 @@ export const applySideDiff = (base: Side, diff: SideDiff): Side => {
 };
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
+export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.port.guid === b.port.guid;
 
 // #endregion Side
 
@@ -4022,32 +4033,39 @@ export interface KitImportResult {
 }
 
 /**
- * Import a kit from a URL (remote HTTP/HTTPS or local file://)
+ * Import a kit from a URL (remote HTTP/HTTPS) or ArrayBuffer/Buffer
  * Fetches the archive, extracts it, reads the SQLite database, and returns the kit and files.
  */
-export const importKit = async (url: string): Promise<KitImportResult> => {
+export const importKit = async (source: string | ArrayBuffer | Buffer): Promise<KitImportResult> => {
   const JSZip = (await import("jszip")).default;
   const initSqlJs = (await import("sql.js")).default;
-  
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch kit from ${url}: ${response.statusText}`);
+
+  let arrayBuffer: ArrayBuffer;
+  if (typeof source === "string") {
+    const response = await fetch(source);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch kit from ${source}: ${response.statusText}`);
+    }
+    arrayBuffer = await response.arrayBuffer();
+  } else if (source instanceof Buffer) {
+    arrayBuffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength) as ArrayBuffer;
+  } else {
+    arrayBuffer = source as ArrayBuffer;
   }
-  
-  const arrayBuffer = await response.arrayBuffer();
+
   const zip = await JSZip.loadAsync(arrayBuffer);
-  
+
   const dbFile = zip.file(".semio/kit.db");
   if (!dbFile) {
     throw new Error("Invalid kit archive: missing .semio/kit.db");
   }
-  
+
   const dbArrayBuffer = await dbFile.async("arraybuffer");
   const SQL = await initSqlJs();
   const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
-  
+
   const kit = await sqliteToKit(db);
-  
+
   const files = new Map<string, Blob>();
   for (const [path, zipEntry] of Object.entries(zip.files)) {
     if (!zipEntry.dir && !path.startsWith(".semio/")) {
@@ -4055,9 +4073,9 @@ export const importKit = async (url: string): Promise<KitImportResult> => {
       files.set(path, blob);
     }
   }
-  
+
   db.close();
-  
+
   return { kit, files };
 };
 
@@ -4069,27 +4087,27 @@ export const importKit = async (url: string): Promise<KitImportResult> => {
 export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blob> => {
   const JSZip = (await import("jszip")).default;
   const initSqlJs = (await import("sql.js")).default;
-  
+
   const SQL = await initSqlJs();
   const db = new SQL.Database();
-  
+
   await kitToSqlite(kit, db);
-  
+
   const dbData = db.export();
   db.close();
-  
+
   const zip = new JSZip();
   zip.file(".semio/kit.db", dbData);
-  
+
   // Add provided files
   for (const [path, blob] of files.entries()) {
     zip.file(path, blob);
   }
-  
+
   // If this is the Metabolism kit, add all files from examples/metabolism (excluding .semio)
   // Note: This requires the files to be provided in the files Map parameter
   // In the future, this could be enhanced to fetch files from a known location
-  
+
   return await zip.generateAsync({ type: "blob" });
 };
 
@@ -4103,7 +4121,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     return [arr as T];
   };
   const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined) ? undefined : value;
-  
+
   const areAttributesEqual = (a?: Attribute[], b?: Attribute[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4117,7 +4135,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const arePortsEqual = (a?: Port[], b?: Port[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4138,7 +4156,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areModelsEqual = (a?: Model[], b?: Model[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4153,7 +4171,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areTypesEqual = (a?: Type[], b?: Type[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4177,7 +4195,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const arePiecesEqual = (a?: Piece[], b?: Piece[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4201,11 +4219,35 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       } else if (pieceA.plane || pieceB.plane) {
         return false;
       }
+      if (pieceA.center && pieceB.center) {
+        if (pieceA.center.u !== pieceB.center.u) return false;
+        if (pieceA.center.v !== pieceB.center.v) return false;
+      } else if (pieceA.center || pieceB.center) {
+        return false;
+      }
+      if (pieceA.scale !== pieceB.scale) return false;
+      if (pieceA.mirrorPlane && pieceB.mirrorPlane) {
+        if (pieceA.mirrorPlane.origin.x !== pieceB.mirrorPlane.origin.x) return false;
+        if (pieceA.mirrorPlane.origin.y !== pieceB.mirrorPlane.origin.y) return false;
+        if (pieceA.mirrorPlane.origin.z !== pieceB.mirrorPlane.origin.z) return false;
+        if (pieceA.mirrorPlane.xAxis.x !== pieceB.mirrorPlane.xAxis.x) return false;
+        if (pieceA.mirrorPlane.xAxis.y !== pieceB.mirrorPlane.xAxis.y) return false;
+        if (pieceA.mirrorPlane.xAxis.z !== pieceB.mirrorPlane.xAxis.z) return false;
+        if (pieceA.mirrorPlane.yAxis.x !== pieceB.mirrorPlane.yAxis.x) return false;
+        if (pieceA.mirrorPlane.yAxis.y !== pieceB.mirrorPlane.yAxis.y) return false;
+        if (pieceA.mirrorPlane.yAxis.z !== pieceB.mirrorPlane.yAxis.z) return false;
+      } else if (pieceA.mirrorPlane || pieceB.mirrorPlane) {
+        return false;
+      }
+      if (pieceA.isHidden !== pieceB.isHidden) return false;
+      if (pieceA.isLocked !== pieceB.isLocked) return false;
+      if (normalizeValue(pieceA.color) !== normalizeValue(pieceB.color)) return false;
+      if (normalizeValue(pieceA.description) !== normalizeValue(pieceB.description)) return false;
       if (!areAttributesEqual(pieceA.attributes, pieceB.attributes)) return false;
     }
     return true;
   };
-  
+
   const areConnectionsEqual = (a?: Connection[], b?: Connection[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4214,8 +4256,10 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       const connB = arrB.find(x => x.guid === connA.guid);
       if (!connB) return false;
       if (connA.connected.piece.guid !== connB.connected.piece.guid) return false;
+      if (connA.connected.designPiece?.guid !== connB.connected.designPiece?.guid) return false;
       if (connA.connected.port.guid !== connB.connected.port.guid) return false;
       if (connA.connecting.piece.guid !== connB.connecting.piece.guid) return false;
+      if (connA.connecting.designPiece?.guid !== connB.connecting.designPiece?.guid) return false;
       if (connA.connecting.port.guid !== connB.connecting.port.guid) return false;
       if (connA.gap !== connB.gap) return false;
       if (connA.shift !== connB.shift) return false;
@@ -4223,11 +4267,14 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (connA.rotation !== connB.rotation) return false;
       if (connA.turn !== connB.turn) return false;
       if (connA.tilt !== connB.tilt) return false;
+      if (connA.x !== connB.x) return false;
+      if (connA.y !== connB.y) return false;
+      if (normalizeValue(connA.description) !== normalizeValue(connB.description)) return false;
       if (!areAttributesEqual(connA.attributes, connB.attributes)) return false;
     }
     return true;
   };
-  
+
   const areDesignsEqual = (a?: Design[], b?: Design[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4251,7 +4298,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areInterfacesEqual = (a?: Interface[], b?: Interface[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4265,7 +4312,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areQualitiesEqual = (a?: Quality[], b?: Quality[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4279,7 +4326,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areFilesEqual = (a?: File[], b?: File[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4291,7 +4338,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areFoldersEqual = (a?: Folder[], b?: Folder[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4304,7 +4351,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   const areAuthorsEqual = (a?: Author[], b?: Author[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -4318,7 +4365,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     }
     return true;
   };
-  
+
   // Top-level kit properties
   if (a.guid !== b.guid) return false;
   if (a.name !== b.name) return false;
@@ -4330,7 +4377,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   if (normalizeValue(a.remote) !== normalizeValue(b.remote)) return false;
   if (normalizeValue(a.homepage) !== normalizeValue(b.homepage)) return false;
   if (normalizeValue(a.license) !== normalizeValue(b.license)) return false;
-  
+
   if (!arraysEqual(normalizeArray(a.concepts), normalizeArray(b.concepts))) return false;
   if (!areTypesEqual(a.types, b.types)) return false;
   if (!areDesignsEqual(a.designs, b.designs)) return false;
@@ -4340,7 +4387,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   if (!areFoldersEqual(a.folders, b.folders)) return false;
   if (!areAuthorsEqual(a.authors, b.authors)) return false;
   if (!areAttributesEqual(a.attributes, b.attributes)) return false;
-  
+
   return true;
 };
 
@@ -4361,17 +4408,17 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     stmt.free();
     return result;
   };
-  
+
   const kitRows = execResult("SELECT * FROM kit LIMIT 1");
   if (kitRows.length === 0) {
     throw new Error("No kit found in database");
   }
   const kitRow = kitRows[0];
-  
+
   const toUndefined = (value: any): any => (value === null || value === "") ? undefined : value;
   const mapOrUndefined = <T, R>(arr: T[], mapper: (item: T) => R): R[] | undefined =>
     arr.length > 0 ? arr.map(mapper) : undefined;
-  
+
   const kit: Kit = {
     guid: kitRow.guid || kitRow.uri || guid(),
     name: kitRow.name || "Unnamed Kit",
@@ -4386,15 +4433,15 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     createdAt: new Date(kitRow.created),
     updatedAt: new Date(kitRow.updated),
   };
-  
+
   const types = execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid]);
-  kit.types = types.map((row: any) => {
+  kit.types = mapOrUndefined(types, (row: any) => {
     const typeGuid = row.guid || String(row.id);
     const models = execResult("SELECT * FROM model WHERE type_guid = ?", [typeGuid]);
     const ports = execResult("SELECT * FROM port WHERE type_guid = ?", [typeGuid]);
     const typeAttributes = execResult("SELECT * FROM attribute WHERE type_guid = ?", [typeGuid]);
     const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_guid = ?", [typeGuid]);
-    
+
     return {
       guid: typeGuid,
       name: row.name,
@@ -4407,7 +4454,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       stock: row.stock,
       createdAt: new Date(row.created),
       updatedAt: new Date(row.updated),
-      models: models.map((m: any) => {
+      models: mapOrUndefined(models, (m: any) => {
         const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
         const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
         return {
@@ -4424,7 +4471,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           })),
         };
       }),
-      ports: ports.map((p: any) => {
+      ports: mapOrUndefined(ports, (p: any) => {
         const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
         const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
         return {
@@ -4466,12 +4513,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         value: toUndefined(a.value),
         definition: toUndefined(a.definition),
       })),
-      concepts: typeConcepts.map((c: any) => c.concept),
+      concepts: typeConcepts.length > 0 ? typeConcepts.map((c: any) => c.concept) : undefined,
     };
   });
-  
+
   const designs = execResult("SELECT * FROM design WHERE kit_guid = ?", [kit.guid]);
-  kit.designs = designs.map((row: any) => {
+  kit.designs = mapOrUndefined(designs, (row: any) => {
     const designGuid = row.guid || String(row.id);
     const pieces = execResult("SELECT * FROM piece WHERE design_guid = ?", [designGuid]);
     const connections = execResult("SELECT * FROM connection WHERE design_guid = ?", [designGuid]);
@@ -4480,7 +4527,9 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     const stats = execResult("SELECT * FROM stat WHERE design_guid = ?", [designGuid]);
     const designAttributes = execResult("SELECT * FROM attribute WHERE design_guid = ?", [designGuid]);
     const designConcepts = execResult("SELECT * FROM design_concept WHERE design_guid = ?", [designGuid]);
-    
+    const designProps = execResult("SELECT * FROM design_prop WHERE design_guid = ?", [designGuid]);
+    const designAuthors = execResult("SELECT * FROM design_author WHERE design_guid = ? ORDER BY rank ASC", [designGuid]);
+
     return {
       guid: designGuid,
       name: row.name,
@@ -4489,9 +4538,20 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       image: toUndefined(row.image),
       parent: row.parent_guid ? { guid: row.parent_guid } : (row.parent_id ? { guid: String(row.parent_id) } : undefined),
       unit: toUndefined(row.unit),
+      isAbstract: row.is_abstract ? true : undefined,
+      folder: toUndefined(row.folder),
+      canScale: row.can_scale ? true : undefined,
+      canMirror: row.can_mirror ? true : undefined,
       createdAt: new Date(row.created),
       updatedAt: new Date(row.updated),
       activeLayer: row.active_layer_guid ? { guid: row.active_layer_guid } : undefined,
+      props: mapOrUndefined(designProps, (dp: any) => ({
+        guid: guid(),
+        quality: { guid: dp.quality_guid },
+        value: String(dp.value),
+        unit: toUndefined(dp.unit),
+      })),
+      authors: mapOrUndefined(designAuthors, (da: any) => da.author_guid),
       pieces: pieces.map((p: any) => {
         const pieceProps = execResult("SELECT prop.* FROM prop JOIN piece_prop ON prop.guid = piece_prop.prop_guid WHERE piece_prop.piece_guid = ?", [p.guid]);
         const pieceAttributes = execResult("SELECT * FROM attribute WHERE piece_guid = ?", [p.guid]);
@@ -4506,7 +4566,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
             yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
           } : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
-          scale: p.scale,
+          scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane: p.mirror_plane_origin_x !== null ? {
             origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
             xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
@@ -4516,7 +4576,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           isLocked: Boolean(p.is_locked),
           color: toUndefined(p.color),
           description: toUndefined(p.description),
-          props: pieceProps.map((pr: any) => {
+          props: mapOrUndefined(pieceProps, (pr: any) => {
             const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
             return {
               guid: pr.guid,
@@ -4545,13 +4605,11 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         return {
           guid: c.guid,
           connected: {
-            guid: guid(),
             piece: { guid: c.connected_piece_guid },
             designPiece: c.connected_design_piece_guid ? { guid: c.connected_design_piece_guid } : undefined,
             port: { guid: c.connected_port_guid },
           },
           connecting: {
-            guid: guid(),
             piece: { guid: c.connecting_piece_guid },
             designPiece: c.connecting_design_piece_guid ? { guid: c.connecting_design_piece_guid } : undefined,
             port: { guid: c.connecting_port_guid },
@@ -4562,8 +4620,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           rotation: c.rotation || 0,
           turn: c.turn || 0,
           tilt: c.tilt || 0,
-          x: c.x,
-          y: c.y,
+          x: c.x !== null ? c.x : undefined,
+          y: c.y !== null ? c.y : undefined,
           description: toUndefined(c.description),
           attributes: mapOrUndefined(connectionAttributes, (a: any) => ({
             guid: a.guid,
@@ -4611,7 +4669,9 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         guid: s.guid,
         quality: { guid: s.quality_guid },
         min: s.min_value,
+        minExcluded: s.min_excluded ? true : undefined,
         max: s.max_value,
+        maxExcluded: s.max_excluded ? true : undefined,
         unit: toUndefined(s.unit),
       })),
       attributes: mapOrUndefined(designAttributes, (a: any) => ({
@@ -4620,13 +4680,13 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         value: toUndefined(a.value),
         definition: toUndefined(a.definition),
       })),
-      concepts: designConcepts.map((c: any) => c.concept),
+      concepts: designConcepts.length > 0 ? designConcepts.map((c: any) => c.concept) : undefined,
     };
   });
-  
+
   // Load interfaces
   const interfaces = execResult("SELECT * FROM interface WHERE kit_guid = ?", [kit.guid]);
-  kit.interfaces = interfaces.map((row: any) => {
+  kit.interfaces = mapOrUndefined(interfaces, (row: any) => {
     const compatibleInterfaces = execResult("SELECT compatible_interface_guid FROM interface_compatibility WHERE interface_guid = ?", [row.guid]);
     const interfaceAttributes = execResult("SELECT * FROM attribute WHERE interface_guid = ?", [row.guid]);
     return {
@@ -4643,7 +4703,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       })),
     };
   });
-  
+
   // Load qualities
   const qualities = execResult("SELECT * FROM quality WHERE kit_guid = ?", [kit.guid]);
   kit.qualities = qualities.length > 0 ? qualities.map((row: any) => {
@@ -4690,7 +4750,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       })),
     };
   }) : undefined;
-  
+
   // Load files
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files = files.length > 0 ? files.map((row: any) => ({
@@ -4703,17 +4763,17 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     createdAt: row.created ? new Date(row.created) : undefined,
     updatedAt: row.updated ? new Date(row.updated) : undefined,
   })) : undefined;
-  
+
   // Load folders
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
-  kit.folders = folders.map((row: any) => ({
+  kit.folders = mapOrUndefined(folders, (row: any) => ({
     guid: row.guid,
     name: row.name,
     parent: row.parent_guid ? { guid: row.parent_guid } : undefined,
     createdAt: row.created ? new Date(row.created) : undefined,
     updatedAt: row.updated ? new Date(row.updated) : undefined,
   }));
-  
+
   // Load authors
   const authors = execResult("SELECT * FROM author WHERE kit_guid = ?", [kit.guid]);
   kit.authors = authors.length > 0 ? authors.map((row: any) => ({
@@ -4721,20 +4781,20 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     name: row.name,
     email: toUndefined(row.email),
   })) : undefined;
-  
+
   // Load concepts
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
   kit.concepts = concepts.map((row: any) => row.value);
-  
+
   // Load kit attributes
   const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
-  kit.attributes = kitAttributes.map((a: any) => ({
+  kit.attributes = mapOrUndefined(kitAttributes, (a: any) => ({
     guid: a.guid,
     key: a.key,
     value: toUndefined(a.value),
     definition: toUndefined(a.definition),
   }));
-  
+
   return kit;
 };
 
@@ -4747,7 +4807,7 @@ const toArray = <T>(value: T | T[] | undefined): T[] => {
 };
 
 const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
-  
+
   const SCHEMA = `
 CREATE TABLE semio (
 	release VARCHAR NOT NULL,
@@ -4943,6 +5003,10 @@ CREATE TABLE design (
 	unit VARCHAR(64),
 	location_guid VARCHAR(36),
 	active_layer_guid VARCHAR(36),
+	is_abstract BOOLEAN,
+	folder VARCHAR(256),
+	can_scale BOOLEAN,
+	can_mirror BOOLEAN,
 	description TEXT,
 	icon TEXT,
 	image TEXT,
@@ -4953,6 +5017,25 @@ CREATE TABLE design (
 	UNIQUE (guid, kit_guid, parent_guid),
 	FOREIGN KEY(parent_guid) REFERENCES design (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE design_prop (
+	design_guid VARCHAR(36) NOT NULL,
+	quality_guid VARCHAR(36) NOT NULL,
+	value FLOAT NOT NULL,
+	unit VARCHAR(64),
+	PRIMARY KEY (design_guid, quality_guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid),
+	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
+);
+
+CREATE TABLE design_author (
+	design_guid VARCHAR(36) NOT NULL,
+	author_guid VARCHAR(36) NOT NULL,
+	rank INTEGER NOT NULL,
+	PRIMARY KEY (design_guid, author_guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid),
+	FOREIGN KEY(author_guid) REFERENCES author (guid)
 );
 
 CREATE TABLE layer (
@@ -5061,7 +5144,9 @@ CREATE TABLE stat (
 	guid VARCHAR(36) NOT NULL,
 	quality_guid VARCHAR(36) NOT NULL,
 	min_value FLOAT,
+	min_excluded BOOLEAN,
 	max_value FLOAT,
+	max_excluded BOOLEAN,
 	unit VARCHAR(64),
 	design_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
@@ -5130,18 +5215,18 @@ CREATE TABLE attribute (
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
   `;
-  
+
   // Execute schema using exec for multiple statements
   db.exec(SCHEMA);
-  
+
   const toISOString = (date: Date | string | undefined): string => {
     if (!date) return new Date().toISOString();
     if (typeof date === "string") return date;
     return date.toISOString();
   };
-  
+
   db.run("INSERT INTO semio (release, engine, created) VALUES (?, ?, ?)", ["1.0.0", "js", new Date().toISOString()]);
-  
+
   db.run(
     "INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -5159,11 +5244,11 @@ CREATE TABLE attribute (
       toISOString(kit.updatedAt),
     ]
   );
-  
+
   toArray(kit.concepts).forEach((concept) => {
     db.run("INSERT INTO concept (kit_guid, value) VALUES (?, ?)", [kit.guid, concept]);
   });
-  
+
   toArray(kit.attributes).forEach((attr) => {
     db.run("INSERT INTO attribute (guid, key, value, definition, kit_guid) VALUES (?, ?, ?, ?, ?)", [
       attr.guid,
@@ -5173,7 +5258,7 @@ CREATE TABLE attribute (
       kit.guid,
     ]);
   });
-  
+
   toArray(kit.interfaces).forEach((iface) => {
     db.run("INSERT INTO interface (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?)", [
       iface.guid,
@@ -5182,14 +5267,14 @@ CREATE TABLE attribute (
       iface.icon || null,
       kit.guid,
     ]);
-    
+
     toArray(iface.compatibleInterfaces).forEach((compat) => {
       db.run("INSERT INTO interface_compatibility (interface_guid, compatible_interface_guid) VALUES (?, ?)", [
         iface.guid,
         compat.guid,
       ]);
     });
-    
+
     toArray(iface.attributes).forEach((attr) => {
       db.run("INSERT INTO attribute (guid, key, value, definition, interface_guid) VALUES (?, ?, ?, ?, ?)", [
         attr.guid,
@@ -5200,7 +5285,7 @@ CREATE TABLE attribute (
       ]);
     });
   });
-  
+
   toArray(kit.qualities).forEach((quality) => {
     db.run(
       "INSERT INTO quality (guid, key, name, kind, default_value, formula, default_si_unit, default_imperial_unit, min_value, min_excluded, max_value, max_excluded, can_scale, definition, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -5222,7 +5307,7 @@ CREATE TABLE attribute (
         kit.guid,
       ]
     );
-    
+
     toArray(quality.benchmarks).forEach((benchmark) => {
       db.run(
         "INSERT INTO benchmark (guid, name, icon, min_value, min_excluded, max_value, max_excluded, quality_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -5237,7 +5322,7 @@ CREATE TABLE attribute (
           quality.guid,
         ]
       );
-      
+
       toArray(benchmark.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, benchmark_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5248,7 +5333,7 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(quality.attributes).forEach((attr) => {
       db.run("INSERT INTO attribute (guid, key, value, definition, quality_guid) VALUES (?, ?, ?, ?, ?)", [
         attr.guid,
@@ -5259,7 +5344,7 @@ CREATE TABLE attribute (
       ]);
     });
   });
-  
+
   toArray(kit.folders).forEach((folder) => {
     db.run("INSERT INTO folder (guid, name, parent_guid, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?)", [
       folder.guid,
@@ -5270,7 +5355,7 @@ CREATE TABLE attribute (
       kit.guid,
     ]);
   });
-  
+
   toArray(kit.files).forEach((file) => {
     db.run("INSERT INTO file (guid, name, folder_guid, size, hash, remote_url, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
       file.guid,
@@ -5284,7 +5369,7 @@ CREATE TABLE attribute (
       kit.guid,
     ]);
   });
-  
+
   toArray(kit.authors).forEach((author) => {
     db.run("INSERT INTO author (guid, name, email, kit_guid) VALUES (?, ?, ?, ?)", [
       author.guid,
@@ -5293,32 +5378,32 @@ CREATE TABLE attribute (
       kit.guid,
     ]);
   });
-  
+
   toArray(kit.types).forEach((type) => {
     db.run(
-        "INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          type.guid,
-          type.name,
-          type.parent?.guid || null,
-          type.isAbstract ? 1 : 0,
-          type.folder || null,
-          type.stock || null,
-          type.virtual ? 1 : 0,
-          type.unit || null,
-          type.description || null,
-          type.icon || null,
-          type.image || null,
-          toISOString(type.createdAt),
-          toISOString(type.updatedAt),
-          kit.guid,
-        ]
-      );
-    
+      "INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        type.guid,
+        type.name,
+        type.parent?.guid || null,
+        type.isAbstract ? 1 : 0,
+        type.folder || null,
+        type.stock || null,
+        type.virtual ? 1 : 0,
+        type.unit || null,
+        type.description || null,
+        type.icon || null,
+        type.image || null,
+        toISOString(type.createdAt),
+        toISOString(type.updatedAt),
+        kit.guid,
+      ]
+    );
+
     toArray(type.concepts).forEach((concept) => {
       db.run("INSERT INTO type_concept (type_guid, concept) VALUES (?, ?)", [type.guid, concept]);
     });
-    
+
     toArray(type.models).forEach((model) => {
       db.run("INSERT INTO model (guid, file, name, description, type_guid) VALUES (?, ?, ?, ?, ?)", [
         model.guid,
@@ -5327,11 +5412,11 @@ CREATE TABLE attribute (
         model.description || null,
         type.guid,
       ]);
-      
+
       toArray(model.tags).forEach((tag) => {
         db.run("INSERT INTO model_tag (model_guid, tag) VALUES (?, ?)", [model.guid, tag]);
       });
-      
+
       toArray(model.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, model_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5342,7 +5427,7 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(type.ports).forEach((port) => {
       db.run(
         "INSERT INTO port (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -5362,15 +5447,15 @@ CREATE TABLE attribute (
           type.guid,
         ]
       );
-      
-        toArray(port.props).forEach((prop) => {
+
+      toArray(port.props).forEach((prop) => {
         db.run("INSERT INTO prop (guid, value, unit, quality_guid, port_guid) VALUES (?, ?, ?, ?, ?)", [
           prop.guid,
           prop.value,
           prop.unit || null,
           prop.quality.guid,
           port.guid,
-        ]);        toArray(prop.attributes).forEach((attr) => {
+        ]); toArray(prop.attributes).forEach((attr) => {
           db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [
             attr.guid,
             attr.key,
@@ -5380,7 +5465,7 @@ CREATE TABLE attribute (
           ]);
         });
       });
-      
+
       toArray(port.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, port_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5391,7 +5476,7 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(type.attributes).forEach((attr) => {
       db.run("INSERT INTO attribute (guid, key, value, definition, type_guid) VALUES (?, ?, ?, ?, ?)", [
         attr.guid,
@@ -5402,15 +5487,19 @@ CREATE TABLE attribute (
       ]);
     });
   });
-  
+
   toArray(kit.designs).forEach((design) => {
     db.run(
-      "INSERT INTO design (guid, name, parent_guid, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO design (guid, name, parent_guid, unit, is_abstract, folder, can_scale, can_mirror, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         design.guid,
         design.name,
         design.parent?.guid || null,
         design.unit || null,
+        design.isAbstract ? 1 : null,
+        design.folder || null,
+        design.canScale ? 1 : null,
+        design.canMirror ? 1 : null,
         design.description || null,
         design.icon || null,
         design.image || null,
@@ -5419,11 +5508,28 @@ CREATE TABLE attribute (
         kit.guid,
       ]
     );
-    
+
     toArray(design.concepts).forEach((concept) => {
       db.run("INSERT INTO design_concept (design_guid, concept) VALUES (?, ?)", [design.guid, concept]);
     });
-    
+
+    toArray(design.props).forEach((prop) => {
+      db.run("INSERT INTO design_prop (design_guid, quality_guid, value, unit) VALUES (?, ?, ?, ?)", [
+        design.guid,
+        prop.quality.guid,
+        parseFloat(prop.value),
+        prop.unit || null,
+      ]);
+    });
+
+    toArray(design.authors).forEach((authorId, index) => {
+      db.run("INSERT INTO design_author (design_guid, author_guid, rank) VALUES (?, ?, ?)", [
+        design.guid,
+        typeof authorId === 'object' ? authorId.guid : authorId,
+        index,
+      ]);
+    });
+
     toArray(design.layers).forEach((layer) => {
       const layerGuid = guid();
       db.run("INSERT INTO layer (guid, path, is_hidden, is_locked, color, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?)", [
@@ -5435,7 +5541,7 @@ CREATE TABLE attribute (
         layer.description || null,
         design.guid,
       ]);
-      
+
       toArray(layer.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, layer_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5446,7 +5552,7 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(design.pieces).forEach((piece) => {
       db.run(
         "INSERT INTO piece (guid, name, type_guid, design_guid_ref, plane_origin_x, plane_origin_y, plane_origin_z, plane_x_axis_x, plane_x_axis_y, plane_x_axis_z, plane_y_axis_x, plane_y_axis_y, plane_y_axis_z, center_u, center_v, scale, mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z, mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z, mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z, is_hidden, is_locked, color, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -5455,27 +5561,27 @@ CREATE TABLE attribute (
           piece.name || null,
           piece.type?.guid || null,
           piece.design?.guid || null,
-          piece.plane?.origin.x || null,
-          piece.plane?.origin.y || null,
-          piece.plane?.origin.z || null,
-          piece.plane?.xAxis.x || null,
-          piece.plane?.xAxis.y || null,
-          piece.plane?.xAxis.z || null,
-          piece.plane?.yAxis.x || null,
-          piece.plane?.yAxis.y || null,
-          piece.plane?.yAxis.z || null,
-          piece.center?.u || null,
-          piece.center?.v || null,
-          piece.scale || null,
-          piece.mirrorPlane?.origin.x || null,
-          piece.mirrorPlane?.origin.y || null,
-          piece.mirrorPlane?.origin.z || null,
-          piece.mirrorPlane?.xAxis.x || null,
-          piece.mirrorPlane?.xAxis.y || null,
-          piece.mirrorPlane?.xAxis.z || null,
-          piece.mirrorPlane?.yAxis.x || null,
-          piece.mirrorPlane?.yAxis.y || null,
-          piece.mirrorPlane?.yAxis.z || null,
+          piece.plane?.origin.x !== undefined ? piece.plane.origin.x : null,
+          piece.plane?.origin.y !== undefined ? piece.plane.origin.y : null,
+          piece.plane?.origin.z !== undefined ? piece.plane.origin.z : null,
+          piece.plane?.xAxis.x !== undefined ? piece.plane.xAxis.x : null,
+          piece.plane?.xAxis.y !== undefined ? piece.plane.xAxis.y : null,
+          piece.plane?.xAxis.z !== undefined ? piece.plane.xAxis.z : null,
+          piece.plane?.yAxis.x !== undefined ? piece.plane.yAxis.x : null,
+          piece.plane?.yAxis.y !== undefined ? piece.plane.yAxis.y : null,
+          piece.plane?.yAxis.z !== undefined ? piece.plane.yAxis.z : null,
+          piece.center?.u !== undefined ? piece.center.u : null,
+          piece.center?.v !== undefined ? piece.center.v : null,
+          piece.scale !== undefined ? piece.scale : null,
+          piece.mirrorPlane?.origin.x !== undefined ? piece.mirrorPlane.origin.x : null,
+          piece.mirrorPlane?.origin.y !== undefined ? piece.mirrorPlane.origin.y : null,
+          piece.mirrorPlane?.origin.z !== undefined ? piece.mirrorPlane.origin.z : null,
+          piece.mirrorPlane?.xAxis.x !== undefined ? piece.mirrorPlane.xAxis.x : null,
+          piece.mirrorPlane?.xAxis.y !== undefined ? piece.mirrorPlane.xAxis.y : null,
+          piece.mirrorPlane?.xAxis.z !== undefined ? piece.mirrorPlane.xAxis.z : null,
+          piece.mirrorPlane?.yAxis.x !== undefined ? piece.mirrorPlane.yAxis.x : null,
+          piece.mirrorPlane?.yAxis.y !== undefined ? piece.mirrorPlane.yAxis.y : null,
+          piece.mirrorPlane?.yAxis.z !== undefined ? piece.mirrorPlane.yAxis.z : null,
           piece.isHidden ? 1 : 0,
           piece.isLocked ? 1 : 0,
           piece.color || null,
@@ -5483,9 +5589,9 @@ CREATE TABLE attribute (
           design.guid,
         ]
       );
-      
+
       // Piece.props not in schema
-      
+
       toArray(piece.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, piece_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5496,7 +5602,7 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(design.groups).forEach((group) => {
       const groupGuid = guid();
       db.run("INSERT INTO \"group\" (guid, name, color, description, design_guid) VALUES (?, ?, ?, ?, ?)", [
@@ -5506,11 +5612,11 @@ CREATE TABLE attribute (
         group.description || null,
         design.guid,
       ]);
-      
+
       toArray(group.pieces).forEach((piece) => {
         db.run("INSERT INTO group_piece (group_guid, piece_guid) VALUES (?, ?)", [groupGuid, piece.guid]);
       });
-      
+
       toArray(group.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, group_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5521,7 +5627,7 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(design.connections).forEach((connection) => {
       if (!connection.connected?.piece || !connection.connecting?.piece || !connection.connected?.port || !connection.connecting?.port) {
         return;
@@ -5542,13 +5648,13 @@ CREATE TABLE attribute (
           connection.rotation || 0,
           connection.turn || 0,
           connection.tilt || 0,
-          connection.x || null,
-          connection.y || null,
+          connection.x !== undefined ? connection.x : null,
+          connection.y !== undefined ? connection.y : null,
           connection.description || null,
           design.guid,
         ]
       );
-      
+
       toArray(connection.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, connection_guid) VALUES (?, ?, ?, ?, ?)", [
           attr.guid,
@@ -5559,20 +5665,22 @@ CREATE TABLE attribute (
         ]);
       });
     });
-    
+
     toArray(design.stats).forEach((stat) => {
-      db.run("INSERT INTO stat (guid, quality_guid, min_value, max_value, unit, design_guid) VALUES (?, ?, ?, ?, ?, ?)", [
+      db.run("INSERT INTO stat (guid, quality_guid, min_value, min_excluded, max_value, max_excluded, unit, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
         stat.guid,
         stat.quality.guid,
         stat.min || null,
+        stat.minExcluded ? 1 : null,
         stat.max || null,
+        stat.maxExcluded ? 1 : null,
         stat.unit || null,
         design.guid,
       ]);
-      
+
       // Stat.attributes not in schema
     });
-    
+
     toArray(design.attributes).forEach((attr) => {
       db.run("INSERT INTO attribute (guid, key, value, definition, design_guid) VALUES (?, ?, ?, ?, ?)", [
         attr.guid,

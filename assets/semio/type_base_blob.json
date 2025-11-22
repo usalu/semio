@@ -1,91 +1,91 @@
 {
-  "updatedAt": "2025-11-22T00:53:58.577Z",
+  "updatedAt": "2025-11-22T14:59:58.583Z",
   "icon": "icons/base_blob.svg",
   "parent": "Base",
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:53:58.577Z",
+  "createdAt": "2025-11-22T14:59:58.583Z",
   "authors": [
     {
-      "guid": "5c21d5aa-54d0-4291-b2e5-071897d0d6bf"
+      "guid": "e7165761-a496-449f-98d6-e80630f19b98"
     }
   ],
   "attributes": [
     {
       "value": "2",
-      "guid": "0bdccb55-2506-4397-b3a5-f60753746e7d",
+      "guid": "3bd2d7a8-83ab-459b-a8ec-42c64a8c94f7",
       "key": "storey",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
     },
     {
       "value": "3.5",
-      "guid": "8330fb4f-1992-490c-a3bf-618eb1550c92",
+      "guid": "e304b3bf-2fde-4237-a111-976782aaef94",
       "key": "floor height",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
       "value": "4",
-      "guid": "e738c632-e49c-4abd-960f-9c783978b34b",
+      "guid": "782b1c70-d762-40d2-8d14-ac7c954eaf78",
       "key": "ground floor height",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
       "value": "2",
-      "guid": "b72fce6f-258d-4091-a483-68bf3623585f",
+      "guid": "211a1182-7d37-47c0-acb2-47c07257cf45",
       "key": "cores",
       "definition": ""
     },
     {
       "value": "6.5",
-      "guid": "8e0a629a-10a9-4fa9-807b-554f0e5ffba4",
+      "guid": "614764b7-74be-48c2-8d00-659fd886a05f",
       "key": "core diameter",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter"
     },
     {
       "value": "532.12",
-      "guid": "65f4d3ef-5887-494e-8a17-76df0613b056",
+      "guid": "a06b32af-cd9b-47c6-a667-46ee1142b502",
       "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
       "value": "3990871",
-      "guid": "63f5cd5d-7498-47d2-ad50-7d7585917778",
+      "guid": "baa2fcdf-2f64-43c7-8eb8-37a471c3cebd",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "15963",
-      "guid": "201bcf86-1c21-44ef-8ca4-f78de2262955",
+      "guid": "dd2cd8f2-1286-43e0-a490-f65992bf3d22",
       "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "21285",
-      "guid": "6e16c408-cb21-441e-af10-80e63be112cf",
+      "guid": "c87ec508-3c2b-45b6-8a8d-0196628a7649",
       "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "21285",
-      "guid": "897ef968-e1c5-4ee5-84b3-362b40bce1a2",
+      "guid": "c575bc82-f35e-4b21-98ba-dcbe1b3e60a1",
       "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "542759",
-      "guid": "2ec7fa9d-fa0d-4594-9e02-dda68b897c51",
+      "guid": "2299d005-44fc-4478-a433-dd091f54973e",
       "key": "income",
       "definition": ""
     },
     {
       "value": "54276",
-      "guid": "20ddfa27-7bba-4ba8-983c-4865fff39987",
+      "guid": "cecbaaba-7e32-414b-8ae9-3f36dec29c7a",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "478905",
-      "guid": "9caa27ed-0da5-4b8d-8564-070eeb1e2653",
+      "guid": "afea43d5-ba42-4c08-a435-1779ea21108b",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }
@@ -93,11 +93,11 @@
   "stock": 2147483647,
   "ports": [
     {
-      "guid": "037d66a9-89ac-4c45-bbb8-61a24a98a33c",
+      "guid": "40c9f341-6a0a-49b3-b3a5-87d20e7d66ff",
       "attributes": [
         {
           "value": "east",
-          "guid": "031e1a70-a330-4270-92fc-4edce528ec95",
+          "guid": "8ed5a381-7c13-4d70-b961-c61d9556dca3",
           "key": "core",
           "definition": ""
         }
@@ -118,11 +118,11 @@
       "t": -0.125
     },
     {
-      "guid": "fc258b53-96c4-428f-a96b-3f81785f106f",
+      "guid": "656d0866-d654-4c4a-8fde-5b163855cdb7",
       "attributes": [
         {
           "value": "west",
-          "guid": "2f41f800-5c31-4f42-8f59-ade2cbf00951",
+          "guid": "4d06196c-2c59-43c5-b1d1-2b8b81084147",
           "key": "core",
           "definition": ""
         }

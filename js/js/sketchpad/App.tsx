@@ -11223,11 +11223,16 @@ export const LayoutCanvas: FC<{
         const rawConfig = layoutState || windowConfig.defaultLayout || createDefaultLayout(windowConfig.windowKinds.map((wt) => wt.id));
         const config = normalizeLayoutConfig(rawConfig);
 
+        console.log("[LayoutCanvas] Initializing GoldenLayout with config:", { rawConfig, config, windowKinds: windowConfig.windowKinds.map((wt) => wt.id) });
+
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
 
+        console.log("[LayoutCanvas] About to register components:", windowConfig.windowKinds);
         windowConfig.windowKinds.forEach((windowType) => {
+          console.log("[LayoutCanvas] Calling layout.registerComponent for:", windowType.id);
           layout.registerComponent(windowType.id, (container: any, componentState: any) => {
+            console.log("[LayoutCanvas] Component instance created:", windowType.id);
             const element = container.getElement();
             let domElement: HTMLElement;
 
@@ -11278,6 +11283,7 @@ export const LayoutCanvas: FC<{
           try {
             if (isInitialized) {
               const config = layout.toConfig();
+              console.log("[LayoutCanvas] Layout state changed, saving config:", config);
               onLayoutChange(config);
             }
           } catch (error: any) {
@@ -11334,6 +11340,7 @@ export const LayoutCanvas: FC<{
         };
 
         layout.on("initialised", () => {
+          console.log("[LayoutCanvas] GoldenLayout initialized successfully");
           customizeHeaders();
           isInitialized = true;
           setLayoutLoaded(true);

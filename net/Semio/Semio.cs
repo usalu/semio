@@ -3022,14 +3022,14 @@ public class Port : Model<Port>
     {
         if (Interface is null || otherPort.Interface is null) return true;
         if (Interface.Guid == otherPort.Interface.Guid) return true;
-        
+
         var thisInterface = kit.Interfaces?.FirstOrDefault(i => i.Guid == Interface.Guid);
         var otherInterface = kit.Interfaces?.FirstOrDefault(i => i.Guid == otherPort.Interface.Guid);
-        
+
         if (thisInterface is null || otherInterface is null) return false;
-        
+
         if (thisInterface.CompatibleInterfaces?.Count == 0 || otherInterface.CompatibleInterfaces?.Count == 0) return true;
-        
+
         return thisInterface.CompatibleInterfaces?.Any(ci => ci.Guid == otherPort.Interface.Guid) == true ||
                otherInterface.CompatibleInterfaces?.Any(ci => ci.Guid == Interface.Guid) == true;
     }
@@ -3640,6 +3640,17 @@ public class Side : Model<Side>
             DesignPiece = appliedDiff.DesignPiece is not null ? DesignPiece : null,
             Port = appliedDiff.Port is not null ? Port : null
         };
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Side other) return false;
+        return Piece.Guid == other.Piece.Guid && DesignPiece?.Guid == other.DesignPiece?.Guid && Port.Guid == other.Port.Guid;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Piece.Guid, DesignPiece?.Guid, Port.Guid);
     }
 
     public override string ToString() => $"Sde({Piece.Guid}" + (Port.Guid != "" ? ":" + Port.Guid : "") + ")";

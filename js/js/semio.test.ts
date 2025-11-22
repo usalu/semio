@@ -20,12 +20,8 @@
 
 // #endregion
 
-import { CapsuleDreamFlatDesign, MetabolismKit, NakaginCapsuleTowerDancingFlatDesign, NakaginCapsuleTowerFlatDesign, NakaginCapsuleTowerSlantedFlatDesign, NakaginCapsuleTowerTwistedFlatDesign } from "@semio/assets";
+import { CapsuleDreamFlatDesign, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, NakaginCapsuleTowerDancingFlatDesign, NakaginCapsuleTowerFlatDesign, NakaginCapsuleTowerSlantedFlatDesign, NakaginCapsuleTowerTwistedFlatDesign } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import kitDiffData from "../../assets/semio/diff_kit_metabolism.json";
-import kitDiffInvertedData from "../../assets/semio/diff_kit_metabolism_inverted.json";
-import kitOriginalData from "../../assets/semio/kit_metabolism.json";
-import kitDiffedData from "../../assets/semio/kit_metabolism_diffed.json";
 import { applyDesignDiff, applyKitDiff, areKitsEqual, deepEqual, Design, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane } from "./semio";
 
 
@@ -53,10 +49,10 @@ const centersEqual = (c1: { u: number, v: number } | undefined, c2: { u: number,
 };
 
 describe("Kit Diff", () => {
-    const kitOriginal = kitOriginalData as any;
-    const kitDiff = kitDiffData as any;
-    const kitDiffInverted = kitDiffInvertedData as any;
-    const kitDiffed = kitDiffedData as any;
+    const kitOriginal = MetabolismKit as any;
+    const kitDiff = MetabolismKitDiff as any;
+    const kitDiffInverted = MetabolismKitDiffInverted as any;
+    const kitDiffed = MetabolismKitDiffed as any;
 
     it("should compute identical diffs and apply them correctly with full round-trip integrity", () => {
         // Import actual diff functions from semio.ts

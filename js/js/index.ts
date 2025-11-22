@@ -21,7 +21,7 @@
 
 import "./i18n";
 
-export { createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, default as Sketchpad } from "./sketchpad/App";
+export { default as Sketchpad, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider } from "./sketchpad/App";
 export type { TooltipConfig } from "./sketchpad/elements";
 export type { CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/sketchpad";
 

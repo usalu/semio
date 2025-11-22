@@ -1,79 +1,79 @@
 {
-  "updatedAt": "2025-11-22T00:54:09.376Z",
+  "updatedAt": "2025-11-22T15:00:10.559Z",
   "icon": "icons/trapezoid-capsule_backslash.svg",
   "parent": "Trapezoid",
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:54:09.376Z",
+  "createdAt": "2025-11-22T15:00:10.559Z",
   "authors": [
     {
-      "guid": "ea11ed32-9d7c-4ae0-8366-c0d304b22ecb"
+      "guid": "433d077d-c072-4279-973b-751e692f5579"
     }
   ],
   "attributes": [
     {
       "value": "back",
-      "guid": "1bde29bf-9758-4d7d-9453-cc8f48e10ff4",
+      "guid": "6b8e8f70-538b-4fe6-9e90-f77a39e9f36a",
       "key": "entrance",
       "definition": ""
     },
     {
       "value": "front",
-      "guid": "83117987-fd33-4e26-b600-2f70a72fe552",
+      "guid": "897c80c2-41bf-41d5-b58c-3eed72cf29bc",
       "key": "view",
       "definition": ""
     },
     {
       "value": "2.5",
-      "guid": "87b2494c-0e21-4bf8-8f09-0c063b9fefd3",
+      "guid": "3cad768b-6d47-42e6-b006-c095cdcc137c",
       "key": "heigth",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
       "value": "7.19",
-      "guid": "e54548fa-fc24-4c22-b8ab-6d2cc08d2a7c",
+      "guid": "cbe8f5c9-a096-4165-adf7-088e411b5b1e",
       "key": "effective floor area",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
       "value": "68272",
-      "guid": "ae749739-632e-4cdd-a71c-9ac29653454f",
+      "guid": "ae1dd924-ca58-4669-8869-128aff6644f9",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "323",
-      "guid": "c4c5e3c7-76dd-40c3-b198-6c36c9081977",
+      "guid": "9bc3b798-ee95-4307-9472-a367540c3eb0",
       "key": "heating energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "216",
-      "guid": "cc89d97f-5eb5-4cd7-820b-9fcaca61471c",
+      "guid": "2e4674d2-3111-4b6e-bab0-83ec8497fac8",
       "key": "cooling energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "216",
-      "guid": "0c414114-6d68-468e-ad40-23365ff559ad",
+      "guid": "e8e88eda-f69a-4a72-914f-9b633b3778fa",
       "key": "technical equipment energy demand",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "value": "10780",
-      "guid": "b2ed30a6-5a01-4b22-8f4d-38ce99cec7b7",
+      "guid": "99b092c3-6b00-4eb2-b7fe-8809773e682d",
       "key": "income",
       "definition": ""
     },
     {
       "value": "862",
-      "guid": "d80cc171-6e58-4860-abc7-c0cb96dac80f",
+      "guid": "070e0681-1891-40c8-9164-e838d230f6c5",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "7186.53",
-      "guid": "3c23af91-de5c-4b0a-abbd-4ef0fd56cd9f",
+      "guid": "01430988-82b5-4767-be59-fb56bf2342f7",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     }
@@ -81,11 +81,11 @@
   "stock": 2147483647,
   "ports": [
     {
-      "guid": "10c40af7-2950-4bfd-9b8d-d06a42ae27f5",
+      "guid": "e121fc2e-2d4e-42c2-a550-3a90e5efa932",
       "attributes": [
         {
           "value": "",
-          "guid": "88825835-10d4-408a-ad2e-37ec9462c458",
+          "guid": "7c296b1b-be36-4ad1-9363-206f02b93bfc",
           "key": "entrance",
           "definition": ""
         }

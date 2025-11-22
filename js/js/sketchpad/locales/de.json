@@ -641,18 +641,18 @@
                 "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
               }
             },
-          "language": {
-            "label": {
-              "normal": "Sprache",
-              "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
-            },
-            "placeholder": {
+            "language": {
               "label": {
-                "normal": "Sprache waehlen...",
-                "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+                "normal": "Sprache",
+                "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+              },
+              "placeholder": {
+                "label": {
+                  "normal": "Sprache waehlen...",
+                  "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+                }
               }
-            }
-          },
+            },
             "mode": {
               "label": {
                 "normal": "Modus",
@@ -876,6 +876,16 @@
               "beginner": "Kit nicht verfuegbar"
             }
           },
+          "dropzone": {
+            "label": {
+              "normal": "Zip-Datei zum Importieren ablegen",
+              "beginner": "Legen Sie eine Zip-Datei hier ab, um sie als Kit zu importieren oder Dateien zum aktuellen Kit hinzuzufuegen"
+            },
+            "description": {
+              "normal": "Kits mit .semio-Ordner werden importiert, andere als Dateien hinzugefuegt",
+              "beginner": "Wenn die Zip-Datei einen .semio-Ordner enthaelt, wird sie als vollstaendiges Kit importiert. Andernfalls werden die Dateien zum aktuellen Kit hinzugefuegt."
+            }
+          },
           "versionPlaceholder": {
             "label": {
               "label": {
@@ -970,19 +980,25 @@
               },
               "hotkey": "Ctrl+F"
             },
-            "search": {
-              "label": {
-                "normal": "Suchfilter",
-                "beginner": "Nach bestimmten Filtern suchen"
-              },
-              "hotkey": "Ctrl+Shift+F"
-            }
-          },
-          "designs": {
+          "search": {
             "label": {
-              "normal": "Entwuerfe",
-              "beginner": "Entwuerfe in diesem Kit"
+              "normal": "Suchfilter",
+              "beginner": "Nach bestimmten Filtern suchen"
             },
+            "hotkey": "Ctrl+Shift+F"
+          }
+        },
+        "pieces": {
+          "label": {
+            "normal": "Teile",
+            "beginner": "Typen und Entwuerfe in diesem Kit"
+          }
+        },
+        "designs": {
+          "label": {
+            "normal": "Entwuerfe",
+            "beginner": "Entwuerfe in diesem Kit"
+          },
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
             "multipleSelected": {
@@ -3031,30 +3047,30 @@
             }
           }
         },
-          "language": {
+        "language": {
+          "label": {
+            "normal": "Sprache",
+            "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+          },
+          "placeholder": {
             "label": {
-              "normal": "Sprache",
-              "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
-            },
-            "placeholder": {
-              "label": {
-                "normal": "Sprache waehlen...",
-                "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
-              }
-            },
-            "de": {
-              "label": {
-                "normal": "Deutsch",
-                "beginner": "Deutsch"
-              }
-            },
-            "en": {
-              "label": {
-                "normal": "English",
-                "beginner": "English"
-              }
+              "normal": "Sprache waehlen...",
+              "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+            }
+          },
+          "de": {
+            "label": {
+              "normal": "Deutsch",
+              "beginner": "Deutsch"
+            }
+          },
+          "en": {
+            "label": {
+              "normal": "English",
+              "beginner": "English"
             }
           }
+        }
       },
       "sort": {
         "label": {

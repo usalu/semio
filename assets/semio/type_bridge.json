@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2025-11-22T00:53:59.115Z",
+  "updatedAt": "2025-11-22T14:59:59.259Z",
   "ports": [
     {
-      "guid": "120a4645-fa3c-4b70-8422-0044b8a46d2f",
+      "guid": "68560333-703a-481d-bde9-c96f65c37784",
       "attributes": [
         {
           "value": "",
-          "guid": "9237e624-dce6-48d9-9798-c924ea35ca63",
+          "guid": "ae35f02d-bcfa-4c42-98b5-c28977ce3265",
           "key": "east",
           "definition": ""
         }
@@ -27,11 +27,11 @@
       "t": 0.25
     },
     {
-      "guid": "ea70a096-4b36-44b8-b2f4-1100dc0901e7",
+      "guid": "28e6c6e0-2fd8-4a15-9a4a-b29285f001de",
       "attributes": [
         {
           "value": "",
-          "guid": "8b7ce9ad-dc32-43f6-96e8-129ebaa195dc",
+          "guid": "eab2675b-82b6-4579-8fb4-156eca234eb9",
           "key": "west",
           "definition": ""
         }
@@ -54,95 +54,95 @@
   ],
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:53:59.115Z",
+  "createdAt": "2025-11-22T14:59:59.259Z",
   "icon": "",
   "authors": [
     {
-      "guid": "4fc703f7-5523-480a-9473-357eca7c4c43"
+      "guid": "f355612f-867f-4a4b-b8b5-3b2dadf3ff44"
     }
   ],
   "attributes": [
     {
       "value": "5.6",
-      "guid": "d5e9c4f0-043e-48b3-8d7c-31f4a24a14e7",
+      "guid": "29386728-be82-4ca9-b7c7-6d828b931e9f",
       "key": "length",
       "definition": ""
     },
     {
       "value": "2.6",
-      "guid": "753372ec-78f3-4ace-ac63-e1ea58e67562",
+      "guid": "a6f8bbaa-8617-4603-8596-3f5eea2fb923",
       "key": "platform west length",
       "definition": ""
     },
     {
       "value": "2.6",
-      "guid": "ddc63ac2-c803-4831-b9bf-3d6a5348546b",
+      "guid": "0b8a3023-db08-42d9-94da-d1c7c64985d6",
       "key": "platform east length",
       "definition": ""
     },
     {
       "value": "0.4",
-      "guid": "c032536a-9cb0-45ad-9aaf-7dfd3979d978",
+      "guid": "413e399d-3456-4b83-a48a-c19e117f6c6a",
       "key": "gap",
       "definition": ""
     },
     {
       "value": "2.6",
-      "guid": "7d3241c4-18f7-4ffc-ac97-f3c33853081a",
+      "guid": "68adc331-2886-4b16-ae06-3093d480e24f",
       "key": "width",
       "definition": ""
     },
     {
       "value": "2.5",
-      "guid": "2762e075-b747-4d0f-9637-e2b5ede29176",
+      "guid": "9fc09337-325d-4c09-8376-bf0964ea666e",
       "key": "height",
       "definition": ""
     },
     {
       "value": "20",
-      "guid": "140b5f76-359e-43a4-b736-95553fa91943",
+      "guid": "799d2506-a43d-48bc-b466-02b3df5e151e",
       "key": "base height",
       "definition": ""
     },
     {
       "value": "10",
-      "guid": "51db6574-0367-4a35-b9fc-fca46c5164dc",
+      "guid": "7318f18a-c024-4b33-b698-d8a84c100e92",
       "key": "primary rod diameter",
       "definition": ""
     },
     {
       "value": "8",
-      "guid": "493690d4-a55c-4986-875f-b92f03e3cded",
+      "guid": "16106d5a-f84d-4d9b-9b73-21b27ee7650b",
       "key": "secondary rod diameter",
       "definition": ""
     },
     {
       "value": "6",
-      "guid": "198e82c8-22e1-41fc-a079-5a86e5587671",
+      "guid": "ec65cf8e-6482-4696-a140-2c1cf63f4d77",
       "key": "tertiary rod diameter",
       "definition": ""
     },
     {
       "value": "125",
-      "guid": "092cc759-7657-4405-a7db-5a8fb2616ba7",
+      "guid": "e9432f7a-01d6-4ad2-95f0-1f7268a3ef36",
       "key": "parapet height",
       "definition": ""
     },
     {
       "value": "65973",
-      "guid": "cb536a64-873a-4b4b-bd8f-a727f8702a68",
+      "guid": "7dfe2cdc-bb2f-4fcc-88ca-abed6bed389b",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "880",
-      "guid": "ab123e95-7ddc-451d-98df-fd246436116d",
+      "guid": "b274a874-ccdf-404c-b4e3-17c1eb389621",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "5864",
-      "guid": "b8177e34-11eb-47c0-9f0b-8c3f4527dd62",
+      "guid": "ece416bf-4071-4101-9ee6-19f52ea6d3e5",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }

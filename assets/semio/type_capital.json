@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2025-11-22T00:53:59.364Z",
+  "updatedAt": "2025-11-22T14:59:59.610Z",
   "ports": [
     {
-      "guid": "8a0fddfa-394b-40d1-a97a-a03554a99515",
+      "guid": "443e5950-5500-453b-ac12-31d938bb7acb",
       "attributes": [
         {
           "value": "",
-          "guid": "198d26ef-a966-4de8-b514-0b5d8f1b4537",
+          "guid": "0c749af4-bd1d-425f-9209-0bbbd6426a12",
           "key": "bottom",
           "definition": ""
         },
         {
           "value": "180",
-          "guid": "125d6f5f-ebf9-43ed-b492-81cb4cd4f41d",
+          "guid": "9c91792c-8109-49c8-8eee-fb6b40a7f54f",
           "key": "wasp rotation",
           "definition": ""
         }
@@ -34,71 +34,71 @@
   ],
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:53:59.364Z",
+  "createdAt": "2025-11-22T14:59:59.610Z",
   "icon": "icons/capital.svg",
   "authors": [
     {
-      "guid": "0494d1f1-07dd-49db-b7c9-f48aa94fb46f"
+      "guid": "2b9d4959-339b-43eb-8dc3-67c5dcc12b57"
     }
   ],
   "attributes": [
     {
       "value": "north west",
-      "guid": "4957d338-880d-4234-98ac-24ed4bcc3f63",
+      "guid": "a21bed64-a380-4974-8693-8a8668ddbd71",
       "key": "peak",
       "definition": ""
     },
     {
       "value": "5.5",
-      "guid": "9c7c96de-5aab-4ff0-b8ae-4aa2e53a2c75",
+      "guid": "af618409-27aa-4df6-b1c4-8c76372cfac0",
       "key": "length",
       "definition": ""
     },
     {
       "value": "5.5",
-      "guid": "15214a09-cb23-4683-9e92-8ad59dc297d4",
+      "guid": "227d50db-91f5-4057-9480-27e188ad01cb",
       "key": "width",
       "definition": ""
     },
     {
       "value": "5.5",
-      "guid": "e8593ef5-f38d-4f94-9892-3e5893532f90",
+      "guid": "892c833c-7c13-4cdd-addb-b46a86c56903",
       "key": "height",
       "definition": ""
     },
     {
       "value": "5.5",
-      "guid": "232d8402-c36b-4163-9668-93dde53ccdbf",
+      "guid": "1687e0f4-b9f3-45b5-9845-94c5a772f113",
       "key": "height side",
       "definition": ""
     },
     {
       "value": "1",
-      "guid": "4c3ca400-49c5-49d8-b196-84ecbfb44708",
+      "guid": "65689505-ef36-4617-af94-e719840164b7",
       "key": "height low",
       "definition": ""
     },
     {
       "value": "0.3",
-      "guid": "caed45bd-4d78-4f2e-bf17-adb6a8ec33ed",
+      "guid": "425c7fe6-d994-4d97-8eae-56b373d61d94",
       "key": "wall thickness",
       "definition": ""
     },
     {
       "value": "60025",
-      "guid": "c145ad71-991e-46ee-b405-3e83da21c28e",
+      "guid": "3be65fe1-85c1-4b0f-8c46-1456c1626b5a",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "720",
-      "guid": "cc3882ec-3a23-49d8-94fc-519a639d85ec",
+      "guid": "435329d0-585e-474e-9a05-36b5a483d028",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "4802",
-      "guid": "1ffb37d6-e108-499b-a433-694b3f3f2bc7",
+      "guid": "67f00a64-85eb-4c95-9118-3c056aced446",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }

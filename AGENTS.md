@@ -1,4 +1,6 @@
-This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
+This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
+
+IMPORTANT: The codebase in under design and development and not used in production yet. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
 
 # Specs
 
@@ -226,6 +228,7 @@ Stats provide computed or measured performance data for entire designs using the
 - Whenever creating a markdown file, ALWAYS create it under `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for the task). When working on existing tasks, ALWAYS update the existing file.
 - When fixing issues, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
 - NEVER skip any test or simplify/remove functionality to pass or fix an issue. ALWAYS adjust implementation to pass the tests.
+- NEVER create scripts outside the `scripts` folder. Not even when debugging or diagnosing a library problem.
 
 ### Keywords
 

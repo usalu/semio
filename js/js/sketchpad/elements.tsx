@@ -3635,8 +3635,8 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
 
           return (
             <React.Fragment key={index}>
-              <BreadcrumbItem {...item} level={level} open={isOpen} onOpenChange={(open) => setOpenIndex(open ? index : null)} />
-              <BreadcrumbSeparatorItem level={level} hasOptions={hasOptions} isOpen={isOpen} onClick={hasOptions ? () => setOpenIndex(isOpen ? null : index) : undefined} id={item.id} />
+              <BreadcrumbItem {...item} level={level} />
+              <BreadcrumbSeparatorItem level={level} hasOptions={hasOptions} isOpen={isOpen} onOpenChange={(open) => setOpenIndex(open ? index : null)} id={item.id} options={item.options} onNavigate={item.onNavigate} />
             </React.Fragment>
           );
         })}
@@ -3648,22 +3648,9 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
 interface BreadcrumbItemProps extends React.ComponentProps<"li"> {
   id?: string;
   content?: React.ReactNode;
-  options?: { label: React.ReactNode; href: string; id?: string }[];
-  onNavigate?: (href: string) => void;
-  level?: Level;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
-function BreadcrumbItem({ className, id, content, children, options, onNavigate, level: propLevel, open = false, onOpenChange, ...props }: BreadcrumbItemProps) {
-  const level = useElementLevel(propLevel);
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-
-  const handleSelect = (href: string) => {
-    onOpenChange?.(false);
-    onNavigate?.(href);
-  };
-
+function BreadcrumbItem({ className, id, content, children, ...props }: BreadcrumbItemProps) {
   const itemContent = content ?? children;
   const interactiveContent = React.useMemo(() => {
     if (itemContent == null || typeof itemContent === "boolean") return null;
@@ -3688,47 +3675,62 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
     );
   }, [itemContent]);
 
-  if (!options?.length) {
-    const itemElement = (
-      <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
-        {interactiveContent}
-      </li>
-    );
+  const itemElement = (
+    <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
+      {interactiveContent}
+    </li>
+  );
 
-    if (id) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
-          <TooltipContent>
-            <DescriptionTooltipContent id={id} />
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return itemElement;
-  }
-
-  const triggerContent =
-    id && !open ? (
+  if (id) {
+    return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
         </TooltipContent>
       </Tooltip>
-    ) : (
-      <div className={cn("flex items-center cursor-selectable", hoverClass)}>{interactiveContent}</div>
     );
+  }
+
+  return itemElement;
+}
+
+interface BreadcrumbSeparatorItemProps {
+  level: Level;
+  hasOptions: boolean;
+  isOpen: boolean;
+  onOpenChange?: (open: boolean) => void;
+  id?: string;
+  options?: { label: React.ReactNode; href: string; id?: string }[];
+  onNavigate?: (href: string) => void;
+}
+
+function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onOpenChange, id, options, onNavigate }: BreadcrumbSeparatorItemProps) {
+  const icon = isOpen ? <ChevronDownIcon className="cursor-foldable" /> : <ChevronRightIcon className="cursor-foldable" />;
+
+  const handleSelect = (href: string) => {
+    onOpenChange?.(false);
+    onNavigate?.(href);
+  };
+
+  if (!hasOptions || !options?.length) {
+    return (
+      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className="flex items-center border-l p-single">
+        <Action level={level} icon={icon} className="cursor-foldable pointer-events-none" as="div" />
+      </li>
+    );
+  }
 
   return (
-    <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
-      <DropdownMenuPrimitive.Root open={open} onOpenChange={onOpenChange}>
-        <DropdownMenuPrimitive.Trigger asChild>{triggerContent}</DropdownMenuPrimitive.Trigger>
+    <li data-slot="breadcrumb-separator" role="presentation" className="flex items-center border-l p-single">
+      <DropdownMenuPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
+        <DropdownMenuPrimitive.Trigger asChild>
+          <div>
+            <Action level={level} id={id && !isOpen ? id : undefined} icon={icon} className="cursor-foldable" />
+          </div>
+        </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content align="start" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single z-temporary">
+          <DropdownMenuPrimitive.Content align="center" sideOffset={8} className="bg-temporary w-auto overflow-hidden border p-single z-temporary">
             {options.map((item, index) => {
               const menuItem = (
                 <DropdownMenuPrimitive.Item
@@ -3768,37 +3770,6 @@ function BreadcrumbItem({ className, id, content, children, options, onNavigate,
       </DropdownMenuPrimitive.Root>
     </li>
   );
-}
-
-interface BreadcrumbSeparatorItemProps {
-  level: Level;
-  hasOptions: boolean;
-  isOpen: boolean;
-  onClick?: () => void;
-  id?: string;
-}
-
-function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onClick, id }: BreadcrumbSeparatorItemProps) {
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
-
-  const separatorElement = (
-    <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className={cn("[&>svg]:size-tiny px-single flex items-center self-stretch border-l cursor-foldable", hasOptions && hoverClass)} onClick={onClick}>
-      {isOpen ? <ChevronDownIcon className="cursor-foldable" /> : <ChevronRightIcon className="cursor-foldable" />}
-    </li>
-  );
-
-  if (id && hasOptions && !isOpen) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{separatorElement}</TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return separatorElement;
 }
 
 export { Breadcrumb, BreadcrumbItem };

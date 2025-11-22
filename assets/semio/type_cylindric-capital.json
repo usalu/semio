@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2025-11-22T00:54:04.144Z",
+  "updatedAt": "2025-11-22T15:00:05.069Z",
   "ports": [
     {
-      "guid": "db5150fe-3c00-4ab8-870f-139377c4416f",
+      "guid": "6f84e0f9-3f26-4130-b727-9f4e199f7761",
       "attributes": [
         {
           "value": "",
-          "guid": "19f43377-a8ab-49d7-b251-cb79206b8e5a",
+          "guid": "0b332470-0890-40c0-b5a4-6274afb24afe",
           "key": "bottom",
           "definition": ""
         },
         {
           "value": "180",
-          "guid": "bfdabb80-0407-4f55-925c-1987c861ece7",
+          "guid": "bcf17362-694f-425f-b9e4-3272ef313ffa",
           "key": "wasp rotation",
           "definition": ""
         }
@@ -34,59 +34,59 @@
   ],
   "unit": "m",
   "virtual": false,
-  "createdAt": "2025-11-22T00:54:04.144Z",
+  "createdAt": "2025-11-22T15:00:05.069Z",
   "icon": "icons/cylindric-capital.svg",
   "authors": [
     {
-      "guid": "76a03ba7-43ba-4ff0-8f6f-9dd675acd021"
+      "guid": "d86bbfaf-c1ea-49ce-8e8e-785f815df623"
     }
   ],
   "attributes": [
     {
       "value": "south west",
-      "guid": "e6e91c52-166d-433b-8cea-692ac4df2fca",
+      "guid": "58673020-abdc-4c77-aff6-132a97184c47",
       "key": "peak",
       "definition": ""
     },
     {
       "value": "6.5",
-      "guid": "49fffdc7-d638-402c-b356-285c5458332c",
+      "guid": "0b19f7e3-fe16-427c-bb0d-f8c8fd7d223b",
       "key": "diameter",
       "definition": ""
     },
     {
       "value": "5.5",
-      "guid": "14f0a747-ec27-4617-8617-f66c98914013",
+      "guid": "b1394168-2efb-48e6-bf57-1fd960602326",
       "key": "height side",
       "definition": ""
     },
     {
       "value": "1",
-      "guid": "65137c91-bce6-4108-8503-4250d64be24b",
+      "guid": "525db4ce-5554-42c6-98b2-8ea7715f9bd6",
       "key": "height low",
       "definition": ""
     },
     {
       "value": "0.3",
-      "guid": "6664af82-814e-4ccc-8bbe-06ebc6f71d12",
+      "guid": "c2ff0193-baff-4931-a44d-6988fbf9b3b5",
       "key": "wall thickness",
       "definition": ""
     },
     {
       "value": "123029",
-      "guid": "b91ab5d5-9bc1-4b51-891f-f92ab8ec87df",
+      "guid": "1dacd90d-c024-465e-bcc5-fe5496e0cf77",
       "key": "construction cost",
       "definition": ""
     },
     {
       "value": "820",
-      "guid": "3934d664-cc31-4eab-b624-2829d7440f39",
+      "guid": "e548199f-2435-4c58-b53d-2041d3a87f23",
       "key": "maintenance expenses",
       "definition": ""
     },
     {
       "value": "8202",
-      "guid": "a42f7680-a649-4437-b250-f18ef1aa6043",
+      "guid": "c028cd97-f129-4f7b-83b4-540d9ac268dc",
       "key": "construction global warming potential",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }

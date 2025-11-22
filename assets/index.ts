@@ -9,7 +9,10 @@ export { default as NakaginCapsuleTowerSlantedDesign } from "./semio/design_naka
 export { default as NakaginCapsuleTowerSlantedFlatDesign } from "./semio/design_nakagin-capsule-tower_slanted_flat.json";
 export { default as NakaginCapsuleTowerTwistedDesign } from "./semio/design_nakagin-capsule-tower_twisted.json";
 export { default as NakaginCapsuleTowerTwistedFlatDesign } from "./semio/design_nakagin-capsule-tower_twisted_flat.json";
+export { default as MetabolismKitDiff } from "./semio/diff_kit_metabolism.json";
+export { default as MetabolismKitDiffInverted } from "./semio/diff_kit_metabolism_inverted.json";
 export { default as MetabolismKit } from "./semio/kit_metabolism.json";
+export { default as MetabolismKitDiffed } from "./semio/kit_metabolism_diffed.json";
 export { default as BaseType } from "./semio/type_base.json";
 export { default as BaseBlobType } from "./semio/type_base_blob.json";
 export { default as BridgeType } from "./semio/type_bridge.json";
@@ -55,3 +58,4 @@ export { default as TrapezoidCapsuleQType } from "./semio/type_trapezoid-capsule
 export { default as TrapezoidCapsuleSType } from "./semio/type_trapezoid-capsule_s.json";
 export { default as TrapezoidCapsuleSlashType } from "./semio/type_trapezoid-capsule_slash.json";
 export { default as TrapezoidCapsuleZType } from "./semio/type_trapezoid-capsule_z.json";
+

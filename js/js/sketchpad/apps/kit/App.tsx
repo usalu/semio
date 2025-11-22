@@ -22,21 +22,40 @@
 // #region Imports
 
 import { DragEndEvent, useDroppable } from "@dnd-kit/core";
-import { AddIcon, AwardIcon, ChevronDownIcon, ChevronRightIcon, DocumentIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FolderIcon, InterfaceIcon, LayoutIcon, SortAscendingIcon, SortDescendingIcon, TypeIcon, UserIcon } from "@semio/assets";
+import {
+  AddIcon,
+  AwardIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  DocumentIcon,
+  FileCodeIcon,
+  FileImageIcon,
+  FileJsonIcon,
+  FileSpreadsheetIcon,
+  FileTypeIcon,
+  FileVideoIcon,
+  FolderIcon,
+  InterfaceIcon,
+  LayoutIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  TypeIcon,
+  UserIcon,
+} from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
+import JSZip from "jszip";
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../../../i18n";
-import { areSameKit, Author, buildFileTree, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Quality, File as SemioFile, Type, TypeDiff } from "../../../semio";
+import { Author, buildFileTree, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Quality, File as SemioFile, Type, TypeDiff } from "../../../semio";
 import type { KitStore, SketchpadStore } from "../../App";
 import {
   Canvas,
   ConceptFilter,
-  DesignScopeProvider,
   identitySelector,
   KitDiffAppStore,
   KitScopeProvider,
@@ -61,7 +80,7 @@ import {
   useSyncDeep,
   Window,
 } from "../../App";
-import { Action, Input, Scrollable, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
+import { Action, Input, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
 import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, Theme, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
 import { createPanelDefinition, PanelKind } from "../../sketchpad";
 import { AppConfig } from "../index";
@@ -1861,6 +1880,97 @@ const DroppableTableWrapper: FC<{ children: React.ReactNode }> = ({ children }) 
   );
 };
 
+const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const kitCommands = useKitCommands();
+  const { t } = useTranslation();
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      const hasZip = Array.from(e.dataTransfer.items).some(
+        (item) => item.kind === "file" && item.type === "application/zip"
+      );
+      if (hasZip) {
+        setIsDragging(true);
+      }
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const zipFile = files.find((f) => f.name.endsWith(".zip"));
+
+    if (zipFile && kitCommands) {
+      try {
+        const arrayBuffer = await zipFile.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const hasKitDb = zip.file(".semio/kit.db") !== null;
+
+        if (hasKitDb) {
+          const tempBlob = new Blob([arrayBuffer], { type: "application/zip" });
+          const tempUrl = URL.createObjectURL(tempBlob);
+          await kitCommands.importKit("semio.sketchpad.app.kit.dropzone", tempUrl);
+          URL.revokeObjectURL(tempUrl);
+        } else {
+          const filesToAdd: { path: string; blob: Blob }[] = [];
+          for (const [path, zipEntry] of Object.entries(zip.files)) {
+            if (!zipEntry.dir) {
+              const blob = await zipEntry.async("blob");
+              filesToAdd.push({ path, blob });
+            }
+          }
+          for (const file of filesToAdd) {
+            const fileToAdd: SemioFile = {
+              guid: guid(),
+              path: file.path,
+              remoteUrl: "",
+              description: "",
+              attributes: [],
+            };
+            await kitCommands.addFile("semio.sketchpad.app.kit.dropzone", fileToAdd, file.blob);
+          }
+        }
+      } catch (error) {
+        console.error("[DEBUG] Failed to process dropped zip file:", error);
+      }
+    }
+  };
+
+  return (
+    <div
+      className="relative h-full w-full"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {children}
+      {isDragging && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <DocumentIcon className="h-12 w-12 text-muted-foreground" />
+            <p className="text-lg font-medium">{t("semio.sketchpad.app.kit.dropzone.label")}</p>
+            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.dropzone.description")}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AppContent: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -2107,6 +2217,114 @@ const AppContent: FC = () => {
     };
   }, [addSection, removeSection, appType, kitApp?.selection]);
 
+  // Add settings section
+  useEffect(() => {
+    if (appType !== "kit") return;
+
+    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
+
+    addSection("settings", {
+      id: "semio.sketchpad.settings",
+      specificity: 0,
+      order: 0,
+      content: () => {
+        const theme = useTheme();
+        const language = useLanguage();
+        const layout = useLayout();
+        const expertise = useExpertise();
+        const mode = useMode();
+
+        const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
+        const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
+        const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
+
+        return (
+          <>
+            <TreeItem>
+              <TreeContent>
+                <ToggleGroup
+                  id="semio.sketchpad.settings.theme"
+                  value={theme}
+                  onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
+                  showLabel
+                  kind="single"
+                  items={[
+                    { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+                    { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+                    { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+                  ]}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+                  <SelectTrigger>
+                    <SelectValue placeholder={languagePlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">{languageEnLabel}</SelectItem>
+                    <SelectItem value="de">{languageDeLabel}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <ToggleGroup
+                  id="semio.sketchpad.settings.layout"
+                  value={typeof layout === "object" ? "desktop" : layout}
+                  onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
+                  showLabel
+                  kind="single"
+                  items={[
+                    { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+                    { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+                  ]}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <ToggleGroup
+                  id="semio.sketchpad.settings.expertise"
+                  value={expertise}
+                  onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
+                  showLabel
+                  kind="single"
+                  items={[
+                    { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+                    { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+                    { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+                  ]}
+                />
+              </TreeContent>
+            </TreeItem>
+            <TreeItem>
+              <TreeContent>
+                <ToggleGroup
+                  id="semio.sketchpad.settings.mode"
+                  value={mode}
+                  onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
+                  showLabel
+                  kind="single"
+                  items={[
+                    { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+                    { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+                  ]}
+                />
+              </TreeContent>
+            </TreeItem>
+          </>
+        );
+      },
+    });
+
+    return () => {
+      removeSection("settings", "semio.sketchpad.settings");
+    };
+  }, [appType, addSection, removeSection, sketchpadCommands]);
+
   // Auto-select design/type when select parameter is present
   useEffect(() => {
     if (!selectParam) return;
@@ -2343,7 +2561,7 @@ const AppContent: FC = () => {
       // Helper function to recursively build folder hierarchy
       const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentGuid = parentFolder?.guid;
-        const childFolders = kit.folders?.filter((f: Folder) => !f.parent && !parentGuid || f.parent && typeof f.parent === 'object' && f.parent.guid === parentGuid) || [];
+        const childFolders = kit.folders?.filter((f: Folder) => (!f.parent && !parentGuid) || (f.parent && typeof f.parent === "object" && f.parent.guid === parentGuid)) || [];
 
         childFolders.forEach((folder: Folder) => {
           if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
@@ -3659,14 +3877,14 @@ const AppContent: FC = () => {
             key="search"
             id="semio.sketchpad.app.kit.canvas.table.search"
             className="flex-1 min-w-[200px]"
-          placeholder={useLabel("semio.sketchpad.common.search")}
-          value={searchQuery}
-          onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
-        />,
-      ]}
-    />
+            placeholder={useLabel("semio.sketchpad.common.search")}
+            value={searchQuery}
+            onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
+          />,
+        ]}
+      />
       <ConceptFilter allConcepts={allConcepts} paramName="c" />
-        <Scrollable ref={scrollAreaRef} className="flex-1 min-h-0" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
+      <Scrollable ref={scrollAreaRef} className="flex-1 min-h-0" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>
         {isDragOver && (
           <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-panel">
             <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
@@ -3882,11 +4100,13 @@ const App: FC = () => {
         </div>
       }
     >
-      <Canvas>
-        <Window id="kit-table">
-          <AppContent />
-        </Window>
-      </Canvas>
+      <KitDropZone>
+        <Canvas>
+          <Window id="kit-table">
+            <AppContent />
+          </Window>
+        </Canvas>
+      </KitDropZone>
     </ErrorBoundary>
   );
 };
@@ -4116,7 +4336,12 @@ const SingleInterfaceSection: FC<{ interfaceGuid: string }> = ({ interfaceGuid }
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.kit.panel.details.section.interface.compatible" value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.interface.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.interface.compatibleInterfaces")}`} readOnly showLabel />
+          <Input
+            id="semio.sketchpad.app.kit.panel.details.section.interface.compatible"
+            value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.interface.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.interface.compatibleInterfaces")}`}
+            readOnly
+            showLabel
+          />
         </TreeContent>
       </TreeItem>
     </>

@@ -710,30 +710,30 @@
             }
           }
         },
-          "language": {
+        "language": {
+          "label": {
+            "normal": "Language",
+            "beginner": "Select the language for the application interface"
+          },
+          "placeholder": {
             "label": {
-              "normal": "Language",
-              "beginner": "Select the language for the application interface"
-            },
-            "placeholder": {
-              "label": {
-                "normal": "Select language...",
-                "beginner": "Select the interface language"
-              }
-            },
-            "de": {
-              "label": {
-                "normal": "Deutsch",
-                "beginner": "Deutsch"
-              }
-            },
-            "en": {
-              "label": {
-                "normal": "English",
-                "beginner": "English"
-              }
+              "normal": "Select language...",
+              "beginner": "Select the interface language"
+            }
+          },
+          "de": {
+            "label": {
+              "normal": "Deutsch",
+              "beginner": "Deutsch"
+            }
+          },
+          "en": {
+            "label": {
+              "normal": "English",
+              "beginner": "English"
             }
           }
+        }
       },
       "sort": {
         "label": {
@@ -906,8 +906,8 @@
               },
               "placeholder": {
                 "label": {
-                "normal": "Select language...",
-                "beginner": "Select the interface language"
+                  "normal": "Select language...",
+                  "beginner": "Select the interface language"
                 }
               }
             },
@@ -1140,6 +1140,16 @@
               "beginner": "Kit not available"
             }
           },
+          "dropzone": {
+            "label": {
+              "normal": "Drop zip file to import",
+              "beginner": "Drop a zip file here to import it as a kit or add files to the current kit"
+            },
+            "description": {
+              "normal": "Kits with .semio folder will be imported, others will be added as files",
+              "beginner": "If the zip contains a .semio folder, it will be imported as a complete kit. Otherwise, the files will be added to the current kit."
+            }
+          },
           "versionPlaceholder": {
             "label": {
               "label": {
@@ -1234,19 +1244,25 @@
               },
               "hotkey": "Ctrl+F"
             },
-            "search": {
-              "label": {
-                "normal": "Search filter",
-                "beginner": "Search for specific filters"
-              },
-              "hotkey": "Ctrl+Shift+F"
-            }
-          },
-          "designs": {
+          "search": {
             "label": {
-              "normal": "Designs",
-              "beginner": "Designs in this kit"
+              "normal": "Search filter",
+              "beginner": "Search for specific filters"
             },
+            "hotkey": "Ctrl+Shift+F"
+          }
+        },
+        "pieces": {
+          "label": {
+            "normal": "Pieces",
+            "beginner": "Types and designs in this kit"
+          }
+        },
+        "designs": {
+          "label": {
+            "normal": "Designs",
+            "beginner": "Designs in this kit"
+          },
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
             "multipleSelected": {
