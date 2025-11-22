@@ -1,130 +1,191 @@
 {
-  "updatedAt": "2025-11-22T15:00:08.002Z",
+  "name": "Ellipsoid Capsule",
+  "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
   "icon": "icons/ellipsoid-capsule_q.svg",
-  "parent": "Ellipsoid",
-  "unit": "m",
+  "image": "images/ellipsoid-capsule_q.png",
+  "variant": "q",
+  "stock": 2147483647,
   "virtual": false,
-  "createdAt": "2025-11-22T15:00:08.002Z",
+  "location": null,
+  "unit": "m",
+  "representations": [
+    {
+      "url": "representations/ellipsoid-capsule_q.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/ellipsoid-capsule_q_1to500.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/ellipsoid-capsule_q_1to200.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/58af8da8c8",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/d6ddf1d05d",
+      "description": "",
+      "tags": [
+        "application/octet-stream",
+        "model/vnd.speckle+json",
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/ellipsoid-capsule_q_collider.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
+    }
+  ],
+  "ports": [
+    {
+      "id_": "",
+      "description": "The middle of the main entrance door of the upper entrance floor.",
+      "mandatory": false,
+      "family": "door capsule east",
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "point": {
+        "x": 0.87,
+        "y": -1.8,
+        "z": 0.0
+      },
+      "direction": {
+        "x": 0.0,
+        "y": -1.0,
+        "z": 0.0
+      },
+      "t": 0.0,
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
+    }
+  ],
   "authors": [
     {
-      "guid": "3bac2cd9-2dcf-4115-9a35-27d88f245eed"
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
     }
   ],
   "attributes": [
     {
+      "name": "entrance",
       "value": "back",
-      "guid": "0a5d34f7-0983-4642-b563-9f41c8e7521f",
-      "key": "entrance",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "view",
       "value": "side",
-      "guid": "349ec1ff-d195-43b1-85e0-fe4460253e8d",
-      "key": "view",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "length",
       "value": "3.6",
-      "guid": "6f3e2212-3b57-4691-a6b4-199395750814",
-      "key": "length",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
+      "name": "width",
       "value": "4",
-      "guid": "3db44f70-f863-429a-ac7f-dd29315b2b69",
-      "key": "width",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
+      "name": "heigth",
       "value": "2.6",
-      "guid": "b13e263d-f833-4511-bdd7-2b9778fc7cbf",
-      "key": "heigth",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
+      "name": "window shape",
       "value": "round",
-      "guid": "2ff22faa-1f42-4e21-8e74-4905ed1d2cfd",
-      "key": "window shape",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "effective floor area",
       "value": "6.92",
-      "guid": "75d5fe26-1ebf-4040-936d-3c328b5cdb93",
-      "key": "effective floor area",
+      "unit": "m²",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
+      "name": "construction cost",
       "value": "79488",
-      "guid": "47fadaa5-4e3b-40af-8bbf-ad989c68f22d",
-      "key": "construction cost",
+      "unit": "€",
       "definition": ""
     },
     {
+      "name": "heating energy demand",
       "value": "276",
-      "guid": "6108e7c8-8155-425f-9cf7-cff57141d035",
-      "key": "heating energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "cooling energy demand",
       "value": "173",
-      "guid": "33ad3134-43ac-4504-ba3b-50a5e451b5c1",
-      "key": "cooling energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "technical equipment energy demand",
       "value": "242",
-      "guid": "3f0656bd-35c1-4b0a-974b-35ad47975523",
-      "key": "technical equipment energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "income",
       "value": "24883",
-      "guid": "90eb263e-86c9-40d4-ae0b-0535511e6ef4",
-      "key": "income",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "maintenance expenses",
       "value": "1659",
-      "guid": "e078a4d6-6fd8-48d7-8cde-f4ba5df957d4",
-      "key": "maintenance expenses",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "construction global warming potential",
       "value": "1200",
-      "guid": "7482c678-c37f-48d3-92a8-0d0836edaf42",
-      "key": "construction global warming potential",
+      "unit": "kgCO2e",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     }
-  ],
-  "stock": 2147483647,
-  "ports": [
-    {
-      "guid": "02afba67-ded3-4d57-bd0f-1f06b5660538",
-      "attributes": [
-        {
-          "value": "",
-          "guid": "8e58be9b-30aa-426d-95e5-4d7b231c906c",
-          "key": "entrance",
-          "definition": ""
-        }
-      ],
-      "point": {
-        "x": 0.87,
-        "z": 0.0,
-        "y": -1.8
-      },
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "direction": {
-        "x": 0.0,
-        "z": 0.0,
-        "y": -1.0
-      },
-      "t": 0.0
-    }
-  ],
-  "name": "q",
-  "guid": "f7056281-1fe0-4630-b486-718b0f3162aa",
-  "image": "images/ellipsoid-capsule_q.png",
-  "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the ."
+  ]
 }

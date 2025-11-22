@@ -3,6 +3,7 @@
 ## 1. Problem Description
 
 When a zip file is dropped onto the kit app, we need to:
+
 1. Check if it contains a `.semio` folder (indicating it's a kit)
 2. If it's a kit: Import the entire kit
 3. If it's not a kit: Import just the files into the current kit
@@ -10,6 +11,7 @@ When a zip file is dropped onto the kit app, we need to:
 ## 2. Analysis
 
 ### 2.1. Current State
+
 - Kit app exists in `js/js/sketchpad/apps/kit/App.tsx`
 - Kit import functionality exists via `semio.kit.import` command
 - File import functionality exists via file operations
@@ -68,6 +70,7 @@ When a zip file is dropped onto the kit app, we need to:
 ### 3.3. Visual Feedback
 
 When dragging a zip file over the kit app:
+
 - Overlay appears with semi-transparent background
 - Document icon displayed
 - Label: "Drop zip file to import"
@@ -89,6 +92,7 @@ When dragging a zip file over the kit app:
 ## 5. Testing Notes
 
 To test this feature:
+
 1. Navigate to a kit in the kit app
 2. Drag a `.semio.zip` kit file (with `.semio` folder) onto the canvas
    - Should import the entire kit

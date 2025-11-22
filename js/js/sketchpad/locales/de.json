@@ -980,25 +980,25 @@
               },
               "hotkey": "Ctrl+F"
             },
-          "search": {
-            "label": {
-              "normal": "Suchfilter",
-              "beginner": "Nach bestimmten Filtern suchen"
-            },
-            "hotkey": "Ctrl+Shift+F"
-          }
-        },
-        "pieces": {
-          "label": {
-            "normal": "Teile",
-            "beginner": "Typen und Entwuerfe in diesem Kit"
-          }
-        },
-        "designs": {
-          "label": {
-            "normal": "Entwuerfe",
-            "beginner": "Entwuerfe in diesem Kit"
+            "search": {
+              "label": {
+                "normal": "Suchfilter",
+                "beginner": "Nach bestimmten Filtern suchen"
+              },
+              "hotkey": "Ctrl+Shift+F"
+            }
           },
+          "pieces": {
+            "label": {
+              "normal": "Teile",
+              "beginner": "Typen und Entwuerfe in diesem Kit"
+            }
+          },
+          "designs": {
+            "label": {
+              "normal": "Entwuerfe",
+              "beginner": "Entwuerfe in diesem Kit"
+            },
             "manual": "manuals/semio/kit#designs",
             "tutorial": "hello-semio/model-design",
             "multipleSelected": {

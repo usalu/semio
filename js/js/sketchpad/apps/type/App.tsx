@@ -53,6 +53,7 @@ import {
   useKitStore,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
   useTooltip,

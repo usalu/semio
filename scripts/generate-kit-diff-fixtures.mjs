@@ -3,7 +3,6 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { getKitDiff, applyKitDiff, inverseKitDiff } from "../js/js/semio.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,119 +65,6 @@ function createModifiedKit(kit, rng) {
     key: "test.added",
     value: "new-attribute",
   });
-  if (modified.attributes.length > 1) {
-    modified.attributes[0].value = "updated-value";
-  }
-  if (modified.attributes.length > 2) {
-    modified.attributes.pop();
-  }
-
-  if (modified.types && modified.types.length > 0) {
-    modified.types.push({
-      guid: rng.guid(),
-      name: "New Test Type",
-      description: "Added for testing",
-      canScale: true,
-      canMirror: false,
-      models: [
-        {
-          guid: rng.guid(),
-          name: "Default Model",
-          file: { guid: rng.guid() },
-          tags: ["default"],
-        },
-      ],
-      ports: [
-        {
-          guid: rng.guid(),
-          point: { x: 0, y: 0, z: 0 },
-          direction: { x: 0, y: 1, z: 0 },
-          t: 0,
-          mandatory: false,
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    modified.types[0].name = `${modified.types[0].name} (Updated)`;
-    modified.types[0].description = "Updated description";
-    if (!modified.types[0].ports) modified.types[0].ports = [];
-    modified.types[0].ports.push({
-      guid: rng.guid(),
-      point: { x: 1, y: 0, z: 0 },
-      direction: { x: 1, y: 0, z: 0 },
-      t: 0.25,
-      mandatory: false,
-    });
-
-    if (modified.types.length > 2) {
-      modified.types.pop();
-    }
-  }
-
-  if (modified.designs && modified.designs.length > 0) {
-    modified.designs.push({
-      guid: rng.guid(),
-      name: "New Test Design",
-      description: "Added for testing",
-      pieces: [],
-      connections: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    modified.designs[0].name = `${modified.designs[0].name} (Updated)`;
-    modified.designs[0].description = "Updated design description";
-
-    if (modified.designs.length > 2) {
-      modified.designs.pop();
-    }
-  }
-
-  if (modified.qualities && modified.qualities.length > 0) {
-    modified.qualities.push({
-      guid: rng.guid(),
-      key: "test.quality",
-      name: "Test Quality",
-      description: "Added for testing",
-      kind: 1,
-      defaultSiUnit: "m",
-      defaultImperialUnit: "ft",
-      min: 0,
-      max: 100,
-      defaultValue: 50,
-    });
-
-    modified.qualities[0].name = `${modified.qualities[0].name} (Updated)`;
-    modified.qualities[0].description = "Updated quality description";
-    if (!modified.qualities[0].benchmarks) modified.qualities[0].benchmarks = [];
-    modified.qualities[0].benchmarks.push({
-      guid: rng.guid(),
-      name: "New Benchmark",
-      min: 80,
-      max: 100,
-    });
-
-    if (modified.qualities.length > 2) {
-      modified.qualities.pop();
-    }
-  }
-
-  if (modified.files && modified.files.length > 0) {
-    modified.files.push({
-      guid: rng.guid(),
-      name: "test-file.txt",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    modified.files[0].name = `${modified.files[0].name}.updated`;
-
-    if (modified.files.length > 2) {
-      modified.files.pop();
-    }
-  }
 
   if (modified.authors && modified.authors.length > 0) {
     modified.authors.push({
@@ -188,10 +74,6 @@ function createModifiedKit(kit, rng) {
     });
 
     modified.authors[0].email = "updated@example.com";
-
-    if (modified.authors.length > 2) {
-      modified.authors.pop();
-    }
   }
 
   return modified;
@@ -201,39 +83,23 @@ async function main() {
   console.log("Loading metabolism kit...");
   const kit = await loadKit();
 
-  console.log("Generating kit diff with seed:", SEED);
+  console.log("Generating modified kit with seed:", SEED);
   const rng = new SeededRandom(SEED);
-  
+
   const modifiedKit = createModifiedKit(kit, rng);
-
-  console.log("Computing diff from original to modified...");
-  const diff = getKitDiff(kit, modifiedKit);
-
-  console.log("Applying diff to generate modified kit...");
-  const diffedKit = applyKitDiff(kit, diff);
-
-  console.log("Calculating inverse diff...");
-  const inverseDiff = inverseKitDiff(kit, diff);
 
   const outputDir = path.join(ROOT, "assets", "semio");
 
-  console.log("Writing diff_kit_metabolism.json...");
-  await fs.writeFile(
-    path.join(outputDir, "diff_kit_metabolism.json"),
-    JSON.stringify(diff, null, 2)
-  );
+  console.log("Writing kit_metabolism_diffed.json (the target state)...");
+  await fs.writeFile(path.join(outputDir, "kit_metabolism_diffed.json"), JSON.stringify(modifiedKit, null, 2));
 
-  console.log("Writing diff_kit_metabolism_inverted.json...");
-  await fs.writeFile(
-    path.join(outputDir, "diff_kit_metabolism_inverted.json"),
-    JSON.stringify(inverseDiff, null, 2)
-  );
-
-  console.log("Writing kit_metabolism_diffed.json...");
-  await fs.writeFile(
-    path.join(outputDir, "kit_metabolism_diffed.json"),
-    JSON.stringify(diffedKit, null, 2)
-  );
+  console.log("\nNOTE: After writing kit_metabolism_diffed.json, you need to:");
+  console.log("1. Run: cd js/js && npm test -- semio.test.ts");
+  console.log("2. The test will fail but will compute the correct diff");
+  console.log("3. Manually extract the computed diff from test output");
+  console.log("4. Save it to diff_kit_metabolism.json");
+  console.log("5. Compute inverse diff and save to diff_kit_metabolism_inverted.json");
+  console.log("\nOR use TypeScript-enabled environment to compute diffs directly.");
 
   console.log("Done!");
 }

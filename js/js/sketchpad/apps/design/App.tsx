@@ -6502,7 +6502,8 @@ const App: FC<AppProps> = () => {
 
     const renderTypeTree = (types: Type[]): ReactNode[] => {
       return types.map((type) => {
-        const children = kit.types?.filter((item) => item.parent === type.guid) || [];
+        const children =
+          kit.types?.filter((item) => (typeof item.parent === "object" ? item.parent?.guid === type.guid : item.parent === type.guid)) || [];
         return (
           <div key={type.guid} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
             <TypeTreeItem type={type} onCreateChild={handleCreateTypeChild}>
@@ -6515,7 +6516,8 @@ const App: FC<AppProps> = () => {
 
     const renderDesignTree = (designs: Design[]): ReactNode[] => {
       return designs.map((design) => {
-        const children = kit.designs?.filter((child) => child.parent === design.guid) || [];
+        const children =
+          kit.designs?.filter((child) => (typeof child.parent === "object" ? child.parent?.guid === design.guid : child.parent === design.guid)) || [];
         return (
           <div key={design.guid} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [design.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
             <DesignTreeItem design={design} onCreateChild={handleCreateDesignChild}>

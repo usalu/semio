@@ -9,7 +9,7 @@
   "authors": {
     "updated": [
       {
-        "id": "361479ba-77e5-4610-a1c5-de23422de443",
+        "id": "452ec3cf-b8e7-42cf-8403-772ccccb3e2a",
         "diff": {
           "email": "updated@example.com"
         }
@@ -17,7 +17,7 @@
     ],
     "added": [
       {
-        "guid": "la5128j2-ajns-ea3k-cnf9-vgg61czkcpiv",
+        "guid": "rg5gm1kb-9gx7-lxcc-p25n-rf7vltu2u19q",
         "name": "Test Author",
         "email": "test@example.com"
       }

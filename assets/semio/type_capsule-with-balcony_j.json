@@ -1,130 +1,190 @@
 {
-  "updatedAt": "2025-11-22T15:00:02.788Z",
+  "name": "Capsule with Balcony",
+  "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
   "icon": "icons/capsule-with-balcony_J.svg",
-  "parent": "Balcony",
-  "unit": "m",
+  "image": "images/capsule-with-balcony_J.png",
+  "variant": "J",
+  "stock": 2147483647,
   "virtual": false,
-  "createdAt": "2025-11-22T15:00:02.788Z",
+  "location": null,
+  "unit": "m",
+  "representations": [
+    {
+      "url": "representations/capsule-with-balcony_J.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/capsule-with-balcony_J_1to500.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/capsule-with-balcony_J_1to200.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/capsule-with-balcony_J_collider.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
+    }
+  ],
+  "ports": [
+    {
+      "id_": "",
+      "description": "The middle of the main entrance door of the upper entrance floor.",
+      "mandatory": false,
+      "family": "door capsule east",
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "point": {
+        "x": -1.3,
+        "y": -1.25,
+        "z": 0.0
+      },
+      "direction": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "t": 0.0,
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
+    }
+  ],
   "authors": [
     {
-      "guid": "c46c6804-38ae-49f2-8785-e5927e916f13"
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
     }
   ],
   "attributes": [
     {
+      "name": "entrance",
       "value": "side",
-      "guid": "7a73f65e-5e92-4b25-b8b3-3c6593c0cae8",
-      "key": "entrance",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "view",
       "value": "front",
-      "guid": "92847b0b-7dc1-45ed-bf15-919ff9619438",
-      "key": "view",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "length",
       "value": "5.7",
-      "guid": "033e8dba-4af5-4fd3-9bab-09a74bc99751",
-      "key": "length",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
+      "name": "width",
       "value": "2.6",
-      "guid": "8ec99ad0-2ae5-42e8-b01c-43bb6f3b6a05",
-      "key": "width",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
+      "name": "heigth",
       "value": "2.5",
-      "guid": "f4f53aba-fb22-48ad-abbb-1f62d5f4cc23",
-      "key": "heigth",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
+      "name": "window shape",
       "value": "round",
-      "guid": "f50c816c-4ff4-4f59-9038-d1843f8f6773",
-      "key": "window shape",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "effective floor area",
       "value": "10.17",
-      "guid": "646f7af3-047c-45f4-9037-8fa61e40b253",
-      "key": "effective floor area",
+      "unit": "m²",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
+      "name": "construction cost",
       "value": "82992",
-      "guid": "9b686ee4-6fda-477c-bbe7-3dcf11c962ea",
-      "key": "construction cost",
+      "unit": "€",
       "definition": ""
     },
     {
+      "name": "heating energy demand",
       "value": "393",
-      "guid": "38d596bc-0d0b-4e1d-ab31-350a5c7f1070",
-      "key": "heating energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "cooling energy demand",
       "value": "262",
-      "guid": "75c2dea5-4f7a-436e-9ecb-2eb616610adc",
-      "key": "cooling energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "technical equipment energy demand",
       "value": "262",
-      "guid": "e6e04cec-c3e7-452e-b985-89b2fdc1667d",
-      "key": "technical equipment energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "income",
       "value": "13104",
-      "guid": "c9c47bfc-61ac-4600-b06d-fd46760beb7c",
-      "key": "income",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "maintenance expenses",
       "value": "1048",
-      "guid": "cef281e0-d90e-430d-8128-3b1c94824642",
-      "key": "maintenance expenses",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "construction global warming potential",
       "value": "8736.01",
-      "guid": "48193d74-eacd-4e03-937d-4b8f43c123f0",
-      "key": "construction global warming potential",
+      "unit": "kgCO2e",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     }
-  ],
-  "stock": 2147483647,
-  "ports": [
-    {
-      "guid": "c2503fd4-cc76-4cab-9d24-456160f0c5df",
-      "attributes": [
-        {
-          "value": "",
-          "guid": "bf1b138f-74b1-4bae-aa79-08758c69ed36",
-          "key": "entrance",
-          "definition": ""
-        }
-      ],
-      "point": {
-        "x": -1.3,
-        "z": 0.0,
-        "y": -1.25
-      },
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "direction": {
-        "x": -1.0,
-        "z": 0.0,
-        "y": 0.0
-      },
-      "t": 0.0
-    }
-  ],
-  "name": "J",
-  "guid": "be8abd99-0184-44b4-8408-10d7c77f24d8",
-  "image": "images/capsule-with-balcony_J.png",
-  "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front."
+  ]
 }

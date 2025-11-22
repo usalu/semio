@@ -1,136 +1,196 @@
 {
-  "updatedAt": "2025-11-22T15:00:01.846Z",
+  "name": "Capsule",
+  "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
   "icon": "icons/capsule_slash.svg",
-  "parent": "Box",
-  "unit": "m",
+  "image": "images/capsule_slash.png",
+  "variant": "/",
+  "stock": 2147483647,
   "virtual": false,
-  "createdAt": "2025-11-22T15:00:01.846Z",
+  "location": null,
+  "unit": "m",
+  "representations": [
+    {
+      "url": "representations/capsule_slash.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/capsule_slash_1to500.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/capsule_slash_1to200.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e6c366306e",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f16baa9eba",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/capsule_slash_collider.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
+    }
+  ],
+  "ports": [
+    {
+      "id_": "",
+      "description": "The middle of the main entrance door of the upper entrance floor.",
+      "mandatory": false,
+      "family": "door capsule west",
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "point": {
+        "x": -0.45,
+        "y": -2.1,
+        "z": 2.7755576e-17
+      },
+      "direction": {
+        "x": 0.0,
+        "y": -1.0,
+        "z": 0.0
+      },
+      "t": 0.0,
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
+    }
+  ],
   "authors": [
     {
-      "guid": "8dd100cf-c100-402d-b627-b1d821260f81"
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
     }
   ],
   "attributes": [
     {
+      "name": "entrance",
       "value": "back",
-      "guid": "d456a803-5df0-4391-a54f-47175e6ce482",
-      "key": "entrance",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "view",
       "value": "front",
-      "guid": "6888dd24-e191-442b-be2b-d51d2de7841e",
-      "key": "view",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "length",
       "value": "4.2",
-      "guid": "a5922f23-a042-4a25-809d-e7b3cad663ec",
-      "key": "length",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
+      "name": "width",
       "value": "2.6",
-      "guid": "0d2b21cb-2597-4a4f-a29e-19c5b18a125b",
-      "key": "width",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
+      "name": "heigth",
       "value": "2.5",
-      "guid": "8ed3dac5-e0b8-422a-94d2-3493b04db630",
-      "key": "heigth",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
+      "name": "window shape",
       "value": "round",
-      "guid": "718d0660-7a43-435f-826f-e18062bed6ee",
-      "key": "window shape",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "effective floor area",
       "value": "8.74",
-      "guid": "3437f4e8-3139-45b5-a3c0-e81652ee64d9",
-      "key": "effective floor area",
+      "unit": "m²",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
+      "name": "construction cost",
       "value": "82992",
-      "guid": "ae4466c7-16f5-46b4-9fe7-9c95b08ee54c",
-      "key": "construction cost",
+      "unit": "€",
       "definition": ""
     },
     {
+      "name": "heating energy demand",
       "value": "393",
-      "guid": "0f39a3cb-f606-448b-9e59-35d36a58d1da",
-      "key": "heating energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "cooling energy demand",
       "value": "262",
-      "guid": "9708f5db-2c1b-420d-8104-6e88a2c18bfc",
-      "key": "cooling energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "technical equipment energy demand",
       "value": "262",
-      "guid": "e88fa6f7-03d2-4cbb-abc9-695efa118f84",
-      "key": "technical equipment energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "income",
       "value": "13104",
-      "guid": "8cdedba6-7ec5-4011-bdc2-bf566c168d0a",
-      "key": "income",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "maintenance expenses",
       "value": "1048",
-      "guid": "d548a688-944b-4518-ab72-9274dfd9b761",
-      "key": "maintenance expenses",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "construction global warming potential",
       "value": "8736.01",
-      "guid": "26a73477-b758-4ec5-9ed2-ff6e3e441e16",
-      "key": "construction global warming potential",
+      "unit": "kgCO2e",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     },
     {
+      "name": "mirrored",
       "value": "",
-      "guid": "140be74d-e898-48ab-a694-b7787b8bc191",
-      "key": "mirrored",
+      "unit": "",
       "definition": ""
     }
-  ],
-  "stock": 2147483647,
-  "ports": [
-    {
-      "guid": "66499800-88a0-45b2-a82c-91e17be6a8ee",
-      "attributes": [
-        {
-          "value": "",
-          "guid": "8c7e0c97-9220-464a-9672-386172c00dea",
-          "key": "entrance",
-          "definition": ""
-        }
-      ],
-      "point": {
-        "x": -0.45,
-        "z": 2.7755576E-17,
-        "y": -2.1
-      },
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "direction": {
-        "x": 0.0,
-        "z": 0.0,
-        "y": -1.0
-      },
-      "t": 0.0
-    }
-  ],
-  "name": "/",
-  "guid": "727d779b-96f0-459b-83b8-f9c61617a045",
-  "image": "images/capsule_slash.png",
-  "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one."
+  ]
 }

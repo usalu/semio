@@ -1,118 +1,178 @@
 {
-  "updatedAt": "2025-11-22T15:00:11.141Z",
+  "name": "Trapezoid Capsule",
+  "description": "An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
   "icon": "icons/trapezoid-capsule_L.svg",
-  "parent": "Trapezoid",
-  "unit": "m",
+  "image": "images/trapezoid-capsule_L.png",
+  "variant": "L",
+  "stock": 2147483647,
   "virtual": false,
-  "createdAt": "2025-11-22T15:00:11.141Z",
+  "location": null,
+  "unit": "m",
+  "representations": [
+    {
+      "url": "representations/trapezoid-capsule_L.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/trapezoid-capsule_L_1to500.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/trapezoid-capsule_L_1to200.3dm",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
+      "description": "",
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
+    },
+    {
+      "url": "representations/trapezoid-capsule_L_collider.glb",
+      "description": "",
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
+    }
+  ],
+  "ports": [
+    {
+      "id_": "",
+      "description": "The middle of the main entrance door of the upper entrance floor.",
+      "mandatory": false,
+      "family": "door capsule east",
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "point": {
+        "x": -0.42,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "direction": {
+        "x": 0.14780942,
+        "y": -0.9890159,
+        "z": 0.0
+      },
+      "t": 0.0,
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
+    }
+  ],
   "authors": [
     {
-      "guid": "312da236-7188-47d5-bc0e-6c629bb000c2"
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
     }
   ],
   "attributes": [
     {
+      "name": "entrance",
       "value": "side",
-      "guid": "6b1d48c6-4b55-40dc-8db1-1824359cb484",
-      "key": "entrance",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "view",
       "value": "front",
-      "guid": "e046c1b4-86d8-4570-9e60-1ee6b49f045d",
-      "key": "view",
+      "unit": "",
       "definition": ""
     },
     {
+      "name": "heigth",
       "value": "2.5",
-      "guid": "ec37df5a-bbd7-463b-9f01-1c0db0ff92cf",
-      "key": "heigth",
+      "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
+      "name": "effective floor area",
       "value": "7.19",
-      "guid": "0556b487-74f4-431b-9e6e-ede9573e9b42",
-      "key": "effective floor area",
+      "unit": "m²",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
+      "name": "construction cost",
       "value": "68272",
-      "guid": "79b4a30c-e5ff-4841-93bf-82827ad92429",
-      "key": "construction cost",
+      "unit": "€",
       "definition": ""
     },
     {
+      "name": "heating energy demand",
       "value": "323",
-      "guid": "cbe897ab-b86e-4e23-a1f1-23edd92f3eca",
-      "key": "heating energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "cooling energy demand",
       "value": "216",
-      "guid": "48d9add6-6bc1-4248-8409-d9ca83324416",
-      "key": "cooling energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "technical equipment energy demand",
       "value": "216",
-      "guid": "f554974d-cf19-4fba-a9f2-601a27553b41",
-      "key": "technical equipment energy demand",
+      "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
+      "name": "income",
       "value": "10780",
-      "guid": "f28ef9a5-e5ef-4f53-963e-19dfd87a9e9f",
-      "key": "income",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "maintenance expenses",
       "value": "862",
-      "guid": "0e078fbe-742b-4d06-af34-34ac3551fdf0",
-      "key": "maintenance expenses",
+      "unit": "€/a",
       "definition": ""
     },
     {
+      "name": "construction global warming potential",
       "value": "7186.53",
-      "guid": "3233c6ce-6967-4940-8052-b75d059d0695",
-      "key": "construction global warming potential",
+      "unit": "kgCO2e",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     },
     {
+      "name": "mirrored",
       "value": "",
-      "guid": "d05ed775-e74f-4b10-ac0b-b1c559c9e978",
-      "key": "mirrored",
+      "unit": "",
       "definition": ""
     }
-  ],
-  "stock": 2147483647,
-  "ports": [
-    {
-      "guid": "94fde461-4d8c-4a30-9365-a6aa7db816df",
-      "attributes": [
-        {
-          "value": "",
-          "guid": "3c3fd589-e145-4604-ac0d-b6e35afd409f",
-          "key": "entrance",
-          "definition": ""
-        }
-      ],
-      "point": {
-        "x": -0.42,
-        "z": 0.0,
-        "y": 0.0
-      },
-      "description": "The middle of the main entrance door of the upper entrance floor.",
-      "mandatory": false,
-      "direction": {
-        "x": 0.14780942,
-        "z": 0.0,
-        "y": -0.9890159
-      },
-      "t": 0.0
-    }
-  ],
-  "name": "L",
-  "guid": "fa9aa714-e7d4-40a0-a7f5-a8cbac94e058",
-  "image": "images/trapezoid-capsule_L.png",
-  "description": "An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one."
+  ]
 }

@@ -63,6 +63,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useFocus,
   useHasKit,
   useIsInKitScope,
@@ -71,6 +72,9 @@ import {
   useKitCommands,
   useKitScope,
   useKitStore,
+  useLanguage,
+  useLayout,
+  useMode,
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
@@ -78,6 +82,7 @@ import {
   useSketchpadStore,
   useSync,
   useSyncDeep,
+  useTheme,
   Window,
 } from "../../App";
 import { Action, Input, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
@@ -1889,9 +1894,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      const hasZip = Array.from(e.dataTransfer.items).some(
-        (item) => item.kind === "file" && item.type === "application/zip"
-      );
+      const hasZip = Array.from(e.dataTransfer.items).some((item) => item.kind === "file" && item.type === "application/zip");
       if (hasZip) {
         setIsDragging(true);
       }
@@ -1951,12 +1954,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <div
-      className="relative h-full w-full"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div className="relative h-full w-full" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       {children}
       {isDragging && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
@@ -1992,6 +1990,7 @@ const AppContent: FC = () => {
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [overId, setOverId] = React.useState<string | null>(null);
+  const lastClickedIndexRef = React.useRef<number>(-1);
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -3235,203 +3234,121 @@ const AppContent: FC = () => {
   };
 
   const handleRowClick = (row: TableRow, index: number, e: React.MouseEvent) => {
-    if (row.kind === "designs") {
-      const designId = (row.data as Design).guid;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "designs" && (r.data as Design).guid === designId);
-        if (selection.designs.length > 0) {
-          const lastSelectedId = selection.designs[selection.designs.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "designs" && (r.data as Design).guid === lastSelectedId);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeIds = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "designs")
-              .map((r) => (r.data as Design).guid);
-            kitAppCommands.selectDesigns("semio.sketchpad.app.kit.canvas.table.selectDesignsRange", rangeIds);
-          }
-        } else {
-          kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesignShift", designId);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+    // Handle shift-click range selection (cross-kind)
+    if (e.shiftKey && lastClickedIndexRef.current !== -1) {
+      const start = Math.min(lastClickedIndexRef.current, index);
+      const end = Math.max(lastClickedIndexRef.current, index);
+      const rangeRows = rows.slice(start, end + 1);
+
+      // Group selected items by kind
+      const selectedByKind = {
+        types: [] as Guid[],
+        designs: [] as Guid[],
+        qualities: [] as string[],
+        interfaces: [] as Guid[],
+        files: [] as string[],
+        folders: [] as Guid[],
+        authors: [] as string[],
+      };
+
+      rangeRows.forEach((r) => {
+        if (r.kind === "types") selectedByKind.types.push((r.data as Type).guid);
+        else if (r.kind === "designs") selectedByKind.designs.push((r.data as Design).guid);
+        else if (r.kind === "qualities") selectedByKind.qualities.push((r.data as Quality).key);
+        else if (r.kind === "interfaces") selectedByKind.interfaces.push((r.data as Interface).guid);
+        else if (r.kind === "files") selectedByKind.files.push((r.data as SemioFile).guid);
+        else if (r.kind === "folders") selectedByKind.folders.push((r.data as Folder).guid);
+        else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
+      });
+
+      // Select all items at once
+      if (selectedByKind.types.length > 0) kitAppCommands.selectTypes("semio.sketchpad.app.kit.canvas.table.selectTypesRange", selectedByKind.types);
+      if (selectedByKind.designs.length > 0) kitAppCommands.selectDesigns("semio.sketchpad.app.kit.canvas.table.selectDesignsRange", selectedByKind.designs);
+      if (selectedByKind.qualities.length > 0) kitAppCommands.selectQualities("semio.sketchpad.app.kit.canvas.table.selectQualitiesRange", selectedByKind.qualities);
+      if (selectedByKind.interfaces.length > 0) kitAppCommands.selectInterfaces("semio.sketchpad.app.kit.canvas.table.selectInterfacesRange", selectedByKind.interfaces);
+      if (selectedByKind.files.length > 0) kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", selectedByKind.files);
+      if (selectedByKind.folders.length > 0) kitAppCommands.selectFolders("semio.sketchpad.app.kit.canvas.table.selectFoldersRange", selectedByKind.folders);
+      if (selectedByKind.authors.length > 0) kitAppCommands.selectAuthors("semio.sketchpad.app.kit.canvas.table.selectAuthorsRange", selectedByKind.authors);
+
+      lastClickedIndexRef.current = index;
+      return;
+    }
+
+    // Handle ctrl/cmd multi-select
+    if (e.metaKey || e.ctrlKey) {
+      if (row.kind === "designs") {
+        const designId = (row.data as Design).guid;
         if (selection.designs.includes(designId)) {
           kitAppCommands.removeDesignFromSelection("semio.sketchpad.app.kit.canvas.table.removeDesignCtrl", designId);
         } else {
           kitAppCommands.addDesignToSelection("semio.sketchpad.app.kit.canvas.table.addDesignCtrl", designId);
         }
-      } else {
-        kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesign", designId);
-      }
-    } else if (row.kind === "types") {
-      const typeId = (row.data as Type).guid;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "types" && (r.data as Type).guid === typeId);
-        if (selection.types.length > 0) {
-          const lastSelectedId = selection.types[selection.types.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "types" && (r.data as Type).guid === lastSelectedId);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeIds = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "types")
-              .map((r) => (r.data as Type).guid);
-            kitAppCommands.selectTypes("semio.sketchpad.app.kit.canvas.table.selectTypesRange", rangeIds);
-          }
-        } else {
-          kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectTypeShift", typeId);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (row.kind === "types") {
+        const typeId = (row.data as Type).guid;
         if (selection.types.includes(typeId)) {
           kitAppCommands.removeTypeFromSelection("semio.sketchpad.app.kit.canvas.table.removeTypeCtrl", typeId);
         } else {
           kitAppCommands.addTypeToSelection("semio.sketchpad.app.kit.canvas.table.addTypeCtrl", typeId);
         }
-      } else {
-        kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectType", typeId);
-      }
-    } else if (row.kind === "qualities") {
-      const qualityKey = (row.data as Quality).key;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "qualities" && (r.data as Quality).key === qualityKey);
-        if (selection.qualities.length > 0) {
-          const lastSelectedKey = selection.qualities[selection.qualities.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "qualities" && (r.data as Quality).key === lastSelectedKey);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeKeys = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "qualities")
-              .map((r) => (r.data as Quality).key);
-            kitAppCommands.selectQualities("semio.sketchpad.app.kit.canvas.table.selectQualitiesRange", rangeKeys);
-          }
-        } else {
-          kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQualityShift", qualityKey);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (row.kind === "qualities") {
+        const qualityKey = (row.data as Quality).key;
         if (selection.qualities.includes(qualityKey)) {
           kitAppCommands.removeQualityFromSelection("semio.sketchpad.app.kit.canvas.table.removeQualityCtrl", qualityKey);
         } else {
           kitAppCommands.addQualityToSelection("semio.sketchpad.app.kit.canvas.table.addQualityCtrl", qualityKey);
         }
-      } else {
-        kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", qualityKey);
-      }
-    } else if (row.kind === "interfaces") {
-      const interfaceId = (row.data as Interface).guid;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "interfaces" && (r.data as Interface).guid === interfaceId);
-        if (selection.interfaces && selection.interfaces.length > 0) {
-          const lastSelectedId = selection.interfaces[selection.interfaces.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "interfaces" && (r.data as Interface).guid === lastSelectedId);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeIds = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "interfaces")
-              .map((r) => (r.data as Interface).guid);
-            kitAppCommands.selectInterfaces("semio.sketchpad.app.kit.canvas.table.selectInterfacesRange", rangeIds);
-          }
-        } else {
-          kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterfaceShift", interfaceId);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (row.kind === "interfaces") {
+        const interfaceId = (row.data as Interface).guid;
         if (selection.interfaces && selection.interfaces.includes(interfaceId)) {
           kitAppCommands.removeInterfaceFromSelection("semio.sketchpad.app.kit.canvas.table.removeInterfaceCtrl", interfaceId);
         } else {
           kitAppCommands.addInterfaceToSelection("semio.sketchpad.app.kit.canvas.table.addInterfaceCtrl", interfaceId);
         }
-      } else {
-        kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", interfaceId);
-      }
-    } else if (row.kind === "files") {
-      const fileGuid = (row.data as SemioFile).guid;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "files" && (r.data as SemioFile).guid === fileGuid);
-        if (selection.files.length > 0) {
-          const lastSelectedGuid = selection.files[selection.files.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "files" && (r.data as SemioFile).guid === lastSelectedGuid);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeGuids = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "files")
-              .map((r) => (r.data as SemioFile).guid);
-            kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", rangeGuids);
-          }
-        } else {
-          kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFileShift", fileGuid);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (row.kind === "files") {
+        const fileGuid = (row.data as SemioFile).guid;
         if (selection.files.includes(fileGuid)) {
           kitAppCommands.removeFileFromSelection("semio.sketchpad.app.kit.canvas.table.removeFileCtrl", fileGuid);
         } else {
           kitAppCommands.addFileToSelection("semio.sketchpad.app.kit.canvas.table.addFileCtrl", fileGuid);
         }
-      } else {
-        kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", fileGuid);
-      }
-    } else if (row.kind === "folders") {
-      const folderId = (row.data as Folder).guid;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "folders" && (r.data as Folder).guid === folderId);
-        if (selection.folders && selection.folders.length > 0) {
-          const lastSelectedId = selection.folders[selection.folders.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "folders" && (r.data as Folder).guid === lastSelectedId);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeIds = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "folders")
-              .map((r) => (r.data as Folder).guid);
-            kitAppCommands.selectFolders("semio.sketchpad.app.kit.canvas.table.selectFoldersRange", rangeIds);
-          }
-        } else {
-          kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolderShift", folderId);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (row.kind === "folders") {
+        const folderId = (row.data as Folder).guid;
         if (selection.folders && selection.folders.includes(folderId)) {
           kitAppCommands.removeFolderFromSelection("semio.sketchpad.app.kit.canvas.table.removeFolderCtrl", folderId);
         } else {
           kitAppCommands.addFolderToSelection("semio.sketchpad.app.kit.canvas.table.addFolderCtrl", folderId);
         }
-      } else {
-        kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolder", folderId);
-      }
-    } else if (row.kind === "authors") {
-      const authorName = (row.data as Author).name;
-      if (e.shiftKey) {
-        const currentIndex = rows.findIndex((r) => r.kind === "authors" && (r.data as Author).name === authorName);
-        if (selection.authors.length > 0) {
-          const lastSelectedName = selection.authors[selection.authors.length - 1];
-          const lastIndex = rows.findIndex((r) => r.kind === "authors" && (r.data as Author).name === lastSelectedName);
-          if (lastIndex !== -1 && currentIndex !== -1) {
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeNames = rows
-              .slice(start, end + 1)
-              .filter((r) => r.kind === "authors")
-              .map((r) => (r.data as Author).name);
-            kitAppCommands.selectAuthors("semio.sketchpad.app.kit.canvas.table.selectAuthorsRange", rangeNames);
-          }
-        } else {
-          kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthorShift", authorName);
-        }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (row.kind === "authors") {
+        const authorName = (row.data as Author).name;
         if (selection.authors.includes(authorName)) {
           kitAppCommands.removeAuthorFromSelection("semio.sketchpad.app.kit.canvas.table.removeAuthorCtrl", authorName);
         } else {
           kitAppCommands.addAuthorToSelection("semio.sketchpad.app.kit.canvas.table.addAuthorCtrl", authorName);
         }
-      } else {
-        kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthor", authorName);
       }
+      // Don't update lastClickedIndexRef for ctrl/cmd clicks
+      return;
     }
+
+    // Handle normal single selection
+    if (row.kind === "designs") {
+      kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesign", (row.data as Design).guid);
+    } else if (row.kind === "types") {
+      kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectType", (row.data as Type).guid);
+    } else if (row.kind === "qualities") {
+      kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", (row.data as Quality).key);
+    } else if (row.kind === "interfaces") {
+      kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", (row.data as Interface).guid);
+    } else if (row.kind === "files") {
+      kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", (row.data as SemioFile).guid);
+    } else if (row.kind === "folders") {
+      kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolder", (row.data as Folder).guid);
+    } else if (row.kind === "authors") {
+      kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthor", (row.data as Author).name);
+    }
+
+    // Update last clicked index for shift-selection
+    lastClickedIndexRef.current = index;
   };
 
   const handleRowDoubleClick = (row: TableRow, index: number) => {

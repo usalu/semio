@@ -228,7 +228,10 @@ Stats provide computed or measured performance data for entire designs using the
 - Whenever creating a markdown file, ALWAYS create it under `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for the task). When working on existing tasks, ALWAYS update the existing file.
 - When fixing issues, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
 - NEVER skip any test or simplify/remove functionality to pass or fix an issue. ALWAYS adjust implementation to pass the tests.
+- NEVER create additional scripts, tests, fixtures, assets, …
 - NEVER create scripts outside the `scripts` folder. Not even when debugging or diagnosing a library problem.
+- ALWAYS create temporary scripts, tests, fixtures, assets, … in the `temp` folder.
+- ALWAYS run specific tests and NEVER use default interactive test mode that creates a never ending process.
 
 ### Keywords
 

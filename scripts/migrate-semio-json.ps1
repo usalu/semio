@@ -301,8 +301,19 @@ function Migrate-Type {
     $typeGuid = New-DeterministicGuid -Seed "type:$uniqueKey"
     
     # Store mapping with unique key (for pieces to reference)
-    if ($null -ne $typeNameToGuidMap -and -not $typeNameToGuidMap.ContainsKey($uniqueKey)) {
-        $typeNameToGuidMap[$uniqueKey] = $typeGuid
+    if ($null -ne $typeNameToGuidMap) {
+        if (-not $typeNameToGuidMap.ContainsKey($uniqueKey)) {
+            $typeNameToGuidMap[$uniqueKey] = $typeGuid
+        }
+        # Also store with name|variant key for piece lookups
+        $pieceKey = "$($type.name)|$variant"
+        if (-not $typeNameToGuidMap.ContainsKey($pieceKey)) {
+            $typeNameToGuidMap[$pieceKey] = $typeGuid
+        }
+        # Also store with just name for simple lookups
+        if (-not $typeNameToGuidMap.ContainsKey($type.name)) {
+            $typeNameToGuidMap[$type.name] = $typeGuid
+        }
     }
     
     $migrated = @{
@@ -310,21 +321,6 @@ function Migrate-Type {
         name = $actualName
         createdAt = $timestamp
         updatedAt = $timestamp
-    }
-    
-    # Store mapping for later reference resolution
-    # Store BOTH old format (name|variant) and new format (actualName) for lookups
-    if ($null -ne $typeNameToGuidMap) {
-        # Store old format: "name|variant" for piece lookups (backwards compat)
-        $oldMapKey = "$($type.name)|$variant"
-        if (-not $typeNameToGuidMap.ContainsKey($oldMapKey)) {
-            $typeNameToGuidMap[$oldMapKey] = $typeGuid
-        }
-        
-        # Store actualName for parent lookups and standalone types
-        if (-not $typeNameToGuidMap.ContainsKey($actualName)) {
-            $typeNameToGuidMap[$actualName] = $typeGuid
-        }
     }
     
     # Optional fields
@@ -484,6 +480,8 @@ function Migrate-Piece {
                 $migrated.type = @{ guid = $typeNameToGuidMap[$mapKey] }
             } elseif ($typeNameToGuidMap.ContainsKey($typeName)) {
                 $migrated.type = @{ guid = $typeNameToGuidMap[$typeName] }
+            } else {
+                Write-Warning "  [PIECE] Type '$typeName' (variant: '$typeVariant') not found in map with $($typeNameToGuidMap.Keys.Count) keys"
             }
         }
     }
@@ -620,9 +618,7 @@ function Migrate-Connection {
     
     # Connected side
     if ($conn.PSObject.Properties.Name -contains 'connected' -and $null -ne $conn.connected) {
-        $connectedSide = @{
-            guid = New-Guid
-        }
+        $connectedSide = @{}
         
         if ($conn.connected -is [string]) {
             # Simple string reference to piece
@@ -703,9 +699,7 @@ function Migrate-Connection {
     
     # Connecting side
     if ($conn.PSObject.Properties.Name -contains 'connecting' -and $null -ne $conn.connecting) {
-        $connectingSide = @{
-            guid = New-Guid
-        }
+        $connectingSide = @{}
         
         if ($conn.connecting -is [string]) {
             # Simple string reference to piece
@@ -1147,44 +1141,8 @@ function Migrate-Kit {
     $authorEmailToObjectMap = @{}
     $locationIdToGuidMap = @{}
     
-    # Pre-load existing GUIDs from standalone type/design files to ensure consistency
-    $kitDir = Split-Path -Path $PSCommandPath
-    $assetsDir = Join-Path (Split-Path $kitDir) "assets\semio"
-    if (Test-Path $assetsDir) {
-        # Load type GUIDs
-        $typeFiles = Get-ChildItem -Path $assetsDir -Filter "type_*.json" -File -ErrorAction SilentlyContinue
-        foreach ($typeFile in $typeFiles) {
-            try {
-                $typeContent = Get-Content -Path $typeFile.FullName -Raw | ConvertFrom-Json
-                if ($typeContent.PSObject.Properties.Name -contains 'guid' -and $typeContent.PSObject.Properties.Name -contains 'name') {
-                    $typeName = $typeContent.name
-                    $typeVariant = if ($typeContent.PSObject.Properties.Name -contains 'variant') { $typeContent.variant } else { '' }
-                    $actualName = if ($typeVariant -ne '') { $typeVariant } else { $typeName }
-                    $typeNameToGuidMap[$actualName] = $typeContent.guid
-                    Write-Host "  Pre-loaded type GUID: $actualName -> $($typeContent.guid)" -ForegroundColor DarkGray
-                }
-            } catch {
-                # Silently skip files that can't be read
-            }
-        }
-        
-        # Load design GUIDs
-        $designFiles = Get-ChildItem -Path $assetsDir -Filter "design_*.json" -File -ErrorAction SilentlyContinue
-        foreach ($designFile in $designFiles) {
-            try {
-                $designContent = Get-Content -Path $designFile.FullName -Raw | ConvertFrom-Json
-                if ($designContent.PSObject.Properties.Name -contains 'guid' -and $designContent.PSObject.Properties.Name -contains 'name') {
-                    $designName = $designContent.name
-                    $designVariant = if ($designContent.PSObject.Properties.Name -contains 'variant') { $designContent.variant } else { '' }
-                    $actualName = if ($designVariant -ne '') { $designVariant } else { $designName }
-                    $designNameToGuidMap[$actualName] = $designContent.guid
-                    Write-Host "  Pre-loaded design GUID: $actualName -> $($designContent.guid)" -ForegroundColor DarkGray
-                }
-            } catch {
-                # Silently skip files that can't be read
-            }
-        }
-    }
+    # Note: NOT pre-loading types from standalone files as they may have already been migrated
+    # with incorrect structure. Kit migration should be self-contained.
     
     # First pass: migrate types and build type name map and port ID map
     if ($kit.PSObject.Properties.Name -contains 'types' -and $null -ne $kit.types -and $kit.types.Count -gt 0) {
@@ -1219,7 +1177,11 @@ function Migrate-Kit {
         foreach ($type in $migrated.types) {
             # Types are hashtables, not PSObjects, so use .Keys instead of .PSObject.Properties.Name
             if ($type.Keys -contains 'parent' -and $null -ne $type.parent -and $type.parent -ne '') {
-                $parentNames[$type.parent] = $true
+                # Parent is a string at this point (before third pass conversion)
+                $parentNameStr = [string]$type.parent
+                if ($parentNameStr -ne '') {
+                    $parentNames[$parentNameStr] = $true
+                }
             }
         }
         
@@ -1298,30 +1260,26 @@ function Migrate-Kit {
     }
     
     if ($null -ne $migrated.designs) {
-        $parentNames = @{}
+        $newParentDesigns = @()
         foreach ($design in $migrated.designs) {
             # Designs are hashtables, not PSObjects, so use .Keys instead of .PSObject.Properties.Name
             if ($design.Keys -contains 'parent' -and $null -ne $design.parent -and $design.parent -ne '') {
-                $parentNames[$design.parent] = $true
-            }
-        }
-        
-        $newParentDesigns = @()
-        foreach ($parentName in $parentNames.Keys) {
-            # Check if this parent exists as a design
-            if (-not $designNameToGuidMap.ContainsKey($parentName)) {
-                # Create abstract parent design
-                $timestamp = Get-CurrentTimestamp
-                $parentGuid = New-Guid
-                $newParentDesigns += @{
-                    guid = $parentGuid
-                    name = $parentName
-                    isAbstract = $true
-                    createdAt = $timestamp
-                    updatedAt = $timestamp
+                # Parent is a string at this point (before third pass conversion)
+                $parentNameStr = [string]$design.parent
+                if ($parentNameStr -ne '' -and -not $designNameToGuidMap.ContainsKey($parentNameStr)) {
+                    # Create abstract parent design
+                    $timestamp = Get-CurrentTimestamp
+                    $parentGuid = New-Guid
+                    $newParentDesigns += @{
+                        guid = $parentGuid
+                        name = $parentNameStr
+                        isAbstract = $true
+                        createdAt = $timestamp
+                        updatedAt = $timestamp
+                    }
+                    $designNameToGuidMap[$parentNameStr] = $parentGuid
+                    Write-Host "  Created abstract parent design: @{guid=$parentGuid}" -ForegroundColor DarkGray
                 }
-                $designNameToGuidMap[$parentName] = $parentGuid
-                Write-Host "  Created abstract parent design: $parentName" -ForegroundColor Cyan
             }
         }
         
@@ -1536,6 +1494,11 @@ function Migrate-JsonFile {
                                 $typeGuid = $kitType.guid
                                 $typeNameToGuidMap[$typeName] = $typeGuid
                                 
+                                # Also map with name|variant composite key (variant defaults to empty string if null)
+                                $typeVariant = if ($kitType.PSObject.Properties.Name -contains 'variant' -and $null -ne $kitType.variant) { $kitType.variant } else { '' }
+                                $compositeKey = "$typeName|$typeVariant"
+                                $typeNameToGuidMap[$compositeKey] = $typeGuid
+                                
                                 # Load ports from this type - create mapping from old port id_ to new GUID
                                 if ($kitType.PSObject.Properties.Name -contains 'ports' -and $null -ne $kitType.ports) {
                                     foreach ($port in $kitType.ports) {
@@ -1574,6 +1537,7 @@ function Migrate-JsonFile {
             
             # Load kit types for port lookup during connection migration
             $kitTypes = if ($null -ne $kitContent -and $kitContent.PSObject.Properties.Name -contains 'types') { $kitContent.types } else { $null }
+            Write-Host "  Loaded $($kitTypes.Count) kit types for port lookup" -ForegroundColor DarkGray
             $migrated = Migrate-Design $content $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap $pieceNameToGuidMap $kitTypes
         }
         else {
@@ -1615,20 +1579,17 @@ $jsonFiles = Get-ChildItem -Path $Path -Filter "*.json" -File
 Write-Host "Found $($jsonFiles.Count) JSON files" -ForegroundColor White
 Write-Host ""
 
-# Process kit files FIRST to establish authoritative GUIDs
+# Process only kit files (types and designs are embedded within the kit)
+# Standalone type/design files will be skipped to avoid duplication issues
 $kitFiles = $jsonFiles | Where-Object { $_.Name -match '^kit_' }
-$otherFiles = $jsonFiles | Where-Object { $_.Name -notmatch '^kit_' }
 
-Write-Host "Processing order: Kit files first, then others" -ForegroundColor Cyan
+Write-Host "Processing: Kit files only" -ForegroundColor Cyan
 Write-Host "  Kit files: $($kitFiles.Count)" -ForegroundColor DarkCyan
-Write-Host "  Other files: $($otherFiles.Count)" -ForegroundColor DarkCyan
+Write-Host "  Note: Standalone type/design files are skipped (all data is in kit)" -ForegroundColor DarkGray
 Write-Host ""
 
+Write-Host "Migrating kit file..." -ForegroundColor Yellow
 foreach ($file in $kitFiles) {
-    Migrate-JsonFile -FilePath $file.FullName -DryRun:$DryRun
-}
-
-foreach ($file in $otherFiles) {
     Migrate-JsonFile -FilePath $file.FullName -DryRun:$DryRun
 }
 
