@@ -6700,16 +6700,16 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
 }
 
 const defaultPanelVisibility: PanelVisibility = {
-  toolbar: true,
-  workbench: true,
-  details: true,
-  chat: true,
-  settings: true,
+  toolbar: false,
+  workbench: false,
+  details: false,
+  chat: false,
+  settings: false,
 };
 
 const initialDocsPanelVisibility: PanelVisibility = {
   toolbar: false,
-  workbench: true,
+  workbench: false,
   details: false,
   chat: false,
   settings: false,

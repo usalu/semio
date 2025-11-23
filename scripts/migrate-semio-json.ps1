@@ -276,21 +276,13 @@ function Migrate-Type {
         $variant = $type.variant
     }
     
-    # Determine parent for unique key
+    # Determine parent for unique key - keep original parent relationships
     $parentValue = $null
-    if ($type.PSObject.Properties.Name -contains 'variant' -and $null -ne $type.variant -and $type.variant -ne '') {
-        # Map metabolism types to new hierarchy
-        switch ($type.name) {
-            "Capsule" { $parentValue = "Box" }
-            "Ellipsoid Capsule" { $parentValue = "Ellipsoid" }
-            "Trapezoid Capsule" { $parentValue = "Trapezoid" }
-            "Capsule with Balcony" { $parentValue = "Balcony" }
-            "Tambour" { $parentValue = "Tambour" }
-            "Cylindric Tambour" { $parentValue = "Cylindric Tambour" }
-            default { $parentValue = $type.name }
-        }
-    } elseif ($type.PSObject.Properties.Name -contains 'parent' -and $null -ne $type.parent) {
+    if ($type.PSObject.Properties.Name -contains 'parent' -and $null -ne $type.parent -and $type.parent -ne '') {
         $parentValue = $type.parent
+    } elseif ($type.PSObject.Properties.Name -contains 'variant' -and $null -ne $type.variant -and $type.variant -ne '') {
+        # Variants inherit from their base type name (e.g., "Capsule", "Ellipsoid Capsule", etc.)
+        $parentValue = $type.name
     }
     $parentKey = if ($null -ne $parentValue) { $parentValue } else { '' }
     
@@ -310,8 +302,8 @@ function Migrate-Type {
         if (-not $typeNameToGuidMap.ContainsKey($pieceKey)) {
             $typeNameToGuidMap[$pieceKey] = $typeGuid
         }
-        # Also store with just name for simple lookups
-        if (-not $typeNameToGuidMap.ContainsKey($type.name)) {
+        # Only store base name if this is NOT a variant (to preserve parent hierarchy)
+        if ($variant -eq '' -and -not $typeNameToGuidMap.ContainsKey($type.name)) {
             $typeNameToGuidMap[$type.name] = $typeGuid
         }
     }
@@ -586,9 +578,9 @@ function Find-PortOnType {
             }
             
             $port = $currentType.ports | Where-Object { 
-                ($_.PSObject.Properties.Name -contains 'name' -and $_.name -eq $portId) -or
-                ($_.PSObject.Properties.Name -contains 'id_' -and $_.id_ -eq $portId) -or
-                ($_.PSObject.Properties.Name -contains 'id' -and $_.id -eq $portId)
+                ($null -ne $_.name -and $_.name -eq $portId) -or
+                ($null -ne $_.id_ -and $_.id_ -eq $portId) -or
+                ($null -ne $_.id -and $_.id -eq $portId)
             } | Select-Object -First 1
             
             if ($null -ne $port) {
@@ -667,11 +659,21 @@ function Migrate-Connection {
                 $piece = $pieces | Where-Object { $_.guid -eq $pieceGuid } | Select-Object -First 1
                 if ($null -ne $piece -and $null -ne $piece.type) {
                     $currentType = $kitTypes | Where-Object { $_.guid -eq $piece.type.guid } | Select-Object -First 1
-                    $port = Find-PortOnType $currentType $portId $kitTypes
-                    if ($null -ne $port) {
-                        $connectedSide.port = @{ guid = $port.guid }
+                    if ($null -ne $currentType) {
+                        $port = Find-PortOnType $currentType $portId $kitTypes
+                        if ($null -ne $port) {
+                            $connectedSide.port = @{ guid = $port.guid }
+                        } else {
+                            Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connected side, piece: $pieceGuid)"
+                        }
                     } else {
-                        Write-Warning "  [CONNECTION] Port '$portId' not found on type hierarchy (connected side, piece: $pieceGuid)"
+                        Write-Warning "  [CONNECTION] Type not found for piece $pieceGuid (connected side)"
+                    }
+                } else {
+                    if ($null -eq $piece) {
+                        Write-Warning "  [CONNECTION] Piece $pieceGuid not found in pieces array (connected side)"
+                    } elseif ($null -eq $piece.type) {
+                        Write-Warning "  [CONNECTION] Piece $pieceGuid has no type (connected side)"
                     }
                 }
             } elseif (-not $portAlreadySet -and $null -ne $portId -and $portIdToGuidMap.ContainsKey($portId)) {
@@ -1166,18 +1168,11 @@ function Migrate-Kit {
         })
     }
     
-    # Second pass: migrate designs with type/design/port maps, passing migrated types for port lookup
-    if ($kit.PSObject.Properties.Name -contains 'designs' -and $null -ne $kit.designs -and $kit.designs.Count -gt 0) {
-        $migrated.designs = @($kit.designs | ForEach-Object { Migrate-Design $_ $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap $null $migrated.types })
-    }
-    
-    # 2.5 pass: Create abstract parent types/designs for bases that have children but don't exist
+    # 1.5 pass: Create abstract parent types BEFORE migrating designs (so port resolution works)
     if ($null -ne $migrated.types) {
         $parentNames = @{}
         foreach ($type in $migrated.types) {
-            # Types are hashtables, not PSObjects, so use .Keys instead of .PSObject.Properties.Name
             if ($type.Keys -contains 'parent' -and $null -ne $type.parent -and $type.parent -ne '') {
-                # Parent is a string at this point (before third pass conversion)
                 $parentNameStr = [string]$type.parent
                 if ($parentNameStr -ne '') {
                     $parentNames[$parentNameStr] = $true
@@ -1188,70 +1183,59 @@ function Migrate-Kit {
         $newParentTypes = @()
         $timestamp = Get-CurrentTimestamp
         
-        # First create top-level abstract parents (like "Capsule")
-        # These are needed by the intermediate abstract types we're about to create
-        $topLevelParents = @("Capsule")
-        foreach ($parentName in $topLevelParents) {
-            if (-not $typeNameToGuidMap.ContainsKey($parentName)) {
-                $parentGuid = New-Guid
-                $newParentTypes += @{
-                    guid = $parentGuid
-                    name = $parentName
-                    isAbstract = $true
-                    createdAt = $timestamp
-                    updatedAt = $timestamp
-                }
-                $typeNameToGuidMap[$parentName] = $parentGuid
-            }
-        }
-        
-        # Then create metabolism-specific intermediate abstract types
-        $metabolismParents = @(
-            @{ name = "Box"; parent = "Capsule"; isAbstract = $true }
-            @{ name = "Ellipsoid"; parent = "Capsule"; isAbstract = $true }
-            @{ name = "Trapezoid"; parent = "Capsule"; isAbstract = $true }
-            @{ name = "Balcony"; parent = "Capsule"; isAbstract = $true }
-        )
-        
-        foreach ($metaParent in $metabolismParents) {
-            # Only create if referenced
-            if ($parentNames.ContainsKey($metaParent.name)) {
-                $parentGuid = New-Guid
-                $parentNameStr = [string]$metaParent.name
-                $parentParentStr = [string]$metaParent.parent
-                $newParentType = @{
-                    guid = $parentGuid
-                    name = $parentNameStr
-                    parent = $parentParentStr
-                    isAbstract = $true
-                    createdAt = $timestamp
-                    updatedAt = $timestamp
-                }
-                $newParentTypes += $newParentType
-                $typeNameToGuidMap[$parentNameStr] = $parentGuid
-                # Mark this parent as handled
-                $parentNames[$parentNameStr] = $false
-            }
-        }
-        
-        # Create any other missing parents
-        foreach ($parentName in $parentNames.Keys) {
-            # Skip if already created or if it exists
-            if ($parentNames[$parentName] -eq $false -or $typeNameToGuidMap.ContainsKey($parentName)) {
-                continue
-            }
-            # Create abstract parent type  
-            $parentGuid = New-Guid
-            # Explicitly convert parent name to string to avoid reference issues
-            $parentNameString = [string]$parentName
+        # Create base "Capsule" type as root of hierarchy
+        if (-not $typeNameToGuidMap.ContainsKey("Capsule")) {
+            $capsuleGuid = New-DeterministicGuid -Seed "type:Capsule||"
             $newParentTypes += @{
-                guid = $parentGuid
-                name = $parentNameString
+                guid = $capsuleGuid
+                name = "Capsule"
                 isAbstract = $true
                 createdAt = $timestamp
                 updatedAt = $timestamp
             }
-            $typeNameToGuidMap[$parentNameString] = $parentGuid
+            $typeNameToGuidMap["Capsule"] = $capsuleGuid
+            Write-Host "  Created base Capsule type" -ForegroundColor DarkGray
+        }
+        
+        # Create intermediate shape types with Capsule as parent
+        $shapeTypes = @(
+            @{Name="Ellipsoid Capsule"; ShortName="Ellipsoid"},
+            @{Name="Trapezoid Capsule"; ShortName="Trapezoid"},
+            @{Name="Capsule with Balcony"; ShortName="Balcony"}
+        )
+        
+        foreach ($shape in $shapeTypes) {
+            if ($parentNames.ContainsKey($shape.Name) -and -not $typeNameToGuidMap.ContainsKey($shape.ShortName)) {
+                $shapeGuid = New-DeterministicGuid -Seed "type:$($shape.ShortName)||Capsule"
+                $newParentTypes += @{
+                    guid = $shapeGuid
+                    name = $shape.ShortName
+                    parent = "Capsule"
+                    isAbstract = $true
+                    createdAt = $timestamp
+                    updatedAt = $timestamp
+                }
+                $typeNameToGuidMap[$shape.ShortName] = $shapeGuid
+                $typeNameToGuidMap[$shape.Name] = $shapeGuid
+                Write-Host "  Created $($shape.ShortName) type (parent: Capsule)" -ForegroundColor DarkGray
+            }
+        }
+        
+        # Create any other missing parent types
+        foreach ($parentName in $parentNames.Keys) {
+            $parentNameString = [string]$parentName
+            if ($parentNameString -ne '' -and -not $typeNameToGuidMap.ContainsKey($parentNameString)) {
+                $parentGuid = New-DeterministicGuid -Seed "type:$parentNameString||"
+                $newParentTypes += @{
+                    guid = $parentGuid
+                    name = $parentNameString
+                    isAbstract = $true
+                    createdAt = $timestamp
+                    updatedAt = $timestamp
+                }
+                $typeNameToGuidMap[$parentNameString] = $parentGuid
+                Write-Host "  Created abstract parent type: $parentNameString" -ForegroundColor DarkGray
+            }
         }
         
         if ($newParentTypes.Count -gt 0) {
@@ -1259,6 +1243,12 @@ function Migrate-Kit {
         }
     }
     
+    # Second pass: migrate designs with type/design/port maps, passing migrated types for port lookup
+    if ($kit.PSObject.Properties.Name -contains 'designs' -and $null -ne $kit.designs -and $kit.designs.Count -gt 0) {
+        $migrated.designs = @($kit.designs | ForEach-Object { Migrate-Design $_ $designNameToGuidMap $typeNameToGuidMap $portIdToGuidMap $authorEmailToObjectMap $null $migrated.types })
+    }
+    
+    # 2.5 pass: Create abstract parent designs
     if ($null -ne $migrated.designs) {
         $newParentDesigns = @()
         foreach ($design in $migrated.designs) {
@@ -1579,18 +1569,162 @@ $jsonFiles = Get-ChildItem -Path $Path -Filter "*.json" -File
 Write-Host "Found $($jsonFiles.Count) JSON files" -ForegroundColor White
 Write-Host ""
 
-# Process only kit files (types and designs are embedded within the kit)
-# Standalone type/design files will be skipped to avoid duplication issues
+# Consolidate all types and designs into kit file
 $kitFiles = $jsonFiles | Where-Object { $_.Name -match '^kit_' }
+$typeFiles = $jsonFiles | Where-Object { $_.Name -match '^type_' }
+$designFiles = $jsonFiles | Where-Object { $_.Name -match '^design_' }
 
-Write-Host "Processing: Kit files only" -ForegroundColor Cyan
+Write-Host "Consolidating all data into kit file" -ForegroundColor Cyan
 Write-Host "  Kit files: $($kitFiles.Count)" -ForegroundColor DarkCyan
-Write-Host "  Note: Standalone type/design files are skipped (all data is in kit)" -ForegroundColor DarkGray
+Write-Host "  Type files to consolidate: $($typeFiles.Count)" -ForegroundColor DarkCyan
+Write-Host "  Design files to consolidate: $($designFiles.Count)" -ForegroundColor DarkCyan
 Write-Host ""
 
-Write-Host "Migrating kit file..." -ForegroundColor Yellow
-foreach ($file in $kitFiles) {
-    Migrate-JsonFile -FilePath $file.FullName -DryRun:$DryRun
+# Load kit file (prefer kit_metabolism.json over kit_metabolism_diffed.json)
+$kitFile = $kitFiles | Where-Object { $_.Name -eq "kit_metabolism.json" } | Select-Object -First 1
+if (-not $kitFile) {
+    $kitFile = $kitFiles[0]
+}
+$kitPath = $kitFile.FullName
+Write-Host "Loading kit: $($kitFile.Name)" -ForegroundColor Yellow
+$kit = Get-Content -Path $kitPath -Raw | ConvertFrom-Json
+
+# Consolidate standalone types into kit (if not already there)
+Write-Host "Consolidating types..." -ForegroundColor Yellow
+$existingTypeNames = @{}
+if ($kit.PSObject.Properties.Name -contains 'types' -and $null -ne $kit.types) {
+    foreach ($type in $kit.types) {
+        $key = "$($type.name)|$($type.variant)"
+        $existingTypeNames[$key] = $true
+    }
+}
+
+$typesToAdd = @()
+foreach ($typeFile in $typeFiles) {
+    try {
+        $type = Get-Content -Path $typeFile.FullName -Raw | ConvertFrom-Json
+        $key = "$($type.name)|$($type.variant)"
+        if (-not $existingTypeNames.ContainsKey($key)) {
+            $typesToAdd += $type
+            Write-Host "  + Adding type: $($type.name) $(if($type.variant){"($($type.variant))"})" -ForegroundColor DarkGray
+        }
+    } catch {
+        Write-Warning "Could not load type file: $($typeFile.Name)"
+    }
+}
+
+if ($typesToAdd.Count -gt 0) {
+    $kit.types = @($kit.types) + @($typesToAdd)
+    Write-Host "  Added $($typesToAdd.Count) types to kit" -ForegroundColor Green
+}
+
+# Consolidate standalone designs into kit with parent-child relationships
+Write-Host "Consolidating designs..." -ForegroundColor Yellow
+
+# Add parent relationships for variant designs per user request
+foreach ($design in $kit.designs) {
+    if ($design.PSObject.Properties.Name -contains 'variant' -and $null -ne $design.variant -and $design.variant -ne '') {
+        # Variant designs should be children of the base design with same name
+        if ($null -eq $design.parent -or $design.parent -eq '') {
+            $design | Add-Member -NotePropertyName 'parent' -NotePropertyValue $design.name -Force
+            Write-Host "  - Set parent for $($design.name) (variant: $($design.variant)) -> $($design.name)" -ForegroundColor DarkGray
+        }
+    }
+}
+
+$existingDesigns = @{}
+if ($kit.PSObject.Properties.Name -contains 'designs' -and $null -ne $kit.designs) {
+    foreach ($design in $kit.designs) {
+        if ($design.PSObject.Properties.Name -contains 'name') {
+            # Use name+parent as key to allow same-named designs with different parents
+            $parentKey = if ($design.PSObject.Properties.Name -contains 'parent') { $design.parent } else { '' }
+            $key = "$($design.name)|$parentKey"
+            $existingDesigns[$key] = $true
+        }
+    }
+}
+
+$designsToAdd = @()
+foreach ($designFile in $designFiles) {
+    try {
+        $design = Get-Content -Path $designFile.FullName -Raw | ConvertFrom-Json
+        $fileName = $designFile.BaseName
+        $isFlat = $fileName -match '_flat$'
+        $designVariant = if ($design.PSObject.Properties.Name -contains 'variant') { $design.variant } else { '' }
+        
+        # Flat designs are children - always try to add them
+        if ($isFlat) {
+            # Find matching parent in kit by name+variant (not yet migrated)
+            $parentDesign = $kit.designs | Where-Object {
+                $_.name -eq $design.name -and 
+                (($_.PSObject.Properties.Name -contains 'variant' -and $_.variant -eq $designVariant) -or
+                 (-not ($_.PSObject.Properties.Name -contains 'variant') -and ($designVariant -eq '' -or $null -eq $designVariant)))
+            } | Select-Object -First 1
+            
+            if ($parentDesign) {
+                # Rename flat design to "Flat" to distinguish from parent
+                $design | Add-Member -NotePropertyName 'name' -NotePropertyValue 'Flat' -Force
+                # Remove variant from flat designs since they're now named "Flat"
+                if ($design.PSObject.Properties.Name -contains 'variant') {
+                    $design.PSObject.Properties.Remove('variant')
+                }
+                
+                # Set parent to variant (if exists) or name
+                # After migration, variant becomes the design name, so parent will resolve correctly
+                if ($parentDesign.PSObject.Properties.Name -contains 'variant' -and $null -ne $parentDesign.variant -and $parentDesign.variant -ne '') {
+                    $design | Add-Member -NotePropertyName 'parent' -NotePropertyValue $parentDesign.variant -Force
+                } else {
+                    $design | Add-Member -NotePropertyName 'parent' -NotePropertyValue $parentDesign.name -Force
+                }
+                
+                $designsToAdd += $design
+                $variantInfo = if ($designVariant -ne '') { " (variant: $designVariant)" } else { "" }
+                $parentInfo = if ($design.PSObject.Properties.Name -contains 'parent') { " -> parent: $($design.parent)" } else { "" }
+                Write-Host "  + Adding flat design: $($design.name)$variantInfo$parentInfo" -ForegroundColor DarkGray
+            } else {
+                Write-Warning "  Could not find parent for flat design: $($design.name) (variant: $designVariant)"
+            }
+        } else {
+            # Non-flat designs - check if already in kit
+            $designInKit = $kit.designs | Where-Object {
+                $_.name -eq $design.name -and 
+                (($_.PSObject.Properties.Name -contains 'variant' -and $_.variant -eq $designVariant) -or
+                 (-not ($_.PSObject.Properties.Name -contains 'variant') -and ($designVariant -eq '' -or $null -eq $designVariant)))
+            } | Select-Object -First 1
+            
+            if ($null -eq $designInKit) {
+                Write-Warning "  Non-flat design not in kit (should be): $($design.name)$(if($designVariant){" (variant: $designVariant)"})"
+            } else {
+                Write-Host "  - Skipping design (already in kit): $($design.name)$(if($designVariant){" (variant: $designVariant)"})" -ForegroundColor DarkGray
+            }
+        }
+    } catch {
+        Write-Warning "Could not load design file: $($designFile.Name)"
+    }
+}
+
+if ($designsToAdd.Count -gt 0) {
+    $kit.designs = @($kit.designs) + @($designsToAdd)
+    Write-Host "  Added $($designsToAdd.Count) designs to kit" -ForegroundColor Green
+}
+
+# Save consolidated kit
+Write-Host "`nSaving consolidated kit..." -ForegroundColor Yellow
+$kit | ConvertTo-Json -Depth 100 -Compress:$false | Set-Content -Path $kitPath -Encoding UTF8
+Write-Host "  Saved to $kitPath" -ForegroundColor Green
+
+# Now migrate the consolidated kit
+Write-Host "`nMigrating consolidated kit..." -ForegroundColor Yellow
+Migrate-JsonFile -FilePath $kitPath -DryRun:$DryRun
+
+# Delete standalone type and design files
+if (-not $DryRun) {
+    Write-Host "`nCleaning up standalone files..." -ForegroundColor Yellow
+    foreach ($file in $typeFiles + $designFiles) {
+        Remove-Item -Path $file.FullName -Force
+        Write-Host "  Deleted: $($file.Name)" -ForegroundColor DarkGray
+    }
+    Write-Host "  Deleted $($typeFiles.Count + $designFiles.Count) standalone files" -ForegroundColor Green
 }
 
 Write-Host ""

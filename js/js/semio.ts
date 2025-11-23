@@ -2304,7 +2304,7 @@ export const applySideDiff = (base: Side, diff: SideDiff): Side => {
 };
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
-export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.port.guid === b.port.guid;
+export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.port?.guid === b.port?.guid;
 
 // #endregion Side
 
@@ -2421,8 +2421,9 @@ export const findPieceConnections = (connections: Connection[], pieceGuid: strin
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
 
-export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Port => {
-  const portGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.port.guid : connection.connecting.port.guid;
+export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Port | undefined => {
+  const portGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.port?.guid : connection.connecting.port?.guid;
+  if (!portGuid) return undefined;
   return findPortInType(type, portGuid);
 };
 
@@ -3441,7 +3442,7 @@ export const isPortInUse = (design: Design, pieceGuid: string, portGuid: string)
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   for (const connection of connections) {
     const isPieceConnected = connection.connected.piece.guid === pieceGuid;
-    const isPortConnected = isPieceConnected ? connection.connected.port.guid === portGuid : connection.connecting.port.guid === portGuid;
+    const isPortConnected = isPieceConnected ? connection.connected.port?.guid === portGuid : connection.connecting.port?.guid === portGuid;
     if (isPortConnected) return true;
   }
   return false;
@@ -3871,7 +3872,7 @@ export const findUsedPortsByPieceInDesign = (kit: Kit, designGuid: string, piece
   if (!piece.type) return [];
   const type = findTypeInKit(kit, piece.type.guid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
-  return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid));
+  return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid)).filter((p): p is Port => p !== undefined);
 };
 
 export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
@@ -3884,7 +3885,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
       const otherPiece = findPieceInDesign(design, otherPieceId);
       if (!otherPiece.type) continue;
       const otherType = findTypeInKit(kit, otherPiece.type.guid);
-      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.port.guid : connection.connected.port.guid;
+      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.port?.guid : connection.connected.port?.guid;
       const otherPort = findPortInType(otherType, otherPortId || "");
       requiredPorts.push(otherPort);
     } catch (error) {
@@ -3919,7 +3920,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
           const otherPiece = findPieceInDesign(design, otherPieceId);
           if (!otherPiece.type) continue;
           const otherType = findTypeInKit(kit, otherPiece.type.guid);
-          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.port.guid : connection.connected.port.guid;
+          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.port?.guid : connection.connected.port?.guid;
           const otherPort = findPortInType(otherType, otherPortId || "");
           externalConnections.push({ connection, requiredPort: otherPort });
         } catch (error) {
@@ -4693,12 +4694,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           name: toUndefined(m.name),
           description: toUndefined(m.description),
           tags: modelTags.map((t: any) => t.tag),
-          attributes: mapOrUndefined(modelAttributes, (a: any) => ({
-            guid: a.guid,
-            key: a.key,
-            value: toUndefined(a.value),
-            definition: toUndefined(a.definition),
-          })),
+          attributes: mapOrUndefined(modelAttributes, buildAttribute),
         };
       });
     if (models_value) type.models = models_value;
@@ -4781,7 +4777,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         value: String(dp.value),
         unit: toUndefined(dp.unit),
       })),
-      authors: mapOrUndefined(designAuthors, (da: any) => da.author_guid),
+      authors: mapOrUndefined(designAuthors, (da: any) => ({ guid: da.author_guid })),
       pieces: pieces.map((p: any) => {
         const pieceProps = execResult("SELECT prop.* FROM prop JOIN piece_prop ON prop.guid = piece_prop.prop_guid WHERE piece_prop.piece_guid = ?", [p.guid]);
         const pieceAttributes = execResult("SELECT * FROM attribute WHERE piece_guid = ?", [p.guid]);
@@ -4815,22 +4811,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
                 value: String(pr.value),
                 unit: toUndefined(pr.unit),
                 quality: { guid: pr.quality_guid },
-                attributes: mapOrUndefined(propAttributes, (a: any) => ({
-                  guid: a.guid,
-                  key: a.key,
-                  value: toUndefined(a.value),
-                  definition: toUndefined(a.definition),
-                })),
+                attributes: mapOrUndefined(propAttributes, buildAttribute),
               };
             }).filter((p: any): p is NonNullable<typeof p> => p !== null);
             return filtered.length > 0 ? filtered : undefined;
           })(),
-          attributes: mapOrUndefined(pieceAttributes, (a: any) => ({
-            guid: a.guid,
-            key: a.key,
-            value: toUndefined(a.value),
-            definition: toUndefined(a.definition),
-          })),
+          attributes: mapOrUndefined(pieceAttributes, buildAttribute),
         };
       }),
       connections: connections.map((c: any) => {
@@ -4856,12 +4842,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           x: c.x !== null ? c.x : undefined,
           y: c.y !== null ? c.y : undefined,
           description: toUndefined(c.description),
-          attributes: mapOrUndefined(connectionAttributes, (a: any) => ({
-            guid: a.guid,
-            key: a.key,
-            value: toUndefined(a.value),
-            definition: toUndefined(a.definition),
-          })),
+          attributes: mapOrUndefined(connectionAttributes, buildAttribute),
         };
       }),
       layers: layers.map((l: any) => {
@@ -4873,12 +4854,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           isLocked: l.is_locked ? true : false,
           color: toUndefined(l.color),
           description: toUndefined(l.description),
-          attributes: mapOrUndefined(layerAttributes, (a: any) => ({
-            guid: a.guid,
-            key: a.key,
-            value: toUndefined(a.value),
-            definition: toUndefined(a.definition),
-          })),
+          attributes: mapOrUndefined(layerAttributes, buildAttribute),
         };
       }),
       groups: groups.map((g: any) => {
@@ -4890,12 +4866,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           color: toUndefined(g.color),
           description: toUndefined(g.description),
           pieces: groupPieces.map((gp: any) => ({ guid: gp.piece_guid })),
-          attributes: mapOrUndefined(groupAttributes, (a: any) => ({
-            guid: a.guid,
-            key: a.key,
-            value: toUndefined(a.value),
-            definition: toUndefined(a.definition),
-          })),
+          attributes: mapOrUndefined(groupAttributes, buildAttribute),
         };
       }),
       stats: stats.map((s: any) => ({
@@ -4907,12 +4878,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         maxExcluded: s.max_excluded ? true : undefined,
         unit: toUndefined(s.unit),
       })),
-      attributes: mapOrUndefined(designAttributes, (a: any) => ({
-        guid: a.guid,
-        key: a.key,
-        value: toUndefined(a.value),
-        definition: toUndefined(a.definition),
-      })),
+      attributes: mapOrUndefined(designAttributes, buildAttribute),
       concepts: designConcepts.length > 0 ? designConcepts.map((c: any) => c.concept) : undefined,
     };
   });
@@ -4928,12 +4894,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       description: toUndefined(row.description),
       icon: toUndefined(row.icon),
       compatibleInterfaces: compatibleInterfaces.length > 0 ? compatibleInterfaces.map((ci: any) => ({ guid: ci.compatible_interface_guid })) : undefined,
-      attributes: mapOrUndefined(interfaceAttributes, (a: any) => ({
-        guid: a.guid,
-        key: a.key,
-        value: toUndefined(a.value),
-        definition: toUndefined(a.definition),
-      })),
+      attributes: mapOrUndefined(interfaceAttributes, buildAttribute),
     };
   });
 
@@ -4967,20 +4928,10 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           minExcluded: b.min_excluded ? true : undefined,
           max: b.max_value,
           maxExcluded: b.max_excluded ? true : undefined,
-          attributes: mapOrUndefined(benchmarkAttributes, (a: any) => ({
-            guid: a.guid,
-            key: a.key,
-            value: toUndefined(a.value),
-            definition: toUndefined(a.definition),
-          })),
+          attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
         };
       }),
-      attributes: mapOrUndefined(qualityAttributes, (a: any) => ({
-        guid: a.guid,
-        key: a.key,
-        value: toUndefined(a.value),
-        definition: toUndefined(a.definition),
-      })),
+      attributes: mapOrUndefined(qualityAttributes, buildAttribute),
     };
   }) : undefined;
 
@@ -5021,12 +4972,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
 
   // Load kit attributes
   const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
-  kit.attributes = mapOrUndefined(kitAttributes, (a: any) => ({
-    guid: a.guid,
-    key: a.key,
-    value: toUndefined(a.value),
-    definition: toUndefined(a.definition),
-  }));
+  kit.attributes = mapOrUndefined(kitAttributes, buildAttribute);
 
   return kit;
 };

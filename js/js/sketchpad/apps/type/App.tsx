@@ -211,9 +211,9 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       }
       if (!yMap.has("panelVisibility")) {
         const yPanelVisibility = new Y.Map<boolean>();
-        yPanelVisibility.set("toolbar", true);
+        yPanelVisibility.set("toolbar", false);
         yPanelVisibility.set("workbench", false);
-        yPanelVisibility.set("details", true);
+        yPanelVisibility.set("details", false);
         yPanelVisibility.set("chat", false);
         yPanelVisibility.set("settings", false);
         yMap.set("panelVisibility", yPanelVisibility);
@@ -221,7 +221,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
         // Ensure toolbar field exists for existing instances
         const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
         if (yPanelVisibility && !yPanelVisibility.has("toolbar")) {
-          yPanelVisibility.set("toolbar", true);
+          yPanelVisibility.set("toolbar", false);
         }
       }
     });
@@ -259,17 +259,17 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
-        toolbar: true,
+        toolbar: false,
         workbench: false,
-        details: true,
+        details: false,
         chat: false,
         settings: false,
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? true,
+      toolbar: yPanelVisibility.get("toolbar") ?? false,
       workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? true,
+      details: yPanelVisibility.get("details") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
       settings: yPanelVisibility.get("settings") ?? false,
     };
