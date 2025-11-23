@@ -95,6 +95,10 @@ export const deepEqual = (a: any, b: any): boolean => {
   if (a == null || b == null) return a === b;
   if (typeof a !== typeof b) return false;
 
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() === b.getTime();
+  }
+
   if (Array.isArray(a)) {
     if (!Array.isArray(b) || a.length !== b.length) return false;
     return a.every((item, index) => deepEqual(item, b[index]));
@@ -254,7 +258,12 @@ export const getKitGuid = (id: KitId): Guid => id.guid;
 
 // #endregion Entity IDs
 
-const DateProperty = () => z.string().optional();
+const DateProperty = () =>
+  z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional();
 
 // #region Attribute
 // https://github.com/usalu/semio#-attribute-
@@ -272,11 +281,7 @@ export const deserializeAttribute = (json: string): Attribute => AttributeSchema
 export const AttributeDiffSchema = AttributeSchema.partial();
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
 export const getAttributeDiff = (before: Attribute, after: Attribute): AttributeDiff => {
-  const diff: AttributeDiff = {};
-  if (before.key !== after.key) diff.key = after.key;
-  if (before.value !== after.value) diff.value = after.value;
-  if (before.definition !== after.definition) diff.definition = after.definition;
-  return diff;
+  return { ...after };
 };
 export const inverseAttributeDiff = (original: Attribute, appliedDiff: AttributeDiff): AttributeDiff => {
   return {
@@ -308,10 +313,7 @@ const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesD
   const afterKeys = after.map((a) => a.key);
   const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
   const added = after.filter((a) => !beforeKeys.includes(a.key));
-  const updated = after
-    .filter((a) => beforeKeys.includes(a.key))
-    .map((a) => ({ id: a.key, diff: getAttributeDiff(before.find((b) => b.key === a.key)!, a) }))
-    .filter((u) => Object.keys(u.diff).length > 0);
+  const updated = after.filter((a) => beforeKeys.includes(a.key)).map((a) => ({ id: a.key, diff: getAttributeDiff(before.find((b) => b.key === a.key)!, a) }));
   const diff: AttributesDiff = {};
   if (removed.length > 0) diff.removed = removed;
   if (updated.length > 0) diff.updated = updated;
@@ -406,7 +408,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 // #region Vec (weak entity)
 // https://github.com/usalu/semio#-vec-
 
-export const VecSchema = z.object({ u: z.number(), v: z.number() });
+export const VecSchema = z.object({ x: z.number(), y: z.number() });
 export type Vec = z.infer<typeof VecSchema>;
 export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
 export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
@@ -415,30 +417,30 @@ export const VecDiffSchema = VecSchema.partial();
 export type VecDiff = z.infer<typeof VecDiffSchema>;
 export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
   return {
-    u: after.u - before.u,
-    v: after.v - before.v,
+    x: after.x - before.x,
+    y: after.y - before.y,
   };
 };
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
-  const u = appliedDiff.u ?? 0;
-  const v = appliedDiff.v ?? 0;
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
   return {
-    u: original.u - u,
-    v: original.v - v,
+    x: original.x - x,
+    y: original.y - y,
   };
 };
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
   return {
-    u: (diff1.u ?? 0) + (diff2.u ?? 0),
-    v: (diff1.v ?? 0) + (diff2.v ?? 0),
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
   };
 };
 export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
-  const u = diff.u ?? 0;
-  const v = diff.v ?? 0;
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
   return {
-    u: base.u + u,
-    v: base.v + v,
+    x: base.x + x,
+    y: base.y + y,
   };
 };
 
@@ -743,7 +745,7 @@ export const getLocationDiff = (before: Location, after: Location): LocationDiff
   if (before.longitude !== after.longitude) diff.longitude = after.longitude - before.longitude;
   if (before.latitude !== after.latitude) diff.latitude = after.latitude - before.latitude;
   if (before.altitude !== after.altitude) diff.altitude = after.altitude !== undefined && before.altitude !== undefined ? after.altitude - before.altitude : after.altitude;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => {
@@ -785,7 +787,7 @@ export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => {
   const diff: AuthorDiff = {};
   if (before.name !== after.name) diff.name = after.name;
   if (before.email !== after.email) diff.email = after.email;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): AuthorDiff => {
@@ -916,7 +918,7 @@ export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
   if (before.name !== after.name) diff.name = after.name;
   if (before.parent?.guid !== after.parent?.guid) diff.parent = after.parent;
   if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   if (before.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
   if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
   if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
@@ -1002,7 +1004,7 @@ export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): Benchmark
   if (before.minExcluded !== after.minExcluded) diff.minExcluded = after.minExcluded;
   if (before.max !== after.max) diff.max = after.max !== undefined && before.max !== undefined ? after.max - before.max : after.max;
   if (before.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: BenchmarkDiff): BenchmarkDiff => {
@@ -1147,8 +1149,8 @@ export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => 
   if (before.icon !== after.icon) diff.icon = after.icon;
   if (before.image !== after.image) diff.image = after.image;
   if (before.unit !== after.unit) diff.unit = after.unit;
-  if (!deepEqual(before.benchmarks, after.benchmarks)) diff.benchmarks = getBenchmarksDiff(before.benchmarks ?? [], after.benchmarks ?? []);
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.benchmarks !== after.benchmarks) diff.benchmarks = getBenchmarksDiff(before.benchmarks ?? [], after.benchmarks ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
@@ -1241,7 +1243,7 @@ export const getInterfaceDiff = (before: Interface, after: Interface): Interface
   if (before.description !== after.description) diff.description = after.description;
   if (before.icon !== after.icon) diff.icon = after.icon;
   if (JSON.stringify(before.compatibleInterfaces) !== JSON.stringify(after.compatibleInterfaces)) diff.compatibleInterfaces = after.compatibleInterfaces;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseInterfaceDiff = (original: Interface, appliedDiff: InterfaceDiff): InterfaceDiff => {
@@ -1367,10 +1369,10 @@ export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).ex
 export type PropDiff = z.infer<typeof PropDiffSchema>;
 export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
   const diff: PropDiff = {};
-  if (before.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
+  if (before.quality.guid !== after.quality.guid) diff.quality = after.quality;
   if (before.value !== after.value) diff.value = after.value;
   if (before.unit !== after.unit) diff.unit = after.unit;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => {
@@ -1486,7 +1488,7 @@ export const getModelDiff = (before: Model, after: Model): ModelDiff => {
   if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
   if (before.file !== after.file) diff.file = after.file;
   if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
@@ -1598,10 +1600,10 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
   if (before.interface?.guid !== after.interface?.guid) diff.interface = after.interface;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
   if (before.t !== after.t) diff.t = after.t - before.t;
-  if (!deepEqual(before.point, after.point)) diff.point = getPointDiff(before.point, after.point);
-  if (!deepEqual(before.direction, after.direction)) diff.direction = getVectorDiff(before.direction, after.direction);
-  if (!deepEqual(before.props, after.props)) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.point !== after.point) diff.point = getPointDiff(before.point, after.point);
+  if (before.direction !== after.direction) diff.direction = getVectorDiff(before.direction, after.direction);
+  if (before.props !== after.props) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
@@ -1864,84 +1866,23 @@ export const TypeDiffSchema = TypeSchema.partial().omit({ models: true, ports: t
 });
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
 export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
-  const diff: TypeDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.parent?.guid !== after.parent?.guid) diff.parent = after.parent;
-  if (before.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
-  if (before.folder !== after.folder) diff.folder = after.folder;
-  if (before.stock !== after.stock) diff.stock = after.stock;
-  if (before.virtual !== after.virtual) diff.virtual = after.virtual;
-  if (before.unit !== after.unit) diff.unit = after.unit;
-  if (before.location?.guid !== after.location?.guid) diff.location = after.location;
-  if (before.icon !== after.icon) diff.icon = after.icon;
-  if (before.image !== after.image) diff.image = after.image;
-  if (before.description !== after.description) diff.description = after.description;
-  if (!arraysEqual(before.authors, after.authors)) diff.authors = after.authors;
-  if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
-  const modelsDiff = getCollectionDiff(before.models ?? [], after.models ?? [], getModelDiff);
-  if (Object.keys(modelsDiff).length > 0) diff.models = modelsDiff;
-  const portsDiff = getCollectionDiff(before.ports ?? [], after.ports ?? [], getPortDiff);
-  if (Object.keys(portsDiff).length > 0) diff.ports = portsDiff;
-  const propsDiff = getCollectionDiff(before.props ?? [], after.props ?? [], getPropDiff);
-  if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
-  const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
-  return diff;
+  // TODO: Implement full Type diff logic
+  return {};
 };
 
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
-  return {
-    ...base,
-    name: diff.name ?? base.name,
-    parent: diff.parent !== undefined ? diff.parent : base.parent,
-    isAbstract: diff.isAbstract ?? base.isAbstract,
-    folder: diff.folder !== undefined ? diff.folder : base.folder,
-    stock: diff.stock !== undefined ? diff.stock : base.stock,
-    virtual: diff.virtual ?? base.virtual,
-    unit: diff.unit !== undefined ? diff.unit : base.unit,
-    location: diff.location !== undefined ? diff.location : base.location,
-    icon: diff.icon !== undefined ? diff.icon : base.icon,
-    image: diff.image !== undefined ? diff.image : base.image,
-    description: diff.description !== undefined ? diff.description : base.description,
-    authors: diff.authors !== undefined ? diff.authors : base.authors,
-    concepts: diff.concepts !== undefined ? diff.concepts : base.concepts,
-    models: diff.models || base.models ? applyCollectionDiff(base.models ?? [], diff.models, applyModelDiff) : base.models,
-    ports: diff.ports || base.ports ? applyCollectionDiff(base.ports ?? [], diff.ports, applyPortDiff) : base.ports,
-    props: diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : base.props,
-    attributes: diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : base.attributes,
-    createdAt: diff.createdAt ?? base.createdAt,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-  };
+  // TODO: Implement full Type apply diff logic including ports, models, props
+  return base;
 };
 
 export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
-  };
+  // TODO: Implement full Type merge diff logic
+  return { ...diff1, ...diff2 };
 };
 
 export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff => {
-  const inverse: TypeDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.parent !== undefined) inverse.parent = original.parent;
-  if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = original.isAbstract;
-  if (appliedDiff.folder !== undefined) inverse.folder = original.folder;
-  if (appliedDiff.stock !== undefined) inverse.stock = original.stock;
-  if (appliedDiff.virtual !== undefined) inverse.virtual = original.virtual;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.location !== undefined) inverse.location = original.location;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.authors !== undefined) inverse.authors = original.authors;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
-  if (appliedDiff.models) inverse.models = inverseCollectionDiff(original.models ?? [], appliedDiff.models, inverseModelDiff);
-  if (appliedDiff.ports) inverse.ports = inverseCollectionDiff(original.ports ?? [], appliedDiff.ports, inversePortDiff);
-  if (appliedDiff.props) inverse.props = inverseCollectionDiff(original.props ?? [], appliedDiff.props, inversePropDiff);
-  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  // TODO: Implement full Type inverse diff logic
+  return {};
 };
 
 export const TypesDiffSchema = z.object({
@@ -1959,7 +1900,6 @@ export const findPortInType = (type: Type, portGuid: string): Port => findPort(t
 // https://github.com/usalu/semio#-layer-
 
 export const LayerSchema = z.object({
-  guid: z.string(),
   path: z.string(),
   isHidden: z.boolean().optional(),
   isLocked: z.boolean().optional(),
@@ -1983,7 +1923,7 @@ export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
   if (before.isLocked !== after.isLocked) diff.isLocked = after.isLocked;
   if (before.color !== after.color) diff.color = after.color;
   if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => {
@@ -2036,16 +1976,14 @@ export const PieceSchema = z.object({
   isLocked: z.boolean().optional(),
   color: z.string().optional(),
   description: z.string().optional(),
-  props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export type Piece = z.infer<typeof PieceSchema>;
 export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
 export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
 
-export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: true, attributes: true }).extend({
+export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, attributes: true }).extend({
   plane: PlaneDiffSchema.optional(),
-  props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
 });
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
@@ -2054,16 +1992,15 @@ export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
   if (before.name !== after.name) diff.name = after.name;
   if (before.type?.guid !== after.type?.guid) diff.type = after.type;
   if (before.design?.guid !== after.design?.guid) diff.design = after.design;
-  if (!deepEqual(before.plane, after.plane)) diff.plane = after.plane ? getPlaneDiff(before.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, after.plane) : undefined;
-  if (!deepEqual(before.center, after.center)) diff.center = after.center;
+  if (before.plane !== after.plane) diff.plane = after.plane ? getPlaneDiff(before.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, after.plane) : undefined;
+  if (before.center !== after.center) diff.center = after.center;
   if (before.scale !== after.scale) diff.scale = after.scale;
-  if (!deepEqual(before.mirrorPlane, after.mirrorPlane)) diff.mirrorPlane = after.mirrorPlane;
+  if (before.mirrorPlane !== after.mirrorPlane) diff.mirrorPlane = after.mirrorPlane;
   if (before.isHidden !== after.isHidden) diff.isHidden = after.isHidden;
   if (before.isLocked !== after.isLocked) diff.isLocked = after.isLocked;
   if (before.color !== after.color) diff.color = after.color;
   if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.props, after.props)) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
@@ -2079,7 +2016,6 @@ export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): Piece
   if (appliedDiff.isLocked !== undefined) inverse.isLocked = original.isLocked;
   if (appliedDiff.color !== undefined) inverse.color = original.color;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(original.props ?? [], appliedDiff.props);
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
@@ -2087,7 +2023,6 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
   return {
     ...diff1,
     ...diff2,
-    props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : (diff2.props ?? diff1.props),
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
@@ -2114,7 +2049,6 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
     isLocked: diff.isLocked ?? base.isLocked,
     color: diff.color ?? base.color,
     description: diff.description ?? base.description,
-    props: diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props,
     attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
 };
@@ -2171,7 +2105,12 @@ export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): D
   const parentConnection = findParentConnectionForPieceInDesign(kit, designId, pieceId);
   return {
     connections: {
-      removed: [parentConnection.guid],
+      removed: [
+        {
+          connected: { piece: parentConnection.connected.piece.guid },
+          connecting: { piece: parentConnection.connecting.piece.guid },
+        },
+      ],
     },
   };
 };
@@ -2180,7 +2119,10 @@ export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]
   const parentConnections = pieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, designId, pieceId));
   return {
     connections: {
-      removed: parentConnections.map((c) => c.guid),
+      removed: parentConnections.map((c) => ({
+        connected: { piece: c.connected.piece.guid },
+        connecting: { piece: c.connecting.piece.guid },
+      })),
     },
   };
 };
@@ -2204,7 +2146,6 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 // https://github.com/usalu/semio#-group-
 
 export const GroupSchema = z.object({
-  guid: z.string(),
   pieces: z.array(PieceIdSchema),
   color: z.string().optional(),
   name: z.string().optional(),
@@ -2212,49 +2153,11 @@ export const GroupSchema = z.object({
   attributes: z.array(AttributeSchema).optional(),
 });
 export type Group = z.infer<typeof GroupSchema>;
-export const GroupDiffSchema = GroupSchema.partial().omit({ attributes: true }).extend({
-  attributes: AttributesDiffSchema.optional(),
-});
+export const GroupDiffSchema = GroupSchema.partial();
 export type GroupDiff = z.infer<typeof GroupDiffSchema>;
-export const getGroupDiff = (before: Group, after: Group): GroupDiff => {
-  const diff: GroupDiff = {};
-  if (!arraysEqual(before.pieces, after.pieces)) diff.pieces = after.pieces;
-  if (before.color !== after.color) diff.color = after.color;
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description;
-  const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
-  return diff;
-};
-export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): GroupDiff => {
-  const inverse: GroupDiff = {};
-  if (appliedDiff.pieces !== undefined) inverse.pieces = original.pieces;
-  if (appliedDiff.color !== undefined) inverse.color = original.color;
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
-};
-export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
-  return {
-    ...base,
-    pieces: diff.pieces ?? base.pieces,
-    color: diff.color !== undefined ? diff.color : base.color,
-    name: diff.name !== undefined ? diff.name : base.name,
-    description: diff.description !== undefined ? diff.description : base.description,
-    attributes: applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}),
-  };
-};
-export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
-  };
-};
 export const GroupsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: GroupDiffSchema })).optional(),
+  removed: z.array(z.array(z.string())).optional(),
+  updated: z.array(z.object({ id: z.array(z.string()), diff: GroupDiffSchema })).optional(),
   added: z.array(GroupSchema).optional(),
 });
 export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
@@ -2268,7 +2171,7 @@ export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   designPiece: PieceIdSchema.optional(),
-  port: PortIdSchema.optional(),
+  port: PortIdSchema,
 });
 export type Side = z.infer<typeof SideSchema>;
 export const SideDiffSchema = SideSchema.partial();
@@ -2281,9 +2184,9 @@ export const SidesDiffSchema = z.object({
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
 export const getSideDiff = (before: Side, after: Side): SideDiff => {
   const diff: SideDiff = {};
-  if (before.piece?.guid !== after.piece?.guid) diff.piece = after.piece;
+  if (before.piece.guid !== after.piece.guid) diff.piece = after.piece;
   if (before.designPiece?.guid !== after.designPiece?.guid) diff.designPiece = after.designPiece;
-  if (before.port?.guid !== after.port?.guid) diff.port = after.port;
+  if (before.port.guid !== after.port.guid) diff.port = after.port;
   return diff;
 };
 export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff => {
@@ -2304,7 +2207,7 @@ export const applySideDiff = (base: Side, diff: SideDiff): Side => {
 };
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
-export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.port?.guid === b.port?.guid;
+export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.port.guid === b.port.guid;
 
 // #endregion Side
 
@@ -2321,8 +2224,8 @@ export const ConnectionSchema = z.object({
   rotation: z.number().optional(),
   turn: z.number().optional(),
   tilt: z.number().optional(),
-  u: z.number().optional(),
-  v: z.number().optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -2335,18 +2238,18 @@ export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ guid: true
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
 export const getConnectionDiff = (before: Connection, after: Connection): ConnectionDiff => {
   const diff: ConnectionDiff = {};
-  if (!deepEqual(before.connected, after.connected)) diff.connected = getSideDiff(before.connected, after.connected);
-  if (!deepEqual(before.connecting, after.connecting)) diff.connecting = getSideDiff(before.connecting, after.connecting);
+  if (before.connected !== after.connected) diff.connected = getSideDiff(before.connected, after.connected);
+  if (before.connecting !== after.connecting) diff.connecting = getSideDiff(before.connecting, after.connecting);
   if (before.gap !== after.gap) diff.gap = after.gap !== undefined && before.gap !== undefined ? after.gap - before.gap : after.gap;
   if (before.shift !== after.shift) diff.shift = after.shift !== undefined && before.shift !== undefined ? after.shift - before.shift : after.shift;
   if (before.rise !== after.rise) diff.rise = after.rise !== undefined && before.rise !== undefined ? after.rise - before.rise : after.rise;
   if (before.rotation !== after.rotation) diff.rotation = after.rotation !== undefined && before.rotation !== undefined ? after.rotation - before.rotation : after.rotation;
   if (before.turn !== after.turn) diff.turn = after.turn !== undefined && before.turn !== undefined ? after.turn - before.turn : after.turn;
   if (before.tilt !== after.tilt) diff.tilt = after.tilt !== undefined && before.tilt !== undefined ? after.tilt - before.tilt : after.tilt;
-  if (before.u !== after.u) diff.u = after.u !== undefined && before.u !== undefined ? after.u - before.u : after.u;
-  if (before.v !== after.v) diff.v = after.v !== undefined && before.v !== undefined ? after.v - before.v : after.v;
+  if (before.x !== after.x) diff.x = after.x !== undefined && before.x !== undefined ? after.x - before.x : after.x;
+  if (before.y !== after.y) diff.y = after.y !== undefined && before.y !== undefined ? after.y - before.y : after.y;
   if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  if (before.attributes !== after.attributes) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 
@@ -2380,16 +2283,16 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
   if (appliedDiff.rotation !== undefined) inverse.rotation = original.rotation !== undefined && appliedDiff.rotation !== undefined ? -appliedDiff.rotation : original.rotation;
   if (appliedDiff.turn !== undefined) inverse.turn = original.turn !== undefined && appliedDiff.turn !== undefined ? -appliedDiff.turn : original.turn;
   if (appliedDiff.tilt !== undefined) inverse.tilt = original.tilt !== undefined && appliedDiff.tilt !== undefined ? -appliedDiff.tilt : original.tilt;
-  if (appliedDiff.u !== undefined) inverse.u = original.u !== undefined && appliedDiff.u !== undefined ? -appliedDiff.u : original.u;
-  if (appliedDiff.v !== undefined) inverse.v = original.v !== undefined && appliedDiff.v !== undefined ? -appliedDiff.v : original.v;
+  if (appliedDiff.x !== undefined) inverse.x = original.x !== undefined && appliedDiff.x !== undefined ? -appliedDiff.x : original.x;
+  if (appliedDiff.y !== undefined) inverse.y = original.y !== undefined && appliedDiff.y !== undefined ? -appliedDiff.y : original.y;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.attributes !== undefined) inverse.attributes = getAttributesDiff(appliedDiff.attributes ? applyAttributesDiff([], appliedDiff.attributes) : [], original.attributes ?? []);
   return inverse;
 };
 
 export const ConnectionsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: ConnectionDiffSchema })).optional(),
+  removed: z.array(z.object({ connected: z.object({ piece: z.string() }), connecting: z.object({ piece: z.string() }) })).optional(),
+  updated: z.array(z.object({ id: z.object({ connected: z.object({ piece: z.string() }), connecting: z.object({ piece: z.string() }) }), diff: ConnectionDiffSchema })).optional(),
   added: z.array(ConnectionSchema).optional(),
 });
 export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
@@ -2421,9 +2324,8 @@ export const findPieceConnections = (connections: Connection[], pieceGuid: strin
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
 
-export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Port | undefined => {
-  const portGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.port?.guid : connection.connecting.port?.guid;
-  if (!portGuid) return undefined;
+export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Port => {
+  const portGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.port.guid : connection.connecting.port.guid;
   return findPortInType(type, portGuid);
 };
 
@@ -2444,40 +2346,6 @@ export const StatSchema = z.object({
 export type Stat = z.infer<typeof StatSchema>;
 export const StatDiffSchema = StatSchema.partial();
 export type StatDiff = z.infer<typeof StatDiffSchema>;
-export const getStatDiff = (before: Stat, after: Stat): StatDiff => {
-  const diff: StatDiff = {};
-  if (before.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
-  if (before.unit !== after.unit) diff.unit = after.unit;
-  if (before.min !== after.min) diff.min = after.min;
-  if (before.minExcluded !== after.minExcluded) diff.minExcluded = after.minExcluded;
-  if (before.max !== after.max) diff.max = after.max;
-  if (before.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
-  return diff;
-};
-export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff => {
-  const inverse: StatDiff = {};
-  if (appliedDiff.quality !== undefined) inverse.quality = original.quality;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.min !== undefined) inverse.min = original.min;
-  if (appliedDiff.minExcluded !== undefined) inverse.minExcluded = original.minExcluded;
-  if (appliedDiff.max !== undefined) inverse.max = original.max;
-  if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = original.maxExcluded;
-  return inverse;
-};
-export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
-  return {
-    ...base,
-    quality: diff.quality ?? base.quality,
-    unit: diff.unit !== undefined ? diff.unit : base.unit,
-    min: diff.min !== undefined ? diff.min : base.min,
-    minExcluded: diff.minExcluded ?? base.minExcluded,
-    max: diff.max !== undefined ? diff.max : base.max,
-    maxExcluded: diff.maxExcluded ?? base.maxExcluded,
-  };
-};
-export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
-  return { ...diff1, ...diff2 };
-};
 export const StatsDiffSchema = z.object({
   removed: z.array(z.string()).optional(),
   updated: z.array(z.object({ id: z.string(), diff: StatDiffSchema })).optional(),
@@ -2543,75 +2411,16 @@ export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: t
 
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
-  const diff: DesignDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.parent?.guid !== after.parent?.guid) diff.parent = after.parent;
-  if (before.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
-  if (before.folder !== after.folder) diff.folder = after.folder;
-  if (before.canScale !== after.canScale) diff.canScale = after.canScale;
-  if (before.canMirror !== after.canMirror) diff.canMirror = after.canMirror;
-  if (before.unit !== after.unit) diff.unit = after.unit;
-  if (before.activeLayer?.guid !== after.activeLayer?.guid) diff.activeLayer = after.activeLayer;
-  if (before.location?.guid !== after.location?.guid) diff.location = after.location;
-  if (before.icon !== after.icon) diff.icon = after.icon;
-  if (before.image !== after.image) diff.image = after.image;
-  if (before.description !== after.description) diff.description = after.description;
-  if (!arraysEqual(before.authors, after.authors)) diff.authors = after.authors as any;
-  if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
-  const piecesDiff = getCollectionDiff(before.pieces ?? [], after.pieces ?? [], getPieceDiff);
-  if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
-  const connectionsDiff = getCollectionDiff(before.connections ?? [], after.connections ?? [], getConnectionDiff);
-  if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
-  const statsDiff = getCollectionDiff(before.stats ?? [], after.stats ?? [], getStatDiff);
-  if (Object.keys(statsDiff).length > 0) diff.stats = statsDiff;
-  const propsDiff = getCollectionDiff(before.props ?? [], after.props ?? [], getPropDiff);
-  if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
-  const layersDiff = getCollectionDiff(before.layers ?? [], after.layers ?? [], getLayerDiff);
-  if (Object.keys(layersDiff).length > 0) diff.layers = layersDiff;
-  const groupsDiff = getCollectionDiff(before.groups ?? [], after.groups ?? [], getGroupDiff);
-  if (Object.keys(groupsDiff).length > 0) diff.groups = groupsDiff;
-  const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
-  return diff;
+  // TODO: Implement full Design diff logic
+  return {};
 };
 export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    pieces: diff1.pieces || diff2.pieces ? mergeCollectionDiff(diff1.pieces ?? {}, diff2.pieces ?? {}, mergePieceDiff) : undefined,
-    connections: diff1.connections || diff2.connections ? mergeCollectionDiff(diff1.connections ?? {}, diff2.connections ?? {}, mergeConnectionDiff) : undefined,
-    stats: diff1.stats || diff2.stats ? mergeCollectionDiff(diff1.stats ?? {}, diff2.stats ?? {}, mergeStatDiff) : undefined,
-    props: diff1.props || diff2.props ? mergeCollectionDiff(diff1.props ?? {}, diff2.props ?? {}, mergePropDiff) : undefined,
-    layers: diff1.layers || diff2.layers ? mergeCollectionDiff(diff1.layers ?? {}, diff2.layers ?? {}, mergeLayerDiff) : undefined,
-    groups: diff1.groups || diff2.groups ? mergeCollectionDiff(diff1.groups ?? {}, diff2.groups ?? {}, mergeGroupDiff) : undefined,
-    authors: diff2.authors ?? diff1.authors,
-    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
-  };
+  // TODO: Implement full Design merge diff logic
+  return { ...diff1, ...diff2 };
 };
 export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): DesignDiff => {
-  const inverse: DesignDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.parent !== undefined) inverse.parent = original.parent;
-  if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = original.isAbstract;
-  if (appliedDiff.folder !== undefined) inverse.folder = original.folder;
-  if (appliedDiff.canScale !== undefined) inverse.canScale = original.canScale;
-  if (appliedDiff.canMirror !== undefined) inverse.canMirror = original.canMirror;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.activeLayer !== undefined) inverse.activeLayer = original.activeLayer;
-  if (appliedDiff.location !== undefined) inverse.location = original.location;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.authors !== undefined) inverse.authors = original.authors as any;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
-  if (appliedDiff.pieces) inverse.pieces = inverseCollectionDiff(original.pieces ?? [], appliedDiff.pieces, inversePieceDiff);
-  if (appliedDiff.connections) inverse.connections = inverseCollectionDiff(original.connections ?? [], appliedDiff.connections, inverseConnectionDiff);
-  if (appliedDiff.stats) inverse.stats = inverseCollectionDiff(original.stats ?? [], appliedDiff.stats, inverseStatDiff);
-  if (appliedDiff.props) inverse.props = inverseCollectionDiff(original.props ?? [], appliedDiff.props, inversePropDiff);
-  if (appliedDiff.layers) inverse.layers = inverseCollectionDiff(original.layers ?? [], appliedDiff.layers, inverseLayerDiff);
-  if (appliedDiff.groups) inverse.groups = inverseCollectionDiff(original.groups ?? [], appliedDiff.groups, inverseGroupDiff);
-  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  // TODO: Implement full Design inverse diff logic
+  return {};
 };
 
 export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
@@ -2737,32 +2546,56 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 };
 
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
-  return {
-    ...base,
-    name: diff.name ?? base.name,
-    parent: diff.parent !== undefined ? diff.parent : base.parent,
-    isAbstract: diff.isAbstract ?? base.isAbstract,
-    folder: diff.folder ?? base.folder,
-    canScale: diff.canScale ?? base.canScale,
-    canMirror: diff.canMirror ?? base.canMirror,
-    unit: diff.unit !== undefined ? diff.unit : base.unit,
-    activeLayer: diff.activeLayer !== undefined ? diff.activeLayer : base.activeLayer,
-    location: diff.location !== undefined ? diff.location : base.location,
-    icon: diff.icon !== undefined ? diff.icon : base.icon,
-    image: diff.image !== undefined ? diff.image : base.image,
-    description: diff.description !== undefined ? diff.description : base.description,
-    authors: diff.authors !== undefined ? diff.authors as any : base.authors,
-    concepts: diff.concepts !== undefined ? diff.concepts : base.concepts,
-    pieces: diff.pieces || base.pieces ? applyCollectionDiff(base.pieces ?? [], diff.pieces, applyPieceDiff) : base.pieces,
-    connections: diff.connections || base.connections ? applyCollectionDiff(base.connections ?? [], diff.connections, applyConnectionDiff) : base.connections,
-    stats: diff.stats || base.stats ? applyCollectionDiff(base.stats ?? [], diff.stats, applyStatDiff) : base.stats,
-    props: diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : base.props,
-    layers: diff.layers || base.layers ? applyCollectionDiff(base.layers ?? [], diff.layers, applyLayerDiff) : base.layers,
-    groups: diff.groups || base.groups ? applyCollectionDiff(base.groups ?? [], diff.groups, applyGroupDiff) : base.groups,
-    attributes: diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : base.attributes,
-    createdAt: diff.createdAt ?? base.createdAt,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-  };
+  let result = { ...base };
+  if (diff.name !== undefined) result.name = diff.name;
+  if (diff.parent !== undefined) result.parent = diff.parent;
+  if (diff.isAbstract !== undefined) result.isAbstract = diff.isAbstract;
+  if (diff.folder !== undefined) result.folder = diff.folder;
+  if (diff.canScale !== undefined) result.canScale = diff.canScale;
+  if (diff.canMirror !== undefined) result.canMirror = diff.canMirror;
+  if (diff.unit !== undefined) result.unit = diff.unit;
+  if (diff.location !== undefined) result.location = diff.location;
+  if (diff.icon !== undefined) result.icon = diff.icon;
+  if (diff.image !== undefined) result.image = diff.image;
+  if (diff.description !== undefined) result.description = diff.description;
+  if (diff.createdAt !== undefined) result.createdAt = diff.createdAt;
+  if (diff.updatedAt !== undefined) result.updatedAt = diff.updatedAt;
+  if (diff.pieces) {
+    let pieces = [...(result.pieces ?? [])];
+    if (diff.pieces.removed) {
+      pieces = pieces.filter((p) => !diff.pieces!.removed!.includes(p.guid));
+    }
+    if (diff.pieces.updated) {
+      pieces = pieces.map((piece) => {
+        const update = diff.pieces!.updated!.find((u) => u.id === piece.guid);
+        return update ? applyPieceDiff(piece, update.diff) : piece;
+      });
+    }
+    if (diff.pieces.added) {
+      pieces.push(...diff.pieces.added);
+    }
+    result.pieces = pieces;
+  }
+  if (diff.connections) {
+    let connections = [...(result.connections ?? [])];
+    if (diff.connections.removed) {
+      connections = connections.filter((c) => !diff.connections!.removed!.some((removed) => areSameConnection(c, removed as any)));
+    }
+    if (diff.connections.updated) {
+      connections = connections.map((connection) => {
+        const update = diff.connections!.updated!.find((u) => areSameConnection(connection, u.id as any));
+        return update ? applyConnectionDiff(connection, update.diff) : connection;
+      });
+    }
+    if (diff.connections.added) {
+      connections.push(...diff.connections.added);
+    }
+    result.connections = connections;
+  }
+  if (diff.attributes) {
+    result.attributes = applyAttributesDiff(result.attributes ?? [], diff.attributes);
+  }
+  return result;
 };
 
 export const DesignsDiffSchema = z.object({
@@ -2794,12 +2627,21 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
 };
 
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignDiff => {
+  const design = kit.designs?.find((d) => d.guid === designId);
+  const removedConnections = connectionIds
+    .map((connId) => {
+      const conn = design?.connections?.find((c) => c.guid === connId);
+      if (!conn) return null;
+      return { connected: { piece: conn.connected.piece.guid }, connecting: { piece: conn.connecting.piece.guid } };
+    })
+    .filter((c): c is { connected: { piece: string }; connecting: { piece: string } } => c !== null);
+
   return {
     pieces: {
       removed: pieceIds,
     },
     connections: {
-      removed: connectionIds,
+      removed: removedConnections,
     },
   };
 };
@@ -3083,14 +2925,9 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         // Ensure parent has a center (default to origin if not set)
         const parentCenter = parentPiece.center || { u: 0, v: 0 };
 
-        const direction = vectorToThree({
-          x: connection.u ?? 0,
-          y: connection.v ?? 0,
-          z: 0,
-        }).normalize();
         const childCenter = {
-          u: round(parentCenter.u + (connection.u ?? 0) + direction.x),
-          v: round(parentCenter.v + (connection.v ?? 0) + direction.y),
+          u: round(parentCenter.u + (connection.x ?? 0)),
+          v: round(parentCenter.v + (connection.y ?? 0)),
         };
 
         const flatChildPiece: Piece = setAttributes(
@@ -3202,8 +3039,8 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
     description: `Clustered design with ${clusteredPieces.length} pieces`,
     pieces: clusteredPieces,
     connections: internalConnections,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   return { clusteredDesign, externalConnections };
@@ -3228,7 +3065,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
       const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
       return connectedInCluster || connectingInCluster;
     })
-    .map((c) => c.guid);
+    .map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } }));
 
   // Update external connections to use direct design references
   const updatedExternalConnections = externalConnections.map((connection) => {
@@ -3447,7 +3284,7 @@ export const isPortInUse = (design: Design, pieceGuid: string, portGuid: string)
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   for (const connection of connections) {
     const isPieceConnected = connection.connected.piece.guid === pieceGuid;
-    const isPortConnected = isPieceConnected ? connection.connected.port?.guid === portGuid : connection.connecting.port?.guid === portGuid;
+    const isPortConnected = isPieceConnected ? connection.connected.port.guid === portGuid : connection.connecting.port.guid === portGuid;
     if (isPortConnected) return true;
   }
   return false;
@@ -3611,27 +3448,6 @@ const applyCollectionDiff = <T extends { guid: string }, D>(
   return result;
 };
 
-const mergeCollectionDiff = <T extends { guid: string }, D>(
-  diff1: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] },
-  diff2: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] },
-  mergeItemDiff: (diff1: D, diff2: D) => D
-): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
-  const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
-  const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
-  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.id, u.diff]));
-  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.id, u.diff]));
-  const allIds = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
-  const updated = Array.from(allIds).map((id) => ({
-    id,
-    diff: mergeItemDiff(updated1Map.get(id) ?? {} as D, updated2Map.get(id) ?? {} as D),
-  }));
-  return {
-    removed: removed.length > 0 ? removed : undefined,
-    updated: updated.length > 0 ? updated : undefined,
-    added: added.length > 0 ? added : undefined,
-  };
-};
-
 export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   const diff: KitDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -3666,14 +3482,30 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   const inverse: KitDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.version !== undefined) inverse.version = original.version;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
-  if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage;
-  if (appliedDiff.license !== undefined) inverse.license = original.license;
-  if (appliedDiff.preview !== undefined) inverse.preview = original.preview;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
+  if (appliedDiff.description !== undefined) {
+    inverse.description = original.description !== undefined ? original.description : null as any;
+  }
+  if (appliedDiff.icon !== undefined) {
+    inverse.icon = original.icon !== undefined ? original.icon : null as any;
+  }
+  if (appliedDiff.image !== undefined) {
+    inverse.image = original.image !== undefined ? original.image : null as any;
+  }
+  if (appliedDiff.remote !== undefined) {
+    inverse.remote = original.remote !== undefined ? original.remote : null as any;
+  }
+  if (appliedDiff.homepage !== undefined) {
+    inverse.homepage = original.homepage !== undefined ? original.homepage : null as any;
+  }
+  if (appliedDiff.license !== undefined) {
+    inverse.license = original.license !== undefined ? original.license : null as any;
+  }
+  if (appliedDiff.preview !== undefined) {
+    inverse.preview = original.preview !== undefined ? original.preview : null as any;
+  }
+  if (appliedDiff.concepts !== undefined) {
+    inverse.concepts = original.concepts !== undefined ? original.concepts : null as any;
+  }
   if (appliedDiff.types) inverse.types = inverseCollectionDiff(original.types ?? [], appliedDiff.types, inverseTypeDiff);
   if (appliedDiff.designs) inverse.designs = inverseCollectionDiff(original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
   if (appliedDiff.interfaces) inverse.interfaces = inverseInterfacesDiff(original.interfaces ?? [], appliedDiff.interfaces);
@@ -3700,29 +3532,85 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
 };
 export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   const result: Kit = {
-    ...base,
-    guid: base.guid,
-    name: 'name' in diff ? diff.name! : base.name,
-    version: 'version' in diff ? diff.version! : base.version,
-    description: 'description' in diff ? diff.description : base.description,
-    icon: 'icon' in diff ? diff.icon : base.icon,
-    image: 'image' in diff ? diff.image : base.image,
-    remote: 'remote' in diff ? diff.remote : base.remote,
-    homepage: 'homepage' in diff ? diff.homepage : base.homepage,
-    license: 'license' in diff ? diff.license : base.license,
-    preview: 'preview' in diff ? diff.preview : base.preview,
-    concepts: 'concepts' in diff ? diff.concepts : base.concepts,
+    guid: diff.guid ?? base.guid,
+    name: diff.name ?? base.name,
+    version: diff.version ?? base.version,
     createdAt: base.createdAt,
     updatedAt: diff.updatedAt ?? base.updatedAt,
     types: applyCollectionDiff(base.types ?? [], diff.types, applyTypeDiff),
     designs: applyCollectionDiff(base.designs ?? [], diff.designs, applyDesignDiff),
-    interfaces: applyInterfacesDiff(base.interfaces ?? [], diff.interfaces ?? {}),
-    qualities: applyCollectionDiff(base.qualities ?? [], diff.qualities, applyQualityDiff),
-    files: applyCollectionDiff(base.files ?? [], diff.files, applyFileDiff),
-    folders: applyCollectionDiff(base.folders ?? [], diff.folders, applyFolderDiff),
     authors: applyCollectionDiff(base.authors ?? [], diff.authors, applyAuthorDiff),
-    attributes: applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}),
   };
+  if (diff.description !== undefined) {
+    if (diff.description !== null) result.description = diff.description;
+  } else if (base.description !== undefined) {
+    result.description = base.description;
+  }
+  if (diff.icon !== undefined) {
+    if (diff.icon !== null) result.icon = diff.icon;
+  } else if (base.icon !== undefined) {
+    result.icon = base.icon;
+  }
+  if (diff.image !== undefined) {
+    if (diff.image !== null) result.image = diff.image;
+  } else if (base.image !== undefined) {
+    result.image = base.image;
+  }
+  if (diff.remote !== undefined) {
+    if (diff.remote !== null) result.remote = diff.remote;
+  } else if (base.remote !== undefined) {
+    result.remote = base.remote;
+  }
+  if (diff.homepage !== undefined) {
+    if (diff.homepage !== null) result.homepage = diff.homepage;
+  } else if (base.homepage !== undefined) {
+    result.homepage = base.homepage;
+  }
+  if (diff.license !== undefined) {
+    if (diff.license !== null) result.license = diff.license;
+  } else if (base.license !== undefined) {
+    result.license = base.license;
+  }
+  if (diff.preview !== undefined) {
+    if (diff.preview !== null) result.preview = diff.preview;
+  } else if (base.preview !== undefined) {
+    result.preview = base.preview;
+  }
+  if (diff.concepts !== undefined) {
+    if (diff.concepts !== null) result.concepts = diff.concepts;
+  } else if (base.concepts !== undefined) {
+    result.concepts = base.concepts;
+  }
+  if (diff.interfaces !== undefined || base.interfaces !== undefined) {
+    const applied = applyInterfacesDiff(base.interfaces ?? [], diff.interfaces ?? {});
+    if (applied.length > 0 || (base.interfaces !== undefined && base.interfaces.length === 0)) {
+      result.interfaces = applied;
+    }
+  }
+  if (diff.qualities !== undefined || base.qualities !== undefined) {
+    const applied = applyCollectionDiff(base.qualities ?? [], diff.qualities, applyQualityDiff);
+    if (applied.length > 0 || (base.qualities !== undefined && base.qualities.length === 0)) {
+      result.qualities = applied;
+    }
+  }
+  if (diff.files !== undefined || base.files !== undefined) {
+    const applied = applyCollectionDiff(base.files ?? [], diff.files, applyFileDiff);
+    if (applied.length > 0 || (base.files !== undefined && base.files.length === 0)) {
+      result.files = applied;
+    }
+  }
+  if (diff.folders !== undefined || base.folders !== undefined) {
+    const applied = applyCollectionDiff(base.folders ?? [], diff.folders, applyFolderDiff);
+    if (applied.length > 0 || (base.folders !== undefined && base.folders.length === 0)) {
+      result.folders = applied;
+    }
+  }
+  if (diff.attributes !== undefined || base.attributes !== undefined) {
+    const applied = applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {});
+    if (applied.length > 0 || (base.attributes !== undefined && base.attributes.length === 0)) {
+      result.attributes = applied;
+    }
+  }
   return result;
 };
 
@@ -3877,7 +3765,7 @@ export const findUsedPortsByPieceInDesign = (kit: Kit, designGuid: string, piece
   if (!piece.type) return [];
   const type = findTypeInKit(kit, piece.type.guid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
-  return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid)).filter((p): p is Port => p !== undefined);
+  return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid));
 };
 
 export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
@@ -3890,7 +3778,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
       const otherPiece = findPieceInDesign(design, otherPieceId);
       if (!otherPiece.type) continue;
       const otherType = findTypeInKit(kit, otherPiece.type.guid);
-      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.port?.guid : connection.connected.port?.guid;
+      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.port.guid : connection.connected.port.guid;
       const otherPort = findPortInType(otherType, otherPortId || "");
       requiredPorts.push(otherPort);
     } catch (error) {
@@ -3925,7 +3813,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
           const otherPiece = findPieceInDesign(design, otherPieceId);
           if (!otherPiece.type) continue;
           const otherType = findTypeInKit(kit, otherPiece.type.guid);
-          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.port?.guid : connection.connected.port?.guid;
+          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.port.guid : connection.connected.port.guid;
           const otherPort = findPortInType(otherType, otherPortId || "");
           externalConnections.push({ connection, requiredPort: otherPort });
         } catch (error) {
@@ -4208,8 +4096,8 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
     name,
     size,
     hash: hash.toString(36),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 };
 
@@ -4309,7 +4197,6 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     return [arr as T];
   };
   const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined) ? undefined : value;
-  const normalizeBoolean = (value: boolean | undefined): boolean | undefined => value ? true : undefined;
 
   const areAttributesEqual = (a?: Attribute[], b?: Attribute[]): boolean => {
     const arrA = normalizeArray(a);
@@ -4321,21 +4208,6 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (attrA.key !== attrB.key) return false;
       if (normalizeValue(attrA.value) !== normalizeValue(attrB.value)) return false;
       if (normalizeValue(attrA.definition) !== normalizeValue(attrB.definition)) return false;
-    }
-    return true;
-  };
-
-  const arePropsEqual = (a?: Prop[], b?: Prop[]): boolean => {
-    const arrA = normalizeArray(a);
-    const arrB = normalizeArray(b);
-    if (arrA.length !== arrB.length) return false;
-    for (const propA of arrA) {
-      const propB = arrB.find(x => x.guid === propA.guid);
-      if (!propB) return false;
-      if (propA.quality.guid !== propB.quality.guid) return false;
-      if (propA.value !== propB.value) return false;
-      if (normalizeValue(propA.unit) !== normalizeValue(propB.unit)) return false;
-      if (!areAttributesEqual(propA.attributes, propB.attributes)) return false;
     }
     return true;
   };
@@ -4355,9 +4227,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (portA.direction.y !== portB.direction.y) return false;
       if (portA.direction.z !== portB.direction.z) return false;
       if (portA.t !== portB.t) return false;
-      if (normalizeBoolean(portA.mandatory) !== normalizeBoolean(portB.mandatory)) return false;
-      if (normalizeValue(portA.interface?.guid) !== normalizeValue(portB.interface?.guid)) return false;
-      if (!arePropsEqual(portA.props, portB.props)) return false;
+      if (portA.mandatory !== portB.mandatory) return false;
       if (!areAttributesEqual(portA.attributes, portB.attributes)) return false;
     }
     return true;
@@ -4394,15 +4264,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (normalizeValue(typeA.description) !== normalizeValue(typeB.description)) return false;
       if (normalizeValue(typeA.icon) !== normalizeValue(typeB.icon)) return false;
       if (normalizeValue(typeA.image) !== normalizeValue(typeB.image)) return false;
-      if (normalizeValue(typeA.folder) !== normalizeValue(typeB.folder)) return false;
-      if (normalizeValue(typeA.unit) !== normalizeValue(typeB.unit)) return false;
-      if (typeA.stock !== typeB.stock) return false;
-      if (normalizeBoolean(typeA.isAbstract) !== normalizeBoolean(typeB.isAbstract)) return false;
-      if (normalizeBoolean(typeA.virtual) !== normalizeBoolean(typeB.virtual)) return false;
-      if (normalizeValue(typeA.location?.guid) !== normalizeValue(typeB.location?.guid)) return false;
       if (!arraysEqual(normalizeArray(typeA.concepts), normalizeArray(typeB.concepts))) return false;
-      if (!arraysEqual(normalizeArray(typeA.authors?.map(a => a.guid)), normalizeArray(typeB.authors?.map(a => a.guid)))) return false;
-      if (!arePropsEqual(typeA.props, typeB.props)) return false;
       if (!areModelsEqual(typeA.models, typeB.models)) return false;
       if (!arePortsEqual(typeA.ports, typeB.ports)) return false;
       if (!areAttributesEqual(typeA.attributes, typeB.attributes)) return false;
@@ -4457,7 +4319,6 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (pieceA.isLocked !== pieceB.isLocked) return false;
       if (normalizeValue(pieceA.color) !== normalizeValue(pieceB.color)) return false;
       if (normalizeValue(pieceA.description) !== normalizeValue(pieceB.description)) return false;
-      if (!arePropsEqual(pieceA.props, pieceB.props)) return false;
       if (!areAttributesEqual(pieceA.attributes, pieceB.attributes)) return false;
     }
     return true;
@@ -4471,19 +4332,19 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       const connB = arrB.find(x => x.guid === connA.guid);
       if (!connB) return false;
       if (connA.connected.piece.guid !== connB.connected.piece.guid) return false;
-      if (normalizeValue(connA.connected.designPiece?.guid) !== normalizeValue(connB.connected.designPiece?.guid)) return false;
-      if (normalizeValue(connA.connected.port?.guid) !== normalizeValue(connB.connected.port?.guid)) return false;
+      if (connA.connected.designPiece?.guid !== connB.connected.designPiece?.guid) return false;
+      if (connA.connected.port.guid !== connB.connected.port.guid) return false;
       if (connA.connecting.piece.guid !== connB.connecting.piece.guid) return false;
-      if (normalizeValue(connA.connecting.designPiece?.guid) !== normalizeValue(connB.connecting.designPiece?.guid)) return false;
-      if (normalizeValue(connA.connecting.port?.guid) !== normalizeValue(connB.connecting.port?.guid)) return false;
+      if (connA.connecting.designPiece?.guid !== connB.connecting.designPiece?.guid) return false;
+      if (connA.connecting.port.guid !== connB.connecting.port.guid) return false;
       if (connA.gap !== connB.gap) return false;
       if (connA.shift !== connB.shift) return false;
       if (connA.rise !== connB.rise) return false;
       if (connA.rotation !== connB.rotation) return false;
       if (connA.turn !== connB.turn) return false;
       if (connA.tilt !== connB.tilt) return false;
-      if (connA.u !== connB.u) return false;
-      if (connA.v !== connB.v) return false;
+      if (connA.x !== connB.x) return false;
+      if (connA.y !== connB.y) return false;
       if (normalizeValue(connA.description) !== normalizeValue(connB.description)) return false;
       if (!areAttributesEqual(connA.attributes, connB.attributes)) return false;
     }
@@ -4631,14 +4492,6 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   const kitRow = kitRows[0];
 
   const toUndefined = (value: any): any => (value === null || value === "") ? undefined : value;
-  const buildAttribute = (a: any): any => {
-    const attr: any = { guid: a.guid, key: a.key };
-    const value = toUndefined(a.value);
-    const definition = toUndefined(a.definition);
-    if (value !== undefined) attr.value = value;
-    if (definition !== undefined) attr.definition = definition;
-    return attr;
-  };
   const mapOrUndefined = <T, R>(arr: T[], mapper: (item: T) => R): R[] | undefined =>
     arr.length > 0 ? arr.map(mapper) : undefined;
 
@@ -4653,8 +4506,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     remote: toUndefined(kitRow.remote),
     homepage: toUndefined(kitRow.homepage),
     license: toUndefined(kitRow.license),
-    createdAt: kitRow.created,
-    updatedAt: kitRow.updated,
+    createdAt: new Date(kitRow.created),
+    updatedAt: new Date(kitRow.updated),
   };
 
   const types = execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid]);
@@ -4665,87 +4518,79 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     const typeAttributes = execResult("SELECT * FROM attribute WHERE type_guid = ?", [typeGuid]);
     const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_guid = ?", [typeGuid]);
 
-    const type: any = {
+    return {
       guid: typeGuid,
       name: row.name,
-      createdAt: row.created,
-      updatedAt: row.updated,
-    };
-    if (row.is_abstract) type.isAbstract = true;
-    const folder = toUndefined(row.folder);
-    if (folder !== undefined) type.folder = folder;
-    const description = toUndefined(row.description);
-    if (description !== undefined) type.description = description;
-    const icon = toUndefined(row.icon);
-    if (icon !== undefined) type.icon = icon;
-    const image = toUndefined(row.image);
-    if (image !== undefined) type.image = image;
-    if (row.parent_guid || row.parent_id) type.parent = { guid: row.parent_guid || String(row.parent_id) };
-    if (row.virtual) type.virtual = true;
-    const unit = toUndefined(row.unit);
-    if (unit !== undefined) type.unit = unit;
-    if (row.stock !== null && row.stock !== undefined) type.stock = row.stock;
-    if (row.location_guid) type.location = { guid: row.location_guid };
-
-    const concepts = mapOrUndefined(typeConcepts, (c: any) => c.concept);
-    if (concepts) type.concepts = concepts;
-
-    const models_value = mapOrUndefined(models, (m: any) => {
-      const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
-      const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
-      return {
-        guid: m.guid,
-        file: m.file,
-        name: toUndefined(m.name),
-        description: toUndefined(m.description),
-        tags: modelTags.map((t: any) => t.tag),
-        attributes: mapOrUndefined(modelAttributes, buildAttribute),
-      };
-    });
-    if (models_value) type.models = models_value;
-
-    const ports_value = mapOrUndefined(ports, (p: any) => {
-      const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
-      const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
-
-      // Build port with conditional properties to avoid undefined assignments
-      const port: any = {
-        guid: p.guid,
-        point: { x: p.point_x, y: p.point_y, z: p.point_z },
-        direction: { x: p.direction_x, y: p.direction_y, z: p.direction_z },
-        t: p.t,
-      };
-
-      if (p.name) port.name = p.name;
-      if (p.mandatory) port.mandatory = true;
-      if (p.interface_guid) port.interface = { guid: p.interface_guid };
-      if (p.description) port.description = p.description;
-
-      const props_value = portProps.map((pr: any) => {
-        const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
-        if (!pr.quality_guid) return null;
+      description: toUndefined(row.description),
+      icon: toUndefined(row.icon),
+      image: toUndefined(row.image),
+      parent: row.parent_guid ? { guid: row.parent_guid } : (row.parent_id ? { guid: String(row.parent_id) } : undefined),
+      virtual: Boolean(row.virtual),
+      unit: toUndefined(row.unit),
+      stock: row.stock,
+      createdAt: new Date(row.created),
+      updatedAt: new Date(row.updated),
+      models: mapOrUndefined(models, (m: any) => {
+        const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
+        const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
         return {
-          guid: pr.guid,
-          value: String(pr.value),
-          unit: toUndefined(pr.unit),
-          quality: { guid: pr.quality_guid },
-          attributes: mapOrUndefined(propAttributes, buildAttribute),
+          guid: m.guid,
+          file: m.file,
+          name: toUndefined(m.name),
+          description: toUndefined(m.description),
+          tags: modelTags.map((t: any) => t.tag),
+          attributes: mapOrUndefined(modelAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
         };
-      }).filter((p: any): p is NonNullable<typeof p> => p !== null);
-      if (props_value && props_value.length > 0) port.props = props_value;
-
-      const attributes_value = mapOrUndefined(portAttributes, buildAttribute);
-      if (attributes_value) port.attributes = attributes_value;
-
-      return port;
-    });
-    if (ports_value) type.ports = ports_value;
-
-
-    const attributes_value = mapOrUndefined(typeAttributes, buildAttribute);
-    if (attributes_value) type.attributes = attributes_value;
-
-    return type;
+      }),
+      ports: mapOrUndefined(ports, (p: any) => {
+        const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
+        const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
+        return {
+          guid: p.guid,
+          name: toUndefined(p.name),
+          point: { x: p.point_x, y: p.point_y, z: p.point_z },
+          direction: { x: p.direction_x, y: p.direction_y, z: p.direction_z },
+          t: p.t,
+          mandatory: Boolean(p.mandatory),
+          interface: p.interface_guid ? { guid: p.interface_guid } : undefined,
+          description: toUndefined(p.description),
+          props: portProps.map((pr: any) => {
+            const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
+            if (!pr.quality_guid) return null;
+            return {
+              guid: pr.guid,
+              value: String(pr.value),
+              unit: toUndefined(pr.unit),
+              quality: { guid: pr.quality_guid },
+              attributes: mapOrUndefined(propAttributes, (a: any) => ({
+                guid: a.guid,
+                key: a.key,
+                value: toUndefined(a.value),
+                definition: toUndefined(a.definition),
+              })),
+            };
+          }).filter((p: any): p is NonNullable<typeof p> => p !== null),
+          attributes: mapOrUndefined(portAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
+        };
+      }),
+      attributes: mapOrUndefined(typeAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
+      concepts: typeConcepts.length > 0 ? typeConcepts.map((c: any) => c.concept) : undefined,
+    };
   });
 
   const designs = execResult("SELECT * FROM design WHERE kit_guid = ?", [kit.guid]);
@@ -4773,16 +4618,16 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       folder: toUndefined(row.folder),
       canScale: row.can_scale ? true : undefined,
       canMirror: row.can_mirror ? true : undefined,
-      createdAt: row.created,
-      updatedAt: row.updated,
+      createdAt: new Date(row.created),
+      updatedAt: new Date(row.updated),
       activeLayer: row.active_layer_guid ? { guid: row.active_layer_guid } : undefined,
       props: mapOrUndefined(designProps, (dp: any) => ({
-        guid: dp.guid,
+        guid: guid(),
         quality: { guid: dp.quality_guid },
         value: String(dp.value),
         unit: toUndefined(dp.unit),
       })),
-      authors: mapOrUndefined(designAuthors, (da: any) => ({ guid: da.author_guid })),
+      authors: mapOrUndefined(designAuthors, (da: any) => da.author_guid),
       pieces: pieces.map((p: any) => {
         const pieceProps = execResult("SELECT prop.* FROM prop JOIN piece_prop ON prop.guid = piece_prop.prop_guid WHERE piece_prop.piece_guid = ?", [p.guid]);
         const pieceAttributes = execResult("SELECT * FROM attribute WHERE piece_guid = ?", [p.guid]);
@@ -4803,25 +4648,32 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
             xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
             yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
           } : undefined,
-          isHidden: p.is_hidden ? true : false,
-          isLocked: p.is_locked ? true : false,
+          isHidden: Boolean(p.is_hidden),
+          isLocked: Boolean(p.is_locked),
           color: toUndefined(p.color),
           description: toUndefined(p.description),
-          props: (() => {
-            const filtered = pieceProps.map((pr: any) => {
-              const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
-              if (!pr.quality_guid) return null;
-              return {
-                guid: pr.guid,
-                value: String(pr.value),
-                unit: toUndefined(pr.unit),
-                quality: { guid: pr.quality_guid },
-                attributes: mapOrUndefined(propAttributes, buildAttribute),
-              };
-            }).filter((p: any): p is NonNullable<typeof p> => p !== null);
-            return filtered.length > 0 ? filtered : undefined;
-          })(),
-          attributes: mapOrUndefined(pieceAttributes, buildAttribute),
+          props: mapOrUndefined(pieceProps, (pr: any) => {
+            const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
+            return {
+              guid: pr.guid,
+              key: pr.key,
+              value: pr.value,
+              unit: toUndefined(pr.unit),
+              quality: pr.quality_guid ? { guid: pr.quality_guid } : undefined,
+              attributes: mapOrUndefined(propAttributes, (a: any) => ({
+                guid: a.guid,
+                key: a.key,
+                value: toUndefined(a.value),
+                definition: toUndefined(a.definition),
+              })),
+            };
+          }),
+          attributes: mapOrUndefined(pieceAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
         };
       }),
       connections: connections.map((c: any) => {
@@ -4844,10 +4696,15 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           rotation: c.rotation || 0,
           turn: c.turn || 0,
           tilt: c.tilt || 0,
-          x: c.u !== null ? c.u : undefined,
-          y: c.v !== null ? c.v : undefined,
+          x: c.x !== null ? c.x : undefined,
+          y: c.y !== null ? c.y : undefined,
           description: toUndefined(c.description),
-          attributes: mapOrUndefined(connectionAttributes, buildAttribute),
+          attributes: mapOrUndefined(connectionAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
         };
       }),
       layers: layers.map((l: any) => {
@@ -4855,11 +4712,16 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         return {
           guid: l.guid,
           path: l.path,
-          isHidden: l.is_hidden ? true : false,
-          isLocked: l.is_locked ? true : false,
+          isHidden: Boolean(l.is_hidden),
+          isLocked: Boolean(l.is_locked),
           color: toUndefined(l.color),
           description: toUndefined(l.description),
-          attributes: mapOrUndefined(layerAttributes, buildAttribute),
+          attributes: mapOrUndefined(layerAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
         };
       }),
       groups: groups.map((g: any) => {
@@ -4871,7 +4733,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           color: toUndefined(g.color),
           description: toUndefined(g.description),
           pieces: groupPieces.map((gp: any) => ({ guid: gp.piece_guid })),
-          attributes: mapOrUndefined(groupAttributes, buildAttribute),
+          attributes: mapOrUndefined(groupAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
         };
       }),
       stats: stats.map((s: any) => ({
@@ -4883,7 +4750,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         maxExcluded: s.max_excluded ? true : undefined,
         unit: toUndefined(s.unit),
       })),
-      attributes: mapOrUndefined(designAttributes, buildAttribute),
+      attributes: mapOrUndefined(designAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
       concepts: designConcepts.length > 0 ? designConcepts.map((c: any) => c.concept) : undefined,
     };
   });
@@ -4898,8 +4770,13 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       name: row.name,
       description: toUndefined(row.description),
       icon: toUndefined(row.icon),
-      compatibleInterfaces: compatibleInterfaces.length > 0 ? compatibleInterfaces.map((ci: any) => ({ guid: ci.compatible_interface_guid })) : undefined,
-      attributes: mapOrUndefined(interfaceAttributes, buildAttribute),
+      compatible: compatibleInterfaces.map((ci: any) => ({ guid: ci.compatible_interface_guid })),
+      attributes: mapOrUndefined(interfaceAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
     };
   });
 
@@ -4913,15 +4790,15 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       key: row.key,
       name: row.name,
       kind: row.kind,
-      defaultValue: row.default_value,
+      default: row.default_value,
       formula: toUndefined(row.formula),
       defaultSiUnit: toUndefined(row.default_si_unit),
       defaultImperialUnit: toUndefined(row.default_imperial_unit),
       min: row.min_value,
-      minExcluded: row.min_excluded ? true : undefined,
+      minExcluded: Boolean(row.min_excluded),
       max: row.max_value,
-      maxExcluded: row.max_excluded ? true : undefined,
-      canScale: row.can_scale ? true : undefined,
+      maxExcluded: Boolean(row.max_excluded),
+      canScale: Boolean(row.can_scale),
       uri: toUndefined(row.definition),
       benchmarks: benchmarks.map((b: any) => {
         const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
@@ -4930,13 +4807,23 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           name: b.name,
           icon: toUndefined(b.icon),
           min: b.min_value,
-          minExcluded: b.min_excluded ? true : undefined,
+          minExcluded: Boolean(b.min_excluded),
           max: b.max_value,
-          maxExcluded: b.max_excluded ? true : undefined,
-          attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+          maxExcluded: Boolean(b.max_excluded),
+          attributes: mapOrUndefined(benchmarkAttributes, (a: any) => ({
+            guid: a.guid,
+            key: a.key,
+            value: toUndefined(a.value),
+            definition: toUndefined(a.definition),
+          })),
         };
       }),
-      attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+      attributes: mapOrUndefined(qualityAttributes, (a: any) => ({
+        guid: a.guid,
+        key: a.key,
+        value: toUndefined(a.value),
+        definition: toUndefined(a.definition),
+      })),
     };
   }) : undefined;
 
@@ -4949,8 +4836,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
     size: row.size,
     hash: row.hash,
-    createdAt: row.created,
-    updatedAt: row.updated,
+    createdAt: row.created ? new Date(row.created) : undefined,
+    updatedAt: row.updated ? new Date(row.updated) : undefined,
   })) : undefined;
 
   // Load folders
@@ -4959,8 +4846,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     guid: row.guid,
     name: row.name,
     parent: row.parent_guid ? { guid: row.parent_guid } : undefined,
-    createdAt: row.created,
-    updatedAt: row.updated,
+    createdAt: row.created ? new Date(row.created) : undefined,
+    updatedAt: row.updated ? new Date(row.updated) : undefined,
   }));
 
   // Load authors
@@ -4977,7 +4864,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
 
   // Load kit attributes
   const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
-  kit.attributes = mapOrUndefined(kitAttributes, buildAttribute);
+  kit.attributes = mapOrUndefined(kitAttributes, (a: any) => ({
+    guid: a.guid,
+    key: a.key,
+    value: toUndefined(a.value),
+    definition: toUndefined(a.definition),
+  }));
 
   return kit;
 };
@@ -4990,7 +4882,9 @@ const toArray = <T>(value: T | T[] | undefined): T[] => {
   return Array.isArray(value) ? value : [value];
 };
 
-export const KIT_SQLITE_SCHEMA = `
+const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
+
+  const SCHEMA = `
 CREATE TABLE semio (
 	release VARCHAR NOT NULL,
 	engine VARCHAR NOT NULL,
@@ -5168,7 +5062,7 @@ CREATE TABLE port (
 	interface_guid VARCHAR(36),
 	description TEXT,
 	type_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
+	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	UNIQUE (guid, type_guid),
 	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
@@ -5202,12 +5096,11 @@ CREATE TABLE design (
 );
 
 CREATE TABLE design_prop (
-	guid VARCHAR(36) NOT NULL,
 	design_guid VARCHAR(36) NOT NULL,
 	quality_guid VARCHAR(36) NOT NULL,
 	value FLOAT NOT NULL,
 	unit VARCHAR(64),
-	PRIMARY KEY (guid),
+	PRIMARY KEY (design_guid, quality_guid),
 	FOREIGN KEY(design_guid) REFERENCES design (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
@@ -5397,12 +5290,10 @@ CREATE TABLE attribute (
 	FOREIGN KEY(design_guid) REFERENCES design (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
-`;
-
-const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
+  `;
 
   // Execute schema using exec for multiple statements
-  db.exec(KIT_SQLITE_SCHEMA);
+  db.exec(SCHEMA);
 
   const toISOString = (date: Date | string | undefined): string => {
     if (!date) return new Date().toISOString();
@@ -5484,10 +5375,10 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         quality.defaultSiUnit || null,
         quality.defaultImperialUnit || null,
         quality.min || null,
-        quality.isMinExcluded ? 1 : null,
+        quality.isMinExcluded ? 1 : 0,
         quality.max || null,
-        quality.isMaxExcluded ? 1 : null,
-        quality.canScale ? 1 : null,
+        quality.isMaxExcluded ? 1 : 0,
+        quality.canScale ? 1 : 0,
         quality.uri || null,
         kit.guid,
       ]
@@ -5501,9 +5392,9 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           benchmark.name,
           benchmark.icon || null,
           benchmark.min || null,
-          benchmark.minExcluded ? 1 : null,
+          benchmark.minExcluded ? 1 : 0,
           benchmark.max || null,
-          benchmark.maxExcluded ? 1 : null,
+          benchmark.maxExcluded ? 1 : 0,
           quality.guid,
         ]
       );
@@ -5634,17 +5525,13 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       );
 
       toArray(port.props).forEach((prop) => {
-        const quality = toArray(kit.qualities).find(q => q.guid === prop.quality.guid);
-        const propKey = quality?.key || "";
-        db.run("INSERT INTO prop (guid, key, value, unit, quality_guid, port_guid) VALUES (?, ?, ?, ?, ?, ?)", [
+        db.run("INSERT INTO prop (guid, value, unit, quality_guid, port_guid) VALUES (?, ?, ?, ?, ?)", [
           prop.guid,
-          propKey,
           prop.value,
           prop.unit || null,
           prop.quality.guid,
           port.guid,
-        ]);
-        toArray(prop.attributes).forEach((attr) => {
+        ]); toArray(prop.attributes).forEach((attr) => {
           db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [
             attr.guid,
             attr.key,
@@ -5703,8 +5590,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
     });
 
     toArray(design.props).forEach((prop) => {
-      db.run("INSERT INTO design_prop (guid, design_guid, quality_guid, value, unit) VALUES (?, ?, ?, ?, ?)", [
-        prop.guid,
+      db.run("INSERT INTO design_prop (design_guid, quality_guid, value, unit) VALUES (?, ?, ?, ?)", [
         design.guid,
         prop.quality.guid,
         parseFloat(prop.value),
@@ -5721,8 +5607,9 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
     });
 
     toArray(design.layers).forEach((layer) => {
+      const layerGuid = guid();
       db.run("INSERT INTO layer (guid, path, is_hidden, is_locked, color, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?)", [
-        layer.guid,
+        layerGuid,
         layer.path,
         layer.isHidden ? 1 : 0,
         layer.isLocked ? 1 : 0,
@@ -5737,7 +5624,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           attr.key,
           attr.value || null,
           attr.definition || null,
-          layer.guid,
+          layerGuid,
         ]);
       });
     });
@@ -5779,30 +5666,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         ]
       );
 
-      toArray(piece.props).forEach((prop) => {
-        const quality = toArray(kit.qualities).find(q => q.guid === prop.quality.guid);
-        const propKey = quality?.key || "";
-        db.run("INSERT INTO prop (guid, key, value, unit, quality_guid) VALUES (?, ?, ?, ?, ?)", [
-          prop.guid,
-          propKey,
-          prop.value,
-          prop.unit || null,
-          prop.quality.guid,
-        ]);
-        db.run("INSERT INTO piece_prop (piece_guid, prop_guid) VALUES (?, ?)", [
-          piece.guid,
-          prop.guid,
-        ]);
-        toArray(prop.attributes).forEach((attr) => {
-          db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [
-            attr.guid,
-            attr.key,
-            attr.value || null,
-            attr.definition || null,
-            prop.guid,
-          ]);
-        });
-      });
+      // Piece.props not in schema
 
       toArray(piece.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, piece_guid) VALUES (?, ?, ?, ?, ?)", [
@@ -5816,8 +5680,9 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
     });
 
     toArray(design.groups).forEach((group) => {
+      const groupGuid = guid();
       db.run("INSERT INTO \"group\" (guid, name, color, description, design_guid) VALUES (?, ?, ?, ?, ?)", [
-        group.guid,
+        groupGuid,
         group.name || null,
         group.color || null,
         group.description || null,
@@ -5825,7 +5690,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       ]);
 
       toArray(group.pieces).forEach((piece) => {
-        db.run("INSERT INTO group_piece (group_guid, piece_guid) VALUES (?, ?)", [group.guid, piece.guid]);
+        db.run("INSERT INTO group_piece (group_guid, piece_guid) VALUES (?, ?)", [groupGuid, piece.guid]);
       });
 
       toArray(group.attributes).forEach((attr) => {
@@ -5834,22 +5699,15 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           attr.key,
           attr.value || null,
           attr.definition || null,
-          group.guid,
+          groupGuid,
         ]);
       });
     });
 
     toArray(design.connections).forEach((connection) => {
-      // Skip connections with missing required data
-      if (!connection.guid || !connection.connected?.piece?.guid || !connection.connecting?.piece?.guid ||
-        !connection.connected?.port?.guid || !connection.connecting?.port?.guid) {
-        console.log(`[DEBUG] Skipping connection due to missing data:`, {
-          guid: connection.guid,
-          connection: JSON.stringify(connection).substring(0, 200),
-        });
+      if (!connection.connected?.piece || !connection.connecting?.piece || !connection.connected?.port || !connection.connecting?.port) {
         return;
       }
-
       db.run(
         "INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
@@ -5866,8 +5724,8 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           connection.rotation || 0,
           connection.turn || 0,
           connection.tilt || 0,
-          connection.u !== undefined ? connection.u : null,
-          connection.v !== undefined ? connection.v : null,
+          connection.x !== undefined ? connection.x : null,
+          connection.y !== undefined ? connection.y : null,
           connection.description || null,
           design.guid,
         ]

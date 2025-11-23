@@ -178,7 +178,7 @@ CREATE TABLE port (
 	interface_guid VARCHAR(36),
 	description TEXT,
 	type_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
+	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	UNIQUE (guid, type_guid),
 	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
@@ -212,12 +212,11 @@ CREATE TABLE design (
 );
 
 CREATE TABLE design_prop (
-	guid VARCHAR(36) NOT NULL,
 	design_guid VARCHAR(36) NOT NULL,
 	quality_guid VARCHAR(36) NOT NULL,
 	value FLOAT NOT NULL,
 	unit VARCHAR(64),
-	PRIMARY KEY (guid),
+	PRIMARY KEY (design_guid, quality_guid),
 	FOREIGN KEY(design_guid) REFERENCES design (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
@@ -320,8 +319,8 @@ CREATE TABLE connection (
 	rotation FLOAT NOT NULL DEFAULT 0,
 	turn FLOAT NOT NULL DEFAULT 0,
 	tilt FLOAT NOT NULL DEFAULT 0,
-	u FLOAT,
-	v FLOAT,
+	x FLOAT,
+	y FLOAT,
 	description TEXT,
 	design_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
