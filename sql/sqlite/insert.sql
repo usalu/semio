@@ -82,8 +82,8 @@ INSERT INTO "group" (guid, name, color, description, design_guid) VALUES (?, ?, 
 INSERT INTO group_piece (group_guid, piece_guid) VALUES (?, ?);
 
 -- Connection
--- Parameters: guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid
-INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- Parameters: guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid
+INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Stat
 -- Parameters: guid, quality_guid, min_value, max_value, unit, design_guid

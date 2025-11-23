@@ -72,15 +72,15 @@ class AttributesDiff {
 
 ' #region Coord
 class Coord {
-  x: float
-  y: float
+  u: float
+  v: float
 }
 ' #endregion Coord
 
 ' #region Vec
 class Vec {
-  x: float
-  y: float
+  u: float
+  v: float
 }
 ' #endregion Vec
 
@@ -612,8 +612,8 @@ class Connection {
   rotation: float
   turn: float
   tilt: float
-  x: float
-  y: float
+  u: float
+  v: float
   description: str
   attributes: list[Attribute]
   --
@@ -646,8 +646,8 @@ class ConnectionDiff {
   rotation?: float
   turn?: float
   tilt?: float
-  x?: float
-  y?: float
+  u?: float
+  v?: float
   description?: str
   attributes?: AttributesDiff
 }

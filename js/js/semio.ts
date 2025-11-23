@@ -406,7 +406,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 // #region Vec (weak entity)
 // https://github.com/usalu/semio#-vec-
 
-export const VecSchema = z.object({ x: z.number(), y: z.number() });
+export const VecSchema = z.object({ u: z.number(), v: z.number() });
 export type Vec = z.infer<typeof VecSchema>;
 export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
 export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
@@ -415,30 +415,30 @@ export const VecDiffSchema = VecSchema.partial();
 export type VecDiff = z.infer<typeof VecDiffSchema>;
 export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
   return {
-    x: after.x - before.x,
-    y: after.y - before.y,
+    u: after.u - before.u,
+    v: after.v - before.v,
   };
 };
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
+  const u = appliedDiff.u ?? 0;
+  const v = appliedDiff.v ?? 0;
   return {
-    x: original.x - x,
-    y: original.y - y,
+    u: original.u - u,
+    v: original.v - v,
   };
 };
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
   return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    u: (diff1.u ?? 0) + (diff2.u ?? 0),
+    v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
 };
 export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
+  const u = diff.u ?? 0;
+  const v = diff.v ?? 0;
   return {
-    x: base.x + x,
-    y: base.y + y,
+    u: base.u + u,
+    v: base.v + v,
   };
 };
 
@@ -2321,8 +2321,8 @@ export const ConnectionSchema = z.object({
   rotation: z.number().optional(),
   turn: z.number().optional(),
   tilt: z.number().optional(),
-  x: z.number().optional(),
-  y: z.number().optional(),
+  u: z.number().optional(),
+  v: z.number().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -2343,8 +2343,8 @@ export const getConnectionDiff = (before: Connection, after: Connection): Connec
   if (before.rotation !== after.rotation) diff.rotation = after.rotation !== undefined && before.rotation !== undefined ? after.rotation - before.rotation : after.rotation;
   if (before.turn !== after.turn) diff.turn = after.turn !== undefined && before.turn !== undefined ? after.turn - before.turn : after.turn;
   if (before.tilt !== after.tilt) diff.tilt = after.tilt !== undefined && before.tilt !== undefined ? after.tilt - before.tilt : after.tilt;
-  if (before.x !== after.x) diff.x = after.x !== undefined && before.x !== undefined ? after.x - before.x : after.x;
-  if (before.y !== after.y) diff.y = after.y !== undefined && before.y !== undefined ? after.y - before.y : after.y;
+  if (before.u !== after.u) diff.u = after.u !== undefined && before.u !== undefined ? after.u - before.u : after.u;
+  if (before.v !== after.v) diff.v = after.v !== undefined && before.v !== undefined ? after.v - before.v : after.v;
   if (before.description !== after.description) diff.description = after.description;
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
@@ -2380,8 +2380,8 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
   if (appliedDiff.rotation !== undefined) inverse.rotation = original.rotation !== undefined && appliedDiff.rotation !== undefined ? -appliedDiff.rotation : original.rotation;
   if (appliedDiff.turn !== undefined) inverse.turn = original.turn !== undefined && appliedDiff.turn !== undefined ? -appliedDiff.turn : original.turn;
   if (appliedDiff.tilt !== undefined) inverse.tilt = original.tilt !== undefined && appliedDiff.tilt !== undefined ? -appliedDiff.tilt : original.tilt;
-  if (appliedDiff.x !== undefined) inverse.x = original.x !== undefined && appliedDiff.x !== undefined ? -appliedDiff.x : original.x;
-  if (appliedDiff.y !== undefined) inverse.y = original.y !== undefined && appliedDiff.y !== undefined ? -appliedDiff.y : original.y;
+  if (appliedDiff.u !== undefined) inverse.u = original.u !== undefined && appliedDiff.u !== undefined ? -appliedDiff.u : original.u;
+  if (appliedDiff.v !== undefined) inverse.v = original.v !== undefined && appliedDiff.v !== undefined ? -appliedDiff.v : original.v;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.attributes !== undefined) inverse.attributes = getAttributesDiff(appliedDiff.attributes ? applyAttributesDiff([], appliedDiff.attributes) : [], original.attributes ?? []);
   return inverse;
@@ -3083,9 +3083,14 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         // Ensure parent has a center (default to origin if not set)
         const parentCenter = parentPiece.center || { u: 0, v: 0 };
 
+        const direction = vectorToThree({
+          x: connection.u ?? 0,
+          y: connection.v ?? 0,
+          z: 0,
+        }).normalize();
         const childCenter = {
-          u: round(parentCenter.u + (connection.x ?? 0)),
-          v: round(parentCenter.v + (connection.y ?? 0)),
+          u: round(parentCenter.u + (connection.u ?? 0) + direction.x),
+          v: round(parentCenter.v + (connection.v ?? 0) + direction.y),
         };
 
         const flatChildPiece: Piece = setAttributes(
@@ -4477,8 +4482,8 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (connA.rotation !== connB.rotation) return false;
       if (connA.turn !== connB.turn) return false;
       if (connA.tilt !== connB.tilt) return false;
-      if (connA.x !== connB.x) return false;
-      if (connA.y !== connB.y) return false;
+      if (connA.u !== connB.u) return false;
+      if (connA.v !== connB.v) return false;
       if (normalizeValue(connA.description) !== normalizeValue(connB.description)) return false;
       if (!areAttributesEqual(connA.attributes, connB.attributes)) return false;
     }
@@ -4681,65 +4686,65 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     if (unit !== undefined) type.unit = unit;
     if (row.stock !== null && row.stock !== undefined) type.stock = row.stock;
     if (row.location_guid) type.location = { guid: row.location_guid };
-    
+
     const concepts = mapOrUndefined(typeConcepts, (c: any) => c.concept);
     if (concepts) type.concepts = concepts;
-    
+
     const models_value = mapOrUndefined(models, (m: any) => {
-        const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
-        const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
-        return {
-          guid: m.guid,
-          file: m.file,
-          name: toUndefined(m.name),
-          description: toUndefined(m.description),
-          tags: modelTags.map((t: any) => t.tag),
-          attributes: mapOrUndefined(modelAttributes, buildAttribute),
-        };
-      });
+      const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
+      const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
+      return {
+        guid: m.guid,
+        file: m.file,
+        name: toUndefined(m.name),
+        description: toUndefined(m.description),
+        tags: modelTags.map((t: any) => t.tag),
+        attributes: mapOrUndefined(modelAttributes, buildAttribute),
+      };
+    });
     if (models_value) type.models = models_value;
-    
+
     const ports_value = mapOrUndefined(ports, (p: any) => {
-        const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
-        const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
-        
-        // Build port with conditional properties to avoid undefined assignments
-        const port: any = {
-          guid: p.guid,
-          point: { x: p.point_x, y: p.point_y, z: p.point_z },
-          direction: { x: p.direction_x, y: p.direction_y, z: p.direction_z },
-          t: p.t,
+      const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
+      const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
+
+      // Build port with conditional properties to avoid undefined assignments
+      const port: any = {
+        guid: p.guid,
+        point: { x: p.point_x, y: p.point_y, z: p.point_z },
+        direction: { x: p.direction_x, y: p.direction_y, z: p.direction_z },
+        t: p.t,
+      };
+
+      if (p.name) port.name = p.name;
+      if (p.mandatory) port.mandatory = true;
+      if (p.interface_guid) port.interface = { guid: p.interface_guid };
+      if (p.description) port.description = p.description;
+
+      const props_value = portProps.map((pr: any) => {
+        const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
+        if (!pr.quality_guid) return null;
+        return {
+          guid: pr.guid,
+          value: String(pr.value),
+          unit: toUndefined(pr.unit),
+          quality: { guid: pr.quality_guid },
+          attributes: mapOrUndefined(propAttributes, buildAttribute),
         };
-        
-        if (p.name) port.name = p.name;
-        if (p.mandatory) port.mandatory = true;
-        if (p.interface_guid) port.interface = { guid: p.interface_guid };
-        if (p.description) port.description = p.description;
-        
-        const props_value = portProps.map((pr: any) => {
-          const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
-          if (!pr.quality_guid) return null;
-          return {
-            guid: pr.guid,
-            value: String(pr.value),
-            unit: toUndefined(pr.unit),
-            quality: { guid: pr.quality_guid },
-            attributes: mapOrUndefined(propAttributes, buildAttribute),
-          };
-        }).filter((p: any): p is NonNullable<typeof p> => p !== null);
-        if (props_value && props_value.length > 0) port.props = props_value;
-        
-        const attributes_value = mapOrUndefined(portAttributes, buildAttribute);
-        if (attributes_value) port.attributes = attributes_value;
-        
-        return port;
-      });
+      }).filter((p: any): p is NonNullable<typeof p> => p !== null);
+      if (props_value && props_value.length > 0) port.props = props_value;
+
+      const attributes_value = mapOrUndefined(portAttributes, buildAttribute);
+      if (attributes_value) port.attributes = attributes_value;
+
+      return port;
+    });
     if (ports_value) type.ports = ports_value;
 
-    
+
     const attributes_value = mapOrUndefined(typeAttributes, buildAttribute);
     if (attributes_value) type.attributes = attributes_value;
-    
+
     return type;
   });
 
@@ -4839,8 +4844,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           rotation: c.rotation || 0,
           turn: c.turn || 0,
           tilt: c.tilt || 0,
-          x: c.x !== null ? c.x : undefined,
-          y: c.y !== null ? c.y : undefined,
+          x: c.u !== null ? c.u : undefined,
+          y: c.v !== null ? c.v : undefined,
           description: toUndefined(c.description),
           attributes: mapOrUndefined(connectionAttributes, buildAttribute),
         };
@@ -5861,8 +5866,8 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           connection.rotation || 0,
           connection.turn || 0,
           connection.tilt || 0,
-          connection.x !== undefined ? connection.x : null,
-          connection.y !== undefined ? connection.y : null,
+          connection.u !== undefined ? connection.u : null,
+          connection.v !== undefined ? connection.v : null,
           connection.description || null,
           design.guid,
         ]

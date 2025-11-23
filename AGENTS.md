@@ -50,7 +50,7 @@ The two `pieces` are called **_connected_** and **_connecting_** but there is no
 
 The _direction_ of a `connection` goes from the lower _hierarchy_ to the higher _hierarchy_ of the `pieces`.
 
-A `connection` can have `attributes` and diagram positioning with **x** and **y** offsets.
+A `connection` can have `attributes` and diagram positioning with **u** and **v** offsets.
 
 ## Piece
 
@@ -1341,13 +1341,13 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 
 ### Coord
 
-1. X
-2. Y
+1. U
+2. V
 
 ### Vec
 
-1. X
-2. Y
+1. U
+2. V
 
 ### Point
 

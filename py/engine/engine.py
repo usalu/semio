@@ -2888,51 +2888,51 @@ class ConnectionTiltField(RealField, abc.ABC):
 #     """🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation."""
 
 
-class ConnectionXField(RealField, abc.ABC):
-    x: float = sqlmodel.Field(default=0)
+class ConnectionUField(RealField, abc.ABC):
+    u: float = sqlmodel.Field(default=0)
 
 
-class ConnectionYField(RealField, abc.ABC):
-    y: float = sqlmodel.Field(default=0)
+class ConnectionVField(RealField, abc.ABC):
+    v: float = sqlmodel.Field(default=0)
 
 
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
     pass
 
 
-class ConnectionProps(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Props):
+class ConnectionProps(ConnectionVField, ConnectionUField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Props):
     pass
 
 
-class ConnectionInput(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Input):
+class ConnectionInput(ConnectionVField, ConnectionUField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Input):
     pass
 
     connected: SideInput = sqlmodel.Field()
     connecting: SideInput = sqlmodel.Field()
 
 
-class ConnectionContext(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Context):
+class ConnectionContext(ConnectionVField, ConnectionUField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Context):
     pass
 
     connected: SideContext = sqlmodel.Field()
     connecting: SideContext = sqlmodel.Field()
 
 
-class ConnectionOutput(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Output):
+class ConnectionOutput(ConnectionVField, ConnectionUField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Output):
     pass
 
     connected: SideOutput = sqlmodel.Field()
     connecting: SideOutput = sqlmodel.Field()
 
 
-class ConnectionPrediction(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Prediction):
+class ConnectionPrediction(ConnectionVField, ConnectionUField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Prediction):
     pass
 
     connected: SidePrediction = sqlmodel.Field()
     connecting: SidePrediction = sqlmodel.Field()
 
 
-class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, TableEntity, table=True):
+class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, TableEntity, table=True):
     PLURAL = "connections"
     __tablename__ = "connections"
 

@@ -3697,15 +3697,15 @@ public class ConnectionDiff : Model<ConnectionDiff>
     public float? Turn { get; set; }
     [NumberProp("🔄", "Tl?", "Tlt?", "The optional tilt around the x-axis.")]
     public float? Tilt { get; set; }
-    [NumberProp("↔️", "X?", "X?", "The optional x offset for diagram positioning.")]
-    public float? X { get; set; }
-    [NumberProp("↕️", "Y?", "Y?", "The optional y offset for diagram positioning.")]
-    public float? Y { get; set; }
+    [NumberProp("↔️", "U?", "U?", "The optional u offset for diagram positioning.")]
+    public float? U { get; set; }
+    [NumberProp("↕️", "V?", "V?", "The optional v offset for diagram positioning.")]
+    public float? V { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Port = id.Connected.Port }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Port = id.Connecting.Port } };
-    public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = connection.Connected.CreateDiff(), Connecting = connection.Connecting.CreateDiff(), Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, X = connection.X, Y = connection.Y, Attributes = connection.Attributes };
+    public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = connection.Connected.CreateDiff(), Connecting = connection.Connecting.CreateDiff(), Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, U = connection.U, V = connection.V, Attributes = connection.Attributes };
 
     public ConnectionDiff MergeDiff(ConnectionDiff other)
     {
@@ -4368,13 +4368,13 @@ public class Design : Model<Design>
 
                 var direction = new Coord
                 {
-                    U = connection.X,
-                    V = connection.Y
+                    U = connection.U ?? 0,
+                    V = connection.V ?? 0
                 }.Normalize();
                 var childCenter = new Coord
                 {
-                    U = parent.Center!.U + connection.X + direction.U,
-                    V = parent.Center!.V + connection.Y + direction.V
+                    U = parent.Center!.U + (connection.U ?? 0) + direction.U,
+                    V = parent.Center!.V + (connection.V ?? 0) + direction.V
                 };
                 child.Center = childCenter;
                 var semioAttribute = child.Attributes.FirstOrDefault(q => q.Key == "semio.parent");
@@ -4436,8 +4436,8 @@ public class Design : Model<Design>
 
         foreach (var connection in Connections)
         {
-            connection.X = connection.X * iconWidth;
-            connection.Y = -(connection.Y * iconWidth);
+            if (connection.U.HasValue) connection.U = connection.U * iconWidth;
+            if (connection.V.HasValue) connection.V = -(connection.V * iconWidth);
         }
 
         // recenter

@@ -284,7 +284,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", height = 20
   return (
     <footer className={`bg-base border-t flex items-center transition-transform duration-200 ${isVisible ? "translate-y-0" : "translate-y-full"} ${className}`} style={{ height: `${height}px` }}>
       {sortedItems.map((item, index) => (
-        <div key={item.id} className="flex items-center h-full">
+        <div key={item.id} data-id={item.id} className="flex items-center h-full">
           {index > 0 && <div className="h-full w-px bg-border" />}
           {item.id ? (
             <Tooltip>
@@ -371,19 +371,19 @@ const Navbar: React.FC<NavbarProps> = ({ leftItems = [], centerItems = [], right
   return (
     <nav id="navbar" className={`bg-base border-b flex items-center gap-single px-single h-large z-base ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
       {sortedLeft.map((item) => (
-        <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
+        <div key={item.id} data-id={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
           {item.content}
         </div>
       ))}
       {sortedCenter.map((item) => (
-        <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
+        <div key={item.id} data-id={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
           {item.content}
         </div>
       ))}
       {sortedRight.length > 0 && (
         <div className="ml-auto flex items-center gap-single">
           {sortedRight.map((item) => (
-            <div key={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
+            <div key={item.id} data-id={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
               {item.content}
             </div>
           ))}
@@ -1060,7 +1060,7 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children" 
 function ActionGroup({ className, level: propLevel, id, children, ...props }: ActionGroupProps) {
   const level = useElementLevel(propLevel);
   return (
-    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", className)} {...props}>
+    <div data-slot="action-group" data-level={level} data-id={id} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", className)} {...props}>
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -1082,6 +1082,7 @@ function ActionGroupItem({
   const actionGroupItemElement = (
     <Component
       data-slot="action-group-item"
+      data-id={id}
       type={Component === "button" ? "button" : undefined}
       role={Component === "div" ? "button" : undefined}
       tabIndex={Component === "div" ? 0 : undefined}
@@ -1268,6 +1269,7 @@ function ButtonGroupItem({
   const buttonGroupItemElement = (
     <Comp
       data-slot="button-group-item"
+      data-id={id}
       data-level={context.level || level}
       className={cn(
         buttonGroupItemVariants({
@@ -1401,7 +1403,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
   const comboboxElement = (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
+        <Button data-id={id} role="combobox" aria-expanded={open} className="w-full justify-between flex-1 min-w-0">
           {selectedOption ? selectedOption.label : computedPlaceholder}
           <ChevronsUpDownIcon className="ml-2 size-tiny shrink-0 opacity-50" />
         </Button>
@@ -1525,6 +1527,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       <input
         type={type}
         data-slot="input"
+        data-id={id}
         className={cn(
           "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent p-single text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           "focus-visible:border-accent",
@@ -1641,6 +1644,7 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
+      data-id={id}
       data-size={size}
       className={cn(
         "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable",
@@ -1876,6 +1880,7 @@ function Slider({
   const sliderElement = (
     <SliderPrimitive.Root
       data-slot="slider"
+      data-id={id}
       defaultValue={defaultValue}
       value={value}
       min={min}
@@ -2235,6 +2240,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const textareaElement = (
     <textarea
       data-slot="textarea"
+      data-id={id}
       className={cn(
         "placeholder:text-muted-foreground text-foreground flex field-sizing-content min-h-huge w-full border bg-transparent px-tiny py-single text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         "focus-visible:border-accent",
@@ -2347,7 +2353,7 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useElementLevel(propLevel);
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x divide-border", className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x divide-border", className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -2374,6 +2380,7 @@ function ToggleGroupItem({ className, id, icon, action, ...props }: ToggleGroupI
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
+      data-id={id}
       className={cn(
         toggleVariants({
           level,
@@ -2836,7 +2843,7 @@ function Strip({ direction = "horizontal", items, className, level: propLevel, i
 
   return (
     <Scrollable orientation="horizontal" className={cn("border-b", direction === "horizontal" ? "h-large" : "w-large", className)}>
-      <div className={cn("p-single flex gap-single", direction === "horizontal" ? "flex-row h-full items-center w-fit" : "flex-col w-full")}>
+      <div data-id={id} className={cn("p-single flex gap-single", direction === "horizontal" ? "flex-row h-full items-center w-fit" : "flex-col w-full")}>
         {items.map((item, index) => (
           <div key={index} className={cn(direction === "horizontal" ? "h-medium" : "w-medium", "shrink-0")}>
             {item}
@@ -3044,6 +3051,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
   if (!hasChildren) {
     return (
       <div
+        data-id={id}
         className={`relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
         style={{ paddingLeft: `${level * 0.75}rem` }}
         onPointerEnter={() => {
@@ -3101,6 +3109,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
+          data-id={id}
           className={`relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           role="button"
@@ -3201,6 +3210,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     return (
       <>
         <div
+          data-id={id}
           ref={setNodeRef}
           style={style}
           className={itemClasses}
@@ -3266,6 +3276,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 
   return (
     <div
+      data-id={id}
       ref={setNodeRef}
       style={style}
       className={itemClasses}
@@ -3383,6 +3394,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     return (
       <>
         <div
+          data-id={id}
           className={itemClasses}
           style={{ paddingLeft: `${level * 0.75}rem` }}
           onDoubleClick={(event) => {
@@ -3445,7 +3457,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
-    <div className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div data-id={id} className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
@@ -3676,7 +3688,7 @@ function BreadcrumbItem({ className, id, content, children, ...props }: Breadcru
   }, [itemContent]);
 
   const itemElement = (
-    <li data-slot="breadcrumb-item" className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
+    <li data-slot="breadcrumb-item" data-id={id} className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
       {interactiveContent}
     </li>
   );
@@ -3726,7 +3738,7 @@ function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onOpenChange, id, 
       <DropdownMenuPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
         <DropdownMenuPrimitive.Trigger asChild>
           <div>
-            <Action level={level} id={id && !isOpen ? id : undefined} icon={icon} className="cursor-foldable" />
+            <Action data-id={id && !isOpen ? id : undefined} level={level} id={id && !isOpen ? id : undefined} icon={icon} className="cursor-foldable" />
           </div>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
@@ -4129,7 +4141,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   if (!isVisible) return null;
   return (
-    <div className={`relative h-full w-full ${className}`} onDoubleClick={onDoubleClick}>
+    <div data-id={id} className={`relative h-full w-full ${className}`} onDoubleClick={onDoubleClick}>
       {(showControls || controls) && (
         <div className="absolute top-1 right-1 z-panel">
           {controls || (

@@ -289,8 +289,8 @@ entity connections {
     *rotation : float
     *turn : float
     *tilt : float
-    *x : float
-    *y : float
+    *u : float
+    *v : float
     ..
     design_id : int <<FK>>
     --

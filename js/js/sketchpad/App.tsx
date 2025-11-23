@@ -1293,22 +1293,22 @@ class YVecStore {
 
   constructor(yVec: YVec, vec: Vec) {
     this.yVec = yVec;
-    this.x = vec.x;
-    this.y = vec.y;
+    this.u = vec.u;
+    this.v = vec.v;
   }
 
-  get x(): number {
-    return this.yVec.get("x") as number;
+  get u(): number {
+    return this.yVec.get("u") as number;
   }
-  set x(x: number) {
-    this.yVec.set("x", x);
+  set u(u: number) {
+    this.yVec.set("u", u);
   }
 
-  get y(): number {
-    return this.yVec.get("y") as number;
+  get v(): number {
+    return this.yVec.get("v") as number;
   }
-  set y(y: number) {
-    this.yVec.set("y", y);
+  set v(v: number) {
+    this.yVec.set("v", v);
   }
 
   hash = (vec: Vec): string => {
@@ -1317,8 +1317,8 @@ class YVecStore {
 
   snapshot = (): Vec => {
     const currentData = {
-      x: this.x,
-      y: this.y,
+      u: this.u,
+      v: this.v,
     };
     const currentHash = this.hash(currentData);
 
@@ -1331,8 +1331,8 @@ class YVecStore {
   };
 
   change = (diff: VecDiff) => {
-    if (diff.x !== undefined) this.x = diff.x;
-    if (diff.y !== undefined) this.y = diff.y;
+    if (diff.u !== undefined) this.u = diff.u;
+    if (diff.v !== undefined) this.v = diff.v;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -3925,8 +3925,8 @@ class ConnectionStore {
     this.rotation = connection.rotation;
     this.turn = connection.turn;
     this.tilt = connection.tilt;
-    this.x = connection.x;
-    this.y = connection.y;
+    this.u = connection.u;
+    this.v = connection.v;
     this.description = connection.description;
     this.attributes = new Map();
     this.yAttributes = this.yConnection.set("attributes", new Y.Array<YAttribute>());
@@ -3993,18 +3993,18 @@ class ConnectionStore {
     if (tilt !== undefined) this.yConnection.set("tilt", tilt);
   }
 
-  get x(): number | undefined {
-    return this.yConnection.get("x") as number | undefined;
+  get u(): number | undefined {
+    return this.yConnection.get("u") as number | undefined;
   }
-  set x(x: number | undefined) {
-    if (x !== undefined) this.yConnection.set("x", x);
+  set u(u: number | undefined) {
+    if (u !== undefined) this.yConnection.set("u", u);
   }
 
-  get y(): number | undefined {
-    return this.yConnection.get("y") as number | undefined;
+  get v(): number | undefined {
+    return this.yConnection.get("v") as number | undefined;
   }
-  set y(y: number | undefined) {
-    if (y !== undefined) this.yConnection.set("y", y);
+  set v(v: number | undefined) {
+    if (v !== undefined) this.yConnection.set("v", v);
   }
 
   id(): Guid {
@@ -4026,8 +4026,8 @@ class ConnectionStore {
       rotation: this.rotation,
       turn: this.turn,
       tilt: this.tilt,
-      x: this.x,
-      y: this.y,
+      u: this.u,
+      v: this.v,
       description: this.description,
       attributes: Array.from(this.attributes.values()).map((attr) => attr.snapshot()),
     };
@@ -4062,8 +4062,8 @@ class ConnectionStore {
     if (diff.rotation !== undefined) this.rotation = diff.rotation;
     if (diff.turn !== undefined) this.turn = diff.turn;
     if (diff.tilt !== undefined) this.tilt = diff.tilt;
-    if (diff.x !== undefined) this.x = diff.x;
-    if (diff.y !== undefined) this.y = diff.y;
+    if (diff.u !== undefined) this.u = diff.u;
+    if (diff.v !== undefined) this.v = diff.v;
     if (diff.description !== undefined) this.description = diff.description;
   };
 

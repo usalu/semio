@@ -89,8 +89,8 @@ kit : !Kit{
                 }
             }
             center : ?Coord{
-                x : !Float
-                y : !Float
+                u : !Float
+                v : !Float
             }
             scale : ?Float // default 1.0
             mirrorPlane : ?Plane{

@@ -3255,8 +3255,8 @@ const ConnectionsSectionForm: FC<{
       if (updatedConnection.rotation !== connection.rotation) diff.rotation = updatedConnection.rotation;
       if (updatedConnection.turn !== connection.turn) diff.turn = updatedConnection.turn;
       if (updatedConnection.tilt !== connection.tilt) diff.tilt = updatedConnection.tilt;
-      if (updatedConnection.x !== connection.x) diff.x = updatedConnection.x;
-      if (updatedConnection.y !== connection.y) diff.y = updatedConnection.y;
+      if (updatedConnection.u !== connection.u) diff.u = updatedConnection.u;
+      if (updatedConnection.v !== connection.v) diff.v = updatedConnection.v;
     }
 
     updateConnection(origin, updatedConnection.guid, diff);
@@ -3275,11 +3275,11 @@ const ConnectionsSectionForm: FC<{
   };
 
   const handleXOffsetChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, x: value });
+    if (isSingle) handleChange({ ...connection!, u: value });
   };
 
   const handleYOffsetChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, y: value });
+    if (isSingle) handleChange({ ...connection!, v: value });
   };
 
   const handleRotationChange = (value: number) => {
@@ -3297,8 +3297,8 @@ const ConnectionsSectionForm: FC<{
   const commonGap = getCommonValue((c) => c.gap);
   const commonShift = getCommonValue((c) => c.shift);
   const commonRise = getCommonValue((c) => c.rise);
-  const commonXOffset = getCommonValue((c) => c.x);
-  const commonYOffset = getCommonValue((c) => c.y);
+  const commonUOffset = getCommonValue((c) => c.u);
+  const commonVOffset = getCommonValue((c) => c.v);
   const commonRotation = getCommonValue((c) => c.rotation);
   const commonTurn = getCommonValue((c) => c.turn);
   const commonTilt = getCommonValue((c) => c.tilt);
@@ -3458,13 +3458,13 @@ const ConnectionsSectionForm: FC<{
       <TreeItem>
         <TreeContent>
           <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.x"
-            value={isSingle ? (connection!.x ?? 0) : (commonXOffset ?? 0)}
+            id="semio.sketchpad.app.design.panel.details.section.connection.u"
+            value={isSingle ? (connection!.u ?? 0) : (commonUOffset ?? 0)}
             onChange={handleXOffsetChange}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.x"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.x"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.x"),
+              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
+              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
+              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
             }}
             step={0.1}
           />
@@ -3473,13 +3473,13 @@ const ConnectionsSectionForm: FC<{
       <TreeItem>
         <TreeContent>
           <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.y"
-            value={isSingle ? (connection!.y ?? 0) : (commonYOffset ?? 0)}
+            id="semio.sketchpad.app.design.panel.details.section.connection.v"
+            value={isSingle ? (connection!.v ?? 0) : (commonVOffset ?? 0)}
             onChange={handleYOffsetChange}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.y"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.y"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.y"),
+              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
+              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
+              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
             }}
             step={0.1}
           />
@@ -3867,16 +3867,16 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 
   const addConnection = useCallback(
     (connection: SemioConnection) => {
-      // Extract x and y from piece centers
+      // Extract u and v from piece centers
       // connected is parent, connecting is child
-      // child.center = parent.center + connection.x/y
-      // so connection.x/y = child.center - parent.center
+      // child.center = parent.center + connection.u/v
+      // so connection.u/v = child.center - parent.center
       const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece.guid);
       const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece.guid);
 
       if (parentPiece?.center && childPiece?.center) {
-        connection.x = childPiece.center.u - parentPiece.center.u;
-        connection.y = childPiece.center.v - parentPiece.center.v;
+        connection.u = childPiece.center.u - parentPiece.center.u;
+        connection.v = childPiece.center.v - parentPiece.center.v;
       }
 
       commands.addConnection("semio.sketchpad.app.design.canvas.diagram.pieceNode", connection);
@@ -4093,16 +4093,16 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
   const addConnection = useCallback(
     (connection: SemioConnection) => {
-      // Extract x and y from piece centers
+      // Extract u and v from piece centers
       // connected is parent, connecting is child
-      // child.center = parent.center + connection.x/y
-      // so connection.x/y = child.center - parent.center
+      // child.center = parent.center + connection.u/v
+      // so connection.u/v = child.center - parent.center
       const parentPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connected.piece.guid);
       const childPiece = design?.pieces?.find((p: Piece) => p.guid === connection.connecting.piece.guid);
 
       if (parentPiece?.center && childPiece?.center) {
-        connection.x = childPiece.center.u - parentPiece.center.u;
-        connection.y = childPiece.center.v - parentPiece.center.v;
+        connection.u = childPiece.center.u - parentPiece.center.u;
+        connection.v = childPiece.center.v - parentPiece.center.v;
       }
 
       commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
