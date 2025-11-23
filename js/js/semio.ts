@@ -5771,5 +5771,276 @@ CREATE TABLE attribute (
 
 // #endregion Kit Import/Export
 
+// #region Validation
+
+// #region Validation core types
+
+export type SemioEntityKind =
+  | "Kit"
+  | "Type"
+  | "Design"
+  | "Piece"
+  | "Connection"
+  | "Port"
+  | "Attribute"
+  | "File"
+  | "Folder"
+  | "Quality"
+  | "Interface"
+  | "Prop"
+  | "Model"
+  | "Layer"
+  | "Group"
+  | "Stat";
+
+export type SemioValidationSeverity = "error" | "warning";
+
+export interface SemioDomainLocation {
+  entityKind: SemioEntityKind;
+  entityGuid?: Guid;
+  field?: string;
+}
+
+export interface SemioKitFix {
+  title: string;
+  diff: KitDiff;
+}
+
+export interface SemioValidationIssue {
+  ruleId: string;
+  severity: SemioValidationSeverity;
+  message: string;
+  location: SemioDomainLocation;
+  relatedGuids?: Guid[];
+  fixes: SemioKitFix[];
+}
+
+export interface SemioValidationResult {
+  issues: SemioValidationIssue[];
+}
+
+export const hasSemioErrors = (res: SemioValidationResult) => res.issues.some((i) => i.severity === "error");
+
+// #endregion Validation core types
+
+// #region Validation context & engine
+
+export interface SemioValidationContext {
+  kit: Kit;
+  typesByGuid: Map<Guid, Type>;
+  designsByGuid: Map<Guid, Design>;
+  piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
+}
+
+export const buildSemioValidationContext = (kit: Kit): SemioValidationContext => {
+  const typesByGuid = new Map<Guid, Type>();
+  const designsByGuid = new Map<Guid, Design>();
+  const piecesByGuid = new Map<Guid, { designGuid: Guid; piece: Piece }>();
+  toArray(kit.types).forEach((t) => typesByGuid.set(t.guid, t));
+  toArray(kit.designs).forEach((d) => {
+    designsByGuid.set(d.guid, d);
+    toArray(d.pieces).forEach((p) => piecesByGuid.set(p.guid, { designGuid: d.guid, piece: p }));
+  });
+  return { kit, typesByGuid, designsByGuid, piecesByGuid };
+};
+
+export type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
+
+export interface SemioValidationConfig {
+  rules?: SemioValidationRule[];
+}
+
+export let defaultSemioValidationRules: SemioValidationRule[] = [];
+
+export const validateSemioKit = (kit: Kit, cfg: SemioValidationConfig = {}): SemioValidationResult => {
+  const ctx = buildSemioValidationContext(kit);
+  const rules = cfg.rules ?? defaultSemioValidationRules;
+  return { issues: rules.flatMap((rule) => rule(ctx)) };
+};
+
+// #endregion Validation context & engine
+
+// #region Fix helper
+
+export const semioMakeFix = (ctx: SemioValidationContext, title: string, mutate: (clone: Kit) => void): SemioKitFix => {
+  const clone = JSON.parse(serializeKit(ctx.kit)) as Kit;
+  mutate(clone);
+  const diff = getKitDiff(ctx.kit, clone);
+  return { title, diff };
+};
+
+// #endregion Fix helper
+
+// #region GUID update helper
+
+const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
+  const update = (obj: any) => {
+    if (!obj || typeof obj !== "object") return;
+    if (obj.guid === oldGuid) obj.guid = newGuid;
+    if (obj.parent?.guid === oldGuid) obj.parent = createTypeId(newGuid);
+    if (obj.type?.guid === oldGuid) obj.type = createTypeId(newGuid);
+    if (obj.design?.guid === oldGuid) obj.design = createDesignId(newGuid);
+    if (obj.interface?.guid === oldGuid) obj.interface = createInterfaceId(newGuid);
+    if (obj.quality?.guid === oldGuid) obj.quality = createQualityId(newGuid);
+    if (obj.piece?.guid === oldGuid) obj.piece = createPieceId(newGuid);
+    if (obj.designPiece?.guid === oldGuid) obj.designPiece = createPieceId(newGuid);
+    if (obj.port?.guid === oldGuid) obj.port = createPortId(newGuid);
+    if (Array.isArray(obj.compatibleInterfaces)) {
+      obj.compatibleInterfaces = obj.compatibleInterfaces.map((iid: InterfaceId) => (iid.guid === oldGuid ? createInterfaceId(newGuid) : iid));
+    }
+    if (Array.isArray(obj.pieces)) {
+      obj.pieces = obj.pieces.map((p: PieceId) => (p.guid === oldGuid ? createPieceId(newGuid) : p));
+    }
+    for (const key in obj) {
+      if (Array.isArray(obj[key])) {
+        obj[key].forEach(update);
+      } else if (typeof obj[key] === "object") {
+        update(obj[key]);
+      }
+    }
+  };
+  update(kit);
+};
+
+// #endregion GUID update helper
+
+// #region Rule: GUID uniqueness
+
+export const semioGuidUniquenessRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  const seen = new Map<Guid, SemioEntityKind>();
+  const check = (entityKind: SemioEntityKind, entityGuid: Guid) => {
+    const existing = seen.get(entityGuid);
+    if (!existing) {
+      seen.set(entityGuid, entityKind);
+      return;
+    }
+    const issue: SemioValidationIssue = {
+      ruleId: "guid-unique",
+      severity: "error",
+      message: `Duplicate GUID "${entityGuid}". First occurrence kept.`,
+      location: { entityKind, entityGuid, field: "guid" },
+      relatedGuids: [entityGuid],
+      fixes: [
+        semioMakeFix(ctx, "Regenerate GUID", (clone) => {
+          const newGuid = guid();
+          updateGuidEverywhere(clone, entityGuid, newGuid);
+        }),
+      ],
+    };
+    issues.push(issue);
+  };
+  check("Kit", ctx.kit.guid);
+  toArray(ctx.kit.types).forEach((t) => check("Type", t.guid));
+  toArray(ctx.kit.designs).forEach((d) => {
+    check("Design", d.guid);
+    toArray(d.pieces).forEach((p) => check("Piece", p.guid));
+    toArray(d.connections).forEach((c) => check("Connection", c.guid));
+    toArray(d.stats).forEach((s) => check("Stat", s.guid));
+  });
+  toArray(ctx.kit.qualities).forEach((q) => check("Quality", q.guid));
+  toArray(ctx.kit.interfaces).forEach((i) => check("Interface", i.guid));
+  toArray(ctx.kit.files).forEach((f) => check("File", f.guid));
+  toArray(ctx.kit.folders).forEach((f) => check("Folder", f.guid));
+  return issues;
+};
+
+// #endregion Rule: GUID uniqueness
+
+// #region Rule: Design sibling name uniqueness
+
+export const semioDesignSiblingNameRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  const byParent = new Map<Guid | undefined, Design[]>();
+  toArray(ctx.kit.designs).forEach((d) => {
+    const pid = d.parent?.guid as Guid | undefined;
+    if (!byParent.has(pid)) byParent.set(pid, []);
+    byParent.get(pid)!.push(d);
+  });
+  for (const [parentGuid, siblings] of byParent) {
+    const names = new Map<string, Design[]>();
+    siblings.forEach((d) => {
+      const name = d.name ?? "";
+      if (!names.has(name)) names.set(name, []);
+      names.get(name)!.push(d);
+    });
+    for (const [name, group] of names) {
+      if (group.length <= 1) continue;
+      const first = group[0];
+      const rest = group.slice(1);
+      const siblingNames = siblings.map((s) => s.name ?? "");
+      rest.forEach((design) => {
+        const fix = semioMakeFix(ctx, `Rename "${name}"`, (clone) => {
+          const cd = toArray(clone.designs).find((x) => x.guid === design.guid);
+          if (!cd) return;
+          const newName = generateUniqueName(name, siblingNames);
+          cd.name = newName;
+        });
+        issues.push({
+          ruleId: "design-sibling-name-unique",
+          severity: "error",
+          message: `Duplicate design name "${name}" among siblings.`,
+          location: { entityKind: "Design", entityGuid: design.guid, field: "name" },
+          relatedGuids: group.map((d) => d.guid),
+          fixes: [fix],
+        });
+      });
+    }
+  }
+  return issues;
+};
+
+// #endregion Rule: Design sibling name uniqueness
+
+// #region Rule: Piece name uniqueness
+
+export const semioPieceNameInDesignRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  toArray(ctx.kit.designs).forEach((design) => {
+    const pieces = toArray(design.pieces);
+    if (pieces.length === 0) return;
+    const nameMap = new Map<string, Piece[]>();
+    pieces.forEach((p) => {
+      const n = p.name ?? "";
+      if (!nameMap.has(n)) nameMap.set(n, []);
+      nameMap.get(n)!.push(p);
+    });
+    for (const [name, list] of nameMap) {
+      if (list.length <= 1) continue;
+      const [first, ...rest] = list;
+      const allNames = pieces.map((p) => p.name ?? "");
+      rest.forEach((piece) => {
+        const fix = semioMakeFix(ctx, `Rename piece "${name}"`, (clone) => {
+          const cd = toArray(clone.designs).find((d) => d.guid === design.guid);
+          if (!cd) return;
+          const cpieces = toArray(cd.pieces);
+          const cp = cpieces.find((p) => p.guid === piece.guid);
+          if (!cp) return;
+          cp.name = generateUniqueName(name, allNames);
+        });
+        issues.push({
+          ruleId: "piece-name-unique-in-design",
+          severity: "error",
+          message: `Duplicate piece name "${name}" inside design "${design.name}".`,
+          location: { entityKind: "Piece", entityGuid: piece.guid, field: "name" },
+          relatedGuids: list.map((p) => p.guid),
+          fixes: [fix],
+        });
+      });
+    }
+  });
+  return issues;
+};
+
+// #endregion Rule: Piece name uniqueness
+
+// #region Rule registration
+
+defaultSemioValidationRules = [semioGuidUniquenessRule, semioDesignSiblingNameRule, semioPieceNameInDesignRule];
+
+// #endregion Rule registration
+
+// #endregion Validation
+
 // #endregion Kit
 

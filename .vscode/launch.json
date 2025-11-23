@@ -74,6 +74,18 @@
       "webRoot": "${workspaceRoot}/js/docs"
     },
     {
+      "name": "dev vscode",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/js/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/js/vscode/out/**/*.js"
+      ],
+      "preLaunchTask": "watch vscode"
+    },
+    {
       "name": "dev sketchpad",
       "type": "node",
       "request": "launch",

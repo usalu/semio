@@ -11,6 +11,7 @@
     "js/docs",
     "js/play",
     "js/desktop",
+    "js/vscode",
     "net/Semio",
     "net/Semio.Grasshopper",
     "yak"
@@ -28,7 +29,8 @@
     "js": "npx nx dev @semio/js",
     "play": "npx nx dev @semio/play",
     "desktop": "npx nx dev @semio/desktop",
-    "docs": "npx nx dev @semio/docs"
+    "docs": "npx nx dev @semio/docs",
+    "vscode": "npx nx watch @semio/vscode"
   },
   "devDependencies": {
     "@nx/eslint-plugin": "^21.6.8",

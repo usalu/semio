@@ -132,6 +132,38 @@
       }
     },
     {
+      "label": "watch vscode",
+      "type": "npm",
+      "script": "watch",
+      "path": "js/vscode",
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*vite.*building",
+          "endsPattern": ".*built in.*"
+        }
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
       "label": "build icons",
       "type": "shell",
       "command": "npx nx build @semio/icons"

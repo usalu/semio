@@ -1,71 +1,94 @@
-# semio README
+# Semio VS Code Extension
 
-This is the README for your extension "semio". After writing up a brief description, we recommend including the following sections.
+Validation and linting for Semio kit JSON files.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### Automatic Validation
 
-For example if there is an image subfolder under your extension project workspace:
+The extension automatically validates Semio kit JSON files (files named `kit_*.json`, `*_kit.json`, or `kit.json`) and shows:
 
-\!\[feature X\]\(images/feature-x.png\)
+- **Errors** for critical issues (duplicate GUIDs, duplicate names, etc.)
+- **Warnings** for non-critical issues
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Quick Fixes
 
-## Requirements
+Every validation issue comes with one or more **Quick Fix** options that:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+1. Apply a `KitDiff` to fix the issue
+2. Re-serialize the entire kit
+3. Replace the document with the fixed JSON
 
-## Extension Settings
+All fixes are **diff-based**, meaning they use the same `KitDiff` system as the core Semio application, ensuring consistency across all platforms.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Validation Rules
 
-For example:
+### GUID Uniqueness (`guid-unique`)
 
-This extension contributes the following settings:
+**Severity:** Error
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Ensures all entity GUIDs are unique across the entire kit.
 
-## Known Issues
+**Quick Fix:** Regenerates a new GUID and updates all references.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+### Design Sibling Name Uniqueness (`design-sibling-name-unique`)
 
-## Release Notes
+**Severity:** Error
 
-Users appreciate release notes as you update your extension.
+Ensures designs with the same parent have unique names.
 
-### 1.0.0
+**Quick Fix:** Renames the design with a unique suffix (e.g., "Wall 2", "Wall 3").
 
-Initial release of ...
+### Piece Name Uniqueness (`piece-name-unique-in-design`)
 
-### 1.0.1
+**Severity:** Error
 
-Fixed issue #.
+Ensures pieces within a design have unique names.
 
-### 1.1.0
+**Quick Fix:** Renames the piece with a unique suffix.
 
-Added features X, Y, and Z.
+## Architecture
 
----
+This extension is a **minimal JSON linter** that:
 
-## Following extension guidelines
+1. Parses JSON → `Kit` using `deserializeKit` from `@semio/js`
+2. Runs `validateSemioKit` (pure domain logic)
+3. Maps domain locations → JSON ranges using `jsonc-parser`
+4. Applies fixes via `applyKitDiff` + full document replacement
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+**Key principle:** All validation logic lives in `@semio/js/semio.ts` as pure domain functions. This extension is just a thin JSON-aware wrapper.
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+## Usage
 
-## Working with Markdown
+1. Open a Semio kit JSON file
+2. Validation happens automatically
+3. Hover over errors/warnings to see details
+4. Click the lightbulb 💡 or press `Ctrl+.` to apply Quick Fixes
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+## Development
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+```bash
+npm install
+npm run build
+```
 
-## For more information
+Or use the **"dev vscode"** launch configuration from the Run and Debug panel in VS Code (F5).
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+## Testing
 
-**Enjoy!**
+The extension validates any JSON file matching:
+
+- `kit_*.json`
+- `*_kit.json`  
+- `kit.json`
+
+Create test files with intentional errors to verify validation works.
+
+## Future Enhancements
+
+- More validation rules (port references, type references, etc.)
+- Batch fixes (fix all issues at once)
+- Performance optimizations (incremental validation)
+- Configuration options (enable/disable specific rules)
+- Custom rule plugins
+

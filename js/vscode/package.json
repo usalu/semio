@@ -1,40 +1,46 @@
 {
-  "name": "semio",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "name": "@semio/vscode",
   "displayName": "semio",
-  "description": "devtools for semio",
+  "description": "semio devtools for VS Code 🧑‍💻",
   "version": "0.0.1",
+  "publisher": "usalu",
   "engines": {
     "vscode": "^1.106.1"
   },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "semio.helloWorld",
-        "title": "Hello World"
-      }
-    ]
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "js/vscode"
   },
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {},
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "vscode:prepublish": "npm run build"
   },
   "devDependencies": {
     "@types/vscode": "^1.106.1",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "typescript-eslint": "^8.46.3",
-    "eslint": "^9.39.1",
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
-  }
+    "vite": "^7.2.2"
+  },
+  "dependencies": {
+    "@semio/js": "*",
+    "jsonc-parser": "^3.3.1"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later"
 }
