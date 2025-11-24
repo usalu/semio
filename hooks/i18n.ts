@@ -13,9 +13,10 @@ try {
     stdio: "inherit",
   });
   console.log("✅ i18n validation passed");
+  console.log(`📝 Report: ${reportDir}/i18n.json`);
   process.exit(0);
 } catch (error) {
   console.error("❌ i18n validation failed");
-  console.error(`📝 Check ${reportDir}/i18n.md for details`);
+  console.error(`📝 Check ${reportDir}/i18n.json for details`);
   process.exit(1);
 }

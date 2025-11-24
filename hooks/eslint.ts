@@ -4,29 +4,39 @@ import { writeFileSync } from "fs";
 import { join } from "path";
 
 const rootDir = join(__dirname, "..");
-const reportPath = join(rootDir, "reports", "eslint.md");
+const reportPath = join(rootDir, "reports", "eslint.json");
 
 console.log("🔍 Running ESLint...");
 
 try {
-  const output = execSync("npx nx run-many -t lint --parallel=1", {
+  const output = execSync("npx nx run-many -t lint --parallel=1 --output-style=stream", {
     cwd: rootDir,
     encoding: "utf-8",
   });
   
-  const report = `# ESLint Report\n\nGenerated: ${new Date().toISOString()}\n\n## ✅ No linting errors found!\n\n${output}\n`;
-  writeFileSync(reportPath, report);
+  const report = {
+    timestamp: new Date().toISOString(),
+    status: "success",
+    output: output,
+  };
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
   
   console.log("✅ ESLint check passed");
+  console.log(`📝 Report: ${reportPath}`);
   process.exit(0);
 } catch (error: any) {
   const stderr = error.stderr?.toString() || "";
   const stdout = error.stdout?.toString() || "";
   
-  const report = `# ESLint Report\n\nGenerated: ${new Date().toISOString()}\n\n## ❌ Linting Issues Found\n\n${stdout}\n${stderr}\n`;
-  writeFileSync(reportPath, report);
+  const report = {
+    timestamp: new Date().toISOString(),
+    status: "error",
+    stdout: stdout,
+    stderr: stderr,
+  };
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
   
   console.error("❌ ESLint check failed");
-  console.error(`📝 Check ${reportPath} for details`);
+  console.error(`📝 Report: ${reportPath}`);
   process.exit(1);
 }

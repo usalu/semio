@@ -1592,12 +1592,11 @@ export const PortDiffSchema = PortSchema.partial().omit({ point: true, direction
 export type PortDiff = z.infer<typeof PortDiffSchema>;
 export const getPortDiff = (before: Port, after: Port): PortDiff => {
   const diff: PortDiff = {};
-  if (before.guid !== after.guid) diff.guid = after.guid;
   if (before.name !== after.name) diff.name = after.name;
   if (before.description !== after.description) diff.description = after.description;
   if (before.interface?.guid !== after.interface?.guid) diff.interface = after.interface;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
-  if (before.t !== after.t) diff.t = after.t - before.t;
+  if (before.t !== after.t) diff.t = after.t;
   if (!deepEqual(before.point, after.point)) diff.point = getPointDiff(before.point, after.point);
   if (!deepEqual(before.direction, after.direction)) diff.direction = getVectorDiff(before.direction, after.direction);
   if (!deepEqual(before.props, after.props)) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
@@ -1616,7 +1615,6 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
 };
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
   const inverse: PortDiff = {};
-  if (appliedDiff.guid !== undefined) inverse.guid = original.guid;
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.interface !== undefined) inverse.interface = original.interface;
@@ -1631,7 +1629,6 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
 export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   return {
     ...base,
-    guid: diff.guid ?? base.guid,
     name: diff.name ?? base.name,
     description: diff.description ?? base.description,
     interface: diff.interface ?? base.interface,
@@ -3668,7 +3665,7 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage;
   if (appliedDiff.license !== undefined) inverse.license = original.license;
   if (appliedDiff.preview !== undefined) inverse.preview = original.preview;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
+  if (appliedDiff.concepts !== undefined && original.concepts !== undefined) inverse.concepts = original.concepts;
   if (appliedDiff.types) inverse.types = inverseCollectionDiff(original.types ?? [], appliedDiff.types, inverseTypeDiff);
   if (appliedDiff.designs) inverse.designs = inverseCollectionDiff(original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
   if (appliedDiff.interfaces) inverse.interfaces = inverseInterfacesDiff(original.interfaces ?? [], appliedDiff.interfaces);

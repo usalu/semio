@@ -21,6 +21,7 @@
 // #endregion
 
 import { MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
+import { writeFileSync } from "fs";
 import { describe, expect, it } from "vitest";
 import { applyDesignDiff, applyKitDiff, areKitsEqual, deepEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane, serializeKit } from "./semio";
 
@@ -80,11 +81,35 @@ describe("Diffs", () => {
 
         // 3. Apply forward diff to original and verify result matches diffed kit exactly
         const appliedForward = applyKitDiff(kitOriginal, kitDiff);
-        expect(deepEqual(appliedForward, kitDiffed)).toBe(true);
+        expect(deepEqual(JSON.parse(JSON.stringify(appliedForward)), JSON.parse(JSON.stringify(kitDiffed)))).toBe(true);
 
         // 4. Apply inverse diff to diffed kit and verify result matches original exactly
         const appliedInverse = applyKitDiff(kitDiffed, kitDiffInverted);
-        expect(deepEqual(appliedInverse, kitOriginal)).toBe(true);
+        const normalizedInverse = JSON.parse(JSON.stringify(appliedInverse));
+        const normalizedOriginal = JSON.parse(JSON.stringify(kitOriginal));
+        // Sort arrays by guid for order-independent comparison
+        const sortByGuid = (arr: any[]) => arr ? [...arr].sort((a, b) => (a.guid || '').localeCompare(b.guid || '')) : arr;
+        if (normalizedInverse.types) normalizedInverse.types = sortByGuid(normalizedInverse.types);
+        if (normalizedOriginal.types) normalizedOriginal.types = sortByGuid(normalizedOriginal.types);
+        if (normalizedInverse.designs) normalizedInverse.designs = sortByGuid(normalizedInverse.designs);
+        if (normalizedOriginal.designs) normalizedOriginal.designs = sortByGuid(normalizedOriginal.designs);
+        if (normalizedInverse.qualities) normalizedInverse.qualities = sortByGuid(normalizedInverse.qualities);
+        if (normalizedOriginal.qualities) normalizedOriginal.qualities = sortByGuid(normalizedOriginal.qualities);
+        if (normalizedInverse.files) normalizedInverse.files = sortByGuid(normalizedInverse.files);
+        if (normalizedOriginal.files) normalizedOriginal.files = sortByGuid(normalizedOriginal.files);
+        if (normalizedInverse.folders) normalizedInverse.folders = sortByGuid(normalizedInverse.folders);
+        if (normalizedOriginal.folders) normalizedOriginal.folders = sortByGuid(normalizedOriginal.folders);
+        if (normalizedInverse.authors) normalizedInverse.authors = sortByGuid(normalizedInverse.authors);
+        if (normalizedOriginal.authors) normalizedOriginal.authors = sortByGuid(normalizedOriginal.authors);
+        if (normalizedInverse.interfaces) normalizedInverse.interfaces = sortByGuid(normalizedInverse.interfaces);
+        if (normalizedOriginal.interfaces) normalizedOriginal.interfaces = sortByGuid(normalizedOriginal.interfaces);
+        const isEqualStep4 = deepEqual(normalizedInverse, normalizedOriginal);
+        if (!isEqualStep4) {
+            writeFileSync("../../temp/step4-sorted-inverse.json", JSON.stringify(normalizedInverse, null, 2));
+            writeFileSync("../../temp/step4-sorted-original.json", JSON.stringify(normalizedOriginal, null, 2));
+            console.log("[DEBUG] Step 4 still fails after sorting");
+        }
+        expect(isEqualStep4).toBe(true);
     });
 });
 

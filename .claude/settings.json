@@ -22,15 +22,7 @@
       "Read(js\\js\\components/**)",
       "Edit(js\\js\\components/**)"
     ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./secrets/**)",
-      "Bash(git checkout)",
-      "Bash(npm run dev)",
-      "Bash(npm run build)",
-      "Bash(npx nx)"
-    ],
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Bash(git checkout)", "Bash(npm run dev)", "Bash(npm run build)", "Bash(npx nx)"],
     "ask": []
   }
 }

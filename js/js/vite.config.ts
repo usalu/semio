@@ -59,6 +59,9 @@ export default defineConfig({
   },
   resolve: {
     dedupe: ["three"],
+    alias: {
+      "@semio/assets": path.resolve(__dirname, "../../assets"),
+    },
   },
   ssr: {
     noExternal: ["golden-layout"],

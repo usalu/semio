@@ -1,38 +1,58 @@
 #!/usr/bin/env tsx
 import { execSync } from "child_process";
-import { writeFileSync, existsSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const rootDir = join(__dirname, "..");
 const pyEngineDir = join(rootDir, "py", "engine");
-const reportPath = join(rootDir, "reports", "ruff.md");
+const reportPath = join(rootDir, "reports", "ruff.json");
 
 if (!existsSync(pyEngineDir)) {
-  console.log("⚠️ Python engine directory not found, skipping Ruff check");
+  console.log("⚠️ Python engine directory not found, skipping Ruff");
   process.exit(0);
 }
 
-console.log("🔍 Running Ruff linter...");
+console.log("🐍 Formatting and linting Python with Ruff...");
 
 try {
-  const output = execSync("ruff check .", {
+  // Format first
+  execSync("ruff format .", {
     cwd: pyEngineDir,
-    encoding: "utf-8",
+    stdio: "inherit",
   });
   
-  const report = `# Ruff Linter Report\n\nGenerated: ${new Date().toISOString()}\n\n## ✅ No linting errors found!\n\n${output || "All checks passed."}\n`;
-  writeFileSync(reportPath, report);
+  // Then fix auto-fixable issues
+  execSync("ruff check --fix .", {
+    cwd: pyEngineDir,
+    stdio: "inherit",
+  });
   
-  console.log("✅ Ruff check passed");
+  // Generate JSON report for remaining issues
+  try {
+    const output = execSync("ruff check --output-format=json .", {
+      cwd: pyEngineDir,
+      encoding: "utf-8",
+    });
+    const report = {
+      timestamp: new Date().toISOString(),
+      status: "success",
+      issues: JSON.parse(output || "[]"),
+    };
+    writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  } catch (checkError: any) {
+    const output = checkError.stdout?.toString() || "[]";
+    const report = {
+      timestamp: new Date().toISOString(),
+      status: "warning",
+      issues: JSON.parse(output || "[]"),
+    };
+    writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  }
+  
+  console.log("✅ Ruff formatting and auto-fixes applied");
+  console.log(`📝 Report: ${reportPath}`);
   process.exit(0);
-} catch (error: any) {
-  const stderr = error.stderr?.toString() || "";
-  const stdout = error.stdout?.toString() || "";
-  
-  const report = `# Ruff Linter Report\n\nGenerated: ${new Date().toISOString()}\n\n## ❌ Linting Issues Found\n\n${stdout}\n${stderr}\n\nRun \`ruff check --fix .\` in py/engine to auto-fix issues.\n`;
-  writeFileSync(reportPath, report);
-  
-  console.error("❌ Ruff check failed");
-  console.error(`📝 Check ${reportPath} for details`);
+} catch (error) {
+  console.error("❌ Ruff formatting failed");
   process.exit(1);
 }

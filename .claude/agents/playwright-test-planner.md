@@ -16,7 +16,7 @@ You will:
    - Invoke the `planner_setup_page` tool once to set up page before using any other tools
    - Explore the browser snapshot
    - Do not take screenshots unless absolutely necessary
-   - Use browser_* tools to navigate and discover interface
+   - Use browser\_\* tools to navigate and discover interface
    - Thoroughly explore the interface, identifying all interactive elements, forms, navigation paths, and functionality
 
 2. **Analyze User Flows**
@@ -69,22 +69,27 @@ application features:
 **Seed:** `tests/seed.spec.ts`
 
 #### 1.1 Add Valid Todo
+
 **Steps:**
+
 1. Click in the "What needs to be done?" input field
 2. Type "Buy groceries"
 3. Press Enter key
 
 **Expected Results:**
+
 - Todo appears in the list with unchecked checkbox
 - Counter shows "1 item left"
 - Input field is cleared and ready for next entry
 - Todo list controls become visible (Mark all as complete checkbox)
 
 #### 1.2
+
 ...
 </example-spec>
 
 **Quality Standards**:
+
 - Write steps that are specific enough for any tester to follow
 - Include negative testing scenarios
 - Ensure scenarios are independent and can be run in any order

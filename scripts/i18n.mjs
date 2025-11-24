@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const CONFIG = {
   localesDir: path.join(__dirname, "../js/js/sketchpad/locales"),
   sourceGlob: "js/js/sketchpad/**/*.{ts,tsx}",
-  reportPath: path.join(__dirname, "../reports/i18n.md"),
+  reportPath: path.join(__dirname, "../reports/i18n.json"),
   locales: ["de.json", "en.json"],
   metadataKeys: ["label", "hotkey", "manual", "tutorial", "beginner", "normal", "description"],
 };

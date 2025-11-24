@@ -5,7 +5,7 @@ import { join } from "path";
 const rootDir = join(__dirname, "..");
 const localesDir = join(rootDir, "js", "js", "sketchpad", "locales");
 const sketchpadDir = join(rootDir, "js", "js", "sketchpad");
-const reportPath = join(rootDir, "reports", "i18n.md");
+const reportPath = join(rootDir, "reports", "i18n.json");
 
 interface Translation {
   [key: string]: string | Translation;
@@ -158,38 +158,22 @@ Array.from(usedIds).forEach(id => {
 //#endregion
 
 //#region Generate Report
-let report = "# i18n Validation Report\n\n";
-report += `Generated: ${new Date().toISOString()}\n\n`;
-
 const errors = issues.filter(i => i.severity === "error");
 const warnings = issues.filter(i => i.severity === "warning");
 
-report += `## Summary\n\n`;
-report += `- **Errors**: ${errors.length}\n`;
-report += `- **Warnings**: ${warnings.length}\n`;
-report += `- **Total Issues**: ${issues.length}\n\n`;
+const report = {
+  timestamp: new Date().toISOString(),
+  summary: {
+    errors: errors.length,
+    warnings: warnings.length,
+    total: issues.length,
+  },
+  errors: errors,
+  warnings: warnings,
+  status: errors.length > 0 ? "error" : warnings.length > 0 ? "warning" : "success",
+};
 
-if (errors.length > 0) {
-  report += `## Errors\n\n`;
-  for (const issue of errors) {
-    report += `- **${issue.key}**: ${issue.message}\n`;
-  }
-  report += `\n`;
-}
-
-if (warnings.length > 0) {
-  report += `## Warnings\n\n`;
-  for (const issue of warnings) {
-    report += `- **${issue.key}**: ${issue.message}\n`;
-  }
-  report += `\n`;
-}
-
-if (issues.length === 0) {
-  report += `## ✅ All i18n checks passed!\n\n`;
-}
-
-writeFileSync(reportPath, report, "utf-8");
+writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf-8");
 console.log(`📝 Report written to ${reportPath}`);
 console.log(`\n${errors.length} errors, ${warnings.length} warnings`);
 

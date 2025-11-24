@@ -4,7 +4,7 @@ import { writeFileSync } from "fs";
 import { join } from "path";
 
 const rootDir = join(__dirname, "..");
-const reportPath = join(rootDir, "reports", "typescript.md");
+const reportPath = join(rootDir, "reports", "typescript.json");
 
 console.log("🔍 Running TypeScript compiler check...");
 
@@ -14,19 +14,29 @@ try {
     encoding: "utf-8",
   });
   
-  const report = `# TypeScript Compiler Report\n\nGenerated: ${new Date().toISOString()}\n\n## ✅ No type errors found!\n\n${output}\n`;
-  writeFileSync(reportPath, report);
+  const report = {
+    timestamp: new Date().toISOString(),
+    status: "success",
+    errors: [],
+  };
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
   
   console.log("✅ TypeScript check passed");
+  console.log(`📝 Report: ${reportPath}`);
   process.exit(0);
 } catch (error: any) {
   const stderr = error.stderr?.toString() || "";
   const stdout = error.stdout?.toString() || "";
+  const output = stdout || stderr;
   
-  const report = `# TypeScript Compiler Report\n\nGenerated: ${new Date().toISOString()}\n\n## ❌ Type Errors Found\n\n${stdout}\n${stderr}\n`;
-  writeFileSync(reportPath, report);
+  const report = {
+    timestamp: new Date().toISOString(),
+    status: "error",
+    errors: output.split('\n').filter(line => line.trim()),
+  };
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
   
   console.error("❌ TypeScript check failed");
-  console.error(`📝 Check ${reportPath} for details`);
+  console.error(`📝 Report: ${reportPath}`);
   process.exit(1);
 }

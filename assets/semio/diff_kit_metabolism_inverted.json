@@ -6,7 +6,6 @@
   "image": "images/metabolism.png",
   "homepage": "https://github.com/usalu/metabolism/tree/r25.07-1",
   "license": "",
-  "concepts": null,
   "types": {
     "added": [
       {
@@ -18,7 +17,20 @@
       }
     ],
     "removed": [
-      "019ab239-31b9-712d-8ec9-9fd69c9a41b6"
+      "019ab6f8-5113-72cb-b23e-3336b2591d6c"
+    ],
+    "updated": [
+      {
+        "id": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
+        "diff": {
+          "name": "Ellipsoid",
+          "ports": {
+            "removed": [
+              "019ab6f8-5113-72cb-b23e-2ef031865c02"
+            ]
+          }
+        }
+      }
     ]
   },
   "designs": {
@@ -6963,17 +6975,31 @@
       }
     ],
     "removed": [
-      "019ab239-31bd-710e-b346-e16580e9c059"
+      "019ab6f8-5113-72cb-b23e-3fe1bb03b1fd"
+    ],
+    "updated": [
+      {
+        "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
+        "diff": {
+          "name": "Slanted",
+          "description": "A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
+          "pieces": {
+            "removed": [
+              "019ab6f8-5113-72cb-b23e-3918ed396e9e"
+            ]
+          }
+        }
+      }
     ]
   },
   "interfaces": {
     "removed": [
-      "019ab239-31bd-710e-b346-eb7bdc89982e"
+      "019ab6f8-5113-72cb-b23e-447307a99503"
     ]
   },
   "folders": {
     "removed": [
-      "019ab239-31bd-710e-b346-ec493baa6738"
+      "019ab6f8-5113-72cb-b23e-49556724b3b6"
     ]
   },
   "authors": {
@@ -6985,7 +7011,7 @@
       }
     ],
     "removed": [
-      "019ab239-31bd-710e-b346-f24fb1982b2d"
+      "019ab6f8-5113-72cb-b23e-4c2cca67a58b"
     ]
   },
   "attributes": {

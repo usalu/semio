@@ -1,6 +1,9 @@
 This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 
-IMPORTANT: The codebase in under design and development and not used in production yet. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
+IMPORTANT:
+
+- The codebase in under design and development and not used in production yet. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
+- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter.
 
 # Specs
 
@@ -451,7 +454,6 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 ### General
 
-- For every task you are working on, ALWAYS create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter.
 - ALWAYS document mechanisms technicallly in `AGENTS.md` and in `README.md`. Those documents NEVER keep a log and ALWAYS show the current state of the codebase.
 - ALWAYS finish everything without asking in between.
 - NEVER interrupt between TODOs or tickets.
@@ -504,59 +506,61 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 ## CI/CD
 
-### Pre-commit Hooks
+### Pre-commit Hooks (Husky)
 
-All commits are validated using pre-commit hooks. Install with:
+All commits are validated using husky hooks:
 
 ```bash
-pip install pre-commit
-pre-commit install
+npm install  # Husky will auto-install via prepare script
 ```
 
-### Available Hooks
+### Hook Workflow
+
+**Formatters** (apply changes automatically):
 
 1. **Prettier** - Formats JavaScript/TypeScript/JSON/YAML/Markdown
-2. **Ruff** - Lints and formats Python code
-3. **i18n Validation** - Validates translation keys and completeness
-4. **TypeScript Check** - Runs TypeScript compiler without emitting files
-5. **ESLint** - Lints JavaScript/TypeScript code
-6. **File Checks** - Trailing whitespace, line endings, merge conflicts, etc.
+2. **Ruff Format** - Formats Python code
+3. **Ruff Fix** - Auto-fixes Python linting issues
+
+**Linters** (generate JSON reports):
+
+1. **i18n Validation** - Validates translation keys and completeness
+2. **TypeScript** - Type checking
+3. **ESLint** - JavaScript/TypeScript linting
 
 ### Reports
 
-All linters and validators generate reports in `reports/`:
+Linters generate JSON reports in `reports/`:
 
-- `reports/i18n.md` - i18n translation validation
-- `reports/prettier.md` - Prettier formatting issues
-- `reports/eslint.md` - ESLint linting issues
-- `reports/typescript.md` - TypeScript compiler errors
-- `reports/ruff.md` - Python Ruff linting issues
+- `reports/i18n.json` - i18n translation validation
+- `reports/eslint.json` - ESLint linting issues
+- `reports/typescript.json` - TypeScript compiler errors
+- `reports/ruff.json` - Python Ruff linting issues
 
-Reports are gitignored (except README) and regenerated on each hook run.
+Reports are gitignored (except README) and regenerated on each commit.
 
 ### Manual Hook Execution
 
-Run individual hooks manually:
+Run formatters:
+
+```bash
+npx tsx hooks/prettier.ts    # Format all files
+npx tsx hooks/ruff.ts         # Format and fix Python
+```
+
+Run linters:
 
 ```bash
 npx tsx hooks/i18n.ts        # i18n validation
-npx tsx hooks/prettier.ts    # Prettier check
-npx tsx hooks/eslint.ts      # ESLint check
 npx tsx hooks/typescript.ts  # TypeScript check
-npx tsx hooks/ruff.ts        # Ruff check
-```
-
-Or run all hooks:
-
-```bash
-pre-commit run --all-files
+npx tsx hooks/eslint.ts      # ESLint check
 ```
 
 ### Hook Configuration
 
 - **Location**: `hooks/*.ts` - TypeScript hook scripts
-- **Config**: `.pre-commit-config.yaml` - Pre-commit configuration
-- **Reports**: `reports/*.md` - Generated reports (gitignored)
+- **Config**: `.husky/pre-commit` - Husky pre-commit hook
+- **Reports**: `reports/*.json` - Generated reports (gitignored)
 
 ## Testing
 
@@ -1238,18 +1242,17 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ └── gh-pages.yml # Deploy user docs togh-pages
 │ └── dependabot.yml
 ├── hooks # Pre-commit hook scripts
-│ ├── i18n.ts # i18n validation hook
-│ ├── prettier.ts # Prettier format check hook
-│ ├── eslint.ts # ESLint linting hook
-│ ├── typescript.ts # TypeScript compiler check hook
-│ └── ruff.ts # Python Ruff linter hook
+│ ├── i18n.ts # i18n validation hook (generates JSON report)
+│ ├── prettier.ts # Prettier formatter hook (applies formatting)
+│ ├── eslint.ts # ESLint linting hook (generates JSON report)
+│ ├── typescript.ts # TypeScript compiler check hook (generates JSON report)
+│ └── ruff.ts # Python Ruff formatter and linter hook (applies formatting, generates JSON report)
 ├── reports # Generated validation reports (gitignored except README.md)
 │ ├── README.md # Reports documentation
-│ ├── i18n.md # i18n validation report
-│ ├── prettier.md # Prettier format check report
-│ ├── eslint.md # ESLint linting report
-│ ├── typescript.md # TypeScript compiler report
-│ └── ruff.md # Python Ruff linter report
+│ ├── i18n.json # i18n validation report
+│ ├── eslint.json # ESLint linting report
+│ ├── typescript.json # TypeScript compiler report
+│ └── ruff.json # Python Ruff linter report
 ├── .vscode
 │ └── \*.md # Temporary markdown documents
 ├── antlr

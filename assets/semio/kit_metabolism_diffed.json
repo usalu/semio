@@ -1,9 +1,6 @@
 {
   "guid": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
-  "name": "Metabolism Modified",
   "version": "r25.08-1",
-  "createdAt": "2025-11-23T01:10:21.03Z",
-  "updatedAt": "2025-11-23T01:10:21.03Z",
   "types": [
     {
       "updatedAt": "2025-11-23T01:10:21.293Z",
@@ -13,7 +10,26 @@
       "parent": {
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
-      "name": "Ellipsoid"
+      "name": "Ellipsoid Modified",
+      "description": "Updated description",
+      "ports": [
+        {
+          "guid": "019ab6f8-5113-72cb-b23e-2ef031865c02",
+          "name": "new-port",
+          "point": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "direction": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          },
+          "t": 0.5,
+          "mandatory": true
+        }
+      ]
     },
     {
       "updatedAt": "2025-11-23T01:10:21.293Z",
@@ -60,6 +76,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
           }
         },
         {
@@ -85,6 +104,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
           }
         }
       ],
@@ -215,6 +237,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-994a9a023448"
           }
         },
         {
@@ -240,6 +265,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-994a9a023448"
           }
         }
       ],
@@ -367,6 +395,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-58d90f95991e"
           }
         },
         {
@@ -392,6 +423,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
           }
         }
       ],
@@ -527,6 +561,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
           }
         }
       ],
@@ -638,6 +675,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb"
           }
         }
       ],
@@ -731,6 +771,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -863,6 +906,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1001,6 +1047,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1133,6 +1182,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1271,6 +1323,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1403,6 +1458,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1541,6 +1599,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1673,6 +1734,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1811,6 +1875,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -1943,6 +2010,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2081,6 +2151,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2213,6 +2286,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2351,6 +2427,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2483,6 +2562,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2621,6 +2703,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2753,6 +2838,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -2891,6 +2979,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3023,6 +3114,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3161,6 +3255,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3293,6 +3390,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3431,6 +3531,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3563,6 +3666,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3701,6 +3807,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3833,6 +3942,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -3971,6 +4083,9 @@
             "y": -0.9890159,
             "x": -0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4085,6 +4200,9 @@
             "y": -0.9890159,
             "x": 0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4205,6 +4323,9 @@
             "y": -0.9890159,
             "x": -0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4319,6 +4440,9 @@
             "y": -0.9890159,
             "x": 0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4439,6 +4563,9 @@
             "y": -0.9890159,
             "x": -0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4553,6 +4680,9 @@
             "y": -0.9890159,
             "x": 0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4673,6 +4803,9 @@
             "y": -0.9890159,
             "x": -0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4787,6 +4920,9 @@
             "y": -0.9890159,
             "x": 0.14780942,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
         }
       ],
@@ -4914,6 +5050,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
           }
         },
         {
@@ -4939,6 +5078,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
           }
         },
         {
@@ -4956,6 +5098,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -4973,6 +5118,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -4990,6 +5138,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5007,6 +5158,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5024,6 +5178,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5041,6 +5198,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5058,6 +5218,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5075,6 +5238,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -5211,6 +5377,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
           }
         },
         {
@@ -5236,6 +5405,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
           }
         },
         {
@@ -5253,6 +5425,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5270,6 +5445,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5287,6 +5465,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5304,6 +5485,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5321,6 +5505,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5338,6 +5525,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5355,6 +5545,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5372,6 +5565,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -5511,6 +5707,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
           }
         },
         {
@@ -5536,6 +5735,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
           }
         },
         {
@@ -5553,6 +5755,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5570,6 +5775,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5587,6 +5795,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5604,6 +5815,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5621,6 +5835,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5638,6 +5855,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5655,6 +5875,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5672,6 +5895,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -5811,6 +6037,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
           }
         },
         {
@@ -5836,6 +6065,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
           }
         },
         {
@@ -5853,6 +6085,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5870,6 +6105,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5887,6 +6125,9 @@
             "y": 1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5904,6 +6145,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5921,6 +6165,9 @@
             "y": 0,
             "x": -1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5938,6 +6185,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -5955,6 +6205,9 @@
             "y": -1,
             "x": 0,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -5972,6 +6225,9 @@
             "y": 0,
             "x": 1,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -6105,6 +6361,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
           }
         },
         {
@@ -6130,6 +6389,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
           }
         },
         {
@@ -6147,6 +6409,9 @@
             "y": 0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6164,6 +6429,9 @@
             "y": 0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6181,6 +6449,9 @@
             "y": 0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6198,6 +6469,9 @@
             "y": 0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6215,6 +6489,9 @@
             "y": -0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6232,6 +6509,9 @@
             "y": -0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6249,6 +6529,9 @@
             "y": -0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6266,6 +6549,9 @@
             "y": -0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -6396,6 +6682,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
           }
         },
         {
@@ -6421,6 +6710,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
           }
         },
         {
@@ -6438,6 +6730,9 @@
             "y": 0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6455,6 +6750,9 @@
             "y": 0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6472,6 +6770,9 @@
             "y": 0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6489,6 +6790,9 @@
             "y": 0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6506,6 +6810,9 @@
             "y": -0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6523,6 +6830,9 @@
             "y": -0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6540,6 +6850,9 @@
             "y": -0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6557,6 +6870,9 @@
             "y": -0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -6690,6 +7006,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
           }
         },
         {
@@ -6715,6 +7034,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
           }
         },
         {
@@ -6732,6 +7054,9 @@
             "y": 0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6749,6 +7074,9 @@
             "y": 0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6766,6 +7094,9 @@
             "y": 0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6783,6 +7114,9 @@
             "y": 0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6800,6 +7134,9 @@
             "y": -0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6817,6 +7154,9 @@
             "y": -0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -6834,6 +7174,9 @@
             "y": -0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -6851,6 +7194,9 @@
             "y": -0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -6984,6 +7330,9 @@
             "y": 0,
             "x": 0,
             "z": -1
+          },
+          "interface": {
+            "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
           }
         },
         {
@@ -7009,6 +7358,9 @@
             "y": 0,
             "x": 0,
             "z": 1
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
           }
         },
         {
@@ -7026,6 +7378,9 @@
             "y": 0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -7043,6 +7398,9 @@
             "y": 0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -7060,6 +7418,9 @@
             "y": 0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -7077,6 +7438,9 @@
             "y": 0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -7094,6 +7458,9 @@
             "y": -0.23901905,
             "x": -0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -7111,6 +7478,9 @@
             "y": -0.97101486,
             "x": -0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         },
         {
@@ -7128,6 +7498,9 @@
             "y": -0.97101486,
             "x": 0.23901905,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
           }
         },
         {
@@ -7145,6 +7518,9 @@
             "y": -0.23901905,
             "x": 0.97101486,
             "z": 0
+          },
+          "interface": {
+            "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
           }
         }
       ],
@@ -7254,16 +7630,16 @@
       "updatedAt": "2025-11-23T01:10:21.288Z"
     },
     {
-      "guid": "019ab239-31b9-712d-8ec9-9fd69c9a41b6",
+      "guid": "019ab6f8-5113-72cb-b23e-3336b2591d6c",
       "name": "New Test Type",
       "virtual": true,
       "unit": "mm",
       "description": "A new type added for testing",
-      "createdAt": "2025-11-23T19:38:04.089Z",
-      "updatedAt": "2025-11-23T19:38:04.089Z",
+      "createdAt": "2025-11-24T17:45:18.355Z",
+      "updatedAt": "2025-11-24T17:45:18.355Z",
       "ports": [
         {
-          "guid": "019ab239-31b9-712d-8ec9-a2c44ed5d71a",
+          "guid": "019ab6f8-5113-72cb-b23e-350f2fa13e2d",
           "name": "test-port",
           "point": {
             "x": 0,
@@ -7281,6 +7657,21 @@
       ]
     }
   ],
+  "homepage": "https://modified.example.com",
+  "icon": "modified-icon.svg",
+  "license": "MIT-Modified",
+  "authors": [
+    {
+      "guid": "019ab6f8-5113-72cb-b23e-4c2cca67a58b",
+      "name": "Test Author",
+      "email": "test@example.com"
+    }
+  ],
+  "image": "modified-image.png",
+  "description": "Modified version for comprehensive diff testing",
+  "createdAt": "2025-11-23T01:10:21.03Z",
+  "remote": "https://github.com/usalu/metabolism/archive/refs/tags/r25.07-1.zip",
+  "name": "Metabolism Modified",
   "designs": [
     {
       "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
@@ -7371,7 +7762,7 @@
         }
       ],
       "unit": "m",
-      "name": "Slanted",
+      "name": "Slanted Modified",
       "icon": "icons/nakagin-capsule-tower_slanted.svg",
       "connections": [
         {
@@ -12396,7 +12787,7 @@
         }
       ],
       "image": "images/nakagin-capsule-tower_slanted.png",
-      "description": "A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
+      "description": "Updated design description",
       "createdAt": "2025-11-23T01:10:21.875Z",
       "pieces": [
         {
@@ -14219,6 +14610,30 @@
           "isLocked": false,
           "description": "",
           "guid": "4ff76d23-635a-4e00-8747-c74ebb93d1d1"
+        },
+        {
+          "guid": "019ab6f8-5113-72cb-b23e-3918ed396e9e",
+          "type": {
+            "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
+          },
+          "plane": {
+            "origin": {
+              "x": 5,
+              "y": 5,
+              "z": 5
+            },
+            "xAxis": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            },
+            "yAxis": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            }
+          },
+          "scale": 1.5
         }
       ],
       "updatedAt": "2025-11-23T01:10:21.875Z"
@@ -256955,7 +257370,7 @@
       "updatedAt": "2025-11-23T01:11:04.468Z"
     },
     {
-      "guid": "d7e12638-9749-471b-937e-a6e5523778ff",
+      "guid": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
       "attributes": [
         {
           "value": "2349.53",
@@ -264073,7 +264488,7 @@
       "updatedAt": "2025-11-23T01:11:04.537Z"
     },
     {
-      "guid": "d7e12638-9749-471b-937e-a6e5523778ff",
+      "guid": "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
       "attributes": [
         {
           "value": "2583.27",
@@ -271191,7 +271606,7 @@
       "updatedAt": "2025-11-23T01:11:04.613Z"
     },
     {
-      "guid": "d7e12638-9749-471b-937e-a6e5523778ff",
+      "guid": "019ab4e0-cb2a-7613-a16a-ae086e331c95",
       "attributes": [
         {
           "value": "2157.63",
@@ -278309,15 +278724,15 @@
       "updatedAt": "2025-11-23T01:11:04.687Z"
     },
     {
-      "guid": "019ab239-31bd-710e-b346-e16580e9c059",
+      "guid": "019ab6f8-5113-72cb-b23e-3fe1bb03b1fd",
       "name": "New Test Design",
       "unit": "mm",
       "description": "A new design added for testing",
-      "createdAt": "2025-11-23T19:38:04.093Z",
-      "updatedAt": "2025-11-23T19:38:04.093Z",
+      "createdAt": "2025-11-24T17:45:18.355Z",
+      "updatedAt": "2025-11-24T17:45:18.355Z",
       "pieces": [
         {
-          "guid": "019ab239-31bd-710e-b346-e598159ec48d",
+          "guid": "019ab6f8-5113-72cb-b23e-40afb3b007ff",
           "type": {
             "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
           },
@@ -278343,44 +278758,202 @@
       ]
     }
   ],
-  "authors": [
-    {
-      "guid": "019ab239-31bd-710e-b346-f24fb1982b2d",
-      "name": "Test Author",
-      "email": "test@example.com"
-    }
-  ],
-  "description": "Modified version for comprehensive diff testing",
-  "icon": "modified-icon.svg",
-  "image": "modified-image.png",
-  "remote": "https://github.com/usalu/metabolism/archive/refs/tags/r25.07-1.zip",
-  "homepage": "https://modified.example.com",
-  "license": "MIT-Modified",
-  "concepts": [
-    "metabolism",
-    "nakagin",
-    "modified"
-  ],
+  "updatedAt": "2025-11-23T01:10:21.03Z",
   "interfaces": [
     {
-      "guid": "019ab239-31bd-710e-b346-eb7bdc89982e",
+      "guid": "019ab243-21f3-7380-93c6-994a9a023448",
+      "name": "core circular bottom",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
+      "name": "core circular top",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f3-7380-93c6-994a9a023448"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
+      "name": "core rectangular bottom",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
+      "name": "core rectangular top",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
+      "name": "door capsule east",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
+      "name": "door capsule west",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
+      "name": "door tambour east",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25"
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-58d90f95991e"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
+      "name": "door tambour west",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
+      "name": "platform east",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+      "name": "platform west",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
+      "name": "roof circular bottom",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
+      "name": "roof circular top",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
+      "name": "roof rectangular bottom",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
+      "name": "roof rectangular top",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
+      "name": "tambour circular bottom",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
+      "name": "tambour circular top",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
+      "name": "tambour rectangular bottom",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
+        }
+      ]
+    },
+    {
+      "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
+      "name": "tambour rectangular top",
+      "compatibleInterfaces": [
+        {
+          "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
+        }
+      ]
+    },
+    {
+      "guid": "019ab6f8-5113-72cb-b23e-447307a99503",
       "name": "Test Interface",
       "description": "A new interface for testing",
       "icon": "test-icon.svg"
     }
   ],
+  "concepts": [
+    "metabolism",
+    "nakagin",
+    "modified"
+  ],
+  "qualities": [],
+  "files": [],
   "folders": [
     {
-      "guid": "019ab239-31bd-710e-b346-ec493baa6738",
+      "guid": "019ab6f8-5113-72cb-b23e-49556724b3b6",
       "name": "test-folder",
       "description": "A new folder for testing",
-      "createdAt": "2025-11-23T19:38:04.093Z",
-      "updatedAt": "2025-11-23T19:38:04.093Z"
+      "createdAt": "2025-11-24T17:45:18.355Z",
+      "updatedAt": "2025-11-24T17:45:18.355Z"
     }
   ],
   "attributes": [
     {
-      "guid": "019ab239-31bd-710e-b346-f7b2aa4fdaff",
+      "guid": "019ab6f8-5113-72cb-b23e-5046f19bc9c3",
       "key": "test.attribute",
       "value": "test value",
       "definition": "A test attribute"
