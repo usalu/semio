@@ -1052,15 +1052,14 @@ const ActionGroupContext = React.createContext<{ level: Level }>({
 });
 
 interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children" | "id"> {
-  id: string;
   children: React.ReactNode;
   level?: Level;
 }
 
-function ActionGroup({ className, level: propLevel, id, children, ...props }: ActionGroupProps) {
+function ActionGroup({ className, level: propLevel, children, ...props }: ActionGroupProps) {
   const level = useElementLevel(propLevel);
   return (
-    <div data-slot="action-group" data-level={level} id={id} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", className)} {...props}>
+    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", className)} {...props}>
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -1191,7 +1190,7 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 function Action({ className, level: propLevel, id, icon, as = "button", ...props }: ActionProps) {
   const level = useElementLevel(propLevel);
   return (
-    <ActionGroup id={id || "action"} level={level} className={className}>
+    <ActionGroup level={level} className={className}>
       <ActionGroupItem as={as} id={id} {...props}>
         {icon}
       </ActionGroupItem>
@@ -1225,7 +1224,7 @@ const ButtonGroupContext = React.createContext<{ level: Level }>({
 });
 
 interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
-  id: string;
+  id?: string;
   level?: Level;
   showLabel?: boolean;
   children: React.ReactNode;
@@ -1325,8 +1324,8 @@ interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"
 function Button({ className, level: propLevel, asChild = false, id, icon, children, ...props }: ButtonProps) {
   const level = useElementLevel(propLevel);
   return (
-    <ButtonGroup id={id || "button"} level={level} className={className}>
-      <ButtonGroupItem asChild={asChild} {...props}>
+    <ButtonGroup level={level} className={className}>
+      <ButtonGroupItem id={id} asChild={asChild} {...props}>
         {icon || children}
       </ButtonGroupItem>
     </ButtonGroup>
@@ -1344,8 +1343,8 @@ function ButtonCycle<T extends string = string>({ className, level: propLevel, i
   };
 
   return (
-    <ButtonGroup id={id || "button-cycle"} showLabel={showLabel} level={level} className={className}>
-      <ButtonGroupItem onClick={handleCycle} icon={currentItem.label} {...props} />
+    <ButtonGroup showLabel={showLabel} level={level} className={className}>
+      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem.label} {...props} />
     </ButtonGroup>
   );
 }

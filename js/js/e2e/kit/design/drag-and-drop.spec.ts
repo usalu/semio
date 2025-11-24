@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('design', () => {
   test('drag type from workbench to canvas', async ({ page }) => {
@@ -9,34 +9,30 @@ test.describe('design', () => {
     await page.waitForLoadState('networkidle');
 
     // 2. Create a kit
-    await page.getByRole('button').nth(5).click();
+    await page.locator('[id="semio.sketchpad.app.home.createTemporary"]').click();
     await page.waitForTimeout(1000);
 
     // 3. Create a type first (so we have something to drag)
-    const typeButton = page.locator('.group\\/toggle-group.flex.w-fit.items-center.border button').nth(1);
-    await typeButton.click();
+    await page.locator('[id="semio.sketchpad.app.kit.kitApp.createType"]').click();
     await page.waitForTimeout(500);
 
     // Navigate back
-    await page.goBack();
+    await page.locator('[id="semio.sketchpad.navbar.back"]').click();
     await page.waitForLoadState('networkidle');
 
     // 4. Create a design
-    const createDesignButton = page.locator('.group\\/toggle-group.flex.w-fit.items-center.border button').first();
-    await createDesignButton.click();
+    await page.locator('[id="semio.sketchpad.app.kit.kitApp.createDesign"]').click();
     await page.waitForTimeout(1000);
 
     // Verify we're in the design app
     await expect(page.getByText('New Design')).toBeVisible();
 
     // 5. Toggle the workbench panel open
-    // Find the panel toggle buttons in the toolbar
-    const panelToggle = page.locator('.group\\/action-group > .text-foreground').first();
-    await panelToggle.click();
+    await page.locator('[id="semio.sketchpad.navbar.panelToggle.workbench"]').click();
     await page.waitForTimeout(500);
 
     // 6. Verify workbench panel is visible (dialog should appear)
-    const workbenchDialog = page.locator('dialog');
+    const workbenchDialog = page.locator('[role="dialog"]');
     await expect(workbenchDialog).toBeVisible();
 
     // 7. Look for draggable type items in the workbench

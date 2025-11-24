@@ -496,3 +496,4 @@ FodyWeavers.xsd
 !.axoCover/settings.json
 !**/[Pp]ackages/build/
 !rb/lib
+!log

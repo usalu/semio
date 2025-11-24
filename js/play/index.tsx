@@ -8,7 +8,7 @@ import "./register-apps";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <div className="h-screen w-screen">
-      <Sketchpad embedded />
+      <Sketchpad />
     </div>
   </React.StrictMode>,
 );

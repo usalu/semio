@@ -22,6 +22,7 @@
     "vitest.explorer",
     "stripe.markdoc-language-support",
     "firefox-devtools.vscode-firefox-debug",
+    "ms-playwright.playwright",
     // dotnet
     "ms-dotnettools.vscode-dotnet-pack",
     "ms-dotnettools.vscode-dotnet-runtime",

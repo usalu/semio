@@ -9,13 +9,11 @@ test.describe('design', () => {
     await page.waitForLoadState('networkidle');
 
     // 2. Create a kit if not exists
-    const createKitButton = page.getByRole('button').nth(5);
-    await createKitButton.click();
+    await page.locator('#semio\\.sketchpad\\.app\\.home\\.createKit').click();
     await page.waitForTimeout(1000);
 
     // 3. Create a design
-    const createButtons = page.locator('.group\\/toggle-group.flex.w-fit.items-center.border button');
-    await createButtons.first().click();
+    await page.locator('#semio\\.sketchpad\\.app\\.kit\\.kitApp\\.createDesign').click();
     await page.waitForTimeout(1000);
 
     // 4. Verify the design app loaded with diagram canvas

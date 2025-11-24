@@ -216,3 +216,7 @@ To test the VS Code extension:
 - Auto-fix on save
 - Custom rule plugins
 - Performance optimizations (incremental validation)
+
+## Recent Work
+
+- Normalized every slug in `log/` filenames by uppercasing them so the directory now follows a consistent naming convention.

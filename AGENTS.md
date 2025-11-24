@@ -451,6 +451,8 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 ### General
 
+- For every task you are working on, ALWAYS create or update a markdown document to plan and log changes under `log/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for the task). E.g. `log/2025-11-24-PIECE-DRAG-AND-DROP-ISSUE.md`.
+- ALWAYS document mechanisms technicallly in `AGENTS.md` and in `README.md`. Those documents NEVER keep a log and ALWAYS show the current state of the codebase.
 - ALWAYS finish everything without asking in between.
 - NEVER interrupt between TODOs or tickets.
 - NEVER remove functionality. Not even to get the code to work quickly.
@@ -480,7 +482,6 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 - NEVER build or run the code.
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
 - NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
-- Whenever creating a markdown file, ALWAYS create it under `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for the task). When working on existing tasks, ALWAYS update the existing file.
 - When fixing issues, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
 - NEVER skip any test or simplify/remove functionality to pass or fix an issue. ALWAYS adjust implementation to pass the tests.
 - NEVER create additional scripts, tests, fixtures, assets, …
@@ -490,16 +491,7 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 ### Keywords
 
-- `PLAN`: Create an agents markdown document to plan a new feature. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this plan). If `IMPLEMENT` is also called then proceed with the implementation directly.
-
-- `DIAGNOSE`: ALWAYS ceate a markdown document and add console logs to the codebase to help understand the problem. Use a slug and call the document `agents/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for this diagnosis). NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [AVATAR-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`.
-
-1. Analyis [DIAGNOSESLUG]
-   1.1. Problem description
-   1.2. Codebase analysis
-2. Possible causes/solutions
-
-- `IMPLEMENT`: Implement a markdown document (such as created by `PLAN` or `DIAGNOSE`). When implementing a `DIAGNOSE` you receive the logs from the user and if the logs are enough to verify your hypothesis, ALWAYs directly implement the solution. When the `DIAGNOSE` is not enough, update the document with the new information, add new logs and continue the process.
+- `DIAGNOSE`: Think about the problem and possible causes. ALWAYS add console logs to the codebase to help understand the problem. NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [PIECE-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`. Then you will receive the logs from the user and if the logs are enough to verify your hypothesis, ALWAYs directly implement the solution. When the `DIAGNOSE` is not enough, update the document with the new information, add new logs and continue the process.
 
 - `FIX`: Anaylze and fix the problem imediatley in one step (without any approval). When you are not sure about the root cause, pick the most likely one and try to implement the solution directly.
 
@@ -507,7 +499,7 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 - `I18N`: Run `scripts/i18n.ps1` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
 
-- `AUTOMATE`: Create a powershell script to automate a task.
+- `AUTOMATE`: Create a script to automate a task. `*.ps1` for non-domain related tasks (use `powershell.ps1` for reusable code). `*.ts` for domain related tasks (use `@semio/js` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
 
 ### Internationalization (i18n)
 
