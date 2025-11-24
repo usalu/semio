@@ -132,9 +132,9 @@
       }
     },
     {
-      "label": "watch vscode",
+      "label": "dev vscode",
       "type": "npm",
-      "script": "watch",
+      "script": "dev",
       "path": "js/vscode",
       "problemMatcher": {
         "owner": "typescript",
@@ -177,7 +177,9 @@
         "options": {
           "shell": {
             "executable": "powershell.exe",
-            "args": ["-Command"]
+            "args": [
+              "-Command"
+            ]
           }
         }
       },

@@ -451,7 +451,7 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 ### General
 
-- For every task you are working on, ALWAYS create or update a markdown document to plan and log changes under `log/DATE_SLUG.md` (replace DATE with YEAR-MONTH-DAY and SLUG with a unique slug for the task). E.g. `log/2025-11-24-PIECE-DRAG-AND-DROP-ISSUE.md`.
+- For every task you are working on, ALWAYS create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter.
 - ALWAYS document mechanisms technicallly in `AGENTS.md` and in `README.md`. Those documents NEVER keep a log and ALWAYS show the current state of the codebase.
 - ALWAYS finish everything without asking in between.
 - NEVER interrupt between TODOs or tickets.
@@ -464,6 +464,7 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 - ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
+- ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `prepublish`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
 - NEVER create new files. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new folders unless for temporary purposes.
 - NEVER create additional example files and implement it directly in the dependent parts.
@@ -483,7 +484,7 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
 - NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
 - When fixing issues, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
-- NEVER skip any test or simplify/remove functionality to pass or fix an issue. ALWAYS adjust implementation to pass the tests.
+- NEVER change (e.g. simplify/remove functionality) or skip any test to pass. ALWAYS adjust implementation to pass the tests.
 - NEVER create additional scripts, tests, fixtures, assets, …
 - NEVER create scripts outside the `scripts` folder. Not even when debugging or diagnosing a library problem.
 - ALWAYS create temporary scripts, tests, fixtures, assets, … in the `temp` folder.
@@ -497,9 +498,617 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, temporary code, …
 
-- `I18N`: Run `scripts/i18n.ps1` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
+- `I18N`: Run `tsx scripts/i18n.ts` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
 
-- `AUTOMATE`: Create a script to automate a task. `*.ps1` for non-domain related tasks (use `powershell.ps1` for reusable code). `*.ts` for domain related tasks (use `@semio/js` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
+- `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
+
+## Testing
+
+### Overview
+
+Semio uses a multi-layered testing approach:
+
+1. **Unit Tests** (`.test.ts`) - Domain logic testing next to modules
+2. **E2E Tests** (Playwright) - Hierarchical integration testing
+3. **Platform Tests** - VS Code extension, CLI, etc.
+
+### Unit Tests
+
+**Location:** Next to the module with `.test.ts` extension
+
+**Example:** `semio.test.ts` tests `semio.ts` domain logic
+
+**Rules:**
+
+- Test domain logic in isolation
+- Use vitest framework
+- Mock external dependencies
+- Focus on pure functions and diffs
+
+### E2E Tests (Playwright)
+
+**Location:** `js/js/playwright/`
+
+**Structure:** Hierarchical seeding matching app structure
+
+```
+playwright/
+  seed.spec.ts              # Sketchpad root seed (empty stub)
+  kit/
+    seed.spec.ts            # Kit seed (creates kit, type, design)
+    design/
+      seed.spec.ts          # Design seed (requires kit)
+      drag-and-drop.spec.ts # Feature test (requires design seed)
+    type/
+      seed.spec.ts          # Type seed (requires kit)
+    quality/
+      seed.spec.ts          # Quality seed (requires kit)
+  docs/
+    seed.spec.ts            # Docs seed
+```
+
+**Nested Seeding Pattern:**
+
+- Tests organized hierarchically: `sketchpad → kit → {design, type, quality, ...}`
+- Each `seed.spec.ts` creates minimum state for child tests
+- Seeds run sequentially to build required state
+- Feature tests depend on their app's seed completing first
+
+**Rules:**
+
+1. **ID Locators Only**: `page.locator('[id="semio.sketchpad.navbar.back"]')`
+   - NEVER use text selectors, CSS classes, or other brittle selectors
+   - IDs follow pattern `semio.sketchpad.{path}`
+   - Ensures stable selectors across UI changes
+
+2. **No Direct Browser API**: Only interact through Sketchpad UI elements
+   - NEVER use `window.`, `document.`, or DOM manipulation
+   - Ensures tests work in browser, Electron, and future platforms
+   - All interactions via locators and page actions
+
+3. **Minimal Seeding**: Each seed creates bare minimum for subtests
+   - Kit seed: Creates kit, one type, one design
+   - Design seed: Creates design in existing kit
+   - Feature tests: Use seeded state, add only what's needed
+
+4. **Comment Dependencies**: Start feature tests with `// Requires {app} seed to run first`
+
+**Example Seed Pattern:**
+
+```typescript
+test.describe("design", () => {
+  test("seed", async ({ page }) => {
+    // Requires kit seed to run first
+    await page.goto("http://localhost:5173");
+    await page.locator("#semio\\.sketchpad\\.app\\.home\\.createKit").click();
+    await page.locator("#semio\\.sketchpad\\.app\\.kit\\.kitApp\\.createDesign").click();
+    await expect(page.getByText("New Design")).toBeVisible();
+  });
+});
+```
+
+**Example Feature Test:**
+
+```typescript
+test("drag type from workbench to canvas", async ({ page }) => {
+  // Requires design seed to run first
+  await page.goto("http://localhost:5173");
+  await page.locator('[id="semio.sketchpad.app.home.createTemporary"]').click();
+  // ... test implementation
+});
+```
+
+### VS Code Extension Tests
+
+**Location:** `js/vscode/extension.test.ts`
+
+**Framework:** VS Code Test Runner
+
+**Rules:**
+
+- Test validation against real VS Code API
+- Use fixture files from `assets/semio/`
+- Test Quick Fixes apply correct diffs
+- Verify diagnostics appear at correct locations
+
+- `I18N`: Run `tsx scripts/i18n.ts` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
+
+- `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
+
+### Log System
+
+All development tasks are tracked via markdown logs with YAML frontmatter stored in a nested date-based structure.
+
+#### Directory Structure
+
+```
+log/
+  YEAR/
+    MONTH/
+      DAY/
+        SLUG.md
+```
+
+Example: `log/2025/11/24/VALIDATION-SYSTEM.md`
+
+#### Frontmatter Format
+
+Every log file MUST have YAML frontmatter:
+
+```yaml
+---
+date: TIMESTAMP # ISO 8601 timestamp (e.g., 2025-11-24T10:30:00.000Z)
+slug: SLUG # Kebab-case identifier (e.g., VALIDATION-SYSTEM)
+author: NAME <EMAIL> # From git config (e.g., "John Doe <john@example.com>")
+summary: SUMMARY # One-line description for commit messages
+model: MODEL # LLM model used (e.g., claude-sonnet-4.5)
+---
+```
+
+#### Script Usage
+
+**Create a new log:**
+
+```bash
+npx tsx scripts/log.ts create SLUG "Summary description"
+```
+
+**Read a log:**
+
+```bash
+npx tsx scripts/log.ts read YEAR MONTH DAY SLUG
+npx tsx scripts/log.ts read 2025 11 24 VALIDATION-SYSTEM
+```
+
+**List logs:**
+
+```bash
+npx tsx scripts/log.ts list              # All logs
+npx tsx scripts/log.ts list 2025         # Logs from 2025
+npx tsx scripts/log.ts list 2025 11      # Logs from November 2025
+npx tsx scripts/log.ts list 2025 11 24   # Logs from November 24, 2025
+```
+
+**Delete a log:**
+
+```bash
+npx tsx scripts/log.ts delete YEAR MONTH DAY SLUG
+```
+
+**Migrate old logs:**
+
+```bash
+npx tsx scripts/log.ts migrate
+```
+
+#### Programmatic Usage
+
+```typescript
+import { createLog, readLog, updateLog, deleteLog, listLogs } from "./scripts/log";
+
+// Create
+const log = createLog({
+  slug: "MY-TASK",
+  summary: "Implement new feature",
+  content: "# Task Details\n\nImplementation notes...",
+  date: new Date(), // Optional, defaults to now
+  model: "claude-sonnet-4.5", // Optional, defaults to SEMIO_MODEL env var
+  author: "Name <email>", // Optional, defaults to git config
+});
+
+// Read
+const log = readLog(2025, 11, 24, "MY-TASK");
+
+// Update
+updateLog(2025, 11, 24, "MY-TASK", {
+  summary: "Updated summary",
+  content: "New content",
+  model: "different-model",
+});
+
+// List with filters
+const logs = listLogs({ year: 2025, month: 11 });
+
+// Delete
+deleteLog(2025, 11, 24, "MY-TASK");
+```
+
+#### Environment Variables
+
+- `SEMIO_MODEL`: Default LLM model identifier (default: `claude-sonnet-4.5`)
+
+#### Git Configuration
+
+Author information is automatically retrieved from:
+
+- `git config --get user.name`
+- `git config --get user.email`
+
+Format: `Name <email>` or just `Name` or `email` depending on what's configured.
+
+### UI Component ID System
+
+Every interactive UI component MUST have a unique `id` prop following the pattern `semio.sketchpad.*`. This ID serves as the central integration point for **7 major subsystems**.
+
+#### ID Convention
+
+**Pattern:**
+
+```
+semio.sketchpad.<context>.<feature>.<component>
+```
+
+**Rules:**
+
+1. All IDs MUST start with `semio.sketchpad.`
+2. Use kebab-case for multi-word segments
+3. Follow hierarchical structure reflecting UI containment
+4. Only the final DOM element receives the `id` attribute
+
+**Examples:**
+
+```tsx
+// Navigation
+id = "semio.sketchpad.navbar.back";
+id = "semio.sketchpad.navbar.panelToggle.workbench";
+
+// App-specific
+id = "semio.sketchpad.app.kit.createType";
+id = "semio.sketchpad.app.design.panel.workbench.typeList";
+id = "semio.sketchpad.app.quality.panel.details.name";
+```
+
+#### Integration Points
+
+##### 1. Internationalization (i18n)
+
+**Location:** `js/js/sketchpad/locales/{lang}.json`
+
+Every ID automatically maps to translation keys with standard suffixes:
+
+- `.label.normal` - Standard label text
+- `.label.beginner` - Beginner-friendly description
+- `.manual` - Path to manual page (e.g., `"navigation"` → `/docs/manual/navigation`)
+- `.tutorial` - Path to tutorial (e.g., `"getting-started/intro"`)
+- `.hotkey` - Keyboard shortcut display (e.g., `"Ctrl+J"`)
+
+**Example translation:**
+
+```json
+{
+  "semio.sketchpad.navbar.back": {
+    "label": {
+      "normal": "Go back",
+      "beginner": "Click to go back, hold to see history"
+    },
+    "manual": "navigation",
+    "tutorial": "getting-started/intro",
+    "hotkey": "Alt+Left"
+  }
+}
+```
+
+**Usage in components:**
+
+```tsx
+// Automatic label via hook
+const label = useLabel("semio.sketchpad.navbar.back");
+
+// Auto-label prop
+<Input id="semio.sketchpad.app.quality.name" showLabel />;
+
+// Manual translation
+const { t } = useTranslation();
+const text = t("semio.sketchpad.navbar.back.label.normal");
+```
+
+**Validation:**
+
+- Script: `tsx scripts/i18n.ts`
+- Report: `agents/i18n.md`
+- Checks: missing keys, unused keys, incomplete translations
+
+##### 2. Tooltips
+
+**Components:**
+
+- `DescriptionTooltipContent` - Auto-resolves content from ID
+- `IdSemioTooltip` - Wrapper providing ID-based tooltip
+- `EnhancedTooltipContent` - Manual tooltip configuration
+
+**Mechanism:**
+
+```tsx
+function DescriptionTooltipContent({ id }) {
+  // Resolves based on expertise level:
+  // EXPERT: no tooltip
+  // NORMAL: .label.normal + .manual + .hotkey
+  // BEGINNER: .label.beginner + .manual + .tutorial + .hotkey
+}
+```
+
+**Usage:**
+
+```tsx
+// Automatic via wrapper
+<Input id="semio.sketchpad.app.quality.name" showLabel />
+
+// Manual tooltip
+<Tooltip>
+  <TooltipTrigger asChild>
+    <Button id="semio.sketchpad.navbar.back">...</Button>
+  </TooltipTrigger>
+  <TooltipContent>
+    <DescriptionTooltipContent id="semio.sketchpad.navbar.back" />
+  </TooltipContent>
+</Tooltip>
+
+// Wrapper shorthand
+<IdSemioTooltip id="semio.sketchpad.navbar.back">
+  <Button>...</Button>
+</IdSemioTooltip>
+```
+
+##### 3. Hotkeys
+
+**Location:** `js/js/sketchpad/App.tsx` (SketchpadStore)
+
+IDs serve as paths for hotkey configuration:
+
+- Path = UI element ID
+- Value = `react-hotkeys-hook` format (`ctrl+k`, `mod+j`, etc.)
+- Stored in `hotkeyOverrides: Map<HotkeyPath, HotkeyValue>`
+- Persisted via Y.js
+
+**Usage:**
+
+```tsx
+// Register hotkey
+useHotkeys("ctrl+j", () => togglePanel("workbench"));
+
+// Display in tooltip (automatic from i18n)
+// Shows hotkey from `${id}.hotkey`
+
+// Click hotkey to navigate to settings
+// Handled automatically by DescriptionTooltipContent
+```
+
+##### 4. Command Origins
+
+**Purpose:** Track which UI element triggered a command for logging, debugging, and undo/redo context.
+
+**Pattern:**
+
+```tsx
+// ALWAYS pass origin as first parameter
+executeCommand(
+  "semio.kitApp.addType", // command
+  "semio.sketchpad.app.kit.createType", // origin (matches button id)
+  typeData, // ...args
+);
+```
+
+**Origin extraction:**
+
+```tsx
+async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+  let origin: string | undefined;
+
+  // First arg is origin if it's a semio.sketchpad.* string
+  if (rest.length > 0 &&
+      typeof rest[0] === "string" &&
+      rest[0].startsWith("semio.sketchpad.")) {
+    origin = rest[0];
+    rest = rest.slice(1);
+  }
+
+  // Execute command with context
+  const result = callback(context, ...rest);
+
+  // Log with origin for debugging
+  console.log(`[${origin || "unknown"}] ${command}`, result);
+
+  return result;
+}
+```
+
+**Usage in components:**
+
+```tsx
+<Button
+  id="semio.sketchpad.app.kit.createType"
+  onClick={() =>
+    executeCommand(
+      "semio.kitApp.addType",
+      "semio.sketchpad.app.kit.createType", // origin = id
+      newTypeData,
+    )
+  }
+/>
+```
+
+##### 5. Tutorial Recording
+
+**Location:** `js/js/sketchpad/tutorials/`
+
+Command origins enable tutorial recording and playback:
+
+- Records sequence of commands with origins
+- Highlights UI elements during playback
+- Validates user actions match expected origins
+
+**Recording structure:**
+
+```typescript
+interface TutorialRecordingEvent {
+  timestamp: number;
+  command: string;
+  origin: string; // UI element ID
+  parameters: any[];
+}
+```
+
+**Playback:**
+
+```tsx
+<TutorialOverlay highlightedElementId={currentEvent.origin} description={t(`${currentEvent.origin}.label.beginner`)} />
+```
+
+##### 6. E2E Testing
+
+**Location:** `js/js/e2e/**/*.spec.ts`
+
+IDs provide stable selectors for Playwright tests:
+
+```typescript
+test("create type and design", async ({ page }) => {
+  // Create temporary kit
+  await page.locator('[id="semio.sketchpad.app.home.createTemporary"]').click();
+
+  // Create type
+  await page.locator('[id="semio.sketchpad.app.kit.kitApp.createType"]').click();
+
+  // Navigate back
+  await page.locator('[id="semio.sketchpad.navbar.back"]').click();
+
+  // Create design
+  await page.locator('[id="semio.sketchpad.app.kit.kitApp.createDesign"]').click();
+});
+```
+
+**Benefits:**
+
+- Stable selectors (don't break with CSS changes)
+- Semantic (reads like documentation)
+- Debuggable (clear which element failed)
+
+##### 7. Analytics & Logging
+
+Command origins provide analytics data:
+
+```typescript
+// All commands logged with origin
+console.log(`[DEBUG] [${origin}] Command: ${command}`, parameters);
+
+// Analytics event
+analytics.track("command_executed", {
+  command,
+  origin,
+  timestamp: Date.now(),
+});
+```
+
+#### Component Authoring
+
+**Required:**
+
+1. Every interactive component MUST have an `id` prop
+2. All `executeCommand` calls MUST include origin as first parameter
+
+**Optional:** 3. Use `showLabel` prop for auto-label from i18n 4. Use `DescriptionTooltipContent` for auto-tooltip
+
+**Component template:**
+
+```tsx
+interface MyComponentProps {
+  id: string; // Required
+  // ... other props
+}
+
+export function MyComponent({ id, ...props }: MyComponentProps) {
+  const label = useLabel(id);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          id={id}
+          onClick={() =>
+            executeCommand(
+              "my.command",
+              id, // origin
+              data,
+            )
+          }
+        >
+          {label}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <DescriptionTooltipContent id={id} />
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+```
+
+**Helper hook pattern:**
+
+```tsx
+const useCommandExecutor = (id: string) => {
+  return (command: string, ...args: any[]) => {
+    executeCommand(command, id, ...args);
+  };
+};
+
+// Usage
+const execute = useCommandExecutor("semio.sketchpad.app.kit.createType");
+<Button onClick={() => execute("semio.kitApp.addType", typeData)} />;
+```
+
+#### i18n Management
+
+**File structure:**
+
+```
+js/js/sketchpad/locales/
+  en.json
+  de.json
+```
+
+**Key structure (nested):**
+
+```json
+{
+  "semio": {
+    "sketchpad": {
+      "navbar": {
+        "back": {
+          "label": {
+            "normal": "Go back",
+            "beginner": "Click to go back, hold to see history"
+          },
+          "manual": "navigation",
+          "tutorial": "getting-started/intro",
+          "hotkey": "Alt+Left"
+        }
+      }
+    }
+  }
+}
+```
+
+**Adding new UI element:**
+
+1. Add component with `id` prop
+2. Add translation entry in `locales/en.json`
+3. Add translation entry in `locales/de.json`
+4. Run `tsx scripts/i18n.ts` to validate
+
+**Validation workflow:**
+
+```bash
+# 1. Run validation
+tsx scripts/i18n.ts
+
+# 2. Check report
+cat agents/i18n.md
+
+# 3. Fix issues in locale files
+
+# 4. Re-run validation
+tsx scripts/i18n.ts
+```
 
 ### Internationalization (i18n)
 
@@ -574,8 +1183,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ └── dependabot.yml
 ├── .vscode
 ├── agents # All temporary markdown documents for planning, diagnosing, implementing, … by and for agents.
-│ ├── i18n.md # i18n validation report produced by scripts/i18n.ps1
-│ └── DATE_SLUG.md # DATE is YEAR-MONTH-DAY and SLUG is a unique slug in CAPS-CASE.
+│ ├── i18n.md # i18n validation report produced by tsx scripts/i18n.ts
+│ └── \*.md # Other temporary markdown documents
 ├── antlr
 ├── assets # @semio/gh: assets for the complete repo
 │ ├── badges
@@ -604,9 +1213,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── js
 │ ├── ai
 │ ├── desktop
-│ │ └── package.json
+│ │ └── package.json # @semio/desktop
 │ ├── docs
-│ │ └── package.json
+│ │ └── package.json # @semio/docs
 │ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
 │ │ ├── .storybook
 │ │ ├── elements
@@ -757,6 +1366,11 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ └── play
 ├── jsonschema
 ├── liveblocks
+├── log # All development task logs organized by date
+│ ├── YEAR
+│ │ ├── MONTH
+│ │ │ ├── DAY
+│ │ │ │ └── SLUG.md # Log file with YAML frontmatter
 ├── meta
 ├── net
 │ ├── Semio
@@ -774,7 +1388,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── rb
 ├── rdf
 ├── scripts
-│ └── i18n.ps1
+│ ├── i18n.ts
+│ ├── log.ts
+│ └── utils.ts # General TypeScript utilities for scripts
 ├── sqlite
 ├── yak
 ├── .gitignore
@@ -787,8 +1403,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
-├── powershell.ps1 # General Powershell utility
-└── README.md # GFM dev docs
+├── README.md # GFM dev docs
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
 

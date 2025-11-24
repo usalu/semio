@@ -22,7 +22,7 @@
 
 import { MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, applyKitDiff, areKitsEqual, deepEqual, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane } from "./semio";
+import { applyDesignDiff, applyKitDiff, areKitsEqual, deepEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane, serializeKit } from "./semio";
 
 
 const TOLERANCE = 0.0001;
@@ -48,13 +48,13 @@ const centersEqual = (c1: { u: number, v: number } | undefined, c2: { u: number,
     return Math.abs(c1.u - c2.u) < TOLERANCE && Math.abs(c1.v - c2.v) < TOLERANCE;
 };
 
-describe("Kit Diff", () => {
+describe("Diffs", () => {
     const kitOriginal = MetabolismKit as any;
     const kitDiff = MetabolismKitDiff as any;
     const kitDiffInverted = MetabolismKitDiffInverted as any;
     const kitDiffed = MetabolismKitDiffed as any;
 
-    it("should compute identical diffs and apply them correctly with full round-trip integrity", () => {
+    it(" Kit + Diff = DiffedKit & DiffedKit + InverseDiff = Kit", () => {
         // Import actual diff functions from semio.ts
 
         // 1. Compute diff from original to diffed and verify it matches the generated diff exactly
@@ -90,74 +90,76 @@ describe("Kit Diff", () => {
 
 describe("flattenDesign", () => {
     const kit = MetabolismKit as Kit;
-    it("Nakagin Capsule Tower should flatten with correct planes and centers", () => {
-        const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower");
-        expect(design).toBeDefined();
-        const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-        expect(expectedDesign).toBeDefined();
-        const flatDesignDiff = flattenDesign(kit, design!.guid);
-        const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-        flatDesign!.pieces?.forEach((p) => {
-            const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-            expect(expectedPiece).toBeDefined();
-            expect(p.plane).toBeDefined();
-            expect(p.center).toBeDefined();
-            expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-            expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+    describe("Nakagin Capsule Tower", () => {
+        it("Normal", () => {
+            const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower");
+            expect(design).toBeDefined();
+            const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
+            expect(expectedDesign).toBeDefined();
+            const flatDesignDiff = flattenDesign(kit, design!.guid);
+            const flatDesign = applyDesignDiff(design!, flatDesignDiff);
+            flatDesign!.pieces?.forEach((p) => {
+                const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
+                expect(expectedPiece).toBeDefined();
+                expect(p.plane).toBeDefined();
+                expect(p.center).toBeDefined();
+                expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
+                expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+            });
         });
-    });
-    it("Slanted should flatten with correct planes and centers", () => {
-        const design = kit.designs?.find((d) => d.name === "Slanted");
-        expect(design).toBeDefined();
-        const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-        expect(expectedDesign).toBeDefined();
-        const flatDesignDiff = flattenDesign(kit, design!.guid);
-        const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-        flatDesign!.pieces?.forEach((p) => {
-            const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-            expect(expectedPiece).toBeDefined();
-            expect(p.plane).toBeDefined();
-            expect(p.center).toBeDefined();
-            expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-            expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+        it("Slanted", () => {
+            const design = kit.designs?.find((d) => d.name === "Slanted");
+            expect(design).toBeDefined();
+            const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
+            expect(expectedDesign).toBeDefined();
+            const flatDesignDiff = flattenDesign(kit, design!.guid);
+            const flatDesign = applyDesignDiff(design!, flatDesignDiff);
+            flatDesign!.pieces?.forEach((p) => {
+                const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
+                expect(expectedPiece).toBeDefined();
+                expect(p.plane).toBeDefined();
+                expect(p.center).toBeDefined();
+                expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
+                expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+            });
+        });
+
+        it("Twisted", () => {
+            const design = kit.designs?.find((d) => d.name === "Twisted");
+            expect(design).toBeDefined();
+            const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
+            expect(expectedDesign).toBeDefined();
+            const flatDesignDiff = flattenDesign(kit, design!.guid);
+            const flatDesign = applyDesignDiff(design!, flatDesignDiff);
+            flatDesign!.pieces?.forEach((p) => {
+                const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
+                expect(expectedPiece).toBeDefined();
+                expect(p.plane).toBeDefined();
+                expect(p.center).toBeDefined();
+                expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
+                expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+            });
+        });
+
+        it("Dancing", () => {
+            const design = kit.designs?.find((d) => d.name === "Dancing");
+            expect(design).toBeDefined();
+            const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
+            expect(expectedDesign).toBeDefined();
+            const flatDesignDiff = flattenDesign(kit, design!.guid);
+            const flatDesign = applyDesignDiff(design!, flatDesignDiff);
+            flatDesign!.pieces?.forEach((p) => {
+                const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
+                expect(expectedPiece).toBeDefined();
+                expect(p.plane).toBeDefined();
+                expect(p.center).toBeDefined();
+                expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
+                expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+            });
         });
     });
 
-    it("Twisted should flatten with correct planes and centers", () => {
-        const design = kit.designs?.find((d) => d.name === "Twisted");
-        expect(design).toBeDefined();
-        const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-        expect(expectedDesign).toBeDefined();
-        const flatDesignDiff = flattenDesign(kit, design!.guid);
-        const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-        flatDesign!.pieces?.forEach((p) => {
-            const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-            expect(expectedPiece).toBeDefined();
-            expect(p.plane).toBeDefined();
-            expect(p.center).toBeDefined();
-            expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-            expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-        });
-    });
-
-    it("Dancing should flatten with correct planes and centers", () => {
-        const design = kit.designs?.find((d) => d.name === "Dancing");
-        expect(design).toBeDefined();
-        const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-        expect(expectedDesign).toBeDefined();
-        const flatDesignDiff = flattenDesign(kit, design!.guid);
-        const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-        flatDesign!.pieces?.forEach((p) => {
-            const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-            expect(expectedPiece).toBeDefined();
-            expect(p.plane).toBeDefined();
-            expect(p.center).toBeDefined();
-            expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-            expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-        });
-    });
-
-    it("Capsule Dream should flatten with correct planes and centers", () => {
+    it("Capsule Dream", () => {
         const design = kit.designs?.find((d) => d.name === "Capsule Dream");
         expect(design).toBeDefined();
         const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
@@ -175,34 +177,24 @@ describe("flattenDesign", () => {
     });
 });
 
-describe("Kit Import/Export", () => {
-    it("should successfully roundtrip export and import a kit", async () => {
+describe("Import/Export", () => {
+    it("Kit -> JSON -> Kit", async () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const serializedKit = serializeKit(kit);
+        const deserializedKit = deserializeKit(serializedKit);
+        expect(areKitsEqual(kit, deserializedKit)).toBe(true);
+    });
+    it("Kit -> Zip -> Kit", async () => {
         const originalKit = MetabolismKit as unknown as Kit;
         const files = new Map<string, Blob>();
-
         const zipBlob = await exportKit(originalKit, files);
-
         expect(zipBlob).toBeInstanceOf(Blob);
         expect(zipBlob.size).toBeGreaterThan(0);
-
         const url = URL.createObjectURL(zipBlob);
-
         const { kit: importedKit, files: importedFiles } = await importKit(url);
-
         URL.revokeObjectURL(url);
-
         expect(areKitsEqual(originalKit, importedKit)).toBe(true);
-
         expect(importedFiles.size).toBe(files.size);
 
-        // Export to assets folder if running in export mode
-        if (process.env.EXPORT_TO_ASSETS === "true") {
-            const fs = await import("fs/promises");
-            const path = await import("path");
-            const buffer = Buffer.from(await zipBlob.arrayBuffer());
-            const outputPath = path.join(process.cwd(), "assets", "metabolism.zip");
-            await fs.writeFile(outputPath, buffer);
-            console.log(`[EXPORT] Wrote ${outputPath} (${(buffer.length / 1024).toFixed(2)} KB)`);
-        }
     });
 });

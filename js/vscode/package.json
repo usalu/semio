@@ -24,7 +24,7 @@
   "contributes": {},
   "scripts": {
     "build": "vite build",
-    "watch": "vite build --watch",
+    "dev": "vite build --watch",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {

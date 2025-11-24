@@ -9,6 +9,21 @@
     "dev": {
       "cache": false
     },
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "cache": true
+    },
+    "prepublish": {
+      "dependsOn": ["^prepublish"],
+      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "cache": true
+    },
+    "publish": {
+      "dependsOn": ["^publish"],
+      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "cache": true
+    },
     "update": {
       "dependsOn": ["^update"],
       "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],

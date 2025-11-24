@@ -1,0 +1,135 @@
+{
+    "guid": "019ab664-0000-0000-0000-000000000001",
+    "name": "Invalid Kit",
+    "types": [
+        {
+            "guid": "019ab664-1111-1111-1111-111111111111",
+            "name": "Duplicate Type Name",
+            "ports": [
+                {
+                    "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
+                    "name": "Duplicate Port Name",
+                    "point": {"x": 0, "y": 0, "z": 0},
+                    "direction": {"x": 0, "y": 1, "z": 0}
+                },
+                {
+                    "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+                    "name": "Duplicate Port Name",
+                    "point": {"x": 1, "y": 0, "z": 0},
+                    "direction": {"x": 0, "y": 1, "z": 0}
+                }
+            ],
+            "models": [
+                {
+                    "name": "Duplicate Model Name",
+                    "url": "model1.glb"
+                },
+                {
+                    "name": "Duplicate Model Name",
+                    "url": "model2.glb"
+                }
+            ]
+        },
+        {
+            "guid": "019ab664-2222-2222-2222-222222222222",
+            "name": "Duplicate Type Name"
+        }
+    ],
+    "designs": [
+        {
+            "guid": "019ab664-3333-3333-3333-333333333333",
+            "name": "Duplicate Design Name",
+            "pieces": [
+                {
+                    "guid": "019ab664-4444-4444-4444-444444444444",
+                    "name": "Duplicate Piece Name",
+                    "type": "019ab664-1111-1111-1111-111111111111",
+                    "plane": {
+                        "origin": {"x": 0, "y": 0, "z": 0},
+                        "xAxis": {"x": 1, "y": 0, "z": 0},
+                        "yAxis": {"x": 0, "y": 1, "z": 0}
+                    }
+                },
+                {
+                    "guid": "019ab664-5555-5555-5555-555555555555",
+                    "name": "Duplicate Piece Name",
+                    "type": "019ab664-2222-2222-2222-222222222222",
+                    "plane": {
+                        "origin": {"x": 5, "y": 0, "z": 0},
+                        "xAxis": {"x": 1, "y": 0, "z": 0},
+                        "yAxis": {"x": 0, "y": 1, "z": 0}
+                    }
+                }
+            ],
+            "layers": [
+                {
+                    "path": "Duplicate.Layer.Path"
+                },
+                {
+                    "path": "Duplicate.Layer.Path"
+                }
+            ]
+        },
+        {
+            "guid": "019ab664-6666-6666-6666-666666666666",
+            "name": "Duplicate Design Name"
+        }
+    ],
+    "qualities": [
+        {
+            "guid": "019ab664-7777-7777-7777-777777777777",
+            "name": "Duplicate Quality Name",
+            "key": "duplicate-quality"
+        },
+        {
+            "guid": "019ab664-8888-8888-8888-888888888888",
+            "name": "Duplicate Quality Name",
+            "key": "duplicate-quality-2"
+        }
+    ],
+    "interfaces": [
+        {
+            "guid": "019ab664-9999-9999-9999-999999999999",
+            "name": "Duplicate Interface Name"
+        },
+        {
+            "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
+            "name": "Duplicate Interface Name"
+        }
+    ],
+    "files": [
+        {
+            "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",
+            "path": "duplicate-file.txt",
+            "remoteUrl": "file1.txt"
+        },
+        {
+            "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
+            "path": "duplicate-file.txt",
+            "remoteUrl": "file2.txt"
+        }
+    ],
+    "folders": [
+        {
+            "guid": "019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000",
+            "path": "duplicate-folder"
+        },
+        {
+            "guid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
+            "path": "duplicate-folder"
+        }
+    ],
+    "connections": [
+        {
+            "guid": "019ab664-3333-3333-3333-333333333333",
+            "connected": {
+                "piece": "019ab664-4444-4444-4444-444444444444",
+                "port": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+            },
+            "connecting": {
+                "piece": "019ab664-5555-5555-5555-555555555555",
+                "port": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+            }
+        }
+    ]
+}

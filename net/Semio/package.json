@@ -4,7 +4,7 @@
   "sourceRoot": "net/Semio",
   "projectType": "library",
   "scripts": {
-    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+    "build": "tsx ./build.ts"
   },
   "devDependencies": {
     "@semio/assets": "*"

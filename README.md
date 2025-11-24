@@ -683,9 +683,9 @@ For a complete setup you need:
 
 If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
 
-Afterwards you can install poetry with this Powershell command:
+Afterwards you can install poetry with this command:
 
-```powershell
+```bash
 (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
 ```
 
@@ -693,14 +693,7 @@ In the console you will see a warning that the `poetry.exe` is not installed in 
 ![Actual Location](poetry/python_ms-store_location.png)
 Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation...\Roaming\pypoetry\venv\Scripts` and add it to your environmental path variable ➕
 
-Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
-
-If you have never executed local Powershell before then you have to first [Set-ExecutionPolicy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy) ⚠️
-If you don't care just run:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
-```
+Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 # 🪄 [AI](AGENTS.md) [↑](#-development-)
 
@@ -863,6 +856,9 @@ This generally reduces the amount of accidental waste that is included in large 
 
 </details>
 
+All automation, CI runs, and agent workflows are controlled through the six commands `dev`, `build`, `test`, `update`, `prepublish`, and `publish`. The root `package.json` forwards each command to `npx nx run-many -t <target>`, so every project executes the same target and inherits the dependency chain defined in `nx.json`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `prepublish` stages a fresh build before a `publish`, and `publish` can wrap the project-specific delivery steps while still returning control. The `prepublish` step already pushes artifacts to the shared test registry used by our package managers so downstream targets can install against that snapshot before any final release.
+Packages should keep the commands they already expose rather than inventing new ones.
+
 # ♻️ Ecosystems [↑](#-overview)
 
 <details>
@@ -963,6 +959,42 @@ Currently only [engine](#️-semioengine-) but in the future it might grow and t
 # 📦 Components [↑](#-overview)
 
 A component is a piece of software which is packaged independently 🏝️
+
+## ✅ Validation System [↑](#-components-)
+
+Semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
+
+**11 Validation Rules:**
+1. **GUID Uniqueness** - All GUIDs must be unique globally
+2. **Type Name Uniqueness** - Sibling types must have unique names
+3. **Design Name Uniqueness** - Sibling designs must have unique names
+4. **Piece Name Uniqueness** - Pieces in a design must have unique names
+5. **Quality Name Uniqueness** - All qualities must have unique names
+6. **Interface Name Uniqueness** - All interfaces must have unique names
+7. **File Name Uniqueness** - All files must have unique names
+8. **Folder Name Uniqueness** - Sibling folders must have unique names
+9. **Port Name Uniqueness** - Ports in a type must have unique names
+10. **Model Name Uniqueness** - Models in a type must have unique names
+11. **Layer Path Uniqueness** - Layers in a design must have unique paths
+
+**Platform Integrations:**
+- **VS Code Extension** - JSON linter with Quick Fixes
+- **Sketchpad UI** - In-app validation panel (planned)
+- **CLI** - Command-line validation tool (planned)
+- **Backend** - API validation endpoint (planned)
+
+**Usage:**
+```typescript
+import { validateSemioKit, applyKitDiff } from "@semio/js/semio";
+
+const result = validateSemioKit(kit);
+if (result.issues.length > 0) {
+  const fix = result.issues[0].fixes[0];
+  const fixedKit = applyKitDiff(kit, fix.diff);
+}
+```
+
+See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js) [↑](#-components-)
 

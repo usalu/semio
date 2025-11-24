@@ -13,11 +13,12 @@
 		"noEmit": true
 	},
 	"include": [
-		"src/**/*"
+		"extension.test.ts",
+		"extension.ts",
 	],
 	"exclude": [
 		"node_modules",
 		"out",
-		"src/test"
+		"test"
 	]
 }

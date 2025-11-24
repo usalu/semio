@@ -4,7 +4,7 @@
   "sourceRoot": "net/Semio.Grasshopper",
   "projectType": "application",
   "scripts": {
-    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+    "build": "tsx ./build.ts"
   },
   "devDependencies": {
     "@semio/net": "*"

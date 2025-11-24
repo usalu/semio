@@ -1,1 +1,0 @@
-& magick convert -compress DWAB -resize 512x512 "temp\environment.hdr"

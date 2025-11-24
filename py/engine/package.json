@@ -4,9 +4,9 @@
   "sourceRoot": "py/engine",
   "projectType": "application",
   "scripts": {
-    "dev": "powershell -ExecutionPolicy Bypass -File ./dev.ps1",
-    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
-    "test": "powershell -ExecutionPolicy Bypass -File ./test.ps1"
+    "dev": "tsx ./dev.ts",
+    "build": "tsx ./build.ts",
+    "test": "tsx ./test.ts"
   },
   "targets": {
     "update": {

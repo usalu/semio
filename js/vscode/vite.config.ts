@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import { defineConfig } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, "src/extension.ts"),
+      entry: path.resolve(__dirname, "extension.ts"),
       formats: ["cjs"],
       fileName: () => "extension",
     },

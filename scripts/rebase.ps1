@@ -1,1 +1,0 @@
-git rebase -i -S HEAD~2
