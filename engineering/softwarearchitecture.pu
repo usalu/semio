@@ -881,4 +881,70 @@ Kit *-- "0..*" Attribute : has >
 Kit *-- "0..*" File : includes >
 ' #endregion Relationships
 
+' #region Validation
+class SemioValidationContext {
+  kit: Kit
+  typesByGuid: Map<Guid, Type>
+  designsByGuid: Map<Guid, Design>
+  piecesByGuid: Map<Guid, Piece>
+  portsByTypeGuid: Map<Guid, Port[]>
+  modelsByTypeGuid: Map<Guid, Model[]>
+}
+
+class SemioValidationIssue {
+  ruleId: str
+  severity: SemioValidationSeverity
+  message: str
+  location: SemioDomainLocation
+  relatedGuids: Guid[]
+  fixes: SemioKitFix[]
+}
+
+class SemioKitFix {
+  title: str
+  diff: KitDiff
+}
+
+class SemioDomainLocation {
+  entityKind: SemioEntityKind
+  entityGuid: Guid
+  field: str
+}
+
+enum SemioValidationSeverity {
+  error
+  warning
+}
+
+enum SemioEntityKind {
+  Kit
+  Type
+  Design
+  Piece
+  Connection
+  Port
+  Quality
+  Interface
+  File
+  Folder
+  Model
+  Layer
+  Group
+  Stat
+}
+
+interface SemioValidationRule {
+  validate(ctx: SemioValidationContext): SemioValidationIssue[]
+}
+
+SemioValidationContext --> Kit
+SemioValidationIssue *-- SemioDomainLocation
+SemioValidationIssue *-- "1..*" SemioKitFix
+SemioKitFix --> KitDiff
+SemioDomainLocation --> SemioEntityKind
+SemioValidationIssue --> SemioValidationSeverity
+SemioValidationRule ..> SemioValidationContext
+SemioValidationRule ..> SemioValidationIssue
+' #endregion Validation
+
 @enduml

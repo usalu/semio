@@ -190,6 +190,261 @@ A `stat` is a statistical measurement on a `design` that references a `quality` 
 
 Stats provide computed or measured performance data for entire designs using the quality framework.
 
+# Validation
+
+## Overview
+
+Semio includes a **domain-pure validation system** built entirely in `semio.ts` with **zero JSON dependencies**. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
+
+## Architecture
+
+### Layer 1: Domain Logic (`semio.ts`)
+
+- **100% JSON-agnostic** - No JSON paths, parsing, or serialization logic
+- **Pure functions** - All validation is deterministic and side-effect free
+- **Diff-based fixes** - Every fix is a `KitDiff` that can be applied, inverted, and merged
+- **Reusable everywhere** - Works in Sketchpad UI, CLI, backend, VS Code, and any other platform
+
+### Layer 2: Platform Integrations
+
+Each platform provides its own thin wrapper:
+
+- **VS Code Extension** (`js/vscode`) - JSON linter with Quick Fixes
+- **Sketchpad UI** - In-app validation panel
+- **CLI** - Command-line validation tool
+- **Backend** - API validation endpoint
+
+## Validation Types
+
+### Core Types
+
+```typescript
+type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Port" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+type SemioValidationSeverity = "error" | "warning";
+
+interface SemioDomainLocation {
+  entityKind: SemioEntityKind;
+  entityGuid?: Guid;
+  field?: string;
+}
+
+interface SemioKitFix {
+  title: string;
+  diff: KitDiff;
+}
+
+interface SemioValidationIssue {
+  ruleId: string;
+  severity: SemioValidationSeverity;
+  message: string;
+  location: SemioDomainLocation;
+  relatedGuids?: Guid[];
+  fixes: SemioKitFix[];
+}
+
+interface SemioValidationResult {
+  issues: SemioValidationIssue[];
+}
+```
+
+### Validation Context
+
+```typescript
+interface SemioValidationContext {
+  kit: Kit;
+  typesByGuid: Map<Guid, Type>;
+  designsByGuid: Map<Guid, Design>;
+  piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
+  portsByTypeGuid: Map<Guid, Port[]>;
+  modelsByTypeGuid: Map<Guid, Model[]>;
+}
+```
+
+## Validation Rules
+
+All validation rules follow the pattern:
+
+```typescript
+type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
+```
+
+### Default Rules
+
+#### 1. GUID Uniqueness (`guid-unique`)
+
+**Severity:** Error
+
+All GUIDs must be unique across the entire kit, including:
+
+- Kit
+- Types
+- Designs
+- Pieces
+- Connections
+- Stats
+- Qualities
+- Interfaces
+- Files
+- Folders
+
+**Fix:** Regenerates a new GUID and updates all references throughout the kit.
+
+#### 2. Type Name Uniqueness (`type-name-unique`)
+
+**Severity:** Error
+
+Types with the same parent must have unique names.
+
+**Fix:** Renames the type with a unique suffix (e.g., "Wall 2", "Wall 3").
+
+#### 3. Design Name Uniqueness (`design-name-unique`)
+
+**Severity:** Error
+
+Designs with the same parent must have unique names.
+
+**Fix:** Renames the design with a unique suffix.
+
+#### 4. Piece Name Uniqueness (`piece-name-unique`)
+
+**Severity:** Error
+
+Pieces within a design must have unique names.
+
+**Fix:** Renames the piece with a unique suffix.
+
+#### 5. Quality Name Uniqueness (`quality-name-unique`)
+
+**Severity:** Error
+
+All qualities within a kit must have unique names.
+
+**Fix:** Renames the quality with a unique suffix.
+
+#### 6. Interface Name Uniqueness (`interface-name-unique`)
+
+**Severity:** Error
+
+All interfaces within a kit must have unique names.
+
+**Fix:** Renames the interface with a unique suffix.
+
+#### 7. File Name Uniqueness (`file-name-unique`)
+
+**Severity:** Error
+
+All files within a kit must have unique names.
+
+**Fix:** Renames the file with a unique suffix.
+
+#### 8. Folder Name Uniqueness (`folder-name-unique`)
+
+**Severity:** Error
+
+Folders with the same parent must have unique names.
+
+**Fix:** Renames the folder with a unique suffix.
+
+#### 9. Port Name Uniqueness (`port-name-unique`)
+
+**Severity:** Error
+
+Ports within a type must have unique names.
+
+**Fix:** Renames the port with a unique suffix.
+
+#### 10. Model Name Uniqueness (`model-name-unique`)
+
+**Severity:** Error
+
+Models within a type must have unique names.
+
+**Fix:** Renames the model with a unique suffix.
+
+#### 11. Layer Path Uniqueness (`layer-path-unique`)
+
+**Severity:** Error
+
+Layer paths within a design must be unique.
+
+**Fix:** Renames the layer path with a unique suffix.
+
+## Uniqueness Requirements Summary
+
+| Entity     | Scope                  | Field | Rule ID               |
+| ---------- | ---------------------- | ----- | --------------------- |
+| Kit        | Global                 | guid  | guid-unique           |
+| Type       | Siblings (same parent) | name  | type-name-unique      |
+| Type       | Global                 | guid  | guid-unique           |
+| Design     | Siblings (same parent) | name  | design-name-unique    |
+| Design     | Global                 | guid  | guid-unique           |
+| Piece      | Within design          | name  | piece-name-unique     |
+| Piece      | Global                 | guid  | guid-unique           |
+| Connection | Global                 | guid  | guid-unique           |
+| Port       | Within type            | name  | port-name-unique      |
+| Model      | Within type            | name  | model-name-unique     |
+| Quality    | Global                 | name  | quality-name-unique   |
+| Quality    | Global                 | guid  | guid-unique           |
+| Interface  | Global                 | name  | interface-name-unique |
+| Interface  | Global                 | guid  | guid-unique           |
+| File       | Global                 | name  | file-name-unique      |
+| File       | Global                 | guid  | guid-unique           |
+| Folder     | Siblings (same parent) | name  | folder-name-unique    |
+| Folder     | Global                 | guid  | guid-unique           |
+| Layer      | Within design          | path  | layer-path-unique     |
+| Stat       | Global                 | guid  | guid-unique           |
+
+## Usage
+
+### In Domain Code
+
+```typescript
+const result = validateSemioKit(kit);
+if (hasSemioErrors(result)) {
+  console.error("Validation errors found:", result.issues);
+}
+```
+
+### Applying Fixes
+
+```typescript
+const issue = result.issues[0];
+const fix = issue.fixes[0];
+const fixedKit = applyKitDiff(kit, fix.diff);
+```
+
+### Custom Validation
+
+```typescript
+const customRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  // Custom validation logic
+  return issues;
+};
+
+const result = validateSemioKit(kit, {
+  rules: [...defaultSemioValidationRules, customRule],
+});
+```
+
+## Creating New Rules
+
+1. Define the rule function following `SemioValidationRule` signature
+2. Use `semioMakeFix` helper to generate `KitDiff`-based fixes
+3. Add to `defaultSemioValidationRules` array
+4. Document in this section
+
+Example:
+
+```typescript
+export const semioCustomRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  // Validation logic
+  // Use semioMakeFix to create fixes
+  return issues;
+};
+```
+
 # Monorepo
 
 ## Rules

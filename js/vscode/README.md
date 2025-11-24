@@ -2,6 +2,8 @@
 
 Validation and linting for Semio kit JSON files.
 
+> **📖 For complete validation documentation, see [`VALIDATION.md`](../../VALIDATION.md) in the repository root.**
+
 ## Features
 
 ### Automatic Validation
@@ -23,29 +25,21 @@ All fixes are **diff-based**, meaning they use the same `KitDiff` system as the 
 
 ## Validation Rules
 
-### GUID Uniqueness (`guid-unique`)
+The extension implements **11 validation rules**:
 
-**Severity:** Error
+1. **GUID Uniqueness** - All GUIDs must be unique
+2. **Type Name Uniqueness** - Sibling types must have unique names
+3. **Design Name Uniqueness** - Sibling designs must have unique names
+4. **Piece Name Uniqueness** - Pieces in a design must have unique names
+5. **Quality Name Uniqueness** - All qualities must have unique names
+6. **Interface Name Uniqueness** - All interfaces must have unique names
+7. **File Name Uniqueness** - All files must have unique names
+8. **Folder Name Uniqueness** - Sibling folders must have unique names
+9. **Port Name Uniqueness** - Ports in a type must have unique names
+10. **Model Name Uniqueness** - Models in a type must have unique names
+11. **Layer Path Uniqueness** - Layers in a design must have unique paths
 
-Ensures all entity GUIDs are unique across the entire kit.
-
-**Quick Fix:** Regenerates a new GUID and updates all references.
-
-### Design Sibling Name Uniqueness (`design-sibling-name-unique`)
-
-**Severity:** Error
-
-Ensures designs with the same parent have unique names.
-
-**Quick Fix:** Renames the design with a unique suffix (e.g., "Wall 2", "Wall 3").
-
-### Piece Name Uniqueness (`piece-name-unique-in-design`)
-
-**Severity:** Error
-
-Ensures pieces within a design have unique names.
-
-**Quick Fix:** Renames the piece with a unique suffix.
+See [`VALIDATION.md`](../../VALIDATION.md) for detailed rule descriptions and scope information.
 
 ## Architecture
 
@@ -69,26 +63,40 @@ This extension is a **minimal JSON linter** that:
 
 ```bash
 npm install
-npm run build
+npm run compile
 ```
 
-Or use the **"dev vscode"** launch configuration from the Run and Debug panel in VS Code (F5).
+Press `F5` in VS Code to launch an Extension Development Host window with the extension loaded.
 
 ## Testing
 
 The extension validates any JSON file matching:
 
 - `kit_*.json`
-- `*_kit.json`  
+- `*_kit.json`
 - `kit.json`
 
 Create test files with intentional errors to verify validation works.
 
-## Future Enhancements
+Example test cases:
 
-- More validation rules (port references, type references, etc.)
-- Batch fixes (fix all issues at once)
-- Performance optimizations (incremental validation)
-- Configuration options (enable/disable specific rules)
-- Custom rule plugins
+- Duplicate GUIDs
+- Duplicate names (types, designs, pieces, etc.)
+- Invalid references
 
+## Files
+
+- `src/extension.ts` - Main extension logic
+- `package.json` - Extension manifest and dependencies
+
+## Dependencies
+
+- `@semio/js` - Core Semio domain logic (validation, diffs, serialization)
+- `jsonc-parser` - JSON parsing with comment support
+- `vscode` - VS Code extension API
+
+## Related Documentation
+
+- [**VALIDATION.md**](../../VALIDATION.md) - Complete validation system documentation
+- [**AGENTS.md**](../../AGENTS.md#validation) - Validation specs and architecture
+- [`agents/2025-11-23_validation-system.md`](../../agents/2025-11-23_validation-system.md) - Implementation details

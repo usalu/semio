@@ -3,12 +3,14 @@
 ## Analysis
 
 ### Current State
+
 - Metabolism.json is the correct source of truth
 - Three placeholder assets exist: MetabolismKitDiff, MetabolismKitDiffInverted, MetabolismKitDiffed
 - Test verifies diff operations work correctly (compute diff, inverse diff, apply diff)
 - Import/export may lose information or violate schema
 
 ### Goals
+
 1. Generate MetabolismKitDiff with comprehensive changes using all kit diff features
 2. Generate MetabolismKitDiffInverted (inverse of the diff)
 3. Generate MetabolismKitDiffed (result of applying diff to original)
@@ -37,6 +39,7 @@ Create `scripts/generate-metabolism-diff.ts` to:
 ### 2. Fix Schema/Import/Export Issues
 
 Based on test failures, identify and fix:
+
 - Missing fields in JSON schema
 - Data loss during export/import
 - Type mismatches
@@ -45,6 +48,7 @@ Based on test failures, identify and fix:
 ### 3. Validate
 
 Run tests until all assertions pass:
+
 - Computed diff matches generated diff
 - Computed inverse diff matches generated inverse diff
 - Applying forward diff produces expected result

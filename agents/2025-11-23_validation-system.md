@@ -40,11 +40,48 @@ JSON-aware linter:
 2. ✅ Add validation context & engine
 3. ✅ Add fix helper
 4. ✅ Implement GUID uniqueness rule
-5. ✅ Implement design sibling name rule
-6. ✅ Implement piece name uniqueness rule
-7. ✅ Register default rules
-8. ✅ Implement VS Code extension
-9. ✅ Update extension package.json
+5. ✅ Implement type name uniqueness rule
+6. ✅ Implement design name uniqueness rule
+7. ✅ Implement piece name uniqueness rule
+8. ✅ Implement quality name uniqueness rule
+9. ✅ Implement interface name uniqueness rule
+10. ✅ Implement file name uniqueness rule
+11. ✅ Implement folder name uniqueness rule
+12. ✅ Implement port name uniqueness rule
+13. ✅ Implement model name uniqueness rule
+14. ✅ Implement layer path uniqueness rule
+15. ✅ Register all default rules
+16. ✅ Implement VS Code extension
+17. ✅ Update extension package.json
+18. ✅ Update AGENTS.md with validation specs
+19. ✅ Update engineering files (softwarearchitecture.pu)
+20. ✅ Create central VALIDATION.md
+21. ✅ Update VS Code README to reference central docs
+
+## Validation Rules Implemented
+
+### Name Uniqueness Rules (11 total)
+
+All implemented rules follow the same pattern:
+
+- Collect entities by scope (global, siblings, within parent)
+- Group by name/path
+- Find duplicates
+- Generate fixes with `semioMakeFix` and `generateUniqueName`
+
+| Rule                    | Scope         | Field | Status         |
+| ----------------------- | ------------- | ----- | -------------- |
+| `guid-unique`           | Global        | guid  | ✅ Implemented |
+| `type-name-unique`      | Siblings      | name  | ✅ Implemented |
+| `design-name-unique`    | Siblings      | name  | ✅ Implemented |
+| `piece-name-unique`     | Within design | name  | ✅ Implemented |
+| `quality-name-unique`   | Global        | name  | ✅ Implemented |
+| `interface-name-unique` | Global        | name  | ✅ Implemented |
+| `file-name-unique`      | Global        | name  | ✅ Implemented |
+| `folder-name-unique`    | Siblings      | name  | ✅ Implemented |
+| `port-name-unique`      | Within type   | name  | ✅ Implemented |
+| `model-name-unique`     | Within type   | name  | ✅ Implemented |
+| `layer-path-unique`     | Within design | path  | ✅ Implemented |
 
 ## Key Design Decisions
 
@@ -119,11 +156,22 @@ const codeActions = result.issues.flatMap(issueToCodeActions);
 
 ### Domain Logic (`js/js/semio.ts`)
 
-Added ~270 lines of pure validation logic:
+Added ~550 lines of pure validation logic:
 
 - **Core Types** (7 types): `SemioEntityKind`, `SemioValidationSeverity`, `SemioDomainLocation`, `SemioKitFix`, `SemioValidationIssue`, `SemioValidationResult`, `SemioValidationContext`
 - **Engine** (5 functions): `buildSemioValidationContext`, `validateSemioKit`, `semioMakeFix`, `hasSemioErrors`, `updateGuidEverywhere`
-- **Rules** (3 rules): `semioGuidUniquenessRule`, `semioDesignSiblingNameRule`, `semioPieceNameInDesignRule`
+- **Rules** (11 rules):
+  - `semioGuidUniquenessRule`
+  - `semioTypeNameUniquenessRule`
+  - `semioDesignNameUniquenessRule`
+  - `semioPieceNameUniquenessRule`
+  - `semioQualityNameUniquenessRule`
+  - `semioInterfaceNameUniquenessRule`
+  - `semioFileNameUniquenessRule`
+  - `semioFolderNameUniquenessRule`
+  - `semioPortNameUniquenessRule`
+  - `semioModelNameUniquenessRule`
+  - `semioLayerPathUniquenessRule`
 
 ### VS Code Extension (`js/vscode`)
 
@@ -136,10 +184,14 @@ Added ~280 lines of JSON-aware linting:
 
 ### Files Modified
 
-1. `js/js/semio.ts` - Added validation system after Kit Import/Export section
-2. `js/vscode/src/extension.ts` - Complete rewrite with validation logic
+1. `js/js/semio.ts` - Added validation system after Kit Import/Export section (~550 lines)
+2. `js/vscode/src/extension.ts` - Complete rewrite with validation logic (~280 lines)
 3. `js/vscode/package.json` - Updated metadata and added dependencies
-4. `js/vscode/README.md` - Complete documentation
+4. `js/vscode/README.md` - Updated with references to central documentation
+5. `VALIDATION.md` - Central validation documentation (new file)
+6. `AGENTS.md` - Added validation section with complete rule documentation
+7. `engineering/softwarearchitecture.pu` - Added validation class diagram
+8. `agents/2025-11-23_validation-system.md` - This planning document
 
 ## Testing
 
