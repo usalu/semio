@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { execSync } from "child_process";
-import { rmSync, existsSync } from "fs";
+import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
 const submodulePath = process.argv[2] || "examples/geometry";

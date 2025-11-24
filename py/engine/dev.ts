@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { stopProcessOnPort, runProcess } from "../../scripts/utils";
+import { runProcess, stopProcessOnPort } from "../../scripts/utils";
 
 stopProcessOnPort(2507); // engine
 stopProcessOnPort(5678); // debugger

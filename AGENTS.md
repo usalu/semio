@@ -496,11 +496,67 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 
 - `FIX`: Anaylze and fix the problem imediatley in one step (without any approval). When you are not sure about the root cause, pick the most likely one and try to implement the solution directly.
 
-- `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, temporary code, …
+- `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, and temporary code.
 
-- `I18N`: Run `tsx scripts/i18n.ts` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
+- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
 
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
+
+## CI/CD
+
+### Pre-commit Hooks
+
+All commits are validated using pre-commit hooks. Install with:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+### Available Hooks
+
+1. **Prettier** - Formats JavaScript/TypeScript/JSON/YAML/Markdown
+2. **Ruff** - Lints and formats Python code
+3. **i18n Validation** - Validates translation keys and completeness
+4. **TypeScript Check** - Runs TypeScript compiler without emitting files
+5. **ESLint** - Lints JavaScript/TypeScript code
+6. **File Checks** - Trailing whitespace, line endings, merge conflicts, etc.
+
+### Reports
+
+All linters and validators generate reports in `reports/`:
+
+- `reports/i18n.md` - i18n translation validation
+- `reports/prettier.md` - Prettier formatting issues
+- `reports/eslint.md` - ESLint linting issues
+- `reports/typescript.md` - TypeScript compiler errors
+- `reports/ruff.md` - Python Ruff linting issues
+
+Reports are gitignored (except README) and regenerated on each hook run.
+
+### Manual Hook Execution
+
+Run individual hooks manually:
+
+```bash
+npx tsx hooks/i18n.ts        # i18n validation
+npx tsx hooks/prettier.ts    # Prettier check
+npx tsx hooks/eslint.ts      # ESLint check
+npx tsx hooks/typescript.ts  # TypeScript check
+npx tsx hooks/ruff.ts        # Ruff check
+```
+
+Or run all hooks:
+
+```bash
+pre-commit run --all-files
+```
+
+### Hook Configuration
+
+- **Location**: `hooks/*.ts` - TypeScript hook scripts
+- **Config**: `.pre-commit-config.yaml` - Pre-commit configuration
+- **Reports**: `reports/*.md` - Generated reports (gitignored)
 
 ## Testing
 
@@ -611,7 +667,7 @@ test("drag type from workbench to canvas", async ({ page }) => {
 - Test Quick Fixes apply correct diffs
 - Verify diagnostics appear at correct locations
 
-- `I18N`: Run `tsx scripts/i18n.ts` to produce a report in `agents/i18n.md`. ALWAYS fix all translation issues from report and rerun the script to produce new reports until all issues are resolved. ALWAYS add all missing keys, update all incomplete keys, remove all unused keys, …
+- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
 
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
 
@@ -805,7 +861,7 @@ const text = t("semio.sketchpad.navbar.back.label.normal");
 **Validation:**
 
 - Script: `tsx scripts/i18n.ts`
-- Report: `agents/i18n.md`
+- Report: `reports/i18n.md`
 - Checks: missing keys, unused keys, incomplete translations
 
 ##### 2. Tooltips
@@ -1102,7 +1158,7 @@ js/js/sketchpad/locales/
 tsx scripts/i18n.ts
 
 # 2. Check report
-cat agents/i18n.md
+cat reports/i18n.md
 
 # 3. Fix issues in locale files
 
@@ -1181,10 +1237,21 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── workflows
 │ │ └── gh-pages.yml # Deploy user docs togh-pages
 │ └── dependabot.yml
+├── hooks # Pre-commit hook scripts
+│ ├── i18n.ts # i18n validation hook
+│ ├── prettier.ts # Prettier format check hook
+│ ├── eslint.ts # ESLint linting hook
+│ ├── typescript.ts # TypeScript compiler check hook
+│ └── ruff.ts # Python Ruff linter hook
+├── reports # Generated validation reports (gitignored except README.md)
+│ ├── README.md # Reports documentation
+│ ├── i18n.md # i18n validation report
+│ ├── prettier.md # Prettier format check report
+│ ├── eslint.md # ESLint linting report
+│ ├── typescript.md # TypeScript compiler report
+│ └── ruff.md # Python Ruff linter report
 ├── .vscode
-├── agents # All temporary markdown documents for planning, diagnosing, implementing, … by and for agents.
-│ ├── i18n.md # i18n validation report produced by tsx scripts/i18n.ts
-│ └── \*.md # Other temporary markdown documents
+│ └── \*.md # Temporary markdown documents
 ├── antlr
 ├── assets # @semio/gh: assets for the complete repo
 │ ├── badges
@@ -1366,7 +1433,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ └── play
 ├── jsonschema
 ├── liveblocks
-├── log # All development task logs organized by date
+├── log # All logs of development tasks by and for agents organized by date
 │ ├── YEAR
 │ │ ├── MONTH
 │ │ │ ├── DAY

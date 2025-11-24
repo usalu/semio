@@ -1,7 +1,30 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('design', () => {
-  test('drag type from workbench to canvas', async ({ page }) => {
+test.describe('Design', () => {
+  test('seed', async ({ page }) => {
+    // Requires kit seed to run first
+
+    // 1. Navigate to http://localhost:5173
+    await page.goto('http://localhost:5173');
+    await page.waitForLoadState('networkidle');
+
+    // 2. Create a kit if not exists
+    await page.locator('#semio\\.sketchpad\\.app\\.home\\.createKit').click();
+    await page.waitForTimeout(1000);
+
+    // 3. Create a design
+    await page.locator('#semio\\.sketchpad\\.app\\.kit\\.kitApp\\.createDesign').click();
+    await page.waitForTimeout(1000);
+
+    // 4. Verify the design app loaded with diagram canvas
+    await expect(page.getByText('diagram')).toBeVisible();
+    await expect(page.getByText('New Design')).toBeVisible();
+
+    // Verify we're in the design app (application elements visible)
+    const canvas = page.locator('application').first();
+    await expect(canvas).toBeVisible();
+  });
+  test('Drag and Drop Pieces', async ({ page }) => {
     // Requires design seed to run first
 
     // 1. Navigate to http://localhost:5173 and set up

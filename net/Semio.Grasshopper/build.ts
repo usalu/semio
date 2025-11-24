@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { execSync } from "child_process";
-import { existsSync, mkdirSync, rmSync, copyFileSync, readdirSync } from "fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "fs";
 import { join } from "path";
 
 const cwd = __dirname;

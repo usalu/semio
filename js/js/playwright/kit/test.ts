@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-test.describe('kit', () => {
+test.describe('Kit', () => {
   test('seed', async ({ page }) => {
     // 1. Navigate to http://localhost:5173
     await page.goto('http://localhost:5173');

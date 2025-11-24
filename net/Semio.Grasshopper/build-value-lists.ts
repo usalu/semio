@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
-import { join } from "path";
 import { parse } from "csv-parse/sync";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
 const buildDir = join(__dirname, "build");
 if (!existsSync(buildDir)) {
@@ -16,11 +16,11 @@ function convertCsvToValueList(
 ): void {
   const csvContent = readFileSync(csvPath, "utf-8");
   const records = parse(csvContent, { columns: true, skip_empty_lines: true });
-  
+
   const lines = records.map((record: any) => {
     return `${record[keyColumn]} = "${record[valueColumn]}"`;
   });
-  
+
   writeFileSync(outputPath, lines.join("\n"), "utf-8");
 }
 

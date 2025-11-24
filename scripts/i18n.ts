@@ -1,11 +1,11 @@
 #!/usr/bin/env tsx
-import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { readdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const rootDir = join(__dirname, "..");
 const localesDir = join(rootDir, "js", "js", "sketchpad", "locales");
 const sketchpadDir = join(rootDir, "js", "js", "sketchpad");
-const reportPath = join(rootDir, "agents", "i18n.md");
+const reportPath = join(rootDir, "reports", "i18n.md");
 
 interface Translation {
   [key: string]: string | Translation;
@@ -34,7 +34,7 @@ const de = loadTranslations("de");
 function findIdsInFile(filePath: string): Set<string> {
   const content = readFileSync(filePath, "utf-8");
   const ids = new Set<string>();
-  
+
   // Match id="..." or id='...' or id={...}
   const idPattern = /id\s*=\s*["'`{]([^"'`}]+)["'`}]/g;
   let match;
@@ -44,7 +44,7 @@ function findIdsInFile(filePath: string): Set<string> {
       ids.add(id);
     }
   }
-  
+
   return ids;
 }
 

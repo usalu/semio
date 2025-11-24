@@ -1,5 +1,5 @@
-import { execSync, spawn, ChildProcess } from "child_process";
-import { readFileSync, writeFileSync, readdirSync, statSync, unlinkSync, renameSync } from "fs";
+import { ChildProcess, execSync, spawn } from "child_process";
+import { readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path";
 import sharp from "sharp";
 
