@@ -11223,19 +11223,18 @@ export const LayoutCanvas: FC<{
           return normalized;
         };
 
-        const rawConfig = layoutState || windowConfig.defaultLayout || createDefaultLayout(windowConfig.windowKinds.map((wt) => wt.id));
+        const rawConfig = layoutState || windowConfig.defaultLayout;
+        if (!rawConfig) {
+          console.error("[LayoutCanvas] No layout config provided!");
+          return;
+        }
         const config = normalizeLayoutConfig(rawConfig);
-
-        console.log("[LayoutCanvas] Initializing GoldenLayout with config:", { rawConfig, config, windowKinds: windowConfig.windowKinds.map((wt) => wt.id) });
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
 
-        console.log("[LayoutCanvas] About to register components:", windowConfig.windowKinds);
         windowConfig.windowKinds.forEach((windowType) => {
-          console.log("[LayoutCanvas] Calling layout.registerComponent for:", windowType.id);
           layout.registerComponent(windowType.id, (container: any, componentState: any) => {
-            console.log("[LayoutCanvas] Component instance created:", windowType.id);
             const element = container.getElement();
             let domElement: HTMLElement;
 

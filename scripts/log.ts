@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, unlinkSync } from "fs";
-import { join, dirname } from "path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "fs";
+import { dirname, join } from "path";
 const matter = require("gray-matter");
 
 //#region Types

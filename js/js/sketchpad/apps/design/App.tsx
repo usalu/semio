@@ -45,7 +45,7 @@ import { Guid, KitDiff, PieceDiff } from "../../../semio";
 import type { DesignStore, KitStore, SketchpadStore } from "../../App";
 import { identitySelector, KitDiffAppStore, registerDesignAppStoreFactory, useDesignScope, useKitScope, useSketchpadStore, useSync, useSyncDeep } from "../../App";
 import type { AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createDefaultLayout, createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
+import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
 
 // #endregion Store
 
@@ -6202,7 +6202,37 @@ const App: FC<AppProps> = () => {
   const storedWindowLayout = useDesignApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([DesignAppWindowKind.Diagram, DesignAppWindowKind.Scene], "row", [70, 30]);
+    return {
+      root: {
+        type: "row",
+        content: [
+          {
+            type: "stack",
+            width: 70,
+            content: [
+              {
+                type: "component",
+                componentName: DesignAppWindowKind.Diagram,
+                title: "Diagram",
+                componentState: {},
+              },
+            ],
+          },
+          {
+            type: "stack",
+            width: 30,
+            content: [
+              {
+                type: "component",
+                componentName: DesignAppWindowKind.Scene,
+                title: "Scene",
+                componentState: {},
+              },
+            ],
+          },
+        ],
+      },
+    };
   }, []);
 
   // Validate layout has Scene window - if not, use undefined to trigger default
@@ -6264,6 +6294,7 @@ const App: FC<AppProps> = () => {
       windowLayout,
       defaultLayout,
       willUseDefault: windowLayout === undefined,
+      finalLayout: windowLayout || defaultLayout,
     });
   }, [windowLayout, defaultLayout]);
 

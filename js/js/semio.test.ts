@@ -21,9 +21,8 @@
 // #endregion
 
 import { MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
-import { writeFileSync } from "fs";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, applyKitDiff, areKitsEqual, deepEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane, serializeKit } from "./semio";
+import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane, serializeKit } from "./semio";
 
 
 const TOLERANCE = 0.0001;
@@ -50,66 +49,20 @@ const centersEqual = (c1: { u: number, v: number } | undefined, c2: { u: number,
 };
 
 describe("Diffs", () => {
-    const kitOriginal = MetabolismKit as any;
+    const kitOriginal = { ...MetabolismKit as any, designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent) };
     const kitDiff = MetabolismKitDiff as any;
     const kitDiffInverted = MetabolismKitDiffInverted as any;
     const kitDiffed = MetabolismKitDiffed as any;
 
     it(" Kit + Diff = DiffedKit & DiffedKit + InverseDiff = Kit", () => {
-        // Import actual diff functions from semio.ts
-
-        // 1. Compute diff from original to diffed and verify it matches the generated diff exactly
         const computedDiff = getKitDiff(kitOriginal, kitDiffed);
-        if (!deepEqual(computedDiff, kitDiff)) {
-            console.log("[DEBUG] [KIT-DIFF-TEST] Computed diff does not match expected diff");
-            console.log("[DEBUG] [KIT-DIFF-TEST] Computed keys:", Object.keys(computedDiff));
-            console.log("[DEBUG] [KIT-DIFF-TEST] Expected keys:", Object.keys(kitDiff));
-            const allKeys = new Set([...Object.keys(computedDiff), ...Object.keys(kitDiff)]);
-            for (const key of allKeys) {
-                if (!deepEqual((computedDiff as any)[key], (kitDiff as any)[key])) {
-                    console.log(`[DEBUG] [KIT-DIFF-TEST] Difference in key: ${key}`);
-                    console.log("[DEBUG] [KIT-DIFF-TEST] Computed:", JSON.stringify((computedDiff as any)[key], null, 2).substring(0, 500));
-                    console.log("[DEBUG] [KIT-DIFF-TEST] Expected:", JSON.stringify((kitDiff as any)[key], null, 2).substring(0, 500));
-                }
-            }
-        }
-        expect(deepEqual(computedDiff, kitDiff)).toBe(true);
-
-        // 2. Compute inverse diff from diffed to original and verify it matches the generated inverse exactly
+        expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);
         const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
-        expect(deepEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
-
-        // 3. Apply forward diff to original and verify result matches diffed kit exactly
+        expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
         const appliedForward = applyKitDiff(kitOriginal, kitDiff);
-        expect(deepEqual(JSON.parse(JSON.stringify(appliedForward)), JSON.parse(JSON.stringify(kitDiffed)))).toBe(true);
-
-        // 4. Apply inverse diff to diffed kit and verify result matches original exactly
+        expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
         const appliedInverse = applyKitDiff(kitDiffed, kitDiffInverted);
-        const normalizedInverse = JSON.parse(JSON.stringify(appliedInverse));
-        const normalizedOriginal = JSON.parse(JSON.stringify(kitOriginal));
-        // Sort arrays by guid for order-independent comparison
-        const sortByGuid = (arr: any[]) => arr ? [...arr].sort((a, b) => (a.guid || '').localeCompare(b.guid || '')) : arr;
-        if (normalizedInverse.types) normalizedInverse.types = sortByGuid(normalizedInverse.types);
-        if (normalizedOriginal.types) normalizedOriginal.types = sortByGuid(normalizedOriginal.types);
-        if (normalizedInverse.designs) normalizedInverse.designs = sortByGuid(normalizedInverse.designs);
-        if (normalizedOriginal.designs) normalizedOriginal.designs = sortByGuid(normalizedOriginal.designs);
-        if (normalizedInverse.qualities) normalizedInverse.qualities = sortByGuid(normalizedInverse.qualities);
-        if (normalizedOriginal.qualities) normalizedOriginal.qualities = sortByGuid(normalizedOriginal.qualities);
-        if (normalizedInverse.files) normalizedInverse.files = sortByGuid(normalizedInverse.files);
-        if (normalizedOriginal.files) normalizedOriginal.files = sortByGuid(normalizedOriginal.files);
-        if (normalizedInverse.folders) normalizedInverse.folders = sortByGuid(normalizedInverse.folders);
-        if (normalizedOriginal.folders) normalizedOriginal.folders = sortByGuid(normalizedOriginal.folders);
-        if (normalizedInverse.authors) normalizedInverse.authors = sortByGuid(normalizedInverse.authors);
-        if (normalizedOriginal.authors) normalizedOriginal.authors = sortByGuid(normalizedOriginal.authors);
-        if (normalizedInverse.interfaces) normalizedInverse.interfaces = sortByGuid(normalizedInverse.interfaces);
-        if (normalizedOriginal.interfaces) normalizedOriginal.interfaces = sortByGuid(normalizedOriginal.interfaces);
-        const isEqualStep4 = deepEqual(normalizedInverse, normalizedOriginal);
-        if (!isEqualStep4) {
-            writeFileSync("../../temp/step4-sorted-inverse.json", JSON.stringify(normalizedInverse, null, 2));
-            writeFileSync("../../temp/step4-sorted-original.json", JSON.stringify(normalizedOriginal, null, 2));
-            console.log("[DEBUG] Step 4 still fails after sorting");
-        }
-        expect(isEqualStep4).toBe(true);
+        expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
     });
 });
 
@@ -128,6 +81,16 @@ describe("flattenDesign", () => {
                 expect(expectedPiece).toBeDefined();
                 expect(p.plane).toBeDefined();
                 expect(p.center).toBeDefined();
+                if (!planesEqual(p.plane, expectedPiece!.plane)) {
+                    console.log('[DEBUG] [FLATTEN] Plane mismatch for', p.name);
+                    console.log('[DEBUG] [FLATTEN]   Computed:', p.plane);
+                    console.log('[DEBUG] [FLATTEN]   Expected:', expectedPiece!.plane);
+                }
+                if (!centersEqual(p.center, expectedPiece!.center)) {
+                    console.log('[DEBUG] [FLATTEN] Center mismatch for', p.name);
+                    console.log('[DEBUG] [FLATTEN]   Computed:', p.center);
+                    console.log('[DEBUG] [FLATTEN]   Expected:', expectedPiece!.center);
+                }
                 expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
                 expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
             });

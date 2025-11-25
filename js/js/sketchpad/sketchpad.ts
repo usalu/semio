@@ -638,13 +638,17 @@ export interface AppWindowProps {
     className?: string;
 }
 
-export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[]): any {
+export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): any {
     return {
         type: direction === "row" ? "row" : "column",
         content: windowIds.map((id, index) => ({
-            type: "component",
-            componentName: id,
-            componentState: {},
+            type: "stack",
+            content: [{
+                type: "component",
+                componentName: id,
+                title: titles && titles[index] ? titles[index] : id,
+                componentState: {},
+            }],
             ...(sizes && sizes[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
         })),
     };

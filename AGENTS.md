@@ -2468,8 +2468,8 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 6. Rotation
 7. Turn
 8. Tilt
-9. X
-10. Y
+9. U
+10. V
 11. Description
 12. Attributes
 

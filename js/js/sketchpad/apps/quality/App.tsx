@@ -1777,12 +1777,12 @@ const App: FC<AppProps> = () => {
   const windowLayout = useQualityApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80]);
+    return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80], ["Formula", "Diagram"]);
   }, []);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
-      windowTypes: [
+      windowKinds: [
         {
           id: QualityAppWindowKind.Formula,
           label: "Formula",

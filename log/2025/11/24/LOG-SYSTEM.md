@@ -20,6 +20,7 @@ Expanded the log system from flat file structure to a nested date-based hierarch
 ### 1. Created `scripts/log.ts`
 
 Complete log management script with:
+
 - **CRUD Operations**: create, read, update, delete, list
 - **YAML Frontmatter**: Metadata tracking for date, slug, author, summary, model
 - **Date-based Structure**: `log/YEAR/MONTH/DAY/SLUG.md`
@@ -44,11 +45,11 @@ Every log file now has YAML frontmatter:
 
 ```yaml
 ---
-date: TIMESTAMP           # ISO 8601 timestamp
-slug: SLUG                # Kebab-case identifier
-author: NAME <EMAIL>      # From git config
-summary: SUMMARY          # One-line description
-model: MODEL              # LLM model identifier
+date: TIMESTAMP # ISO 8601 timestamp
+slug: SLUG # Kebab-case identifier
+author: NAME <EMAIL> # From git config
+summary: SUMMARY # One-line description
+model: MODEL # LLM model identifier
 ---
 ```
 
@@ -65,6 +66,7 @@ npx tsx scripts/log.ts migrate
 ### 4. Migration Complete
 
 Migrated 31 existing logs from flat structure:
+
 - Old: `log/2025-11-24_SLUG.md`
 - New: `log/2025/11/24/SLUG.md`
 
@@ -75,6 +77,7 @@ All logs now have proper YAML frontmatter with metadata.
 #### `AGENTS.md`
 
 Added comprehensive "Log System" section covering:
+
 - Directory structure
 - Frontmatter format
 - Script usage (CLI and programmatic)
@@ -105,21 +108,25 @@ Added `gray-matter` for YAML frontmatter parsing.
 ## Usage Examples
 
 ### Create a log
+
 ```bash
 npx tsx scripts/log.ts create MY-TASK "Implement new feature"
 ```
 
 ### Read a log
+
 ```bash
 npx tsx scripts/log.ts read 2025 11 24 MY-TASK
 ```
 
 ### List logs from November 2025
+
 ```bash
 npx tsx scripts/log.ts list 2025 11
 ```
 
 ### Programmatic usage
+
 ```typescript
 import { createLog, listLogs } from "./scripts/log";
 
@@ -136,16 +143,16 @@ const logs = listLogs({ year: 2025, month: 11 });
 
 - Created: `scripts/log.ts`
 - Modified: `AGENTS.md` (log system documentation, file structure, general rules)
-- Modified: `.gitignore` (allow log directory, ignore *.log files)
+- Modified: `.gitignore` (allow log directory, ignore \*.log files)
 - Migrated: 31 log files to new structure
 - Added: `package.json` dependency on `gray-matter`
 
 ## Future Enhancements
 
 Potential improvements:
+
 - Log templates for common task types
 - Integration with commit messages
 - Search functionality across logs
 - Summary generation from logs
 - Export to other formats (PDF, HTML)
-

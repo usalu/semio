@@ -3110,7 +3110,7 @@ const App: FC = () => {
   const windowLayout = useTypeApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([TypeAppWindowKind.Scene]);
+    return createDefaultLayout([TypeAppWindowKind.Scene], "row", undefined, ["Scene"]);
   }, []);
 
   const windowConfig: AppWindowConfig = useMemo(() => {

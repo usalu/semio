@@ -24,7 +24,7 @@
           "ports": {
             "added": [
               {
-                "guid": "019ab6f8-5113-72cb-b23e-2ef031865c02",
+                "guid": "019ab86d-925c-77db-88d6-9f366c102b99",
                 "name": "new-port",
                 "point": {
                   "x": 1,
@@ -46,16 +46,16 @@
     ],
     "added": [
       {
-        "guid": "019ab6f8-5113-72cb-b23e-3336b2591d6c",
+        "guid": "019ab86d-925c-77db-88d6-a051a5506e8c",
         "name": "New Test Type",
         "virtual": true,
         "unit": "mm",
         "description": "A new type added for testing",
-        "createdAt": "2025-11-24T17:45:18.355Z",
-        "updatedAt": "2025-11-24T17:45:18.355Z",
+        "createdAt": "2025-11-25T00:32:59.996Z",
+        "updatedAt": "2025-11-25T00:32:59.996Z",
         "ports": [
           {
-            "guid": "019ab6f8-5113-72cb-b23e-350f2fa13e2d",
+            "guid": "019ab86d-925c-77db-88d6-a48f9a839f71",
             "name": "test-port",
             "point": {
               "x": 0,
@@ -80,14 +80,14 @@
     ],
     "updated": [
       {
-        "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
+        "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
         "diff": {
-          "name": "Slanted Modified",
+          "name": "Capsule Dream Modified",
           "description": "Updated design description",
           "pieces": {
             "added": [
               {
-                "guid": "019ab6f8-5113-72cb-b23e-3918ed396e9e",
+                "guid": "019ab86d-925d-7628-b247-432c49243c6b",
                 "type": {
                   "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
                 },
@@ -117,15 +117,15 @@
     ],
     "added": [
       {
-        "guid": "019ab6f8-5113-72cb-b23e-3fe1bb03b1fd",
+        "guid": "019ab86d-925d-7628-b247-4464eb248bad",
         "name": "New Test Design",
         "unit": "mm",
         "description": "A new design added for testing",
-        "createdAt": "2025-11-24T17:45:18.355Z",
-        "updatedAt": "2025-11-24T17:45:18.355Z",
+        "createdAt": "2025-11-25T00:32:59.997Z",
+        "updatedAt": "2025-11-25T00:32:59.997Z",
         "pieces": [
           {
-            "guid": "019ab6f8-5113-72cb-b23e-40afb3b007ff",
+            "guid": "019ab86d-925d-7628-b247-4b4f5f76a013",
             "type": {
               "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
             },
@@ -155,7 +155,7 @@
   "interfaces": {
     "added": [
       {
-        "guid": "019ab6f8-5113-72cb-b23e-447307a99503",
+        "guid": "019ab86d-925d-7628-b247-4e822fa39ea7",
         "name": "Test Interface",
         "description": "A new interface for testing",
         "icon": "test-icon.svg"
@@ -165,11 +165,11 @@
   "folders": {
     "added": [
       {
-        "guid": "019ab6f8-5113-72cb-b23e-49556724b3b6",
+        "guid": "019ab86d-925d-7628-b247-50bafa320219",
         "name": "test-folder",
         "description": "A new folder for testing",
-        "createdAt": "2025-11-24T17:45:18.355Z",
-        "updatedAt": "2025-11-24T17:45:18.355Z"
+        "createdAt": "2025-11-25T00:32:59.997Z",
+        "updatedAt": "2025-11-25T00:32:59.997Z"
       }
     ]
   },
@@ -179,7 +179,7 @@
     ],
     "added": [
       {
-        "guid": "019ab6f8-5113-72cb-b23e-4c2cca67a58b",
+        "guid": "019ab86d-925d-7628-b247-5661f9a5149b",
         "name": "Test Author",
         "email": "test@example.com"
       }
@@ -188,7 +188,7 @@
   "attributes": {
     "added": [
       {
-        "guid": "019ab6f8-5113-72cb-b23e-5046f19bc9c3",
+        "guid": "019ab86d-925d-7628-b247-58426d9751c3",
         "key": "test.attribute",
         "value": "test value",
         "definition": "A test attribute"

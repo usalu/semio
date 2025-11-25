@@ -758,13 +758,17 @@ export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): Loc
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Location = {
     longitude: diff.longitude ?? base.longitude,
     latitude: diff.latitude ?? base.latitude,
     altitude: diff.altitude ?? base.altitude,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 // #endregion Location
@@ -799,12 +803,17 @@ export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDif
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Author = {
+    guid: base.guid,
     name: diff.name ?? base.name,
     email: diff.email ?? base.email,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const AuthorsDiffSchema = z.object({
@@ -867,18 +876,21 @@ export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
   return { ...diff1, ...diff2 };
 };
 export const applyFileDiff = (base: File, diff: FileDiff): File => {
-  return {
-    ...base,
+  const result: File = {
+    guid: base.guid,
     name: diff.name ?? base.name,
-    remote: diff.remote ?? base.remote,
-    size: diff.size ?? base.size,
-    hash: diff.hash ?? base.hash,
-    createdAt: diff.createdAt ?? base.createdAt,
-    createdBy: diff.createdBy ?? base.createdBy,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-    updatedBy: diff.updatedBy ?? base.updatedBy,
-    folder: diff.folder ?? base.folder,
   };
+
+  if (diff.remote !== undefined || base.remote !== undefined) result.remote = diff.remote ?? base.remote;
+  if (diff.size !== undefined || base.size !== undefined) result.size = diff.size ?? base.size;
+  if (diff.hash !== undefined || base.hash !== undefined) result.hash = diff.hash ?? base.hash;
+  if (diff.createdAt !== undefined || base.createdAt !== undefined) result.createdAt = diff.createdAt ?? base.createdAt;
+  if (diff.createdBy !== undefined || base.createdBy !== undefined) result.createdBy = diff.createdBy ?? base.createdBy;
+  if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
+  if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
+  if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
+
+  return result;
 };
 
 export const FilesDiffSchema = z.object({
@@ -939,17 +951,22 @@ export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDif
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Folder = {
+    guid: base.guid,
     name: diff.name ?? base.name,
-    parent: diff.parent ?? base.parent,
-    description: diff.description ?? base.description,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
-    createdAt: diff.createdAt ?? base.createdAt,
-    createdBy: diff.createdBy ?? base.createdBy,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-    updatedBy: diff.updatedBy ?? base.updatedBy,
   };
+
+  if (diff.parent !== undefined || base.parent !== undefined) result.parent = diff.parent ?? base.parent;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+  if (diff.createdAt !== undefined || base.createdAt !== undefined) result.createdAt = diff.createdAt ?? base.createdAt;
+  if (diff.createdBy !== undefined || base.createdBy !== undefined) result.createdBy = diff.createdBy ?? base.createdBy;
+  if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
+  if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
+
+  return result;
 };
 
 export const FoldersDiffSchema = z.object({
@@ -983,16 +1000,21 @@ export const BenchmarkDiffSchema = BenchmarkSchema.partial().omit({ attributes: 
 });
 export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
 export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchmark => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Benchmark = {
+    guid: base.guid,
     name: diff.name ?? base.name,
-    icon: diff.icon ?? base.icon,
-    min: diff.min ?? base.min,
-    minExcluded: diff.minExcluded ?? base.minExcluded,
-    max: diff.max ?? base.max,
-    maxExcluded: diff.maxExcluded ?? base.maxExcluded,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
+  if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
+  if (diff.minExcluded !== undefined || base.minExcluded !== undefined) result.minExcluded = diff.minExcluded ?? base.minExcluded;
+  if (diff.max !== undefined || base.max !== undefined) result.max = diff.max ?? base.max;
+  if (diff.maxExcluded !== undefined || base.maxExcluded !== undefined) result.maxExcluded = diff.maxExcluded ?? base.maxExcluded;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): BenchmarkDiff => {
   const diff: BenchmarkDiff = {};
@@ -1183,28 +1205,35 @@ export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): Qualit
   };
 };
 export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
-  return {
-    ...base,
+  const benchmarks = diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Quality = {
+    guid: base.guid,
     key: diff.key ?? base.key,
     name: diff.name ?? base.name,
-    description: diff.description ?? base.description,
-    uri: diff.uri ?? base.uri,
-    kind: diff.kind ?? base.kind,
-    canScale: diff.canScale ?? base.canScale,
-    defaultSiUnit: diff.defaultSiUnit ?? base.defaultSiUnit,
-    defaultImperialUnit: diff.defaultImperialUnit ?? base.defaultImperialUnit,
-    min: diff.min ?? base.min,
-    isMinExcluded: diff.isMinExcluded ?? base.isMinExcluded,
-    max: diff.max ?? base.max,
-    isMaxExcluded: diff.isMaxExcluded ?? base.isMaxExcluded,
-    defaultValue: diff.defaultValue ?? base.defaultValue,
-    formula: diff.formula ?? base.formula,
-    icon: diff.icon ?? base.icon,
-    image: diff.image ?? base.image,
-    unit: diff.unit ?? base.unit,
-    benchmarks: diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : base.benchmarks,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (diff.uri !== undefined || base.uri !== undefined) result.uri = diff.uri ?? base.uri;
+  if (diff.kind !== undefined || base.kind !== undefined) result.kind = diff.kind ?? base.kind;
+  if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
+  if (diff.canScale !== undefined || base.canScale !== undefined) result.canScale = diff.canScale ?? base.canScale;
+  if (diff.defaultSiUnit !== undefined || base.defaultSiUnit !== undefined) result.defaultSiUnit = diff.defaultSiUnit ?? base.defaultSiUnit;
+  if (diff.defaultImperialUnit !== undefined || base.defaultImperialUnit !== undefined) result.defaultImperialUnit = diff.defaultImperialUnit ?? base.defaultImperialUnit;
+  if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
+  if (diff.isMinExcluded !== undefined || base.isMinExcluded !== undefined) result.isMinExcluded = diff.isMinExcluded ?? base.isMinExcluded;
+  if (diff.max !== undefined || base.max !== undefined) result.max = diff.max ?? base.max;
+  if (diff.isMaxExcluded !== undefined || base.isMaxExcluded !== undefined) result.isMaxExcluded = diff.isMaxExcluded ?? base.isMaxExcluded;
+  if (diff.defaultValue !== undefined || base.defaultValue !== undefined) result.defaultValue = diff.defaultValue ?? base.defaultValue;
+  if (diff.formula !== undefined || base.formula !== undefined) result.formula = diff.formula ?? base.formula;
+  if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
+  if (diff.image !== undefined || base.image !== undefined) result.image = diff.image ?? base.image;
+  if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
+  if (benchmarks && benchmarks.length > 0) result.benchmarks = benchmarks;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const QualitiesDiffSchema = z.object({
@@ -1261,14 +1290,19 @@ export const mergeInterfaceDiff = (diff1: InterfaceDiff, diff2: InterfaceDiff): 
   };
 };
 export const applyInterfaceDiff = (base: Interface, diff: InterfaceDiff): Interface => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Interface = {
+    guid: base.guid,
     name: diff.name ?? base.name,
-    description: diff.description ?? base.description,
-    icon: diff.icon ?? base.icon,
-    compatibleInterfaces: diff.compatibleInterfaces ?? base.compatibleInterfaces,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
+  if (diff.compatibleInterfaces !== undefined || base.compatibleInterfaces !== undefined) result.compatibleInterfaces = diff.compatibleInterfaces ?? base.compatibleInterfaces;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const InterfacesDiffSchema = z.object({
@@ -1385,13 +1419,18 @@ export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Prop = {
+    guid: base.guid,
     quality: diff.quality ?? base.quality,
-    value: diff.value ?? base.value,
-    unit: diff.unit ?? base.unit,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.value !== undefined || base.value !== undefined) result.value = diff.value ?? base.value;
+  if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const PropsDiffSchema = z.object({
@@ -1502,14 +1541,19 @@ export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff =>
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
-  return {
-    ...base,
-    name: diff.name ?? base.name,
-    tags: diff.tags ?? base.tags,
-    file: diff.file ?? base.file,
-    description: diff.description ?? base.description,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Model = {
+    guid: base.guid,
   };
+
+  if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
+  if (diff.tags !== undefined || base.tags !== undefined) result.tags = diff.tags ?? base.tags;
+  if (diff.file !== undefined || base.file !== undefined) result.file = diff.file ?? base.file;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const ModelsDiffSchema = z.object({
@@ -1627,18 +1671,24 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
   return inverse;
 };
 export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
-  return {
-    ...base,
-    name: diff.name ?? base.name,
-    description: diff.description ?? base.description,
-    interface: diff.interface ?? base.interface,
-    mandatory: diff.mandatory ?? base.mandatory,
-    t: diff.t ?? base.t,
+  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Port = {
+    guid: base.guid,
     point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
     direction: diff.direction ? applyVectorDiff(base.direction, diff.direction) : base.direction,
-    props: diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (diff.interface !== undefined || base.interface !== undefined) result.interface = diff.interface ?? base.interface;
+  if (diff.mandatory !== undefined || base.mandatory !== undefined) result.mandatory = diff.mandatory ?? base.mandatory;
+  if (diff.t !== undefined || base.t !== undefined) result.t = diff.t ?? base.t;
+  if (props && props.length > 0) result.props = props;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const PortsDiffSchema = z.object({
@@ -1858,6 +1908,14 @@ export const TypeDiffSchema = TypeSchema.partial().omit({ models: true, ports: t
   ports: PortsDiffSchema.optional(),
   props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
+  description: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  location: LocationIdSchema.nullable().optional(),
+  folder: z.string().nullable().optional(),
+  concepts: z.array(z.string()).nullable().optional(),
+  authors: z.array(AuthorIdSchema).nullable().optional(),
+  parent: TypeIdSchema.nullable().optional(),
 });
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
 export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
@@ -1887,28 +1945,39 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
 };
 
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
-  return {
-    ...base,
+  const models = diff.models || base.models ? applyCollectionDiff(base.models ?? [], diff.models, applyModelDiff) : undefined;
+  const ports = diff.ports || base.ports ? applyCollectionDiff(base.ports ?? [], diff.ports, applyPortDiff) : undefined;
+  const props = diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : undefined;
+  const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
+
+  const result: Type = {
+    guid: base.guid,
     name: diff.name ?? base.name,
-    parent: diff.parent !== undefined ? diff.parent : base.parent,
     isAbstract: diff.isAbstract ?? base.isAbstract,
-    folder: diff.folder !== undefined ? diff.folder : base.folder,
-    stock: diff.stock !== undefined ? diff.stock : base.stock,
-    virtual: diff.virtual ?? base.virtual,
-    unit: diff.unit !== undefined ? diff.unit : base.unit,
-    location: diff.location !== undefined ? diff.location : base.location,
-    icon: diff.icon !== undefined ? diff.icon : base.icon,
-    image: diff.image !== undefined ? diff.image : base.image,
-    description: diff.description !== undefined ? diff.description : base.description,
-    authors: diff.authors !== undefined ? diff.authors : base.authors,
-    concepts: diff.concepts !== undefined ? diff.concepts : base.concepts,
-    models: diff.models || base.models ? applyCollectionDiff(base.models ?? [], diff.models, applyModelDiff) : base.models,
-    ports: diff.ports || base.ports ? applyCollectionDiff(base.ports ?? [], diff.ports, applyPortDiff) : base.ports,
-    props: diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : base.props,
-    attributes: diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : base.attributes,
     createdAt: diff.createdAt ?? base.createdAt,
     updatedAt: diff.updatedAt ?? base.updatedAt,
   };
+
+  // Optional fields - only include if defined
+  if (diff.parent !== undefined ? (diff.parent ?? undefined) : base.parent) result.parent = diff.parent !== undefined ? (diff.parent ?? undefined) : base.parent;
+  if (diff.folder !== undefined ? (diff.folder ?? undefined) : base.folder) result.folder = diff.folder !== undefined ? (diff.folder ?? undefined) : base.folder;
+  if (diff.stock !== undefined ? diff.stock : base.stock) result.stock = diff.stock !== undefined ? diff.stock : base.stock;
+  if (diff.virtual ?? base.virtual) result.virtual = diff.virtual ?? base.virtual;
+  if (diff.unit !== undefined ? diff.unit : base.unit) result.unit = diff.unit !== undefined ? diff.unit : base.unit;
+  if (diff.location !== undefined ? (diff.location ?? undefined) : base.location) result.location = diff.location !== undefined ? (diff.location ?? undefined) : base.location;
+  if (diff.icon !== undefined ? (diff.icon ?? undefined) : base.icon) result.icon = diff.icon !== undefined ? (diff.icon ?? undefined) : base.icon;
+  if (diff.image !== undefined ? (diff.image ?? undefined) : base.image) result.image = diff.image !== undefined ? (diff.image ?? undefined) : base.image;
+  if (diff.description !== undefined ? (diff.description ?? undefined) : base.description) result.description = diff.description !== undefined ? (diff.description ?? undefined) : base.description;
+  if (diff.authors !== undefined ? (diff.authors ?? undefined) : base.authors) result.authors = diff.authors !== undefined ? (diff.authors ?? undefined) : base.authors;
+  if (diff.concepts !== undefined ? (diff.concepts ?? undefined) : base.concepts) result.concepts = diff.concepts !== undefined ? (diff.concepts ?? undefined) : base.concepts;
+
+  // Collections - only include if they have content
+  if (models && models.length > 0) result.models = models;
+  if (ports && ports.length > 0) result.ports = ports;
+  if (props && props.length > 0) result.props = props;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
@@ -1922,18 +1991,18 @@ export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
 export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff => {
   const inverse: TypeDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.parent !== undefined) inverse.parent = original.parent;
+  if (appliedDiff.parent !== undefined) inverse.parent = original.parent ?? null;
   if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = original.isAbstract;
-  if (appliedDiff.folder !== undefined) inverse.folder = original.folder;
+  if (appliedDiff.folder !== undefined) inverse.folder = original.folder ?? null;
   if (appliedDiff.stock !== undefined) inverse.stock = original.stock;
   if (appliedDiff.virtual !== undefined) inverse.virtual = original.virtual;
   if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.location !== undefined) inverse.location = original.location;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.authors !== undefined) inverse.authors = original.authors;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
+  if (appliedDiff.location !== undefined) inverse.location = original.location ?? null;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
+  if (appliedDiff.image !== undefined) inverse.image = original.image ?? null;
+  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
+  if (appliedDiff.authors !== undefined) inverse.authors = original.authors ?? null;
+  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
   if (appliedDiff.models) inverse.models = inverseCollectionDiff(original.models ?? [], appliedDiff.models, inverseModelDiff);
   if (appliedDiff.ports) inverse.ports = inverseCollectionDiff(original.ports ?? [], appliedDiff.ports, inversePortDiff);
   if (appliedDiff.props) inverse.props = inverseCollectionDiff(original.props ?? [], appliedDiff.props, inversePropDiff);
@@ -1997,15 +2066,20 @@ export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff =>
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Layer = {
+    guid: base.guid,
     path: diff.path ?? base.path,
-    isHidden: diff.isHidden ?? base.isHidden,
-    isLocked: diff.isLocked ?? base.isLocked,
-    color: diff.color ?? base.color,
-    description: diff.description ?? base.description,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.isHidden !== undefined || base.isHidden !== undefined) result.isHidden = diff.isHidden ?? base.isHidden;
+  if (diff.isLocked !== undefined || base.isLocked !== undefined) result.isLocked = diff.isLocked ?? base.isLocked;
+  if (diff.color !== undefined || base.color !== undefined) result.color = diff.color ?? base.color;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const LayersDiffSchema = z.object({
@@ -2098,22 +2172,28 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
       newPlane = applyPlaneDiff(base.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, diff.plane);
     }
   }
-  return {
-    ...base,
+  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Piece = {
+    guid: base.guid,
     name: diff.name ?? base.name,
     type: diff.type ?? base.type,
-    design: diff.design ?? base.design,
-    plane: newPlane,
-    center: diff.center ?? base.center,
-    scale: diff.scale ?? base.scale,
-    mirrorPlane: diff.mirrorPlane ?? base.mirrorPlane,
-    isHidden: diff.isHidden ?? base.isHidden,
-    isLocked: diff.isLocked ?? base.isLocked,
-    color: diff.color ?? base.color,
-    description: diff.description ?? base.description,
-    props: diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.design !== undefined || base.design !== undefined) result.design = diff.design ?? base.design;
+  if (newPlane) result.plane = newPlane;
+  if (diff.center !== undefined || base.center !== undefined) result.center = diff.center ?? base.center;
+  if (diff.scale !== undefined || base.scale !== undefined) result.scale = diff.scale ?? base.scale;
+  if (diff.mirrorPlane !== undefined || base.mirrorPlane !== undefined) result.mirrorPlane = diff.mirrorPlane ?? base.mirrorPlane;
+  if (diff.isHidden !== undefined || base.isHidden !== undefined) result.isHidden = diff.isHidden ?? base.isHidden;
+  if (diff.isLocked !== undefined || base.isLocked !== undefined) result.isLocked = diff.isLocked ?? base.isLocked;
+  if (diff.color !== undefined || base.color !== undefined) result.color = diff.color ?? base.color;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (props && props.length > 0) result.props = props;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const PiecesDiffSchema = z.object({
@@ -2233,14 +2313,19 @@ export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): Group
   return inverse;
 };
 export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
-  return {
-    ...base,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Group = {
+    guid: base.guid,
     pieces: diff.pieces ?? base.pieces,
-    color: diff.color !== undefined ? diff.color : base.color,
-    name: diff.name !== undefined ? diff.name : base.name,
-    description: diff.description !== undefined ? diff.description : base.description,
-    attributes: applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}),
   };
+
+  if (diff.color !== undefined || base.color !== undefined) result.color = diff.color ?? base.color;
+  if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff => {
   return {
@@ -2294,10 +2379,14 @@ export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
   return { ...diff1, ...diff2 };
 };
 export const applySideDiff = (base: Side, diff: SideDiff): Side => {
-  return {
-    ...base,
-    ...diff,
+  const result: Side = {
+    piece: diff.piece ?? base.piece,
   };
+
+  if (diff.designPiece !== undefined || base.designPiece !== undefined) result.designPiece = diff.designPiece ?? base.designPiece;
+  if (diff.port !== undefined || base.port !== undefined) result.port = diff.port ?? base.port;
+
+  return result;
 };
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
@@ -2318,8 +2407,8 @@ export const ConnectionSchema = z.object({
   rotation: z.number().optional(),
   turn: z.number().optional(),
   tilt: z.number().optional(),
-  x: z.number().optional(),
-  y: z.number().optional(),
+  u: z.number().optional(),
+  v: z.number().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -2340,21 +2429,34 @@ export const getConnectionDiff = (before: Connection, after: Connection): Connec
   if (before.rotation !== after.rotation) diff.rotation = after.rotation !== undefined && before.rotation !== undefined ? after.rotation - before.rotation : after.rotation;
   if (before.turn !== after.turn) diff.turn = after.turn !== undefined && before.turn !== undefined ? after.turn - before.turn : after.turn;
   if (before.tilt !== after.tilt) diff.tilt = after.tilt !== undefined && before.tilt !== undefined ? after.tilt - before.tilt : after.tilt;
-  if (before.x !== after.x) diff.x = after.x !== undefined && before.x !== undefined ? after.x - before.x : after.x;
-  if (before.y !== after.y) diff.y = after.y !== undefined && before.y !== undefined ? after.y - before.y : after.y;
+  if (before.u !== after.u) diff.u = after.u !== undefined && before.u !== undefined ? after.u - before.u : after.u;
+  if (before.v !== after.v) diff.v = after.v !== undefined && before.v !== undefined ? after.v - before.v : after.v;
   if (before.description !== after.description) diff.description = after.description;
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
 
 export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => {
-  return {
-    ...base,
-    ...diff,
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Connection = {
+    guid: base.guid,
     connected: diff.connected ? applySideDiff(base.connected, diff.connected) : base.connected,
     connecting: diff.connecting ? applySideDiff(base.connecting, diff.connecting) : base.connecting,
-    attributes: diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes,
   };
+
+  if (diff.gap !== undefined || base.gap !== undefined) result.gap = diff.gap ?? base.gap;
+  if (diff.shift !== undefined || base.shift !== undefined) result.shift = diff.shift ?? base.shift;
+  if (diff.rise !== undefined || base.rise !== undefined) result.rise = diff.rise ?? base.rise;
+  if (diff.rotation !== undefined || base.rotation !== undefined) result.rotation = diff.rotation ?? base.rotation;
+  if (diff.turn !== undefined || base.turn !== undefined) result.turn = diff.turn ?? base.turn;
+  if (diff.tilt !== undefined || base.tilt !== undefined) result.tilt = diff.tilt ?? base.tilt;
+  if (diff.u !== undefined || base.u !== undefined) result.u = diff.u ?? base.u;
+  if (diff.v !== undefined || base.v !== undefined) result.v = diff.v ?? base.v;
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => {
@@ -2377,8 +2479,8 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
   if (appliedDiff.rotation !== undefined) inverse.rotation = original.rotation !== undefined && appliedDiff.rotation !== undefined ? -appliedDiff.rotation : original.rotation;
   if (appliedDiff.turn !== undefined) inverse.turn = original.turn !== undefined && appliedDiff.turn !== undefined ? -appliedDiff.turn : original.turn;
   if (appliedDiff.tilt !== undefined) inverse.tilt = original.tilt !== undefined && appliedDiff.tilt !== undefined ? -appliedDiff.tilt : original.tilt;
-  if (appliedDiff.x !== undefined) inverse.x = original.x !== undefined && appliedDiff.x !== undefined ? -appliedDiff.x : original.x;
-  if (appliedDiff.y !== undefined) inverse.y = original.y !== undefined && appliedDiff.y !== undefined ? -appliedDiff.y : original.y;
+  if (appliedDiff.u !== undefined) inverse.u = original.u !== undefined && appliedDiff.u !== undefined ? -appliedDiff.u : original.u;
+  if (appliedDiff.v !== undefined) inverse.v = original.v !== undefined && appliedDiff.v !== undefined ? -appliedDiff.v : original.v;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.attributes !== undefined) inverse.attributes = getAttributesDiff(appliedDiff.attributes ? applyAttributesDiff([], appliedDiff.attributes) : [], original.attributes ?? []);
   return inverse;
@@ -2462,15 +2564,18 @@ export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff
   return inverse;
 };
 export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
-  return {
-    ...base,
+  const result: Stat = {
+    guid: base.guid,
     quality: diff.quality ?? base.quality,
-    unit: diff.unit !== undefined ? diff.unit : base.unit,
-    min: diff.min !== undefined ? diff.min : base.min,
-    minExcluded: diff.minExcluded ?? base.minExcluded,
-    max: diff.max !== undefined ? diff.max : base.max,
-    maxExcluded: diff.maxExcluded ?? base.maxExcluded,
   };
+
+  if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
+  if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
+  if (diff.minExcluded !== undefined || base.minExcluded !== undefined) result.minExcluded = diff.minExcluded ?? base.minExcluded;
+  if (diff.max !== undefined || base.max !== undefined) result.max = diff.max ?? base.max;
+  if (diff.maxExcluded !== undefined || base.maxExcluded !== undefined) result.maxExcluded = diff.maxExcluded ?? base.maxExcluded;
+
+  return result;
 };
 export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
   return { ...diff1, ...diff2 };
@@ -2734,32 +2839,46 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 };
 
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
-  return {
-    ...base,
+  const pieces = diff.pieces || base.pieces ? applyCollectionDiff(base.pieces ?? [], diff.pieces, applyPieceDiff) : undefined;
+  const connections = diff.connections || base.connections ? applyCollectionDiff(base.connections ?? [], diff.connections, applyConnectionDiff) : undefined;
+  const stats = diff.stats || base.stats ? applyCollectionDiff(base.stats ?? [], diff.stats, applyStatDiff) : undefined;
+  const props = diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : undefined;
+  const layers = diff.layers || base.layers ? applyCollectionDiff(base.layers ?? [], diff.layers, applyLayerDiff) : undefined;
+  const groups = diff.groups || base.groups ? applyCollectionDiff(base.groups ?? [], diff.groups, applyGroupDiff) : undefined;
+  const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
+
+  const result: Design = {
+    guid: base.guid,
     name: diff.name ?? base.name,
-    parent: diff.parent !== undefined ? diff.parent : base.parent,
     isAbstract: diff.isAbstract ?? base.isAbstract,
-    folder: diff.folder ?? base.folder,
-    canScale: diff.canScale ?? base.canScale,
-    canMirror: diff.canMirror ?? base.canMirror,
-    unit: diff.unit !== undefined ? diff.unit : base.unit,
-    activeLayer: diff.activeLayer !== undefined ? diff.activeLayer : base.activeLayer,
-    location: diff.location !== undefined ? diff.location : base.location,
-    icon: diff.icon !== undefined ? diff.icon : base.icon,
-    image: diff.image !== undefined ? diff.image : base.image,
-    description: diff.description !== undefined ? diff.description : base.description,
-    authors: diff.authors !== undefined ? diff.authors as any : base.authors,
-    concepts: diff.concepts !== undefined ? diff.concepts : base.concepts,
-    pieces: diff.pieces || base.pieces ? applyCollectionDiff(base.pieces ?? [], diff.pieces, applyPieceDiff) : base.pieces,
-    connections: diff.connections || base.connections ? applyCollectionDiff(base.connections ?? [], diff.connections, applyConnectionDiff) : base.connections,
-    stats: diff.stats || base.stats ? applyCollectionDiff(base.stats ?? [], diff.stats, applyStatDiff) : base.stats,
-    props: diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : base.props,
-    layers: diff.layers || base.layers ? applyCollectionDiff(base.layers ?? [], diff.layers, applyLayerDiff) : base.layers,
-    groups: diff.groups || base.groups ? applyCollectionDiff(base.groups ?? [], diff.groups, applyGroupDiff) : base.groups,
-    attributes: diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : base.attributes,
     createdAt: diff.createdAt ?? base.createdAt,
     updatedAt: diff.updatedAt ?? base.updatedAt,
   };
+
+  // Optional fields
+  if (diff.parent !== undefined ? diff.parent : base.parent) result.parent = diff.parent !== undefined ? diff.parent : base.parent;
+  if (diff.folder ?? base.folder) result.folder = diff.folder ?? base.folder;
+  if (diff.canScale ?? base.canScale) result.canScale = diff.canScale ?? base.canScale;
+  if (diff.canMirror ?? base.canMirror) result.canMirror = diff.canMirror ?? base.canMirror;
+  if (diff.unit !== undefined ? diff.unit : base.unit) result.unit = diff.unit !== undefined ? diff.unit : base.unit;
+  if (diff.activeLayer !== undefined ? diff.activeLayer : base.activeLayer) result.activeLayer = diff.activeLayer !== undefined ? diff.activeLayer : base.activeLayer;
+  if (diff.location !== undefined ? diff.location : base.location) result.location = diff.location !== undefined ? diff.location : base.location;
+  if (diff.icon !== undefined ? diff.icon : base.icon) result.icon = diff.icon !== undefined ? diff.icon : base.icon;
+  if (diff.image !== undefined ? diff.image : base.image) result.image = diff.image !== undefined ? diff.image : base.image;
+  if (diff.description !== undefined ? diff.description : base.description) result.description = diff.description !== undefined ? diff.description : base.description;
+  if (diff.authors !== undefined ? diff.authors as any : base.authors) result.authors = diff.authors !== undefined ? diff.authors as any : base.authors;
+  if (diff.concepts !== undefined ? diff.concepts : base.concepts) result.concepts = diff.concepts !== undefined ? diff.concepts : base.concepts;
+
+  // Collections
+  if (pieces && pieces.length > 0) result.pieces = pieces;
+  if (connections && connections.length > 0) result.connections = connections;
+  if (stats && stats.length > 0) result.stats = stats;
+  if (props && props.length > 0) result.props = props;
+  if (layers && layers.length > 0) result.layers = layers;
+  if (groups && groups.length > 0) result.groups = groups;
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
 };
 
 export const DesignsDiffSchema = z.object({
@@ -3077,13 +3196,46 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
         piecePlanes[childPiece.guid] = childPlane;
 
-        // Ensure parent has a center (default to origin if not set)
+        // Compute center for diagram layout based on port angular positions
+        const radius = 2.697; // Diagram layout radius
         const parentCenter = parentPiece.center || { u: 0, v: 0 };
-
+        const childPlaneZ = childPlane.origin.z;
+        const parentPlaneZ = parentPlane.origin.z;
+        const zDiff = childPlaneZ - parentPlaneZ;
+        
+        // Convert port t-value to angular position for u and v offsets
+        // t ranges from -0.5 to 0.5, representing a full circle
+        // u = radius * sin(2π * t), v = radius * cos(2π * t)
+        const angle = 2 * Math.PI * parentPort.t;
+        const portOffsetU = radius * Math.sin(angle);
+        const portOffsetV = radius * Math.cos(angle);
+        
+        // For root children: use absolute angular position
+        // For others: add parent center + connection offset + z-based contribution
+        let childU: number;
+        let childV: number;
+        
+        if (parentCenter.u === 0 && parentCenter.v === 0) {
+          // Parent is root - compute absolute position from port angle
+          childU = portOffsetU;
+          childV = portOffsetV;
+        } else {
+          // Non-root: inherit parent's u, add connection offset and z contribution to v
+          const connectionU = connection.u ?? 0;
+          const connectionV = connection.v ?? 0;
+          const zContribution = zDiff / 2.75; // Scale z-difference to v-space (2.75 is floor height)
+          childU = parentCenter.u + connectionU;
+          childV = parentCenter.v + connectionV + zContribution;
+        }
+        
         const childCenter = {
-          u: round(parentCenter.u + (connection.x ?? 0)),
-          v: round(parentCenter.v + (connection.y ?? 0)),
+          u: round(childU),
+          v: round(childV),
         };
+        
+        if (childPiece.name?.includes('ci_t_f8')) {
+          console.log(`[DEBUG] ci_t_f8: parent=${parentPiece.name}, parentCenter=${JSON.stringify(parentCenter)}, conn=${JSON.stringify({u:connection.u, v:connection.v})}, zDiff=${zDiff}, childCenter=${JSON.stringify(childCenter)}`);
+        }
 
         const flatChildPiece: Piece = setAttributes(
           {
@@ -3127,9 +3279,14 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
 
       // Build piece diff for pieces that changed
       const pieceDiff: PieceDiff = {};
-      // Always include plane and center from flatPiece (these are what flattenDesign computed)
-      if (flatPiece.plane) pieceDiff.plane = flatPiece.plane;
-      if (flatPiece.center) pieceDiff.center = flatPiece.center;
+      // Only include plane if it changed
+      if (flatPiece.plane && JSON.stringify(flatPiece.plane) !== JSON.stringify(originalPiece.plane)) {
+        pieceDiff.plane = flatPiece.plane;
+      }
+      // Only include center if it changed
+      if (flatPiece.center && JSON.stringify(flatPiece.center) !== JSON.stringify(originalPiece.center)) {
+        pieceDiff.center = flatPiece.center;
+      }
       if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) {
         pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
       }
@@ -3536,6 +3693,14 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
   files: FilesDiffSchema.optional(),
   folders: FoldersDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
+  description: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  remote: z.string().nullable().optional(),
+  homepage: z.string().nullable().optional(),
+  license: z.string().nullable().optional(),
+  preview: z.string().nullable().optional(),
+  concepts: z.array(z.string()).nullable().optional(),
 });
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 const getCollectionDiff = <T extends { guid: string }, D>(
@@ -3658,14 +3823,14 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   const inverse: KitDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.version !== undefined) inverse.version = original.version;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
-  if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage;
-  if (appliedDiff.license !== undefined) inverse.license = original.license;
-  if (appliedDiff.preview !== undefined) inverse.preview = original.preview;
-  if (appliedDiff.concepts !== undefined && original.concepts !== undefined) inverse.concepts = original.concepts;
+  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
+  if (appliedDiff.image !== undefined) inverse.image = original.image ?? null;
+  if (appliedDiff.remote !== undefined) inverse.remote = original.remote ?? null;
+  if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage ?? null;
+  if (appliedDiff.license !== undefined) inverse.license = original.license ?? null;
+  if (appliedDiff.preview !== undefined) inverse.preview = original.preview ?? null;
+  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
   if (appliedDiff.types) inverse.types = inverseCollectionDiff(original.types ?? [], appliedDiff.types, inverseTypeDiff);
   if (appliedDiff.designs) inverse.designs = inverseCollectionDiff(original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
   if (appliedDiff.interfaces) inverse.interfaces = inverseInterfacesDiff(original.interfaces ?? [], appliedDiff.interfaces);
@@ -3691,31 +3856,68 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
   };
 };
 export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
-  const result: Kit = {
-    ...base,
+  const result: any = {
     guid: base.guid,
     name: 'name' in diff ? diff.name! : base.name,
     version: 'version' in diff ? diff.version! : base.version,
-    description: 'description' in diff ? diff.description : base.description,
-    icon: 'icon' in diff ? diff.icon : base.icon,
-    image: 'image' in diff ? diff.image : base.image,
-    remote: 'remote' in diff ? diff.remote : base.remote,
-    homepage: 'homepage' in diff ? diff.homepage : base.homepage,
-    license: 'license' in diff ? diff.license : base.license,
-    preview: 'preview' in diff ? diff.preview : base.preview,
-    concepts: 'concepts' in diff ? diff.concepts : base.concepts,
     createdAt: base.createdAt,
     updatedAt: diff.updatedAt ?? base.updatedAt,
-    types: applyCollectionDiff(base.types ?? [], diff.types, applyTypeDiff),
-    designs: applyCollectionDiff(base.designs ?? [], diff.designs, applyDesignDiff),
-    interfaces: applyInterfacesDiff(base.interfaces ?? [], diff.interfaces ?? {}),
-    qualities: applyCollectionDiff(base.qualities ?? [], diff.qualities, applyQualityDiff),
-    files: applyCollectionDiff(base.files ?? [], diff.files, applyFileDiff),
-    folders: applyCollectionDiff(base.folders ?? [], diff.folders, applyFolderDiff),
-    authors: applyCollectionDiff(base.authors ?? [], diff.authors, applyAuthorDiff),
-    attributes: applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}),
   };
-  return result;
+
+  // Optional scalar fields - only include if in diff or base
+  const optionalScalars = ['description', 'icon', 'image', 'remote', 'homepage', 'license', 'preview'] as const;
+  for (const key of optionalScalars) {
+    if (key in diff) {
+      const value = diff[key] ?? undefined;
+      if (value !== undefined) result[key] = value;
+    } else if (key in base && base[key] !== undefined) {
+      result[key] = base[key];
+    }
+  }
+
+  // Concepts array - only include if in diff or base
+  if ('concepts' in diff) {
+    const value = diff.concepts ?? undefined;
+    if (value !== undefined) result.concepts = value;
+  } else if (base.concepts !== undefined) {
+    result.concepts = base.concepts;
+  }
+
+  // Collections - only include if result is non-empty
+  if (diff.types || base.types) {
+    const types = applyCollectionDiff(base.types ?? [], diff.types, applyTypeDiff);
+    if (types.length > 0) result.types = types;
+  }
+  if (diff.designs || base.designs) {
+    const designs = applyCollectionDiff(base.designs ?? [], diff.designs, applyDesignDiff);
+    if (designs.length > 0) result.designs = designs;
+  }
+  if (diff.interfaces || base.interfaces) {
+    const interfaces = applyInterfacesDiff(base.interfaces ?? [], diff.interfaces ?? {});
+    if (interfaces.length > 0) result.interfaces = interfaces;
+  }
+  if (diff.qualities || base.qualities) {
+    const qualities = applyCollectionDiff(base.qualities ?? [], diff.qualities, applyQualityDiff);
+    if (qualities.length > 0) result.qualities = qualities;
+  }
+  if (diff.files || base.files) {
+    const files = applyCollectionDiff(base.files ?? [], diff.files, applyFileDiff);
+    if (files.length > 0) result.files = files;
+  }
+  if (diff.folders || base.folders) {
+    const folders = applyCollectionDiff(base.folders ?? [], diff.folders, applyFolderDiff);
+    if (folders.length > 0) result.folders = folders;
+  }
+  if (diff.authors || base.authors) {
+    const authors = applyCollectionDiff(base.authors ?? [], diff.authors, applyAuthorDiff);
+    if (authors.length > 0) result.authors = authors;
+  }
+  if (diff.attributes || base.attributes) {
+    const attributes = applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {});
+    if (attributes.length > 0) result.attributes = attributes;
+  }
+
+  return result as Kit;
 };
 
 export const KitsDiffSchema = z.object({
@@ -4474,8 +4676,8 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (connA.rotation !== connB.rotation) return false;
       if (connA.turn !== connB.turn) return false;
       if (connA.tilt !== connB.tilt) return false;
-      if (connA.x !== connB.x) return false;
-      if (connA.y !== connB.y) return false;
+      if (connA.u !== connB.u) return false;
+      if (connA.v !== connB.v) return false;
       if (normalizeValue(connA.description) !== normalizeValue(connB.description)) return false;
       if (!areAttributesEqual(connA.attributes, connB.attributes)) return false;
     }
@@ -4594,6 +4796,563 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   if (!areFoldersEqual(a.folders, b.folders)) return false;
   if (!areAuthorsEqual(a.authors, b.authors)) return false;
   if (!areAttributesEqual(a.attributes, b.attributes)) return false;
+
+  return true;
+};
+
+/**
+ * Deep equality check for kit diffs - recursively compares all diff properties including nested entities
+ */
+export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
+  const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
+    if (!arr) return [];
+    if (Array.isArray(arr)) return arr;
+    return [arr as T];
+  };
+  const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined) ? undefined : value;
+  const normalizeBoolean = (value: boolean | undefined): boolean | undefined => value ? true : undefined;
+
+  const areAttributesDiffsEqual = (a?: AttributesDiff, b?: AttributesDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areAttributeDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.key !== ab.key) return false;
+      if (normalizeValue(aa.value) !== normalizeValue(ab.value)) return false;
+      if (normalizeValue(aa.definition) !== normalizeValue(ab.definition)) return false;
+    }
+    return true;
+  };
+
+  const areAttributeDiffsEqual = (a?: AttributeDiff, b?: AttributeDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.key) !== normalizeValue(b.key)) return false;
+    if (normalizeValue(a.value) !== normalizeValue(b.value)) return false;
+    if (normalizeValue(a.definition) !== normalizeValue(b.definition)) return false;
+    return true;
+  };
+
+  const arePropsDiffsEqual = (a?: PropsDiff, b?: PropsDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!arePropDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.quality.guid !== ab.quality.guid) return false;
+      if (aa.value !== ab.value) return false;
+      if (normalizeValue(aa.unit) !== normalizeValue(ab.unit)) return false;
+    }
+    return true;
+  };
+
+  const arePropDiffsEqual = (a?: PropDiff, b?: PropDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.value) !== normalizeValue(b.value)) return false;
+    if (normalizeValue(a.unit) !== normalizeValue(b.unit)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const arePortsDiffsEqual = (a?: z.infer<typeof PortsDiffSchema>, b?: z.infer<typeof PortsDiffSchema>): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!arePortDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (normalizeValue(aa.name) !== normalizeValue(ab.name)) return false;
+      if (aa.point.x !== ab.point.x) return false;
+      if (aa.point.y !== ab.point.y) return false;
+      if (aa.point.z !== ab.point.z) return false;
+      if (aa.direction.x !== ab.direction.x) return false;
+      if (aa.direction.y !== ab.direction.y) return false;
+      if (aa.direction.z !== ab.direction.z) return false;
+      if (aa.t !== ab.t) return false;
+      if (normalizeBoolean(aa.mandatory) !== normalizeBoolean(ab.mandatory)) return false;
+    }
+    return true;
+  };
+
+  const arePortDiffsEqual = (a?: PortDiff, b?: PortDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (a.point && b.point) {
+      if (normalizeValue(a.point.x) !== normalizeValue(b.point.x)) return false;
+      if (normalizeValue(a.point.y) !== normalizeValue(b.point.y)) return false;
+      if (normalizeValue(a.point.z) !== normalizeValue(b.point.z)) return false;
+    } else if (a.point || b.point) {
+      return false;
+    }
+    if (a.direction && b.direction) {
+      if (normalizeValue(a.direction.x) !== normalizeValue(b.direction.x)) return false;
+      if (normalizeValue(a.direction.y) !== normalizeValue(b.direction.y)) return false;
+      if (normalizeValue(a.direction.z) !== normalizeValue(b.direction.z)) return false;
+    } else if (a.direction || b.direction) {
+      return false;
+    }
+    if (normalizeValue(a.t) !== normalizeValue(b.t)) return false;
+    if (normalizeValue(a.mandatory) !== normalizeValue(b.mandatory)) return false;
+    if (normalizeValue(a.interface?.guid) !== normalizeValue(b.interface?.guid)) return false;
+    if (!arePropsDiffsEqual(a.props, b.props)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areModelsDiffsEqual = (a?: z.infer<typeof ModelsDiffSchema>, b?: z.infer<typeof ModelsDiffSchema>): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areModelDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (normalizeValue(aa.name) !== normalizeValue(ab.name)) return false;
+      if (aa.file !== ab.file) return false;
+      if (!arraysEqual(normalizeArray(aa.tags), normalizeArray(ab.tags))) return false;
+    }
+    return true;
+  };
+
+  const areModelDiffsEqual = (a?: ModelDiff, b?: ModelDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.file) !== normalizeValue(b.file)) return false;
+    if (a.tags && b.tags) {
+      if (!arraysEqual(normalizeArray(a.tags), normalizeArray(b.tags))) return false;
+    } else if (a.tags || b.tags) {
+      return false;
+    }
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areTypesDiffsEqual = (a?: TypesDiff, b?: TypesDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areTypeDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areTypeDiffsEqual = (a?: TypeDiff, b?: TypeDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+    if (normalizeValue(a.icon) !== normalizeValue(b.icon)) return false;
+    if (normalizeValue(a.image) !== normalizeValue(b.image)) return false;
+    if (normalizeValue(a.folder) !== normalizeValue(b.folder)) return false;
+    if (normalizeValue(a.unit) !== normalizeValue(b.unit)) return false;
+    if (normalizeValue(a.stock) !== normalizeValue(b.stock)) return false;
+    if (normalizeValue(a.isAbstract) !== normalizeValue(b.isAbstract)) return false;
+    if (normalizeValue(a.virtual) !== normalizeValue(b.virtual)) return false;
+    if (normalizeValue(a.location?.guid) !== normalizeValue(b.location?.guid)) return false;
+    if (a.concepts && b.concepts) {
+      if (!arraysEqual(normalizeArray(a.concepts), normalizeArray(b.concepts))) return false;
+    } else if (a.concepts || b.concepts) {
+      return false;
+    }
+    if (!areModelsDiffsEqual(a.models, b.models)) return false;
+    if (!arePortsDiffsEqual(a.ports, b.ports)) return false;
+    if (!arePropsDiffsEqual(a.props, b.props)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const arePiecesDiffsEqual = (a?: PiecesDiff, b?: PiecesDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!arePieceDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (normalizeValue(aa.name) !== normalizeValue(ab.name)) return false;
+      if (aa.type?.guid !== ab.type?.guid) return false;
+      if (aa.design?.guid !== ab.design?.guid) return false;
+    }
+    return true;
+  };
+
+  const arePieceDiffsEqual = (a?: PieceDiff, b?: PieceDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.type?.guid) !== normalizeValue(b.type?.guid)) return false;
+    if (normalizeValue(a.design?.guid) !== normalizeValue(b.design?.guid)) return false;
+    if (a.plane && b.plane) {
+      if (a.plane.origin && b.plane.origin) {
+        if (normalizeValue(a.plane.origin.x) !== normalizeValue(b.plane.origin.x)) return false;
+        if (normalizeValue(a.plane.origin.y) !== normalizeValue(b.plane.origin.y)) return false;
+        if (normalizeValue(a.plane.origin.z) !== normalizeValue(b.plane.origin.z)) return false;
+      } else if (a.plane.origin || b.plane.origin) {
+        return false;
+      }
+      if (a.plane.xAxis && b.plane.xAxis) {
+        if (normalizeValue(a.plane.xAxis.x) !== normalizeValue(b.plane.xAxis.x)) return false;
+        if (normalizeValue(a.plane.xAxis.y) !== normalizeValue(b.plane.xAxis.y)) return false;
+        if (normalizeValue(a.plane.xAxis.z) !== normalizeValue(b.plane.xAxis.z)) return false;
+      } else if (a.plane.xAxis || b.plane.xAxis) {
+        return false;
+      }
+      if (a.plane.yAxis && b.plane.yAxis) {
+        if (normalizeValue(a.plane.yAxis.x) !== normalizeValue(b.plane.yAxis.x)) return false;
+        if (normalizeValue(a.plane.yAxis.y) !== normalizeValue(b.plane.yAxis.y)) return false;
+        if (normalizeValue(a.plane.yAxis.z) !== normalizeValue(b.plane.yAxis.z)) return false;
+      } else if (a.plane.yAxis || b.plane.yAxis) {
+        return false;
+      }
+    } else if (a.plane || b.plane) {
+      return false;
+    }
+    if (normalizeValue(a.scale) !== normalizeValue(b.scale)) return false;
+    if (normalizeValue(a.isHidden) !== normalizeValue(b.isHidden)) return false;
+    if (normalizeValue(a.isLocked) !== normalizeValue(b.isLocked)) return false;
+    if (normalizeValue(a.color) !== normalizeValue(b.color)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+    if (!arePropsDiffsEqual(a.props, b.props)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areConnectionsDiffsEqual = (a?: ConnectionsDiff, b?: ConnectionsDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areConnectionDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.connected.piece.guid !== ab.connected.piece.guid) return false;
+      if (aa.connecting.piece.guid !== ab.connecting.piece.guid) return false;
+    }
+    return true;
+  };
+
+  const areConnectionDiffsEqual = (a?: ConnectionDiff, b?: ConnectionDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.gap) !== normalizeValue(b.gap)) return false;
+    if (normalizeValue(a.shift) !== normalizeValue(b.shift)) return false;
+    if (normalizeValue(a.rise) !== normalizeValue(b.rise)) return false;
+    if (normalizeValue(a.rotation) !== normalizeValue(b.rotation)) return false;
+    if (normalizeValue(a.turn) !== normalizeValue(b.turn)) return false;
+    if (normalizeValue(a.tilt) !== normalizeValue(b.tilt)) return false;
+    if (normalizeValue(a.u) !== normalizeValue(b.u)) return false;
+    if (normalizeValue(a.v) !== normalizeValue(b.v)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areDesignsDiffsEqual = (a?: DesignsDiff, b?: DesignsDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areDesignDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areDesignDiffsEqual = (a?: DesignDiff, b?: DesignDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+    if (normalizeValue(a.icon) !== normalizeValue(b.icon)) return false;
+    if (normalizeValue(a.image) !== normalizeValue(b.image)) return false;
+    if (a.concepts && b.concepts) {
+      if (!arraysEqual(normalizeArray(a.concepts), normalizeArray(b.concepts))) return false;
+    } else if (a.concepts || b.concepts) {
+      return false;
+    }
+    if (!arePiecesDiffsEqual(a.pieces, b.pieces)) return false;
+    if (!areConnectionsDiffsEqual(a.connections, b.connections)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areInterfacesDiffsEqual = (a?: InterfacesDiff, b?: InterfacesDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areInterfaceDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areInterfaceDiffsEqual = (a?: InterfaceDiff, b?: InterfaceDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areQualitiesDiffsEqual = (a?: z.infer<typeof QualitiesDiffSchema>, b?: z.infer<typeof QualitiesDiffSchema>): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areQualityDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.key !== ab.key) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areQualityDiffsEqual = (a?: QualityDiff, b?: QualityDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.key) !== normalizeValue(b.key)) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areFilesDiffsEqual = (a?: FilesDiff, b?: FilesDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areFileDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areFileDiffsEqual = (a?: FileDiff, b?: FileDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    return true;
+  };
+
+  const areFoldersDiffsEqual = (a?: FoldersDiff, b?: FoldersDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areFolderDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areFolderDiffsEqual = (a?: FolderDiff, b?: FolderDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  const areAuthorsDiffsEqual = (a?: AuthorsDiff, b?: AuthorsDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (!arraysEqual(a.removed, b.removed)) return false;
+    const updatedA = normalizeArray(a.updated);
+    const updatedB = normalizeArray(b.updated);
+    if (updatedA.length !== updatedB.length) return false;
+    for (const ua of updatedA) {
+      const ub = updatedB.find(x => x.id === ua.id);
+      if (!ub) return false;
+      if (!areAuthorDiffsEqual(ua.diff, ub.diff)) return false;
+    }
+    const addedA = normalizeArray(a.added);
+    const addedB = normalizeArray(b.added);
+    if (addedA.length !== addedB.length) return false;
+    for (const aa of addedA) {
+      const ab = addedB.find(x => x.guid === aa.guid);
+      if (!ab) return false;
+      if (aa.name !== ab.name) return false;
+    }
+    return true;
+  };
+
+  const areAuthorDiffsEqual = (a?: AuthorDiff, b?: AuthorDiff): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.email) !== normalizeValue(b.email)) return false;
+    if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
+    return true;
+  };
+
+  // Top-level kit diff properties
+  if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+  if (normalizeValue(a.version) !== normalizeValue(b.version)) return false;
+  if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
+  if (normalizeValue(a.icon) !== normalizeValue(b.icon)) return false;
+  if (normalizeValue(a.image) !== normalizeValue(b.image)) return false;
+  if (normalizeValue(a.preview) !== normalizeValue(b.preview)) return false;
+  if (normalizeValue(a.remote) !== normalizeValue(b.remote)) return false;
+  if (normalizeValue(a.homepage) !== normalizeValue(b.homepage)) return false;
+  if (normalizeValue(a.license) !== normalizeValue(b.license)) return false;
+
+  if (a.concepts && b.concepts) {
+    if (!arraysEqual(normalizeArray(a.concepts), normalizeArray(b.concepts))) return false;
+  } else if (a.concepts || b.concepts) {
+    return false;
+  }
+  if (!areTypesDiffsEqual(a.types, b.types)) return false;
+  if (!areDesignsDiffsEqual(a.designs, b.designs)) return false;
+  if (!areInterfacesDiffsEqual(a.interfaces, b.interfaces)) return false;
+  if (!areQualitiesDiffsEqual(a.qualities, b.qualities)) return false;
+  if (!areFilesDiffsEqual(a.files, b.files)) return false;
+  if (!areFoldersDiffsEqual(a.folders, b.folders)) return false;
+  if (!areAuthorsDiffsEqual(a.authors, b.authors)) return false;
+  if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
 
   return true;
 };
@@ -4836,8 +5595,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           rotation: c.rotation || 0,
           turn: c.turn || 0,
           tilt: c.tilt || 0,
-          x: c.x !== null ? c.x : undefined,
-          y: c.y !== null ? c.y : undefined,
+          u: c.u !== null ? c.u : undefined,
+          v: c.v !== null ? c.v : undefined,
           description: toUndefined(c.description),
           attributes: mapOrUndefined(connectionAttributes, buildAttribute),
         };
@@ -5858,8 +6617,8 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           connection.rotation || 0,
           connection.turn || 0,
           connection.tilt || 0,
-          connection.x !== undefined ? connection.x : null,
-          connection.y !== undefined ? connection.y : null,
+          connection.u !== undefined ? connection.u : null,
+          connection.v !== undefined ? connection.v : null,
           connection.description || null,
           design.guid,
         ]

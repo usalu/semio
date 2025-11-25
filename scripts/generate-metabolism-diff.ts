@@ -45,7 +45,12 @@ async function main() {
     console.log("Loading Metabolism kit...");
     const kitPath = path.join(__dirname, "..", "assets", "semio", "kit_metabolism.json");
     const kitJson = await fs.readFile(kitPath, "utf-8");
-    const original: Kit = JSON.parse(kitJson);
+    let original: Kit = JSON.parse(kitJson);
+
+    // Remove flattened designs (designs with parents) to avoid GUID mismatches in tests
+    // since flattenDesign generates new GUIDs for pieces
+    console.log("Removing flattened designs from original...");
+    original.designs = original.designs?.filter(d => !d.parent);
 
     console.log("Creating comprehensive diff...");
 
@@ -273,65 +278,6 @@ async function main() {
         JSON.stringify(diffed, null, 2),
         "utf-8"
     );
-
-    console.log("Generating flattened designs...");
-    const { flattenDesign, applyDesignDiff } = await import("../js/js/semio");
-
-    const nakagin = original.designs?.find((d) => d.name === "Nakagin Capsule Tower");
-    const slanted = original.designs?.find((d) => d.name === "Slanted");
-    const twisted = original.designs?.find((d) => d.name === "Twisted");
-    const dancing = original.designs?.find((d) => d.name === "Dancing");
-    const capsuleDream = original.designs?.find((d) => d.name === "Capsule Dream");
-
-    if (nakagin) {
-        const flatDesignDiff = flattenDesign(original, nakagin.guid);
-        const flatDesign = applyDesignDiff(nakagin, flatDesignDiff);
-        await fs.writeFile(
-            path.join(outputDir, "design_nakagin_flat.json"),
-            JSON.stringify(flatDesign, null, 2),
-            "utf-8"
-        );
-    }
-
-    if (slanted) {
-        const flatDesignDiff = flattenDesign(original, slanted.guid);
-        const flatDesign = applyDesignDiff(slanted, flatDesignDiff);
-        await fs.writeFile(
-            path.join(outputDir, "design_slanted_flat.json"),
-            JSON.stringify(flatDesign, null, 2),
-            "utf-8"
-        );
-    }
-
-    if (twisted) {
-        const flatDesignDiff = flattenDesign(original, twisted.guid);
-        const flatDesign = applyDesignDiff(twisted, flatDesignDiff);
-        await fs.writeFile(
-            path.join(outputDir, "design_twisted_flat.json"),
-            JSON.stringify(flatDesign, null, 2),
-            "utf-8"
-        );
-    }
-
-    if (dancing) {
-        const flatDesignDiff = flattenDesign(original, dancing.guid);
-        const flatDesign = applyDesignDiff(dancing, flatDesignDiff);
-        await fs.writeFile(
-            path.join(outputDir, "design_dancing_flat.json"),
-            JSON.stringify(flatDesign, null, 2),
-            "utf-8"
-        );
-    }
-
-    if (capsuleDream) {
-        const flatDesignDiff = flattenDesign(original, capsuleDream.guid);
-        const flatDesign = applyDesignDiff(capsuleDream, flatDesignDiff);
-        await fs.writeFile(
-            path.join(outputDir, "design_capsule_dream_flat.json"),
-            JSON.stringify(flatDesign, null, 2),
-            "utf-8"
-        );
-    }
 
     console.log("Done!");
     console.log(`- diff_kit_metabolism.json: ${JSON.stringify(diff).length} bytes`);
