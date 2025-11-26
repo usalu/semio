@@ -222,6 +222,50 @@
             "beginner": "Tutorials"
           }
         },
+        "tutorial": {
+          "controls": {
+            "stop": {
+              "label": {
+                "normal": "Stop Tutorial",
+                "beginner": "Click to stop the current tutorial"
+              }
+            },
+            "previous": {
+              "label": {
+                "normal": "Previous Step",
+                "beginner": "Go to the previous step in the tutorial"
+              }
+            },
+            "playPause": {
+              "label": {
+                "normal": "Play/Pause",
+                "beginner": "Play or pause the tutorial"
+              }
+            },
+            "next": {
+              "label": {
+                "normal": "Next Step",
+                "beginner": "Go to the next step in the tutorial"
+              }
+            }
+          }
+        },
+        "recording": {
+          "controls": {
+            "playPause": {
+              "label": {
+                "normal": "Play/Pause Recording",
+                "beginner": "Play or pause the recording"
+              }
+            },
+            "stop": {
+              "label": {
+                "normal": "Stop Recording",
+                "beginner": "Stop the recording and save it"
+              }
+            }
+          }
+        },
         "createKit": {
           "label": {
             "normal": "Create Kit",
@@ -1506,8 +1550,8 @@
                 },
                 "artifact": {
                   "label": {
-                    "normal": "Artifact",
-                    "beginner": "The artifact name"
+                    "normal": "Name",
+                    "beginner": "The name"
                   }
                 },
                 "updatedAt": {
@@ -1760,6 +1804,24 @@
               "label": {
                 "normal": "Table Windows",
                 "beginner": "Table Windows"
+              }
+            }
+          },
+          "diagram": {
+            "clusterMenu": {
+              "cluster": {
+                "label": {
+                  "normal": "Cluster",
+                  "beginner": "Group selected design pieces into a single cluster"
+                }
+              }
+            },
+            "expandMenu": {
+              "expand": {
+                "label": {
+                  "normal": "Expand",
+                  "beginner": "Expand the design piece to show its internal components"
+                }
               }
             }
           },
@@ -3216,6 +3278,20 @@
             "label": {
               "normal": "Settings",
               "beginner": "Settings"
+            }
+          },
+          "navigation": {
+            "previous": {
+              "label": {
+                "normal": "Previous",
+                "beginner": "Navigate to the previous page"
+              }
+            },
+            "next": {
+              "label": {
+                "normal": "Next",
+                "beginner": "Navigate to the next page"
+              }
             }
           }
         }

@@ -1,6 +1,6 @@
 // #region Header
 
-// App.tsx
+// Sketchpad.tsx
 
 // 2025 Ueli Saluz
 
@@ -71,6 +71,7 @@ import {
   DesignDiff,
   DesignShallow,
   DiffStatus,
+  exportKit,
   FileDiff,
   findDesignInKit,
   findPieceInDesign,
@@ -88,6 +89,9 @@ import {
   GroupDiff,
   guid,
   Guid,
+  importKit,
+  Interface,
+  InterfaceDiff,
   inverseKitDiff,
   Kit,
   KitDiff,
@@ -125,11 +129,10 @@ import {
   Vector,
   VectorDiff,
 } from "../semio";
-import type { DesignAppState } from "./apps/design/App";
-import type { KitAppState } from "./apps/kit/App";
-import type { QualityAppState } from "./apps/quality/App";
-import type { TypeAppState } from "./apps/type/App";
+import type { DesignAppState } from "./Design";
 import { Breadcrumb, ButtonGroup, ButtonGroupItem, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Footer, InteractionProvider, Layout as LayoutComponent, Navbar, NavbarItem, Toggle, Window } from "./elements";
+import type { KitAppState } from "./Kit";
+import type { QualityAppState } from "./Quality";
 import {
   AppCommandResult,
   AppConfig,
@@ -194,8 +197,9 @@ import {
   YLeafMapNumber,
   YLeafMapString,
   YStringArray,
-} from "./sketchpad";
-import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./tutorials";
+} from "./shared";
+import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
+import type { TypeAppState } from "./Type";
 // Lazy imports to break circular dependency - hooks are imported inside functions that use them
 // Module cache for lazy-loaded hooks
 let designAppModuleCache: any = null;
@@ -787,7 +791,7 @@ function preloadDocsRegistry(): Promise<void> {
     return Promise.resolve();
   }
   if (!docsRegistryPromise) {
-    docsRegistryPromise = import("./apps/docs/App").then((module) => {
+    docsRegistryPromise = import("./Docs").then((module) => {
       docsRegistryCache = module.docsRegistry;
       return docsRegistryCache;
     });
@@ -5923,7 +5927,7 @@ export function useFileUrls(): Map<Url, Url> {
   return kitStore.fileUrls;
 }
 
-export function useKitTransaction(origin: string): Transaction {
+export function useKitTransaction(origin: string): Y.Transaction {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid;
@@ -6905,22 +6909,22 @@ export class SketchpadStore {
     if (SketchpadStore._modulesLoaded) return;
     SketchpadStore._modulesLoaded = true;
     Promise.all([
-      import("./apps/design/App").then((m) => {
+      import("./Design").then((m) => {
         designAppModuleCache = m;
       }),
-      import("./apps/home/App").then((m) => {
+      import("./Home").then((m) => {
         homeAppModuleCache = m;
       }),
-      import("./apps/kit/App").then((m) => {
+      import("./Kit").then((m) => {
         kitAppModuleCache = m;
         if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
           (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache = m;
         }
       }),
-      import("./apps/type/App").then((m) => {
+      import("./Type").then((m) => {
         typeAppModuleCache = m;
       }),
-      import("./apps/quality/App").then((m) => {
+      import("./Quality").then((m) => {
         qualityAppModuleCache = m;
       }),
     ]).catch((err) => {});

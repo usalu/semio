@@ -1,6 +1,6 @@
 // #region Header
 
-// App.tsx
+// Docs.tsx
 
 // 2025 Ueli Saluz
 
@@ -27,12 +27,11 @@ import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useContext, 
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
 import * as Y from "yjs";
-import { useLabel } from "../../../i18n";
-import type { SketchpadStore } from "../../App";
-import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "../../App";
-import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "../../elements";
-import type { AppConfig, AppEdit, PanelVisibility } from "../../sketchpad";
-import { PanelKind, createPanelDefinition } from "../../sketchpad";
+import { useLabel } from "../i18n";
+import type { SketchpadStore } from "./Sketchpad";
+import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "./Sketchpad";
+import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
+import { createPanelDefinition, PanelKind, type AppConfig, type AppEdit, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 
@@ -175,7 +174,7 @@ export function getAllSections(): SectionInfo[] {
 // #region MDX Provider
 
 // Lazy load SectionTree to avoid loading React Router in Storybook
-const SectionTree = lazy(() => import("../../elements").then((module) => ({ default: module.SectionTree })));
+const SectionTree = lazy(() => import("./elements").then((module) => ({ default: module.SectionTree })));
 
 export interface HeadingNode {
   id: string;

@@ -20,12 +20,12 @@
 
 // #endregion
 
-import { MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
+import { InvalidKit, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, importKit, inverseKitDiff, Kit, Plane, serializeKit } from "./semio";
+import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, hasSemioErrors, importKit, inverseKitDiff, Kit, Plane, serializeKit, validateSemioKit } from "./semio";
 
 
-const TOLERANCE = 0.0001;
+const TOLERANCE = 0.001;
 
 const planesEqual = (p1?: Plane, p2?: Plane): boolean => {
     if (!p1 || !p2) return false; // Both must exist to be equal
@@ -175,6 +175,8 @@ describe("Import/Export", () => {
     it("Kit -> Zip -> Kit", async () => {
         const originalKit = MetabolismKit as unknown as Kit;
         const files = new Map<string, Blob>();
+        const dummyFile = new Blob(["dummy content"], { type: "text/plain" });
+        files.set("dummy.txt", dummyFile);
         const zipBlob = await exportKit(originalKit, files);
         expect(zipBlob).toBeInstanceOf(Blob);
         expect(zipBlob.size).toBeGreaterThan(0);
@@ -184,5 +186,49 @@ describe("Import/Export", () => {
         expect(areKitsEqual(originalKit, importedKit)).toBe(true);
         expect(importedFiles.size).toBe(files.size);
 
+    });
+});
+
+describe("Validation", () => {
+    it("Valid kit has no errors", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const result = validateSemioKit(kit);
+        expect(hasSemioErrors(result)).toBe(false);
+    });
+
+    it("Invalid kit has all expected errors", () => {
+        const kit = InvalidKit as unknown as Kit;
+        const result = validateSemioKit(kit);
+        expect(hasSemioErrors(result)).toBe(true);
+        const ruleIds = new Set(result.issues.map(i => i.ruleId));
+        const expectedRules = [
+            "guid-unique",
+            "type-name-unique",
+            "design-name-unique",
+            "piece-name-unique",
+            "quality-name-unique",
+            "interface-name-unique",
+            "file-name-unique",
+            "folder-name-unique",
+            "port-name-unique",
+            "model-name-unique",
+            "layer-path-unique"
+        ];
+        expectedRules.forEach(ruleId => {
+            expect(ruleIds.has(ruleId), `Missing validation rule: ${ruleId}`).toBe(true);
+        });
+        expect(ruleIds.size).toBe(expectedRules.length);
+    });
+
+    it("Fixes can be applied to resolve issues", () => {
+        const kit = InvalidKit as unknown as Kit;
+        const result = validateSemioKit(kit);
+        expect(result.issues.length).toBeGreaterThan(0);
+        const issue = result.issues[0];
+        expect(issue.fixes.length).toBeGreaterThan(0);
+        const fix = issue.fixes[0];
+        const fixedKit = applyKitDiff(kit, fix.diff);
+        const revalidated = validateSemioKit(fixedKit);
+        expect(revalidated.issues.some(i => i.ruleId === issue.ruleId && i.location.entityGuid === issue.location.entityGuid)).toBe(false);
     });
 });

@@ -3659,9 +3659,11 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
 interface BreadcrumbItemProps extends React.ComponentProps<"li"> {
   id?: string;
   content?: React.ReactNode;
+  onNavigate?: (href: string) => void;
+  options?: { label: React.ReactNode; href: string; id?: string }[];
 }
 
-function BreadcrumbItem({ className, id, content, children, ...props }: BreadcrumbItemProps) {
+function BreadcrumbItem({ className, id, content, children, onNavigate, options, ...props }: BreadcrumbItemProps) {
   const itemContent = content ?? children;
   const interactiveContent = React.useMemo(() => {
     if (itemContent == null || typeof itemContent === "boolean") return null;
@@ -3808,7 +3810,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   return (
     <div className="flex items-center justify-between border-t border-border pt-4 mt-8">
       {prev ? (
-        <Button onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
+        <Button id="semio.sketchpad.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
           <ChevronLeftIcon className="size-tiny" />
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
@@ -3819,7 +3821,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
         <div />
       )}
       {next ? (
-        <Button onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
+        <Button id="semio.sketchpad.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
@@ -4881,7 +4883,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       const target = controlsRef.current.target;
       const forwardVec = new THREE.Vector3().subVectors(target, position);
 
-      if (forwardVec.lengthSq() < 0.0001) return;
+      if (forwardVec.lengthSq() < 0.001) return;
 
       const forward = forwardVec.normalize();
       const up = cameraRef.current.up;

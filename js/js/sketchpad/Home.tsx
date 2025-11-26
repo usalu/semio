@@ -46,9 +46,13 @@ import { de, enUS } from "date-fns/locale";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import * as Y from "yjs";
-import i18n, { useLabel } from "../../../i18n";
-import { generateUniqueName, guid, Guid, Kit, KitShallow } from "../../../semio";
-import type { SketchpadStore } from "../../App";
+import i18n, { useLabel } from "../i18n";
+import { generateUniqueName, guid, Guid, Kit, KitShallow } from "../semio";
+import { docsRegistry } from "./Docs";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
+import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "./shared";
+import type { SketchpadStore } from "./Sketchpad";
 import {
   AppStore,
   Canvas,
@@ -77,12 +81,7 @@ import {
   useTheme,
   useTooltip,
   Window,
-} from "../../App";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "../../elements";
-import type { AppEdit, PanelDefinition, PanelVisibility } from "../../sketchpad";
-import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "../../sketchpad";
-import { docsRegistry } from "../docs/App";
-import { AppConfig } from "../index";
+} from "./Sketchpad";
 
 // #endregion Imports
 

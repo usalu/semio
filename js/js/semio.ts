@@ -406,7 +406,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 // #region Vec (weak entity)
 // https://github.com/usalu/semio#-vec-
 
-export const VecSchema = z.object({ x: z.number(), y: z.number() });
+export const VecSchema = z.object({ u: z.number(), v: z.number() });
 export type Vec = z.infer<typeof VecSchema>;
 export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
 export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
@@ -415,30 +415,30 @@ export const VecDiffSchema = VecSchema.partial();
 export type VecDiff = z.infer<typeof VecDiffSchema>;
 export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
   return {
-    x: after.x - before.x,
-    y: after.y - before.y,
+    u: after.u - before.u,
+    v: after.v - before.v,
   };
 };
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
+  const u = appliedDiff.u ?? 0;
+  const v = appliedDiff.v ?? 0;
   return {
-    x: original.x - x,
-    y: original.y - y,
+    u: original.u - u,
+    v: original.v - v,
   };
 };
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
   return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    u: (diff1.u ?? 0) + (diff2.u ?? 0),
+    v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
 };
 export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
+  const u = diff.u ?? 0;
+  const v = diff.v ?? 0;
   return {
-    x: base.x + x,
-    y: base.y + y,
+    u: base.u + u,
+    v: base.v + v,
   };
 };
 
@@ -3196,46 +3196,41 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
         piecePlanes[childPiece.guid] = childPlane;
 
-        // Compute center for diagram layout based on port angular positions
+        // Compute center for diagram layout based on connection type and port positions
         const radius = 2.697; // Diagram layout radius
+        const verticalVExtra = 1.0; // Constant v-offset for vertical connections
+        const horizontalScale = 3.0633; // Scale factor for horizontal connection offsets
         const parentCenter = parentPiece.center || { u: 0, v: 0 };
-        const childPlaneZ = childPlane.origin.z;
-        const parentPlaneZ = parentPlane.origin.z;
-        const zDiff = childPlaneZ - parentPlaneZ;
-        
-        // Convert port t-value to angular position for u and v offsets
-        // t ranges from -0.5 to 0.5, representing a full circle
-        // u = radius * sin(2π * t), v = radius * cos(2π * t)
-        const angle = 2 * Math.PI * parentPort.t;
-        const portOffsetU = radius * Math.sin(angle);
-        const portOffsetV = radius * Math.cos(angle);
-        
-        // For root children: use absolute angular position
-        // For others: add parent center + connection offset + z-based contribution
+        const connectionU = connection.u ?? 0;
+        const connectionV = connection.v ?? 0;
+
         let childU: number;
         let childV: number;
-        
+
         if (parentCenter.u === 0 && parentCenter.v === 0) {
-          // Parent is root - compute absolute position from port angle
-          childU = portOffsetU;
-          childV = portOffsetV;
+          // Root children: use angular formula based on parent port's t-value
+          const angle = 2 * Math.PI * parentPort.t;
+          childU = radius * Math.sin(angle);
+          childV = radius * Math.cos(angle);
         } else {
-          // Non-root: inherit parent's u, add connection offset and z contribution to v
-          const connectionU = connection.u ?? 0;
-          const connectionV = connection.v ?? 0;
-          const zContribution = zDiff / 2.75; // Scale z-difference to v-space (2.75 is floor height)
-          childU = parentCenter.u + connectionU;
-          childV = parentCenter.v + connectionV + zContribution;
+          // Non-root: determine if connection is vertical or horizontal based on port direction
+          const isVerticalConnection = Math.abs(parentPort.direction?.z ?? 0) > 0.5;
+
+          if (isVerticalConnection) {
+            // Vertical connection: add connection offset + constant vertical contribution
+            childU = parentCenter.u + connectionU;
+            childV = parentCenter.v + connectionV + verticalVExtra;
+          } else {
+            // Horizontal connection: scale connection offset
+            childU = parentCenter.u + connectionU * horizontalScale;
+            childV = parentCenter.v + connectionV * horizontalScale;
+          }
         }
-        
+
         const childCenter = {
           u: round(childU),
           v: round(childV),
         };
-        
-        if (childPiece.name?.includes('ci_t_f8')) {
-          console.log(`[DEBUG] ci_t_f8: parent=${parentPiece.name}, parentCenter=${JSON.stringify(parentCenter)}, conn=${JSON.stringify({u:connection.u, v:connection.v})}, zDiff=${zDiff}, childCenter=${JSON.stringify(childCenter)}`);
-        }
 
         const flatChildPiece: Piece = setAttributes(
           {
@@ -4414,21 +4409,39 @@ export interface KitImportResult {
   files: Map<string, Blob>;
 }
 
+let cachedSqlJs: any = null;
+const getSqlJs = async () => {
+  if (!cachedSqlJs) {
+    const initSqlJs = (await import("sql.js")).default;
+    cachedSqlJs = await initSqlJs();
+  }
+  return cachedSqlJs;
+};
+
 /**
  * Import a kit from a URL (remote HTTP/HTTPS) or ArrayBuffer/Buffer
  * Fetches the archive, extracts it, reads the SQLite database, and returns the kit and files.
  */
-export const importKit = async (source: string | ArrayBuffer | Buffer): Promise<KitImportResult> => {
+export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
   const JSZip = (await import("jszip")).default;
-  const initSqlJs = (await import("sql.js")).default;
 
   let arrayBuffer: ArrayBuffer;
-  if (typeof source === "string") {
-    const response = await fetch(source);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch kit from ${source}: ${response.statusText}`);
+  if (source instanceof Blob) {
+    arrayBuffer = await source.arrayBuffer();
+  } else if (typeof source === "string") {
+    if (source.startsWith("blob:")) {
+      const response = await fetch(source);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch kit from blob URL: ${response.statusText}`);
+      }
+      arrayBuffer = await response.arrayBuffer();
+    } else {
+      const response = await fetch(source);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch kit from ${source}: ${response.statusText}`);
+      }
+      arrayBuffer = await response.arrayBuffer();
     }
-    arrayBuffer = await response.arrayBuffer();
   } else if (source instanceof Buffer) {
     arrayBuffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength) as ArrayBuffer;
   } else {
@@ -4443,7 +4456,7 @@ export const importKit = async (source: string | ArrayBuffer | Buffer): Promise<
   }
 
   const dbArrayBuffer = await dbFile.async("arraybuffer");
-  const SQL = await initSqlJs();
+  const SQL = await getSqlJs();
   const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
 
   const kit = await sqliteToKit(db);
@@ -4468,9 +4481,8 @@ export const importKit = async (source: string | ArrayBuffer | Buffer): Promise<
  */
 export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blob> => {
   const JSZip = (await import("jszip")).default;
-  const initSqlJs = (await import("sql.js")).default;
 
-  const SQL = await initSqlJs();
+  const SQL = await getSqlJs();
   const db = new SQL.Database();
 
   await kitToSqlite(kit, db);
@@ -4481,14 +4493,10 @@ export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blo
   const zip = new JSZip();
   zip.file(".semio/kit.db", dbData);
 
-  // Add provided files
   for (const [path, blob] of files.entries()) {
-    zip.file(path, blob);
+    const arrayBuffer = await blob.arrayBuffer();
+    zip.file(path, new Uint8Array(arrayBuffer));
   }
-
-  // If this is the Metabolism kit, add all files from examples/metabolism (excluding .semio)
-  // Note: This requires the files to be provided in the files Map parameter
-  // In the future, this could be enhanced to fetch files from a known location
 
   return await zip.generateAsync({ type: "blob" });
 };
@@ -4647,8 +4655,8 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       } else if (pieceA.mirrorPlane || pieceB.mirrorPlane) {
         return false;
       }
-      if (pieceA.isHidden !== pieceB.isHidden) return false;
-      if (pieceA.isLocked !== pieceB.isLocked) return false;
+      if (normalizeBoolean(pieceA.isHidden) !== normalizeBoolean(pieceB.isHidden)) return false;
+      if (normalizeBoolean(pieceA.isLocked) !== normalizeBoolean(pieceB.isLocked)) return false;
       if (normalizeValue(pieceA.color) !== normalizeValue(pieceB.color)) return false;
       if (normalizeValue(pieceA.description) !== normalizeValue(pieceB.description)) return false;
       if (!arePropsEqual(pieceA.props, pieceB.props)) return false;
@@ -5415,6 +5423,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     const ports = execResult("SELECT * FROM port WHERE type_guid = ?", [typeGuid]);
     const typeAttributes = execResult("SELECT * FROM attribute WHERE type_guid = ?", [typeGuid]);
     const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_guid = ?", [typeGuid]);
+    const typeAuthors = execResult("SELECT * FROM type_author WHERE type_guid = ? ORDER BY rank", [typeGuid]);
 
     const type: any = {
       guid: typeGuid,
@@ -5440,6 +5449,9 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
 
     const concepts = mapOrUndefined(typeConcepts, (c: any) => c.concept);
     if (concepts) type.concepts = concepts;
+
+    const authors = mapOrUndefined(typeAuthors, (ta: any) => ({ guid: ta.author_guid }));
+    if (authors) type.authors = authors;
 
     const models_value = mapOrUndefined(models, (m: any) => {
       const modelTags = execResult("SELECT tag FROM model_tag WHERE model_guid = ?", [m.guid]);
@@ -5554,8 +5566,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
             xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
             yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
           } : undefined,
-          isHidden: p.is_hidden ? true : false,
-          isLocked: p.is_locked ? true : false,
+          isHidden: p.is_hidden ? true : undefined,
+          isLocked: p.is_locked ? true : undefined,
           color: toUndefined(p.color),
           description: toUndefined(p.description),
           props: (() => {
@@ -5606,8 +5618,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         return {
           guid: l.guid,
           path: l.path,
-          isHidden: l.is_hidden ? true : false,
-          isLocked: l.is_locked ? true : false,
+          isHidden: l.is_hidden ? true : undefined,
+          isLocked: l.is_locked ? true : undefined,
           color: toUndefined(l.color),
           description: toUndefined(l.description),
           attributes: mapOrUndefined(layerAttributes, buildAttribute),
@@ -5724,7 +5736,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
 
   // Load concepts
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
-  kit.concepts = concepts.map((row: any) => row.value);
+  kit.concepts = concepts.length > 0 ? concepts.map((row: any) => row.value) : undefined;
 
   // Load kit attributes
   const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
@@ -6061,8 +6073,8 @@ CREATE TABLE connection (
 	rotation FLOAT NOT NULL DEFAULT 0,
 	turn FLOAT NOT NULL DEFAULT 0,
 	tilt FLOAT NOT NULL DEFAULT 0,
-	x FLOAT,
-	y FLOAT,
+	u FLOAT,
+	v FLOAT,
 	description TEXT,
 	design_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
@@ -6099,6 +6111,15 @@ CREATE TABLE type_concept (
 	type_guid VARCHAR(36) NOT NULL,
 	concept VARCHAR(256) NOT NULL,
 	PRIMARY KEY (type_guid, concept)
+);
+
+CREATE TABLE type_author (
+	type_guid VARCHAR(36) NOT NULL,
+	author_guid VARCHAR(36) NOT NULL,
+	rank INTEGER NOT NULL,
+	PRIMARY KEY (type_guid, author_guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(author_guid) REFERENCES author (guid)
 );
 
 CREATE TABLE design_concept (
@@ -6338,6 +6359,14 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
     toArray(type.concepts).forEach((concept) => {
       db.run("INSERT INTO type_concept (type_guid, concept) VALUES (?, ?)", [type.guid, concept]);
+    });
+
+    toArray(type.authors).forEach((authorId, index) => {
+      db.run("INSERT INTO type_author (type_guid, author_guid, rank) VALUES (?, ?, ?)", [
+        type.guid,
+        typeof authorId === 'object' ? authorId.guid : authorId,
+        index,
+      ]);
     });
 
     toArray(type.models).forEach((model) => {
@@ -6594,15 +6623,11 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       // Skip connections with missing required data
       if (!connection.guid || !connection.connected?.piece?.guid || !connection.connecting?.piece?.guid ||
         !connection.connected?.port?.guid || !connection.connecting?.port?.guid) {
-        console.log(`[DEBUG] Skipping connection due to missing data:`, {
-          guid: connection.guid,
-          connection: JSON.stringify(connection).substring(0, 200),
-        });
         return;
       }
 
       db.run(
-        "INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           connection.guid,
           connection.connected.piece.guid,

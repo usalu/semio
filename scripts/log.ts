@@ -111,7 +111,7 @@ export function createLog(input: LogCreateInput): Log {
     summary: input.summary,
     model: input.model || getCurrentModel(),
   };
-  const content = input.content || "";
+  const content = input.content || "# Previously\n\n# Plan\n\n# Changes\n";
   const fileContent = matter.stringify(content, frontmatter);
   ensureDirectoryExists(logPath);
   writeFileSync(logPath, fileContent, "utf-8");

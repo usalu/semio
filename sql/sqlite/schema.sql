@@ -359,6 +359,15 @@ CREATE TABLE type_concept (
 	PRIMARY KEY (type_guid, concept)
 );
 
+CREATE TABLE type_author (
+	type_guid VARCHAR(36) NOT NULL,
+	author_guid VARCHAR(36) NOT NULL,
+	rank INTEGER NOT NULL,
+	PRIMARY KEY (type_guid, author_guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(author_guid) REFERENCES author (guid)
+);
+
 CREATE TABLE design_concept (
 	design_guid VARCHAR(36) NOT NULL,
 	concept VARCHAR(256) NOT NULL,

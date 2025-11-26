@@ -23,13 +23,17 @@
   "main": "./out/extension.js",
   "contributes": {},
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.test.config.ts",
     "dev": "vite build --watch",
+    "test": "vscode-test",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {
     "@types/vscode": "^1.106.1",
     "@types/node": "^24.10.1",
+    "@types/mocha": "^10.0.10",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2",
     "typescript": "^5.9.3",
     "vite": "^7.2.2"
   },

@@ -50,9 +50,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
-import i18n, { useLabel } from "../../../i18n";
-import { Author, buildFileTree, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Quality, File as SemioFile, Type, TypeDiff } from "../../../semio";
-import type { KitStore, SketchpadStore } from "../../App";
+import i18n, { useLabel } from "../i18n";
+import { Author, buildFileTree, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Quality, File as SemioFile, Type, TypeDiff } from "../semio";
+import type { KitStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
   ConceptFilter,
@@ -84,11 +84,10 @@ import {
   useSyncDeep,
   useTheme,
   Window,
-} from "../../App";
-import { Action, Input, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
-import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, Theme, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind } from "../../sketchpad";
-import { AppConfig } from "../index";
+} from "./Sketchpad";
+import { Action, Input, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
+import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, Theme, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { AppConfig, createPanelDefinition, PanelKind } from "./shared";
 
 // #endregion Imports
 
@@ -1991,6 +1990,7 @@ const AppContent: FC = () => {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [overId, setOverId] = React.useState<string | null>(null);
   const lastClickedIndexRef = React.useRef<number>(-1);
+  const clickTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -3234,6 +3234,12 @@ const AppContent: FC = () => {
   };
 
   const handleRowClick = (row: TableRow, index: number, e: React.MouseEvent) => {
+    // Clear any pending click timer to prevent double execution on double-click
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+
     // Handle shift-click range selection (cross-kind)
     if (e.shiftKey && lastClickedIndexRef.current !== -1) {
       const start = Math.min(lastClickedIndexRef.current, index);
@@ -3330,28 +3336,37 @@ const AppContent: FC = () => {
       return;
     }
 
-    // Handle normal single selection
-    if (row.kind === "designs") {
-      kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesign", (row.data as Design).guid);
-    } else if (row.kind === "types") {
-      kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectType", (row.data as Type).guid);
-    } else if (row.kind === "qualities") {
-      kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", (row.data as Quality).key);
-    } else if (row.kind === "interfaces") {
-      kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", (row.data as Interface).guid);
-    } else if (row.kind === "files") {
-      kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", (row.data as SemioFile).guid);
-    } else if (row.kind === "folders") {
-      kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolder", (row.data as Folder).guid);
-    } else if (row.kind === "authors") {
-      kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthor", (row.data as Author).name);
-    }
+    // Handle normal single selection with delay to detect double-click
+    clickTimerRef.current = setTimeout(() => {
+      if (row.kind === "designs") {
+        kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesign", (row.data as Design).guid);
+      } else if (row.kind === "types") {
+        kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectType", (row.data as Type).guid);
+      } else if (row.kind === "qualities") {
+        kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", (row.data as Quality).key);
+      } else if (row.kind === "interfaces") {
+        kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", (row.data as Interface).guid);
+      } else if (row.kind === "files") {
+        kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", (row.data as SemioFile).guid);
+      } else if (row.kind === "folders") {
+        kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolder", (row.data as Folder).guid);
+      } else if (row.kind === "authors") {
+        kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthor", (row.data as Author).name);
+      }
+      clickTimerRef.current = null;
+    }, 200);
 
     // Update last clicked index for shift-selection
     lastClickedIndexRef.current = index;
   };
 
   const handleRowDoubleClick = (row: TableRow, index: number) => {
+    // Clear the click timer to prevent single-click selection
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+
     if (row.kind === "designs") {
       sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
     } else if (row.kind === "types") {
@@ -3869,7 +3884,7 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }}>
                   <div className="flex items-center gap-single flex-1 min-w-0">
                     {row.hasChildren ? (
                       <Action

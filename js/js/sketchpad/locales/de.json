@@ -222,6 +222,50 @@
             "beginner": "Tutorials"
           }
         },
+        "tutorial": {
+          "controls": {
+            "stop": {
+              "label": {
+                "normal": "Tutorial beenden",
+                "beginner": "Klicken, um das aktuelle Tutorial zu beenden"
+              }
+            },
+            "previous": {
+              "label": {
+                "normal": "Vorheriger Schritt",
+                "beginner": "Zum vorherigen Schritt im Tutorial gehen"
+              }
+            },
+            "playPause": {
+              "label": {
+                "normal": "Abspielen/Pause",
+                "beginner": "Tutorial abspielen oder pausieren"
+              }
+            },
+            "next": {
+              "label": {
+                "normal": "Nächster Schritt",
+                "beginner": "Zum nächsten Schritt im Tutorial gehen"
+              }
+            }
+          }
+        },
+        "recording": {
+          "controls": {
+            "playPause": {
+              "label": {
+                "normal": "Aufnahme abspielen/pausieren",
+                "beginner": "Aufnahme abspielen oder pausieren"
+              }
+            },
+            "stop": {
+              "label": {
+                "normal": "Aufnahme beenden",
+                "beginner": "Aufnahme beenden und speichern"
+              }
+            }
+          }
+        },
         "createKit": {
           "label": {
             "normal": "Kit erstellen",
@@ -1228,8 +1272,8 @@
                 },
                 "artifact": {
                   "label": {
-                    "normal": "Artefakt",
-                    "beginner": "Der Artefaktname"
+                    "normal": "Name",
+                    "beginner": "Der Name"
                   }
                 },
                 "updatedAt": {
@@ -1495,6 +1539,24 @@
               },
               "manual": "design#windows",
               "tutorial": "hello-semio/model-design#table"
+            }
+          },
+          "diagram": {
+            "clusterMenu": {
+              "cluster": {
+                "label": {
+                  "normal": "Gruppieren",
+                  "beginner": "Ausgewählte Entwurfsteile zu einem einzelnen Cluster gruppieren"
+                }
+              }
+            },
+            "expandMenu": {
+              "expand": {
+                "label": {
+                  "normal": "Erweitern",
+                  "beginner": "Das Entwurfsteil erweitern, um seine internen Komponenten anzuzeigen"
+                }
+              }
             }
           },
           "descriptionPlaceholder": {
@@ -2203,6 +2265,20 @@
             "label": {
               "normal": "Settings",
               "beginner": "Settings"
+            }
+          },
+          "navigation": {
+            "previous": {
+              "label": {
+                "normal": "Zurück",
+                "beginner": "Zur vorherigen Seite navigieren"
+              }
+            },
+            "next": {
+              "label": {
+                "normal": "Weiter",
+                "beginner": "Zur nächsten Seite navigieren"
+              }
             }
           }
         },

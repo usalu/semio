@@ -6,7 +6,7 @@ suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
 	test('Validate invalid kit fixture', async () => {
-		const fixturePath = path.join(__dirname, '../../assets/semio/kit_invalid.json');
+		const fixturePath = path.join(__dirname, '../../../../assets/semio/kit_invalid.json');
 		const fixtureUri = vscode.Uri.file(fixturePath);
 
 		const document = await vscode.workspace.openTextDocument(fixtureUri);
@@ -54,7 +54,7 @@ suite('Extension Test Suite', () => {
 	});
 
 	test('Quick fixes apply correct diffs', async () => {
-		const fixturePath = path.join(__dirname, '../../assets/semio/kit_invalid.json');
+		const fixturePath = path.join(__dirname, '../../../../assets/semio/kit_invalid.json');
 		const fixtureUri = vscode.Uri.file(fixturePath);
 
 		const document = await vscode.workspace.openTextDocument(fixtureUri);

@@ -1,6 +1,6 @@
 // #region Header
 
-// App.tsx
+// Design.tsx
 
 // 2025 Ueli Saluz
 
@@ -41,11 +41,10 @@
 // #region Store
 
 import * as Y from "yjs";
-import { Guid, KitDiff, PieceDiff } from "../../../semio";
-import type { DesignStore, KitStore, SketchpadStore } from "../../App";
-import { identitySelector, KitDiffAppStore, registerDesignAppStoreFactory, useDesignScope, useKitScope, useSketchpadStore, useSync, useSyncDeep } from "../../App";
-import type { AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
+import { Guid, KitDiff, PieceDiff } from "../semio";
+import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
+import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesignAppStoreFactory, SketchpadStore, useDesignScope, useKitScope, usePieceScope, useSketchpadStore, useSync, useSyncDeep } from "./Sketchpad"; // TODO: Get rid of this import
 
 // #endregion Store
 
@@ -62,7 +61,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
-import { useLabel } from "../../../i18n";
+import { useLabel } from "../i18n";
 
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, Connection as RFConnection, XYPosition } from "@xyflow/react";
 import { BaseEdge, Handle, Position, ReactFlowInstance, ReactFlowProvider, useReactFlow, ViewportPortal } from "@xyflow/react";
@@ -96,7 +95,8 @@ import {
   TOLERANCE,
   toThreeRotation,
   Type,
-} from "../../../semio";
+} from "../semio";
+import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Geometry, Input, Scene, Slider, SortableTreeItems, Stepper, Textarea, TreeContent, TreeItem, TreeSection } from "./elements";
 import {
   Canvas,
   ConnectionScopeProvider,
@@ -138,9 +138,7 @@ import {
   useSketchpadCommands,
   useTooltip,
   useType,
-} from "../../App";
-import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Geometry, Input, Scene, Slider, SortableTreeItems, Stepper, Textarea, TreeContent, TreeItem, TreeSection } from "../../elements";
-import { AppConfig } from "../index";
+} from "./Sketchpad";
 
 let kitAppModuleCache: any = null;
 if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
@@ -159,7 +157,7 @@ const getKitAppModule = () => {
 };
 
 const KitSectionLazy = React.lazy(async () => {
-  const module = await import("../kit/App");
+  const module = await import("./Kit");
   kitAppModuleCache = module;
   if (typeof window !== "undefined") {
     if (!(window as any).__KIT_APP_MODULE_CACHE__) {
@@ -3659,7 +3657,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button level="temporary" className="px-3 py-single text-sm" onClick={() => onCluster(groupPieceIds)}>
+              <Button id="semio.sketchpad.app.design.diagram.clusterMenu.cluster" level="temporary" className="px-3 py-single text-sm" onClick={() => onCluster(groupPieceIds)}>
                 Cluster
               </Button>
             </div>
@@ -3721,7 +3719,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button level="temporary" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
+              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" level="temporary" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
                 Expand
               </Button>
             </div>
@@ -6208,24 +6206,24 @@ const App: FC<AppProps> = () => {
         content: [
           {
             type: "stack",
-            width: 70,
+            size: "50%",
             content: [
               {
                 type: "component",
                 componentName: DesignAppWindowKind.Diagram,
-                title: "Diagram",
+                title: "diagram",
                 componentState: {},
               },
             ],
           },
           {
             type: "stack",
-            width: 30,
+            size: "50%",
             content: [
               {
                 type: "component",
                 componentName: DesignAppWindowKind.Scene,
-                title: "Scene",
+                title: "scene",
                 componentState: {},
               },
             ],
@@ -6303,12 +6301,12 @@ const App: FC<AppProps> = () => {
       windowKinds: [
         {
           id: DesignAppWindowKind.Diagram,
-          label: "Diagram",
+          label: "diagram",
           component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
         },
         {
           id: DesignAppWindowKind.Scene,
-          label: "Scene",
+          label: "scene",
           component: (props: any) => <SceneWindow />,
         },
       ],

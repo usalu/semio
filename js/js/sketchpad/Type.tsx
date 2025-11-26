@@ -1,6 +1,6 @@
 // #region Header
 
-// App.tsx
+// Type.tsx
 
 // 2025 Ueli Saluz
 
@@ -29,9 +29,12 @@ import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
-import { useLabel } from "../../../i18n";
-import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, Type, TypeDiff, Vector } from "../../../semio";
-import type { KitStore, SketchpadStore, TypeStore } from "../../App";
+import { useLabel } from "../i18n";
+import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, Type, TypeDiff, Vector } from "../semio";
+import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
+import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, Transact, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
+import type { KitStore, SketchpadStore, TypeStore } from "./Sketchpad";
 import {
   Canvas,
   createDefaultLayout,
@@ -59,11 +62,7 @@ import {
   useTooltip,
   useType,
   useTypeScope,
-} from "../../App";
-import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "../../elements";
-import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, Transact, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
-import { AppConfig } from "../index";
+} from "./Sketchpad";
 
 let kitAppModuleCache: any = null;
 if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
@@ -82,7 +81,7 @@ const getKitAppModule = () => {
 };
 
 const KitSectionLazy = React.lazy(async () => {
-  const module = await import("../kit/App");
+  const module = await import("./Kit");
   kitAppModuleCache = module;
   if (typeof window !== "undefined") {
     if (!(window as any).__KIT_APP_MODULE_CACHE__) {

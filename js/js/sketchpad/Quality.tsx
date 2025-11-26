@@ -1,6 +1,6 @@
 // #region Header
 
-// App.tsx
+// Quality.tsx
 
 // 2025 Ueli Saluz
 
@@ -28,9 +28,12 @@ import React, { createContext, FC, memo, useCallback, useContext, useEffect, use
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import * as Y from "yjs";
-import { useLabel } from "../../../i18n";
-import { guid, Guid, Kit, Quality, QualityDiff } from "../../../semio";
-import type { KitStore, QualityStore, SketchpadStore } from "../../App";
+import { useLabel } from "../i18n";
+import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
+import { Diagram as BaseDiagram, calculateDiagramLayout, DiagramNode, DraggableAvatar, HoverCard, HoverCardContent, HoverCardTrigger, Input, PlaceholderDiagramNode, Textarea, TreeContent, TreeItem } from "./elements";
+import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { AppConfig, createPanelDefinition, PanelKind, ToolKind } from "./shared";
+import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
   createDefaultLayout,
@@ -51,11 +54,7 @@ import {
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
-} from "../../App";
-import { Diagram as BaseDiagram, calculateDiagramLayout, DiagramNode, DraggableAvatar, HoverCard, HoverCardContent, HoverCardTrigger, Input, PlaceholderDiagramNode, Textarea, TreeContent, TreeItem } from "../../elements";
-import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "../../sketchpad";
-import { createPanelDefinition, PanelKind, ToolKind } from "../../sketchpad";
-import { AppConfig } from "../index";
+} from "./Sketchpad";
 
 // #endregion
 

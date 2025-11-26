@@ -3,7 +3,7 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 IMPORTANT:
 
 - The codebase in under design and development and not used in production yet. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter.
+- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.
 
 # Specs
 
@@ -192,261 +192,6 @@ Props define measurable characteristics of ports using the quality system for st
 A `stat` is a statistical measurement on a `design` that references a `quality` with **range** (min/max) and optional **unit**.
 
 Stats provide computed or measured performance data for entire designs using the quality framework.
-
-# Validation
-
-## Overview
-
-Semio includes a **domain-pure validation system** built entirely in `semio.ts` with **zero JSON dependencies**. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
-
-## Architecture
-
-### Layer 1: Domain Logic (`semio.ts`)
-
-- **100% JSON-agnostic** - No JSON paths, parsing, or serialization logic
-- **Pure functions** - All validation is deterministic and side-effect free
-- **Diff-based fixes** - Every fix is a `KitDiff` that can be applied, inverted, and merged
-- **Reusable everywhere** - Works in Sketchpad UI, CLI, backend, VS Code, and any other platform
-
-### Layer 2: Platform Integrations
-
-Each platform provides its own thin wrapper:
-
-- **VS Code Extension** (`js/vscode`) - JSON linter with Quick Fixes
-- **Sketchpad UI** - In-app validation panel
-- **CLI** - Command-line validation tool
-- **Backend** - API validation endpoint
-
-## Validation Types
-
-### Core Types
-
-```typescript
-type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Port" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
-type SemioValidationSeverity = "error" | "warning";
-
-interface SemioDomainLocation {
-  entityKind: SemioEntityKind;
-  entityGuid?: Guid;
-  field?: string;
-}
-
-interface SemioKitFix {
-  title: string;
-  diff: KitDiff;
-}
-
-interface SemioValidationIssue {
-  ruleId: string;
-  severity: SemioValidationSeverity;
-  message: string;
-  location: SemioDomainLocation;
-  relatedGuids?: Guid[];
-  fixes: SemioKitFix[];
-}
-
-interface SemioValidationResult {
-  issues: SemioValidationIssue[];
-}
-```
-
-### Validation Context
-
-```typescript
-interface SemioValidationContext {
-  kit: Kit;
-  typesByGuid: Map<Guid, Type>;
-  designsByGuid: Map<Guid, Design>;
-  piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
-  portsByTypeGuid: Map<Guid, Port[]>;
-  modelsByTypeGuid: Map<Guid, Model[]>;
-}
-```
-
-## Validation Rules
-
-All validation rules follow the pattern:
-
-```typescript
-type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
-```
-
-### Default Rules
-
-#### 1. GUID Uniqueness (`guid-unique`)
-
-**Severity:** Error
-
-All GUIDs must be unique across the entire kit, including:
-
-- Kit
-- Types
-- Designs
-- Pieces
-- Connections
-- Stats
-- Qualities
-- Interfaces
-- Files
-- Folders
-
-**Fix:** Regenerates a new GUID and updates all references throughout the kit.
-
-#### 2. Type Name Uniqueness (`type-name-unique`)
-
-**Severity:** Error
-
-Types with the same parent must have unique names.
-
-**Fix:** Renames the type with a unique suffix (e.g., "Wall 2", "Wall 3").
-
-#### 3. Design Name Uniqueness (`design-name-unique`)
-
-**Severity:** Error
-
-Designs with the same parent must have unique names.
-
-**Fix:** Renames the design with a unique suffix.
-
-#### 4. Piece Name Uniqueness (`piece-name-unique`)
-
-**Severity:** Error
-
-Pieces within a design must have unique names.
-
-**Fix:** Renames the piece with a unique suffix.
-
-#### 5. Quality Name Uniqueness (`quality-name-unique`)
-
-**Severity:** Error
-
-All qualities within a kit must have unique names.
-
-**Fix:** Renames the quality with a unique suffix.
-
-#### 6. Interface Name Uniqueness (`interface-name-unique`)
-
-**Severity:** Error
-
-All interfaces within a kit must have unique names.
-
-**Fix:** Renames the interface with a unique suffix.
-
-#### 7. File Name Uniqueness (`file-name-unique`)
-
-**Severity:** Error
-
-All files within a kit must have unique names.
-
-**Fix:** Renames the file with a unique suffix.
-
-#### 8. Folder Name Uniqueness (`folder-name-unique`)
-
-**Severity:** Error
-
-Folders with the same parent must have unique names.
-
-**Fix:** Renames the folder with a unique suffix.
-
-#### 9. Port Name Uniqueness (`port-name-unique`)
-
-**Severity:** Error
-
-Ports within a type must have unique names.
-
-**Fix:** Renames the port with a unique suffix.
-
-#### 10. Model Name Uniqueness (`model-name-unique`)
-
-**Severity:** Error
-
-Models within a type must have unique names.
-
-**Fix:** Renames the model with a unique suffix.
-
-#### 11. Layer Path Uniqueness (`layer-path-unique`)
-
-**Severity:** Error
-
-Layer paths within a design must be unique.
-
-**Fix:** Renames the layer path with a unique suffix.
-
-## Uniqueness Requirements Summary
-
-| Entity     | Scope                  | Field | Rule ID               |
-| ---------- | ---------------------- | ----- | --------------------- |
-| Kit        | Global                 | guid  | guid-unique           |
-| Type       | Siblings (same parent) | name  | type-name-unique      |
-| Type       | Global                 | guid  | guid-unique           |
-| Design     | Siblings (same parent) | name  | design-name-unique    |
-| Design     | Global                 | guid  | guid-unique           |
-| Piece      | Within design          | name  | piece-name-unique     |
-| Piece      | Global                 | guid  | guid-unique           |
-| Connection | Global                 | guid  | guid-unique           |
-| Port       | Within type            | name  | port-name-unique      |
-| Model      | Within type            | name  | model-name-unique     |
-| Quality    | Global                 | name  | quality-name-unique   |
-| Quality    | Global                 | guid  | guid-unique           |
-| Interface  | Global                 | name  | interface-name-unique |
-| Interface  | Global                 | guid  | guid-unique           |
-| File       | Global                 | name  | file-name-unique      |
-| File       | Global                 | guid  | guid-unique           |
-| Folder     | Siblings (same parent) | name  | folder-name-unique    |
-| Folder     | Global                 | guid  | guid-unique           |
-| Layer      | Within design          | path  | layer-path-unique     |
-| Stat       | Global                 | guid  | guid-unique           |
-
-## Usage
-
-### In Domain Code
-
-```typescript
-const result = validateSemioKit(kit);
-if (hasSemioErrors(result)) {
-  console.error("Validation errors found:", result.issues);
-}
-```
-
-### Applying Fixes
-
-```typescript
-const issue = result.issues[0];
-const fix = issue.fixes[0];
-const fixedKit = applyKitDiff(kit, fix.diff);
-```
-
-### Custom Validation
-
-```typescript
-const customRule: SemioValidationRule = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
-  // Custom validation logic
-  return issues;
-};
-
-const result = validateSemioKit(kit, {
-  rules: [...defaultSemioValidationRules, customRule],
-});
-```
-
-## Creating New Rules
-
-1. Define the rule function following `SemioValidationRule` signature
-2. Use `semioMakeFix` helper to generate `KitDiff`-based fixes
-3. Add to `defaultSemioValidationRules` array
-4. Document in this section
-
-Example:
-
-```typescript
-export const semioCustomRule: SemioValidationRule = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
-  // Validation logic
-  // Use semioMakeFix to create fixes
-  return issues;
-};
-```
 
 # Monorepo
 
@@ -989,7 +734,7 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 
 ##### 5. Tutorial Recording
 
-**Location:** `js/js/sketchpad/tutorials/`
+**Location:** `js/js/sketchpad/Tutorials.tsx`
 
 Command origins enable tutorial recording and playback:
 
@@ -1378,47 +1123,65 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── de.json
 │ │ │ └── en.json
 │ │ ├── sketchpad
-│ │ │ ├── App.tsx # central barrel (Canvas, Navbar, Footer, store, kits, panels)
-│ │ │ ├── apps
-│ │ │ │ ├── index.tsx
-│ │ │ │ ├── design
-│ │ │ │ │ └── App.tsx
-│ │ │ │ ├── docs
-│ │ │ │ │ ├── App.tsx
-│ │ │ │ │ └── pages
+│ │ │ ├── Sketchpad.tsx # central barrel (Canvas, Navbar, Footer, store, kits, panels)
+│ │ │ ├── Design.tsx # design app
+│ │ │ ├── Docs.tsx # documentation app
+│ │ │ ├── Home.tsx # home app
+│ │ │ ├── Kit.tsx # kit app
+│ │ │ ├── Quality.tsx # quality app
+│ │ │ ├── Type.tsx # type app
+│ │ │ ├── Tutorials.tsx # consolidated tutorial system
+│ │ │ ├── elements.tsx # UI elements
+│ │ │ ├── locales
+│ │ │ │ ├── de.json
+│ │ │ │ └── en.json
+│ │ │ └── pages # documentation pages
+│ │ │ ├── index.mdx
+│ │ │ ├── getting-started
+│ │ │ │ ├── index.mdx
+│ │ │ │ ├── installation.mdx
+│ │ │ │ ├── intro
 │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ ├── getting-started
-│ │ │ │ │ │ ├── index.mdx
-│ │ │ │ │ │ └── installation.mdx
-│ │ │ │ │ ├── integrations
-│ │ │ │ │ │ └── index.mdx
-│ │ │ │ │ ├── manuals
-│ │ │ │ │ │ └── kit.mdx
-│ │ │ │ │ ├── showcases
-│ │ │ │ │ │ └── metabolism.mdx
-│ │ │ │ │ └── tutorials
-│ │ │ │ │ ├── hello-semio
-│ │ │ │ │ │ └── index.mdx
-│ │ │ │ │ └── serial-conversion
-│ │ │ │ │ └── index.mdx
-│ │ │ │ ├── home
-│ │ │ │ │ └── App.tsx
-│ │ │ │ ├── kit
-│ │ │ │ │ └── App.tsx
-│ │ │ │ ├── quality
-│ │ │ │ │ └── App.tsx
-│ │ │ │ └── type
-│ │ │ │ └── App.tsx
+│ │ │ │ │ ├── think-in-semio.mdx
+│ │ │ │ │ └── why-semio.mdx
+│ │ │ │ └── starter.mdx
+│ │ │ ├── integrations
+│ │ │ │ ├── index.mdx
+│ │ │ │ ├── cloud.mdx
+│ │ │ │ ├── ladybug.mdx
+│ │ │ │ ├── rhino.mdx
+│ │ │ │ ├── speckle.mdx
+│ │ │ │ └── wasp.mdx
+│ │ │ ├── manuals
+│ │ │ │ ├── index.mdx
+│ │ │ │ ├── grasshopper.mdx
+│ │ │ │ ├── semio
+│ │ │ │ │ ├── index.mdx
+│ │ │ │ │ └── kit.mdx
+│ │ │ │ └── sketchpad.mdx
+│ │ │ ├── showcases
+│ │ │ │ ├── index.mdx
+│ │ │ │ └── metabolism.mdx
+│ │ │ ├── theory
+│ │ │ │ ├── index.mdx
+│ │ │ │ ├── design-information-modeling.mdx
+│ │ │ │ ├── graphs.mdx
+│ │ │ │ └── kit-of-parts-architecture.mdx
 │ │ │ └── tutorials
-│ │ │ ├── commands.ts
-│ │ │ ├── exampleTutorial.ts
-│ │ │ ├── index.ts
-│ │ │ ├── RecordButton.tsx
-│ │ │ ├── sketchpadTour.ts
-│ │ │ ├── store.tsx
-│ │ │ ├── TutorialControls.tsx
-│ │ │ ├── TutorialOverlay.tsx
-│ │ │ └── types.ts
+│ │ │ ├── index.mdx
+│ │ │ ├── hello-semio
+│ │ │ │ ├── index.mdx
+│ │ │ │ ├── model-brick-set.mdx
+│ │ │ │ ├── model-design.mdx
+│ │ │ │ ├── save-kit.mdx
+│ │ │ │ ├── show-design.mdx
+│ │ │ │ └── sketch-setup.mdx
+│ │ │ ├── metabolism
+│ │ │ │ └── index.mdx
+│ │ │ └── serial-conversion
+│ │ │ ├── index.mdx
+│ │ │ └── sketchpad
+│ │ │ └── index.mdx
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts
@@ -1516,7 +1279,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.
 - The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in components.
 
-The former `Canvas`, `Navbar`, `Footer`, `Panel`, and `store` modules now live inside `js/js/sketchpad/App.tsx`. Keep the region order intact when modifying this file so downstream imports continue to work.
+The former `Canvas`, `Navbar`, `Footer`, `Panel`, and `store` modules now live inside `js/js/sketchpad/Sketchpad.tsx`. Keep the region order intact when modifying this file so downstream imports continue to work.
 
 #### Architecture - Open-Closed Principle
 
@@ -1524,7 +1287,7 @@ The codebase follows the Open-Closed Principle (OCP): closed for modification, o
 
 ##### App Structure Standards
 
-All apps in `js/js/sketchpad/apps/*/App.tsx` MUST follow this structure:
+All apps in `js/js/sketchpad/*App.tsx` (Design.tsx, Home.tsx, Kit.tsx, Quality.tsx, Type.tsx, Docs.tsx) MUST follow this structure:
 
 1. **Region Order:** Header → Imports → Types → Store → Commands → Components → App → Config
 2. **Store Base Class:** MUST extend either `AppStore` or `KitDiffAppStore` (no custom base classes)
@@ -1540,16 +1303,16 @@ See `REFACTOR.md` for detailed rationale and migration guide.
 
 To add a new app:
 
-1. Create a folder under `js/js/sketchpad/apps/{appname}/`.
-2. Add a single `App.tsx` that:
+1. Create a file in `js/js/sketchpad/{AppName}.tsx`.
+2. Add a single file that:
    - exports the default React component,
    - declares and exports `config: AppConfig`,
    - wires any local state, commands, or helpers needed by the app.
 3. Keep optional helpers (pages, panels, tools) alongside the file and import them from the same module.
 
-The app registry auto-discovers `App.tsx` files via `import.meta.glob('./*/App.tsx')`.
+The app registry auto-discovers app files via `import.meta.glob('./*.tsx')`.
 
-Example section inside `App.tsx`:
+Example section inside the app file:
 
 ```typescript
 import { FC } from "react";
@@ -1575,7 +1338,7 @@ export default App;
 
 To add a new tool to an app:
 
-1. Create a `*Tool.tsx` file directly inside `js/js/sketchpad/apps/{app}/`.
+1. Create a `*Tool.tsx` file directly inside `js/js/sketchpad/`.
 2. Export a `Tool<AppState>` object with a unique `id` and `render` implementation.
 
 Each app loads sibling `*Tool.tsx` modules via `import.meta.glob('./*Tool.tsx', { eager: true })`, so simply dropping the file in place registers it.
@@ -1609,11 +1372,13 @@ useEffect(() => {
 
 ##### Tutorials
 
-The tutorial system lives in `js/js/sketchpad/tutorials` and re-exports everything via `index.ts`. Tutorials are managed by `TutorialStore`, which wraps a Y.js map and keeps playback, milestone ordering, and recording state (`TutorialPlaybackState`, `TutorialRecordingState`). Always create the store with the app transaction handler so tutorial mutations participate in undo/redo.
+The tutorial system is consolidated in `js/js/sketchpad/Tutorials.tsx` and is split into regions for types, store, commands, built-in tutorials, and UI components. `TutorialStore` wraps a Y.js map and keeps playback, milestone ordering, and recording state (`TutorialPlaybackState`, `TutorialRecordingState`). Always create the store with the app transaction handler so tutorial mutations participate in undo/redo.
 
-Wrap consumers in `TutorialProvider` and use the helper hooks (`useTutorialStore`, `useActiveTutorial`, `useTutorialProgress`, `useTutorialCommandInterceptor`, etc.) instead of accessing the store directly. `TutorialControls` and `TutorialOverlay` are the canonical UI integrations for playback, highlighting, and recording.
+Wrap consumers in `TutorialProvider` and use the helper hooks (`useTutorialStore`, `useActiveTutorial`, `useTutorialProgress`, `useTutorialCommandInterceptor`, etc.) instead of accessing the store directly. `TutorialControls`, `RecordingControls`, `RecordButton`, and `TutorialOverlay` are the canonical UI integrations for playback, recording, highlighting, and capture.
 
-Tutorial commands live in `commands.ts` under the `semio.tutorial.*` and `semio.recording.*` namespaces; extend the exported `tutorialCommands` object and re-export through `index.ts` when adding behaviors. Bundle reusable walkthroughs or recordings as modules (for example `sketchpadTour.ts`) that return `Tutorial` objects and register them with `addTutorial`.
+Tutorial commands are consolidated in `Tutorials.tsx` under the `tutorialCommands` and `devCommands` objects for the `semio.tutorial.*` and `semio.recording.*` namespaces. Bundle reusable walkthroughs or recordings as data objects (for example `helloTutorial`, `sketchpadTour`) and register them with `addTutorial`.
+
+All tutorial-related code (types, store, commands, UI components, and built-in tutorials) is now in a single file using regions for organization instead of being spread across multiple files in a separate folder.
 
 ##### Footer
 
@@ -1716,7 +1481,7 @@ Every app supports transactions:
 
 ##### Hooks and Helpers
 
-- **`useSync` / `useSyncDeep`** (from `js/js/sketchpad/App.tsx`) wrap `useSyncExternalStore` against a store's `onChanged` / `onChangedDeep` events. Pass a selector (defaults to `identitySelector`) to scope renders to the slice you need.
+- **`useSync` / `useSyncDeep`** (from `js/js/sketchpad/Sketchpad.tsx`) wrap `useSyncExternalStore` against a store's `onChanged` / `onChangedDeep` events. Pass a selector (defaults to `identitySelector`) to scope renders to the slice you need.
 - **`createObserver`** bridges a Y.js map or array into the store by registering either shallow or deep observers; always dispose the returned cleanup in `useEffect` finalizers.
 - **`RemoteProviders`** bundles the `yProvider` and `fileProvider` factories needed when constructing `SketchpadStore` so persistence and external file access stay aligned.
 
@@ -1881,12 +1646,14 @@ executeCommand<T>(command: string, ...args): Promise<T>
 
 #### Files
 
-- `js/js/sketchpad/App.tsx` - Base Store, AppStore, KitDiffAppStore, SketchpadStore, KitStore
-- `js/js/sketchpad/apps/design/App.tsx` - DesignAppStore and design app state
-- `js/js/sketchpad/apps/type/App.tsx` - TypeAppStore and type toolchain
-- `js/js/sketchpad/apps/quality/App.tsx` - QualityAppStore and quality workflows
-- `js/js/sketchpad/apps/kit/App.tsx` - KitAppStore and kit command wiring
-- `js/js/sketchpad/apps/home/App.tsx` - HomeStore and home experience
+- `js/js/sketchpad/Sketchpad.tsx` - Base Store, AppStore, KitDiffAppStore, SketchpadStore, KitStore
+- `js/js/sketchpad/Design.tsx` - DesignAppStore and design app state
+- `js/js/sketchpad/Type.tsx` - TypeAppStore and type toolchain
+- `js/js/sketchpad/Quality.tsx` - QualityAppStore and quality workflows
+- `js/js/sketchpad/Kit.tsx` - KitAppStore and kit command wiring
+- `js/js/sketchpad/Home.tsx` - HomeStore and home experience
+- `js/js/sketchpad/Docs.tsx` - DocsAppStore and documentation app
+- `js/js/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
 
 ### Command System
 
@@ -2047,7 +1814,7 @@ Users can override default hotkeys via `hotkeyOverrides` in SketchpadStore. Over
 
 #### Hotkey Hooks
 
-- `useHotkey(path, callback, deps)` - Register hotkey handler
+- `useHotkey(path, callback, deps)` - Register hotkey handler (from `js/js/sketchpad/Sketchpad.tsx`)
 - `useSetHotkey()` - Set hotkey override
 - `useResetHotkey()` - Reset hotkey to default
 - `useResetAllHotkeys()` - Reset all overrides
@@ -2217,6 +1984,261 @@ Windows can emit events via `onWindowEvents` callback:
 - Window focus changes
 - Window resize
 - Custom app events
+
+### Validation
+
+#### Overview
+
+Semio includes a **domain-pure validation system** built entirely in `semio.ts` with **zero JSON dependencies**. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
+
+#### Architecture
+
+##### Layer 1: Domain Logic (`semio.ts`)
+
+- **100% JSON-agnostic** - No JSON paths, parsing, or serialization logic
+- **Pure functions** - All validation is deterministic and side-effect free
+- **Diff-based fixes** - Every fix is a `KitDiff` that can be applied, inverted, and merged
+- **Reusable everywhere** - Works in Sketchpad UI, CLI, backend, VS Code, and any other platform
+
+##### Layer 2: Platform Integrations
+
+Each platform provides its own thin wrapper:
+
+- **VS Code Extension** (`js/vscode`) - JSON linter with Quick Fixes
+- **Sketchpad UI** - In-app validation panel
+- **CLI** - Command-line validation tool
+- **Backend** - API validation endpoint
+
+#### Validation Types
+
+##### Core Types
+
+```typescript
+type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Port" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+type SemioValidationSeverity = "error" | "warning";
+
+interface SemioDomainLocation {
+  entityKind: SemioEntityKind;
+  entityGuid?: Guid;
+  field?: string;
+}
+
+interface SemioKitFix {
+  title: string;
+  diff: KitDiff;
+}
+
+interface SemioValidationIssue {
+  ruleId: string;
+  severity: SemioValidationSeverity;
+  message: string;
+  location: SemioDomainLocation;
+  relatedGuids?: Guid[];
+  fixes: SemioKitFix[];
+}
+
+interface SemioValidationResult {
+  issues: SemioValidationIssue[];
+}
+```
+
+##### Validation Context
+
+```typescript
+interface SemioValidationContext {
+  kit: Kit;
+  typesByGuid: Map<Guid, Type>;
+  designsByGuid: Map<Guid, Design>;
+  piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
+  portsByTypeGuid: Map<Guid, Port[]>;
+  modelsByTypeGuid: Map<Guid, Model[]>;
+}
+```
+
+#### Validation Rules
+
+All validation rules follow the pattern:
+
+```typescript
+type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
+```
+
+##### Default Rules
+
+#### 1. GUID Uniqueness (`guid-unique`)
+
+**Severity:** Error
+
+All GUIDs must be unique across the entire kit, including:
+
+- Kit
+- Types
+- Designs
+- Pieces
+- Connections
+- Stats
+- Qualities
+- Interfaces
+- Files
+- Folders
+
+**Fix:** Regenerates a new GUID and updates all references throughout the kit.
+
+#### 2. Type Name Uniqueness (`type-name-unique`)
+
+**Severity:** Error
+
+Types with the same parent must have unique names.
+
+**Fix:** Renames the type with a unique suffix (e.g., "Wall 2", "Wall 3").
+
+#### 3. Design Name Uniqueness (`design-name-unique`)
+
+**Severity:** Error
+
+Designs with the same parent must have unique names.
+
+**Fix:** Renames the design with a unique suffix.
+
+#### 4. Piece Name Uniqueness (`piece-name-unique`)
+
+**Severity:** Error
+
+Pieces within a design must have unique names.
+
+**Fix:** Renames the piece with a unique suffix.
+
+#### 5. Quality Name Uniqueness (`quality-name-unique`)
+
+**Severity:** Error
+
+All qualities within a kit must have unique names.
+
+**Fix:** Renames the quality with a unique suffix.
+
+#### 6. Interface Name Uniqueness (`interface-name-unique`)
+
+**Severity:** Error
+
+All interfaces within a kit must have unique names.
+
+**Fix:** Renames the interface with a unique suffix.
+
+#### 7. File Name Uniqueness (`file-name-unique`)
+
+**Severity:** Error
+
+All files within a kit must have unique names.
+
+**Fix:** Renames the file with a unique suffix.
+
+#### 8. Folder Name Uniqueness (`folder-name-unique`)
+
+**Severity:** Error
+
+Folders with the same parent must have unique names.
+
+**Fix:** Renames the folder with a unique suffix.
+
+#### 9. Port Name Uniqueness (`port-name-unique`)
+
+**Severity:** Error
+
+Ports within a type must have unique names.
+
+**Fix:** Renames the port with a unique suffix.
+
+#### 10. Model Name Uniqueness (`model-name-unique`)
+
+**Severity:** Error
+
+Models within a type must have unique names.
+
+**Fix:** Renames the model with a unique suffix.
+
+#### 11. Layer Path Uniqueness (`layer-path-unique`)
+
+**Severity:** Error
+
+Layer paths within a design must be unique.
+
+**Fix:** Renames the layer path with a unique suffix.
+
+#### Uniqueness Requirements Summary
+
+| Entity     | Scope                  | Field | Rule ID               |
+| ---------- | ---------------------- | ----- | --------------------- |
+| Kit        | Global                 | guid  | guid-unique           |
+| Type       | Siblings (same parent) | name  | type-name-unique      |
+| Type       | Global                 | guid  | guid-unique           |
+| Design     | Siblings (same parent) | name  | design-name-unique    |
+| Design     | Global                 | guid  | guid-unique           |
+| Piece      | Within design          | name  | piece-name-unique     |
+| Piece      | Global                 | guid  | guid-unique           |
+| Connection | Global                 | guid  | guid-unique           |
+| Port       | Within type            | name  | port-name-unique      |
+| Model      | Within type            | name  | model-name-unique     |
+| Quality    | Global                 | name  | quality-name-unique   |
+| Quality    | Global                 | guid  | guid-unique           |
+| Interface  | Global                 | name  | interface-name-unique |
+| Interface  | Global                 | guid  | guid-unique           |
+| File       | Global                 | name  | file-name-unique      |
+| File       | Global                 | guid  | guid-unique           |
+| Folder     | Siblings (same parent) | name  | folder-name-unique    |
+| Folder     | Global                 | guid  | guid-unique           |
+| Layer      | Within design          | path  | layer-path-unique     |
+| Stat       | Global                 | guid  | guid-unique           |
+
+#### Usage
+
+##### In Domain Code
+
+```typescript
+const result = validateSemioKit(kit);
+if (hasSemioErrors(result)) {
+  console.error("Validation errors found:", result.issues);
+}
+```
+
+##### Applying Fixes
+
+```typescript
+const issue = result.issues[0];
+const fix = issue.fixes[0];
+const fixedKit = applyKitDiff(kit, fix.diff);
+```
+
+##### Custom Validation
+
+```typescript
+const customRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  // Custom validation logic
+  return issues;
+};
+
+const result = validateSemioKit(kit, {
+  rules: [...defaultSemioValidationRules, customRule],
+});
+```
+
+###### Creating New Rules
+
+1. Define the rule function following `SemioValidationRule` signature
+2. Use `semioMakeFix` helper to generate `KitDiff`-based fixes
+3. Add to `defaultSemioValidationRules` array
+4. Document in this section
+
+Example:
+
+```typescript
+export const semioCustomRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  // Validation logic
+  // Use semioMakeFix to create fixes
+  return issues;
+};
+```
 
 # Hierarchies
 
