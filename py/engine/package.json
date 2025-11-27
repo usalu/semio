@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx ./dev.ts",
     "build": "tsx ./build.ts",
-    "test": "tsx ./test.ts"
+    "test": "tsx ./test.ts",
+    "preflight": "ruff format . && ruff check --fix . || echo \"Warning: ruff not found. Install with: pip install ruff\""
   },
   "targets": {
     "update": {

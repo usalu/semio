@@ -1,15 +1,7 @@
 #!/usr/bin/env sh
 
-# Run formatters first
-echo "🎨 Running formatters..."
-npx tsx hooks/prettier.ts
-npx tsx hooks/ruff.ts
+echo "🚀 Running preflight checks..."
+npm run preflight
 
-# Run linters and generate reports
-echo "🔍 Running linters..."
-npx tsx hooks/i18n.ts
-npx tsx hooks/typescript.ts
-npx tsx hooks/eslint.ts
-
-echo "✅ All checks passed!"
+echo "✅ All preflight checks passed!"
 

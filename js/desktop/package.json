@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "electron-forge start",
     "build": "electron-forge make",
-    "publish": "electron-forge publish"
+    "publish": "electron-forge publish",
+    "preflight": "echo \"No preflight checks configured\""
   },
   "dependencies": {
     "@semio/js": "^0.1.0",

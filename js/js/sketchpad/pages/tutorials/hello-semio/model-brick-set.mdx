@@ -46,7 +46,7 @@ you’re building a **semantic system** that adapts, scales, and speaks your des
 Let’s begin by modeling the mold shown in the sketch  
 This will serve as the base for generating its **Variants** 🧩
 
-![📤 sketch drawing](/sketch-drawing-mold.png)
+![📤 sketch drawing](/assets/images/sketch-drawing-mold.png)
 
 Before we start building, let’s go over the essential elements that define a **Type** 🧱:
 
@@ -160,7 +160,7 @@ This is useful because it lets us generate **all the different Variants** of thi
 using a single logic controlled by the parameters `n` and `W`  
 which define the brick’s length and width 📏
 
-![📁 Geometry Generation](/attach-geometry-crop.gif)
+![📁 Geometry Generation](/assets/images/attach-geometry-crop.gif)
 
 ---
 
@@ -176,7 +176,7 @@ You can place it **directly after** your geometry generation step in Grasshopper
 
 🔁 The Export Workflow Looks Like This:
 
-![📤 Export Geometry](/export-geometry.png)
+![📤 Export Geometry](/assets/images/export-geometry.png)
 
 ---
 
@@ -205,7 +205,7 @@ Another `Concat` merges directory + file name:
 
 Your file directory should now look like this:
 
-![📤 Exported file](/file-export-Profile-2-.png)
+![📤 Exported file](/assets/images/file-export-Profile-2-.png)
 
 ---
 
@@ -224,7 +224,7 @@ This tells Semio **where to find the geometry** that represents your Type.
 - 🔗 This Model is later connected to the **`Typ` (Model Type)** component —  
   so that your Type is linked to its visual form
 
-![📁 Reference Geometry](/reference-geometry.png)
+![📁 Reference Geometry](/assets/images/reference-geometry.png)
 
 ---
 
@@ -298,8 +298,8 @@ This version uses the **fully detailed geometry** of the piece 🪵
 A rectangle cut at an angle and extruded into a realistic wooden profile ✏️  
 It includes every visible detail in 3D: full depth, edges, and joinery-ready shapes 🔍
 
-![📁 Switch Model](/Switch-Model.png)  
-![📁 Filename](/Profile-2-detailed.png)
+![📁 Switch Model](/assets/images/Switch-Model.png)  
+![📁 Filename](/assets/images/Profile-2-detailed.png)
 
 Best for:
 
@@ -315,8 +315,8 @@ This version is a **flat sheet simplification** 📄
 A single-surface geometry that represents the general size of the piece 📐  
 It captures only **one dimension** and skips all 3D detail 🚫
 
-![📁 Switch Model](/switch-model-sheet.png)  
-![📁 Filename](/Profile-2-simplified.png)
+![📁 Switch Model](/assets/images/switch-model-sheet.png)  
+![📁 Filename](/assets/images/Profile-2-simplified.png)
 
 Use this when:
 
@@ -332,8 +332,8 @@ This version is a **bounding box simplification** 📦
 A simple block that approximates the piece's volume ➕  
 It includes **two dimensions** but omits exact geometry 🧊
 
-![📁 Switch Model](/switch-model-Block.png)  
-![📁 Filename](/Profile-2-simplified.png)
+![📁 Switch Model](/assets/images/switch-model-Block.png)  
+![📁 Filename](/assets/images/Profile-2-simplified.png)
 
 Best for:
 
@@ -389,7 +389,7 @@ In the Semio Grasshopper plugin, each Port is defined with three main inputs:
   The direction the Port faces — telling Semio which way the brick will connect 🔁  
   It’s what lets Semio rotate and align the bricks correctly when snapping them together
 
-![📁 Ports](/model-port-alpha.png)
+![📁 Ports](/assets/images/model-port-alpha.png)
 
 ---
 
@@ -491,8 +491,8 @@ Here's what you plug in:
 - 🧲 **Ports** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
 - 🧊 **Model** — the geometry that defines the brick's shape
 
-![📁 Model Type](/model-type.png)  
-![📁 Model Type](/model-type-geo.png)
+![📁 Model Type](/assets/images/model-type.png)  
+![📁 Model Type](/assets/images/model-type-geo.png)
 
 ---
 
@@ -511,7 +511,7 @@ a 2-unit-long brick ready to be placed in your Design 🧱
 
 ## 🧬 Create Mold Versions (Variants of [Type](/think-in-semio/#type))
 
-![📤 sketch drawing](/sketch-drawing-variant.png)
+![📤 sketch drawing](/assets/images/sketch-drawing-variant.png)
 
 Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch 🔢
 
@@ -569,7 +569,7 @@ Since most Variants share the same logic and differ by only one or two parameter
 - ⚡ Generate all Variants **efficiently**
 - 🧼 Keep your script **clean and modular**
 
-![📁 Variant GIF](/Type-1-to-5-crop.gif)
+![📁 Variant GIF](/assets/images/Type-1-to-5-crop.gif)
 
 <Tabs defaultValue="file">
 <TabsList>
@@ -588,7 +588,7 @@ You define the full logic:
 - 🧲 Place Ports using `Model Port`
 - 🧱 Create the Variant using `Model Type`
 
-![📁 Cluster](/cluster-type-inside-ALpha.png)
+![📁 Cluster](/assets/images/cluster-type-inside-ALpha.png)
 
 **Outside the Cluster:**
 
@@ -599,8 +599,8 @@ You only feed in the changing inputs:
 - 📁 Directory of the GH file
 - 🔘 Export toggle
 
-![📁 Cluster](/type-cluster-file-reference-Alpha.png)  
-![📁 Cluster](/file-export.png)
+![📁 Cluster](/assets/images/type-cluster-file-reference-Alpha.png)  
+![📁 Cluster](/assets/images/file-export.png)
 
 </TabsContent>
 
@@ -614,7 +614,7 @@ You define the full modeling logic directly, without saving external files:
 - 🧲 Place Ports using `Model Port`
 - 🧱 Create the Variant using `Model Type`
 
-![📁 Cluster](/cluster-type-inside-direct.rfrc.png)
+![📁 Cluster](/assets/images/cluster-type-inside-direct.rfrc.png)
 
 **Outside the Cluster:**
 
@@ -623,7 +623,7 @@ Only the changing parameters are connected:
 - 📏 `n` → the unit count (e.g. 2, 4, 5)
 - 🏷️ Variant name → often also `n`
 
-![📁 Cluster](/type-cluster-direct-reference-Alpha.png)
+![📁 Cluster](/assets/images/type-cluster-direct-reference-Alpha.png)
 
 </TabsContent>
 </Tabs>

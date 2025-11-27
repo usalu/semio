@@ -800,6 +800,16 @@
               }
             }
           },
+          "dropzone": {
+            "label": {
+              "normal": "Zip-Datei zum Importieren eines Kits ablegen",
+              "beginner": "Legen Sie eine Zip-Datei hier ab, um sie als neues Kit zu importieren"
+            },
+            "description": {
+              "normal": "Nur Kits mit .semio-Ordner können importiert werden",
+              "beginner": "Die Zip-Datei muss einen .semio-Ordner mit kit.db enthalten, um als Kit importiert zu werden."
+            }
+          },
           "noKits": {
             "label": {
               "normal": "No Kits",

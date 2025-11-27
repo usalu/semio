@@ -24,6 +24,7 @@
     "dev": "npx nx run-many -t dev",
     "build": "npx nx run-many -t build",
     "test": "npx nx run-many -t test",
+    "preflight": "npx nx run-many -t preflight",
     "update": "npx nx run-many -t update",
     "prepublish": "npx nx run-many -t prepublish",
     "publish": "npx nx run-many -t publish",

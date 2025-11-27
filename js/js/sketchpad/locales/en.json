@@ -1058,6 +1058,16 @@
               }
             }
           },
+          "dropzone": {
+            "label": {
+              "normal": "Drop zip file to import kit",
+              "beginner": "Drop a zip file here to import it as a new kit"
+            },
+            "description": {
+              "normal": "Only kits with .semio folder can be imported",
+              "beginner": "The zip file must contain a .semio folder with kit.db to be imported as a kit."
+            }
+          },
           "noKits": {
             "label": {
               "normal": "No Kits",

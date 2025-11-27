@@ -1,15 +1,17 @@
 ---
-date: '2025-11-26T17:24:30.290Z'
+date: "2025-11-26T17:24:30.290Z"
 slug: VSCODE-EXTENSION-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix VS Code extension linting and test setup
 model: claude-sonnet-4.5
 ---
+
 # Previously
 
 The VS Code extension for semio was not showing validation errors on invalid kit JSON files. The test infrastructure was also not properly set up.
 
 Issues identified:
+
 1. The `kit_invalid.json` fixture had an outdated schema (missing required fields like `guid` for models, `t` for ports, `guid` for layers, `name` instead of `path` for files/folders, etc.)
 2. The VS Code extension tests were not being built - only `extension.ts` was compiled to `out/`, but `extension.test.ts` was not
 3. Missing test dependencies (`@vscode/test-cli`, `@vscode/test-electron`, `@types/mocha`)
@@ -26,6 +28,7 @@ Issues identified:
 # Changes
 
 ## 1. Fixed `assets/semio/kit_invalid.json`
+
 - Added `t` property to ports (required)
 - Added `guid` and `file` properties to models (required)
 - Added `guid` property to layers (required)
@@ -36,6 +39,7 @@ Issues identified:
 - Moved `connections` inside the design (where they belong)
 
 ## 2. Added validation tests to `js/js/semio.test.ts`
+
 - Added import for `InvalidKit`, `validateSemioKit`, `hasSemioErrors`
 - Added "Validation" test suite with 3 tests:
   - "Valid kit has no errors" - validates MetabolismKit has no errors
@@ -43,15 +47,18 @@ Issues identified:
   - "Fixes can be applied to resolve issues" - validates fixes work correctly
 
 ## 3. Updated `js/vscode/package.json`
+
 - Added test dependencies: `@types/mocha`, `@vscode/test-cli`, `@vscode/test-electron`
 - Added `uuid` dependency (needed by @semio/js)
 - Added `test` script: `vscode-test`
 - Updated `build` script to also build tests
 
 ## 4. Created `js/vscode/vite.test.config.ts`
+
 - Separate vite config for building test file
 - Outputs to `out/test/extension.test.js`
 - Uses `emptyOutDir: false` to not delete extension build
 
 ## 5. Fixed `js/vscode/extension.test.ts`
+
 - Corrected path to fixture: `../../../../assets/semio/kit_invalid.json`

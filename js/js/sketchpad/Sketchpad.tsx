@@ -10913,8 +10913,12 @@ export function useCanvasContext() {
   return context;
 }
 
-export const Canvas: FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="h-full w-full">{children}</div>;
+export const Canvas: FC<{ children: ReactNode; id?: string }> = ({ children, id }) => {
+  return (
+    <div id={id} className="h-full w-full">
+      {children}
+    </div>
+  );
 };
 
 export const HorizontalWindows: FC<{ children: ReactNode }> = ({ children }) => {
@@ -11967,7 +11971,6 @@ const LayoutWrapper: FC = () => {
     if (centerCollision && centerCollision.id) {
       return [centerCollision]; // Wrap in array
     }
-
     return [];
   }, []);
   const kitShallows = useKitShallows();

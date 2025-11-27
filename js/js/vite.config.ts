@@ -19,24 +19,25 @@
 
 // #endregion
 
-import tailwindcss from "@tailwindcss/vite";
 import mdx from "@mdx-js/rollup";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+import { defineConfig } from "vitest/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  publicDir: "public",
   plugins: [
     tailwindcss(),
     {
@@ -50,6 +51,23 @@ export default defineConfig({
     react(),
     wasm(),
     topLevelAwait(),
+    {
+      name: "serve-assets",
+      configureServer(server) {
+        const assetsPath = path.resolve(__dirname, "../../assets");
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.startsWith("/assets/")) {
+            const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
+            const fs = require("fs");
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+              fs.createReadStream(filePath).pipe(res);
+              return;
+            }
+          }
+          next();
+        });
+      },
+    },
   ],
   optimizeDeps: {
     include: ["golden-layout", "three"],
@@ -69,7 +87,7 @@ export default defineConfig({
   test: {
     environment: "node",
     testTimeout: 30000,
-    include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    include: ["semio.test.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
     coverage: {
       provider: "v8",

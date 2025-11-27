@@ -1930,7 +1930,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
         } else {
           const filesToAdd: { path: string; blob: Blob }[] = [];
           for (const [path, zipEntry] of Object.entries(zip.files)) {
-            if (!zipEntry.dir) {
+            if (!zipEntry.dir && !path.startsWith(".semio/")) {
               const blob = await zipEntry.async("blob");
               filesToAdd.push({ path, blob });
             }
@@ -1946,9 +1946,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
             await kitCommands.addFile("semio.sketchpad.app.kit.dropzone", fileToAdd, file.blob);
           }
         }
-      } catch (error) {
-        console.error("[DEBUG] Failed to process dropped zip file:", error);
-      }
+      } catch (error) {}
     }
   };
 

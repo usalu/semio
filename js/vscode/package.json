@@ -26,7 +26,8 @@
     "build": "vite build && vite build --config vite.test.config.ts",
     "dev": "vite build --watch",
     "test": "vscode-test",
-    "vscode:prepublish": "npm run build"
+    "vscode:prepublish": "npm run build",
+    "preflight": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/vscode": "^1.106.1",

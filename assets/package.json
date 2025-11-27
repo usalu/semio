@@ -4,6 +4,9 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "assets",
   "projectType": "library",
+  "scripts": {
+    "preflight": "echo \"No preflight checks configured for assets\""
+  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

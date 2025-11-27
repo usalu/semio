@@ -50,7 +50,7 @@ import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesig
 
 // #region Imports
 
-import { useDraggable } from "@dnd-kit/core";
+import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
@@ -4795,7 +4795,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
-  const kit = useKit();
+  const kit = useKit() as Kit;
   const activeTool = (useDesignApp((s) => s.activeTool) as ToolKind | undefined) ?? ToolKind.SELECTION_NORMAL;
 
   const selection = useDesignAppSelection();
@@ -4811,12 +4811,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const { nodes, edges } = useMemo(() => {
     if (!design || !flattenedDesign) return { nodes: [], edges: [] };
-    return (
-      designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
-        nodes: [],
-        edges: [],
-      }
-    );
+    return designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? { nodes: [], edges: [] };
   }, [design, flattenedDesign, metadata, kit, selection]);
 
   const focusContext = useFocusSafe();
@@ -4868,12 +4863,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
-  const { activeDraggedType, activeDraggedDesign } = useDragDrop();
+  const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
 
   const setDropZoneRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (node) {
-        const rect = node.getBoundingClientRect();
         node.setAttribute("data-drop-zone", "diagram");
         node.setAttribute("data-drop-zone-id", diagramId);
       }
@@ -4882,16 +4876,65 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [diagramId],
   );
 
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, delta } = event;
+      if (!dropZoneRef.current || !reactFlowInstanceRef.current) return;
+      if (!(event.activatorEvent instanceof PointerEvent)) return;
+      const dropX = event.activatorEvent.clientX + delta.x;
+      const dropY = event.activatorEvent.clientY + delta.y;
+      const dropZoneBounds = dropZoneRef.current.getBoundingClientRect();
+      const isWithinBounds = dropX >= dropZoneBounds.left && dropX <= dropZoneBounds.right && dropY >= dropZoneBounds.top && dropY <= dropZoneBounds.bottom;
+      if (!isWithinBounds) return;
+      const dragData = active.data.current as { type: string; typeGuid?: string; designGuid?: string } | undefined;
+      if (!dragData) return;
+      const localX = dropX - dropZoneBounds.left;
+      const localY = dropY - dropZoneBounds.top;
+      const centerU = localX / ICON_WIDTH - 0.5;
+      const centerV = -localY / ICON_WIDTH + 0.5;
+      if (dragData.type === "type" && dragData.typeGuid) {
+        const droppedType = kit.types?.find((t) => t.guid === dragData.typeGuid);
+        if (!droppedType) return;
+        startTransaction("semio.sketchpad.app.design.dragEnd.type");
+        const pieceGuid = guid();
+        const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, center: { u: centerU, v: centerV } };
+        addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
+        finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
+      } else if (dragData.type === "design" && dragData.designGuid) {
+        const droppedDesign = kit.designs?.find((d) => d.guid === dragData.designGuid);
+        if (!droppedDesign) return;
+        startTransaction("semio.sketchpad.app.design.dragEnd.design");
+        const pieceGuid = guid();
+        const piece = {
+          guid: pieceGuid,
+          id_: pieceGuid,
+          design: { guid: droppedDesign.guid },
+          center: { u: centerU, v: centerV },
+        };
+        addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
+        finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
+      }
+      setActiveDraggedType(null);
+      setActiveDraggedDesign(null);
+    },
+    [reactFlowInstanceRef, kit, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign, diagramId],
+  );
+
+  useEffect(() => {
+    const listener = (e: Event) => {
+      const customEvent = e as CustomEvent<DragEndEvent>;
+      handleDragEnd(customEvent.detail);
+    };
+    window.addEventListener("design-drag-end", listener);
+    return () => window.removeEventListener("design-drag-end", listener);
+  }, [handleDragEnd]);
+
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && dragState) {
-        // Abort the transaction and reset drag state
         abortTransaction("semio.sketchpad.app.design.canvas.diagram.handleEscape");
         setDragState(null);
         setHelperLines([]);
-
-        // Reset the node positions to their original state by triggering a re-render
-        // The transaction abort will have restored the data, we just need to update the UI
         if (reactFlowInstanceRef.current) {
           reactFlowInstanceRef.current.setNodes((nodes) => nodes.map((node) => ({ ...node })));
         }
@@ -4922,6 +4965,28 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     const viewport = reactFlowInstanceRef.current.getViewport();
     setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", { u: viewport.x / ICON_WIDTH, v: -viewport.y / ICON_WIDTH });
   }, [reactFlowInstanceRef, setDiagramCenter]);
+
+  const centerViewport = useCallback(() => {
+    if (!reactFlowInstanceRef.current) return;
+    const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
+    if (diagramElement) {
+      const rect = diagramElement.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        reactFlowInstanceRef.current.setViewport({ x: centerX, y: centerY, zoom: 1 });
+        console.log(`[Diagram] Centered viewport: width=${rect.width}, height=${rect.height}, viewport={x: ${centerX}, y: ${centerY}, zoom: 1}`);
+        // Save the centered position
+        setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.centerViewport", { u: centerX / ICON_WIDTH, v: -centerY / ICON_WIDTH });
+      } else {
+        console.warn("[Diagram] Element has no dimensions yet, retrying...");
+        setTimeout(() => centerViewport(), 100);
+      }
+    } else {
+      console.warn("[Diagram] Element not found, retrying...");
+      setTimeout(() => centerViewport(), 100);
+    }
+  }, [reactFlowInstanceRef, diagramId, setDiagramCenter]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     console.log("onNodeClick fired", node.id, "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
@@ -5630,45 +5695,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [addConnection, reactFlowInstanceRef, design],
   );
 
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (!activeDraggedType && !activeDraggedDesign) return;
-      if (!reactFlowInstanceRef.current) return;
-
-      const { x, y } = reactFlowInstanceRef.current.screenToFlowPosition({
-        x: e.clientX,
-        y: e.clientY,
-      });
-
-      if (activeDraggedType) {
-        startTransaction("semio.sketchpad.app.design.dragEnd.type");
-        const pieceGuid = guid();
-        const piece = {
-          guid: pieceGuid,
-          id_: pieceGuid,
-          type: activeDraggedType.guid,
-          center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
-        };
-        addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
-        finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
-      } else if (activeDraggedDesign) {
-        startTransaction("semio.sketchpad.app.design.dragEnd.design");
-        const pieceGuid = guid();
-        const piece = {
-          guid: pieceGuid,
-          id_: pieceGuid,
-          design: activeDraggedDesign.guid,
-          center: { u: x / ICON_WIDTH - 0.5, v: -y / ICON_WIDTH + 0.5 },
-        };
-        addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
-        finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
-      }
-    },
-    [activeDraggedType, activeDraggedDesign, reactFlowInstanceRef, startTransaction, addPiece, finalizeTransaction],
-  );
-
   return (
-    <div id="diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef} onPointerUp={handlePointerUp}>
+    <div id="semio.sketchpad.app.design.canvas.diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
       <Diagram
         nodes={nodes}
         edges={edges}
@@ -5681,8 +5709,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         edgesFocusable={false}
         nodesDraggable={true}
         minZoom={0.1}
+        defaultZoom={1}
         maxZoom={12}
-        fitView={!savedDiagramCenter && !savedDiagramScale}
+        fitView={false}
         panOnDrag={[0]}
         zoomOnDoubleClick={false}
         onNodeClick={onNodeClick as any}
@@ -5697,12 +5726,27 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         onConnect={onConnect}
         reactFlowInstanceRef={reactFlowInstanceRef}
         onInit={(instance) => {
+          console.log("[Diagram] onInit called - savedCenter:", savedDiagramCenter, "savedScale:", savedDiagramScale);
           if (reactFlowInstanceRef) {
             reactFlowInstanceRef.current = instance;
           }
           const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
           if (diagramElement) {
             (diagramElement as any).__reactFlowInstance = instance;
+          }
+          // Center the viewport if no saved diagram center exists OR if it's at the default (0,0) origin
+          const isAtDefaultOrigin = savedDiagramCenter && savedDiagramCenter.u === 0 && savedDiagramCenter.v === 0;
+          if (!savedDiagramCenter || isAtDefaultOrigin) {
+            console.log("[Diagram] Centering viewport (no saved center or at default origin)");
+            isUpdatingViewportRef.current = true;
+            setTimeout(() => {
+              centerViewport();
+              setTimeout(() => {
+                isUpdatingViewportRef.current = false;
+              }, 200);
+            }, 100);
+          } else {
+            console.log("[Diagram] Saved diagram center exists:", savedDiagramCenter, "scale:", savedDiagramScale);
           }
         }}
         showControls={fullscreen && panelVisibility.toolbar}
@@ -6112,12 +6156,91 @@ const ModelDesign: FC = () => {
 };
 
 const DesignAppScene: FC = () => {
-  const { deselectAll, toggleAccesslFullscreen, setCamera, clearFocus } = useDesignAppCommands();
+  const { deselectAll, toggleAccesslFullscreen, setCamera, clearFocus, addPiece, startTransaction, finalizeTransaction } = useDesignAppCommands();
   const fullscreen = useDesignAppFullscreen() === DesignAppFullscreenWindow.Accessl;
   const camera = useDesignAppCamera();
   const focusedPieceGuid = useDesignAppFocusedPieceGuid();
   const panelVisibility = useAppPanelVisibility();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
+  const kit = useKit() as Kit;
+  const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
+  const sceneDropZoneRef = useRef<HTMLDivElement | null>(null);
+  const sceneId = useRef(guid()).current;
+
+  const handleSceneDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, delta } = event;
+      if (!sceneDropZoneRef.current) return;
+      if (!(event.activatorEvent instanceof PointerEvent)) return;
+      const dropX = event.activatorEvent.clientX + delta.x;
+      const dropY = event.activatorEvent.clientY + delta.y;
+      const dropZoneBounds = sceneDropZoneRef.current.getBoundingClientRect();
+      const isWithinBounds = dropX >= dropZoneBounds.left && dropX <= dropZoneBounds.right && dropY >= dropZoneBounds.top && dropY <= dropZoneBounds.bottom;
+      if (!isWithinBounds) return;
+      const dragData = active.data.current as { type: string; typeGuid?: string; designGuid?: string } | undefined;
+      if (!dragData) return;
+      const localX = dropX - dropZoneBounds.left;
+      const localY = dropY - dropZoneBounds.top;
+      const ndcX = (localX / dropZoneBounds.width) * 2 - 1;
+      const ndcY = -(localY / dropZoneBounds.height) * 2 + 1;
+      const zoom = 50;
+      const camPos = camera?.position ?? { x: 10, y: 10, z: 10 };
+      const camForward = camera?.forward ?? { x: -1, y: -1, z: -1 };
+      const camUp = camera?.up ?? { x: 0, y: 1, z: 0 };
+      const fwdLen = Math.sqrt(camForward.x ** 2 + camForward.y ** 2 + camForward.z ** 2);
+      const fwd = { x: camForward.x / fwdLen, y: camForward.y / fwdLen, z: camForward.z / fwdLen };
+      const rightX = camUp.y * fwd.z - camUp.z * fwd.y;
+      const rightY = camUp.z * fwd.x - camUp.x * fwd.z;
+      const rightZ = camUp.x * fwd.y - camUp.y * fwd.x;
+      const rightLen = Math.sqrt(rightX ** 2 + rightY ** 2 + rightZ ** 2);
+      const right = { x: rightX / rightLen, y: rightY / rightLen, z: rightZ / rightLen };
+      const upX = fwd.y * right.z - fwd.z * right.y;
+      const upY = fwd.z * right.x - fwd.x * right.z;
+      const upZ = fwd.x * right.y - fwd.y * right.x;
+      const upLen = Math.sqrt(upX ** 2 + upY ** 2 + upZ ** 2);
+      const actualUp = { x: upX / upLen, y: upY / upLen, z: upZ / upLen };
+      const halfWidth = dropZoneBounds.width / (2 * zoom);
+      const halfHeight = dropZoneBounds.height / (2 * zoom);
+      const rayOrigin = {
+        x: camPos.x + right.x * ndcX * halfWidth + actualUp.x * ndcY * halfHeight,
+        y: camPos.y + right.y * ndcX * halfWidth + actualUp.y * ndcY * halfHeight,
+        z: camPos.z + right.z * ndcX * halfWidth + actualUp.z * ndcY * halfHeight,
+      };
+      const t = Math.abs(fwd.y) > 0.0001 ? -rayOrigin.y / fwd.y : 0;
+      const worldX = rayOrigin.x + fwd.x * t;
+      const worldZ = rayOrigin.z + fwd.z * t;
+      const plane: Plane = { origin: { x: worldX, y: 0, z: worldZ }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+      if (dragData.type === "type" && dragData.typeGuid) {
+        const droppedType = kit.types?.find((t) => t.guid === dragData.typeGuid);
+        if (!droppedType) return;
+        startTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
+        const pieceGuid = guid();
+        const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, plane };
+        addPiece("semio.sketchpad.app.design.scene.dragEnd.type", piece);
+        finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
+      } else if (dragData.type === "design" && dragData.designGuid) {
+        const droppedDesign = kit.designs?.find((d) => d.guid === dragData.designGuid);
+        if (!droppedDesign) return;
+        startTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
+        const pieceGuid = guid();
+        const piece = { guid: pieceGuid, id_: pieceGuid, design: { guid: droppedDesign.guid }, plane };
+        addPiece("semio.sketchpad.app.design.scene.dragEnd.design", piece);
+        finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
+      }
+      setActiveDraggedType(null);
+      setActiveDraggedDesign(null);
+    },
+    [kit, camera, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign],
+  );
+
+  useEffect(() => {
+    const listener = (e: Event) => {
+      const customEvent = e as CustomEvent<DragEndEvent>;
+      handleSceneDragEnd(customEvent.detail);
+    };
+    window.addEventListener("design-drag-end", listener);
+    return () => window.removeEventListener("design-drag-end", listener);
+  }, [handleSceneDragEnd]);
 
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
@@ -6144,20 +6267,22 @@ const DesignAppScene: FC = () => {
   }, [clearFocus]);
 
   return (
-    <Scene
-      showGizmo={fullscreen && !!panelVisibility.toolbar}
-      camera={camera}
-      onCameraChange={onCameraChange}
-      onDoubleClickCapture={onDoubleClickCapture}
-      onPointerMissed={onPointerMissed}
-      focusedItemId={focusedPieceGuid}
-      onFocusComplete={onFocusComplete}
-      orthographic={projection === "orthographic"}
-      projection={projection}
-      onProjectionChange={setProjection}
-    >
-      <ModelDesign />
-    </Scene>
+    <div ref={sceneDropZoneRef} data-drop-zone="scene" data-drop-zone-id={sceneId} className="h-full w-full">
+      <Scene
+        showGizmo={fullscreen && !!panelVisibility.toolbar}
+        camera={camera}
+        onCameraChange={onCameraChange}
+        onDoubleClickCapture={onDoubleClickCapture}
+        onPointerMissed={onPointerMissed}
+        focusedItemId={focusedPieceGuid}
+        onFocusComplete={onFocusComplete}
+        orthographic={projection === "orthographic"}
+        projection={projection}
+        onProjectionChange={setProjection}
+      >
+        <ModelDesign />
+      </Scene>
+    </div>
   );
 };
 
@@ -6844,7 +6969,7 @@ const App: FC<AppProps> = () => {
 
   return (
     <ReactFlowProvider>
-      <Canvas>
+      <Canvas id="semio.sketchpad.app.design.canvas">
         <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
       </Canvas>
       <DesignAppFooter />

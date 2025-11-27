@@ -4,7 +4,8 @@
   "sourceRoot": "net/Semio.Grasshopper",
   "projectType": "application",
   "scripts": {
-    "build": "tsx ./build.ts"
+    "build": "tsx ./build.ts",
+    "preflight": "echo \"No preflight checks configured for .NET project\""
   },
   "devDependencies": {
     "@semio/net": "*"

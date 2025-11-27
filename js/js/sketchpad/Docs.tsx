@@ -183,6 +183,59 @@ export interface HeadingNode {
   children?: HeadingNode[];
 }
 
+// Global headings state with event-based updates
+// This allows the MDX content and the Details panel to share heading state
+// even though they're rendered in different parts of the component tree
+const headingsState = {
+  headings: new Map<string, HeadingNode>(),
+  listeners: new Set<() => void>(),
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  },
+  notify() {
+    this.listeners.forEach((listener) => listener());
+  },
+  register(heading: HeadingNode) {
+    const existing = this.headings.get(heading.id);
+    if (!existing || existing.text !== heading.text || existing.level !== heading.level) {
+      this.headings.set(heading.id, heading);
+      this.notify();
+    }
+  },
+  clear() {
+    if (this.headings.size > 0) {
+      this.headings.clear();
+      this.notify();
+    }
+  },
+  getAll() {
+    return Array.from(this.headings.values());
+  },
+};
+
+export const useHeadings = () => {
+  const [headings, setHeadings] = useState<HeadingNode[]>(() => headingsState.getAll());
+
+  useEffect(() => {
+    const unsubscribe = headingsState.subscribe(() => {
+      setHeadings(headingsState.getAll());
+    });
+    setHeadings(headingsState.getAll());
+    return unsubscribe;
+  }, []);
+
+  const registerHeading = useCallback((heading: HeadingNode) => {
+    headingsState.register(heading);
+  }, []);
+
+  const clearHeadings = useCallback(() => {
+    headingsState.clear();
+  }, []);
+
+  return { headings, registerHeading, clearHeadings };
+};
+
 interface HeadingsContextValue {
   headings: HeadingNode[];
   registerHeading: (heading: HeadingNode) => void;
@@ -190,14 +243,6 @@ interface HeadingsContextValue {
 }
 
 const HeadingsContext = createContext<HeadingsContextValue | null>(null);
-
-export const useHeadings = () => {
-  const context = useContext(HeadingsContext);
-  if (!context) {
-    return { headings: [], clearHeadings: () => {}, registerHeading: () => {} };
-  }
-  return context;
-};
 
 const TabItem: FC<{ label: string; children: ReactNode }> = ({ children }) => <>{children}</>;
 
@@ -223,7 +268,7 @@ const Tabs: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
+const createComponents = () => ({
   Aside,
   Tabs,
   TabItem,
@@ -231,16 +276,10 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   h1: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
-      children
-        ?.toString()
+      (typeof children === "string" ? children : "")
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
-    useEffect(() => {
-      if (generatedId && children) {
-        registerHeading({ id: generatedId, text: children.toString(), level: 1 });
-      }
-    }, [generatedId, children]);
     return (
       <h1 id={generatedId} className="text-4xl font-bold mb-4 mt-8" {...props}>
         {children}
@@ -250,16 +289,10 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   h2: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
-      children
-        ?.toString()
+      (typeof children === "string" ? children : "")
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
-    useEffect(() => {
-      if (generatedId && children) {
-        registerHeading({ id: generatedId, text: children.toString(), level: 2 });
-      }
-    }, [generatedId, children]);
     return (
       <h2 id={generatedId} className="text-3xl font-semibold mb-3 mt-6" {...props}>
         {children}
@@ -269,16 +302,10 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   h3: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
-      children
-        ?.toString()
+      (typeof children === "string" ? children : "")
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
-    useEffect(() => {
-      if (generatedId && children) {
-        registerHeading({ id: generatedId, text: children.toString(), level: 3 });
-      }
-    }, [generatedId, children]);
     return (
       <h3 id={generatedId} className="text-2xl font-semibold mb-2 mt-5" {...props}>
         {children}
@@ -288,16 +315,10 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   h4: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
-      children
-        ?.toString()
+      (typeof children === "string" ? children : "")
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
-    useEffect(() => {
-      if (generatedId && children) {
-        registerHeading({ id: generatedId, text: children.toString(), level: 4 });
-      }
-    }, [generatedId, children]);
     return (
       <h4 id={generatedId} className="text-xl font-semibold mb-2 mt-4" {...props}>
         {children}
@@ -307,16 +328,10 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   h5: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
-      children
-        ?.toString()
+      (typeof children === "string" ? children : "")
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
-    useEffect(() => {
-      if (generatedId && children) {
-        registerHeading({ id: generatedId, text: children.toString(), level: 5 });
-      }
-    }, [generatedId, children]);
     return (
       <h5 id={generatedId} className="text-lg font-semibold mb-1 mt-3" {...props}>
         {children}
@@ -326,16 +341,10 @@ const createComponents = (registerHeading: (heading: HeadingNode) => void) => ({
   h6: ({ children, id, ...props }: any) => {
     const generatedId =
       id ||
-      children
-        ?.toString()
+      (typeof children === "string" ? children : "")
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "");
-    useEffect(() => {
-      if (generatedId && children) {
-        registerHeading({ id: generatedId, text: children.toString(), level: 6 });
-      }
-    }, [generatedId, children]);
     return (
       <h6 id={generatedId} className="text-base font-semibold mb-1 mt-2" {...props}>
         {children}
@@ -429,23 +438,7 @@ interface HeadingsProviderProps {
 }
 
 export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
-  const [headings, setHeadings] = useState<HeadingNode[]>([]);
-  const headingsRef = useRef<Map<string, HeadingNode>>(new Map());
-
-  const registerHeading = useCallback((heading: HeadingNode) => {
-    const existingHeading = headingsRef.current.get(heading.id);
-    // Only update if heading doesn't exist or has changed
-    if (!existingHeading || existingHeading.text !== heading.text || existingHeading.level !== heading.level) {
-      headingsRef.current.set(heading.id, heading);
-      setHeadings(Array.from(headingsRef.current.values()));
-    }
-  }, []);
-
-  const clearHeadings = useCallback(() => {
-    headingsRef.current.clear();
-    setHeadings([]);
-  }, []);
-
+  const { headings, registerHeading, clearHeadings } = useHeadings();
   return <HeadingsContext.Provider value={{ headings, registerHeading, clearHeadings }}>{children}</HeadingsContext.Provider>;
 };
 
@@ -454,8 +447,7 @@ interface MDXProviderProps {
 }
 
 export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
-  const { registerHeading } = useHeadings();
-  const components = useMemo(() => createComponents(registerHeading), [registerHeading]);
+  const components = useMemo(() => createComponents(), []);
   return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
 };
 
@@ -1092,23 +1084,21 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 
   return (
     <div ref={containerRef} className="h-full w-full">
-      <HeadingsProvider>
-        <Page frontmatter={frontmatter} focusedItemId={focusedItemId} onFocusComplete={() => setFocusedItemId(undefined)} footer={<PageNavigation prev={navigation.prev} next={navigation.next} />}>
-          <MDXProvider>
-            <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>{MDXContent ? <MDXContent /> : <p className="text-muted-foreground">No content available</p>}</Suspense>
-          </MDXProvider>
+      <Page frontmatter={frontmatter} focusedItemId={focusedItemId} onFocusComplete={() => setFocusedItemId(undefined)} footer={<PageNavigation prev={navigation.prev} next={navigation.next} />}>
+        <MDXProvider>
+          <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>{MDXContent ? <MDXContent /> : <p className="text-muted-foreground">No content available</p>}</Suspense>
+        </MDXProvider>
 
-          {/* Auto-inject section tree on index pages */}
-          {treeData && (
-            <TreeStateProvider>
-              <div className="not-prose my-8 p-6 rounded-lg border border-border bg-card">
-                <h3 className="text-lg font-semibold mb-4">In this section</h3>
-                <div className="flex flex-col gap-single">{renderTreeNode(treeData)}</div>
-              </div>
-            </TreeStateProvider>
-          )}
-        </Page>
-      </HeadingsProvider>
+        {/* Auto-inject section tree on index pages */}
+        {treeData && (
+          <TreeStateProvider>
+            <div className="not-prose my-8 p-6 rounded-lg border border-border bg-card">
+              <h3 className="text-lg font-semibold mb-4">In this section</h3>
+              <div className="flex flex-col gap-single">{renderTreeNode(treeData)}</div>
+            </div>
+          </TreeStateProvider>
+        )}
+      </Page>
     </div>
   );
 };
@@ -1326,7 +1316,6 @@ const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => vo
         <TreeItem
           key={heading.id}
           label={heading.text}
-          icon={<HashIcon className="size-tiny" />}
           defaultOpen={heading.children && heading.children.length > 0}
           onClick={() => {
             if (onNavigate) {
@@ -1509,30 +1498,36 @@ const App: FC = () => {
 
   if (loading) {
     return (
-      <Canvas>
-        <Window id="page" className="h-full w-full">
-          <PageCanvas frontmatter={{ title: "Loading...", description: "" }} />
-        </Window>
-      </Canvas>
+      <HeadingsProvider>
+        <Canvas>
+          <Window id="page" className="h-full w-full">
+            <PageCanvas frontmatter={{ title: "Loading...", description: "" }} />
+          </Window>
+        </Canvas>
+      </HeadingsProvider>
     );
   }
 
   if (error || !mdxModule) {
     return (
-      <Canvas>
-        <Window id="page" className="h-full w-full">
-          <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />
-        </Window>
-      </Canvas>
+      <HeadingsProvider>
+        <Canvas>
+          <Window id="page" className="h-full w-full">
+            <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />
+          </Window>
+        </Canvas>
+      </HeadingsProvider>
     );
   }
 
   return (
-    <Canvas>
-      <Window id="page" className="h-full w-full">
-        <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />
-      </Window>
-    </Canvas>
+    <HeadingsProvider>
+      <Canvas>
+        <Window id="page" className="h-full w-full">
+          <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />
+        </Window>
+      </Canvas>
+    </HeadingsProvider>
   );
 };
 

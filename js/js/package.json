@@ -14,7 +14,9 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "preflight": "prettier --write . && tsc --noEmit",
+    "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

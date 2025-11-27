@@ -11,7 +11,7 @@ To actually build a design, you need to create **Pieces** — the bricks made fr
 Now it’s time to **turn your molds into actual bricks** — called **Pieces** 🧩  
 These are the elements you’ll place, move, and connect in your design 🎯
 
-![📤 sketch drawing](/sketch-drawing-piece.png)
+![📤 sketch drawing](/assets/images/sketch-drawing-piece.png)
 
 When you create a Piece, you're telling Semio:  
 _"Take this specific mold (Type + Variant) and make a real, usable brick from it."_ 🧱
@@ -96,11 +96,11 @@ each one inherits geometry, ports, and semantic logic from its **Type** and **Va
 
 🧱 Let’s start by modeling the first two Pieces from the sketch
 
-![Model Piece Component](/model-piece-10Alpha.png)
+![Model Piece Component](/assets/images/model-piece-10Alpha.png)
 
 Once all five Pieces are created, your model will look like this:
 
-![Model Piece Component](/model-5pieces-10Alpha-V2.png)
+![Model Piece Component](/assets/images/model-5pieces-10Alpha-V2.png)
 
 > ✅ Your bricks are now cast and ready  
 > Next step: **placing and connecting them** to build your final model 🔗
@@ -117,7 +117,7 @@ Each **Connection** says:
 
 <br />
 
-![📤 sketch drawing](/sketch-drawing-connections.png)
+![📤 sketch drawing](/assets/images/sketch-drawing-connections.png)
 
 ### 🧭 Set the Connection
 
@@ -148,16 +148,16 @@ From the sketch, we can tell:
 So the connection looks like this:
 `Con(Yel:w → Red-T:w)`
 
-![Connection Example](/mode-connection-grasshopper.png)
+![Connection Example](/assets/images/mode-connection-grasshopper.png)
 
 This tells Semio:  
 **Snap the west Port of `Yel` to the west Port of `Red-T`**
 
-![Set Connection](/set-connection-2pcs-alpha.png)
+![Set Connection](/assets/images/set-connection-2pcs-alpha.png)
 
 Once this first connection is in place, you can continue snapping all remaining bricks together using similar logic 🧩
 
-![Set Connection](/mode-connection-5pcs-grasshopper.png)
+![Set Connection](/assets/images/mode-connection-5pcs-grasshopper.png)
 
 🔗 This Tells Semio:
 
@@ -175,7 +175,7 @@ Once this first connection is in place, you can continue snapping all remaining 
 
 ---
 
-![Set Connection](/set-connection-all-pcs-alpha.png)
+![Set Connection](/assets/images/set-connection-all-pcs-alpha.png)
 
 ### 🎯 Adjust Snap _(Optional Step)_
 
@@ -201,7 +201,7 @@ You can move the geometry in three local directions:
 - **Rise** ⬆️⬇️ → Lifts or lowers the Piece vertically, perpendicular to the face it connects to  
   🪜 Like lifting a brick slightly higher or lowering it onto the studs
 
-  ![Connection Adjustment](/translation-parameter.gif)
+  ![Connection Adjustment](/assets/images/translation-parameter.gif)
 
 ---
 
@@ -214,14 +214,14 @@ You can move the geometry in three local directions:
 - **Tilt** 🤸 → Tilts the Piece forward or backward, around a vertical axis
   🎢 Like tilting a ramp or slope brick up or down
 
-  ![Connection Adjustment](/Rotation-parameter.gif)
+  ![Connection Adjustment](/assets/images/Rotation-parameter.gif)
 
 ---
 
 As we can see, the two Pieces we connected earlier don’t align exactly as shown in the sketch 🧩
 
 <br />
-![📤 sketch drawing](/sketch-drawing-45.png)
+![📤 sketch drawing](/assets/images/sketch-drawing-45.png)
 <br />
 This is where the optional step of adjusting the snap comes in 🛠️
 
@@ -230,7 +230,7 @@ You’re not changing the Port itself ⚓
 Instead, you're offsetting the **geometry** that comes with it 📐
 
 <br />
-![Set Connection](/set-connection-2pcs.gif)
+![Set Connection](/assets/images/set-connection-2pcs.gif)
 
 ---
 
@@ -249,9 +249,9 @@ you can **rotate it individually** — Semio allows per-piece rotation without b
 🔗 And thanks to Semio’s **chain behavior**,  
 when you move or rotate one Piece, all the connected Pieces after it will **update automatically** 💫
 
-![Set Connection](/set-connection-3pcs.gif)
+![Set Connection](/assets/images/set-connection-3pcs.gif)
 
-![Set Connection](/set-connection-5pcs.gif)
+![Set Connection](/assets/images/set-connection-5pcs.gif)
 
 ---
 
@@ -295,7 +295,7 @@ You’ll provide three main inputs:
 
 **Example:**
 
-![Model Design Example](/model-design.png)
+![Model Design Example](/assets/images/model-design.png)
 
 ---
 
@@ -386,9 +386,9 @@ Semio will only override the inputs you change — everything else stays exactly
 > _E.g. In the "Hello Semio" logo example, rotating the first Piece flips all connected Pieces as well — because they’re linked logically_  
 > \_
 
-![Reconstruct Piece](/reconruct-piece-2.png)
+![Reconstruct Piece](/assets/images/reconruct-piece-2.png)
 
-![Reconstruct Piece](/reconruct-piece.png)
+![Reconstruct Piece](/assets/images/reconruct-piece.png)
 
 #### 🔗 Adjust a Connection
 
@@ -400,9 +400,9 @@ This makes it easy to fine-tune how two Pieces are connected without rebuilding 
 
 > _E.g. You can change the gap, shift, or rotation of an existing Connection, and all downstream geometry will update automatically._
 
-![Reconstruct Con](/reconstruct-connection.png)
-![Reconstruct Con](/reconstruct-connection-2.png)
-![Reconstruct Con](/reconstruct-connection-3.png)
+![Reconstruct Con](/assets/images/reconstruct-connection.png)
+![Reconstruct Con](/assets/images/reconstruct-connection-2.png)
+![Reconstruct Con](/assets/images/reconstruct-connection-3.png)
 
 #### 🧱 Update a Type
 
