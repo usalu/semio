@@ -1,10 +1,11 @@
 ---
-date: '2025-10-31T23:00:00.000Z'
+date: "2025-11-17T23:00:00.000Z"
 slug: REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-summary: Migration from 2025-11-01_REFACTOR.md
+summary: Migration from REFACTOR.md
 model: unknown
 ---
+
 # Sketchpad Apps Refactoring Proposal
 
 ## Executive Summary

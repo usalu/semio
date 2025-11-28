@@ -1,0 +1,192 @@
+{
+  "config": {
+    "configFile": "C:\\git\\semio.tech\\semio\\js\\js\\playwright.config.ts",
+    "rootDir": "C:/git/semio.tech/semio/js/js",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../reports/playwright.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/git/semio.tech/semio/js/js/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/git/semio.tech/semio/js/js",
+        "testIgnore": [],
+        "testMatch": [
+          "**/sketchpad.test.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/git/semio.tech/semio/js/js/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/git/semio.tech/semio/js/js",
+        "testIgnore": [],
+        "testMatch": [
+          "**/sketchpad.test.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/git/semio.tech/semio/js/js/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/git/semio.tech/semio/js/js",
+        "testIgnore": [],
+        "testMatch": [
+          "**/sketchpad.test.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "3way",
+    "version": "1.56.1",
+    "workers": 8,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "sketchpad.test.ts",
+      "file": "sketchpad.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "sketchpad",
+          "file": "sketchpad.test.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Kit Import Drag and Drop",
+              "file": "sketchpad.test.ts",
+              "line": 199,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "Import metabolism.zip creates temporary kit with all types, designs, ports, pieces, and files",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 120000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 12043,
+                          "error": {
+                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*kit\\/.+/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5173/\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5173/\"\u001b[22m\n",
+                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*kit\\/.+/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5173/\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5173/\"\u001b[22m\n\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:216:26",
+                            "location": {
+                              "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                              "column": 26,
+                              "line": 216
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 214 |\u001b[39m       \u001b[36mawait\u001b[39m canvas\u001b[33m.\u001b[39mdispatchEvent(\u001b[32m\"drop\"\u001b[39m\u001b[33m,\u001b[39m { dataTransfer })\u001b[33m;\u001b[39m\n \u001b[90m 215 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m5000\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 216 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*kit\\/.+/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 217 |\u001b[39m       \u001b[36mconst\u001b[39m kitState \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m {\n \u001b[90m 218 |\u001b[39m         \u001b[36mconst\u001b[39m store \u001b[33m=\u001b[39m (window \u001b[36mas\u001b[39m any)\u001b[33m.\u001b[39m__SKETCHPAD_STORE__\u001b[33m;\u001b[39m\n \u001b[90m 219 |\u001b[39m         \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mstore) \u001b[36mreturn\u001b[39m \u001b[36mnull\u001b[39m\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 26,
+                                "line": 216
+                              },
+                              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*kit\\/.+/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5173/\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5173/\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 214 |\u001b[39m       \u001b[36mawait\u001b[39m canvas\u001b[33m.\u001b[39mdispatchEvent(\u001b[32m\"drop\"\u001b[39m\u001b[33m,\u001b[39m { dataTransfer })\u001b[33m;\u001b[39m\n \u001b[90m 215 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m5000\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 216 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*kit\\/.+/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 217 |\u001b[39m       \u001b[36mconst\u001b[39m kitState \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m {\n \u001b[90m 218 |\u001b[39m         \u001b[36mconst\u001b[39m store \u001b[33m=\u001b[39m (window \u001b[36mas\u001b[39m any)\u001b[33m.\u001b[39m__SKETCHPAD_STORE__\u001b[33m;\u001b[39m\n \u001b[90m 219 |\u001b[39m         \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mstore) \u001b[36mreturn\u001b[39m \u001b[36mnull\u001b[39m\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:216:26\u001b[22m"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-28T22:08:57.560Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Kit-Im-84854-igns-ports-pieces-and-files-chromium\\error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 26,
+                            "line": 216
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "1f96767271edc4239dfa-b10899b60a4a3bbadf58",
+                  "file": "sketchpad.test.ts",
+                  "line": 200,
+                  "column": 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-28T22:08:55.937Z",
+    "duration": 13858.246000000003,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

@@ -669,6 +669,8 @@ export interface Tool<TState = any> {
 export interface ToolMode {
   id: string;
   icon?: ReactNode;
+  label?: string;
+  tooltipId?: string;
 }
 
 export interface ToolDefinition {

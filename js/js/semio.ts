@@ -3095,7 +3095,6 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   });
 
   const components = cy.elements().components();
-  let isFirstRoot = true;
 
   // Helper to add or update attributes on a piece
   const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
@@ -3129,12 +3128,8 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
     let rootPlane: Plane;
     if (rootPiece.plane) {
       rootPlane = rootPiece.plane;
-    } else if (isFirstRoot) {
-      const identityMatrix = new THREE.Matrix4().identity();
-      rootPlane = matrixToPlane(identityMatrix);
-      isFirstRoot = false;
     } else {
-      console.warn(`Root piece ${rootPiece.guid} has no defined plane and is not the first root. Defaulting to identity plane.`);
+      // Each disconnected component can have its own root with identity plane
       const identityMatrix = new THREE.Matrix4().identity();
       rootPlane = matrixToPlane(identityMatrix);
     }
@@ -4410,13 +4405,19 @@ const getSqlJs = async () => {
   if (!cachedSqlJs) {
     const initSqlJs = (await import("sql.js")).default;
     try {
-      // Load WASM file from public directory
-      cachedSqlJs = await initSqlJs({
-        locateFile: (file: string) => {
-          // WASM file is served from the public directory
-          return `/${file}`;
-        },
-      });
+      const isNode = typeof process !== "undefined" && process.versions?.node;
+      if (isNode) {
+        const path = await import("path");
+        const url = await import("url");
+        const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+        cachedSqlJs = await initSqlJs({
+          locateFile: (file: string) => path.join(__dirname, "public", file),
+        });
+      } else {
+        cachedSqlJs = await initSqlJs({
+          locateFile: (file: string) => `/${file}`,
+        });
+      }
     } catch (error) {
       console.error("Failed to initialize sql.js:", error);
       throw new Error("Failed to load SQLite database library.");

@@ -841,12 +841,10 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
       return {} as T;
     }
     if (command === "semio.qualityApp.undo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.qualityApp.redo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }

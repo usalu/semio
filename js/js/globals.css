@@ -524,6 +524,10 @@
       cursor: var(--cursor-crosshair-centered) !important;
     }
 
+    .react-flow__viewport-portal {
+      pointer-events: none !important;
+    }
+
     [data-slot="popover-trigger"] {
       cursor: var(--cursor-pointer) !important;
     }

@@ -692,7 +692,6 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
       return {} as T;
     }
     if (command === "semio.kitApp.undo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }

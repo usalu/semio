@@ -829,7 +829,6 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
       upload: async (kitId, fileId, path, blob) => {
         const key = getKey(kitId, fileId, path);
         storage.set(key, blob);
-        console.log(`[MEMORY] Uploaded file ${path} (${blob.size} bytes)`);
         return `memory://${key}`;
       },
 
@@ -841,14 +840,12 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
           throw new Error(`File not found in memory: ${key}`);
         }
 
-        console.log(`[MEMORY] Downloaded file ${path} (${blob.size} bytes)`);
         return blob;
       },
 
       delete: async (kitId, fileId, path) => {
         const key = getKey(kitId, fileId, path);
         storage.delete(key);
-        console.log(`[MEMORY] Deleted file ${path}`);
       },
 
       getUrl: (kitId, fileId, path) => {
@@ -903,7 +900,6 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
           const request = store.put(blob, key);
 
           request.onsuccess = () => {
-            console.log(`[LOCAL] Uploaded file ${path} (${blob.size} bytes)`);
             resolve(`local://${key}`);
           };
           request.onerror = () => reject(request.error);
@@ -926,7 +922,6 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
             if (!blob) {
               reject(new Error(`File not found in IndexedDB: ${key}`));
             } else {
-              console.log(`[LOCAL] Downloaded file ${path} (${blob.size} bytes)`);
               resolve(blob);
             }
           };
@@ -946,7 +941,6 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
           const request = store.delete(key);
 
           request.onsuccess = () => {
-            console.log(`[LOCAL] Deleted file ${path}`);
             resolve();
           };
           request.onerror = () => reject(request.error);
@@ -997,7 +991,6 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
         }
 
         const result = await response.json();
-        console.log(`[REMOTE] Uploaded file ${path} (${blob.size} bytes)`);
         return result.url || getUrl(kitId, fileId, path);
       },
 
@@ -1012,7 +1005,6 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
         }
 
         const blob = await response.blob();
-        console.log(`[REMOTE] Downloaded file ${path} (${blob.size} bytes)`);
         return blob;
       },
 
@@ -1026,7 +1018,6 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
           throw new Error(`Remote delete failed: ${response.statusText}`);
         }
 
-        console.log(`[REMOTE] Deleted file ${path}`);
       },
 
       getUrl: (kitId, fileId, path) => {
@@ -5800,7 +5791,6 @@ export class KitStore {
               if (this.fileProvider) {
                 try {
                   const remoteUrl = await this.fileProvider.upload(this.guid, file.guid, storagePath, blob);
-                  console.log(`[KIT ${this.name}] Uploaded file ${storagePath} to ${remoteUrl}`);
                   this.file(file.guid).change({ remote: remoteUrl });
                 } catch (error) {
                   console.error(`[KIT ${this.name}] Failed to upload file ${storagePath}:`, error);
@@ -5827,7 +5817,6 @@ export class KitStore {
               if (this.fileProvider) {
                 try {
                   await this.fileProvider.delete(this.guid, fileId, storagePath);
-                  console.log(`[KIT ${this.name}] Deleted file ${storagePath}`);
                 } catch (error) {
                   console.error(`[KIT ${this.name}] Failed to delete file ${storagePath}:`, error);
                 }
@@ -7293,7 +7282,6 @@ export class SketchpadStore {
       }
       if (diff.theme) this.ySketchpad.set("theme", diff.theme);
       if (diff.language !== undefined) {
-        console.log("[Store Change] Setting language in yMap to:", diff.language);
         this.ySketchpad.set("language", diff.language);
       }
       if (diff.layout) this.ySketchpad.set("layout", JSON.stringify(diff.layout));
@@ -7436,7 +7424,6 @@ export class SketchpadStore {
     }
 
     if (command === "semio.sketchpad.createKit") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const kit = rest[0] as Kit;
       const local = rest[1] as boolean | undefined;
       const remote = rest[2] as boolean | undefined;
@@ -7444,19 +7431,16 @@ export class SketchpadStore {
       return {} as T;
     }
     if (command === "semio.sketchpad.createKitApp") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const id = rest[0] as KitAppId;
       this.createKitApp(id.kit);
       return {} as T;
     }
     if (command === "semio.sketchpad.createDesignApp") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const id = rest[0] as DesignAppId;
       this.createDesignApp(id.kit, id.design);
       return {} as T;
     }
     if (command === "semio.sketchpad.importKit") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const Guid = rest[0] as Guid;
       const url = rest[1] as string;
       const kitStore = this.kits.get(Guid);
@@ -7466,7 +7450,6 @@ export class SketchpadStore {
       return {} as T;
     }
     if (command === "semio.sketchpad.freeze") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const completeState = this.dumpState();
       const stateJson = JSON.stringify(completeState, null, 2);
       const blob = new Blob([stateJson], { type: "application/json" });
@@ -7479,7 +7462,6 @@ export class SketchpadStore {
       return {} as T;
     }
     if (command === "semio.sketchpad.timetravel") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".json";
@@ -8555,7 +8537,6 @@ export const commands = {
     };
   },
   "semio.sketchpad.setLanguage": (context: SketchpadCommandContext, language: string): SketchpadCommandResult => {
-    console.log("[setLanguage Command] Setting language to:", language, "Previous language:", context.sketchpad.language);
     return {
       diff: { language },
     };
@@ -10815,7 +10796,7 @@ const PanelToggles: FC = ({}) => {
   const ActiveRightIcon = activeRightConfig?.icon;
 
   return (
-    <div className="flex items-stretch border overflow-hidden h-medium divide-x divide-border">
+    <div className="flex items-stretch border overflow-hidden h-medium divide-x divide-[color:var(--border-color)]">
       {workbenchConfigs.length > 0 && (
         <Toggle
           kind="dropdown"
@@ -10825,7 +10806,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleWorkbenchValueChange("semio.sketchpad.navbar.panelToggle.workbench", value)}
           pressed={isAnyWorkbenchPanelOpen}
           onPressedChange={(pressed) => handleWorkbenchPressedChange("semio.sketchpad.navbar.panelToggle.workbench", pressed)}
-          className="border-0"
+          className="border-y-0 border-r-0"
         />
       )}
       {hudConfigs.length > 0 && (
@@ -10837,7 +10818,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleHudValueChange("semio.sketchpad.navbar.panelToggle.hud", value)}
           pressed={isAnyHudPanelOpen}
           onPressedChange={(pressed) => handleHudPressedChange("semio.sketchpad.navbar.panelToggle.hud", pressed)}
-          className="border-0"
+          className="border-y-0 border-r-0"
         />
       )}
       {rightConfigs.length > 0 && (
@@ -10849,7 +10830,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleRightValueChange("semio.sketchpad.navbar.panelToggle.right", value)}
           pressed={isAnyRightPanelOpen}
           onPressedChange={(pressed) => handleRightPressedChange("semio.sketchpad.navbar.panelToggle.right", pressed)}
-          className="border-0"
+          className="border-y-0 border-r-0"
         />
       )}
     </div>
@@ -11293,7 +11274,6 @@ export const LayoutCanvas: FC<{
           try {
             if (isInitialized) {
               const config = layout.toConfig();
-              console.log("[LayoutCanvas] Layout state changed, saving config:", config);
               onLayoutChange(config);
             }
           } catch (error: any) {
@@ -11350,7 +11330,6 @@ export const LayoutCanvas: FC<{
         };
 
         layout.on("initialised", () => {
-          console.log("[LayoutCanvas] GoldenLayout initialized successfully");
           customizeHeaders();
           isInitialized = true;
           setLayoutLoaded(true);
@@ -11620,6 +11599,7 @@ const LayoutWrapper: FC = () => {
   const footerItems = useFooterItems();
   const workbenchSections = usePanelSections("workbench");
   const toolsSections = usePanelSections("tools");
+  const toolbarSections = usePanelSections("toolbar");
   const hudSections = usePanelSections("hud");
   const statsSections = usePanelSections("stats");
   const detailsSections = usePanelSections("details");
@@ -11675,13 +11655,10 @@ const LayoutWrapper: FC = () => {
 
   useEffect(() => {
     if (language) {
-      console.log("[Language Sync] Current i18n language:", i18n.language, "Store language:", language);
       if (i18n.language !== language) {
-        console.log("[Language Sync] Changing language to:", language);
         i18n
           .changeLanguage(language)
           .then(() => {
-            console.log("[Language Sync] Language changed successfully to:", language);
           })
           .catch((err) => {
             console.error("[Language Sync] Failed to change language:", err);
@@ -12068,7 +12045,20 @@ const LayoutWrapper: FC = () => {
                 }
               : undefined
           }
-          canvas={<AppRouter />}
+          canvas={
+            <div className="relative h-full w-full">
+              <AppRouter />
+              {panelVisibility.toolbar && toolbarSections.length > 0 && (
+                <div className="absolute bottom-single left-1/2 -translate-x-1/2 z-panel pointer-events-auto">
+                  <div className="flex items-center gap-single bg-panel border p-single">
+                    {toolbarSections.map((section) => (
+                      <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          }
         />
         <DragOverlay>
           {activeDragId && activeDragData ? (

@@ -258,7 +258,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
-        toolbar: false,
+        toolbar: true,
         workbench: false,
         details: false,
         chat: false,
@@ -266,7 +266,7 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
+      toolbar: yPanelVisibility.get("toolbar") ?? true,
       workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
@@ -551,12 +551,10 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       return {} as T;
     }
     if (command === "semio.typeApp.undo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.typeApp.redo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }

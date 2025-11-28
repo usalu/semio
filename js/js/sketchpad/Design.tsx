@@ -42,7 +42,7 @@
 
 import * as Y from "yjs";
 import { Guid, KitDiff, PieceDiff } from "../semio";
-import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
 import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesignAppStoreFactory, SketchpadStore, useDesignScope, useKitScope, usePieceScope, useSketchpadStore, useSync, useSyncDeep } from "./Sketchpad"; // TODO: Get rid of this import
 
@@ -54,7 +54,7 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, RemoveIcon, SceneIcon, TableViewIcon } from "@semio/assets";
+import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, RemoveIcon, SceneIcon, SelectToolIcon, TableViewIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -1010,7 +1010,7 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
-        toolbar: false,
+        toolbar: true,
         workbench: false,
         details: false,
         chat: false,
@@ -1018,7 +1018,7 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
+      toolbar: yPanelVisibility.get("toolbar") ?? true,
       workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
       chat: yPanelVisibility.get("chat") ?? false,
@@ -1401,12 +1401,10 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
       return {} as T;
     }
     if (command === "semio.designApp.undo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.undo();
       return {} as T;
     }
     if (command === "semio.designApp.redo") {
-      console.log(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
       return {} as T;
     }
@@ -1971,9 +1969,39 @@ export const DesignAppFooter: FC = () => {
 
 // #region Tools
 
-const DesignAppTools: any[] = [];
+export const SelectionNormalTool: Tool<DesignAppState> = {
+  id: ToolKind.SELECTION_NORMAL,
+  icon: <SelectToolIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
 
-const getDesignTools = (): any[] => [
+export const SelectionAdditiveTool: Tool<DesignAppState> = {
+  id: ToolKind.SELECTION_ADDITIVE,
+  icon: <AddIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+export const SelectionSubtractiveTool: Tool<DesignAppState> = {
+  id: ToolKind.SELECTION_SUBTRACTIVE,
+  icon: <RemoveIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+export const LassoRectangularTool: Tool<DesignAppState> = {
+  id: ToolKind.LASSO_RECTANGULAR,
+  icon: <DiagramIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+export const LassoFreeformTool: Tool<DesignAppState> = {
+  id: ToolKind.LASSO_FREEFORM,
+  icon: <SceneIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool];
+
+const getDesignTools = (): ToolDefinition[] => [
   {
     id: "selection",
     defaultMode: ToolKind.SELECTION_NORMAL,
@@ -3044,13 +3072,7 @@ const PiecesSectionForm: FC = () => {
           <TreeContent>
             <div className="flex flex-col gap-single">
               <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.piece.connectedPieceInfo")}</p>
-              <Button
-                onClick={() => {
-                  const origin = "semio.sketchpad.app.design.panel.details.section.piece.fixPiece";
-                  console.log("[ORIGIN] Fix piece not yet implemented", origin);
-                }}
-                id="semio.sketchpad.app.design.piece.fixPiece"
-              >
+              <Button id="semio.sketchpad.app.design.piece.fixPiece">
                 <DisconnectIcon className="size-tiny" />
                 {useLabel("semio.sketchpad.app.design.piece.fixPiece")}
               </Button>
@@ -4791,6 +4813,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     setDiagramCenter,
     setDiagramScale,
     focusPiece,
+    hoverPiece,
+    clearHover,
   } = useDesignAppCommands();
 
   const kitCommands = useKitCommands();
@@ -4888,10 +4912,18 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (!isWithinBounds) return;
       const dragData = active.data.current as { type: string; typeGuid?: string; designGuid?: string } | undefined;
       if (!dragData) return;
-      const localX = dropX - dropZoneBounds.left;
-      const localY = dropY - dropZoneBounds.top;
-      const centerU = localX / ICON_WIDTH - 0.5;
-      const centerV = -localY / ICON_WIDTH + 0.5;
+      const reactFlowWrapper = dropZoneRef.current.querySelector(".react-flow") as HTMLElement;
+      const wrapperBounds = reactFlowWrapper?.getBoundingClientRect() ?? dropZoneBounds;
+      const viewportEl = dropZoneRef.current.querySelector(".react-flow__viewport") as HTMLElement;
+      const cssTransform = viewportEl?.style.transform ?? "translate(0px, 0px) scale(1)";
+      const transformMatch = cssTransform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([\d.]+)\)/);
+      const viewport = transformMatch ? { x: parseFloat(transformMatch[1]), y: parseFloat(transformMatch[2]), zoom: parseFloat(transformMatch[3]) } : { x: 0, y: 0, zoom: 1 };
+      const localX = dropX - wrapperBounds.left;
+      const localY = dropY - wrapperBounds.top;
+      const flowX = (localX - viewport.x) / viewport.zoom;
+      const flowY = (localY - viewport.y) / viewport.zoom;
+      const centerU = (flowX - ICON_WIDTH / 2) / ICON_WIDTH;
+      const centerV = -(flowY - ICON_WIDTH / 2) / ICON_WIDTH;
       if (dragData.type === "type" && dragData.typeGuid) {
         const droppedType = kit.types?.find((t) => t.guid === dragData.typeGuid);
         if (!droppedType) return;
@@ -4975,7 +5007,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         reactFlowInstanceRef.current.setViewport({ x: centerX, y: centerY, zoom: 1 });
-        console.log(`[Diagram] Centered viewport: width=${rect.width}, height=${rect.height}, viewport={x: ${centerX}, y: ${centerY}, zoom: 1}`);
         // Save the centered position
         setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.centerViewport", { u: centerX / ICON_WIDTH, v: -centerY / ICON_WIDTH });
       } else {
@@ -4989,7 +5020,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   }, [reactFlowInstanceRef, diagramId, setDiagramCenter]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
-    console.log("onNodeClick fired", node.id, "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
     e.stopPropagation();
     const pieceId = getPieceIdFromNode(node);
     if (e.ctrlKey || e.metaKey) removePieceFromSelection("semio.sketchpad.app.design.canvas.diagram.onNodeClick", pieceId);
@@ -5019,7 +5049,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   };
 
   const onPaneClick = (e: React.MouseEvent) => {
-    console.log("onPaneClick fired", "target:", e.target, "currentTarget:", e.currentTarget, "classList:", (e.target as HTMLElement).className);
     e.stopPropagation();
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
       deselectAll("semio.sketchpad.app.design.canvas.diagram.onPaneClick");
@@ -5038,6 +5067,48 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const onExpand = useCallback((target: string) => {
     // TODO: Implement explode command
   }, []);
+
+  const onNodeMouseEnter = useCallback(
+    (_e: React.MouseEvent, node: DiagramNode) => {
+      const pieceId = getPieceIdFromNode(node);
+
+      // Clear any global pending clear hover
+      if (globalHoverClearTimeout) {
+        clearTimeout(globalHoverClearTimeout);
+        globalHoverClearTimeout = null;
+      }
+
+      // Only set hover if this is a different piece
+      if (currentHoveredPieceGuid !== pieceId) {
+        currentHoveredPieceGuid = pieceId;
+        hoverPiece("semio.sketchpad.app.design.canvas.diagram.onNodeMouseEnter", pieceId);
+      }
+    },
+    [hoverPiece],
+  );
+
+  const onNodeMouseLeave = useCallback(
+    (_e: React.MouseEvent, node: DiagramNode) => {
+      const pieceId = getPieceIdFromNode(node);
+
+      // Clear any existing global timeout
+      if (globalHoverClearTimeout) {
+        clearTimeout(globalHoverClearTimeout);
+      }
+
+      // Set a global timeout for clearing hover
+      // Only clear if this piece is still the currently hovered one
+      const pieceGuidAtLeave = pieceId;
+      globalHoverClearTimeout = setTimeout(() => {
+        if (currentHoveredPieceGuid === pieceGuidAtLeave) {
+          clearHover("semio.sketchpad.app.design.canvas.diagram.onNodeMouseLeave");
+          currentHoveredPieceGuid = null;
+        }
+        globalHoverClearTimeout = null;
+      }, 50);
+    },
+    [clearHover],
+  );
 
   const onNodeDragStart = useCallback(
     (event: any, node: Node) => {
@@ -5716,6 +5787,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         zoomOnDoubleClick={false}
         onNodeClick={onNodeClick as any}
         onNodeDoubleClick={onNodeDoubleClick as any}
+        onNodeMouseEnter={onNodeMouseEnter as any}
+        onNodeMouseLeave={onNodeMouseLeave as any}
         onEdgeClick={onEdgeClick as any}
         onNodeDragStart={onNodeDragStart as any}
         onNodeDrag={onNodeDrag as any}
@@ -5726,7 +5799,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         onConnect={onConnect}
         reactFlowInstanceRef={reactFlowInstanceRef}
         onInit={(instance) => {
-          console.log("[Diagram] onInit called - savedCenter:", savedDiagramCenter, "savedScale:", savedDiagramScale);
           if (reactFlowInstanceRef) {
             reactFlowInstanceRef.current = instance;
           }
@@ -5737,7 +5809,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           // Center the viewport if no saved diagram center exists OR if it's at the default (0,0) origin
           const isAtDefaultOrigin = savedDiagramCenter && savedDiagramCenter.u === 0 && savedDiagramCenter.v === 0;
           if (!savedDiagramCenter || isAtDefaultOrigin) {
-            console.log("[Diagram] Centering viewport (no saved center or at default origin)");
             isUpdatingViewportRef.current = true;
             setTimeout(() => {
               centerViewport();
@@ -5745,8 +5816,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                 isUpdatingViewportRef.current = false;
               }, 200);
             }, 100);
-          } else {
-            console.log("[Diagram] Saved diagram center exists:", savedDiagramCenter, "scale:", savedDiagramScale);
           }
         }}
         showControls={fullscreen && panelVisibility.toolbar}
@@ -5756,7 +5825,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         onFocusComplete={() => setFocusedItemId(undefined)}
         panels={
           <>
-            <ViewportPortal>⌞</ViewportPortal>
+            <ViewportPortal>
+              <div className="pointer-events-none">⌞</div>
+            </ViewportPortal>
             {others.map((presence, idx) => (
               <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.u || 0}-${presence.cursor?.v || 0}`} {...presence} />
             ))}
@@ -6210,12 +6281,13 @@ const DesignAppScene: FC = () => {
       const worldX = rayOrigin.x + fwd.x * t;
       const worldZ = rayOrigin.z + fwd.z * t;
       const plane: Plane = { origin: { x: worldX, y: 0, z: worldZ }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+      const center = { u: worldX * 0.3 + 6, v: worldZ * 0.3 - 7 };
       if (dragData.type === "type" && dragData.typeGuid) {
         const droppedType = kit.types?.find((t) => t.guid === dragData.typeGuid);
         if (!droppedType) return;
         startTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
         const pieceGuid = guid();
-        const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, plane };
+        const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, plane, center };
         addPiece("semio.sketchpad.app.design.scene.dragEnd.type", piece);
         finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
       } else if (dragData.type === "design" && dragData.designGuid) {
@@ -6223,7 +6295,7 @@ const DesignAppScene: FC = () => {
         if (!droppedDesign) return;
         startTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
         const pieceGuid = guid();
-        const piece = { guid: pieceGuid, id_: pieceGuid, design: { guid: droppedDesign.guid }, plane };
+        const piece = { guid: pieceGuid, id_: pieceGuid, design: { guid: droppedDesign.guid }, plane, center };
         addPiece("semio.sketchpad.app.design.scene.dragEnd.design", piece);
         finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
       }
@@ -6361,7 +6433,6 @@ const App: FC<AppProps> = () => {
   // Validate layout has Scene window - if not, use undefined to trigger default
   const windowLayout = useMemo(() => {
     if (!storedWindowLayout) {
-      console.log("[DesignApp] No stored layout, will use default");
       return storedWindowLayout;
     }
 
@@ -6388,10 +6459,7 @@ const App: FC<AppProps> = () => {
     };
 
     const hasScene = hasSceneWindow(storedWindowLayout);
-    console.log("[DesignApp] Stored layout check:", { hasScene, layout: storedWindowLayout });
-
     if (!hasScene) {
-      console.log("[DesignApp] Scene window not found in saved layout, resetting to default");
       return undefined;
     }
 
@@ -6401,7 +6469,6 @@ const App: FC<AppProps> = () => {
   // Clear invalid layout from store
   useEffect(() => {
     if (store && storedWindowLayout && windowLayout === undefined) {
-      console.log("[DesignApp] Clearing invalid layout from store");
       // Use try-catch to ensure it doesn't fail silently
       try {
         store.change({ windowLayout: undefined });
@@ -6410,16 +6477,6 @@ const App: FC<AppProps> = () => {
       }
     }
   }, [store, storedWindowLayout, windowLayout]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log("[DesignApp] Passing to LayoutCanvas:", {
-      windowLayout,
-      defaultLayout,
-      willUseDefault: windowLayout === undefined,
-      finalLayout: windowLayout || defaultLayout,
-    });
-  }, [windowLayout, defaultLayout]);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {

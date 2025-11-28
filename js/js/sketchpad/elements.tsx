@@ -1059,7 +1059,7 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children" 
 function ActionGroup({ className, level: propLevel, children, ...props }: ActionGroupProps) {
   const level = useElementLevel(propLevel);
   return (
-    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", className)} {...props}>
+    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x divide-[color:var(--border-color)] overflow-hidden", className)} {...props}>
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -1233,7 +1233,7 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 function ButtonGroup({ className, level: propLevel, id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useElementLevel(propLevel);
   const buttonGroupElement = (
-    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x divide-border overflow-hidden h-medium", className)} {...props}>
+    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x divide-[color:var(--border-color)] overflow-hidden h-medium", className)} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -2352,7 +2352,7 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useElementLevel(propLevel);
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x divide-border", className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x divide-[color:var(--border-color)]", className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -4916,7 +4916,6 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       if (!targetObject) {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(`Focus: Object ${focusedItemId} not found, retrying... (${retryCount}/${maxRetries})`);
           setTimeout(findAndFocusObject, 50);
         } else {
           console.warn(`Focus: Object ${focusedItemId} not found after ${maxRetries} retries`);
@@ -4924,8 +4923,6 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         }
         return;
       }
-
-      console.log(`Focus: Found object ${focusedItemId}, starting zoom animation`);
 
       const box = new THREE.Box3().setFromObject(targetObject);
       const center = box.getCenter(new THREE.Vector3());
