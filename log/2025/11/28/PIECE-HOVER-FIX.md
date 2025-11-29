@@ -1,11 +1,12 @@
-```markdown
+````markdown
 ---
-date: '2025-11-28T18:49:22.576Z'
+date: "2025-11-28T18:49:22.576Z"
 slug: PIECE-HOVER-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix piece hover and selection not working in diagram
 model: claude-sonnet-4.5
 ---
+
 # Previously
 
 Issue: React Flow's `ViewportPortal` component creates a wrapper div with class `react-flow__viewport-portal` that was intercepting all pointer events, preventing hover and click interactions from reaching the piece nodes in the diagram.
@@ -29,6 +30,7 @@ Added CSS rule to disable pointer events on React Flow's viewport portal contain
   pointer-events: none !important;
 }
 ```
+````
 
 This allows pointer events to pass through the viewport portal and reach the piece nodes underneath.
 
@@ -37,6 +39,7 @@ This allows pointer events to pass through the viewport portal and reach the pie
 **File:** `js/js/sketchpad.test.ts`
 
 Added comprehensive test that:
+
 - Creates a kit, type, and design
 - Drags a type to the diagram to create a piece
 - Verifies hover adds `ring` class to avatar
@@ -46,7 +49,10 @@ Added comprehensive test that:
 ## 3. Cleaned up debug logging
 
 Removed temporary `[DEBUG] [PIECE-HOVER-FIX]` console.log statements from:
+
 - `Sketchpad.tsx`: `useIsPieceHovered` hook
 - `Design.tsx`: `hoverPiece` command, `handleMouseEnter` callback, `PieceNodeInner` render
+
+```
 
 ```

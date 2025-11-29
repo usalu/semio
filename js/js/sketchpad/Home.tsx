@@ -44,8 +44,8 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
@@ -731,26 +731,46 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     if (zipFile) {
       try {
         const { kit, files: importedFiles } = await importKit(zipFile);
-        createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
+        await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
         const kitStore = store.kit(kit.guid);
-        for (const [path, blob] of importedFiles.entries()) {
-          const fileToAdd = {
-            guid: guid(),
-            path: path,
-            name: path.split("/").pop() || path,
-            size: blob.size,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.dropzone", fileToAdd, blob);
-        }
+        // Wait for Yjs document to fully initialize before navigating
+        await new Promise((resolve) => setTimeout(resolve, 0));
         navigateToKit(kit.guid);
+        (async () => {
+          for (const [path, blob] of importedFiles.entries()) {
+            const fileToAdd = { guid: guid(), path: path, name: path.split("/").pop() || path, size: blob.size, createdAt: new Date(), updatedAt: new Date() };
+            await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.dropzone", fileToAdd, blob);
+          }
+        })();
       } catch (error) {}
     }
   };
 
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.name.endsWith(".zip") || file.name.endsWith(".semio.zip")) {
+      try {
+        const { kit, files: importedFiles } = await importKit(file);
+        await createKit("semio.sketchpad.app.home.fileInput", kit, true, false);
+        const kitStore = store.kit(kit.guid);
+        // Wait for Yjs document to fully initialize before navigating
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        navigateToKit(kit.guid);
+        for (const [path, blob] of importedFiles.entries()) {
+          const fileToAdd = { guid: guid(), path: path, name: path.split("/").pop() || path, size: blob.size, createdAt: new Date(), updatedAt: new Date() };
+          await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.fileInput", fileToAdd, blob);
+        }
+      } catch (error) {
+        console.error("Import error:", error);
+      }
+    }
+    e.target.value = "";
+  };
+
   return (
     <div className="relative h-full w-full" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+      <input type="file" id="semio.sketchpad.app.home.importKit" accept=".zip" className="hidden" onChange={handleFileInputChange} />
       {children}
       {isDragging && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
@@ -1221,7 +1241,7 @@ const Home: FC = ({}) => {
       newParams.append("e", rowId);
     }
 
-    setSearchParams(newParams);
+    setSearchParams(newParams, { replace: true });
   };
 
   const handleSearchChange = (value: string) => {
@@ -1390,7 +1410,7 @@ const Home: FC = ({}) => {
                       }
                     }}
                   >
-                    <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }} onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-single flex-1 min-w-0">
                         {row.hasChildren ? (
                           <Action
@@ -1582,7 +1602,7 @@ const Home: FC = ({}) => {
                       </div>
                     ),
                     accessor: (row) => (
-                      <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }} onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }} onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-single flex-1 min-w-0">
                           {row.hasChildren ? (
                             <Action
@@ -1595,7 +1615,7 @@ const Home: FC = ({}) => {
                               icon={row.isExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
                             />
                           ) : (
-                            <span className="size-tiny shrink-0" />
+                            <span className="size-small shrink-0" />
                           )}
                           <TableAvatar name={row.name} icon={row.type === "docs" ? row.icon : row.kit?.icon} />
                           <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>

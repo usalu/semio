@@ -1017,7 +1017,6 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
         if (!response.ok) {
           throw new Error(`Remote delete failed: ${response.statusText}`);
         }
-
       },
 
       getUrl: (kitId, fileId, path) => {
@@ -1141,10 +1140,8 @@ class AttributeStore {
 
   constructor(yAttribute: YAttribute, attribute: Attribute) {
     this.yAttribute = yAttribute;
-    this.guid = attribute.guid;
-    this.key = attribute.key;
-    this.value = attribute.value;
-    this.definition = attribute.definition;
+    // Values are already set in createAttribute before construction
+    // Avoid calling setters here to prevent any potential observer issues
   }
 
   get key(): string {
@@ -1767,6 +1764,11 @@ class AuthorStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
+    // Populate the Y.Map before adding to document to avoid Yjs access errors
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -2481,6 +2483,11 @@ class ModelStore {
     if (model.attributes) {
       for (const attribute of model.attributes) {
         const yAttribute = new Y.Map<YAttributeVal>();
+        // Populate the Y.Map before adding to document to avoid Yjs access errors
+        yAttribute.set("guid", attribute.guid);
+        yAttribute.set("key", attribute.key);
+        yAttribute.set("value", attribute.value || "");
+        yAttribute.set("definition", attribute.definition || "");
         this.yAttributes.push([yAttribute]);
         const attributeStore = new AttributeStore(yAttribute, attribute);
         this.attributes.set(attribute.guid, attributeStore);
@@ -2741,7 +2748,9 @@ export class TypeStore {
     this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
     if (type.authors) {
       for (const author of type.authors) {
+        if (!author?.guid) continue;
         const authorStore = this.parent.author(author.guid);
+        if (!authorStore) continue;
         this.authors.set(authorStore.guid, authorStore);
         this.yAuthors.push([authorStore.guid]);
       }
@@ -2857,6 +2866,11 @@ export class TypeStore {
     if (!attribute.guid) throw new Error("Attribute guid is required.");
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
+    // Populate the Y.Map before adding to document to avoid Yjs access errors
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -3397,6 +3411,11 @@ class PieceStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
+    // Populate the Y.Map before adding to document to avoid Yjs access errors
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -4043,6 +4062,11 @@ class ConnectionStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
+    // Populate the Y.Map before adding to document to avoid Yjs access errors
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -4281,6 +4305,7 @@ export class DesignStore {
     this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
     if (design.pieces) {
       for (const piece of design.pieces) {
+        if (!piece?.guid) continue;
         this.createPiece(piece);
       }
     }
@@ -4288,6 +4313,7 @@ export class DesignStore {
     this.yConnections = this.yDesign.set("connections", new Y.Array<YConnection>());
     if (design.connections) {
       for (const connection of design.connections) {
+        if (!connection?.guid) continue;
         this.createConnection(connection);
       }
     }
@@ -4295,6 +4321,7 @@ export class DesignStore {
     this.yAttributes = this.yDesign.set("attributes", new Y.Array<YAttribute>());
     if (design.attributes) {
       for (const attribute of design.attributes) {
+        if (!attribute?.guid) continue;
         this.createAttribute(attribute);
       }
     }
@@ -4302,6 +4329,7 @@ export class DesignStore {
     this.yStats = this.yDesign.set("stats", new Y.Array<YStat>());
     if (design.stats) {
       for (const stat of design.stats) {
+        if (!stat?.guid) continue;
         this.createStat(stat);
       }
     }
@@ -4309,6 +4337,7 @@ export class DesignStore {
     this.yProps = this.yDesign.set("props", new Y.Array<YProp>());
     if (design.props) {
       for (const prop of design.props) {
+        if (!prop?.guid) continue;
         this.createProp(prop);
       }
     }
@@ -4316,6 +4345,7 @@ export class DesignStore {
     this.yLayers = this.yDesign.set("layers", new Y.Array<YLayer>());
     if (design.layers) {
       for (const layer of design.layers) {
+        if (!layer?.guid) continue;
         this.createLayer(layer);
       }
     }
@@ -4327,6 +4357,7 @@ export class DesignStore {
     this.yGroups = this.yDesign.set("groups", new Y.Array<YGroup>());
     if (design.groups) {
       for (const group of design.groups) {
+        if (!group?.guid) continue;
         this.createGroup(group);
       }
     }
@@ -4345,12 +4376,14 @@ export class DesignStore {
     this.authors = new Map();
     if (design.authors) {
       design.authors.forEach((authorId) => {
+        if (!authorId?.guid) return;
         const authorStore = this.parent.author(authorId.guid);
+        if (!authorStore) return;
         this.authors.set(authorId.guid, authorStore);
       });
     }
     this.yAuthors = this.yDesign.set("authors", new Y.Array<YAuthorUuid>());
-    this.authors.forEach((author) => this.yAuthors.push([author.guid]));
+    this.authors.forEach((author) => author?.guid && this.yAuthors.push([author.guid]));
 
     this.yDesign.set("createdAt", new Date().toISOString());
     this.updated();
@@ -4461,6 +4494,11 @@ export class DesignStore {
 
   createAttribute(attribute: Attribute): void {
     const yAttribute = new Y.Map<YAttributeVal>();
+    // Populate the Y.Map before adding to document to avoid Yjs access errors
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -5164,13 +5202,13 @@ export class KitStore {
       this.image = kit.image;
       this.description = kit.description;
 
-      kit.attributes?.forEach((attribute) => this.createAttribute(attribute));
-      kit.authors?.forEach((author) => this.createAuthor(author));
-      kit.folders?.forEach((folder) => this.createFolder(folder));
-      kit.qualities?.forEach((quality) => this.createQuality(quality));
-      kit.types?.forEach((type) => this.createType(type));
-      kit.designs?.forEach((design) => this.createDesign(design));
-      kit.files?.forEach((file) => this.createFile(file));
+      kit.attributes?.forEach((attribute) => attribute?.guid && this.createAttribute(attribute));
+      kit.authors?.forEach((author) => author?.guid && this.createAuthor(author));
+      kit.folders?.forEach((folder) => folder?.guid && this.createFolder(folder));
+      kit.qualities?.forEach((quality) => quality?.guid && this.createQuality(quality));
+      kit.types?.forEach((type) => type?.guid && this.createType(type));
+      kit.designs?.forEach((design) => design?.guid && this.createDesign(design));
+      kit.files?.forEach((file) => file?.guid && this.createFile(file));
 
       this.yKit.set("createdAt", new Date().toISOString());
       this.updated();
@@ -5513,6 +5551,11 @@ export class KitStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map() as YAttribute;
+    // Populate the Y.Map before adding to document to avoid Yjs access errors
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
     this.yAttributes.push([yAttribute]);
     const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.attributes.set(attribute.guid, yAttributeStore);
@@ -11658,8 +11701,7 @@ const LayoutWrapper: FC = () => {
       if (i18n.language !== language) {
         i18n
           .changeLanguage(language)
-          .then(() => {
-          })
+          .then(() => {})
           .catch((err) => {
             console.error("[Language Sync] Failed to change language:", err);
           });

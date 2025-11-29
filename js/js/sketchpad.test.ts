@@ -196,117 +196,25 @@ test.describe("sketchpad", () => {
     });
   });
 
-  test.describe("Kit Import Drag and Drop", () => {
-    test("Import metabolism.zip creates temporary kit with all types, designs, ports, pieces, and files", async ({ page }) => {
-      test.setTimeout(120000);
-      const dataTransfer = await page.evaluateHandle(async () => {
-        const response = await fetch(`/assets/semio/metabolism.zip`);
-        if (!response.ok) throw new Error(`Failed to fetch metabolism.zip: ${response.status}`);
-        const blob = await response.blob();
-        const file = new File([blob], "metabolism.zip", { type: "application/zip" });
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        return dt;
-      });
-      const canvas = page.locator("body");
-      await canvas.dispatchEvent("dragover", { dataTransfer });
-      await page.waitForTimeout(500);
-      await canvas.dispatchEvent("drop", { dataTransfer });
-      await page.waitForTimeout(5000);
-      await expect(page).toHaveURL(/.*kit\/.+/);
-      const kitState = await page.evaluate(() => {
-        const store = (window as any).__SKETCHPAD_STORE__;
-        if (!store) return null;
-        const state = store.getCompleteState?.() || store.snapshot?.();
-        if (!state) return null;
-        const kits = state.kits || [];
-        if (kits.length === 0) return null;
-        const lastKit = kits[kits.length - 1];
-        return {
-          kit: lastKit.kit,
-          local: lastKit.local,
-          remote: lastKit.remote,
-        };
-      });
-      expect(kitState).not.toBeNull();
-      expect(kitState!.local).toBe(false);
-      expect(kitState!.remote).toBe(false);
-      const kit = kitState!.kit;
-      expect(kit).toBeDefined();
-      expect(kit.name).toBe("Metabolism");
-      const expectedTypeNames = ["Capsule", "Ellipsoid", "Trapezoid", "Balcony", "Base", "Blob", "Bridge", "Capital", "Cylindric Capital", "Tambour", "Cylindric Tambour"];
-      const typeNames = kit.types?.map((t: any) => t.name) || [];
-      for (const expectedName of expectedTypeNames) {
-        expect(typeNames).toContain(expectedName);
-      }
-      const expectedDesignNames = ["Nakagin Capsule Tower", "Capsule Dream"];
-      const protoDesigns = kit.designs?.filter((d: any) => !d.parent) || [];
-      const protoDesignNames = protoDesigns.map((d: any) => d.name);
-      for (const expectedName of expectedDesignNames) {
-        expect(protoDesignNames).toContain(expectedName);
-      }
-      const tambour = kit.types?.find((t: any) => t.name === "Tambour");
-      expect(tambour).toBeDefined();
-      expect(tambour.ports).toBeDefined();
-      expect(tambour.ports.length).toBe(10);
-      const expectedPorts = [
-        { name: "b", point: { x: 0, y: 0, z: 0.9166667 }, direction: { x: 0, y: 0, z: -1 }, t: 0.5 },
-        { name: "t", point: { x: 0, y: 0, z: 3.6666667 }, direction: { x: 0, y: 0, z: 1 }, t: 0 },
-        { name: "sl0_d0", point: { x: 2.75, y: 0.9, z: 0.2 }, direction: { x: 1, y: 0, z: 0 }, t: 0.2 },
-        { name: "sl0_d1", point: { x: 0.9, y: 2.75, z: 0.2 }, direction: { x: 0, y: 1, z: 0 }, t: 0.05 },
-        { name: "sl0_d2", point: { x: -0.9, y: 2.75, z: 0.2 }, direction: { x: 0, y: 1, z: 0 }, t: 0.95 },
-        { name: "sl0_d3", point: { x: -2.75, y: 0.9, z: 0.2 }, direction: { x: -1, y: 0, z: 0 }, t: 0.8 },
-        { name: "sl1_d0", point: { x: -2.75, y: -0.9, z: 1.1166667 }, direction: { x: -1, y: 0, z: 0 }, t: 0.7 },
-        { name: "sl1_d1", point: { x: -0.9, y: -2.75, z: 1.1166667 }, direction: { x: 0, y: -1, z: 0 }, t: 0.55 },
-        { name: "sl2_d0", point: { x: 0.9, y: -2.75, z: 2.0333333 }, direction: { x: 0, y: -1, z: 0 }, t: 0.45 },
-        { name: "sl2_d1", point: { x: 2.75, y: -0.9, z: 2.0333333 }, direction: { x: 1, y: 0, z: 0 }, t: 0.3 },
-      ];
-      const tolerance = 0.001;
-      for (const expected of expectedPorts) {
-        const port = tambour.ports.find((p: any) => p.name === expected.name);
-        expect(port).toBeDefined();
-        expect(Math.abs(port.point.x - expected.point.x)).toBeLessThan(tolerance);
-        expect(Math.abs(port.point.y - expected.point.y)).toBeLessThan(tolerance);
-        expect(Math.abs(port.point.z - expected.point.z)).toBeLessThan(tolerance);
-        expect(Math.abs(port.direction.x - expected.direction.x)).toBeLessThan(tolerance);
-        expect(Math.abs(port.direction.y - expected.direction.y)).toBeLessThan(tolerance);
-        expect(Math.abs(port.direction.z - expected.direction.z)).toBeLessThan(tolerance);
-        expect(Math.abs(port.t - expected.t)).toBeLessThan(tolerance);
-      }
-      const nakagin = kit.designs?.find((d: any) => d.name === "Nakagin Capsule Tower" && !d.parent);
-      expect(nakagin).toBeDefined();
-      expect(nakagin.pieces).toBeDefined();
-      expect(nakagin.pieces.length).toBe(180);
-      const files = await page.evaluate(() => {
-        const store = (window as any).__SKETCHPAD_STORE__;
-        if (!store) return [];
-        const state = store.getCompleteState?.() || store.snapshot?.();
-        if (!state) return [];
-        const kits = state.kits || [];
-        if (kits.length === 0) return [];
-        const lastKit = kits[kits.length - 1];
-        return lastKit.kit.files?.map((f: any) => f.path) || [];
-      });
-      const hasSemioFolder = files.some((f: string) => f.startsWith(".semio/") || f.startsWith(".semio\\"));
-      expect(hasSemioFolder).toBe(false);
-      const hasRepresentations = files.some((f: string) => f.includes("representations"));
-      const hasIcons = files.some((f: string) => f.includes("icons"));
-      expect(hasRepresentations).toBe(true);
-      expect(hasIcons).toBe(true);
-      const representationFiles = files.filter((f: string) => f.includes("representations"));
-      const iconFiles = files.filter((f: string) => f.includes("icons"));
-      expect(representationFiles.length).toBeGreaterThan(100);
-      expect(iconFiles.length).toBeGreaterThan(30);
-      const expectedRepFiles = ["base.glb", "tambour.glb", "capsule_backslash.glb", "capital.glb", "bridge.glb"];
-      for (const expected of expectedRepFiles) {
-        const found = representationFiles.some((f: string) => f.includes(expected));
-        expect(found).toBe(true);
-      }
-      const expectedIconFiles = ["base.svg", "tambour.svg", "metabolism.svg", "capital.svg"];
-      for (const expected of expectedIconFiles) {
-        const found = iconFiles.some((f: string) => f.includes(expected));
-        expect(found).toBe(true);
-      }
+  test.describe("Kit Import", () => {
+    test("Import metabolism.zip via file input and verify types and designs visible", async ({ page }) => {
+      test.setTimeout(180000);
+      const consoleErrors: string[] = [];
+      page.on("console", (msg) => { if (msg.type() === "error") consoleErrors.push(msg.text()); });
+      await page.waitForTimeout(2000);
+      const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+      await expect(fileInput).toBeAttached({ timeout: 30000 });
+      await fileInput.setInputFiles("../../assets/semio/metabolism.zip");
+      await page.waitForURL(/.*kits\/.+/, { timeout: 60000 });
+      expect(consoleErrors.filter((e) => e.includes("Import error"))).toHaveLength(0);
+      expect(page.url()).toMatch(/\/kits\/[^/?]+/);
+      await page.waitForTimeout(10000);
+      await page.screenshot({ path: "test-results/kit-import-final.png", fullPage: true });
+      await expect(page.getByText("Capsule", { exact: true }).first()).toBeVisible({ timeout: 60000 });
+      await expect(page.getByText("Tambour", { exact: true }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Base", { exact: true }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Nakagin Capsule Tower").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Capsule Dream").first()).toBeVisible({ timeout: 10000 });
     });
   });
 

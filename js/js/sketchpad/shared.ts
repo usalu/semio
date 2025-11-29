@@ -148,7 +148,7 @@ export interface FileProvider {
   getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 
-export interface MemoryFileProviderConfig {}
+export interface MemoryFileProviderConfig { }
 
 export interface LocalFileProviderConfig {
   dbName?: string;
@@ -408,7 +408,7 @@ export interface AppConfig {
   order?: number;
 }
 
-export interface AppRegistration extends AppConfig {}
+export interface AppRegistration extends AppConfig { }
 
 // #endregion App Registry
 

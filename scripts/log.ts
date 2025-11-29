@@ -99,7 +99,7 @@ export function createLog(input: LogCreateInput): Log {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
-  const slug = input.slug;
+  const slug = input.slug.toUpperCase();
   const logPath = getLogPath(year, month, day, slug);
   if (existsSync(logPath)) {
     throw new Error(`Log already exists: ${logPath}`);
@@ -201,6 +201,7 @@ export function migrateOldLogs(): void {
     const match = entry.match(oldLogPattern);
     if (!match) continue;
     const [, year, month, day, slug] = match;
+    const capitalizedSlug = slug.toUpperCase();
     const content = readFileSync(fullPath, "utf-8");
     const parsed = matter(content);
     if (parsed.data.date) {
@@ -210,12 +211,12 @@ export function migrateOldLogs(): void {
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     const frontmatter: LogFrontmatter = {
       date: date.toISOString(),
-      slug,
+      slug: capitalizedSlug,
       author: getDefaultAuthor(),
       summary: `Migration from ${entry}`,
       model: "unknown",
     };
-    const newPath = getLogPath(parseInt(year), parseInt(month), parseInt(day), slug);
+    const newPath = getLogPath(parseInt(year), parseInt(month), parseInt(day), capitalizedSlug);
     ensureDirectoryExists(newPath);
     const fileContent = matter.stringify(parsed.content || content, frontmatter);
     writeFileSync(newPath, fileContent, "utf-8");
@@ -231,7 +232,7 @@ function printUsage(): void {
 Usage: tsx scripts/log.ts <command> [options]
 
 Commands:
-  create <slug> <summary>              Create a new log
+  create <slug> <summary>              Create a new log (slug will be capitalized)
   read <year> <month> <day> <slug>     Read a log
   update <year> <month> <day> <slug>   Update a log (interactive)
   delete <year> <month> <day> <slug>   Delete a log
@@ -239,7 +240,7 @@ Commands:
   migrate                              Migrate old logs to new structure
 
 Examples:
-  tsx scripts/log.ts create MY-TASK "Implement new feature"
+  tsx scripts/log.ts create my-task "Implement new feature"  # Creates MY-TASK.md
   tsx scripts/log.ts read 2025 11 24 MY-TASK
   tsx scripts/log.ts list 2025 11
   tsx scripts/log.ts migrate

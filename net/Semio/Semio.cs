@@ -418,7 +418,7 @@ public class UnitValue
         return Utility.Units.Convert(Value, Unit, targetUnit);
     }
 
-    public override string ToString() => string.IsNullOrEmpty(Unit) ? Value.ToString(CultureInfo.InvariantCulture) : $"'{Value.ToString(CultureInfo.InvariantCulture)} {Unit}'";
+    public override string ToString() => string.IsNullOrEmpty(Unit) ? Value.ToString("G9", CultureInfo.InvariantCulture) : $"'{Value.ToString("G9", CultureInfo.InvariantCulture)} {Unit}'";
 }
 
 public class NumberConstant : Constant
@@ -1173,7 +1173,7 @@ public class Expression
         if (Root == null) throw new InvalidOperationException("Expression has no root term.");
         return Root switch
         {
-            NumberConstant c => string.IsNullOrEmpty(targetUnit) ? c.UnitValue : c.UnitValue.ConvertTo(targetUnit),
+            NumberConstant c => string.IsNullOrEmpty(targetUnit) ? c.UnitValue : new UnitValue(c.UnitValue.ConvertTo(targetUnit)),
             StringConstant sc => sc.Value,
             Variable v => context != null && context.TryGetValue(v.Name, out var val)
                             ? val
@@ -1825,6 +1825,12 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
     }
 }
 
+public class DiffUpdate<T>
+{
+    public string Id { get; set; } = "";
+    public T? Diff { get; set; }
+}
+
 #region Attribute
 
 [Model("🔐", "AI", "AtI", "The ID of the attribute.")]
@@ -1840,6 +1846,8 @@ public class AttributeId : Model<AttributeId>
 [Model("🔐", "AD", "ADf", "A diff for attributes.")]
 public class AttributeDiff : Model<AttributeDiff>
 {
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the attribute.")]
+    public string? Guid { get; set; }
     [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
     public string Key { get; set; } = "";
     [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
@@ -1848,17 +1856,41 @@ public class AttributeDiff : Model<AttributeDiff>
     public string Definition { get; set; } = "";
 
     public static implicit operator AttributeDiff(AttributeId id) => new() { Key = id.Key };
-    public static implicit operator AttributeDiff(Attribute attribute) => new() { Key = attribute.Key, Value = attribute.Value, Definition = attribute.Definition };
+    public static implicit operator AttributeDiff(Attribute attribute) => new() { Guid = attribute.Guid, Key = attribute.Key, Value = attribute.Value, Definition = attribute.Definition };
 
     public AttributeDiff MergeDiff(AttributeDiff other)
     {
         return new AttributeDiff
         {
+            Guid = other.Guid ?? Guid,
             Key = string.IsNullOrEmpty(other.Key) ? Key : other.Key,
             Value = string.IsNullOrEmpty(other.Value) ? Value : other.Value,
             Definition = string.IsNullOrEmpty(other.Definition) ? Definition : other.Definition
         };
     }
+}
+
+[Model("📊", "AtD", "AtsDf", "A diff for multiple attributes.")]
+public class AttributesDiff : Model<AttributesDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed attributes.", PropImportance.OPTIONAL)]
+    public List<string> Removed { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added attributes.", PropImportance.OPTIONAL)]
+    public List<Attribute> Added { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated attributes.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<AttributeDiff>> Updated { get; set; } = new();
+
+    public AttributesDiff MergeDiff(AttributesDiff other)
+    {
+        return new AttributesDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+
+    public static implicit operator AttributesDiff(List<Attribute> attributes) => new() { Updated = attributes.Select(a => new DiffUpdate<AttributeDiff> { Id = a.Guid, Diff = (AttributeDiff)a }).ToList() };
 }
 
 /// <summary>
@@ -1867,6 +1899,9 @@ public class AttributeDiff : Model<AttributeDiff>
 [Model("🏷️", "At", "Atr", "A attribute is a key value pair with an an optional definition.")]
 public class Attribute : Model<Attribute>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the attribute.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+
     [Name("🔑", "Ke", "Key", "The key of the attribute.", PropImportance.ID)]
     public string Key { get; set; } = "";
 
@@ -1877,12 +1912,13 @@ public class Attribute : Model<Attribute>
     public string Definition { get; set; } = "";
 
     public static implicit operator Attribute(AttributeId id) => new() { Key = id.Key };
-    public static implicit operator Attribute(AttributeDiff diff) => new() { Key = diff.Key, Value = diff.Value, Definition = diff.Definition };
+    public static implicit operator Attribute(AttributeDiff diff) => new() { Guid = diff.Guid ?? "", Key = diff.Key, Value = diff.Value, Definition = diff.Definition };
 
     public Attribute ApplyDiff(AttributeDiff diff)
     {
         return new Attribute
         {
+            Guid = Guid,
             Key = !string.IsNullOrEmpty(diff.Key) ? diff.Key : Key,
             Value = !string.IsNullOrEmpty(diff.Value) ? diff.Value : Value,
             Definition = !string.IsNullOrEmpty(diff.Definition) ? diff.Definition : Definition
@@ -1892,6 +1928,7 @@ public class Attribute : Model<Attribute>
     {
         return new AttributeDiff
         {
+            Guid = Guid,
             Key = Key,
             Value = Value,
             Definition = Definition
@@ -1901,6 +1938,7 @@ public class Attribute : Model<Attribute>
     {
         return new AttributeDiff
         {
+            Guid = Guid,
             Key = !string.IsNullOrEmpty(appliedDiff.Key) ? Key : "",
             Value = !string.IsNullOrEmpty(appliedDiff.Value) ? Value : "",
             Definition = !string.IsNullOrEmpty(appliedDiff.Definition) ? Definition : ""
@@ -2099,6 +2137,32 @@ public class ArtifactAuthor : Model<ArtifactAuthor>
     }
 }
 
+[Model("👤", "AuD", "AuDf", "A diff for an author.")]
+public class AuthorDiff : Model<AuthorDiff>
+{
+    [Id("🆔", "Gd?", "Gui?", "The optional guid of the author.")]
+    public string? Guid { get; set; }
+    [Name("📛", "Na?", "Nam?", "The optional name of the author.")]
+    public string? Name { get; set; }
+    [Email("📧", "Em?", "Eml?", "The optional email of the author.")]
+    public string? Email { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
+    public List<Attribute>? Attributes { get; set; }
+
+    public static implicit operator AuthorDiff(Author author) => new() { Guid = author.Guid, Name = author.Name, Email = author.Email, Attributes = author.Attributes };
+
+    public AuthorDiff MergeDiff(AuthorDiff other)
+    {
+        return new AuthorDiff
+        {
+            Guid = other.Guid ?? Guid,
+            Name = other.Name ?? Name,
+            Email = other.Email ?? Email,
+            Attributes = other.Attributes ?? Attributes
+        };
+    }
+}
+
 [Model("", "Au", "Aut", "The information about the author.")]
 public class Author : Model<Author>
 {
@@ -2128,6 +2192,29 @@ public class Author : Model<Author>
 
         return (isValid, errors);
     }
+}
+
+[Model("👥", "AuD", "AusDf", "A diff for multiple authors.")]
+public class AuthorsDiff : Model<AuthorsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed authors.", PropImportance.OPTIONAL)]
+    public List<string> Removed { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added authors.", PropImportance.OPTIONAL)]
+    public List<Author> Added { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated authors.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<AuthorDiff>> Updated { get; set; } = new();
+
+    public AuthorsDiff MergeDiff(AuthorsDiff other)
+    {
+        return new AuthorsDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+
+    public static implicit operator AuthorsDiff(List<Author> authors) => new() { Updated = authors.Select(a => new DiffUpdate<AuthorDiff> { Id = a.Guid, Diff = (AuthorDiff)a }).ToList() };
 }
 
 #endregion Author
@@ -2195,13 +2282,13 @@ public class FileDiff : Model<FileDiff>
 public class FilesDiff : Model<FilesDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
-    public List<FileId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
-    public List<FileDiff> Updated { get; set; } = new();
+    public List<DiffUpdate<FileDiff>> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
     public List<File> Added { get; set; } = new();
 
-    public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
+    public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => new DiffUpdate<FileDiff> { Id = f.Guid, Diff = (FileDiff)f }).ToList() };
 }
 
 [Model("📄", "Fl", "Fil", "A file with content.")]
@@ -2297,13 +2384,13 @@ public class FolderDiff : Model<FolderDiff>
 public class FoldersDiff : Model<FoldersDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed folders.", PropImportance.OPTIONAL)]
-    public List<FolderId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated folders.", PropImportance.OPTIONAL)]
-    public List<FolderDiff> Updated { get; set; } = new();
+    public List<DiffUpdate<FolderDiff>> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added folders.", PropImportance.OPTIONAL)]
     public List<Folder> Added { get; set; } = new();
 
-    public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => (FolderDiff)f).ToList() };
+    public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => new DiffUpdate<FolderDiff> { Id = f.Guid, Diff = (FolderDiff)f }).ToList() };
 }
 
 [Model("📁", "Fol", "Folder", "A folder is an organizational container.")]
@@ -2556,13 +2643,13 @@ public class InterfaceDiff : Model<InterfaceDiff>
 public class InterfacesDiff : Model<InterfacesDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed interfaces.", PropImportance.OPTIONAL)]
-    public List<InterfaceId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added interfaces.", PropImportance.OPTIONAL)]
     public List<Interface> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified interfaces.", PropImportance.OPTIONAL)]
-    public List<InterfaceDiff> Modified { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated interfaces.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<InterfaceDiff>> Updated { get; set; } = new();
 
-    public static implicit operator InterfacesDiff(List<Interface> interfaces) => new() { Modified = interfaces.Select(i => (InterfaceDiff)i).ToList() };
+    public static implicit operator InterfacesDiff(List<Interface> interfaces) => new() { Updated = interfaces.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
 }
 
 /// <summary>
@@ -2705,13 +2792,23 @@ public class ModelDiff : Model<ModelDiff>
 public class ModelsDiff : Model<ModelsDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed models.", PropImportance.OPTIONAL)]
-    public List<ModelId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added models.", PropImportance.OPTIONAL)]
-    public List<ModelDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified models.", PropImportance.OPTIONAL)]
-    public List<ModelDiff> Modified { get; set; } = new();
+    public List<Model> Added { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated models.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<ModelDiff>> Updated { get; set; } = new();
 
-    public static implicit operator ModelsDiff(List<Model> models) => new() { Modified = models.Select(r => (ModelDiff)r).ToList() };
+    public ModelsDiff MergeDiff(ModelsDiff other)
+    {
+        return new ModelsDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+
+    public static implicit operator ModelsDiff(List<Model> models) => new() { Updated = models.Select(r => new DiffUpdate<ModelDiff> { Id = r.Guid, Diff = (ModelDiff)r }).ToList() };
 }
 
 /// <summary>
@@ -2721,6 +2818,8 @@ public class ModelsDiff : Model<ModelsDiff>
     "A model is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Model : Model<Model>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the model.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
     [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
     public string Name { get; set; } = "";
     [Name("📄", "Fl", "Fil", "The file path to the resource of the model.", PropImportance.REQUIRED)]
@@ -2857,7 +2956,7 @@ public class PortDiff : Model<PortDiff>
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator PortDiff(Port port) => new() { Guid = port.Guid, Description = port.Description, Interface = port.Interface, Mandatory = port.Mandatory, T = port.T, CompatibleInterfaces = port.CompatibleInterfaces, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
+    public static implicit operator PortDiff(Port port) => new() { Guid = port.Guid, Description = port.Description, Interface = port.Interface, Mandatory = port.Mandatory, T = port.T, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
 
     public PortDiff MergeDiff(PortDiff other)
     {
@@ -2868,7 +2967,6 @@ public class PortDiff : Model<PortDiff>
             Interface = other.Interface ?? Interface,
             Mandatory = other.Mandatory ?? Mandatory,
             T = other.T ?? T,
-            CompatibleInterfaces = other.CompatibleInterfaces ?? CompatibleInterfaces,
             Point = other.Point ?? Point,
             Direction = other.Direction ?? Direction,
             Props = other.Props ?? Props,
@@ -2881,13 +2979,23 @@ public class PortDiff : Model<PortDiff>
 public class PortsDiff : Model<PortsDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
-    public List<PortId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
-    public List<PortDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified ports.", PropImportance.OPTIONAL)]
-    public List<PortDiff> Modified { get; set; } = new();
+    public List<Port> Added { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<PortDiff>> Updated { get; set; } = new();
 
-    public static implicit operator PortsDiff(List<Port> ports) => new() { Modified = ports.Select(p => (PortDiff)p).ToList() };
+    public PortsDiff MergeDiff(PortsDiff other)
+    {
+        return new PortsDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+
+    public static implicit operator PortsDiff(List<Port> ports) => new() { Updated = ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = (PortDiff)p }).ToList() };
 }
 
 /// <summary>
@@ -3060,10 +3168,10 @@ public class Port : Model<Port>
         return new Port
         {
             Guid = Guid,
+            Name = Name,
             Description = Description,
             Mandatory = Mandatory,
             Interface = Interface,
-            CompatibleInterfaces = CompatibleInterfaces,
             Point = Point,
             Direction = Direction,
             T = T,
@@ -3096,8 +3204,8 @@ public class TypeDiff : Model<TypeDiff>
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
     public string? Name { get; set; }
-    [Id("📁", "Pa?", "Par?", "The optional parent type guid.")]
-    public string? Parent { get; set; }
+    [ModelProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
+    public TypeId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
     public bool? IsAbstract { get; set; }
     [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
@@ -3119,15 +3227,15 @@ public class TypeDiff : Model<TypeDiff>
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [ModelProp("💾", "Rp*", "Reps*", "The optional models of the type.", PropImportance.OPTIONAL)]
-    public List<Model> Models { get; set; } = new();
+    public ModelsDiff? Models { get; set; }
     [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
-    public List<Port> Ports { get; set; } = new();
+    public PortsDiff? Ports { get; set; }
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
-    public List<AuthorId> Authors { get; set; } = new();
+    public List<AuthorId>? Authors { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
-    public List<Attribute> Attributes { get; set; } = new();
+    public List<Attribute>? Attributes { get; set; }
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
+    public List<string>? Concepts { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the type.")]
     public DateTime? CreatedAt { get; set; }
     [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the type.")]
@@ -3146,29 +3254,29 @@ public class TypeDiff : Model<TypeDiff>
             Uri = string.IsNullOrEmpty(other.Uri) ? Uri : other.Uri,
             Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
             Location = other.Location ?? Location,
-            Models = other.Models.Any() ? other.Models : Models,
-            Ports = other.Ports.Any() ? other.Ports : Ports,
-            Authors = other.Authors.Any() ? other.Authors : Authors,
-            Attributes = other.Attributes.Any() ? other.Attributes : Attributes,
-            Concepts = other.Concepts.Any() ? other.Concepts : Concepts
+            Models = other.Models is not null ? (other.Models.MergeDiff(Models ?? new ModelsDiff())) : Models,
+            Ports = other.Ports is not null ? (other.Ports.MergeDiff(Ports ?? new PortsDiff())) : Ports,
+            Authors = other.Authors is not null && other.Authors.Any() ? other.Authors : Authors,
+            Attributes = other.Attributes is not null && other.Attributes.Any() ? other.Attributes : Attributes,
+            Concepts = other.Concepts is not null && other.Concepts.Any() ? other.Concepts : Concepts
         };
     }
 
     public static implicit operator TypeDiff(TypeId id) => new() { Guid = id.Guid };
-    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = type.Models, Ports = type.Ports, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<string>(), Updated = type.Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() }, Ports = new PortsDiff { Added = new List<Port>(), Removed = new List<string>(), Updated = type.Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() }, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
 [Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
 public class TypesDiff : Model<TypesDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
-    public List<TypeId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added types.", PropImportance.OPTIONAL)]
-    public List<TypeDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified types.", PropImportance.OPTIONAL)]
-    public List<TypeDiff> Modified { get; set; } = new();
+    public List<Type> Added { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated types.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<TypeDiff>> Updated { get; set; } = new();
 
-    public static implicit operator TypesDiff(List<Type> types) => new() { Modified = types.Select(t => (TypeDiff)t).ToList() };
+    public static implicit operator TypesDiff(List<Type> types) => new() { Updated = types.Select(t => new DiffUpdate<TypeDiff> { Id = t.Guid, Diff = (TypeDiff)t }).ToList() };
 }
 
 /// <summary>
@@ -3181,8 +3289,8 @@ public class Type : Model<Type>
     public string Guid { get; set; } = "";
     [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Id("📁", "Pa?", "Par?", "The optional parent type guid.")]
-    public string? Parent { get; set; }
+    [ModelProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
+    public TypeId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
     public bool? IsAbstract { get; set; }
     [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
@@ -3227,14 +3335,23 @@ public class Type : Model<Type>
     public override string ToString() => $"Typ({ToHumanIdString()})";
 
     public static implicit operator Type(TypeId id) => new() { Guid = id.Guid, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
-    public static implicit operator Type(TypeDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Models = diff.Models ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
+    public static implicit operator Type(TypeDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Models = diff.Models?.Added ?? new(), Ports = diff.Ports?.Added ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
     public static implicit operator string(Type type) => type.Name;
     public static implicit operator Type(string name) => new() { Name = name, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
     public Type ApplyDiff(TypeDiff diff)
     {
+        var models = Models;
+        var ports = Ports;
+
+        if (diff.Models is not null)
+            models = ApplyModelsDiff(Models, diff.Models);
+        if (diff.Ports is not null)
+            ports = ApplyPortsDiff(Ports, diff.Ports);
+
         return new Type
         {
+            Guid = Guid,
             Name = string.IsNullOrEmpty(diff.Name) ? Name : diff.Name,
             Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
             Icon = string.IsNullOrEmpty(diff.Icon) ? Icon : diff.Icon,
@@ -3244,19 +3361,48 @@ public class Type : Model<Type>
             Uri = string.IsNullOrEmpty(diff.Uri) ? Uri : diff.Uri,
             Unit = string.IsNullOrEmpty(diff.Unit) ? Unit : diff.Unit,
             Location = diff.Location ?? Location,
-            Models = diff.Models?.Any() == true ? diff.Models : Models,
-            Ports = diff.Ports?.Any() == true ? diff.Ports : Ports,
-            Authors = diff.Authors?.Any() == true ? diff.Authors : Authors,
-            Attributes = diff.Attributes?.Any() == true ? diff.Attributes : Attributes,
-            Concepts = diff.Concepts?.Any() == true ? diff.Concepts : Concepts,
-            Props = Props
+            Models = models,
+            Ports = ports,
+            Authors = diff.Authors is not null && diff.Authors.Any() ? diff.Authors : Authors,
+            Attributes = diff.Attributes is not null && diff.Attributes.Any() ? diff.Attributes : Attributes,
+            Concepts = diff.Concepts is not null && diff.Concepts.Any() ? diff.Concepts : Concepts,
+            Props = Props,
+            CreatedAt = CreatedAt,
+            UpdatedAt = DateTime.UtcNow
         };
+    }
+
+    private List<Model> ApplyModelsDiff(List<Model> original, ModelsDiff diff)
+    {
+        var result = original.Where(m => !diff.Removed.Contains(m.Guid)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(m => m.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
+        }
+        result.AddRange(diff.Added);
+        return result;
+    }
+
+    private List<Port> ApplyPortsDiff(List<Port> original, PortsDiff diff)
+    {
+        var result = original.Where(p => !diff.Removed.Contains(p.Guid)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(p => p.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
+        }
+        result.AddRange(diff.Added);
+        return result;
     }
 
     public TypeDiff CreateDiff()
     {
         return new TypeDiff
         {
+            Guid = Guid,
             Name = Name,
             Description = Description,
             Icon = Icon,
@@ -3266,8 +3412,8 @@ public class Type : Model<Type>
             Uri = Uri,
             Unit = Unit,
             Location = Location,
-            Models = Models,
-            Ports = Ports,
+            Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<string>(), Updated = Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() },
+            Ports = new PortsDiff { Added = new List<Port>(), Removed = new List<string>(), Updated = Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() },
             Authors = Authors,
             Attributes = Attributes,
             Concepts = Concepts
@@ -3287,10 +3433,10 @@ public class Type : Model<Type>
             Uri = !string.IsNullOrEmpty(appliedDiff.Uri) ? Uri : "",
             Unit = !string.IsNullOrEmpty(appliedDiff.Unit) ? Unit : "",
             Location = appliedDiff.Location is not null ? Location : null,
-            Models = appliedDiff.Models.Any() ? Models : new List<Model>(),
-            Ports = appliedDiff.Ports.Any() ? Ports : new List<Port>(),
-            Authors = appliedDiff.Authors.Any() ? Authors : new List<AuthorId>(),
-            Attributes = appliedDiff.Attributes.Any() ? Attributes : new List<Attribute>()
+            Models = appliedDiff.Models is not null ? new ModelsDiff { Added = new List<Model>(), Removed = new List<string>(), Updated = Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() } : null,
+            Ports = appliedDiff.Ports is not null ? new PortsDiff { Added = new List<Port>(), Removed = new List<string>(), Updated = Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() } : null,
+            Authors = appliedDiff.Authors is not null && appliedDiff.Authors.Any() ? Authors : null,
+            Attributes = appliedDiff.Attributes is not null && appliedDiff.Attributes.Any() ? Attributes : null
         };
     }
 
@@ -3470,23 +3616,23 @@ public class PieceId : Model<PieceId>
 public class PiecesDiff : Model<PiecesDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
-    public List<PieceId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated pieces.", PropImportance.OPTIONAL)]
-    public List<PieceDiff> Modified { get; set; } = new();
+    public List<DiffUpdate<PieceDiff>> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added pieces.", PropImportance.OPTIONAL)]
-    public List<PieceDiff> Added { get; set; } = new();
+    public List<Piece> Added { get; set; } = new();
 
     public PiecesDiff MergeDiff(PiecesDiff other)
     {
         return new PiecesDiff
         {
             Removed = other.Removed.Concat(Removed).Distinct().ToList(),
-            Modified = other.Modified.Concat(Modified).GroupBy(m => m.Guid).Select(g => g.Last()).ToList(),
+            Updated = other.Updated.Concat(Updated).GroupBy(m => m.Id).Select(g => g.Last()).ToList(),
             Added = other.Added.Concat(Added).GroupBy(a => a.Guid).Select(g => g.Last()).ToList()
         };
     }
 
-    public static implicit operator PiecesDiff(List<Piece> pieces) => new() { Modified = pieces.Select(p => p.CreateDiff()).ToList() };
+    public static implicit operator PiecesDiff(List<Piece> pieces) => new() { Updated = pieces.Select(p => new DiffUpdate<PieceDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() };
 }
 
 [Model("📊", "PcD", "PcDf", "A diff for a piece.")]
@@ -3650,7 +3796,14 @@ public class Side : Model<Side>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Piece.Guid, DesignPiece?.Guid, Port.Guid);
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 31 + (Piece.Guid?.GetHashCode() ?? 0);
+            hash = hash * 31 + (DesignPiece?.Guid?.GetHashCode() ?? 0);
+            hash = hash * 31 + (Port.Guid?.GetHashCode() ?? 0);
+            return hash;
+        }
     }
 
     public override string ToString() => $"Sde({Piece.Guid}" + (Port.Guid != "" ? ":" + Port.Guid : "") + ")";
@@ -3720,8 +3873,8 @@ public class ConnectionDiff : Model<ConnectionDiff>
             Rotation = other.Rotation ?? Rotation,
             Turn = other.Turn ?? Turn,
             Tilt = other.Tilt ?? Tilt,
-            X = other.X ?? X,
-            Y = other.Y ?? Y,
+            U = other.U ?? U,
+            V = other.V ?? V,
             Attributes = other.Attributes ?? Attributes
         };
     }
@@ -3731,20 +3884,20 @@ public class ConnectionDiff : Model<ConnectionDiff>
 public class ConnectionsDiff : Model<ConnectionsDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
-    public List<ConnectionId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated connections.", PropImportance.OPTIONAL)]
-    public List<ConnectionDiff> Updated { get; set; } = new();
+    public List<DiffUpdate<ConnectionDiff>> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added connections.", PropImportance.OPTIONAL)]
     public List<Connection> Added { get; set; } = new();
 
-    public static implicit operator ConnectionsDiff(List<Connection> connections) => new() { Updated = connections.Select(c => (ConnectionDiff)c).ToList() };
+    public static implicit operator ConnectionsDiff(List<Connection> connections) => new() { Updated = connections.Select(c => new DiffUpdate<ConnectionDiff> { Id = c.Guid, Diff = (ConnectionDiff)c }).ToList() };
 
     public ConnectionsDiff MergeDiff(ConnectionsDiff other)
     {
         return new ConnectionsDiff
         {
             Removed = other.Removed.Concat(Removed).Distinct().ToList(),
-            Updated = other.Updated.Concat(Updated).GroupBy(u => u.Connected?.Piece?.Guid + "--" + u.Connecting?.Piece?.Guid).Select(g => g.Last()).ToList(),
+            Updated = other.Updated.Concat(Updated).GroupBy(u => u.Id).Select(g => g.Last()).ToList(),
             Added = other.Added.Concat(Added).GroupBy(a => a.Connected.Piece.Guid + "--" + a.Connecting.Piece.Guid).Select(g => g.Last()).ToList()
         };
     }
@@ -3756,6 +3909,8 @@ public class ConnectionsDiff : Model<ConnectionsDiff>
 [Model("🔗", "Cn", "Con", "A connection between two pieces.")]
 public class Connection : Model<Connection>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the connection.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
     [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
     public Side Connected { get; set; } = new();
     [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
@@ -3774,10 +3929,10 @@ public class Connection : Model<Connection>
     public float Turn { get; set; } = 0;
     [NumberProp("🔄", "Tl", "Tlt", "The tilt around the x-axis.")]
     public float Tilt { get; set; } = 0;
-    [NumberProp("↔️", "X", "X", "The x offset for diagram positioning.")]
-    public float X { get; set; } = 0;
-    [NumberProp("↕️", "Y", "Y", "The y offset for diagram positioning.")]
-    public float Y { get; set; } = 0;
+    [NumberProp("↔️", "U?", "U?", "The optional u offset for diagram positioning.")]
+    public float? U { get; set; }
+    [NumberProp("↕️", "V?", "V?", "The optional v offset for diagram positioning.")]
+    public float? V { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -3786,7 +3941,7 @@ public class Connection : Model<Connection>
     public override string ToString() => $"Con({ToHumanIdString()})";
 
     public static implicit operator Connection(ConnectionId id) => new() { Connected = id.Connected, Connecting = id.Connecting };
-    public static implicit operator Connection(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new(), Description = diff.Description ?? "", Gap = diff.Gap ?? 0, Shift = diff.Shift ?? 0, Rise = diff.Rise ?? 0, Rotation = diff.Rotation ?? 0, Turn = diff.Turn ?? 0, Tilt = diff.Tilt ?? 0, X = diff.X ?? 0, Y = diff.Y ?? 0, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Connection(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new(), Description = diff.Description ?? "", Gap = diff.Gap ?? 0, Shift = diff.Shift ?? 0, Rise = diff.Rise ?? 0, Rotation = diff.Rotation ?? 0, Turn = diff.Turn ?? 0, Tilt = diff.Tilt ?? 0, U = diff.U, V = diff.V, Attributes = diff.Attributes ?? new() };
 
     public Connection ApplyDiff(ConnectionDiff diff)
     {
@@ -3801,8 +3956,8 @@ public class Connection : Model<Connection>
             Rotation = diff.Rotation ?? Rotation,
             Turn = diff.Turn ?? Turn,
             Tilt = diff.Tilt ?? Tilt,
-            X = diff.X ?? X,
-            Y = diff.Y ?? Y,
+            U = diff.U ?? U,
+            V = diff.V ?? V,
             Attributes = diff.Attributes ?? Attributes
         };
     }
@@ -3820,8 +3975,8 @@ public class Connection : Model<Connection>
             Rotation = Rotation,
             Turn = Turn,
             Tilt = Tilt,
-            X = X,
-            Y = Y,
+            U = U,
+            V = V,
             Attributes = Attributes
         };
     }
@@ -3839,8 +3994,8 @@ public class Connection : Model<Connection>
             Rotation = appliedDiff.Rotation.HasValue ? Rotation : null,
             Turn = appliedDiff.Turn.HasValue ? Turn : null,
             Tilt = appliedDiff.Tilt.HasValue ? Tilt : null,
-            X = appliedDiff.X.HasValue ? X : null,
-            Y = appliedDiff.Y.HasValue ? Y : null,
+            U = appliedDiff.U.HasValue ? U : null,
+            V = appliedDiff.V.HasValue ? V : null,
             Attributes = appliedDiff.Attributes is not null ? Attributes : null
         };
     }
@@ -3880,8 +4035,8 @@ public class Connection : Model<Connection>
             Rotation = Rotation,
             Turn = Turn,
             Tilt = Tilt,
-            X = X,
-            Y = Y,
+            U = U,
+            V = V,
             Attributes = attributes
         };
     }
@@ -3919,13 +4074,13 @@ public class Stat : Model<Stat>
 public class DesignsDiff : Model<DesignsDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
-    public List<DesignId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated designs.", PropImportance.OPTIONAL)]
-    public List<DesignDiff> Updated { get; set; } = new();
+    public List<DiffUpdate<DesignDiff>> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added designs.", PropImportance.OPTIONAL)]
     public List<Design> Added { get; set; } = new();
 
-    public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => (DesignDiff)d).ToList() };
+    public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => new DiffUpdate<DesignDiff> { Id = d.Guid, Diff = (DesignDiff)d }).ToList() };
 }
 
 [Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
@@ -3935,8 +4090,8 @@ public class DesignDiff : Model<DesignDiff>
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
     public string? Name { get; set; }
-    [Id("📁", "Pa?", "Par?", "The optional parent design guid.")]
-    public string? Parent { get; set; }
+    [ModelProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
+    public DesignId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
     public bool? IsAbstract { get; set; }
     [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
@@ -3981,7 +4136,7 @@ public class DesignDiff : Model<DesignDiff>
     public DateTime? UpdatedAt { get; set; }
 
     public static implicit operator DesignDiff(DesignId id) => new() { Guid = id.Guid };
-    public static implicit operator DesignDiff(Design design) => new() { Guid = design.Guid, Name = design.Name, Parent = design.Parent, IsAbstract = design.IsAbstract, Folder = design.Folder, Description = design.Description, Icon = design.Icon, Image = design.Image, Location = design.Location, Unit = design.Unit, CanScale = design.CanScale, CanMirror = design.CanMirror, ActiveLayer = design.ActiveLayer, Pieces = new PiecesDiff { Removed = new List<PieceId>(), Modified = design.Pieces.Select(p => p.CreateDiff()).ToList(), Added = new List<PieceDiff>() }, Connections = new ConnectionsDiff { Removed = new List<ConnectionId>(), Updated = design.Connections.Select(c => c.CreateDiff()).ToList(), Added = new List<Connection>() }, Props = design.Props, Stats = design.Stats, Layers = design.Layers, Groups = design.Groups, Authors = design.Authors, Concepts = design.Concepts, Attributes = design.Attributes, CreatedAt = design.CreatedAt, UpdatedAt = design.UpdatedAt };
+    public static implicit operator DesignDiff(Design design) => new() { Guid = design.Guid, Name = design.Name, Parent = design.Parent, IsAbstract = design.IsAbstract, Folder = design.Folder, Description = design.Description, Icon = design.Icon, Image = design.Image, Location = design.Location, Unit = design.Unit, CanScale = design.CanScale, CanMirror = design.CanMirror, ActiveLayer = design.ActiveLayer, Pieces = new PiecesDiff { Removed = new List<string>(), Updated = design.Pieces.Select(p => new DiffUpdate<PieceDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList(), Added = new List<Piece>() }, Connections = new ConnectionsDiff { Removed = new List<string>(), Updated = design.Connections.Select(c => new DiffUpdate<ConnectionDiff> { Id = c.Guid, Diff = c.CreateDiff() }).ToList(), Added = new List<Connection>() }, Props = design.Props, Stats = design.Stats, Layers = design.Layers, Groups = design.Groups, Authors = design.Authors, Concepts = design.Concepts, Attributes = design.Attributes, CreatedAt = design.CreatedAt, UpdatedAt = design.UpdatedAt };
 
     public DesignDiff MergeDiff(DesignDiff other)
     {
@@ -4040,8 +4195,8 @@ public class Design : Model<Design>
     public string Guid { get; set; } = "";
     [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Id("📁", "Pa?", "Par?", "The optional parent design guid.")]
-    public string? Parent { get; set; }
+    [ModelProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
+    public DesignId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
     public bool? IsAbstract { get; set; }
     [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
@@ -4149,14 +4304,14 @@ public class Design : Model<Design>
             Unit = Unit,
             Pieces = new PiecesDiff
             {
-                Removed = new List<PieceId>(),
-                Modified = Pieces.Select(p => p.CreateDiff()).ToList(),
-                Added = new List<PieceDiff>()
+                Removed = new List<string>(),
+                Updated = Pieces.Select(p => new DiffUpdate<PieceDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList(),
+                Added = new List<Piece>()
             },
             Connections = new ConnectionsDiff
             {
-                Removed = new List<ConnectionId>(),
-                Updated = Connections.Select(c => c.CreateDiff()).ToList(),
+                Removed = new List<string>(),
+                Updated = Connections.Select(c => new DiffUpdate<ConnectionDiff> { Id = c.Guid, Diff = c.CreateDiff() }).ToList(),
                 Added = new List<Connection>()
             },
             Stats = Stats,
@@ -4168,12 +4323,12 @@ public class Design : Model<Design>
 
     private List<Piece> ApplyPiecesDiff(List<Piece> original, PiecesDiff diff)
     {
-        var result = original.Where(p => !diff.Removed.Any(r => r.Guid == p.Guid)).ToList();
-        foreach (var updated in diff.Modified)
+        var result = original.Where(p => !diff.Removed.Contains(p.Guid)).ToList();
+        foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(p => p.Guid == updated.Guid);
-            if (index >= 0)
-                result[index] = result[index].ApplyDiff(updated);
+            var index = result.FindIndex(p => p.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
         }
         result.AddRange(diff.Added.Select(a => new Piece
         {
@@ -4194,40 +4349,28 @@ public class Design : Model<Design>
 
         return new PiecesDiff
         {
-            Removed = original.Where(p => !modifiedIds.Contains(p.Guid)).Select(p => new PieceId { Guid = p.Guid }).ToList(),
-            Modified = original.Where(p => modifiedIds.Contains(p.Guid))
+            Removed = original.Where(p => !modifiedIds.Contains(p.Guid)).Select(p => p.Guid).ToList(),
+            Updated = original.Where(p => modifiedIds.Contains(p.Guid))
                 .SelectMany(p =>
                 {
                     var modifiedPiece = modified.First(m => m.Guid == p.Guid);
                     var diff = p.CreateDiff();
-                    return !Equals(p, modifiedPiece) ? new[] { diff } : new PieceDiff[] { };
+                    return !Equals(p, modifiedPiece) ? new[] { new DiffUpdate<PieceDiff> { Id = p.Guid, Diff = diff } } : Array.Empty<DiffUpdate<PieceDiff>>();
                 })
                 .ToList(),
-            Added = modified.Where(p => !originalIds.Contains(p.Guid)).Select(p => new PieceDiff
-            {
-                Guid = p.Guid,
-                Description = p.Description,
-                Type = p.Type,
-                Plane = p.Plane,
-                Center = p.Center,
-                Attributes = p.Attributes
-            }).ToList()
+            Added = modified.Where(p => !originalIds.Contains(p.Guid)).ToList()
         };
     }
 
     private List<Connection> ApplyConnectionsDiff(List<Connection> original, ConnectionsDiff diff)
     {
-        var result = original.Where(c => !diff.Removed.Any(r =>
-            r.Connected.Piece.Guid == c.Connected.Piece.Guid &&
-            r.Connecting.Piece.Guid == c.Connecting.Piece.Guid)).ToList();
+        var result = original.Where(c => !diff.Removed.Contains(c.Guid)).ToList();
 
         foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(c =>
-                c.Connected.Piece.Guid == (updated.Connected?.Piece?.Guid ?? c.Connected.Piece.Guid) &&
-                c.Connecting.Piece.Guid == (updated.Connecting?.Piece?.Guid ?? c.Connecting.Piece.Guid));
-            if (index >= 0)
-                result[index] = result[index].ApplyDiff(updated);
+            var index = result.FindIndex(c => c.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
         }
         result.AddRange(diff.Added);
         return result;
@@ -4235,22 +4378,21 @@ public class Design : Model<Design>
 
     private ConnectionsDiff CreateConnectionsDiff(List<Connection> original, List<Connection> modified)
     {
-        var originalKeys = original.Select(c => (c.Connected.Piece.Guid, c.Connecting.Piece.Guid)).ToHashSet();
-        var modifiedKeys = modified.Select(c => (c.Connected.Piece.Guid, c.Connecting.Piece.Guid)).ToHashSet();
+        var originalGuids = original.Select(c => c.Guid).ToHashSet();
+        var modifiedGuids = modified.Select(c => c.Guid).ToHashSet();
 
         return new ConnectionsDiff
         {
-            Removed = original.Where(c => !modifiedKeys.Contains((c.Connected.Piece.Guid, c.Connecting.Piece.Guid)))
-                .Select(c => new ConnectionId { Connected = c.Connected, Connecting = c.Connecting }).ToList(),
-            Updated = original.Where(c => modifiedKeys.Contains((c.Connected.Piece.Guid, c.Connecting.Piece.Guid)))
+            Removed = original.Where(c => !modifiedGuids.Contains(c.Guid)).Select(c => c.Guid).ToList(),
+            Updated = original.Where(c => modifiedGuids.Contains(c.Guid))
                 .SelectMany(c =>
                 {
-                    var modifiedConnection = modified.First(m => m.Connected.Piece.Guid == c.Connected.Piece.Guid && m.Connecting.Piece.Guid == c.Connecting.Piece.Guid);
+                    var modifiedConnection = modified.First(m => m.Guid == c.Guid);
                     var diff = c.CreateDiff();
-                    return !Equals(c, modifiedConnection) ? new[] { diff } : new ConnectionDiff[] { };
+                    return !Equals(c, modifiedConnection) ? new[] { new DiffUpdate<ConnectionDiff> { Id = c.Guid, Diff = diff } } : Array.Empty<DiffUpdate<ConnectionDiff>>();
                 })
                 .ToList(),
-            Added = modified.Where(c => !originalKeys.Contains((c.Connected.Piece.Guid, c.Connecting.Piece.Guid))).ToList()
+            Added = modified.Where(c => !originalGuids.Contains(c.Guid)).ToList()
         };
     }
 
@@ -4331,14 +4473,14 @@ public class Design : Model<Design>
                 if (connectedPiece.Type is null)
                     throw new Exception($"Flatten requires all pieces to have a type. Piece ({connectedPiece.Guid}) has no type.");
                 var connectedType = types.First(t => t.Guid == connectedPiece.Type.Guid);
-                if (!ports[connectedType.Name].ContainsKey(connection.Connected.Port.Guid))
+                if (!ports[connectedType.Guid].ContainsKey(connection.Connected.Port.Guid))
                     throw new Exception(
                         $"The type {connectedType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the port {connection.Connected.Port.Guid}.");
                 var connectingPiece = Pieces.First(p => p.Guid == connection.Connecting.Piece.Guid);
                 if (connectingPiece.Type is null)
                     throw new Exception($"Flatten requires all pieces to have a type. Piece ({connectingPiece.Guid}) has no type.");
                 var connectingType = types.First(t => t.Guid == connectingPiece.Type.Guid);
-                if (!ports[connectingType.Name].ContainsKey(connection.Connecting.Port.Guid))
+                if (!ports[connectingType.Guid].ContainsKey(connection.Connecting.Port.Guid))
                     throw new Exception(
                         $"The type {connectingType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the port {connection.Connecting.Port.Guid}.");
             }
@@ -4938,10 +5080,16 @@ public class KitDiff : Model<KitDiff>
     public DesignsDiff? Designs { get; set; }
     [ModelProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
     public FilesDiff? Files { get; set; }
-    [ModelProp("�", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
+    [ModelProp("📁", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
     public FoldersDiff? Folders { get; set; }
-    [ModelProp("�🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
-    public List<Attribute>? Attributes { get; set; }
+    [ModelProp("🔗", "In*", "Int*", "The optional interfaces diff for the kit.", PropImportance.OPTIONAL)]
+    public InterfacesDiff? Interfaces { get; set; }
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors diff for the kit.", PropImportance.OPTIONAL)]
+    public AuthorsDiff? Authors { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes diff for the kit.", PropImportance.OPTIONAL)]
+    public AttributesDiff? Attributes { get; set; }
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts for the kit.", PropImportance.OPTIONAL)]
+    public List<string>? Concepts { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional creation date.")]
     public string? CreatedAt { get; set; }
     [Name("📝", "UA?", "UpA?", "The optional last update date.")]
@@ -4965,7 +5113,10 @@ public class KitDiff : Model<KitDiff>
             Designs = other.Designs ?? Designs,
             Files = other.Files ?? Files,
             Folders = other.Folders ?? Folders,
+            Interfaces = other.Interfaces ?? Interfaces,
+            Authors = other.Authors ?? Authors,
             Attributes = other.Attributes ?? Attributes,
+            Concepts = other.Concepts ?? Concepts,
             CreatedAt = other.CreatedAt ?? CreatedAt,
             UpdatedAt = other.UpdatedAt ?? UpdatedAt
         };
@@ -4983,7 +5134,7 @@ public class KitDiff : Model<KitDiff>
         Remote = kit.Remote,
         Homepage = kit.Homepage,
         License = kit.License,
-        Attributes = kit.Attributes,
+        Concepts = kit.Concepts,
         CreatedAt = kit.CreatedAt,
         UpdatedAt = kit.UpdatedAt
     };
@@ -5006,13 +5157,13 @@ public class KitId : Model<KitId>
 public class KitsDiff : Model<KitsDiff>
 {
     [ModelProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
-    public List<KitId> Removed { get; set; } = new();
+    public List<string> Removed { get; set; } = new();
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
-    public List<KitDiff> Updated { get; set; } = new();
+    public List<DiffUpdate<KitDiff>> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
     public List<Kit> Added { get; set; } = new();
 
-    public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => (KitDiff)k).ToList() };
+    public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new DiffUpdate<KitDiff> { Id = k.Guid, Diff = (KitDiff)k }).ToList() };
 }
 
 /// <summary>
@@ -5074,7 +5225,7 @@ public class Kit : Model<Kit>
     [Name("📝", "UA", "UpA", "The last update date of the kit.")]
     public string UpdatedAt { get; set; } = "";
 
-    public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Files = diff.Files?.Added ?? new(), Attributes = diff.Attributes ?? new() };
+    public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Files = diff.Files?.Added ?? new(), Attributes = diff.Attributes?.Added ?? new() };
     public static implicit operator string(Kit kit) => kit.Name;
     public static implicit operator Kit(string name) => new() { Name = name };
 
@@ -5083,6 +5234,7 @@ public class Kit : Model<Kit>
         var types = Types;
         var designs = Designs;
         var files = Files;
+        var attributes = Attributes;
 
         if (diff.Types is not null)
         {
@@ -5095,6 +5247,10 @@ public class Kit : Model<Kit>
         if (diff.Files is not null)
         {
             files = ApplyFilesDiff(Files, diff.Files);
+        }
+        if (diff.Attributes is not null)
+        {
+            attributes = ApplyAttributesDiff(Attributes, diff.Attributes);
         }
 
         return new Kit
@@ -5113,8 +5269,21 @@ public class Kit : Model<Kit>
             Files = files,
             Types = types,
             Designs = designs,
-            Attributes = diff.Attributes?.Any() == true ? diff.Attributes : Attributes
+            Attributes = attributes
         };
+    }
+
+    private List<Attribute> ApplyAttributesDiff(List<Attribute> original, AttributesDiff diff)
+    {
+        var result = original.Where(a => !diff.Removed.Contains(a.Guid)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(a => a.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
+        }
+        result.AddRange(diff.Added);
+        return result;
     }
 
     public KitDiff CreateDiff()
@@ -5132,20 +5301,20 @@ public class Kit : Model<Kit>
             License = License,
             Types = new TypesDiff
             {
-                Removed = new List<TypeId>(),
-                Modified = Types.Select(t => t.CreateDiff()).ToList(),
-                Added = new List<TypeDiff>()
+                Removed = new List<string>(),
+                Updated = Types.Select(t => new DiffUpdate<TypeDiff> { Id = t.Guid, Diff = t.CreateDiff() }).ToList(),
+                Added = new List<Type>()
             },
             Designs = new DesignsDiff
             {
-                Removed = new List<DesignId>(),
-                Updated = Designs.Select(d => d.CreateDiff()).ToList(),
+                Removed = new List<string>(),
+                Updated = Designs.Select(d => new DiffUpdate<DesignDiff> { Id = d.Guid, Diff = d.CreateDiff() }).ToList(),
                 Added = new List<Design>()
             },
             Files = new FilesDiff
             {
-                Removed = new List<FileId>(),
-                Updated = Files.Select(f => (FileDiff)f).ToList(),
+                Removed = new List<string>(),
+                Updated = Files.Select(f => new DiffUpdate<FileDiff> { Id = f.Guid, Diff = (FileDiff)f }).ToList(),
                 Added = new List<File>()
             },
             Attributes = Attributes
@@ -5154,74 +5323,45 @@ public class Kit : Model<Kit>
 
     private List<Type> ApplyTypesDiff(List<Type> original, TypesDiff diff)
     {
-        var result = original.Where(t => !diff.Removed.Any(r => r.Guid == t.Guid)).ToList();
-        foreach (var updated in diff.Modified)
+        var result = original.Where(t => !diff.Removed.Contains(t.Guid)).ToList();
+        foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(t => t.Guid == (updated.Guid ?? t.Guid));
-            if (index >= 0)
-                result[index] = result[index].ApplyDiff(updated);
+            var index = result.FindIndex(t => t.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
         }
-        result.AddRange(diff.Added.Select(a => new Type
-        {
-            Name = a.Name ?? "",
-            Description = a.Description ?? "",
-            Icon = a.Icon ?? "",
-            Image = a.Image ?? "",
-            Stock = a.Stock ?? 2147483647,
-            Virtual = a.Virtual ?? false,
-            Unit = a.Unit,
-            Location = a.Location,
-            Models = a.Models,
-            Ports = a.Ports,
-            Authors = a.Authors.Select(auth => new AuthorId { Email = auth.Email }).ToList(),
-            Attributes = a.Attributes ?? new List<Attribute>()
-        }));
+        result.AddRange(diff.Added);
         return result;
     }
 
     private TypesDiff CreateTypesDiff(List<Type> original, List<Type> modified)
     {
-        var originalKeys = original.Select(t => t.Name).ToHashSet();
-        var modifiedKeys = modified.Select(t => t.Name).ToHashSet();
+        var originalGuids = original.Select(t => t.Guid).ToHashSet();
+        var modifiedGuids = modified.Select(t => t.Guid).ToHashSet();
 
         return new TypesDiff
         {
-            Removed = original.Where(t => !modifiedKeys.Contains(t.Name))
-                .Select(t => new TypeId { Guid = t.Guid }).ToList(),
-            Modified = original.Where(t => modifiedKeys.Contains(t.Name))
+            Removed = original.Where(t => !modifiedGuids.Contains(t.Guid)).Select(t => t.Guid).ToList(),
+            Updated = original.Where(t => modifiedGuids.Contains(t.Guid))
                 .SelectMany(t =>
                 {
-                    var modifiedType = modified.First(m => m.Name == t.Name);
+                    var modifiedType = modified.First(m => m.Guid == t.Guid);
                     var diff = t.CreateDiff();
-                    return !Equals(t, modifiedType) ? new[] { diff } : new TypeDiff[] { };
+                    return !Equals(t, modifiedType) ? new[] { new DiffUpdate<TypeDiff> { Id = t.Guid, Diff = diff } } : Array.Empty<DiffUpdate<TypeDiff>>();
                 })
                 .ToList(),
-            Added = modified.Where(t => !originalKeys.Contains(t.Name)).Select(t => new TypeDiff
-            {
-                Name = t.Name,
-                Description = t.Description,
-                Icon = t.Icon,
-                Image = t.Image,
-                Stock = t.Stock,
-                Virtual = t.Virtual,
-                Unit = t.Unit,
-                Location = t.Location,
-                Models = t.Models,
-                Ports = t.Ports,
-                Authors = t.Authors,
-                Attributes = t.Attributes
-            }).ToList()
+            Added = modified.Where(t => !originalGuids.Contains(t.Guid)).ToList()
         };
     }
 
     private List<Design> ApplyDesignsDiff(List<Design> original, DesignsDiff diff)
     {
-        var result = original.Where(d => !diff.Removed.Any(r => r.Guid == d.Guid)).ToList();
+        var result = original.Where(d => !diff.Removed.Contains(d.Guid)).ToList();
         foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(d => d.Guid == (updated.Guid ?? d.Guid));
-            if (index >= 0)
-                result[index] = result[index].ApplyDiff(updated);
+            var index = result.FindIndex(d => d.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
+                result[index] = result[index].ApplyDiff(updated.Diff);
         }
         result.AddRange(diff.Added);
         return result;
@@ -5229,46 +5369,45 @@ public class Kit : Model<Kit>
 
     private DesignsDiff CreateDesignsDiff(List<Design> original, List<Design> modified)
     {
-        var originalKeys = original.Select(d => d.Guid).ToHashSet();
-        var modifiedKeys = modified.Select(d => d.Guid).ToHashSet();
+        var originalGuids = original.Select(d => d.Guid).ToHashSet();
+        var modifiedGuids = modified.Select(d => d.Guid).ToHashSet();
 
         return new DesignsDiff
         {
-            Removed = original.Where(d => !modifiedKeys.Contains(d.Guid))
-                .Select(d => new DesignId { Guid = d.Guid }).ToList(),
-            Updated = original.Where(d => modifiedKeys.Contains(d.Guid))
+            Removed = original.Where(d => !modifiedGuids.Contains(d.Guid)).Select(d => d.Guid).ToList(),
+            Updated = original.Where(d => modifiedGuids.Contains(d.Guid))
                 .SelectMany(d =>
                 {
                     var modifiedDesign = modified.First(m => m.Guid == d.Guid);
                     var diff = d.CreateDiff();
-                    return !Equals(d, modifiedDesign) ? new[] { diff } : new DesignDiff[] { };
+                    return !Equals(d, modifiedDesign) ? new[] { new DiffUpdate<DesignDiff> { Id = d.Guid, Diff = diff } } : Array.Empty<DiffUpdate<DesignDiff>>();
                 })
                 .ToList(),
-            Added = modified.Where(d => !originalKeys.Contains(d.Guid)).ToList()
+            Added = modified.Where(d => !originalGuids.Contains(d.Guid)).ToList()
         };
     }
 
     private List<File> ApplyFilesDiff(List<File> original, FilesDiff diff)
     {
-        var result = original.Where(f => !diff.Removed.Any(r => r.Guid == f.Guid)).ToList();
+        var result = original.Where(f => !diff.Removed.Contains(f.Guid)).ToList();
         foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(f => f.Guid == (updated.Guid ?? f.Guid));
-            if (index >= 0)
+            var index = result.FindIndex(f => f.Guid == updated.Id);
+            if (index >= 0 && updated.Diff != null)
             {
                 var file = result[index];
                 result[index] = new File
                 {
-                    Guid = updated.Guid ?? file.Guid,
-                    Name = updated.Name ?? file.Name,
-                    Remote = updated.Remote ?? file.Remote,
-                    Folder = updated.Folder ?? file.Folder,
-                    Size = updated.Size ?? file.Size,
-                    Hash = updated.Hash ?? file.Hash,
-                    CreatedAt = updated.CreatedAt ?? file.CreatedAt,
-                    CreatedBy = updated.CreatedBy ?? file.CreatedBy,
-                    UpdatedAt = updated.UpdatedAt ?? file.UpdatedAt,
-                    UpdatedBy = updated.UpdatedBy ?? file.UpdatedBy
+                    Guid = updated.Diff.Guid ?? file.Guid,
+                    Name = updated.Diff.Name ?? file.Name,
+                    Remote = updated.Diff.Remote ?? file.Remote,
+                    Folder = updated.Diff.Folder ?? file.Folder,
+                    Size = updated.Diff.Size ?? file.Size,
+                    Hash = updated.Diff.Hash ?? file.Hash,
+                    CreatedAt = updated.Diff.CreatedAt ?? file.CreatedAt,
+                    CreatedBy = updated.Diff.CreatedBy ?? file.CreatedBy,
+                    UpdatedAt = updated.Diff.UpdatedAt ?? file.UpdatedAt,
+                    UpdatedBy = updated.Diff.UpdatedBy ?? file.UpdatedBy
                 };
             }
         }

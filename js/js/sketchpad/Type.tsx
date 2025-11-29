@@ -22,7 +22,7 @@
 // #region Imports
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
+import { Edges, Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -1315,8 +1315,18 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     [activeTool, onClearPreview],
   );
 
+  const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
+
   if (!blobUrl) {
-    return null; // No placeholder - just render nothing if no valid blob URL yet
+    // Render placeholder box when no model is loaded (same as design pieces)
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={foregroundColor} emissive={foregroundColor} emissiveIntensity={0.45} />
+        <Edges scale={1.001} color={foregroundColor} />
+      </mesh>
+    );
   }
 
   return (

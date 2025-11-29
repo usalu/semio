@@ -5991,8 +5991,17 @@ const PieceMesh: FC = () => {
     };
   }, [fileGuid, kitStore]);
 
+  const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
+
   if (!blobUrl) {
-    return null;
+    // Render placeholder box when no model is loaded (same as design pieces)
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={foregroundColor} emissive={foregroundColor} emissiveIntensity={0.45} />
+        <Edges scale={1.001} color={foregroundColor} />
+      </mesh>
+    );
   }
 
   return (

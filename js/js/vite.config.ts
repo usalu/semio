@@ -22,6 +22,7 @@
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -52,20 +53,31 @@ export default defineConfig({
     wasm(),
     topLevelAwait(),
     {
-      name: "serve-assets",
+      name: "serve-wasm-and-assets",
+      enforce: "pre",
       configureServer(server) {
         const assetsPath = path.resolve(__dirname, "../../assets");
-        server.middlewares.use((req, res, next) => {
-          if (req.url?.startsWith("/assets/")) {
-            const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
-            const fs = require("fs");
-            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-              fs.createReadStream(filePath).pipe(res);
-              return;
+        const publicPath = path.resolve(__dirname, "public");
+        return () => {
+          server.middlewares.use((req, res, next) => {
+            if (req.url?.endsWith(".wasm")) {
+              const wasmFile = path.join(publicPath, req.url);
+              if (fs.existsSync(wasmFile) && fs.statSync(wasmFile).isFile()) {
+                res.setHeader("Content-Type", "application/wasm");
+                fs.createReadStream(wasmFile).pipe(res);
+                return;
+              }
             }
-          }
-          next();
-        });
+            if (req.url?.startsWith("/assets/")) {
+              const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
+              if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                fs.createReadStream(filePath).pipe(res);
+                return;
+              }
+            }
+            next();
+          });
+        };
       },
     },
   ],
