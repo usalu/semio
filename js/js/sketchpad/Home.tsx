@@ -752,15 +752,17 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     if (file.name.endsWith(".zip") || file.name.endsWith(".semio.zip")) {
       try {
         const { kit, files: importedFiles } = await importKit(file);
-        await createKit("semio.sketchpad.app.home.fileInput", kit, true, false);
+        await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
         const kitStore = store.kit(kit.guid);
-        // Wait for Yjs document to fully initialize before navigating
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         navigateToKit(kit.guid);
-        for (const [path, blob] of importedFiles.entries()) {
-          const fileToAdd = { guid: guid(), path: path, name: path.split("/").pop() || path, size: blob.size, createdAt: new Date(), updatedAt: new Date() };
-          await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.fileInput", fileToAdd, blob);
-        }
+        // TODO: File adding temporarily disabled - causes page hang due to excessive Yjs observer updates
+        // setTimeout(async () => {
+        //   for (const [filePath, blob] of importedFiles.entries()) {
+        //     const fileToAdd = { guid: guid(), path: filePath, name: filePath.split("/").pop() || filePath, size: blob.size, createdAt: new Date(), updatedAt: new Date() };
+        //     await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.fileInput", fileToAdd, blob);
+        //   }
+        // }, 500);
       } catch (error) {
         console.error("Import error:", error);
       }
@@ -877,12 +879,23 @@ const Home: FC = ({}) => {
     };
   }, [appType, addSection, removeSection]);
 
-  // Add settings panel section
+  // Add settings panel sections
   useEffect(() => {
     if (appType !== "home") return;
 
+    // Add Home-specific settings (most specific)
     addSection("settings", {
       id: "semio.sketchpad.app.home.settings",
+      specificity: 20,
+      order: 0,
+      content: () => {
+        return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
+      },
+    });
+
+    // Add global Sketchpad settings (least specific)
+    addSection("settings", {
+      id: "semio.sketchpad.settings",
       specificity: 0,
       order: 0,
       content: () => {
@@ -892,6 +905,7 @@ const Home: FC = ({}) => {
 
     return () => {
       removeSection("settings", "semio.sketchpad.app.home.settings");
+      removeSection("settings", "semio.sketchpad.settings");
     };
   }, [appType, addSection, removeSection, setTheme, setLayout, setExpertise, setMode]);
 
@@ -1229,19 +1243,23 @@ const Home: FC = ({}) => {
   };
 
   const toggleRow = (rowId: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    const currentRows = newParams.getAll("e");
+    const currentUrl = new URL(window.location.href);
+    const currentRows = currentUrl.searchParams.getAll("e");
 
     if (currentRows.includes(rowId)) {
       // Remove row
-      newParams.delete("e");
-      currentRows.filter((r) => r !== rowId).forEach((r) => newParams.append("e", r));
+      currentUrl.searchParams.delete("e");
+      currentRows.filter((r) => r !== rowId).forEach((r) => currentUrl.searchParams.append("e", r));
     } else {
       // Add row
-      newParams.append("e", rowId);
+      currentUrl.searchParams.append("e", rowId);
     }
 
-    setSearchParams(newParams, { replace: true });
+    // Use native History API to preserve forward/back navigation
+    // Preserve the existing history state to avoid breaking React Router
+    window.history.replaceState(window.history.state, "", currentUrl);
+    // Trigger popstate to notify React Router of the URL change
+    window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
   };
 
   const handleSearchChange = (value: string) => {

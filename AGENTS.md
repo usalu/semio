@@ -1223,6 +1223,17 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ └── Semio.Grasshopper.cs # @semio/gh: all grasshopper code
 │ ├── Semio.Grasshopper.Tests
 │ └── Semio.Tests
+├── py
+│ ├── engine
+│ │ ├── .venv
+│ │ ├── build.ts # wrapper
+│ │ ├── dev.ts # wrapper
+│ │ ├── engine.py # @semio/engine
+│ │ ├── test_engine.py # pytest
+│ │ ├── package.json # monorepo integration
+│ │ ├── pyproject.toml # uv project file
+│ │ ├── test.ts # wrapper
+│ │ ├── uv.lock
 ├── rb
 ├── rdf
 ├── scripts

@@ -65,6 +65,31 @@ import dotenv
 import fastapi
 import fastapi.openapi
 import graphene
+if sys.version_info >= (3, 13):
+    import graphene_pydantic.util
+    def _patched_evaluate_forward_ref(type_: typing.ForwardRef, globalns: typing.Any, localns: typing.Any) -> typing.Any:
+        return typing.cast(typing.Any, type_)._evaluate(globalns, localns, recursive_guard=frozenset())
+    graphene_pydantic.util.evaluate_forward_ref = _patched_evaluate_forward_ref
+    import graphene_pydantic.converters
+    graphene_pydantic.converters.evaluate_forward_ref = _patched_evaluate_forward_ref
+    import sqlmodel._compat
+    _original_get_relationship_to = sqlmodel._compat.get_relationship_to
+    def _patched_get_relationship_to(name: str, rel_info: typing.Any, annotation: typing.Any) -> typing.Any:
+        if isinstance(annotation, str):
+            import re
+            def strip_quotes(s: str) -> str:
+                if (s.startswith("'") and s.endswith("'")) or (s.startswith('"') and s.endswith('"')):
+                    return s[1:-1]
+                return s
+            annotation = strip_quotes(annotation)
+            list_match = re.match(r"list\[(.+)\]", annotation)
+            if list_match:
+                annotation = strip_quotes(list_match.group(1))
+            return annotation
+        return _original_get_relationship_to(name=name, rel_info=rel_info, annotation=annotation)
+    sqlmodel._compat.get_relationship_to = _patched_get_relationship_to
+    import sqlmodel.main
+    sqlmodel.main.get_relationship_to = _patched_get_relationship_to
 import graphene_pydantic
 import graphene_sqlalchemy
 import jinja2
@@ -329,6 +354,8 @@ class Semio(sqlmodel.SQLModel, table=True):
 class Model(sqlmodel.SQLModel, abc.ABC):
     """⚪ The base for models."""
 
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
     @classmethod
     def parse(cls, input: str | dict | typing.Any | None) -> "Model":
         """⚒️ Parse the entity from an input."""
@@ -341,6 +368,9 @@ class Model(sqlmodel.SQLModel, abc.ABC):
     def dump(self) -> "Output":
         """📦 Dump the entity to a dictionary."""
         return self.model_dump()
+
+
+BaseModel = Model  # Alias to preserve reference after table Model shadows it
 
 
 # Composition over inheritance. Literally.
@@ -565,31 +595,31 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     __tablename__ = "attributes"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
-    model: typing.Optional["Model"] = sqlmodel.Relationship(back_populates="attributes")
+    model: Model = sqlmodel.Relationship(back_populates="attributes")
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="attributes")
+    port: Port = sqlmodel.Relationship(back_populates="attributes")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="attributes")
+    type: Type = sqlmodel.Relationship(back_populates="attributes")
     piecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), default=None, exclude=True)
-    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="attributes")
+    piece: Piece = sqlmodel.Relationship(back_populates="attributes")
     connectionPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connection_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connections.id")), default=None, exclude=True)
-    connection: typing.Optional["Connection"] = sqlmodel.Relationship(back_populates="attributes")
+    connection: Connection = sqlmodel.Relationship(back_populates="attributes")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="attributes")
+    design: Design = sqlmodel.Relationship(back_populates="attributes")
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="attributes")
+    kit: Kit = sqlmodel.Relationship(back_populates="attributes")
     qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
-    quality: typing.Optional["Quality"] = sqlmodel.Relationship(back_populates="attributes")
+    quality: Quality = sqlmodel.Relationship(back_populates="attributes")
     propPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("props.id")), default=None, exclude=True)
-    prop: typing.Optional["Prop"] = sqlmodel.Relationship(back_populates="attributes")
+    prop: Prop = sqlmodel.Relationship(back_populates="attributes")
     authorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("authors.id")), default=None, exclude=True)
-    author: typing.Optional["Author"] = sqlmodel.Relationship(back_populates="attributes")
+    author: Author = sqlmodel.Relationship(back_populates="attributes")
     locationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("locations.id")), default=None, exclude=True)
-    location: typing.Optional["Location"] = sqlmodel.Relationship(back_populates="attributes")
+    location: Location = sqlmodel.Relationship(back_populates="attributes")
     benchmarkPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmarks.id")), default=None, exclude=True)
-    benchmark: typing.Optional["Benchmark"] = sqlmodel.Relationship(back_populates="attributes")
+    benchmark: Benchmark = sqlmodel.Relationship(back_populates="attributes")
     folderPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folders.id")), default=None, exclude=True)
-    folder: typing.Optional["Folder"] = sqlmodel.Relationship(back_populates="attributes")
+    folder: Folder = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -660,11 +690,6 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         return self.name
 
 
-class AttributeNode(TableEntityNode):
-    class Meta:
-        model = Attribute
-
-
 class AttributeInputNode(InputNode):
     class Meta:
         model = AttributeInput
@@ -688,7 +713,7 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
     __tablename__ = "tags"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
-    model: typing.Optional["Model"] = sqlmodel.Relationship(back_populates="tags_")
+    model: Model = sqlmodel.Relationship(back_populates="tags_")
 
 
 # endregion Tag
@@ -702,9 +727,9 @@ class Concept(TagOrderField, TagNameField, Table, table=True):
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="concepts_")
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="concepts_")
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="concepts_")
+    kit: Kit = sqlmodel.Relationship(back_populates="concepts_")
+    type: Type = sqlmodel.Relationship(back_populates="concepts_")
+    design: Design = sqlmodel.Relationship(back_populates="concepts_")
 
 
 # endregion Concept
@@ -1003,7 +1028,7 @@ class Plane(Table, table=True):
     yAxisX: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_x", sqlalchemy.Float()), exclude=True)
     yAxisY: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_y", sqlalchemy.Float()), exclude=True)
     yAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_z", sqlalchemy.Float()), exclude=True)
-    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="plane")
+    piece: Piece = sqlmodel.Relationship(back_populates="plane")
 
     # def __init__(
     #     self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
@@ -1122,11 +1147,6 @@ class Plane(Table, table=True):
         return PlaneOutput(**entity)
 
 
-class PlaneNode(TableNode):
-    class Meta:
-        model = Plane
-
-
 class PlaneInputNode(InputNode):
     class Meta:
         model = PlaneInput
@@ -1153,19 +1173,19 @@ class Location(LocationLatitudeField, LocationLongitudeField, TableEntity, table
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
 
 
-class LocationInput(Location, Input):
+class LocationInput(LocationLatitudeField, LocationLongitudeField, Input):
     pass
 
 
-class LocationOutput(Location, Output):
+class LocationOutput(LocationLatitudeField, LocationLongitudeField, Output):
     pass
 
 
-class LocationContext(Location, Context):
+class LocationContext(LocationLatitudeField, LocationLongitudeField, Context):
     pass
 
 
-class LocationPrediction(Location, Prediction):
+class LocationPrediction(LocationLatitudeField, LocationLongitudeField, Prediction):
     pass
 
 
@@ -1218,7 +1238,7 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     __tablename__ = "authors"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
+    kit: Kit = sqlmodel.Relationship(back_populates="authors_")
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
 
     __table_args__ = (sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),)
@@ -1230,11 +1250,6 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
 
     def idMembers(self) -> RecursiveAnyList:
         return self.email
-
-
-class AuthorNode(TableEntityNode):
-    class Meta:
-        model = Author
 
 
 class AuthorInputNode(InputNode):
@@ -1256,9 +1271,9 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     __tablename__ = "artifact_authors"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="artifact_authors")
+    type: Type = sqlmodel.Relationship(back_populates="artifact_authors")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="artifact_authors")
+    design: Design = sqlmodel.Relationship(back_populates="artifact_authors")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint("(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)", name="ck_artifact_authors_parent_set"),
@@ -1347,7 +1362,7 @@ class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreat
     __tablename__ = "files"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="files_")
+    kit: Kit = sqlmodel.Relationship(back_populates="files_")
 
     __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_files_guid_kit_id"),)
 
@@ -1358,6 +1373,11 @@ class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreat
 
     def idMembers(self) -> RecursiveAnyList:
         return self.guid
+
+
+class FileInputNode(InputNode):
+    class Meta:
+        model = FileInput
 
 
 # endregion File
@@ -1422,7 +1442,7 @@ class Folder(FolderUpdatedByField, FolderUpdatedAtField, FolderCreatedByField, F
     __tablename__ = "folders"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="folders_")
+    kit: Kit = sqlmodel.Relationship(back_populates="folders_")
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="folder", cascade_delete=True)
 
     __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_folders_guid_kit_id"),)
@@ -1467,6 +1487,11 @@ class Folder(FolderUpdatedByField, FolderUpdatedAtField, FolderCreatedByField, F
         for key, value in props.model_dump().items():
             setattr(self, key, value)
         return self
+
+
+class FolderInputNode(InputNode):
+    class Meta:
+        model = FolderInput
 
 
 # endregion Folder
@@ -1519,7 +1544,7 @@ class Benchmark(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExclud
     __tablename__ = "benchmarks"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
-    quality: typing.Optional[Quality] = sqlmodel.Relationship(back_populates="benchmarks")
+    quality: Quality = sqlmodel.Relationship(back_populates="benchmarks")
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
 
 
@@ -1687,7 +1712,7 @@ class Quality(
     __tablename__ = "qualities"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
+    kit: Kit = sqlmodel.Relationship(back_populates="qualities")
 
     benchmarks: list["Benchmark"] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
@@ -1744,11 +1769,11 @@ class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, Pr
     __tablename__ = "props"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="props")
+    port: Port = sqlmodel.Relationship(back_populates="props")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="props")
+    type: Type = sqlmodel.Relationship(back_populates="props")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="props")
+    design: Design = sqlmodel.Relationship(back_populates="props")
 
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="prop", cascade_delete=True)
 
@@ -1796,6 +1821,11 @@ class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, Pr
         entity = {**PropProps.model_validate(self).model_dump()}
         entity["attributes"] = [q.dump() for q in self.attributes]
         return PropOutput(**entity)
+
+
+class PropInputNode(InputNode):
+    class Meta:
+        model = PropInput
 
 
 # endregion Prop
@@ -1846,8 +1876,8 @@ class Model(ModelDescriptionField, ModelFileField, ModelUrlField, TableEntity, t
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     tags_: list[Tag] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
-    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="models")
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    type: Type = sqlmodel.Relationship(back_populates="models")
 
     @property
     def tags(self: "Model") -> list[str]:
@@ -1899,17 +1929,6 @@ class NoModelAssigned(NoParentAssigned):
         return "👪 The entity has no parent model assigned."
 
 
-class ModelNode(TableEntityNode):
-    class Meta:
-        model = Model
-        excludedFields = ("tags_",)
-
-    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
-
-    # def resolve_attributes(self, info):
-    #     return self.attributes
-
-
 class ModelInputNode(InputNode):
     class Meta:
         model = ModelInput
@@ -1937,7 +1956,7 @@ class CompatibleInterface(CompatibleInterfaceOrderField, CompatibleInterfaceName
     __tablename__ = "compatible_interfaces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="compatibleInterfaces_")
+    port: Port = sqlmodel.Relationship(back_populates="compatibleInterfaces_")
 
 
 # endregion CompatibleInterface
@@ -2017,7 +2036,7 @@ class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionFi
     attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
     props: list["Prop"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="ports")
+    type: Type = sqlmodel.Relationship(back_populates="ports")
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"})
     connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPortPk"})
 
@@ -2103,23 +2122,6 @@ class PortNotFound(NotFound):
     def __str__(self):
         variant = f", {self.parent.variant}" if self.parent.variant else ""
         return f"🔍 Couldn't find the port ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
-
-
-class PortNode(TableEntityNode):
-    class Meta:
-        model = Port
-        exclude_fields = ("connecteds", "connectings")
-
-    # Add localId field to follow GraphQL naming conventions instead of id_
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
-
-    # def resolve_attributes(self, info):
-    #     return self.attributes
 
 
 class PortInputNode(InputNode):
@@ -2287,7 +2289,7 @@ class Type(
         exclude=True,
     )
 
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="types")
+    kit: Kit = sqlmodel.Relationship(back_populates="types")
 
     pieces: list["Piece"] = sqlmodel.Relationship(back_populates="type")
 
@@ -2436,11 +2438,6 @@ class TypeHasNotAllUsedPorts(SpecificationError):
         return f"🚫 A design is using some ports of the type. The new type is missing the following ports: {', '.join(self.missingPorts)}."
 
 
-class TypeNode(TableEntityNode):
-    class Meta:
-        model = Type
-
-
 class TypeInputNode(InputNode):
     class Meta:
         model = TypeInput
@@ -2489,7 +2486,7 @@ class Layer(LayerColorField, LayerDescriptionField, LayerNameField, TableEntity,
     __tablename__ = "layers"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="layers")
+    design: Design = sqlmodel.Relationship(back_populates="layers")
 
 
 # endregion Layer
@@ -2581,19 +2578,19 @@ class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, P
     # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
-class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, PieceCenterField, PieceHiddenField, PieceLockedField, PieceColorField, PieceScaleField, PieceMirrorPlaneField, TableEntity, table=True):
+class Piece(PieceIdField, PieceHiddenField, PieceLockedField, PieceColorField, PieceScaleField, TableEntity, table=True):
     PLURAL = "pieces"
     __tablename__ = "pieces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     id_: str = sqlmodel.Field(sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)), default="")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id"), nullable=True), default=None, exclude=True)
-    type: typing.Optional[Type] = sqlmodel.Relationship(back_populates="pieces")
+    type: Type = sqlmodel.Relationship(back_populates="pieces")
     designPiecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id"), nullable=True), default=None, exclude=True)
-    designPiece: typing.Optional["Design"] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
+    designPiece: Design = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
+    design: Design = sqlmodel.Relationship(back_populates="pieces", sa_relationship_kwargs={"foreign_keys": "[Piece.designPk]"})
     planePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("plane_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("planes.id"), nullable=True), default=None, exclude=True)
-    plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
+    plane: Plane = sqlmodel.Relationship(back_populates="piece")
     centerU: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
     centerV: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
@@ -2695,21 +2692,10 @@ class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, Pie
         return self.id_
 
 
-class PieceNode(TableEntityNode):
-    class Meta:
-        model = Piece
-        exclude_fields = ("connecteds", "connectings")
-
-    # Add localId field to follow GraphQL naming conventions instead of id_
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
+        exclude_fields = ("type", "designPiece")
 
     type = TypeIdInputNode()
     designPiece = graphene.Field(lambda: DesignIdInputNode)
@@ -2759,7 +2745,7 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
     __tablename__ = "groups"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="groups")
+    design: Design = sqlmodel.Relationship(back_populates="groups")
 
 
 # endregion Group
@@ -2768,7 +2754,7 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
 # https://github.com/usalu/semio-side-
 
 
-class Side(Model):
+class Side(BaseModel):
     piece: PieceId = sqlmodel.Field()
     designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
     port: PortId = sqlmodel.Field()
@@ -2811,9 +2797,9 @@ class SideNode(Node):
 
     exclude_fields = ("piece", "port")
 
-    piece = graphene.NonNull(PieceNode)
-    designPiece = graphene.Field(PieceNode)
-    port = graphene.NonNull(PortNode)
+    piece = graphene.NonNull(lambda: PieceNode)
+    designPiece = graphene.Field(lambda: PieceNode)
+    port = graphene.NonNull(lambda: PortNode)
 
     def resolve_piece(self, info):
         return self.piece
@@ -2944,7 +2930,7 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
     connectedDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectedDesignPieceId", sa_column=sqlmodel.Column("connected_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id"), nullable=True), default=None, exclude=True
     )
-    connectedDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectedDesignPiecePk]"))
+    connectedDesignPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectedDesignPiecePk]"))
     connectingPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectingPieceId", sa_column=sqlmodel.Column("connecting_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), exclude=True, default=None)
     connectingPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connectings", foreign_keys="[Connection.connectingPiecePk]"))
     connectingPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectingPortId", sa_column=sqlmodel.Column("connecting_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
@@ -2952,10 +2938,10 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
     connectingDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectingDesignPieceId", sa_column=sqlmodel.Column("connecting_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id"), nullable=True), default=None, exclude=True
     )
-    connectingDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectingDesignPiecePk]"))
+    connectingDesignPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectingDesignPiecePk]"))
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
     designPk: typing.Optional[int] = sqlmodel.Field(alias="designId", sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: "Design" = sqlmodel.Relationship(back_populates="connections")
+    design: Design = sqlmodel.Relationship(back_populates="connections")
     __table_args__ = (
         sqlalchemy.UniqueConstraint(
             "connected_piece_id", "connected_design_piece_id", "connecting_piece_id", "connecting_design_piece_id", name="uq_connections_connected_piece_id_connected_design_piece_id_connecting_piece_id_connecting_design_piece_id"
@@ -3112,26 +3098,6 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
         ]
 
 
-class ConnectionNode(TableEntityNode):
-    class Meta:
-        model = Connection
-        exclude_fields = (
-            "connectedPiece",
-            "connectedPort",
-            "connectingPiece",
-            "connectingPort",
-        )
-
-    connected = graphene.NonNull(lambda: SideNode)
-    connecting = graphene.NonNull(lambda: SideNode)
-
-    def resolve_connected(self, info):
-        return self.connected
-
-    def resolve_connecting(self, info):
-        return self.connecting
-
-
 class ConnectionInputNode(InputNode):
     class Meta:
         model = ConnectionInput
@@ -3195,7 +3161,7 @@ class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxFiel
     __tablename__ = "stats"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="stats")
+    design: Design = sqlmodel.Relationship(back_populates="stats")
 
 
 # endregion Stat
@@ -3352,14 +3318,14 @@ class Design(
     locationLongitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()), exclude=True, default=None)
     locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
     layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True, sa_relationship_kwargs={"foreign_keys": "[Piece.designPk]"})
     groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     props: list["Prop"] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
+    kit: Kit = sqlmodel.Relationship(back_populates="designs")
 
     __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id", name="uq_designs_name_variant_view_kit_id"),)
 
@@ -3493,11 +3459,6 @@ class NoDesignAssigned(NoParentAssigned):
 class DesignInputNode(InputNode):
     class Meta:
         model = DesignInput
-
-
-class DesignNode(TableEntityNode):
-    class Meta:
-        model = Design
 
 
 class DesignIdInputNode(InputNode):
@@ -3691,6 +3652,99 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         return self.id()
 
 
+
+
+# region Moved Graphene Nodes
+# These classes were moved here to ensure all SQLModel table classes are defined
+# before graphene-sqlalchemy triggers mapper configuration.
+
+class AttributeNode(TableEntityNode):
+    class Meta:
+        model = Attribute
+
+
+class PlaneNode(TableNode):
+    class Meta:
+        model = Plane
+
+
+class AuthorNode(TableEntityNode):
+    class Meta:
+        model = Author
+
+
+class ModelNode(TableEntityNode):
+    class Meta:
+        model = Model
+        excludedFields = ("tags_",)
+
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+
+    # def resolve_attributes(self, info):
+    #     return self.attributes
+
+
+class PortNode(TableEntityNode):
+    class Meta:
+        model = Port
+        exclude_fields = ("connecteds", "connectings")
+
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+
+    # def resolve_attributes(self, info):
+    #     return self.attributes
+
+
+class TypeNode(TableEntityNode):
+    class Meta:
+        model = Type
+
+
+class PieceNode(TableEntityNode):
+    class Meta:
+        model = Piece
+        exclude_fields = ("connecteds", "connectings")
+
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+
+class ConnectionNode(TableEntityNode):
+    class Meta:
+        model = Connection
+        exclude_fields = (
+            "connectedPiece",
+            "connectedPort",
+            "connectingPiece",
+            "connectingPort",
+        )
+
+    connected = graphene.NonNull(lambda: SideNode)
+    connecting = graphene.NonNull(lambda: SideNode)
+
+    def resolve_connected(self, info):
+        return self.connected
+
+    def resolve_connecting(self, info):
+        return self.connecting
+
+
+class DesignNode(TableEntityNode):
+    class Meta:
+        model = Design
+
+
+
+# endregion Moved Graphene Nodes
 class KitNotFound(NotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri

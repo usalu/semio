@@ -83,7 +83,7 @@
     ],
     "shard": null,
     "updateSnapshots": "missing",
-    "updateSourceMethod": "3way",
+    "updateSourceMethod": "patch",
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
@@ -105,440 +105,181 @@
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 15,
+          "line": 20,
           "column": 6,
           "specs": [],
           "suites": [
             {
-              "title": "Kit",
+              "title": "Settings Panel Hierarchy",
               "file": "sketchpad.test.ts",
-              "line": 21,
-              "column": 8,
-              "specs": [],
-              "suites": [
-                {
-                  "title": "Design",
-                  "file": "sketchpad.test.ts",
-                  "line": 26,
-                  "column": 10,
-                  "specs": [
-                    {
-                      "title": "Windows",
-                      "ok": false,
-                      "tags": [],
-                      "tests": [
-                        {
-                          "timeout": 30000,
-                          "annotations": [],
-                          "expectedStatus": "passed",
-                          "projectId": "chromium",
-                          "projectName": "chromium",
-                          "results": [
-                            {
-                              "workerIndex": 0,
-                              "parallelIndex": 0,
-                              "status": "timedOut",
-                              "duration": 30027,
-                              "error": {
-                                "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                                "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10",
-                                "location": {
-                                  "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                  "column": 10,
-                                  "line": 22
-                                },
-                                "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
-                              },
-                              "errors": [
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 10,
-                                    "line": 22
-                                  },
-                                  "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10\u001b[22m"
-                                },
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 77,
-                                    "line": 23
-                                  },
-                                  "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.createTemporary\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m     test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Design\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:77\u001b[22m"
-                                }
-                              ],
-                              "stdout": [],
-                              "stderr": [],
-                              "retry": 0,
-                              "startTime": "2025-11-29T00:54:33.186Z",
-                              "annotations": [],
-                              "attachments": [],
-                              "errorLocation": {
-                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 10,
-                                "line": 22
-                              }
-                            }
-                          ],
-                          "status": "unexpected"
-                        }
-                      ],
-                      "id": "1f96767271edc4239dfa-b664cffe04aff1bf07ff",
-                      "file": "sketchpad.test.ts",
-                      "line": 31,
-                      "column": 7
-                    },
-                    {
-                      "title": "Drag and Drop Pieces",
-                      "ok": false,
-                      "tags": [],
-                      "tests": [
-                        {
-                          "timeout": 30000,
-                          "annotations": [],
-                          "expectedStatus": "passed",
-                          "projectId": "chromium",
-                          "projectName": "chromium",
-                          "results": [
-                            {
-                              "workerIndex": 1,
-                              "parallelIndex": 1,
-                              "status": "timedOut",
-                              "duration": 30022,
-                              "error": {
-                                "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                                "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10",
-                                "location": {
-                                  "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                  "column": 10,
-                                  "line": 22
-                                },
-                                "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
-                              },
-                              "errors": [
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 10,
-                                    "line": 22
-                                  },
-                                  "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10\u001b[22m"
-                                },
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 77,
-                                    "line": 23
-                                  },
-                                  "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.createTemporary\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m     test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Design\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:77\u001b[22m"
-                                }
-                              ],
-                              "stdout": [],
-                              "stderr": [],
-                              "retry": 0,
-                              "startTime": "2025-11-29T00:54:33.237Z",
-                              "annotations": [],
-                              "attachments": [],
-                              "errorLocation": {
-                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 10,
-                                "line": 22
-                              }
-                            }
-                          ],
-                          "status": "unexpected"
-                        }
-                      ],
-                      "id": "1f96767271edc4239dfa-19c89a303abbd9712b5f",
-                      "file": "sketchpad.test.ts",
-                      "line": 41,
-                      "column": 7
-                    }
-                  ]
-                },
-                {
-                  "title": "Type",
-                  "file": "sketchpad.test.ts",
-                  "line": 152,
-                  "column": 10,
-                  "specs": [
-                    {
-                      "title": "Toolbar is visible with selection and port tools",
-                      "ok": false,
-                      "tags": [],
-                      "tests": [
-                        {
-                          "timeout": 30000,
-                          "annotations": [],
-                          "expectedStatus": "passed",
-                          "projectId": "chromium",
-                          "projectName": "chromium",
-                          "results": [
-                            {
-                              "workerIndex": 2,
-                              "parallelIndex": 2,
-                              "status": "timedOut",
-                              "duration": 30035,
-                              "error": {
-                                "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                                "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10",
-                                "location": {
-                                  "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                  "column": 10,
-                                  "line": 22
-                                },
-                                "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
-                              },
-                              "errors": [
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 10,
-                                    "line": 22
-                                  },
-                                  "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10\u001b[22m"
-                                },
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 77,
-                                    "line": 23
-                                  },
-                                  "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.createTemporary\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m     test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Design\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:77\u001b[22m"
-                                }
-                              ],
-                              "stdout": [],
-                              "stderr": [],
-                              "retry": 0,
-                              "startTime": "2025-11-29T00:54:33.211Z",
-                              "annotations": [],
-                              "attachments": [],
-                              "errorLocation": {
-                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 10,
-                                "line": 22
-                              }
-                            }
-                          ],
-                          "status": "unexpected"
-                        }
-                      ],
-                      "id": "1f96767271edc4239dfa-95611b57385724055ef9",
-                      "file": "sketchpad.test.ts",
-                      "line": 157,
-                      "column": 7
-                    },
-                    {
-                      "title": "Port tool can be selected",
-                      "ok": false,
-                      "tags": [],
-                      "tests": [
-                        {
-                          "timeout": 30000,
-                          "annotations": [],
-                          "expectedStatus": "passed",
-                          "projectId": "chromium",
-                          "projectName": "chromium",
-                          "results": [
-                            {
-                              "workerIndex": 3,
-                              "parallelIndex": 3,
-                              "status": "timedOut",
-                              "duration": 30021,
-                              "error": {
-                                "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                                "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10",
-                                "location": {
-                                  "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                  "column": 10,
-                                  "line": 22
-                                },
-                                "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
-                              },
-                              "errors": [
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 10,
-                                    "line": 22
-                                  },
-                                  "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10\u001b[22m"
-                                },
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 77,
-                                    "line": 23
-                                  },
-                                  "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.createTemporary\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m     test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Design\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:77\u001b[22m"
-                                }
-                              ],
-                              "stdout": [],
-                              "stderr": [],
-                              "retry": 0,
-                              "startTime": "2025-11-29T00:54:33.264Z",
-                              "annotations": [],
-                              "attachments": [],
-                              "errorLocation": {
-                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 10,
-                                "line": 22
-                              }
-                            }
-                          ],
-                          "status": "unexpected"
-                        }
-                      ],
-                      "id": "1f96767271edc4239dfa-36f3f8fcf05c662a6745",
-                      "file": "sketchpad.test.ts",
-                      "line": 174,
-                      "column": 7
-                    },
-                    {
-                      "title": "Selection tool is active by default",
-                      "ok": false,
-                      "tags": [],
-                      "tests": [
-                        {
-                          "timeout": 30000,
-                          "annotations": [],
-                          "expectedStatus": "passed",
-                          "projectId": "chromium",
-                          "projectName": "chromium",
-                          "results": [
-                            {
-                              "workerIndex": 4,
-                              "parallelIndex": 4,
-                              "status": "timedOut",
-                              "duration": 30028,
-                              "error": {
-                                "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                                "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10",
-                                "location": {
-                                  "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                  "column": 10,
-                                  "line": 22
-                                },
-                                "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
-                              },
-                              "errors": [
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 10,
-                                    "line": 22
-                                  },
-                                  "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:22:10\u001b[22m"
-                                },
-                                {
-                                  "location": {
-                                    "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                    "column": 77,
-                                    "line": 23
-                                  },
-                                  "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.createTemporary\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Kit\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 22 |\u001b[39m     test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.createTemporary\"]'\u001b[39m)\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m     test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"Design\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:77\u001b[22m"
-                                }
-                              ],
-                              "stdout": [],
-                              "stderr": [],
-                              "retry": 0,
-                              "startTime": "2025-11-29T00:54:33.262Z",
-                              "annotations": [],
-                              "attachments": [],
-                              "errorLocation": {
-                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 10,
-                                "line": 22
-                              }
-                            }
-                          ],
-                          "status": "unexpected"
-                        }
-                      ],
-                      "id": "1f96767271edc4239dfa-f64a83ef4138d52b4c7d",
-                      "file": "sketchpad.test.ts",
-                      "line": 187,
-                      "column": 7
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "title": "Kit Import",
-              "file": "sketchpad.test.ts",
-              "line": 199,
+              "line": 330,
               "column": 8,
               "specs": [
                 {
-                  "title": "Import metabolism.zip via file input and verify types and designs visible",
+                  "title": "Home app shows correct settings sections in order",
                   "ok": false,
                   "tags": [],
                   "tests": [
                     {
-                      "timeout": 180000,
+                      "timeout": 30000,
                       "annotations": [],
                       "expectedStatus": "passed",
                       "projectId": "chromium",
                       "projectName": "chromium",
                       "results": [
                         {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "timedOut",
+                          "duration": 30086,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:368:13"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:29:35.128Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-dcb3a--settings-sections-in-order-chromium\\error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "firefox",
+                      "projectName": "firefox",
+                      "results": [
+                        {
                           "workerIndex": 5,
                           "parallelIndex": 5,
-                          "status": "failed",
-                          "duration": 34892,
+                          "status": "timedOut",
+                          "duration": 30161,
                           "error": {
-                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeAttached\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[id=\"semio.sketchpad.app.home.importKit\"]')\nExpected: attached\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeAttached\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.importKit\"]')\u001b[22m\n",
-                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeAttached\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[id=\"semio.sketchpad.app.home.importKit\"]')\nExpected: attached\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeAttached\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.importKit\"]')\u001b[22m\n\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:206:31",
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8",
                             "location": {
                               "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                              "column": 31,
-                              "line": 206
+                              "column": 8,
+                              "line": 21
                             },
-                            "snippet": "\u001b[0m \u001b[90m 204 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m2000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 205 |\u001b[39m       \u001b[36mconst\u001b[39m fileInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.importKit\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 206 |\u001b[39m       \u001b[36mawait\u001b[39m expect(fileInput)\u001b[33m.\u001b[39mtoBeAttached({ timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 207 |\u001b[39m       \u001b[36mawait\u001b[39m fileInput\u001b[33m.\u001b[39msetInputFiles(\u001b[32m\"../../assets/semio/metabolism.zip\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 208 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForURL(\u001b[35m/.*kits\\/.+/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m60000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 209 |\u001b[39m       expect(consoleErrors\u001b[33m.\u001b[39mfilter((e) \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mincludes(\u001b[32m\"Import error\"\u001b[39m)))\u001b[33m.\u001b[39mtoHaveLength(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                            "snippet": "\u001b[0m \u001b[90m 19 |\u001b[39m\n \u001b[90m 20 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"sketchpad\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 22 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m\"networkidle\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
                           },
                           "errors": [
                             {
                               "location": {
                                 "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 31,
-                                "line": 206
+                                "column": 8,
+                                "line": 21
                               },
-                              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeAttached\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[id=\"semio.sketchpad.app.home.importKit\"]')\nExpected: attached\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeAttached\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.app.home.importKit\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 204 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m2000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 205 |\u001b[39m       \u001b[36mconst\u001b[39m fileInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.home.importKit\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 206 |\u001b[39m       \u001b[36mawait\u001b[39m expect(fileInput)\u001b[33m.\u001b[39mtoBeAttached({ timeout\u001b[33m:\u001b[39m \u001b[35m30000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 207 |\u001b[39m       \u001b[36mawait\u001b[39m fileInput\u001b[33m.\u001b[39msetInputFiles(\u001b[32m\"../../assets/semio/metabolism.zip\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 208 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForURL(\u001b[35m/.*kits\\/.+/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m60000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 209 |\u001b[39m       expect(consoleErrors\u001b[33m.\u001b[39mfilter((e) \u001b[33m=>\u001b[39m e\u001b[33m.\u001b[39mincludes(\u001b[32m\"Import error\"\u001b[39m)))\u001b[33m.\u001b[39mtoHaveLength(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:206:31\u001b[22m"
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  19 |\n  20 | test.describe(\"sketchpad\", () => {\n> 21 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  22 |     await page.goto(\"/\");\n  23 |     await page.waitForLoadState(\"networkidle\");\n  24 |   });\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 16,
+                                "line": 23
+                              },
+                              "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n  21 |   test.beforeEach(async ({ page }) => {\n  22 |     await page.goto(\"/\");\n> 23 |     await page.waitForLoadState(\"networkidle\");\n     |                ^\n  24 |   });\n  25 |\n  26 |   test.describe(\"Kit\", () => {\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:16"
                             }
                           ],
                           "stdout": [],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-11-29T00:54:33.272Z",
+                          "startTime": "2025-11-29T02:29:35.028Z",
                           "annotations": [],
-                          "attachments": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-dcb3a--settings-sections-in-order-firefox\\error-context.md"
+                            }
+                          ],
                           "errorLocation": {
                             "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                            "column": 31,
-                            "line": 206
+                            "column": 8,
+                            "line": 21
                           }
+                        }
+                      ],
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "webkit",
+                      "projectName": "webkit",
+                      "results": [
+                        {
+                          "workerIndex": 10,
+                          "parallelIndex": 1,
+                          "status": "timedOut",
+                          "duration": 30102,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:368:13"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:30:06.678Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-dcb3a--settings-sections-in-order-webkit\\error-context.md"
+                            }
+                          ]
                         }
                       ],
                       "status": "unexpected"
                     }
                   ],
-                  "id": "1f96767271edc4239dfa-65f3b044f1ff45275ca9",
+                  "id": "1f96767271edc4239dfa-4c23ebbe0aa754e8e49c",
                   "file": "sketchpad.test.ts",
-                  "line": 200,
+                  "line": 365,
                   "column": 5
-                }
-              ]
-            },
-            {
-              "title": "Docs",
-              "file": "sketchpad.test.ts",
-              "line": 221,
-              "column": 8,
-              "specs": [
+                },
                 {
-                  "title": "Content Loads",
-                  "ok": true,
+                  "title": "Kit app shows correct settings sections in order",
+                  "ok": false,
                   "tags": [],
                   "tests": [
                     {
@@ -549,30 +290,158 @@
                       "projectName": "chromium",
                       "results": [
                         {
-                          "workerIndex": 6,
-                          "parallelIndex": 6,
-                          "status": "passed",
-                          "duration": 4810,
-                          "errors": [],
+                          "workerIndex": 1,
+                          "parallelIndex": 1,
+                          "status": "timedOut",
+                          "duration": 30079,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:392:13"
+                            }
+                          ],
                           "stdout": [],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-11-29T00:54:33.278Z",
+                          "startTime": "2025-11-29T02:29:35.061Z",
                           "annotations": [],
-                          "attachments": []
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-fd80b--settings-sections-in-order-chromium\\error-context.md"
+                            }
+                          ]
                         }
                       ],
-                      "status": "expected"
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "firefox",
+                      "projectName": "firefox",
+                      "results": [
+                        {
+                          "workerIndex": 6,
+                          "parallelIndex": 6,
+                          "status": "timedOut",
+                          "duration": 30174,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8",
+                            "location": {
+                              "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                              "column": 8,
+                              "line": 21
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 19 |\u001b[39m\n \u001b[90m 20 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"sketchpad\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 22 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m\"networkidle\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 8,
+                                "line": 21
+                              },
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  19 |\n  20 | test.describe(\"sketchpad\", () => {\n> 21 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  22 |     await page.goto(\"/\");\n  23 |     await page.waitForLoadState(\"networkidle\");\n  24 |   });\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 16,
+                                "line": 23
+                              },
+                              "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n  21 |   test.beforeEach(async ({ page }) => {\n  22 |     await page.goto(\"/\");\n> 23 |     await page.waitForLoadState(\"networkidle\");\n     |                ^\n  24 |   });\n  25 |\n  26 |   test.describe(\"Kit\", () => {\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:16"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:29:35.101Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-fd80b--settings-sections-in-order-firefox\\error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 8,
+                            "line": 21
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "webkit",
+                      "projectName": "webkit",
+                      "results": [
+                        {
+                          "workerIndex": 12,
+                          "parallelIndex": 0,
+                          "status": "timedOut",
+                          "duration": 30101,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:392:13"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:30:06.775Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-fd80b--settings-sections-in-order-webkit\\error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "unexpected"
                     }
                   ],
-                  "id": "1f96767271edc4239dfa-da829f6c4a26b1c2548e",
+                  "id": "1f96767271edc4239dfa-6ae9455f8659eae0ed91",
                   "file": "sketchpad.test.ts",
-                  "line": 227,
+                  "line": 385,
                   "column": 5
                 },
                 {
-                  "title": "Workbench Panel Shows All Sections",
-                  "ok": true,
+                  "title": "Design app shows correct settings sections in order",
+                  "ok": false,
                   "tags": [],
                   "tests": [
                     {
@@ -581,32 +450,160 @@
                       "expectedStatus": "passed",
                       "projectId": "chromium",
                       "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 2,
+                          "status": "timedOut",
+                          "duration": 30064,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:418:13"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:29:35.164Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-11b39--settings-sections-in-order-chromium\\error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "firefox",
+                      "projectName": "firefox",
                       "results": [
                         {
                           "workerIndex": 7,
                           "parallelIndex": 7,
-                          "status": "passed",
-                          "duration": 5598,
-                          "errors": [],
+                          "status": "timedOut",
+                          "duration": 30290,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8",
+                            "location": {
+                              "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                              "column": 8,
+                              "line": 21
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 19 |\u001b[39m\n \u001b[90m 20 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"sketchpad\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 22 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m\"networkidle\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 8,
+                                "line": 21
+                              },
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  19 |\n  20 | test.describe(\"sketchpad\", () => {\n> 21 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  22 |     await page.goto(\"/\");\n  23 |     await page.waitForLoadState(\"networkidle\");\n  24 |   });\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 16,
+                                "line": 23
+                              },
+                              "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n  21 |   test.beforeEach(async ({ page }) => {\n  22 |     await page.goto(\"/\");\n> 23 |     await page.waitForLoadState(\"networkidle\");\n     |                ^\n  24 |   });\n  25 |\n  26 |   test.describe(\"Kit\", () => {\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:16"
+                            }
+                          ],
                           "stdout": [],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-11-29T00:54:33.296Z",
+                          "startTime": "2025-11-29T02:29:35.346Z",
                           "annotations": [],
-                          "attachments": []
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-11b39--settings-sections-in-order-firefox\\error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 8,
+                            "line": 21
+                          }
                         }
                       ],
-                      "status": "expected"
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "webkit",
+                      "projectName": "webkit",
+                      "results": [
+                        {
+                          "workerIndex": 11,
+                          "parallelIndex": 2,
+                          "status": "timedOut",
+                          "duration": 30059,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:418:13"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:30:06.803Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-11b39--settings-sections-in-order-webkit\\error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "unexpected"
                     }
                   ],
-                  "id": "1f96767271edc4239dfa-eea5945d080ec0fa3854",
+                  "id": "1f96767271edc4239dfa-171a19290b817b6c203b",
                   "file": "sketchpad.test.ts",
-                  "line": 238,
+                  "line": 409,
                   "column": 5
                 },
                 {
-                  "title": "Workbench Panel Shows Pages In Sections",
-                  "ok": true,
+                  "title": "Type app shows correct settings sections in order",
+                  "ok": false,
                   "tags": [],
                   "tests": [
                     {
@@ -617,30 +614,158 @@
                       "projectName": "chromium",
                       "results": [
                         {
-                          "workerIndex": 6,
+                          "workerIndex": 3,
+                          "parallelIndex": 3,
+                          "status": "timedOut",
+                          "duration": 30142,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:448:13"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:29:34.919Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-ae0c5--settings-sections-in-order-chromium\\error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "firefox",
+                      "projectName": "firefox",
+                      "results": [
+                        {
+                          "workerIndex": 8,
+                          "parallelIndex": 3,
+                          "status": "timedOut",
+                          "duration": 30163,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8",
+                            "location": {
+                              "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                              "column": 8,
+                              "line": 21
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 19 |\u001b[39m\n \u001b[90m 20 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"sketchpad\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 22 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m\"networkidle\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 8,
+                                "line": 21
+                              },
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  19 |\n  20 | test.describe(\"sketchpad\", () => {\n> 21 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  22 |     await page.goto(\"/\");\n  23 |     await page.waitForLoadState(\"networkidle\");\n  24 |   });\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 16,
+                                "line": 23
+                              },
+                              "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n  21 |   test.beforeEach(async ({ page }) => {\n  22 |     await page.goto(\"/\");\n> 23 |     await page.waitForLoadState(\"networkidle\");\n     |                ^\n  24 |   });\n  25 |\n  26 |   test.describe(\"Kit\", () => {\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:16"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:30:06.655Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-ae0c5--settings-sections-in-order-firefox\\error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 8,
+                            "line": 21
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "webkit",
+                      "projectName": "webkit",
+                      "results": [
+                        {
+                          "workerIndex": 13,
                           "parallelIndex": 6,
-                          "status": "passed",
-                          "duration": 3683,
-                          "errors": [],
+                          "status": "timedOut",
+                          "duration": 30045,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:448:13"
+                            }
+                          ],
                           "stdout": [],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-11-29T00:54:38.665Z",
+                          "startTime": "2025-11-29T02:30:09.600Z",
                           "annotations": [],
-                          "attachments": []
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-ae0c5--settings-sections-in-order-webkit\\error-context.md"
+                            }
+                          ]
                         }
                       ],
-                      "status": "expected"
+                      "status": "unexpected"
                     }
                   ],
-                  "id": "1f96767271edc4239dfa-bd91b73e7d1ec355070c",
+                  "id": "1f96767271edc4239dfa-428a5dc8bf748e529410",
                   "file": "sketchpad.test.ts",
-                  "line": 255,
+                  "line": 439,
                   "column": 5
                 },
                 {
-                  "title": "Details Panel Shows Page Section",
-                  "ok": true,
+                  "title": "All apps have global Sketchpad settings available",
+                  "ok": false,
                   "tags": [],
                   "tests": [
                     {
@@ -651,59 +776,153 @@
                       "projectName": "chromium",
                       "results": [
                         {
-                          "workerIndex": 7,
-                          "parallelIndex": 7,
-                          "status": "passed",
-                          "duration": 4991,
-                          "errors": [],
+                          "workerIndex": 4,
+                          "parallelIndex": 4,
+                          "status": "timedOut",
+                          "duration": 30097,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:506:15"
+                            }
+                          ],
                           "stdout": [],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-11-29T00:54:39.338Z",
+                          "startTime": "2025-11-29T02:29:35.006Z",
                           "annotations": [],
-                          "attachments": []
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-9b7e2-ketchpad-settings-available-chromium\\error-context.md"
+                            }
+                          ]
                         }
                       ],
-                      "status": "expected"
-                    }
-                  ],
-                  "id": "1f96767271edc4239dfa-e583d305397dbfcffc91",
-                  "file": "sketchpad.test.ts",
-                  "line": 268,
-                  "column": 5
-                },
-                {
-                  "title": "Navigation Works Between Pages",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
+                      "status": "unexpected"
+                    },
                     {
                       "timeout": 30000,
                       "annotations": [],
                       "expectedStatus": "passed",
-                      "projectId": "chromium",
-                      "projectName": "chromium",
+                      "projectId": "firefox",
+                      "projectName": "firefox",
                       "results": [
                         {
-                          "workerIndex": 6,
-                          "parallelIndex": 6,
-                          "status": "passed",
-                          "duration": 3178,
-                          "errors": [],
+                          "workerIndex": 9,
+                          "parallelIndex": 4,
+                          "status": "timedOut",
+                          "duration": 30132,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8",
+                            "location": {
+                              "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                              "column": 8,
+                              "line": 21
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 19 |\u001b[39m\n \u001b[90m 20 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m\"sketchpad\"\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 21 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 22 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m\"networkidle\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 8,
+                                "line": 21
+                              },
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  19 |\n  20 | test.describe(\"sketchpad\", () => {\n> 21 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  22 |     await page.goto(\"/\");\n  23 |     await page.waitForLoadState(\"networkidle\");\n  24 |   });\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:21:8"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 16,
+                                "line": 23
+                              },
+                              "message": "Error: page.waitForLoadState: Test timeout of 30000ms exceeded.\n\n  21 |   test.beforeEach(async ({ page }) => {\n  22 |     await page.goto(\"/\");\n> 23 |     await page.waitForLoadState(\"networkidle\");\n     |                ^\n  24 |   });\n  25 |\n  26 |   test.describe(\"Kit\", () => {\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:23:16"
+                            }
+                          ],
                           "stdout": [],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-11-29T00:54:42.362Z",
+                          "startTime": "2025-11-29T02:30:06.672Z",
                           "annotations": [],
-                          "attachments": []
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-9b7e2-ketchpad-settings-available-firefox\\error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 8,
+                            "line": 21
+                          }
                         }
                       ],
-                      "status": "expected"
+                      "status": "unexpected"
+                    },
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "webkit",
+                      "projectName": "webkit",
+                      "results": [
+                        {
+                          "workerIndex": 14,
+                          "parallelIndex": 5,
+                          "status": "timedOut",
+                          "duration": 30052,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          },
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                                "column": 85,
+                                "line": 343
+                              },
+                              "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]')\u001b[22m\n\n\n  341 |\n  342 |     const openSettingsPanel = async (page: Page) => {\n> 343 |       await page.locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]').click();\n      |                                                                                     ^\n  344 |       await page.waitForTimeout(500);\n  345 |     };\n  346 |\n    at openSettingsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:343:85)\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:506:15"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-11-29T02:30:10.255Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Settin-9b7e2-ketchpad-settings-available-webkit\\error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "unexpected"
                     }
                   ],
-                  "id": "1f96767271edc4239dfa-8679fd82576ffa2341c7",
+                  "id": "1f96767271edc4239dfa-afe038e470ae6cc36537",
                   "file": "sketchpad.test.ts",
-                  "line": 286,
+                  "line": 469,
                   "column": 5
                 }
               ]
@@ -715,11 +934,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-11-29T00:54:30.742Z",
-    "duration": 37766.48300000001,
-    "expected": 5,
+    "startTime": "2025-11-29T02:29:32.686Z",
+    "duration": 67820.05,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 6,
+    "unexpected": 15,
     "flaky": 0
   }
 }

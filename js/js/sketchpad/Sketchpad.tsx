@@ -2476,10 +2476,14 @@ class ModelStore {
     this.guid = model.guid;
     this.file = model.file;
     this.description = model.description;
-    this.yTags = this.yModel.set("tags", new Y.Array<string>());
+    const yTags = new Y.Array<string>();
+    this.yModel.set("tags", yTags);
+    this.yTags = yTags;
     if (model.tags) this.yTags.push(model.tags);
     this.attributes = new Map();
-    this.yAttributes = this.yModel.set("attributes", new Y.Array<YAttribute>());
+    const yAttributes = new Y.Array<YAttribute>();
+    this.yModel.set("attributes", yAttributes);
+    this.yAttributes = yAttributes;
     if (model.attributes) {
       for (const attribute of model.attributes) {
         const yAttribute = new Y.Map<YAttributeVal>();
@@ -2734,7 +2738,9 @@ export class TypeStore {
     this.description = type.description;
 
     this.attributes = new Map();
-    this.yAttributes = this.yType.set("attributes", new Y.Array<YAttribute>());
+    const yTypeAttributes = new Y.Array<YAttribute>();
+    this.yType.set("attributes", yTypeAttributes);
+    this.yAttributes = yTypeAttributes;
     // if (type.attributes) {
     //   for (const attribute of type.attributes) {
     //     this.createAttribute(attribute);
@@ -2745,7 +2751,9 @@ export class TypeStore {
     }
 
     this.authors = new Map();
-    this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
+    const yTypeAuthors = new Y.Array<YAuthorUuid>();
+    this.yType.set("authors", yTypeAuthors);
+    this.yAuthors = yTypeAuthors;
     if (type.authors) {
       for (const author of type.authors) {
         if (!author?.guid) continue;
@@ -2756,7 +2764,9 @@ export class TypeStore {
       }
     }
 
-    this.yModels = this.yType.set("models", new Y.Array<YModel>());
+    const yTypeModels = new Y.Array<YModel>();
+    this.yType.set("models", yTypeModels);
+    this.yModels = yTypeModels;
     // if (type.models) {
     //   for (const model of type.models) {
     //     this.createModel(model);
@@ -2766,7 +2776,9 @@ export class TypeStore {
       type.models.forEach((model) => this.createModel(model));
     }
 
-    this.yPorts = this.yType.set("ports", new Y.Array<YPort>());
+    const yTypePorts = new Y.Array<YPort>();
+    this.yType.set("ports", yTypePorts);
+    this.yPorts = yTypePorts;
     if (type.ports) {
       for (const port of type.ports) {
         this.createPort(port);
@@ -3328,7 +3340,9 @@ class PieceStore {
       this.mirrorPlane = undefined;
     }
 
-    this.yAttributes = this.yPiece.set("attributes", new Y.Array<YAttribute>());
+    const yPieceAttributes = new Y.Array<YAttribute>();
+    this.yPiece.set("attributes", yPieceAttributes);
+    this.yAttributes = yPieceAttributes;
     if (piece.attributes) {
       for (const attribute of piece.attributes) {
         this.createAttribute(attribute);
@@ -3929,9 +3943,11 @@ class ConnectionStore {
     this.parent = parent;
     this.yConnection = yConnection;
     this.guid = connection.guid;
-    const yConnected = this.yConnection.set("connected", new Y.Map<YSideVal>());
+    const yConnected = new Y.Map<YSideVal>();
+    this.yConnection.set("connected", yConnected);
     this.connected = new SideStore(parent, yConnected, connection.connected);
-    const yConnecting = this.yConnection.set("connecting", new Y.Map<YSideVal>());
+    const yConnecting = new Y.Map<YSideVal>();
+    this.yConnection.set("connecting", yConnecting);
     this.connecting = new SideStore(parent, yConnecting, connection.connecting);
     this.gap = connection.gap;
     this.shift = connection.shift;
@@ -3943,7 +3959,9 @@ class ConnectionStore {
     this.v = connection.v;
     this.description = connection.description;
     this.attributes = new Map();
-    this.yAttributes = this.yConnection.set("attributes", new Y.Array<YAttribute>());
+    const yConnectionAttributes = new Y.Array<YAttribute>();
+    this.yConnection.set("attributes", yConnectionAttributes);
+    this.yAttributes = yConnectionAttributes;
     if (connection.attributes) {
       for (const attribute of connection.attributes) {
         this.createAttribute(attribute);
@@ -4302,7 +4320,9 @@ export class DesignStore {
     this.image = design.image;
     this.description = design.description;
 
-    this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
+    const yDesignPieces = new Y.Array<YPiece>();
+    this.yDesign.set("pieces", yDesignPieces);
+    this.yPieces = yDesignPieces;
     if (design.pieces) {
       for (const piece of design.pieces) {
         if (!piece?.guid) continue;
@@ -4310,7 +4330,9 @@ export class DesignStore {
       }
     }
 
-    this.yConnections = this.yDesign.set("connections", new Y.Array<YConnection>());
+    const yDesignConnections = new Y.Array<YConnection>();
+    this.yDesign.set("connections", yDesignConnections);
+    this.yConnections = yDesignConnections;
     if (design.connections) {
       for (const connection of design.connections) {
         if (!connection?.guid) continue;
@@ -4318,7 +4340,9 @@ export class DesignStore {
       }
     }
 
-    this.yAttributes = this.yDesign.set("attributes", new Y.Array<YAttribute>());
+    const yDesignAttributes = new Y.Array<YAttribute>();
+    this.yDesign.set("attributes", yDesignAttributes);
+    this.yAttributes = yDesignAttributes;
     if (design.attributes) {
       for (const attribute of design.attributes) {
         if (!attribute?.guid) continue;
@@ -4326,7 +4350,9 @@ export class DesignStore {
       }
     }
 
-    this.yStats = this.yDesign.set("stats", new Y.Array<YStat>());
+    const yDesignStats = new Y.Array<YStat>();
+    this.yDesign.set("stats", yDesignStats);
+    this.yStats = yDesignStats;
     if (design.stats) {
       for (const stat of design.stats) {
         if (!stat?.guid) continue;
@@ -4334,7 +4360,9 @@ export class DesignStore {
       }
     }
 
-    this.yProps = this.yDesign.set("props", new Y.Array<YProp>());
+    const yDesignProps = new Y.Array<YProp>();
+    this.yDesign.set("props", yDesignProps);
+    this.yProps = yDesignProps;
     if (design.props) {
       for (const prop of design.props) {
         if (!prop?.guid) continue;
@@ -4342,7 +4370,9 @@ export class DesignStore {
       }
     }
 
-    this.yLayers = this.yDesign.set("layers", new Y.Array<YLayer>());
+    const yDesignLayers = new Y.Array<YLayer>();
+    this.yDesign.set("layers", yDesignLayers);
+    this.yLayers = yDesignLayers;
     if (design.layers) {
       for (const layer of design.layers) {
         if (!layer?.guid) continue;
@@ -4354,7 +4384,9 @@ export class DesignStore {
       this.yDesign.set("activeLayer", design.activeLayer.guid);
     }
 
-    this.yGroups = this.yDesign.set("groups", new Y.Array<YGroup>());
+    const yDesignGroups = new Y.Array<YGroup>();
+    this.yDesign.set("groups", yDesignGroups);
+    this.yGroups = yDesignGroups;
     if (design.groups) {
       for (const group of design.groups) {
         if (!group?.guid) continue;
@@ -4368,7 +4400,9 @@ export class DesignStore {
       this.location = new YLocationStore(yLocation, design.location);
     }
 
-    this.yConcepts = this.yDesign.set("concepts", new Y.Array<string>());
+    const yDesignConcepts = new Y.Array<string>();
+    this.yDesign.set("concepts", yDesignConcepts);
+    this.yConcepts = yDesignConcepts;
     if (design.concepts) {
       design.concepts.forEach((concept) => this.yConcepts.push([concept]));
     }
@@ -4382,7 +4416,9 @@ export class DesignStore {
         this.authors.set(authorId.guid, authorStore);
       });
     }
-    this.yAuthors = this.yDesign.set("authors", new Y.Array<YAuthorUuid>());
+    const yDesignAuthors = new Y.Array<YAuthorUuid>();
+    this.yDesign.set("authors", yDesignAuthors);
+    this.yAuthors = yDesignAuthors;
     this.authors.forEach((author) => author?.guid && this.yAuthors.push([author.guid]));
 
     this.yDesign.set("createdAt", new Date().toISOString());
@@ -10849,7 +10885,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleWorkbenchValueChange("semio.sketchpad.navbar.panelToggle.workbench", value)}
           pressed={isAnyWorkbenchPanelOpen}
           onPressedChange={(pressed) => handleWorkbenchPressedChange("semio.sketchpad.navbar.panelToggle.workbench", pressed)}
-          className="border-y-0 border-r-0"
+          className="border-0"
         />
       )}
       {hudConfigs.length > 0 && (
@@ -10861,7 +10897,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleHudValueChange("semio.sketchpad.navbar.panelToggle.hud", value)}
           pressed={isAnyHudPanelOpen}
           onPressedChange={(pressed) => handleHudPressedChange("semio.sketchpad.navbar.panelToggle.hud", pressed)}
-          className="border-y-0 border-r-0"
+          className="border-0"
         />
       )}
       {rightConfigs.length > 0 && (
@@ -10873,7 +10909,7 @@ const PanelToggles: FC = ({}) => {
           onValueChange={(value) => handleRightValueChange("semio.sketchpad.navbar.panelToggle.right", value)}
           pressed={isAnyRightPanelOpen}
           onPressedChange={(pressed) => handleRightPressedChange("semio.sketchpad.navbar.panelToggle.right", pressed)}
-          className="border-y-0 border-r-0"
+          className="border-0"
         />
       )}
     </div>
