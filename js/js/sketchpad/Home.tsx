@@ -48,9 +48,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
+import { Folder, generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
 import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "./shared";
 import type { SketchpadStore } from "./Sketchpad";
@@ -100,11 +100,17 @@ export interface HomeSelectionDiff {
 export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
 export type HomeSortDirection = "asc" | "desc";
 
+export interface LoadingKit {
+  tempGuid: Guid;
+  name: string;
+}
+
 export interface HomeState {
   panelVisibility: PanelVisibility;
   selection?: HomeSelection;
   sortColumn?: HomeSortColumn;
   sortDirection?: HomeSortDirection;
+  loadingKits?: LoadingKit[];
 }
 
 export interface HomeDiff {
@@ -194,6 +200,32 @@ export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, 
     return this.yMap.get("sortDirection") as HomeSortDirection | undefined;
   }
 
+  get loadingKits(): LoadingKit[] {
+    const yLoadingKits = this.yMap.get("loadingKits") as Y.Array<any>;
+    return yLoadingKits ? yLoadingKits.toArray() : [];
+  }
+
+  addLoadingKit(loadingKit: LoadingKit): void {
+    this.transact(() => {
+      let yLoadingKits = this.yMap.get("loadingKits") as Y.Array<any>;
+      if (!yLoadingKits) {
+        yLoadingKits = new Y.Array<any>();
+        this.yMap.set("loadingKits", yLoadingKits);
+      }
+      yLoadingKits.push([loadingKit]);
+    });
+  }
+
+  removeLoadingKit(tempGuid: Guid): void {
+    this.transact(() => {
+      const yLoadingKits = this.yMap.get("loadingKits") as Y.Array<any>;
+      if (yLoadingKits) {
+        const index = yLoadingKits.toArray().findIndex((k: LoadingKit) => k.tempGuid === tempGuid);
+        if (index !== -1) yLoadingKits.delete(index, 1);
+      }
+    });
+  }
+
   protected hash(state: HomeState): string {
     return JSON.stringify(state);
   }
@@ -204,6 +236,7 @@ export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, 
       selection: this.selection,
       sortColumn: this.sortColumn,
       sortDirection: this.sortDirection,
+      loadingKits: this.loadingKits,
     };
   }
 
@@ -700,6 +733,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
   const { createKit, navigateToKit } = useSketchpadCommands();
   const store = useSketchpadStore();
+  const homeStore = store.home();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -729,20 +763,43 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     const zipFile = files.find((f) => f.name.endsWith(".zip") || f.name.endsWith(".semio.zip"));
 
     if (zipFile) {
+      const tempGuid = guid();
+      const kitName = zipFile.name.replace(/\.(semio\.)?zip$/, "");
+      homeStore.addLoadingKit({ tempGuid, name: kitName });
       try {
         const { kit, files: importedFiles } = await importKit(zipFile);
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
         const kitStore = store.kit(kit.guid);
-        // Wait for Yjs document to fully initialize before navigating
+        homeStore.removeLoadingKit(tempGuid);
         await new Promise((resolve) => setTimeout(resolve, 0));
         navigateToKit(kit.guid);
-        (async () => {
-          for (const [path, blob] of importedFiles.entries()) {
-            const fileToAdd = { guid: guid(), path: path, name: path.split("/").pop() || path, size: blob.size, createdAt: new Date(), updatedAt: new Date() };
-            await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.dropzone", fileToAdd, blob);
+        const folderPathMap = new Map<string, string>();
+        const foldersToAdd: Folder[] = [];
+        const ensureFolder = (parts: string[]): string => {
+          let parentGuid: string | undefined = undefined;
+          let currentPath = "";
+          for (const part of parts) {
+            currentPath = currentPath ? `${currentPath}/${part}` : part;
+            let folderGuid = folderPathMap.get(currentPath);
+            if (!folderGuid) {
+              folderGuid = guid();
+              folderPathMap.set(currentPath, folderGuid);
+              foldersToAdd.push({ guid: folderGuid, name: part, parent: parentGuid ? { guid: parentGuid } : undefined, createdAt: new Date(), updatedAt: new Date() });
+            }
+            parentGuid = folderGuid;
           }
-        })();
-      } catch (error) {}
+          return parentGuid!;
+        };
+        const filesToAdd = Array.from(importedFiles.entries()).map(([filePath, blob]) => {
+          const parts = filePath.split("/").filter((p) => p.length > 0);
+          const directories = parts.slice(0, -1);
+          const parentFolderGuid = directories.length > 0 ? ensureFolder(directories) : undefined;
+          return { file: { guid: guid(), name: parts[parts.length - 1] || filePath, folder: parentFolderGuid ? { guid: parentFolderGuid } : undefined, size: blob.size, createdAt: new Date(), updatedAt: new Date() }, blob };
+        });
+        if (foldersToAdd.length > 0 || filesToAdd.length > 0) kitStore.execute("semio.kit.addFiles", "semio.sketchpad.app.home.dropzone", foldersToAdd, filesToAdd);
+      } catch (error) {
+        homeStore.removeLoadingKit(tempGuid);
+      }
     }
   };
 
@@ -750,21 +807,42 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.name.endsWith(".zip") || file.name.endsWith(".semio.zip")) {
+      const tempGuid = guid();
+      const kitName = file.name.replace(/\.(semio\.)?zip$/, "");
+      homeStore.addLoadingKit({ tempGuid, name: kitName });
       try {
         const { kit, files: importedFiles } = await importKit(file);
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
         const kitStore = store.kit(kit.guid);
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        homeStore.removeLoadingKit(tempGuid);
+        await new Promise((resolve) => setTimeout(resolve, 100));
         navigateToKit(kit.guid);
-        // TODO: File adding temporarily disabled - causes page hang due to excessive Yjs observer updates
-        // setTimeout(async () => {
-        //   for (const [filePath, blob] of importedFiles.entries()) {
-        //     const fileToAdd = { guid: guid(), path: filePath, name: filePath.split("/").pop() || filePath, size: blob.size, createdAt: new Date(), updatedAt: new Date() };
-        //     await kitStore.execute("semio.kit.addFile", "semio.sketchpad.app.home.fileInput", fileToAdd, blob);
-        //   }
-        // }, 500);
+        const folderPathMap = new Map<string, string>();
+        const foldersToAdd: Folder[] = [];
+        const ensureFolder = (parts: string[]): string => {
+          let parentGuid: string | undefined = undefined;
+          let currentPath = "";
+          for (const part of parts) {
+            currentPath = currentPath ? `${currentPath}/${part}` : part;
+            let folderGuid = folderPathMap.get(currentPath);
+            if (!folderGuid) {
+              folderGuid = guid();
+              folderPathMap.set(currentPath, folderGuid);
+              foldersToAdd.push({ guid: folderGuid, name: part, parent: parentGuid ? { guid: parentGuid } : undefined, createdAt: new Date(), updatedAt: new Date() });
+            }
+            parentGuid = folderGuid;
+          }
+          return parentGuid!;
+        };
+        const filesToAdd = Array.from(importedFiles.entries()).map(([filePath, blob]) => {
+          const parts = filePath.split("/").filter((p) => p.length > 0);
+          const directories = parts.slice(0, -1);
+          const parentFolderGuid = directories.length > 0 ? ensureFolder(directories) : undefined;
+          return { file: { guid: guid(), name: parts[parts.length - 1] || filePath, folder: parentFolderGuid ? { guid: parentFolderGuid } : undefined, size: blob.size, createdAt: new Date(), updatedAt: new Date() }, blob };
+        });
+        if (foldersToAdd.length > 0 || filesToAdd.length > 0) kitStore.execute("semio.kit.addFiles", "semio.sketchpad.app.home.fileInput", foldersToAdd, filesToAdd);
       } catch (error) {
-        console.error("Import error:", error);
+        homeStore.removeLoadingKit(tempGuid);
       }
     }
     e.target.value = "";
@@ -800,12 +878,13 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  type: KitStoreKind | "docs";
+  type: KitStoreKind | "docs" | "loading";
   updatedAt: string;
   createdAt: string;
   kit?: KitShallow;
   docsPath?: string;
   icon?: string;
+  isLoading?: boolean;
 };
 
 const Home: FC = ({}) => {
@@ -1032,6 +1111,23 @@ const Home: FC = ({}) => {
       });
     }
 
+    // Add loading kits at the top (after docs)
+    const loadingKits = homeState?.loadingKits || [];
+    loadingKits.forEach((loadingKit: LoadingKit) => {
+      result.push({
+        id: `loading-${loadingKit.tempGuid}`,
+        name: loadingKit.name,
+        level: 0,
+        hasChildren: false,
+        isExpanded: false,
+        type: "loading",
+        updatedAt: "",
+        createdAt: "",
+        kit: undefined,
+        isLoading: true,
+      });
+    });
+
     const kitGroups = new Map<string, KitShallow[]>();
 
     kits.forEach((kit) => {
@@ -1139,7 +1235,7 @@ const Home: FC = ({}) => {
     }
 
     return result;
-  }, [kits, getKitKind, selectedKind, searchQuery, selectedName, selectedVersion, expandedRows, sortColumn, sortDirection]);
+  }, [kits, getKitKind, selectedKind, searchQuery, selectedName, selectedVersion, expandedRows, sortColumn, sortDirection, homeState?.loadingKits]);
 
   const { setFocusItems, setOnFocusItem } = useFocus();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -1620,7 +1716,7 @@ const Home: FC = ({}) => {
                       </div>
                     ),
                     accessor: (row) => (
-                      <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }} onClick={(e) => e.stopPropagation()}>
+                      <div className={`flex items-center gap-single justify-between ${row.isLoading ? "opacity-50 pointer-events-none" : ""}`} style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }} onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-single flex-1 min-w-0">
                           {row.hasChildren ? (
                             <Action
@@ -1637,9 +1733,10 @@ const Home: FC = ({}) => {
                           )}
                           <TableAvatar name={row.name} icon={row.type === "docs" ? row.icon : row.kit?.icon} />
                           <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
+                          {row.isLoading && <Spinner size="small" />}
                         </div>
                         <div className="flex items-center gap-single shrink-0">
-                          {row.level === 0 && row.type !== "docs" && (
+                          {row.level === 0 && row.type !== "docs" && row.type !== "loading" && (
                             <Action
                               level="base"
                               onClick={(e) => {

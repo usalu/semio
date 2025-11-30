@@ -1850,19 +1850,8 @@ class FileStore {
   private cache?: SemioFile;
   private cacheHash?: string;
 
-  constructor(yFile: YFile, file: SemioFile) {
+  constructor(yFile: YFile) {
     this.yFile = yFile;
-
-    this.guid = file.guid;
-    this.name = file.name;
-    this.folder = file.folder?.guid;
-    this.remote = file.remote;
-    this.size = file.size;
-    this.fileHash = file.hash;
-    this.createdAt = file.createdAt;
-    this.updatedAt = file.updatedAt;
-    this.createdBy = file.createdBy;
-    this.updatedBy = file.updatedBy;
   }
 
   get guid(): string {
@@ -2006,16 +1995,8 @@ class FolderStore {
   private cache?: Folder;
   private cacheHash?: string;
 
-  constructor(yFolder: YFolder, folder: Folder) {
+  constructor(yFolder: YFolder) {
     this.yFolder = yFolder;
-    this.guid = folder.guid;
-    this.name = folder.name;
-    this.parent = folder.parent?.guid;
-    this.description = folder.description;
-    this.createdAt = folder.createdAt;
-    this.updatedAt = folder.updatedAt;
-    this.createdBy = folder.createdBy;
-    this.updatedBy = folder.updatedBy;
   }
 
   get guid(): string {
@@ -5198,6 +5179,7 @@ export class KitStore {
   private readonly regularFiles: Map<Guid, string>;
   private cache?: Kit;
   private cacheHash?: string;
+  private dirty: boolean = true;
 
   constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders) {
     this.parent = parent;
@@ -5400,8 +5382,8 @@ export class KitStore {
   createType(type: Type): void {
     if (this.hasType(type.guid)) throw new Error(`Type (${type.name}) already exists.`);
     const yType = new Y.Map<YTypeVal>();
-    const yTypeStore = new TypeStore(this, yType, type);
     this.yTypes.push([yType]);
+    const yTypeStore = new TypeStore(this, yType, type);
     this.types.set(type.guid, yTypeStore);
   }
 
@@ -5432,8 +5414,18 @@ export class KitStore {
   createFile(file: SemioFile): void {
     if (this.hasFile(file.guid)) throw new Error(`File (${file.name}) already exists.`);
     const yFile = new Y.Map() as YFile;
+    yFile.set("guid", file.guid);
+    yFile.set("name", file.name);
+    if (file.folder?.guid) yFile.set("folder", file.folder.guid);
+    if (file.remote) yFile.set("remote", file.remote);
+    if (file.size !== undefined) yFile.set("size", file.size);
+    if (file.hash) yFile.set("hash", file.hash);
+    if (file.createdAt) yFile.set("createdAt", file.createdAt instanceof Date ? file.createdAt.toISOString() : file.createdAt);
+    if (file.updatedAt) yFile.set("updatedAt", file.updatedAt instanceof Date ? file.updatedAt.toISOString() : file.updatedAt);
+    if (file.createdBy) yFile.set("createdBy", file.createdBy);
+    if (file.updatedBy) yFile.set("updatedBy", file.updatedBy);
     this.yFiles.push([yFile]);
-    const yFileStore = new FileStore(yFile, file);
+    const yFileStore = new FileStore(yFile);
     this.files.set(file.guid, yFileStore);
   }
 
@@ -5448,8 +5440,16 @@ export class KitStore {
   createFolder(folder: Folder): void {
     if (this.hasFolder(folder.guid)) throw new Error(`Folder (${folder.name}) already exists.`);
     const yFolder = new Y.Map() as YFolder;
+    yFolder.set("guid", folder.guid);
+    yFolder.set("name", folder.name);
+    if (folder.parent?.guid) yFolder.set("parent", folder.parent.guid);
+    if (folder.description) yFolder.set("description", folder.description);
+    if (folder.createdAt) yFolder.set("createdAt", folder.createdAt instanceof Date ? folder.createdAt.toISOString() : folder.createdAt);
+    if (folder.updatedAt) yFolder.set("updatedAt", folder.updatedAt instanceof Date ? folder.updatedAt.toISOString() : folder.updatedAt);
+    if (folder.createdBy) yFolder.set("createdBy", folder.createdBy);
+    if (folder.updatedBy) yFolder.set("updatedBy", folder.updatedBy);
     this.yFolders.push([yFolder]);
-    const yFolderStore = new FolderStore(yFolder, folder);
+    const yFolderStore = new FolderStore(yFolder);
     this.folders.set(folder.guid, yFolderStore);
   }
 
@@ -5605,7 +5605,15 @@ export class KitStore {
     return JSON.stringify(kit);
   }
 
+  markDirty = () => {
+    this.dirty = true;
+  };
+
   snapshot = (): Kit => {
+    if (!this.dirty && this.cache) {
+      return this.cache;
+    }
+
     const currentData = {
       guid: this.guid,
       name: this.name,
@@ -5633,6 +5641,7 @@ export class KitStore {
       this.cache = currentData;
       this.cacheHash = currentHash;
     }
+    this.dirty = false;
     return this.cache;
   };
 
@@ -5815,6 +5824,7 @@ export class KitStore {
         }
       }
       this.yKit.set("updatedAt", new Date().toISOString());
+      this.dirty = true;
       this.cache = undefined;
       this.cacheHash = undefined;
     });
@@ -6152,6 +6162,18 @@ export const kitCommands = {
     const files: File[] = blob ? [new File([blob], file.name)] : [];
     return {
       diff: { files: { added: [file] } },
+      files,
+    };
+  },
+  "semio.kit.addFiles": (context: KitCommandContext, foldersToAdd: Folder[], filesToAdd: { file: SemioFile; blob?: Blob }[]): KitCommandResult => {
+    const semioFiles: SemioFile[] = [];
+    const files: File[] = [];
+    for (const { file, blob } of filesToAdd) {
+      semioFiles.push(file);
+      if (blob) files.push(new File([blob], file.name));
+    }
+    return {
+      diff: { folders: { added: foldersToAdd }, files: { added: semioFiles } },
       files,
     };
   },

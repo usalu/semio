@@ -218,7 +218,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER remove code that is commented out.
 - NEVER add comments to the code. Especially not to communicate to the user.
 - NEVER ask to run a command where you are not using the output. All dev servers, debugging and testing processes are running.
-- NEVER run modifying `git` commands such as (`git checkout`, `git branch`, …). Only read-only `git` commands are allowed. If you messed up, ALWAYS fix the file.
+- NEVER run modifying `git` commands such as (`git checkout`, `git branch`, `git stash`, …) because there are other are ALWAYS agents/processes/devs working on the same set of files at the same time. Only read-only `git` commands are allowed. If you messed up, ALWAYS fix the file.
 - NEVER create tests unless you are explicitly asked to.
 - ALWAYS use inline syntax if possible.
 - NEVER add two statements into the same line.

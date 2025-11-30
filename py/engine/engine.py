@@ -43,6 +43,7 @@ from __future__ import annotations
 # region Imports
 import abc
 import argparse
+import dataclasses
 import datetime
 import difflib
 import enum
@@ -65,41 +66,54 @@ import dotenv
 import fastapi
 import fastapi.openapi
 import graphene
+
 if sys.version_info >= (3, 13):
     import graphene_pydantic.util
+
     def _patched_evaluate_forward_ref(type_: typing.ForwardRef, globalns: typing.Any, localns: typing.Any) -> typing.Any:
         return typing.cast(typing.Any, type_)._evaluate(globalns, localns, recursive_guard=frozenset())
+
     graphene_pydantic.util.evaluate_forward_ref = _patched_evaluate_forward_ref
     import graphene_pydantic.converters
+
     graphene_pydantic.converters.evaluate_forward_ref = _patched_evaluate_forward_ref
     import sqlmodel._compat
+
     _original_get_relationship_to = sqlmodel._compat.get_relationship_to
+
     def _patched_get_relationship_to(name: str, rel_info: typing.Any, annotation: typing.Any) -> typing.Any:
         if isinstance(annotation, str):
             import re
+
             def strip_quotes(s: str) -> str:
                 if (s.startswith("'") and s.endswith("'")) or (s.startswith('"') and s.endswith('"')):
                     return s[1:-1]
                 return s
+
             annotation = strip_quotes(annotation)
             list_match = re.match(r"list\[(.+)\]", annotation)
             if list_match:
                 annotation = strip_quotes(list_match.group(1))
             return annotation
         return _original_get_relationship_to(name=name, rel_info=rel_info, annotation=annotation)
+
     sqlmodel._compat.get_relationship_to = _patched_get_relationship_to
     import sqlmodel.main
+
     sqlmodel.main.get_relationship_to = _patched_get_relationship_to
 import graphene_pydantic
 import graphene_sqlalchemy
 import jinja2
 import lark
 import loguru
+import networkx
+import numpy
 import openai
 import pydantic
 import PySide6.QtCore
 import PySide6.QtGui
 import PySide6.QtWidgets
+import pytransform3d.rotations
 import requests
 import sqlalchemy
 import sqlalchemy.exc
@@ -688,6 +702,17 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
 
     def idMembers(self) -> RecursiveAnyList:
         return self.name
+
+    @classmethod
+    def parse(cls, input: str | dict | typing.Any | None) -> "Attribute":
+        if input is None:
+            return cls()
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
+        return cls(
+            name=obj.get("name", obj.get("key", "")),
+            value=obj.get("value", ""),
+            definition=obj.get("definition", ""),
+        )
 
 
 class AttributeInputNode(InputNode):
@@ -2085,8 +2110,15 @@ class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionFi
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = PortProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        interface_obj = obj.get("interface")
+        interface_guid = interface_obj.get("guid") if isinstance(interface_obj, dict) else interface_obj if isinstance(interface_obj, str) else None
+        entity = cls(
+            id_=obj.get("id_", obj.get("name", "")),
+            description=obj.get("description", ""),
+            is_mandatory=obj.get("mandatory", False),
+            interface=interface_guid,
+            t=obj.get("t", 0.0),
+        )
         point = Point.parse(obj["point"])
         direction = Vector.parse(obj["direction"])
         entity.point = point
@@ -2096,7 +2128,9 @@ class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionFi
         except KeyError:
             pass
         try:
-            entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
+            attrs = [Attribute.parse(attr) for attr in obj.get("attributes", [])]
+            if attrs:
+                entity.attributes = attrs
         except KeyError:
             pass
         return entity
@@ -2346,11 +2380,28 @@ class Type(
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = TypeProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        parent_obj = obj.get("parent")
+        parent_guid = parent_obj.get("guid") if isinstance(parent_obj, dict) else parent_obj if isinstance(parent_obj, str) else None
+        folder_obj = obj.get("folder")
+        folder_guid = folder_obj.get("guid") if isinstance(folder_obj, dict) else folder_obj if isinstance(folder_obj, str) else None
+        entity = cls(
+            name=obj.get("name", ""),
+            variant=obj.get("variant", ""),
+            description=obj.get("description", ""),
+            icon=obj.get("icon", ""),
+            image=obj.get("image", ""),
+            isAbstract=obj.get("isAbstract", False),
+            isVirtual=obj.get("isVirtual", False),
+            stock=obj.get("stock"),
+            unit=obj.get("unit", ""),
+            parent=parent_guid,
+            folder=folder_guid,
+        )
         try:
-            entity.location = props.location
-        except KeyError:
+            location_obj = obj.get("location")
+            if location_obj:
+                entity.location = Location.parse(location_obj) if isinstance(location_obj, dict) else location_obj
+        except (KeyError, AttributeError):
             pass
         try:
             models = [Model.parse(r) for r in obj["models"]]
@@ -3593,8 +3644,19 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = KitProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        uri = obj.get("uri", f"memory://{obj.get('name', 'unnamed')}")
+        entity = cls(
+            name=obj.get("name", ""),
+            version=obj.get("version", ""),
+            description=obj.get("description", ""),
+            icon=obj.get("icon", ""),
+            image=obj.get("image", ""),
+            remoteUrl=obj.get("remoteUrl", ""),
+            homepageUrl=obj.get("homepageUrl", ""),
+            license=obj.get("license", ""),
+            preview=obj.get("preview", ""),
+            uri=uri,
+        )
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
@@ -3652,11 +3714,10 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
         return self.id()
 
 
-
-
 # region Moved Graphene Nodes
 # These classes were moved here to ensure all SQLModel table classes are defined
 # before graphene-sqlalchemy triggers mapper configuration.
+
 
 class AttributeNode(TableEntityNode):
     class Meta:
@@ -3743,7 +3804,6 @@ class DesignNode(TableEntityNode):
         model = Design
 
 
-
 # endregion Moved Graphene Nodes
 class KitNotFound(NotFound):
     def __init__(self, uri: str) -> None:
@@ -3825,6 +3885,704 @@ class KitNode(TableEntityNode):
 
 
 # endregion Kit
+
+# region Validation
+
+
+class ValidationSeverity(enum.Enum):
+    ERROR = "error"
+    WARNING = "warning"
+
+
+@dataclasses.dataclass
+class ValidationIssue:
+    ruleId: str
+    severity: ValidationSeverity
+    message: str
+    entityKind: str
+    entityGuid: str
+
+
+@dataclasses.dataclass
+class ValidationResult:
+    issues: list[ValidationIssue]
+
+    def hasErrors(self) -> bool:
+        return any(i.severity == ValidationSeverity.ERROR for i in self.issues)
+
+
+def validateGuidUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    seen: dict[str, str] = {}
+
+    def check(entityKind: str, entityGuid: str) -> None:
+        if entityGuid in seen:
+            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}".', entityKind=entityKind, entityGuid=entityGuid))
+        else:
+            seen[entityGuid] = entityKind
+
+    check("Kit", kit.guid)
+    for t in kit.types:
+        check("Type", t.guid)
+    for d in kit.designs:
+        check("Design", d.guid)
+        for p in d.pieces:
+            check("Piece", p.guid)
+        for c in d.connections:
+            check("Connection", c.guid)
+        for s in d.stats:
+            check("Stat", s.guid)
+    for q in kit.qualities:
+        check("Quality", q.guid)
+    for f in kit.files_:
+        check("File", f.guid)
+    for fo in kit.folders_:
+        check("Folder", fo.guid)
+    return issues
+
+
+def validateTypeNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    byParent: dict[str | None, list[Type]] = {}
+    for t in kit.types:
+        parentGuid = t.parent.guid if t.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(t)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Type]] = {}
+        for t in siblings:
+            if t.name not in names:
+                names[t.name] = []
+            names[t.name].append(t)
+        for name, group in names.items():
+            if len(group) > 1:
+                for t in group[1:]:
+                    issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.guid))
+    return issues
+
+
+def validateDesignNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    byParent: dict[str | None, list[Design]] = {}
+    for d in kit.designs:
+        parentGuid = d.parent.guid if d.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(d)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Design]] = {}
+        for d in siblings:
+            if d.name not in names:
+                names[d.name] = []
+            names[d.name].append(d)
+        for name, group in names.items():
+            if len(group) > 1:
+                for d in group[1:]:
+                    issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.guid))
+    return issues
+
+
+def validatePieceNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for design in kit.designs:
+        names: dict[str, list[Piece]] = {}
+        for p in design.pieces:
+            if p.name_ and p.name_ not in names:
+                names[p.name_] = []
+            if p.name_:
+                names[p.name_].append(p)
+        for name, group in names.items():
+            if len(group) > 1:
+                for p in group[1:]:
+                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" in design.', entityKind="Piece", entityGuid=p.guid))
+    return issues
+
+
+def validatePortNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for t in kit.types:
+        names: dict[str, list[Port]] = {}
+        for port in t.ports:
+            if port.name_ and port.name_ not in names:
+                names[port.name_] = []
+            if port.name_:
+                names[port.name_].append(port)
+        for name, group in names.items():
+            if len(group) > 1:
+                for port in group[1:]:
+                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" in type.', entityKind="Port", entityGuid=port.guid))
+    return issues
+
+
+def validateModelNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for t in kit.types:
+        names: dict[str, list[Model]] = {}
+        for model in t.models:
+            if model.name and model.name not in names:
+                names[model.name] = []
+            if model.name:
+                names[model.name].append(model)
+        for name, group in names.items():
+            if len(group) > 1:
+                for model in group[1:]:
+                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" in type.', entityKind="Model", entityGuid=model.guid))
+    return issues
+
+
+def validateQualityNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    names: dict[str, list[Quality]] = {}
+    for q in kit.qualities:
+        if q.name not in names:
+            names[q.name] = []
+        names[q.name].append(q)
+    for name, group in names.items():
+        if len(group) > 1:
+            for q in group[1:]:
+                issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.guid))
+    return issues
+
+
+def validateFileNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    names: dict[str, list[File]] = {}
+    for f in kit.files_:
+        if f.name not in names:
+            names[f.name] = []
+        names[f.name].append(f)
+    for name, group in names.items():
+        if len(group) > 1:
+            for f in group[1:]:
+                issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.guid))
+    return issues
+
+
+def validateFolderNameUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    byParent: dict[str | None, list[Folder]] = {}
+    for fo in kit.folders_:
+        parentGuid = fo.parent if fo.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(fo)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Folder]] = {}
+        for fo in siblings:
+            if fo.name not in names:
+                names[fo.name] = []
+            names[fo.name].append(fo)
+        for name, group in names.items():
+            if len(group) > 1:
+                for fo in group[1:]:
+                    issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.guid))
+    return issues
+
+
+def validateLayerPathUniqueness(kit: Kit) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for design in kit.designs:
+        paths: dict[str, list[Layer]] = {}
+        for layer in design.layers:
+            if layer.path not in paths:
+                paths[layer.path] = []
+            paths[layer.path].append(layer)
+        for path, group in paths.items():
+            if len(group) > 1:
+                for layer in group[1:]:
+                    issues.append(ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" in design.', entityKind="Layer", entityGuid=layer.guid))
+    return issues
+
+
+def validateKit(kit: Kit) -> ValidationResult:
+    issues: list[ValidationIssue] = []
+    issues.extend(validateGuidUniqueness(kit))
+    issues.extend(validateTypeNameUniqueness(kit))
+    issues.extend(validateDesignNameUniqueness(kit))
+    issues.extend(validatePieceNameUniqueness(kit))
+    issues.extend(validatePortNameUniqueness(kit))
+    issues.extend(validateModelNameUniqueness(kit))
+    issues.extend(validateQualityNameUniqueness(kit))
+    issues.extend(validateFileNameUniqueness(kit))
+    issues.extend(validateFolderNameUniqueness(kit))
+    issues.extend(validateLayerPathUniqueness(kit))
+    return ValidationResult(issues=issues)
+
+
+# region Dict-based Validation
+
+
+def validateKitDict(kit: dict) -> ValidationResult:
+    issues: list[ValidationIssue] = []
+    seen: dict[str, str] = {}
+
+    def checkGuid(entityKind: str, entityGuid: str) -> None:
+        if entityGuid in seen:
+            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}".', entityKind=entityKind, entityGuid=entityGuid))
+        else:
+            seen[entityGuid] = entityKind
+
+    checkGuid("Kit", kit.get("guid", ""))
+    for t in kit.get("types", []):
+        checkGuid("Type", t.get("guid", ""))
+        for port in t.get("ports", []):
+            checkGuid("Port", port.get("guid", ""))
+        for model in t.get("models", []):
+            checkGuid("Model", model.get("guid", ""))
+    for d in kit.get("designs", []):
+        checkGuid("Design", d.get("guid", ""))
+        for p in d.get("pieces", []):
+            checkGuid("Piece", p.get("guid", ""))
+        for c in d.get("connections", []):
+            checkGuid("Connection", c.get("guid", ""))
+        for s in d.get("stats", []):
+            checkGuid("Stat", s.get("guid", ""))
+    for q in kit.get("qualities", []):
+        checkGuid("Quality", q.get("guid", ""))
+    for i in kit.get("interfaces", []):
+        checkGuid("Interface", i.get("guid", ""))
+    for f in kit.get("files", []):
+        checkGuid("File", f.get("guid", ""))
+    for fo in kit.get("folders", []):
+        checkGuid("Folder", fo.get("guid", ""))
+    byParent: dict[str | None, list[dict]] = {}
+    for t in kit.get("types", []):
+        parentGuid = t.get("parent", {}).get("guid") if t.get("parent") else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(t)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[dict]] = {}
+        for t in siblings:
+            name = t.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(t)
+        for name, group in names.items():
+            if len(group) > 1:
+                for t in group[1:]:
+                    issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.get("guid", "")))
+    byParent = {}
+    for d in kit.get("designs", []):
+        parentGuid = d.get("parent", {}).get("guid") if d.get("parent") else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(d)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[dict]] = {}
+        for d in siblings:
+            name = d.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(d)
+        for name, group in names.items():
+            if len(group) > 1:
+                for d in group[1:]:
+                    issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", "")))
+    for design in kit.get("designs", []):
+        names = {}
+        for p in design.get("pieces", []):
+            name = p.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(p)
+        for name, group in names.items():
+            if len(group) > 1:
+                for p in group[1:]:
+                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" in design.', entityKind="Piece", entityGuid=p.get("guid", "")))
+    for t in kit.get("types", []):
+        names = {}
+        for port in t.get("ports", []):
+            name = port.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(port)
+        for name, group in names.items():
+            if len(group) > 1:
+                for port in group[1:]:
+                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" in type.', entityKind="Port", entityGuid=port.get("guid", "")))
+    for t in kit.get("types", []):
+        names = {}
+        for model in t.get("models", []):
+            name = model.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(model)
+        for name, group in names.items():
+            if len(group) > 1:
+                for model in group[1:]:
+                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" in type.', entityKind="Model", entityGuid=model.get("guid", "")))
+    names = {}
+    for q in kit.get("qualities", []):
+        name = q.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(q)
+    for name, group in names.items():
+        if len(group) > 1:
+            for q in group[1:]:
+                issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.get("guid", "")))
+    names = {}
+    for i in kit.get("interfaces", []):
+        name = i.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(i)
+    for name, group in names.items():
+        if len(group) > 1:
+            for i in group[1:]:
+                issues.append(ValidationIssue(ruleId="interface-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate interface name "{name}".', entityKind="Interface", entityGuid=i.get("guid", "")))
+    names = {}
+    for f in kit.get("files", []):
+        name = f.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(f)
+    for name, group in names.items():
+        if len(group) > 1:
+            for f in group[1:]:
+                issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.get("guid", "")))
+    byParent = {}
+    for fo in kit.get("folders", []):
+        parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(fo)
+    for parentGuid, siblings in byParent.items():
+        names = {}
+        for fo in siblings:
+            name = fo.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(fo)
+        for name, group in names.items():
+            if len(group) > 1:
+                for fo in group[1:]:
+                    issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", "")))
+    for design in kit.get("designs", []):
+        paths: dict[str, list[dict]] = {}
+        for layer in design.get("layers", []):
+            path = layer.get("path", "")
+            if path not in paths:
+                paths[path] = []
+            paths[path].append(layer)
+        for path, group in paths.items():
+            if len(group) > 1:
+                for layer in group[1:]:
+                    issues.append(ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" in design.', entityKind="Layer", entityGuid=layer.get("guid", "")))
+    return ValidationResult(issues=issues)
+
+
+# endregion Dict-based Validation
+
+# endregion Validation
+
+# region Graph Operations
+
+
+def buildPieceGraph(design: Design | dict) -> networkx.Graph:
+    G = networkx.Graph()
+    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
+    connections = design.get("connections", []) if isinstance(design, dict) else design.connections
+    for piece in pieces:
+        pieceGuid = piece["guid"] if isinstance(piece, dict) else piece.guid
+        G.add_node(pieceGuid, piece=piece)
+    for connection in connections:
+        if isinstance(connection, dict):
+            sourceId = connection["connected"]["piece"]["guid"]
+            targetId = connection["connecting"]["piece"]["guid"]
+        else:
+            sourceId = connection.connectedPiece.guid
+            targetId = connection.connectingPiece.guid
+        if G.has_node(sourceId) and G.has_node(targetId):
+            G.add_edge(sourceId, targetId, connection=connection)
+    return G
+
+
+def findFixedPieces(design: Design | dict) -> list[str]:
+    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
+    result = []
+    for p in pieces:
+        if isinstance(p, dict):
+            if p.get("plane") is not None:
+                result.append(p["guid"])
+        else:
+            if p.plane is not None:
+                result.append(p.guid)
+    return result
+
+
+def getConnectedComponents(design: Design | dict) -> list[set[str]]:
+    G = buildPieceGraph(design)
+    return [set(c) for c in networkx.connected_components(G)]
+
+
+def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
+    G = buildPieceGraph(design)
+    if rootGuid not in G:
+        return {}
+    return networkx.single_source_shortest_path_length(G, rootGuid)
+
+
+# endregion Graph Operations
+
+# region FlattenDesign
+
+
+def getTypeByGuid(kit: dict, guid: str) -> dict | None:
+    for t in kit.get("types", []):
+        if t.get("guid") == guid:
+            return t
+    return None
+
+
+def getPortFromType(kit: dict, typeData: dict | None, portGuid: str | None) -> dict | None:
+    if typeData is None:
+        return None
+    if portGuid is None:
+        ports = typeData.get("ports", [])
+        if ports:
+            return ports[0]
+        parent = typeData.get("parent")
+        if parent:
+            parentType = getTypeByGuid(kit, parent.get("guid", ""))
+            return getPortFromType(kit, parentType, portGuid)
+        return None
+    for port in typeData.get("ports", []):
+        if port.get("guid") == portGuid:
+            return port
+    parent = typeData.get("parent")
+    if parent:
+        parentType = getTypeByGuid(kit, parent.get("guid", ""))
+        return getPortFromType(kit, parentType, portGuid)
+    ports = typeData.get("ports", [])
+    if ports:
+        return ports[0]
+    return None
+
+
+def computeChildPlaneDict(parentPlane: dict, parentPort: dict, childPort: dict, connection: dict) -> dict:
+    gap = connection.get("gap", 0)
+    shift = connection.get("shift", 0)
+    rise = connection.get("rise", 0)
+    rotation = connection.get("rotation", 0)
+    turn = connection.get("turn", 0)
+    tilt = connection.get("tilt", 0)
+    pOrigin = numpy.array([parentPlane["origin"]["x"], parentPlane["origin"]["y"], parentPlane["origin"]["z"]])
+    pX = numpy.array([parentPlane["xAxis"]["x"], parentPlane["xAxis"]["y"], parentPlane["xAxis"]["z"]])
+    pY = numpy.array([parentPlane["yAxis"]["x"], parentPlane["yAxis"]["y"], parentPlane["yAxis"]["z"]])
+    pZ = numpy.cross(pX, pY)
+    parentMatrix = numpy.eye(4)
+    parentMatrix[:3, 0] = pX
+    parentMatrix[:3, 1] = pY
+    parentMatrix[:3, 2] = pZ
+    parentMatrix[:3, 3] = pOrigin
+    ppPoint = numpy.array([parentPort["point"]["x"], parentPort["point"]["y"], parentPort["point"]["z"]])
+    ppDir = numpy.array([parentPort["direction"]["x"], parentPort["direction"]["y"], parentPort["direction"]["z"]])
+    cpPoint = numpy.array([childPort["point"]["x"], childPort["point"]["y"], childPort["point"]["z"]])
+    cpDir = numpy.array([childPort["direction"]["x"], childPort["direction"]["y"], childPort["direction"]["z"]])
+    ppWorld = parentMatrix[:3, :3] @ ppPoint + parentMatrix[:3, 3]
+    ppDirWorld = parentMatrix[:3, :3] @ ppDir
+    ppDirWorld = normalizeVector(ppDirWorld)
+    translation = ppWorld + gap * ppDirWorld + shift * numpy.cross(ppDirWorld, pZ) + rise * pZ
+    targetDir = -ppDirWorld
+    cpDirNormalized = normalizeVector(cpDir)
+    if numpy.allclose(cpDirNormalized, targetDir, atol=1e-6):
+        baseRotation = numpy.eye(3)
+    elif numpy.allclose(cpDirNormalized, -targetDir, atol=1e-6):
+        axis = numpy.array([1.0, 0.0, 0.0])
+        if numpy.allclose(numpy.abs(cpDirNormalized), axis, atol=1e-6):
+            axis = numpy.array([0.0, 1.0, 0.0])
+        baseRotation = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [numpy.pi]]))
+    else:
+        axis = numpy.cross(cpDirNormalized, targetDir)
+        axis = normalizeVector(axis)
+        angle = numpy.arccos(numpy.clip(numpy.dot(cpDirNormalized, targetDir), -1.0, 1.0))
+        baseRotation = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [angle]]))
+    rotRad = numpy.deg2rad(rotation)
+    rotationMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([targetDir, [rotRad]]))
+    turnRad = numpy.deg2rad(turn)
+    pZWorld = normalizeVector(pZ)
+    turnMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([pZWorld, [turnRad]]))
+    tiltRad = numpy.deg2rad(tilt)
+    pXWorld = normalizeVector(parentMatrix[:3, :3] @ numpy.array([1, 0, 0]))
+    tiltMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([pXWorld, [tiltRad]]))
+    combinedRotation = tiltMatrix @ turnMatrix @ rotationMatrix @ baseRotation
+    childOrigin = translation - combinedRotation @ cpPoint
+    childX = combinedRotation @ numpy.array([1, 0, 0])
+    childY = combinedRotation @ numpy.array([0, 1, 0])
+    return {
+        "origin": {"x": float(childOrigin[0]), "y": float(childOrigin[1]), "z": float(childOrigin[2])},
+        "xAxis": {"x": float(childX[0]), "y": float(childX[1]), "z": float(childX[2])},
+        "yAxis": {"x": float(childY[0]), "y": float(childY[1]), "z": float(childY[2])},
+    }
+
+
+def flattenDesignDict(kit: dict, designGuid: str) -> dict:
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        raise ValueError(f"Design {designGuid} not found")
+    pieces = design.get("pieces", [])
+    connections = design.get("connections", [])
+    if not pieces:
+        return {}
+    pieceMap = {p["guid"]: dict(p) for p in pieces}
+    piecePlanes: dict[str, dict] = {}
+    G = buildPieceGraph(design)
+    components = list(networkx.connected_components(G))
+    for component in components:
+        rootNode = None
+        for nodeId in component:
+            piece = pieceMap.get(nodeId)
+            if piece and piece.get("plane") is not None:
+                rootNode = nodeId
+                break
+        if rootNode is None and component:
+            rootNode = next(iter(component))
+        if rootNode is None:
+            continue
+        rootPiece = pieceMap[rootNode]
+        if rootPiece.get("plane"):
+            piecePlanes[rootNode] = rootPiece["plane"]
+        else:
+            piecePlanes[rootNode] = {"origin": {"x": 0, "y": 0, "z": 0}, "xAxis": {"x": 1, "y": 0, "z": 0}, "yAxis": {"x": 0, "y": 1, "z": 0}}
+        for source, target in networkx.bfs_edges(G, rootNode):
+            if target in piecePlanes:
+                continue
+            parentId = source
+            childId = target
+            parentPlane = piecePlanes.get(parentId)
+            if parentPlane is None:
+                continue
+            edgeData = G.get_edge_data(parentId, childId)
+            connection = edgeData.get("connection") if edgeData else None
+            if connection is None:
+                continue
+            parentPiece = pieceMap[parentId]
+            childPiece = pieceMap[childId]
+            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
+            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
+            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
+            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
+            parentPortGuid = parentSide.get("port", {}).get("guid") if parentSide.get("port") else None
+            childPortGuid = childSide.get("port", {}).get("guid") if childSide.get("port") else None
+            parentPort = getPortFromType(kit, parentType, parentPortGuid)
+            childPort = getPortFromType(kit, childType, childPortGuid)
+            if parentPort is None or childPort is None:
+                continue
+            childPlane = computeChildPlaneDict(parentPlane, parentPort, childPort, connection)
+            piecePlanes[childId] = childPlane
+    updatedPieces = []
+    for piece in pieces:
+        newPiece = dict(piece)
+        if piece["guid"] in piecePlanes:
+            newPiece["plane"] = piecePlanes[piece["guid"]]
+        if newPiece.get("center") is None:
+            newPiece["center"] = {"u": 0, "v": 0}
+        updatedPieces.append(newPiece)
+    return {"pieces": {"updated": [{"id": p["guid"], "diff": {"plane": p.get("plane"), "center": p.get("center")}} for p in updatedPieces if p["guid"] in piecePlanes]}}
+
+
+# endregion FlattenDesign
+
+# region Spatial Math
+
+
+def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
+    length = numpy.linalg.norm(v)
+    if length < 1e-10:
+        return v
+    return v / length
+
+
+def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.ndarray | None = None) -> Plane:
+    if origin is None:
+        origin = numpy.array([0.0, 0.0, 0.0])
+    yAxis = normalizeVector(yAxis)
+    worldY = numpy.array([0.0, 1.0, 0.0])
+    if numpy.allclose(yAxis, worldY, atol=1e-6):
+        rotationToY = numpy.eye(3)
+    elif numpy.allclose(yAxis, -worldY, atol=1e-6):
+        rotationToY = pytransform3d.rotations.matrix_from_axis_angle([1, 0, 0, numpy.pi])
+    else:
+        axis = numpy.cross(worldY, yAxis)
+        axis = normalizeVector(axis)
+        angle = numpy.arccos(numpy.clip(numpy.dot(worldY, yAxis), -1.0, 1.0))
+        rotationToY = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [angle]]))
+    phiRadians = numpy.deg2rad(phiDegrees)
+    rotationAroundY = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([yAxis, [phiRadians]]))
+    worldX = numpy.array([1.0, 0.0, 0.0])
+    xAxis = rotationAroundY @ rotationToY @ worldX
+    xAxis = normalizeVector(xAxis)
+    plane = Plane()
+    plane.origin = Point(x=float(origin[0]), y=float(origin[1]), z=float(origin[2]))
+    plane.xAxis = Vector(x=float(xAxis[0]), y=float(xAxis[1]), z=float(xAxis[2]))
+    plane.yAxis = Vector(x=float(yAxis[0]), y=float(yAxis[1]), z=float(yAxis[2]))
+    return plane
+
+
+def computeChildPlane(parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection) -> Plane:
+    gap = connection.gap or 0
+    shift = connection.shift or 0
+    rise = connection.rise or 0
+    rotation = connection.rotation or 0
+    turn = connection.turn or 0
+    tilt = connection.tilt or 0
+    pOrigin = numpy.array([parentPlane.origin.x, parentPlane.origin.y, parentPlane.origin.z])
+    pX = numpy.array([parentPlane.xAxis.x, parentPlane.xAxis.y, parentPlane.xAxis.z])
+    pY = numpy.array([parentPlane.yAxis.x, parentPlane.yAxis.y, parentPlane.yAxis.z])
+    pZ = numpy.cross(pX, pY)
+    parentMatrix = numpy.eye(4)
+    parentMatrix[:3, 0] = pX
+    parentMatrix[:3, 1] = pY
+    parentMatrix[:3, 2] = pZ
+    parentMatrix[:3, 3] = pOrigin
+    ppPoint = numpy.array([parentPort.point.x, parentPort.point.y, parentPort.point.z])
+    ppDir = numpy.array([parentPort.direction.x, parentPort.direction.y, parentPort.direction.z])
+    cpPoint = numpy.array([childPort.point.x, childPort.point.y, childPort.point.z])
+    cpDir = numpy.array([childPort.direction.x, childPort.direction.y, childPort.direction.z])
+    ppWorld = parentMatrix[:3, :3] @ ppPoint + parentMatrix[:3, 3]
+    ppDirWorld = parentMatrix[:3, :3] @ ppDir
+    ppDirWorld = normalizeVector(ppDirWorld)
+    translation = ppWorld + gap * ppDirWorld + shift * numpy.cross(ppDirWorld, pZ) + rise * pZ
+    targetDir = -ppDirWorld
+    cpDirNormalized = normalizeVector(cpDir)
+    if numpy.allclose(cpDirNormalized, targetDir, atol=1e-6):
+        baseRotation = numpy.eye(3)
+    elif numpy.allclose(cpDirNormalized, -targetDir, atol=1e-6):
+        axis = numpy.array([1.0, 0.0, 0.0])
+        if numpy.allclose(numpy.abs(cpDirNormalized), axis, atol=1e-6):
+            axis = numpy.array([0.0, 1.0, 0.0])
+        baseRotation = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [numpy.pi]]))
+    else:
+        axis = numpy.cross(cpDirNormalized, targetDir)
+        axis = normalizeVector(axis)
+        angle = numpy.arccos(numpy.clip(numpy.dot(cpDirNormalized, targetDir), -1.0, 1.0))
+        baseRotation = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [angle]]))
+    rotRad = numpy.deg2rad(rotation)
+    rotationMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([targetDir, [rotRad]]))
+    turnRad = numpy.deg2rad(turn)
+    pZWorld = normalizeVector(pZ)
+    turnMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([pZWorld, [turnRad]]))
+    tiltRad = numpy.deg2rad(tilt)
+    pXWorld = normalizeVector(parentMatrix[:3, :3] @ numpy.array([1, 0, 0]))
+    tiltMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([pXWorld, [tiltRad]]))
+    combinedRotation = tiltMatrix @ turnMatrix @ rotationMatrix @ baseRotation
+    childOrigin = translation - combinedRotation @ cpPoint
+    childX = combinedRotation @ numpy.array([1, 0, 0])
+    childY = combinedRotation @ numpy.array([0, 1, 0])
+    plane = Plane()
+    plane.origin = Point(x=float(childOrigin[0]), y=float(childOrigin[1]), z=float(childOrigin[2]))
+    plane.xAxis = Vector(x=float(childX[0]), y=float(childX[1]), z=float(childX[2]))
+    plane.yAxis = Vector(x=float(childY[0]), y=float(childY[1]), z=float(childY[2]))
+    return plane
+
+
+# endregion Spatial Math
 
 # region Store
 

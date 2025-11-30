@@ -875,6 +875,74 @@ export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, c
 
 // #endregion Card
 
+// #region Spinner
+
+export interface SpinnerProps {
+  size?: "small" | "medium" | "large";
+  className?: string;
+}
+
+export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "" }) => {
+  const sizeClass = size === "small" ? "size-small" : size === "large" ? "size-large" : "size-medium";
+  return (
+    <svg className={`animate-spin ${sizeClass} ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
+};
+
+// #endregion Spinner
+
+// #region NotFound
+
+export interface NotFoundProps {
+  title: string;
+  description?: string;
+  parentPath?: string;
+  parentLabel?: string;
+  icon?: React.ReactNode;
+}
+
+export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
+      <div className="flex items-center justify-center size-huge text-muted-foreground">{icon || <AlertCircleIcon className="size-huge" />}</div>
+      <h1 className="text-xl font-semibold">{title}</h1>
+      {description && <p className="text-muted-foreground max-w-md">{description}</p>}
+      {parentPath && (
+        <button onClick={() => navigate(parentPath)} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
+          <ChevronLeftIcon className="size-small" />
+          <span>{parentLabel || "Go back"}</span>
+        </button>
+      )}
+    </div>
+  );
+};
+
+// #endregion NotFound
+
+// #region LoadingRow
+
+export interface LoadingRowProps {
+  name: string;
+  icon?: React.ReactNode;
+  className?: string;
+}
+
+export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = "" }) => {
+  return (
+    <div className={`flex items-center gap-single p-single opacity-50 pointer-events-none ${className}`}>
+      {icon && <span className="shrink-0">{icon}</span>}
+      <span className="flex-1 truncate">{name}</span>
+      <Spinner size="small" />
+    </div>
+  );
+};
+
+// #endregion LoadingRow
+
 // #region DiagramNode
 
 export interface DiagramNodeProps {

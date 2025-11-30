@@ -85,7 +85,7 @@ import {
   useTheme,
   Window,
 } from "./Sketchpad";
-import { Action, Input, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
+import { Action, Input, NotFound, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
 import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, Theme, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, PanelKind } from "./shared";
 
@@ -494,8 +494,29 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
           yExpandedRows = new Y.Array<string>();
           this.yMap.set("expandedRows", yExpandedRows);
         }
-        yExpandedRows.delete(0, yExpandedRows.length);
-        yExpandedRows.push(diff.expandedRows);
+        // Efficiently update only changed elements instead of replacing entire array
+        const currentRows = yExpandedRows.toArray();
+        const newRows = diff.expandedRows;
+        const currentSet = new Set(currentRows);
+        const newSet = new Set(newRows);
+
+        // Find rows to remove (in current but not in new)
+        const toRemove: number[] = [];
+        currentRows.forEach((row, index) => {
+          if (!newSet.has(row)) {
+            toRemove.push(index);
+          }
+        });
+        // Remove in reverse order to maintain indices
+        for (let i = toRemove.length - 1; i >= 0; i--) {
+          yExpandedRows.delete(toRemove[i], 1);
+        }
+
+        // Find rows to add (in new but not in current)
+        const toAdd = newRows.filter((row) => !currentSet.has(row));
+        if (toAdd.length > 0) {
+          yExpandedRows.push(toAdd);
+        }
       }
       if (diff.sortColumn !== undefined) {
         this.yMap.set("sortColumn", diff.sortColumn);
@@ -2001,11 +2022,7 @@ const AppContent: FC = () => {
 
   // Early return if no kit is loaded
   if (!hasKit || !kit) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.noKitLoaded")}</p>
-      </div>
-    );
+    return <NotFound title={t("semio.sketchpad.app.kit.notFound.label.normal")} description={t("semio.sketchpad.app.kit.notFound.description.normal")} parentPath="/" parentLabel={t("semio.sketchpad.app.home.title")} />;
   }
 
   // Early return if kit app is not initialized yet
@@ -2028,24 +2045,55 @@ const AppContent: FC = () => {
   // Get selection parameter for auto-selecting designs/types
   const selectParam = searchParams.get("select");
   const expandedRowsArray = kitApp?.expandedRows || [];
-  const expandedRows = new Set(expandedRowsArray);
+  const expandedRowsArrayKey = expandedRowsArray.join(",");
+  const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsArrayKey]);
 
-  const selection = {
-    types: kitApp?.selection?.types || [],
-    designs: kitApp?.selection?.designs || [],
-    qualities: kitApp?.selection?.qualities || [],
-    files: kitApp?.selection?.files || [],
-    folders: kitApp?.selection?.folders || [],
-    authors: kitApp?.selection?.authors || [],
-  };
+  const selectionTypes = kitApp?.selection?.types || [];
+  const selectionDesigns = kitApp?.selection?.designs || [];
+  const selectionQualities = kitApp?.selection?.qualities || [];
+  const selectionFiles = kitApp?.selection?.files || [];
+  const selectionFolders = kitApp?.selection?.folders || [];
+  const selectionAuthors = kitApp?.selection?.authors || [];
+  const selectionTypesKey = selectionTypes.join(",");
+  const selectionDesignsKey = selectionDesigns.join(",");
+  const selectionQualitiesKey = selectionQualities.join(",");
+  const selectionFilesKey = selectionFiles.join(",");
+  const selectionFoldersKey = selectionFolders.join(",");
+  const selectionAuthorsKey = selectionAuthors.join(",");
+  const selection = useMemo(
+    () => ({
+      types: selectionTypes,
+      designs: selectionDesigns,
+      qualities: selectionQualities,
+      files: selectionFiles,
+      folders: selectionFolders,
+      authors: selectionAuthors,
+    }),
+    [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
+  );
   const sortColumn = kitApp?.sortColumn;
   const sortDirection = kitApp?.sortDirection || "asc";
 
+  const kitDesigns = kit?.designs;
+  const kitTypes = kit?.types;
+  const kitQualities = kit?.qualities;
+  const kitInterfaces = kit?.interfaces;
+  const kitFiles = kit?.files;
+  const kitFolders = kit?.folders;
+  const kitAuthors = kit?.authors;
+  const kitDesignsKey = useMemo(() => kitDesigns?.map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`).join("|") || "", [kitDesigns]);
+  const kitTypesKey = useMemo(() => kitTypes?.map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|") || "", [kitTypes]);
+  const kitQualitiesKey = useMemo(() => kitQualities?.map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|") || "", [kitQualities]);
+  const kitInterfacesKey = useMemo(() => kitInterfaces?.map((i) => `${i.guid}:${i.name}`).join("|") || "", [kitInterfaces]);
+  const kitFilesKey = useMemo(() => kitFiles?.map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFiles]);
+  const kitFoldersKey = useMemo(() => kitFolders?.map((f) => `${f.guid}:${f.name}:${f.parent?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFolders]);
+  const kitAuthorsKey = useMemo(() => kitAuthors?.map((a) => `${a.guid}:${a.name}`).join("|") || "", [kitAuthors]);
+
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
-    kit?.designs?.forEach((d: Design) => d.concepts?.forEach((c: string) => conceptSet.add(c)));
+    kitDesigns?.forEach((d: Design) => d.concepts?.forEach((c: string) => conceptSet.add(c)));
     return Array.from(conceptSet).sort();
-  }, [kit?.designs]);
+  }, [kitDesignsKey]);
 
   // Collect unique names for the selected kind (or unified when no kind selected)
   // Names are shown hierarchically based on selectedName filter
@@ -2053,7 +2101,7 @@ const AppContent: FC = () => {
     const nameSet = new Set<string>();
 
     // Helper to get visible names from a hierarchy
-    const collectVisibleNames = <T extends { guid: string; name: string; parent?: string }>(entities: T[] | undefined) => {
+    const collectVisibleNames = <T extends { guid: string; name: string; parent?: { guid: string } }>(entities: T[] | undefined) => {
       if (!entities) return;
 
       if (!selectedName) {
@@ -2071,14 +2119,14 @@ const AppContent: FC = () => {
     };
 
     if (!selectedKind || selectedKind === "designs") {
-      collectVisibleNames(kit?.designs);
+      collectVisibleNames(kitDesigns);
     }
     if (!selectedKind || selectedKind === "types") {
-      collectVisibleNames(kit?.types);
+      collectVisibleNames(kitTypes);
     }
 
     return Array.from(nameSet).sort();
-  }, [kit?.designs, kit?.types, selectedKind, selectedName]);
+  }, [kitDesignsKey, kitTypesKey, selectedKind, selectedName]);
 
   useEffect(() => {
     if (appType !== "kit" || !kitScope?.guid || !hasKit) {
@@ -2338,7 +2386,7 @@ const AppContent: FC = () => {
     if (!selectParam) return;
 
     if (selectedKind === "designs") {
-      const design = kit.designs?.find((d: Design) => d.guid === selectParam);
+      const design = kitDesigns?.find((d: Design) => d.guid === selectParam);
       if (design) {
         kitAppCommands.selectDesign("semio.sketchpad.app.kit.autoselect.design", selectParam);
         // Remove the select parameter after selecting
@@ -2347,7 +2395,7 @@ const AppContent: FC = () => {
         setSearchParams(newParams, { replace: true });
       }
     } else if (selectedKind === "types") {
-      const type = kit.types?.find((t: Type) => t.guid === selectParam);
+      const type = kitTypes?.find((t: Type) => t.guid === selectParam);
       if (type) {
         kitAppCommands.selectType("semio.sketchpad.app.kit.autoselect.type", selectParam);
         // Remove the select parameter after selecting
@@ -2359,7 +2407,7 @@ const AppContent: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectParam, selectedKind]);
 
-  const rows = useMemo<TableRow[]>(() => {
+  const allRows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
     const locale = i18n.language === "de" ? de : enUS;
     const formatDate = (date?: Date) => {
@@ -2369,9 +2417,58 @@ const AppContent: FC = () => {
       return formatDistanceToNow(parsedDate, { addSuffix: true, locale });
     };
 
+    // Pre-build lookup maps for O(1) child lookups instead of O(n) filter operations
+    const designsByParent = new Map<string | undefined, Design[]>();
+    const typesByParent = new Map<string | undefined, Type[]>();
+    const foldersByParent = new Map<string | undefined, Folder[]>();
+    const designsByFolder = new Map<string, Design[]>();
+    const typesByFolder = new Map<string, Type[]>();
+    const qualitiesByFolder = new Map<string, Quality[]>();
+    const filesByFolder = new Map<string, SemioFile[]>();
+
+    kitDesigns?.forEach((d: Design) => {
+      const parentKey = d.parent?.guid;
+      if (!designsByParent.has(parentKey)) designsByParent.set(parentKey, []);
+      designsByParent.get(parentKey)!.push(d);
+      if (d.folder) {
+        if (!designsByFolder.has(d.folder)) designsByFolder.set(d.folder, []);
+        designsByFolder.get(d.folder)!.push(d);
+      }
+    });
+
+    kitTypes?.forEach((t: Type) => {
+      const parentKey = t.parent?.guid;
+      if (!typesByParent.has(parentKey)) typesByParent.set(parentKey, []);
+      typesByParent.get(parentKey)!.push(t);
+      if (t.folder) {
+        if (!typesByFolder.has(t.folder)) typesByFolder.set(t.folder, []);
+        typesByFolder.get(t.folder)!.push(t);
+      }
+    });
+
+    kitFolders?.forEach((f: Folder) => {
+      const parentKey = f.parent?.guid;
+      if (!foldersByParent.has(parentKey)) foldersByParent.set(parentKey, []);
+      foldersByParent.get(parentKey)!.push(f);
+    });
+
+    kitQualities?.forEach((q: Quality) => {
+      if (q.folder) {
+        if (!qualitiesByFolder.has(q.folder)) qualitiesByFolder.set(q.folder, []);
+        qualitiesByFolder.get(q.folder)!.push(q);
+      }
+    });
+
+    kitFiles?.forEach((f: SemioFile) => {
+      if (f.folder?.guid) {
+        if (!filesByFolder.has(f.folder.guid)) filesByFolder.set(f.folder.guid, []);
+        filesByFolder.get(f.folder.guid)!.push(f);
+      }
+    });
+
     if (!selectedKind || selectedKind === "designs") {
       const designGroups = new Map<string, Design[]>();
-      kit.designs?.forEach((design: Design) => {
+      kitDesigns?.forEach((design: Design) => {
         const key = design.name;
         if (!designGroups.has(key)) designGroups.set(key, []);
         designGroups.get(key)!.push(design);
@@ -2379,9 +2476,11 @@ const AppContent: FC = () => {
 
       // Helper function to recursively build design hierarchy
       const buildDesignHierarchy = (designs: Design[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
-        const childDesigns = designs.filter((d) => d.parent?.guid === parentGuid);
+        const childDesigns = designsByParent.get(parentGuid) || [];
 
         childDesigns.forEach((design) => {
+          // Skip designs not in the input set (for filtered views)
+          if (!designs.includes(design)) return;
           if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c))) return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
           // Skip root designs that are in folders when not viewing the folders kind
@@ -2389,7 +2488,7 @@ const AppContent: FC = () => {
           if (!selectedKind && parentGuid === undefined && design.folder) return;
 
           const rowId = `design-${design.guid}`;
-          const children = designs.filter((d) => d.parent?.guid === design.guid);
+          const children = designsByParent.get(design.guid) || [];
           const hasChildren = children.length > 0;
 
           result.push({
@@ -2402,18 +2501,18 @@ const AppContent: FC = () => {
             level,
             parentId: parentRowId,
             hasChildren,
-            isExpanded: expandedRows.has(rowId),
+            isExpanded: false, // Computed in visibleRows
             data: design,
           });
 
-          if (expandedRows.has(rowId) && hasChildren) {
+          if (hasChildren) {
             buildDesignHierarchy(designs, design.guid, level + 1, rowId);
           }
         });
       };
 
       // Apply name filter - if selectedName is set, only include designs with that name and their descendants
-      const allDesignsArray = kit.designs || [];
+      const allDesignsArray = kitDesigns || [];
       if (selectedName) {
         // Find all designs with the selected name
         const matchingDesignGuids = new Set(allDesignsArray.filter((d) => d.name === selectedName).map((d) => d.guid));
@@ -2421,7 +2520,7 @@ const AppContent: FC = () => {
         // Collect all descendants of matching designs
         const includeGuids = new Set(matchingDesignGuids);
         const collectDescendants = (parentGuid: string) => {
-          const children = allDesignsArray.filter((d) => d.parent?.guid === parentGuid);
+          const children = designsByParent.get(parentGuid) || [];
           children.forEach((child) => {
             includeGuids.add(child.guid);
             collectDescendants(child.guid);
@@ -2443,16 +2542,18 @@ const AppContent: FC = () => {
     if (!selectedKind || selectedKind === "types") {
       // Helper function to recursively build type hierarchy
       const buildTypeHierarchy = (types: Type[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
-        const childTypes = types.filter((t) => t.parent?.guid === parentGuid);
+        const childTypes = typesByParent.get(parentGuid) || [];
 
         childTypes.forEach((type) => {
+          // Skip types not in the input set (for filtered views)
+          if (!types.includes(type)) return;
           if (searchQuery && !type.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
           // Skip root types that are in folders when not viewing the folders kind
           // Only filter at root level (parentGuid === undefined), not children
           if (!selectedKind && parentGuid === undefined && type.folder) return;
 
           const rowId = `type-${type.guid}`;
-          const children = types.filter((t) => t.parent?.guid === type.guid);
+          const children = typesByParent.get(type.guid) || [];
           const hasChildren = children.length > 0;
 
           result.push({
@@ -2465,18 +2566,18 @@ const AppContent: FC = () => {
             level,
             parentId: parentRowId,
             hasChildren,
-            isExpanded: expandedRows.has(rowId),
+            isExpanded: false, // Computed in visibleRows
             data: type,
           });
 
-          if (expandedRows.has(rowId) && hasChildren) {
+          if (hasChildren) {
             buildTypeHierarchy(types, type.guid, level + 1, rowId);
           }
         });
       };
 
       // Apply name filter - if selectedName is set, only include types with that name and their descendants
-      const allTypesArray = kit.types || [];
+      const allTypesArray = kitTypes || [];
       if (selectedName) {
         // Find all types with the selected name
         const matchingTypeGuids = new Set(allTypesArray.filter((t) => t.name === selectedName).map((t) => t.guid));
@@ -2484,7 +2585,7 @@ const AppContent: FC = () => {
         // Collect all descendants of matching types
         const includeGuids = new Set(matchingTypeGuids);
         const collectDescendants = (parentGuid: string) => {
-          const children = allTypesArray.filter((t) => t.parent?.guid === parentGuid);
+          const children = typesByParent.get(parentGuid) || [];
           children.forEach((child) => {
             includeGuids.add(child.guid);
             collectDescendants(child.guid);
@@ -2504,7 +2605,7 @@ const AppContent: FC = () => {
     }
 
     if (!selectedKind || selectedKind === "qualities") {
-      kit.qualities?.forEach((quality: Quality) => {
+      kitQualities?.forEach((quality: Quality) => {
         if (searchQuery && !quality.name.toLowerCase().includes(searchQuery.toLowerCase()) && !quality.key.toLowerCase().includes(searchQuery.toLowerCase())) return;
         // Skip qualities that are in folders when not viewing the folders kind
         if (!selectedKind && quality.folder) return;
@@ -2524,7 +2625,7 @@ const AppContent: FC = () => {
     }
 
     if (!selectedKind || selectedKind === "interfaces") {
-      kit.interfaces?.forEach((iface: Interface) => {
+      kitInterfaces?.forEach((iface: Interface) => {
         if (searchQuery && !iface.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
           id: `interface-${iface.guid}`,
@@ -2543,7 +2644,7 @@ const AppContent: FC = () => {
 
     if (selectedKind === "files") {
       // Build file tree from files - only when specifically viewing files kind
-      const fileTree = buildFileTree(kit.folders || [], kit.files || []);
+      const fileTree = buildFileTree(kitFolders || [], kitFiles || []);
       const flatTree = flattenFileTree(fileTree, 0, expandedRows);
 
       flatTree.forEach((node) => {
@@ -2569,17 +2670,17 @@ const AppContent: FC = () => {
       // Helper function to recursively build folder hierarchy
       const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentGuid = parentFolder?.guid;
-        const childFolders = kit.folders?.filter((f: Folder) => (!f.parent && !parentGuid) || (f.parent && typeof f.parent === "object" && f.parent.guid === parentGuid)) || [];
+        const childFolders = foldersByParent.get(parentGuid) || [];
 
         childFolders.forEach((folder: Folder) => {
           if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-          // Get artifacts in this folder
-          const folderedDesigns = kit.designs?.filter((d: Design) => d.folder === folder.guid) || [];
-          const folderedTypes = kit.types?.filter((t: Type) => t.folder === folder.guid) || [];
-          const folderedQualities = kit.qualities?.filter((q: Quality) => q.folder === folder.guid) || [];
-          const folderedFiles = kit.files?.filter((f: SemioFile) => f.folder?.guid === folder.guid) || [];
-          const folderedSubFolders = kit.folders?.filter((f: Folder) => f.parent?.guid === folder.guid) || [];
+          // Get artifacts in this folder using pre-built lookup maps
+          const folderedDesigns = designsByFolder.get(folder.guid) || [];
+          const folderedTypes = typesByFolder.get(folder.guid) || [];
+          const folderedQualities = qualitiesByFolder.get(folder.guid) || [];
+          const folderedFiles = filesByFolder.get(folder.guid) || [];
+          const folderedSubFolders = foldersByParent.get(folder.guid) || [];
           const folderedArtifacts = folderedDesigns.length + folderedTypes.length + folderedQualities.length + folderedFiles.length + folderedSubFolders.length;
 
           const folderId = `folder-${folder.guid}`;
@@ -2592,21 +2693,20 @@ const AppContent: FC = () => {
             createdAt: formatDate(folder.createdAt),
             level,
             hasChildren: folderedArtifacts > 0,
-            isExpanded: expandedRows.has(folderId),
+            isExpanded: false, // Computed in visibleRows
             data: folder,
             folderId: folder.parent?.guid,
             parentId: parentRowId,
           });
 
-          // Add child artifacts if folder is expanded
-          if (expandedRows.has(folderId)) {
+          // Add child artifacts (always build, visibility computed later)
+          if (folderedArtifacts > 0) {
             // Add designs in folder with their full hierarchy
             const rootFolderedDesigns = folderedDesigns.filter((d: Design) => !d.parent);
             rootFolderedDesigns.forEach((design: Design) => {
               if (!design.guid) return;
               const rowId = `design-${design.guid}`;
-              const allDesigns = kit.designs || [];
-              const children = allDesigns.filter((d) => d.parent?.guid === design.guid);
+              const children = designsByParent.get(design.guid) || [];
               const hasChildren = children.length > 0;
 
               result.push({
@@ -2618,19 +2718,19 @@ const AppContent: FC = () => {
                 createdAt: formatDate(design.createdAt),
                 level: level + 1,
                 hasChildren,
-                isExpanded: expandedRows.has(rowId),
+                isExpanded: false, // Computed in visibleRows
                 data: design,
                 folderId: folder.guid,
                 parentId: folderId,
               });
 
-              // Recursively add design children
-              if (expandedRows.has(rowId) && hasChildren) {
+              // Recursively add design children (always build, visibility computed later)
+              if (hasChildren) {
                 const buildDesignChildrenInFolder = (parentDesignGuid: string, childLevel: number, parentRowId: string): void => {
-                  const childDesigns = allDesigns.filter((d) => d.parent?.guid === parentDesignGuid);
+                  const childDesigns = designsByParent.get(parentDesignGuid) || [];
                   childDesigns.forEach((childDesign) => {
                     const childRowId = `design-${childDesign.guid}`;
-                    const grandChildren = allDesigns.filter((d) => d.parent?.guid === childDesign.guid);
+                    const grandChildren = designsByParent.get(childDesign.guid) || [];
                     const hasGrandChildren = grandChildren.length > 0;
 
                     result.push({
@@ -2642,13 +2742,13 @@ const AppContent: FC = () => {
                       createdAt: formatDate(childDesign.createdAt),
                       level: childLevel,
                       hasChildren: hasGrandChildren,
-                      isExpanded: expandedRows.has(childRowId),
+                      isExpanded: false, // Computed in visibleRows
                       data: childDesign,
                       folderId: folder.guid,
                       parentId: parentRowId,
                     });
 
-                    if (expandedRows.has(childRowId) && hasGrandChildren) {
+                    if (hasGrandChildren) {
                       buildDesignChildrenInFolder(childDesign.guid, childLevel + 1, childRowId);
                     }
                   });
@@ -2662,8 +2762,7 @@ const AppContent: FC = () => {
             rootFolderedTypes.forEach((type: Type) => {
               if (!type.guid) return;
               const rowId = `type-${type.guid}`;
-              const allTypes = kit.types || [];
-              const children = allTypes.filter((t) => t.parent?.guid === type.guid);
+              const children = typesByParent.get(type.guid) || [];
               const hasChildren = children.length > 0;
 
               result.push({
@@ -2675,19 +2774,19 @@ const AppContent: FC = () => {
                 createdAt: formatDate(type.createdAt),
                 level: level + 1,
                 hasChildren,
-                isExpanded: expandedRows.has(rowId),
+                isExpanded: false, // Computed in visibleRows
                 data: type,
                 folderId: folder.guid,
                 parentId: folderId,
               });
 
-              // Recursively add type children
-              if (expandedRows.has(rowId) && hasChildren) {
+              // Recursively add type children (always build, visibility computed later)
+              if (hasChildren) {
                 const buildTypeChildrenInFolder = (parentTypeGuid: string, childLevel: number, parentRowId: string): void => {
-                  const childTypes = allTypes.filter((t) => t.parent?.guid === parentTypeGuid);
+                  const childTypes = typesByParent.get(parentTypeGuid) || [];
                   childTypes.forEach((childType) => {
                     const childRowId = `type-${childType.guid}`;
-                    const grandChildren = allTypes.filter((t) => t.parent?.guid === childType.guid);
+                    const grandChildren = typesByParent.get(childType.guid) || [];
                     const hasGrandChildren = grandChildren.length > 0;
 
                     result.push({
@@ -2699,13 +2798,13 @@ const AppContent: FC = () => {
                       createdAt: formatDate(childType.createdAt),
                       level: childLevel,
                       hasChildren: hasGrandChildren,
-                      isExpanded: expandedRows.has(childRowId),
+                      isExpanded: false, // Computed in visibleRows
                       data: childType,
                       folderId: folder.guid,
                       parentId: parentRowId,
                     });
 
-                    if (expandedRows.has(childRowId) && hasGrandChildren) {
+                    if (hasGrandChildren) {
                       buildTypeChildrenInFolder(childType.guid, childLevel + 1, childRowId);
                     }
                   });
@@ -2761,7 +2860,7 @@ const AppContent: FC = () => {
     }
 
     if (!selectedKind || selectedKind === "authors") {
-      kit.authors?.forEach((author: Author) => {
+      kitAuthors?.forEach((author: Author) => {
         if (searchQuery && !author.name.toLowerCase().includes(searchQuery.toLowerCase()) && !author.email.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
           id: `author-${author.guid}`,
@@ -2859,7 +2958,75 @@ const AppContent: FC = () => {
     }
 
     return result;
-  }, [kit, kit.files, selectedKind, selectedName, selectedConcepts, searchQuery, expandedRows, sortColumn, sortDirection]);
+  }, [
+    kitDesigns,
+    kitTypes,
+    kitQualities,
+    kitInterfaces,
+    kitFiles,
+    kitFolders,
+    kitAuthors,
+    kitDesignsKey,
+    kitTypesKey,
+    kitQualitiesKey,
+    kitInterfacesKey,
+    kitFilesKey,
+    kitFoldersKey,
+    kitAuthorsKey,
+    selectedKind,
+    selectedName,
+    selectedConcepts,
+    searchQuery,
+    sortColumn,
+    sortDirection,
+  ]);
+
+  // Compute visible rows: filter allRows based on expandedRows (fast O(n) operation)
+  const rows = useMemo<TableRow[]>(() => {
+    // Build a Set of all visible row IDs:
+    // A row is visible if all its ancestors are expanded
+    const visibleRowIds = new Set<string>();
+    const rowById = new Map<string, TableRow>();
+
+    // First pass: index all rows by ID
+    allRows.forEach((row) => rowById.set(row.id, row));
+
+    // Second pass: determine visibility by checking ancestor chain
+    allRows.forEach((row) => {
+      let isVisible = true;
+      let currentRow = row;
+
+      // Walk up the parent chain to check if all ancestors are expanded
+      while (currentRow.parentId) {
+        const parent = rowById.get(currentRow.parentId);
+        if (!parent) {
+          // Parent not found, row is not visible
+          isVisible = false;
+          break;
+        }
+        if (!expandedRows.has(parent.id)) {
+          // Parent is collapsed, row is not visible
+          isVisible = false;
+          break;
+        }
+        currentRow = parent;
+      }
+
+      if (isVisible) {
+        visibleRowIds.add(row.id);
+      }
+    });
+
+    // Filter to visible rows and set isExpanded
+    const result = allRows
+      .filter((row) => visibleRowIds.has(row.id))
+      .map((row) => ({
+        ...row,
+        isExpanded: expandedRows.has(row.id),
+      }));
+
+    return result;
+  }, [allRows, expandedRows]);
 
   // Compute selected row IDs for the Table component
   const selectedRows = useMemo(() => {
@@ -3651,7 +3818,7 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 16 * var(--spacing))` }}>
+                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                   <div className="flex items-center gap-single flex-1 min-w-0">
                     {row.hasChildren ? (
                       <Action
@@ -3893,7 +4060,7 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * 24 * var(--spacing))` }}>
+                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                   <div className="flex items-center gap-single flex-1 min-w-0">
                     {row.hasChildren ? (
                       <Action
@@ -3905,7 +4072,7 @@ const AppContent: FC = () => {
                         icon={row.isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
                       />
                     ) : (
-                      <span className="size-tiny shrink-0" />
+                      <span className="size-small shrink-0" />
                     )}
                     <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
                     <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>

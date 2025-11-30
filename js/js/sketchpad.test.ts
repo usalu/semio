@@ -202,10 +202,14 @@ test.describe("sketchpad", () => {
   });
 
   test.describe("Kit Import Drag and Drop", () => {
-    test("Drop metabolism.zip creates temporary kit and navigates", async ({ page }) => {
-      test.setTimeout(60000);
+    test("Drop metabolism.zip creates temporary kit with files", async ({ page }) => {
+      test.setTimeout(90000);
       const consoleErrors: string[] = [];
-      page.on("console", (msg) => { if (msg.type() === "error") consoleErrors.push(msg.text()); });
+      const yjsWarnings: string[] = [];
+      page.on("console", (msg) => {
+        if (msg.type() === "error") consoleErrors.push(msg.text());
+        if (msg.type() === "warning" && msg.text().includes("Invalid access")) yjsWarnings.push(msg.text());
+      });
       page.on("pageerror", (err) => consoleErrors.push(`PAGE_ERROR: ${err.message}`));
       await page.waitForTimeout(1000);
 
@@ -217,21 +221,196 @@ test.describe("sketchpad", () => {
 
       // Wait for navigation to kit page
       await page.waitForURL(/.*kits\/.+/, { timeout: 30000 });
-
-      // Verify navigation completed and page is responsive
-      const url = page.url();
-      expect(url).toMatch(/kits\/.+/);
+      const kitUrl = page.url();
+      expect(kitUrl).toMatch(/kits\/.+/);
 
       // Verify no import errors
       expect(consoleErrors.filter(e => e.includes("Import error"))).toHaveLength(0);
 
-      // Wait for page to be interactive (not hung)
-      await page.waitForTimeout(2000);
+      // Wait for page to be interactive and files to be added
+      await page.waitForTimeout(3000);
       const isResponsive = await Promise.race([
         page.evaluate(() => true),
         new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
       ]);
       expect(isResponsive).toBe(true);
+
+      // Verify kit content is visible
+      const pageText = await page.evaluate(() => document.body.innerText);
+      expect(pageText).toContain("Metabolism");
+      expect(pageText).toContain("Capsule");
+      expect(pageText).toContain("Nakagin Capsule Tower");
+
+      // Navigate to Files view 
+      const filesButton = page.locator('[id="semio.sketchpad.app.kit.kind.files"]');
+      await filesButton.click({ timeout: 5000 }).catch(() => { });
+      await page.waitForTimeout(2000);
+
+      // Check for folders in the page
+      const filesText = await page.evaluate(() => document.body.innerText);
+      console.log("Files view text:", filesText.substring(0, 1500));
+      expect(filesText).toContain("representations");
+
+      // Verify no Y.js "Invalid access" warnings occurred
+      console.log(`Y.js warnings count: ${yjsWarnings.length}`);
+      if (yjsWarnings.length > 0) {
+        console.log("Y.js warnings:", yjsWarnings.slice(0, 5));
+      }
+      expect(yjsWarnings).toHaveLength(0);
+
+      // Navigate back to Types view for fold/unfold performance test
+      // First, hide files by clicking the files toggle (which is currently pressed)
+      const filesToggle = page.locator('[id="semio.sketchpad.app.kit.kitApp.hideKind"]');
+      await filesToggle.click({ timeout: 5000 }).catch(() => {
+        console.log("Files toggle not found or already showing types");
+      });
+      await page.waitForTimeout(500);
+
+      // Now show types by clicking the types toggle
+      const typesToggle = page.locator('[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
+      await typesToggle.click({ timeout: 5000 }).catch(() => {
+        console.log("Types toggle not found, maybe already showing types");
+      });
+      await page.waitForTimeout(1000);
+
+      // Performance test helper: measure time for an action using page.evaluate for accurate timing
+      const measureAction = async (action: () => Promise<void>): Promise<number> => {
+        const start = Date.now();
+        await action();
+        // Wait for any React renders to complete
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const end = Date.now();
+        return end - start;
+      };
+
+      // Find table rows
+      const tableRows = page.locator('tr, [role="row"]');
+      const rowCount = await tableRows.count();
+      console.log(`Found ${rowCount} table rows`);
+
+      // Look for type/design artifacts in the page
+      const pageContent = await page.evaluate(() => document.body.innerText);
+      const hasTypes = pageContent.includes("Capsule") || pageContent.includes("Base") || pageContent.includes("Core");
+      console.log(`Page has types visible: ${hasTypes}`);
+
+      // Test fold/unfold by clicking on row expand chevrons
+      const performanceResults: { name: string; expandTime: number; collapseTime: number }[] = [];
+      const maxAllowedTime = 100; // ms threshold
+
+      // Find expand/collapse buttons only within the table body (not navbar/search/etc)
+      // Look for table body first
+      const tableBody = page.locator('tbody').first();
+      await expect(tableBody).toBeVisible({ timeout: 5000 });
+
+      const tableButtons = await tableBody.locator('button').all();
+      console.log(`Found ${tableButtons.length} buttons in table body`);
+
+      // Look for buttons that appear to be expand/collapse toggles (chevrons)
+      let expandButtons: Locator[] = [];
+      for (const btn of tableButtons) {
+        const innerHTML = await btn.innerHTML().catch(() => "");
+        if (innerHTML.includes("chevron") || innerHTML.includes("Chevron")) {
+          expandButtons.push(btn);
+        }
+      }
+      console.log(`Found ${expandButtons.length} chevron buttons in table`);
+
+      // If no chevron buttons found in table, fall back to looking for type rows
+      if (expandButtons.length === 0) {
+        console.log("No chevron buttons found in table, looking for type row entries");
+
+        // Look for specific type names that we know exist in metabolism kit
+        const typeNames = ["Capsule", "Core", "Module", "Base", "Bridge", "Capital"];
+        for (const typeName of typeNames) {
+          const typeRow = tableBody.getByText(typeName, { exact: false }).first();
+          const exists = await typeRow.count() > 0;
+          if (exists) {
+            console.log(`Found type: ${typeName}`);
+
+            // Try to find a clickable expand element near this text
+            const parentRow = typeRow.locator('xpath=ancestor::tr').first();
+            const rowExpandBtn = parentRow.locator('button').first();
+
+            if (await rowExpandBtn.count() > 0) {
+              expandButtons.push(rowExpandBtn);
+              console.log(`Added expand button for ${typeName}`);
+            }
+          }
+        }
+      }
+
+      // Get the text next to each chevron button to identify what row it is
+      for (let i = 0; i < Math.min(expandButtons.length, 10); i++) {
+        const btn = expandButtons[i];
+        const siblingText = await btn.evaluate((el) => {
+          // Look for text in the table row
+          const row = el.closest('tr');
+          const text = row?.textContent || el.parentElement?.textContent || "";
+          return text.substring(0, 60).trim().replace(/\\s+/g, ' ');
+        }).catch(() => `Button ${i}`);
+        console.log(`Button ${i}: ${siblingText}`);
+      }
+
+      // Test each expand button - limit to 5 for reasonable test time
+      for (let i = 0; i < Math.min(expandButtons.length, 5); i++) {
+        const btn = expandButtons[i];
+
+        // Get parent row info for logging
+        const rowInfo = await btn.evaluate((el) => {
+          const row = el.closest('tr');
+          if (row) {
+            const text = row.textContent || "";
+            return text.substring(0, 80).trim().replace(/\\s+/g, ' ');
+          }
+          return 'unknown row';
+        }).catch(() => `Row ${i}`);
+
+        console.log(`Testing button ${i}: ${rowInfo}`);
+
+        // Measure expand time
+        const expandTime = await measureAction(async () => {
+          await btn.click();
+        });
+
+        // Small delay
+        await page.waitForTimeout(100);
+
+        // Measure collapse time
+        const collapseTime = await measureAction(async () => {
+          await btn.click();
+        });
+
+        performanceResults.push({
+          name: rowInfo.substring(0, 40),
+          expandTime,
+          collapseTime
+        });
+
+        console.log(`${rowInfo.substring(0, 40)}: expand=${expandTime}ms, collapse=${collapseTime}ms`);
+      }
+
+      // Log performance summary
+      console.log("\nPerformance Summary:");
+      console.log("====================");
+      for (const result of performanceResults) {
+        console.log(`${result.name}: expand=${result.expandTime}ms, collapse=${result.collapseTime}ms`);
+      }
+
+      // Assert performance - if we found any buttons to test
+      if (performanceResults.length > 0) {
+        for (const result of performanceResults) {
+          expect(result.expandTime, `Expand time for "${result.name}" should be < ${maxAllowedTime}ms`).toBeLessThan(maxAllowedTime);
+          expect(result.collapseTime, `Collapse time for "${result.name}" should be < ${maxAllowedTime}ms`).toBeLessThan(maxAllowedTime);
+        }
+      } else {
+        console.log("WARNING: No expand/collapse buttons found for performance testing");
+        // At minimum, verify the page is responsive
+        const responsiveCheck = await measureAction(async () => {
+          await page.evaluate(() => document.body.click());
+        });
+        console.log(`Page responsiveness check: ${responsiveCheck}ms`);
+        expect(responsiveCheck).toBeLessThan(maxAllowedTime);
+      }
     });
   });
 

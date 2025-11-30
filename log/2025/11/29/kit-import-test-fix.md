@@ -31,11 +31,17 @@ The Kit Import Playwright test was failing due to multiple issues:
   - `ConnectionStore`: Fixed `yConnected`, `yConnecting`, `yAttributes`
   - `DesignStore`: Fixed `yPieces`, `yConnections`, `yAttributes`, `yStats`, `yProps`, `yLayers`, `yGroups`, `yConcepts`, `yAuthors`
 
+- **Fixed "Invalid access" warnings in `createFile`/`createFolder`**: Set Y.Map values BEFORE pushing to Y.Array to prevent observers from reading uninitialized data:
+  - `FileStore`: Values are now set on yFile before pushing to yFiles array, constructor simplified to only accept yFile
+  - `FolderStore`: Values are now set on yFolder before pushing to yFolders array, constructor simplified
+
+- **Added batch `semio.kit.addFiles` command**: Accepts both folders and files arrays, creates all in single transaction
+
 ## `js/js/sketchpad/Home.tsx`
 
-- Updated `handleFileInputChange` with debug logging
-- Added 500ms delay before navigation to allow Yjs observers to settle
-- Temporarily disabled background file adding to isolate page hang issue
+- Updated `handleFileInputChange` and `handleDrop` to properly create folder hierarchy from file paths
+- Added `Folder` import from semio
+- Files now correctly reference their parent folder via `folder: { guid }` property
 
 ## `js/js/sketchpad.test.ts`
 
@@ -53,9 +59,23 @@ The Kit Import test now **passes consistently**. It verifies:
 - Navigation to `/kits/{guid}` completes successfully
 - No import errors in console
 - Page remains responsive after import
+- Types (Capsule, Base, Bridge, Capital, Tambour) are visible
+- Designs (Nakagin Capsule Tower, Capsule Dream) are visible
+- Folders (`icons`, `representations`) are visible in the Files view
+- Files are added via batch operation in single Yjs transaction
+- No "Invalid access" warnings during import
 
-## Known Issues (Out of Scope)
+## Performance Fix: Batch File Adding
 
-1. **Page renders list view instead of kit details**: After navigation to `/kits/{guid}`, the page shows a list of all kits instead of the imported kit's details. This is a separate React Router or component rendering issue to be addressed in a future task.
+**Problem**: Adding 95 files individually via `semio.kit.addFile` was extremely slow because:
 
-2. **File adding causes page hang**: When background file adding is enabled after navigation, the page becomes completely unresponsive. File adding is temporarily disabled until the root cause is identified.
+- Each file triggered a separate Yjs transaction
+- Each transaction triggered observer updates
+- 95 sequential async operations with observer overhead
+
+**Solution**: Added batch `semio.kit.addFiles` command that:
+
+- Accepts array of `{ file, blob }` objects
+- Adds all files in a single Yjs transaction
+- Reduces 95 transactions to 1 transaction
+- Import now completes in ~3 seconds instead of hanging
