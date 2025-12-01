@@ -326,10 +326,66 @@ class PropsDiff {
 }
 ' #endregion Prop
 
+' #region Tag
+class Tag {
+  guid: str
+  name: str
+  description: str
+  icon: str
+  attributes: list[Attribute]
+}
+
+class TagId {
+  guid: str
+}
+
+class TagDiff {
+  name?: str
+  description?: str
+  icon?: str
+  attributes?: AttributesDiff
+}
+
+class TagsDiff {
+  removed?: list[TagId]
+  updated?: list[TagDiff]
+  added?: list[Tag]
+}
+' #endregion Tag
+
+' #region Concept
+class Concept {
+  guid: str
+  name: str
+  description: str
+  icon: str
+  attributes: list[Attribute]
+}
+
+class ConceptId {
+  guid: str
+}
+
+class ConceptDiff {
+  name?: str
+  description?: str
+  icon?: str
+  attributes?: AttributesDiff
+}
+
+class ConceptsDiff {
+  removed?: list[ConceptId]
+  updated?: list[ConceptDiff]
+  added?: list[Concept]
+}
+' #endregion Concept
+
 ' #region Model
 class Model {
-  tags: list[str]
-  url: str
+  guid: str
+  name: str
+  tags: list[TagId]
+  file: FileId
   description: str
   attributes: list[Attribute]
   --
@@ -338,13 +394,13 @@ class Model {
 }
 
 class ModelId {
-  url: str
-  tags: list[str]
+  guid: str
 }
 
 class ModelDiff {
-  tags?: list[str]
-  url?: str
+  name?: str
+  tags?: list[TagId]
+  file?: FileId
   description?: str
   attributes?: AttributesDiff
 }
@@ -416,7 +472,7 @@ class Type {
   availableCount: float
   location: Location
   authors: list[Author]
-  concepts: list[str]
+  concepts: list[ConceptId]
   icon: str
   image: str
   description: str
@@ -443,7 +499,7 @@ class TypeDiff {
   availableCount?: float
   location?: LocationDiff
   authors?: AuthorsDiff
-  concepts?: list[str]
+  concepts?: list[ConceptId]
   icon?: str
   image?: str
   description?: str
@@ -500,23 +556,11 @@ class Piece {
   scale: float
   mirrorPlane: Plane
   props: list[Prop]
-  isHidden: bool
-  isLocked: bool
+  hidden: bool
+  locked: bool
   color: str
   description: str
   attributes: list[Attribute]
-  --
-  context Piece inv descriptionCanBeEmpty:
-    description->notEmpty() or description->isEmpty()
-  context Piece inv validPieceReference:
-    (type->notEmpty() and design->isEmpty() and piece->isEmpty()) or
-    (type->isEmpty() and design->notEmpty() and piece->notEmpty())
-  context Piece inv colorValidation:
-    color->isEmpty() or color.matches('^#[0-9A-Fa-f]{6}$')
-  context Piece inv scalePositive:
-    scale > 0
-  context Piece inv noSelfReference:
-    piece <> self
 }
 
 class PieceId {
@@ -532,8 +576,8 @@ class PieceDiff {
   scale?: float
   mirrorPlane?: Plane
   props?: PropsDiff
-  isHidden?: bool
-  isLocked?: bool
+  hidden?: bool
+  locked?: bool
   color?: str
   description?: str
   attributes?: AttributesDiff
@@ -553,11 +597,6 @@ class Group {
   color: str
   description: str
   attributes: list[Attribute]
-  --
-  context Group inv nameCanBeEmpty:
-    name->notEmpty() or name->isEmpty()
-  context Group inv descriptionCanBeEmpty:
-    description->notEmpty() or description->isEmpty()
 }
 
 class GroupId {
@@ -565,9 +604,9 @@ class GroupId {
 }
 
 class GroupDiff {
-  pieces?: PiecesDiff
-  color?: str
   name?: str
+  pieces?: list[PieceId]
+  color?: str
   description?: str
   attributes?: AttributesDiff
 }
@@ -581,31 +620,16 @@ class GroupsDiff {
 
 ' #region Side
 class Side {
-  piece: Piece
-  port: Port
-}
-
-class SideId {
   piece: PieceId
+  designPiece: PieceId
   port: PortId
-}
-
-class SideDiff {
-  piece?: PieceId
-  port?: PortId
-}
-
-class SidesDiff {
-  removed?: list[SideId]
-  updated?: list[SideDiff]
-  added?: list[Side]
 }
 ' #endregion Side
 
 ' #region Connection
 class Connection {
-  connecting: Side
   connected: Side
+  connecting: Side
   gap: float
   shift: float
   rise: float
@@ -616,30 +640,16 @@ class Connection {
   v: float
   description: str
   attributes: list[Attribute]
-  --
-  context Connection inv descriptionCanBeEmpty:
-    description->notEmpty() or description->isEmpty()
-  context Connection inv portsAreCompatible:
-    connecting.port.compatibleInterfaces->includes(connected.port.interface) or
-    connected.port.compatibleInterfaces->includes(connecting.port.interface)
-  context Connection inv noDuplicateConnections:
-    connecting <> connected
-  context Connection inv rotationInValidRange:
-    rotation >= -180 and rotation <= 180
-  context Connection inv turnInValidRange:
-    turn >= -180 and turn <= 180
-  context Connection inv tiltInValidRange:
-    tilt >= -180 and tilt <= 180
 }
 
 class ConnectionId {
-  connecting: SideId
-  connected: SideId
+  connected: Side
+  connecting: Side
 }
 
 class ConnectionDiff {
-  connected?: SideId
-  connecting?: SideId
+  connected?: Side
+  connecting?: Side
   gap?: float
   shift?: float
   rise?: float
@@ -667,11 +677,6 @@ class Stat {
   minExcluded: bool
   max: float
   maxExcluded: bool
-  --
-  context Stat inv unitCanBeEmpty:
-    unit->notEmpty() or unit->isEmpty()
-  context Stat inv minLessThanMax:
-    min < max
 }
 
 class StatId {
@@ -711,7 +716,7 @@ class Design {
   unit: str
   location: Location
   authors: list[Author]
-  concepts: list[str]
+  concepts: list[ConceptId]
   icon: str
   image: str
   description: str
@@ -742,7 +747,7 @@ class DesignDiff {
   unit?: str
   location?: LocationDiff
   authors?: AuthorsDiff
-  concepts?: list[str]
+  concepts?: list[ConceptId]
   icon?: str
   image?: str
   description?: str
@@ -764,13 +769,14 @@ class Kit {
   version: str
   types: list[Type]
   designs: list[Design]
+  tags: list[Tag]
+  concepts: list[Concept]
   qualities: list[Quality]
   files: list[File]
   authors: list[Author]
   remoteUrl: str
   homepageUrl: str
   license: str
-  concepts: list[str]
   icon: str
   image: str
   description: str
@@ -794,7 +800,8 @@ class KitDiff {
   remote?: str
   homepage?: str
   license?: str
-  concepts?: list[str]
+  tags?: TagsDiff
+  concepts?: ConceptsDiff
   types?: TypesDiff
   designs?: DesignsDiff
   authors?: AuthorsDiff
@@ -833,8 +840,11 @@ Type *-- "0..*" Attribute : has >
 Type *-- "0..*" Prop : has >
 Type *-- "1" Location : located at >
 Type *-- "0..*" Author : created by >
+Type o-- "0..*" Concept : categorized by >
 
 Model *-- "0..*" Attribute : has >
+Model o-- "0..*" Tag : tagged with >
+Model o-- "1" File : references >
 
 Port *-- "0..*" Attribute : has >
 Port *-- "1" Point : at >
@@ -871,6 +881,7 @@ Design *-- "0..*" Prop : has >
 Design *-- "1" Location : located at >
 Design *-- "0..*" Author : created by >
 Design o-- "1" Layer : active layer >
+Design o-- "0..*" Concept : categorized by >
 
 Kit -|> Model
 Kit *-- "0..*" Design : contains >
@@ -878,7 +889,12 @@ Kit *-- "0..*" Type : contains >
 Kit *-- "0..*" Quality : defines >
 Kit *-- "0..*" Author : has >
 Kit *-- "0..*" Attribute : has >
+Kit *-- "0..*" Tag : defines >
+Kit *-- "0..*" Concept : defines >
 Kit *-- "0..*" File : includes >
+
+Tag *-- "0..*" Attribute : has >
+Concept *-- "0..*" Attribute : has >
 ' #endregion Relationships
 
 ' #region Validation
@@ -931,6 +947,8 @@ enum SemioEntityKind {
   Layer
   Group
   Stat
+  Tag
+  Concept
 }
 
 interface SemioValidationRule {

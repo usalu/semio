@@ -3,7 +3,8 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 IMPORTANT:
 
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.
+- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the log is to understand the context, problem and decision making process. It is only about the process.
+- For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 # Specs
 
@@ -15,7 +16,7 @@ A `kit` is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runt
 
 A _static_ `kit` contains a reserved `.semio` folder that contains a `kit.db` sqlite file.
 
-The SQL-schema of `kit.db` is found in `./sqlite/schema.sql`.
+The SQL-schema of `kit.db` is found in `./sql/sqlite/schema.sql`.
 
 For Inter-Process-Communication (IPC) the JSON-schema in `./jsonschema/kit.json` is used.
 
@@ -81,11 +82,25 @@ A `port` can have `props` that define measurable characteristics and `attributes
 
 ## Model
 
-A `model` is an optional **name**, `tagged` **url** to a resource with an optional **description**.
+A `model` is a **guid**, optional **name**, **file** reference (FileId), optional **tags** (TagId references), optional **description**, and `attributes`.
 
-No **`tags`** means the _default_ model.
+The **file** is a required reference to a kit-level `file` entity via `FileId` (guid).
 
-The similarity of `models` is determined by the jaccard index of their **`tags`**.
+The **tags** are optional references to kit-level `tag` entities via `TagId` (guid). No **tags** means the _default_ model.
+
+The similarity of `models` is determined by the jaccard index of their **tag** guids.
+
+### Supported 3D File Extensions
+
+Model files should use supported 3D formats. The `SUPPORTED_3D_EXTENSIONS` constant in `semio.ts` lists all supported formats including: `gltf`, `glb`, `fbx`, `obj`, `dae`, `3ds`, `stl`, `ply`, `usdz`, `vrm`, `ifc`, `3mf`, and more. Use `validateModelFile(filename)` to check if a file extension is supported.
+
+### Model Tag Selection
+
+In **Type app** and **Design app**, the footer displays all tag names from the type's/design's models. Clicking a tag toggles its selection. The model with the highest Jaccard index matching the selected tags is displayed in the scene. This is implemented via:
+
+- `TypeAppFooter` and `DesignAppFooter` components showing clickable tag names
+- `selectBestModel(models, selectedTagGuids)` function to find the best matching model
+- `selectedModelTags` state tracked per type (in Design app: `Record<Guid, string[]>` mapping type guids to selected tag guids)
 
 ## Attribute
 
@@ -114,7 +129,15 @@ A list of attributes is semantically equivalent to nested dictionaries where the
 
 ## Tag
 
-A `tag` is a kebab-cased **name**.
+A `tag` is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and `attributes`.
+
+Tags are used to categorize and filter `models` within a `type`. A `model` references tags via `TagId` (guid reference).
+
+## Concept
+
+A `concept` is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and `attributes`.
+
+Concepts provide semantic grouping for `types` and `designs`. Types and designs reference concepts via `ConceptId` (guid reference).
 
 ## Plane
 
@@ -249,6 +272,8 @@ Stats provide computed or measured performance data for entire designs using the
 - `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
 
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
+
+- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent logs using `npx tsx scripts/log.ts search [query] --limit=10` and analyze with git staged and unstaged changes that are related to the task.
 
 ## CI/CD
 
@@ -479,6 +504,17 @@ npx tsx scripts/log.ts list 2025 11      # Logs from November 2025
 npx tsx scripts/log.ts list 2025 11 24   # Logs from November 24, 2025
 ```
 
+**Search logs:**
+
+```bash
+npx tsx scripts/log.ts search "drag drop"                    # Search for "drag drop" in all logs
+npx tsx scripts/log.ts search "test" --limit=5               # Search and show first 5 results
+npx tsx scripts/log.ts search --year=2025 --month=12         # Search in December 2025
+npx tsx scripts/log.ts search "validation" --limit=3         # Search for "validation" (limit 3)
+```
+
+Searches in slug, summary, content, and author fields (case-insensitive).
+
 **Delete a log:**
 
 ```bash
@@ -494,7 +530,7 @@ npx tsx scripts/log.ts migrate
 #### Programmatic Usage
 
 ```typescript
-import { createLog, readLog, updateLog, deleteLog, listLogs } from "./scripts/log";
+import { createLog, readLog, updateLog, deleteLog, listLogs, searchLogs } from "./scripts/log";
 
 // Create
 const log = createLog({
@@ -518,6 +554,15 @@ updateLog(2025, 11, 24, "MY-TASK", {
 
 // List with filters
 const logs = listLogs({ year: 2025, month: 11 });
+
+// Search with query and filters
+const results = searchLogs({
+  query: "drag drop",        // Search term (optional)
+  year: 2025,                // Filter by year (optional)
+  month: 12,                 // Filter by month (optional)
+  day: 1,                    // Filter by day (optional)
+  limit: 10,                 // Limit results (optional)
+});
 
 // Delete
 deleteLog(2025, 11, 24, "MY-TASK");
@@ -1030,6 +1075,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── urban-patterns
 │ └── voxels
 ├── graphql
+│ └── schema.graphql # autogenerated from `py/engine/generate-schemas.ts`
 ├── js
 │ ├── ai
 │ ├── desktop
@@ -1202,7 +1248,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── vite.config.ts
 │ │ └── vitest.workspace.ts
 │ └── play
-├── jsonschema
+├── jsonschema # autogenerated from `py/engine/generate-schemas.ts`
 ├── liveblocks
 ├── log # All logs of development tasks by and for agents organized by date
 │ ├── YEAR
@@ -1240,7 +1286,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── i18n.ts
 │ ├── log.ts
 │ └── utils.ts # General TypeScript utilities for scripts
-├── sqlite
+├── sql
+│ ├── sqlite
+│ │ └── schema.sql # autogenerated from `py/engine/generate-schemas.ts`
 ├── yak
 ├── .gitignore
 ├── .gitmodules

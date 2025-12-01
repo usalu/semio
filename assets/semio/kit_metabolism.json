@@ -198,7 +198,60 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.034Z",
       "name": "Base",
-      "updatedAt": "2025-11-23T01:10:21.034Z"
+      "updatedAt": "2025-11-23T01:10:21.034Z",
+      "models": [
+        {
+          "guid": "1ff5b7b3-9143-44d0-b05d-3c1a51ed6410",
+          "url": "representations/base.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "e6dca5d0-7c56-4e60-9db4-5c7d55bd1fea",
+          "url": "representations/base_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "2eea48b5-d68c-4a89-8d06-40d414e86370",
+          "url": "representations/base_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "ccddf3ac-72c1-48f8-ab9c-b21a4c5340be",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5267da44d",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "43c9afc0-4512-48be-adc9-aefae6201cad",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b394acfd5c",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "ef7796ad-64ee-4690-9741-0be45a88e7ac",
+          "url": "representations/base_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -356,7 +409,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.052Z",
       "name": "Blob",
-      "updatedAt": "2025-11-23T01:10:21.052Z"
+      "updatedAt": "2025-11-23T01:10:21.052Z",
+      "models": [
+        {
+          "guid": "453b773d-f39c-43af-92bd-9b48c7006deb",
+          "url": "representations/base_blob.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "00c3ff0c-2519-4ff6-9ada-d9761797b0db",
+          "url": "representations/base_blob_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "eeb09e0b-8a0a-4383-8f83-539d6d5899fd",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5d9d8631c",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "6403de86-62f7-496e-9fa2-b59bb7aed40e",
+          "url": "representations/base_blob_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "176fac2a-2329-470f-95be-ef8bef5e87d5",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/2069b62658",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "1a494d69-940e-42d8-8285-18bd1abccec2",
+          "url": "representations/base_blob_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -517,7 +621,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.108Z",
       "name": "Bridge",
-      "updatedAt": "2025-11-23T01:10:21.108Z"
+      "updatedAt": "2025-11-23T01:10:21.108Z",
+      "models": [
+        {
+          "guid": "9592b515-a5a5-4608-993b-622265f4801d",
+          "url": "representations/bridge.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "764c6801-8055-476d-8679-847649b5820d",
+          "url": "representations/bridge_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "25bc7b95-99ea-4b3d-b760-c6437dca1f13",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "cb10c4ac-96d5-4d21-99ad-9192ba58325e",
+          "url": "representations/bridge_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "a2222b32-79aa-433c-9424-70f3fc57eb34",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "99705e66-b2d8-4d9d-9a56-f9adf91ca2e5",
+          "url": "representations/bridge_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -631,7 +786,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.111Z",
       "name": "Capital",
-      "updatedAt": "2025-11-23T01:10:21.111Z"
+      "updatedAt": "2025-11-23T01:10:21.111Z",
+      "models": [
+        {
+          "guid": "3f6af29a-433d-48bd-b200-9e32f75406fc",
+          "url": "representations/capital.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "b8c35ac3-bf10-48b6-943b-a4a84613d552",
+          "url": "representations/capital_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "d7f72292-7fdc-45d0-8c01-17e548ad3fc6",
+          "url": "representations/capital_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "5f1f5af6-61e3-41f7-baa1-179be5302150",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "99ab16a3-2150-43ed-acec-9264f15b1304",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "5945aab3-937e-46da-948b-031e82c36ed7",
+          "url": "representations/capital_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -733,7 +939,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.113Z",
       "name": "Cylindric Capital",
-      "updatedAt": "2025-11-23T01:10:21.113Z"
+      "updatedAt": "2025-11-23T01:10:21.113Z",
+      "models": [
+        {
+          "guid": "fe0f7320-060e-4f25-b0bf-f5f505b40cc5",
+          "url": "representations/cylindric-capital.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "b8b928f9-c44c-46ae-9559-a4cd138ccfde",
+          "url": "representations/cylindric-capital_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "4bb76b61-af48-478f-9d3d-f06a8c5e3d11",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "45c84a55-7f71-4d06-9832-677992e5ebb5",
+          "url": "representations/cylindric-capital_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "bb58402a-f39a-4f16-981f-263037bd503a",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "376518f9-14f9-4b74-9067-b9891bae2054",
+          "url": "representations/cylindric-capital_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -868,7 +1125,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.115Z",
       "name": "\\",
-      "updatedAt": "2025-11-23T01:10:21.115Z"
+      "updatedAt": "2025-11-23T01:10:21.115Z",
+      "models": [
+        {
+          "guid": "8e8109c0-2280-49af-b6f8-8aac646c27d3",
+          "url": "representations/capsule_backslash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "4f251fa3-b35e-48a8-9740-6723215d9924",
+          "url": "representations/capsule_backslash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "49ce8e4b-0a18-4c3d-871c-00bc4e7afb42",
+          "url": "representations/capsule_backslash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "0fca3664-67b8-4401-b2b9-6f19296062d4",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "dce6c0db-15e4-4e62-9392-3e84076403c8",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "9386e0e2-4731-4d4a-b1b2-7e4a668e3fb6",
+          "url": "representations/capsule_backslash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1009,7 +1317,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.117Z",
       "name": "/",
-      "updatedAt": "2025-11-23T01:10:21.117Z"
+      "updatedAt": "2025-11-23T01:10:21.117Z",
+      "models": [
+        {
+          "guid": "4168ea7c-abca-4061-acbe-f43ca048f3d9",
+          "url": "representations/capsule_slash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "f901b609-f2c3-4c75-914e-6a772468adf7",
+          "url": "representations/capsule_slash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "65c5f28d-10ea-4db9-895b-0bd88b6570a2",
+          "url": "representations/capsule_slash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "cbe73591-3fc9-4f15-b4e4-c6284bebe4d8",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e6c366306e",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "7a94c844-6f5f-451f-a677-9274762604aa",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f16baa9eba",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "98edfb75-2b91-43f5-85b8-3abea22c2ca3",
+          "url": "representations/capsule_slash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1144,7 +1503,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.119Z",
       "name": "q",
-      "updatedAt": "2025-11-23T01:10:21.119Z"
+      "updatedAt": "2025-11-23T01:10:21.119Z",
+      "models": [
+        {
+          "guid": "14e16a60-8c82-4ee0-b6ca-aabc341e1267",
+          "url": "representations/capsule_q.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "15f42bdb-2333-42c2-88fe-9b6cd47a1300",
+          "url": "representations/capsule_q_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "852a821c-3359-4bbf-975f-288bb65f8e3f",
+          "url": "representations/capsule_q_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "f1e44ea8-9643-4f24-a553-5a12141eea1d",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "8e002f1b-f356-4044-bef8-0e803eb20022",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "a18fff67-1795-4c9d-8764-b24dbdb417ec",
+          "url": "representations/capsule_q_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1285,7 +1695,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.121Z",
       "name": "p",
-      "updatedAt": "2025-11-23T01:10:21.121Z"
+      "updatedAt": "2025-11-23T01:10:21.121Z",
+      "models": [
+        {
+          "guid": "b606318b-1aee-48b6-802d-b3cb686d7fc6",
+          "url": "representations/capsule_p.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "06cc9b2a-dd2c-4f72-b4c6-cbceae93ea52",
+          "url": "representations/capsule_p_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "11025489-3235-407f-9453-21eb7227a98b",
+          "url": "representations/capsule_p_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "d02213f6-1943-470f-a189-c082a43b7c98",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b3a9105a14",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "560edb6f-940b-4b9a-821d-6881a4121553",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ff37b776dd",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "204a8f0a-898b-45cb-b528-caed1a4f1c01",
+          "url": "representations/capsule_p_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1420,7 +1881,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.123Z",
       "name": "J",
-      "updatedAt": "2025-11-23T01:10:21.123Z"
+      "updatedAt": "2025-11-23T01:10:21.123Z",
+      "models": [
+        {
+          "guid": "2f50c36b-7cb7-47f8-afe5-6879a08792de",
+          "url": "representations/capsule_J.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "7f804dcf-fcc7-40b9-bb16-d8e385ed8dd0",
+          "url": "representations/capsule_J_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "6a5e627e-e388-455f-8566-aee1c23fd672",
+          "url": "representations/capsule_J_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "16018941-598b-4513-a538-215adb9fee6b",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "c80b2c6c-0abf-4c1b-8843-8887065511b0",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "81bdc1ef-c0c2-4344-9ac3-3e53d7a44dfb",
+          "url": "representations/capsule_J_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1561,7 +2073,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.125Z",
       "name": "L",
-      "updatedAt": "2025-11-23T01:10:21.125Z"
+      "updatedAt": "2025-11-23T01:10:21.125Z",
+      "models": [
+        {
+          "guid": "2b344546-aac6-47d9-9ccf-e52aacf47d87",
+          "url": "representations/capsule_L.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "b3048297-2384-4a56-bba6-2cff6bd013c2",
+          "url": "representations/capsule_L_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "a9961c2c-f418-48b9-b2a7-877743dcb39c",
+          "url": "representations/capsule_L_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "66b8e720-936f-4964-b459-4055e210faa2",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "89669b54-baeb-45d8-98dd-089a5570c6e6",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "58854cac-41f5-4a22-b929-3e07ce3e8e89",
+          "url": "representations/capsule_L_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1696,7 +2259,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.128Z",
       "name": "s",
-      "updatedAt": "2025-11-23T01:10:21.128Z"
+      "updatedAt": "2025-11-23T01:10:21.128Z",
+      "models": [
+        {
+          "guid": "ea681f2b-4101-496c-8bc9-2a215456c394",
+          "url": "representations/capsule_s.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "7affa153-3183-45c1-90ac-c670346ab737",
+          "url": "representations/capsule_s_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "e3b0b865-7604-4157-b3c8-a1efee28569b",
+          "url": "representations/capsule_s_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "65264e6b-066e-457e-9f70-e8cbc1c26244",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "c3ab58bd-f789-4b3c-9b5c-884ce1244153",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "a12167be-b163-40e4-a4c6-f8b79cb93972",
+          "url": "representations/capsule_s_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1837,7 +2451,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.131Z",
       "name": "z",
-      "updatedAt": "2025-11-23T01:10:21.131Z"
+      "updatedAt": "2025-11-23T01:10:21.131Z",
+      "models": [
+        {
+          "guid": "25bc9642-3487-47b9-bc42-f7c4c1c12d85",
+          "url": "representations/capsule_z.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "5ff10f17-7a57-42eb-bced-35515250eef0",
+          "url": "representations/capsule_z_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "83ac29b5-397f-472e-86d7-b529d47acd29",
+          "url": "representations/capsule_z_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "8ec5eae7-7f93-4d32-9594-13162e304505",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "d29da0de-4497-4019-9f96-ba20ee797400",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "9ee5e469-8319-4a10-a01d-fc4de574b494",
+          "url": "representations/capsule_z_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -1972,7 +2637,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.133Z",
       "name": "\\",
-      "updatedAt": "2025-11-23T01:10:21.133Z"
+      "updatedAt": "2025-11-23T01:10:21.133Z",
+      "models": [
+        {
+          "guid": "f7a897d1-c25b-46c6-90ad-a93e2bb28f00",
+          "url": "representations/capsule-with-balcony_backslash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "dc3b0aee-adc7-42d4-b7e5-9034641a401b",
+          "url": "representations/capsule-with-balcony_backslash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "8df226b9-1156-49b3-8734-56618ff3416a",
+          "url": "representations/capsule-with-balcony_backslash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "8f755265-1306-4c55-ac68-461e328e9658",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "d380aca4-1736-4b05-aaaa-c7f1b34f3839",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "1bd137ac-c95a-4e7a-8f5f-a0400bc0a437",
+          "url": "representations/capsule-with-balcony_backslash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2113,7 +2829,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.136Z",
       "name": "/",
-      "updatedAt": "2025-11-23T01:10:21.136Z"
+      "updatedAt": "2025-11-23T01:10:21.136Z",
+      "models": [
+        {
+          "guid": "1446d8e8-74f2-43d3-8c54-617b3aa37b6c",
+          "url": "representations/capsule-with-balcony_slash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "a7bad88b-37eb-460a-9f44-1ea261bc38ae",
+          "url": "representations/capsule-with-balcony_slash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "48458e10-93a1-4f43-8efd-41c0f98b7cd7",
+          "url": "representations/capsule-with-balcony_slash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "da7257df-c848-4aa1-92ad-6c04298a3c73",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e6c366306e",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "e6394356-4a98-4339-a8e5-4067000cfd9e",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f16baa9eba",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "3cdfc534-15bb-492f-ba51-43939011325a",
+          "url": "representations/capsule-with-balcony_slash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2248,7 +3015,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.139Z",
       "name": "q",
-      "updatedAt": "2025-11-23T01:10:21.139Z"
+      "updatedAt": "2025-11-23T01:10:21.139Z",
+      "models": [
+        {
+          "guid": "ce505638-47a3-4f5e-b149-f5f012957982",
+          "url": "representations/capsule-with-balcony_q.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "8da6424c-9012-4d01-ba60-6c284099b829",
+          "url": "representations/capsule-with-balcony_q_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "f5a231df-6654-4d96-9dc0-81a26c0f6a63",
+          "url": "representations/capsule-with-balcony_q_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "4927356a-ea36-4125-82e6-938fceb12b5b",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "b8bb6e78-985a-4969-b8e3-01671eee9c27",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "d67d86a5-a1f2-4750-897c-293134689345",
+          "url": "representations/capsule-with-balcony_q_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2389,7 +3207,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.144Z",
       "name": "p",
-      "updatedAt": "2025-11-23T01:10:21.144Z"
+      "updatedAt": "2025-11-23T01:10:21.144Z",
+      "models": [
+        {
+          "guid": "2df830f7-57f2-4f44-ad77-58d1dd9c7bda",
+          "url": "representations/capsule-with-balcony_p.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "9292a798-93a5-48ed-a639-ba7fea678856",
+          "url": "representations/capsule-with-balcony_p_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "1a79cf30-8fb5-425f-8044-cd31167bce4e",
+          "url": "representations/capsule-with-balcony_p_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "7b75777f-08ce-4f82-ad77-45735d23a414",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b3a9105a14",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "1bd2eb8e-d46a-45f8-a1e4-9da78b983477",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ff37b776dd",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "236a1876-9554-4825-87b8-c5283b06fbad",
+          "url": "representations/capsule-with-balcony_p_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2524,7 +3393,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.149Z",
       "name": "J",
-      "updatedAt": "2025-11-23T01:10:21.149Z"
+      "updatedAt": "2025-11-23T01:10:21.149Z",
+      "models": [
+        {
+          "guid": "c963e01b-0d6f-4ec5-8757-7558e7c66a92",
+          "url": "representations/capsule-with-balcony_J.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "0270329c-1965-404b-bbc7-b02bd23f23bf",
+          "url": "representations/capsule-with-balcony_J_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "1efae316-2cf4-4e29-90aa-b490dcfc2c81",
+          "url": "representations/capsule-with-balcony_J_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "d3128dcc-a491-4103-b339-880d99f50bd8",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "35a43cf9-7c85-41c5-b3c5-456322ed586e",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "020652b4-44fa-40b2-afbf-259464d960b0",
+          "url": "representations/capsule-with-balcony_J_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2665,7 +3585,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.151Z",
       "name": "L",
-      "updatedAt": "2025-11-23T01:10:21.151Z"
+      "updatedAt": "2025-11-23T01:10:21.151Z",
+      "models": [
+        {
+          "guid": "3dd46db0-b34f-4f9a-b0fc-b498a1bc6818",
+          "url": "representations/capsule-with-balcony_L.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "aa28a797-ad43-4a48-bf5f-91a204dc3c31",
+          "url": "representations/capsule-with-balcony_L_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "8a426c8a-0676-4b16-a91b-bb043666632d",
+          "url": "representations/capsule-with-balcony_L_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "0dcc4045-1020-47f2-ad9f-1f44bba10599",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "0d2b7fc8-ad33-40e8-997d-02b53b2c3a23",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fcb397f7-be64-47d4-966c-2fd3435ca221",
+          "url": "representations/capsule-with-balcony_L_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2800,7 +3771,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.205Z",
       "name": "s",
-      "updatedAt": "2025-11-23T01:10:21.205Z"
+      "updatedAt": "2025-11-23T01:10:21.205Z",
+      "models": [
+        {
+          "guid": "2701a17e-0eba-4b63-8f96-7545b9f64dec",
+          "url": "representations/capsule-with-balcony_s.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "5ab0bddf-2127-4030-9bbb-48c6e29cb4ee",
+          "url": "representations/capsule-with-balcony_s_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "1ae9d3a5-de81-479d-892e-334c324ef29a",
+          "url": "representations/capsule-with-balcony_s_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "1611c6c9-458c-4010-b8ae-4c53a3ce4cf2",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "2222056a-5547-497b-ba3d-9903239c65cb",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fa1d826d-5468-46df-a1f9-5d6bf72c17e2",
+          "url": "representations/capsule-with-balcony_s_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -2941,7 +3963,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.207Z",
       "name": "z",
-      "updatedAt": "2025-11-23T01:10:21.207Z"
+      "updatedAt": "2025-11-23T01:10:21.207Z",
+      "models": [
+        {
+          "guid": "5b2bf987-b66d-4e63-9f93-b94271ca4c09",
+          "url": "representations/capsule-with-balcony_z.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "f26b2078-1010-4773-9527-b3825002e980",
+          "url": "representations/capsule-with-balcony_z_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "27a72ba8-d3be-4800-a578-2a0372c24800",
+          "url": "representations/capsule-with-balcony_z_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "5394ddb3-15ef-4486-bec5-98a04fddb6b6",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "67aa6bf9-4024-4889-8430-a59d625d0a86",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "32b14b63-7faf-43d4-9256-d84f2eaf4ae9",
+          "url": "representations/capsule-with-balcony_z_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3076,7 +4149,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.21Z",
       "name": "\\",
-      "updatedAt": "2025-11-23T01:10:21.21Z"
+      "updatedAt": "2025-11-23T01:10:21.21Z",
+      "models": [
+        {
+          "guid": "6e7dbabf-f0ef-48d0-95ab-8d7086e4e239",
+          "url": "representations/ellipsoid-capsule_backslash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "3177d103-69d1-493a-b499-ccd05775c9e7",
+          "url": "representations/ellipsoid-capsule_backslash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "46af2944-02b1-48fc-b0c4-c847c73e0c2e",
+          "url": "representations/ellipsoid-capsule_backslash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "81b19d22-c3ea-4f9f-9e88-282bbcee1b22",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f8a0750f34",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "7a8e0512-4969-4f85-a4ef-3f5b66d397ea",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/08abe6efbe",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "aab22851-0624-4b9b-90c0-0d97e403b9d2",
+          "url": "representations/ellipsoid-capsule_backslash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3217,7 +4342,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.212Z",
       "name": "/",
-      "updatedAt": "2025-11-23T01:10:21.212Z"
+      "updatedAt": "2025-11-23T01:10:21.212Z",
+      "models": [
+        {
+          "guid": "a3489623-5a10-447e-88af-881ed31e7f1b",
+          "url": "representations/ellipsoid-capsule_slash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "5b6e5fd9-857a-403c-98b4-7fe820af44e8",
+          "url": "representations/ellipsoid-capsule_slash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "6fa2a143-b78f-4aa1-9424-dd8c2d359705",
+          "url": "representations/ellipsoid-capsule_slash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "5c5f019a-41cd-4e2a-9a69-169acdebc9e0",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/d7c20e7ea4",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fc791858-905b-4568-891a-92f85c4b05fd",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/2a87d1fb6f",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "a6340427-3c4f-4881-8565-2f1b63ac6249",
+          "url": "representations/ellipsoid-capsule_slash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3352,7 +4529,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.214Z",
       "name": "q",
-      "updatedAt": "2025-11-23T01:10:21.214Z"
+      "updatedAt": "2025-11-23T01:10:21.214Z",
+      "models": [
+        {
+          "guid": "619d0551-5701-42ef-96e4-30eae2761059",
+          "url": "representations/ellipsoid-capsule_q.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "1cc38f14-265e-4f2b-8f1f-64b31e63479c",
+          "url": "representations/ellipsoid-capsule_q_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "1d4a38b7-27c6-4333-b5eb-6c9e83f23fde",
+          "url": "representations/ellipsoid-capsule_q_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "3136327b-3d41-441e-8bb8-cee2fc16a063",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/58af8da8c8",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "04685048-6e68-486f-be0a-a61bb0b2f9a3",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/d6ddf1d05d",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "3deaaf2e-d8da-4ea5-a950-58318f770bf9",
+          "url": "representations/ellipsoid-capsule_q_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3493,7 +4722,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.216Z",
       "name": "p",
-      "updatedAt": "2025-11-23T01:10:21.216Z"
+      "updatedAt": "2025-11-23T01:10:21.216Z",
+      "models": [
+        {
+          "guid": "ef9ca83b-51ca-4b84-809e-61076d695b9c",
+          "url": "representations/ellipsoid-capsule_p.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "16051a67-8221-4cd0-b671-2a504411c12b",
+          "url": "representations/ellipsoid-capsule_p_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "c91fdf9c-2123-4971-8e93-ae49bf4be2f1",
+          "url": "representations/ellipsoid-capsule_p_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "f47e2232-1e23-481b-80dd-bb4d59ccaf70",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/80ad44ffe9",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "07ddcb91-430f-483e-9958-8a358411813a",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0c53ae86dc",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "e16367dc-115d-4638-8f7e-f2cfce483f16",
+          "url": "representations/ellipsoid-capsule_p_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3628,7 +4909,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.218Z",
       "name": "J",
-      "updatedAt": "2025-11-23T01:10:21.218Z"
+      "updatedAt": "2025-11-23T01:10:21.218Z",
+      "models": [
+        {
+          "guid": "503f22bc-75d0-42cd-a0d4-8ea1c25e8726",
+          "url": "representations/ellipsoid-capsule_J.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "9ac611a6-9c15-4efc-bb79-de3f63c7198b",
+          "url": "representations/ellipsoid-capsule_J_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "2c3ad749-11c8-4446-be11-ef2e1cbe6664",
+          "url": "representations/ellipsoid-capsule_J_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "1f173ae2-69d8-4d2c-976c-49e5967a9d4e",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/22564f1ee2",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "033d1ec8-8375-404e-995b-f1d48dd04f6c",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/19c41d4361",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "663e9ffe-ea02-4778-9877-2f30798a146b",
+          "url": "representations/ellipsoid-capsule_J_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3769,7 +5102,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.22Z",
       "name": "L",
-      "updatedAt": "2025-11-23T01:10:21.22Z"
+      "updatedAt": "2025-11-23T01:10:21.22Z",
+      "models": [
+        {
+          "guid": "ee3c24c7-03a9-4983-a91f-2eb4038fa9ce",
+          "url": "representations/ellipsoid-capsule_L.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "0dbbdbe8-d50a-4be6-b551-0da91d243dc3",
+          "url": "representations/ellipsoid-capsule_L_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "80da7ba1-ad38-4a21-af5d-17dddcb3da53",
+          "url": "representations/ellipsoid-capsule_L_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "a858bd0b-5793-4795-b593-200874c7f269",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c35e56f23a",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "e6e606aa-9096-42ad-8203-f247e1c025e7",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/fa19ddafc5",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "7251e0be-afc7-47e2-ad59-d93546dbdcb8",
+          "url": "representations/ellipsoid-capsule_L_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -3904,7 +5289,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.222Z",
       "name": "s",
-      "updatedAt": "2025-11-23T01:10:21.222Z"
+      "updatedAt": "2025-11-23T01:10:21.222Z",
+      "models": [
+        {
+          "guid": "b25a9625-28db-4e01-b017-ccfd14f1c444",
+          "url": "representations/ellipsoid-capsule_s.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "e01bfa37-8544-4901-8770-6ed37e47f2ef",
+          "url": "representations/ellipsoid-capsule_s_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "96560631-864d-4f5a-8b10-95c19c4678f8",
+          "url": "representations/ellipsoid-capsule_s_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "5010405d-5b42-414c-8643-9bb43f85eaf5",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c5306eb015",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "aad23d8f-c584-422b-9f83-00418ad18610",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/bfdbce0be1",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "2f9c3efc-41dd-4b7f-b750-9e9c17117ac5",
+          "url": "representations/ellipsoid-capsule_s_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4045,7 +5482,59 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.224Z",
       "name": "z",
-      "updatedAt": "2025-11-23T01:10:21.224Z"
+      "updatedAt": "2025-11-23T01:10:21.224Z",
+      "models": [
+        {
+          "guid": "1d51b4fe-e34f-4fe9-8fa5-daad39088ce8",
+          "url": "representations/ellipsoid-capsule_z.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "992b44ce-9da2-4726-a278-d6738bce463d",
+          "url": "representations/ellipsoid-capsule_z_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "5305670c-bb55-4c3b-a854-2d9f1f16367d",
+          "url": "representations/ellipsoid-capsule_z_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "e999b210-5204-4a3e-9c2e-af8e6f5a93e7",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ada7ff222e",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "2ad8bb02-1069-4b4b-9d40-bfb800a19e2b",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ba36f367e7",
+          "tags": [
+            "application/octet-stream",
+            "model/vnd.speckle+json",
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "1c476ce5-080c-4dd9-a585-1967f930b933",
+          "url": "representations/ellipsoid-capsule_z_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4162,7 +5651,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.227Z",
       "name": "\\",
-      "updatedAt": "2025-11-23T01:10:21.227Z"
+      "updatedAt": "2025-11-23T01:10:21.227Z",
+      "models": [
+        {
+          "guid": "87d7df78-a91f-4a91-8727-a21b65670650",
+          "url": "representations/trapezoid-capsule_backslash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "bd570496-d6bb-43fc-8b94-70a52bd6b165",
+          "url": "representations/trapezoid-capsule_backslash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "ecfb5ad9-fd5c-4f83-859a-cbf820fcc705",
+          "url": "representations/trapezoid-capsule_backslash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "0ee73bfb-f94b-45b0-a8d4-94bf72edb0a5",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "58bb655a-1f85-43e5-9e5a-ae3f327241b5",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "d1a01b01-31d8-4971-92e4-3fc29068a930",
+          "url": "representations/trapezoid-capsule_backslash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4285,7 +5825,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.228Z",
       "name": "/",
-      "updatedAt": "2025-11-23T01:10:21.228Z"
+      "updatedAt": "2025-11-23T01:10:21.228Z",
+      "models": [
+        {
+          "guid": "8058d4af-fe67-4bda-aa98-6604d05b392c",
+          "url": "representations/trapezoid-capsule_slash.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "f59aa864-f911-4edc-9ab2-e033288fbc2f",
+          "url": "representations/trapezoid-capsule_slash_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "9a5b57b8-434f-4885-96d8-d6dd2379efb5",
+          "url": "representations/trapezoid-capsule_slash_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "380bfe23-d455-4240-8c3e-a574d81ce09a",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/e6c366306e",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "1414a631-bfe3-4d88-9a53-0699f9f8357b",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f16baa9eba",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "e819b868-1852-4229-a31f-21f9e56b89c6",
+          "url": "representations/trapezoid-capsule_slash_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4402,7 +5993,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.23Z",
       "name": "q",
-      "updatedAt": "2025-11-23T01:10:21.23Z"
+      "updatedAt": "2025-11-23T01:10:21.23Z",
+      "models": [
+        {
+          "guid": "01af3417-e9f3-498f-a32c-785120b64295",
+          "url": "representations/trapezoid-capsule_q.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "84ab3e7d-ab1d-4069-99c6-bc8f2394988a",
+          "url": "representations/trapezoid-capsule_q_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "a5fa62d0-23bd-4829-8a95-93ad246feb9a",
+          "url": "representations/trapezoid-capsule_q_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "62ad6b11-ddf8-4f80-a0ba-c768fb2bbbaf",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "3c5425b2-7dbc-4593-b069-80f7c8b717e6",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fa40dabf-016b-4a1e-8998-12594f7c555c",
+          "url": "representations/trapezoid-capsule_q_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4525,7 +6167,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.232Z",
       "name": "p",
-      "updatedAt": "2025-11-23T01:10:21.232Z"
+      "updatedAt": "2025-11-23T01:10:21.232Z",
+      "models": [
+        {
+          "guid": "3937c5ad-e8b2-4eaf-bc42-5569332e2fd1",
+          "url": "representations/trapezoid-capsule_p.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "5b1970b0-3fa5-4412-8e87-2a40a84841ef",
+          "url": "representations/trapezoid-capsule_p_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "f2566c32-da51-4289-878c-72ebf770933d",
+          "url": "representations/trapezoid-capsule_p_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "c1c36e82-6a86-43d6-97c2-66d357beaf75",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b3a9105a14",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fceca0a4-5345-43d5-97ef-cd72f40b1f28",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ff37b776dd",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fc687f16-9736-4ac5-b371-5d781c75bd14",
+          "url": "representations/trapezoid-capsule_p_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4642,7 +6335,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.234Z",
       "name": "J",
-      "updatedAt": "2025-11-23T01:10:21.234Z"
+      "updatedAt": "2025-11-23T01:10:21.234Z",
+      "models": [
+        {
+          "guid": "5aa152b8-124c-4b35-b96d-f9ae3333ad58",
+          "url": "representations/trapezoid-capsule_J.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "902ec3d0-3cb4-439a-8df1-b0e21397b6cc",
+          "url": "representations/trapezoid-capsule_J_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "6e145891-3620-49cb-8212-7b0797586557",
+          "url": "representations/trapezoid-capsule_J_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "2af60bce-af1a-40ca-a5c4-9612c2302ef0",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "ee50fb56-7937-4b7c-a59d-816f22b029d8",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "406e2b55-9e60-47b6-af60-2fbf1434638a",
+          "url": "representations/trapezoid-capsule_J_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4765,7 +6509,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.236Z",
       "name": "L",
-      "updatedAt": "2025-11-23T01:10:21.236Z"
+      "updatedAt": "2025-11-23T01:10:21.236Z",
+      "models": [
+        {
+          "guid": "108161f3-90e7-45c9-afb0-29f68f7190f7",
+          "url": "representations/trapezoid-capsule_L.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "368632f6-6d18-4b3f-a412-b5116557f5c5",
+          "url": "representations/trapezoid-capsule_L_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "21354e96-af90-4c8a-b82d-8c66dcf51329",
+          "url": "representations/trapezoid-capsule_L_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "747fbd87-6cb3-446b-9d1c-fc65f146c39d",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fe01ae45-8901-4c7b-9fc2-4af51ec17004",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "cad4c1ea-772f-4e2e-ab48-b8b3e873309a",
+          "url": "representations/trapezoid-capsule_L_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -4882,7 +6677,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.238Z",
       "name": "s",
-      "updatedAt": "2025-11-23T01:10:21.238Z"
+      "updatedAt": "2025-11-23T01:10:21.238Z",
+      "models": [
+        {
+          "guid": "94838483-5480-4482-b530-5b82afa6fce5",
+          "url": "representations/trapezoid-capsule_s.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "640bf272-3218-4810-ac15-79bba513f450",
+          "url": "representations/trapezoid-capsule_s_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "17f9e7e2-de72-4e9d-b5a8-d7030448ccf2",
+          "url": "representations/trapezoid-capsule_s_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "66c4ddef-0a37-49e9-ab5a-bcb720aab22e",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "3abe17fd-1885-4966-a835-7a51ce4dc231",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "7c4814e0-a7c9-42e1-8957-710970e4df7f",
+          "url": "representations/trapezoid-capsule_s_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -5005,7 +6851,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.24Z",
       "name": "z",
-      "updatedAt": "2025-11-23T01:10:21.24Z"
+      "updatedAt": "2025-11-23T01:10:21.24Z",
+      "models": [
+        {
+          "guid": "67afd378-ad20-468d-a19d-c94b82880789",
+          "url": "representations/trapezoid-capsule_z.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "3afc7cce-d68b-49e4-af76-a8e7a4d6831e",
+          "url": "representations/trapezoid-capsule_z_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "9230379d-23fc-4c3d-a617-570dce513fca",
+          "url": "representations/trapezoid-capsule_z_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "f0552c96-9936-445f-9aba-7642234c8efe",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "81b02099-acfc-43fa-a155-5ddb3feab02b",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "9c9a0515-2bd1-4700-a249-91e727a16ff7",
+          "url": "representations/trapezoid-capsule_z_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -5332,7 +7229,56 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.247Z",
       "name": "Tambour",
-      "updatedAt": "2025-11-23T01:10:21.247Z"
+      "updatedAt": "2025-11-23T01:10:21.247Z",
+      "models": [
+        {
+          "guid": "4e2560ab-143b-45f9-92cc-fd38eff8e2fd",
+          "url": "representations/tambour.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "817fb6d8-dd78-48a6-bba4-1f1e1ac0d5fb",
+          "url": "representations/tambour_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm"
+          ]
+        },
+        {
+          "guid": "f7823271-3e0d-4d3c-a1c5-d9b7c7ae74d5",
+          "url": "representations/tambour_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "86db6e9f-2a77-4ef7-9e9b-25f82b08906a",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f9222724e5",
+          "tags": [
+            "model/vnd.3dm",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "49acead9-27e2-415b-a185-8feaa2e8ca38",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b27c179b7d",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "0981575a-40af-4fba-ac7b-94c17cc1c058",
+          "url": "representations/tambour_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -5662,7 +7608,56 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.251Z",
       "name": "First Storey",
-      "updatedAt": "2025-11-23T01:10:21.251Z"
+      "updatedAt": "2025-11-23T01:10:21.251Z",
+      "models": [
+        {
+          "guid": "7246ecb8-9fe4-49ea-bc4e-08e5002700c9",
+          "url": "representations/tambour_first-storey.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "322fb888-0bad-45a4-ac4f-9af09109d8d4",
+          "url": "representations/tambour_first-storey_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm"
+          ]
+        },
+        {
+          "guid": "f18829e9-c8ec-4411-a958-ae8d8496fe67",
+          "url": "representations/tambour_first-storey_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "ee50737d-7c36-495e-b52f-83bbd8583ba9",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/89d6e55762",
+          "tags": [
+            "model/vnd.3dm",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "93b9d1ea-3eae-402c-a2b2-f333ebebb65c",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c5850e2821",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "fd703f10-0949-4504-b3a6-85d419ca149e",
+          "url": "representations/tambour_first-storey_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -5992,7 +7987,56 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.268Z",
       "name": "Last Storey",
-      "updatedAt": "2025-11-23T01:10:21.268Z"
+      "updatedAt": "2025-11-23T01:10:21.268Z",
+      "models": [
+        {
+          "guid": "bff40394-f453-4c4d-b355-22c0f82a8ec3",
+          "url": "representations/tambour_last-storey.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "16b4e27f-436c-4deb-bce5-5b48b3955a6a",
+          "url": "representations/tambour_last-storey_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm"
+          ]
+        },
+        {
+          "guid": "74bb9ff7-ac02-45f6-9384-d51d56d90f3e",
+          "url": "representations/tambour_last-storey_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "74ba3580-00da-4e86-b8ae-24cd2ff34f4d",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/53dc156694",
+          "tags": [
+            "model/vnd.3dm",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "eb4ccb09-2937-40e7-b343-26f7b4812eb1",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/345fa2173d",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "a015f704-cebf-4fee-9fda-d5ec60d1b832",
+          "url": "representations/tambour_last-storey_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -6322,7 +8366,56 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.272Z",
       "name": "Single Storey",
-      "updatedAt": "2025-11-23T01:10:21.272Z"
+      "updatedAt": "2025-11-23T01:10:21.272Z",
+      "models": [
+        {
+          "guid": "caa84a84-da0a-4ff8-a63f-840ebd9ed028",
+          "url": "representations/tambour_single-storey.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "9175399d-3204-4209-9e08-5b912e50c5bb",
+          "url": "representations/tambour_single-storey_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm"
+          ]
+        },
+        {
+          "guid": "1346b6dc-6c81-4111-877d-29c32200b891",
+          "url": "representations/tambour_single-storey_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "a3e4b5e4-3e9c-4f1a-a55d-bdeda41061e4",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/73566dc911",
+          "tags": [
+            "model/vnd.3dm",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "98f247f4-ba13-453d-8589-751f1c9b22dc",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/8965b08c83",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "f55d6a67-49d8-4733-bd22-ad21e4ee4603",
+          "url": "representations/tambour_single-storey_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -6643,7 +8736,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.276Z",
       "name": "Cylindric Tambour",
-      "updatedAt": "2025-11-23T01:10:21.276Z"
+      "updatedAt": "2025-11-23T01:10:21.276Z",
+      "models": [
+        {
+          "guid": "e59d0630-6e6a-4ff8-9d31-ebf6cd34e542",
+          "url": "representations/cylindric-tambour.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "cc9c63cc-af4a-480f-bbc9-1e1e08b2fb98",
+          "url": "representations/cylindric-tambour_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "6873c604-a90b-4dc6-9f50-2e8925a8b080",
+          "url": "representations/cylindric-tambour_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "9774ad63-7a36-4d15-a865-1176d70eeaa7",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/2a6977ed68",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "bd3daf80-7809-40ff-b274-befe287c3e03",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/1152f570e6",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "a5cdd931-d897-497b-9bf5-d2acc430f1ba",
+          "url": "representations/cylindric-tambour_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -6967,7 +9111,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.28Z",
       "name": "First Storey",
-      "updatedAt": "2025-11-23T01:10:21.28Z"
+      "updatedAt": "2025-11-23T01:10:21.28Z",
+      "models": [
+        {
+          "guid": "8c32cfe4-0f69-43e9-8315-93f1b44d4590",
+          "url": "representations/cylindric-tambour_first-storey.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "78be3922-7364-43d5-a646-1e8ed7a01faf",
+          "url": "representations/cylindric-tambour_first-storey_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "a7a03817-ef69-4c27-af1d-34258cf6b5e7",
+          "url": "representations/cylindric-tambour_first-storey_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "37176786-da3f-4482-aec7-dc897ec12155",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b862062ab5",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "1fd1b99e-0783-4f80-a3f7-9daba7ec440d",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/152ecb7f14",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "8f5138fd-83b0-42fb-bd9e-03302bf7e71f",
+          "url": "representations/cylindric-tambour_first-storey_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -7291,7 +9486,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.284Z",
       "name": "Last Storey",
-      "updatedAt": "2025-11-23T01:10:21.284Z"
+      "updatedAt": "2025-11-23T01:10:21.284Z",
+      "models": [
+        {
+          "guid": "8ee725e9-3643-4f80-ba00-aa644756f2a0",
+          "url": "representations/cylindric-tambour_last-storey.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "a1cf9cf7-1888-4651-8a7b-28eab48cee9e",
+          "url": "representations/cylindric-tambour_last-storey_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "233a7c22-c743-4e42-b3cb-28d9a2914eb9",
+          "url": "representations/cylindric-tambour_last-storey_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "bc5a9f97-9e70-4a65-8124-22a4531fed9d",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ec423cca22",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "5b213841-9a6e-4177-ad84-71e950757fd3",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/4088e8e156",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "562768ba-019c-4aa4-a420-6a8403550580",
+          "url": "representations/cylindric-tambour_last-storey_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     },
     {
       "ports": [
@@ -7615,7 +9861,58 @@
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.288Z",
       "name": "Single Storey",
-      "updatedAt": "2025-11-23T01:10:21.288Z"
+      "updatedAt": "2025-11-23T01:10:21.288Z",
+      "models": [
+        {
+          "guid": "455659a4-1e9b-4b3a-a5b7-b31987422e53",
+          "url": "representations/cylindric-tambour_single-storey.glb",
+          "tags": [
+            "model/gltf-binary"
+          ]
+        },
+        {
+          "guid": "346ba9c8-3d65-4448-81ad-a868a547c44b",
+          "url": "representations/cylindric-tambour_single-storey_1to500.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500"
+          ]
+        },
+        {
+          "guid": "26a64fc1-c664-409b-a16a-5870c6fd4e06",
+          "url": "representations/cylindric-tambour_single-storey_1to200.3dm",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200"
+          ]
+        },
+        {
+          "guid": "6be10953-a5f5-4822-8f63-e5e30153db1f",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/6e372d67ee",
+          "tags": [
+            "model/vnd.3dm",
+            "1to500",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "4b5cd55a-2fb3-429b-bee7-9bba08538c79",
+          "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/025c85ea51",
+          "tags": [
+            "model/vnd.3dm",
+            "1to200",
+            "model/vnd.speckle+json"
+          ]
+        },
+        {
+          "guid": "7fbb30ee-f254-4cd5-9384-42b44e5be8dc",
+          "url": "representations/cylindric-tambour_single-storey_collider.glb",
+          "tags": [
+            "model/gltf-binary",
+            "collider"
+          ]
+        }
+      ]
     }
   ],
   "homepage": "https://github.com/usalu/metabolism/tree/r25.07-1",
@@ -285769,5 +288066,6 @@
         }
       ]
     }
-  ]
+  ],
+  "preview": "docs/preview.png"
 }

@@ -1,6 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
 
-
 // https://playwright.dev/docs/test-configuration.
 export default defineConfig({
   testMatch: "**/sketchpad.test.ts",
@@ -8,9 +7,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [["list"], ['json', { outputFile: '../../reports/playwright.json' }]],
+  reporter: [["list"], ["json", { outputFile: "../../reports/playwright.json" }]],
   use: {
-    baseURL: "http://localhost:5174",
+    baseURL: "http://localhost:5173",
     trace: "on-first-retry",
   },
   projects: [

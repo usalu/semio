@@ -24,7 +24,7 @@
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
@@ -59,6 +59,7 @@ import {
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
+  useSyncField,
   useTooltip,
   useType,
   useTypeScope,
@@ -210,17 +211,17 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
       }
       if (!yMap.has("panelVisibility")) {
         const yPanelVisibility = new Y.Map<boolean>();
-        yPanelVisibility.set("toolbar", false);
+        yPanelVisibility.set("toolbar", true);
         yPanelVisibility.set("workbench", false);
         yPanelVisibility.set("details", false);
         yPanelVisibility.set("chat", false);
         yPanelVisibility.set("settings", false);
         yMap.set("panelVisibility", yPanelVisibility);
       } else {
-        // Ensure toolbar field exists for existing instances
+        // Ensure toolbar is always visible for existing instances
         const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
-        if (yPanelVisibility && !yPanelVisibility.has("toolbar")) {
-          yPanelVisibility.set("toolbar", false);
+        if (yPanelVisibility && yPanelVisibility.get("toolbar") !== true) {
+          yPanelVisibility.set("toolbar", true);
         }
       }
     });
@@ -618,24 +619,34 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
   return useSyncDeep<TypeAppState, T>(store as TypeAppStore, selector || ((state: TypeAppState) => state as T));
 }
 
-export function useTypeAppSelection(): TypeAppSelection {
-  return useTypeApp((s) => s.selection) as TypeAppSelection;
+export function useTypeAppSelection(id?: TypeAppId): TypeAppSelection {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return {};
+  return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", (s) => s.selection ?? {});
 }
 
-export function useTypeAppPanelVisibility(): PanelVisibility {
-  return useTypeApp((s) => s.panelVisibility) as PanelVisibility;
+export function useTypeAppPanelVisibility(id?: TypeAppId): PanelVisibility {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return { toolbar: false, workbench: false, details: false, chat: false, settings: false };
+  return useSyncField<TypeAppState, PanelVisibility>(store as TypeAppStore, "panelVisibility", (s) => s.panelVisibility);
 }
 
-export function useTypeAppOthers(): TypeAppPresenceOther[] {
-  return useTypeApp((s) => s.others) as TypeAppPresenceOther[];
+export function useTypeAppOthers(id?: TypeAppId): TypeAppPresenceOther[] {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return [];
+  return useSyncDeep<TypeAppState, TypeAppPresenceOther[]>(store as TypeAppStore, (s) => s.others);
 }
 
-export function useTypeAppCamera(): Camera | undefined {
-  return useTypeApp((s) => s.camera) as Camera | undefined;
+export function useTypeAppCamera(id?: TypeAppId): Camera | undefined {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<TypeAppState, Camera | undefined>(store as TypeAppStore, "camera", (s) => s.camera, false);
 }
 
-export function useTypeAppFocusedPortGuid(): Guid | undefined {
-  return useTypeApp((s) => s.focusedPortGuid) as Guid | undefined;
+export function useTypeAppFocusedPortGuid(id?: TypeAppId): Guid | undefined {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "focusedPortGuid", (s) => s.focusedPortGuid, false);
 }
 
 export function useTypeAppCommands(id?: TypeAppId) {
@@ -801,19 +812,21 @@ export function useTypeAppCommands(id?: TypeAppId) {
   };
 }
 
-export function useTypeAppHover(): TypeAppHover | undefined {
-  return useTypeApp((s) => s.hover) as TypeAppHover | undefined;
+export function useTypeAppHover(id?: TypeAppId): TypeAppHover | undefined {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<TypeAppState, TypeAppHover | undefined>(store as TypeAppStore, "hover", (s) => s.hover);
 }
 
-export function useTypeAppActiveTool(): ToolKind {
-  return useTypeApp((s) => s.activeTool) as ToolKind;
+export function useTypeAppActiveTool(id?: TypeAppId): ToolKind {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return ToolKind.SELECTION_NORMAL;
+  return useSyncField<TypeAppState, ToolKind>(store as TypeAppStore, "activeTool", (s) => s.activeTool ?? ToolKind.SELECTION_NORMAL, false);
 }
 
 export function useTypeAppTransaction(origin: string, id?: TypeAppId): Transaction {
   const store = useTypeAppStore(undefined, id) as TypeAppStore | null;
-  if (!store) {
-    return {};
-  }
+  if (!store) return {};
   return {
     start: () => store.execute("semio.typeApp.startTransaction", origin),
     finalize: () => store.execute("semio.typeApp.finalizeTransaction", origin),
@@ -822,19 +835,27 @@ export function useTypeAppTransaction(origin: string, id?: TypeAppId): Transacti
 }
 
 export function useTypeAppIsPortSelected(id: TypeAppId | undefined, portId: string): boolean {
-  return useTypeApp((s) => s.selection?.ports?.includes(portId) || false, id) as boolean;
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return false;
+  return useSyncField<TypeAppState, boolean>(store as TypeAppStore, "selection", (s) => s.selection?.ports?.includes(portId) || false);
 }
 
 export function useTypeAppIsPortHovered(id: TypeAppId | undefined, portId: string): boolean {
-  return useTypeApp((s) => s.hover?.port === portId, id) as boolean;
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return false;
+  return useSyncField<TypeAppState, boolean>(store as TypeAppStore, "hover", (s) => s.hover?.port === portId);
 }
 
-export function useTypeAppSelectedModelGuid(): Guid | undefined {
-  return useTypeApp((s) => s.selectedModelGuid) as Guid | undefined;
+export function useTypeAppSelectedModelGuid(id?: TypeAppId): Guid | undefined {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "selectedModelGuid", (s) => s.selectedModelGuid, false);
 }
 
-export function useTypeAppSelectedModelTags(): string[] {
-  return useTypeApp((s) => s.selectedModelTags ?? []) as string[];
+export function useTypeAppSelectedModelTags(id?: TypeAppId): string[] {
+  const store = useTypeAppStore(identitySelector, id);
+  if (!store) return [];
+  return useSyncField<TypeAppState, string[]>(store as TypeAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? []);
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
@@ -1196,26 +1217,44 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const { modelUrl, fileExtension, fileGuid } = useMemo(() => {
     if (!type?.models || type.models.length === 0) {
+      console.warn("[TypeMesh] No models available for type:", type?.guid, type?.name);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
     let model: Model | undefined;
 
     if (selectedModelGuid) {
+      // Use explicitly selected model GUID
       model = type.models.find((r) => r.guid === selectedModelGuid);
+      console.log("[TypeMesh] Selected model using explicit GUID:", model?.guid);
     } else if (selectedModelTags.length > 0) {
+      // Use manually selected tags with strict filtering
       model = selectBestModel(type.models, selectedModelTags);
+      console.log("[TypeMesh] Selected model using manual tags:", model?.guid, "tags:", selectedModelTags);
     } else {
-      const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
-      model = defaultRep ?? type.models[0];
+      // Use type's concepts as default tags for jaccard-based selection
+      const conceptGuids = type.concepts?.map((c) => c.guid) ?? [];
+      if (conceptGuids.length > 0) {
+        // Use findModel directly (jaccard) instead of selectBestModel (which filters first)
+        // This finds the model with highest jaccard similarity to the type's concepts
+        model = findModel(type.models, conceptGuids);
+        console.log("[TypeMesh] Selected model using type concepts:", model?.guid, "concepts:", conceptGuids);
+      } else {
+        // Fallback to default model (one with no tags) or first model
+        const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
+        model = defaultRep ?? type.models[0];
+        console.log("[TypeMesh] Selected default/first model:", model?.guid);
+      }
     }
 
     if (!model) {
+      console.warn("[TypeMesh] No model found for type:", type?.guid);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
     const file = kit?.files?.find((f) => f.guid === model.file);
     if (!file) {
+      console.warn("[TypeMesh] File not found in kit for model:", model.guid, "file guid:", model.file);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
@@ -1223,9 +1262,11 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
+      console.warn("[TypeMesh] File URL not available:", file.guid, file.name);
       return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
 
+    console.log("[TypeMesh] Model ready to load:", model.guid, "file:", file.name);
     return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
   }, [type, kit, kitStore, selectedModelGuid, selectedModelTags]);
 
@@ -2791,9 +2832,9 @@ export const ToolsToggleGroup: FC = () => {
   const app = useTypeApp((s) => s, typeAppId);
   const { setActiveTool } = useTypeAppCommands(typeAppId);
 
-  if (!kit || !type || !app) return null;
+  if (!kit || !type) return null;
 
-  const activeTool = (app as TypeAppState).activeTool ?? ToolKind.SELECTION_NORMAL;
+  const activeTool = (app as TypeAppState | null)?.activeTool ?? ToolKind.SELECTION_NORMAL;
 
   return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool as ToolKind)} level="panel" />;
 };
@@ -2839,20 +2880,7 @@ const App: FC = () => {
     };
   }, [activeTool, setActiveTool]);
 
-  useEffect(() => {
-    if (appType !== "type") return;
-
-    addSection("toolbar", {
-      id: "semio.sketchpad.app.type.tools",
-      specificity: 20,
-      order: 0,
-      content: <ToolsToggleGroup />,
-    });
-
-    return () => {
-      removeSection("toolbar", "semio.sketchpad.app.type.tools");
-    };
-  }, [addSection, removeSection, appType]);
+  // Toolbar section is now registered in TypeApp component for earlier initialization
 
   // Dynamic details panel based on selection
   useEffect(() => {
@@ -3032,11 +3060,7 @@ const App: FC = () => {
       id: "semio.sketchpad.app.type.settings",
       specificity: 30,
       order: 0,
-      content: () => (
-        <>
-          {/* Type-specific settings can be added here in the future */}
-        </>
-      ),
+      content: () => <>{/* Type-specific settings can be added here in the future */}</>,
     });
 
     // Add Kit settings (middle specificity)
@@ -3178,6 +3202,22 @@ const App: FC = () => {
 };
 
 const TypeApp: FC = () => {
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+
+  useLayoutEffect(() => {
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.type.tools",
+      specificity: 20,
+      order: 0,
+      content: <ToolsToggleGroup />,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.type.tools");
+    };
+  }, [addSection, removeSection]);
+
   return <App />;
 };
 
@@ -3191,24 +3231,63 @@ export const TypeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
+  const type = useType() as Type | undefined;
+  const kit = useKit() as Kit | undefined;
+  const selectedModelTags = useTypeAppSelectedModelTags();
+  const { addModelTag, removeModelTag } = useTypeAppCommands();
+
+  // Get all unique tag guids from the type's models
+  const allModelTagGuids = useMemo(() => {
+    if (!type?.models) return [];
+    const tagGuids = new Set<string>();
+    type.models.forEach((model) => {
+      model.tags?.forEach((tag) => tagGuids.add(tag.guid));
+    });
+    return Array.from(tagGuids);
+  }, [type?.models]);
+
+  // Get tag names from kit
+  const tagNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    kit?.tags?.forEach((tag) => {
+      map.set(tag.guid, tag.name);
+    });
+    return map;
+  }, [kit?.tags]);
 
   useEffect(() => {
     if (appType !== "type") return;
 
-    // TODO: Add type-specific footer items here
-    // Example:
-    // addFooterItem({
-    //   id: "semio.sketchpad.app.type.footer.someAction",
-    //   icon: SomeIcon,
-    //   label: "Action",
-    //   onClick: () => { /* action */ },
-    //   order: 0,
-    // });
+    // Remove previous tag items
+    allModelTagGuids.forEach((tagGuid) => {
+      removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
+    });
+
+    // Add footer items for each tag
+    allModelTagGuids.forEach((tagGuid, index) => {
+      const tagName = tagNameMap.get(tagGuid) || tagGuid.slice(0, 8);
+      const isSelected = selectedModelTags.includes(tagGuid);
+
+      addFooterItem({
+        id: `semio.sketchpad.app.type.footer.tag.${tagGuid}`,
+        content: <span className={`cursor-pointer transition-colors ${isSelected ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>{tagName}</span>,
+        onClick: () => {
+          if (isSelected) {
+            removeModelTag("semio.sketchpad.app.type.footer.tag.remove", tagGuid);
+          } else {
+            addModelTag("semio.sketchpad.app.type.footer.tag.add", tagGuid);
+          }
+        },
+        order: index,
+      });
+    });
 
     return () => {
-      // removeFooterItem("semio.sketchpad.app.type.footer.someAction");
+      allModelTagGuids.forEach((tagGuid) => {
+        removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
+      });
     };
-  }, [appType, addFooterItem, removeFooterItem]);
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTag, removeModelTag]);
 
   return null;
 };
@@ -3238,9 +3317,9 @@ export const config: AppConfig = {
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

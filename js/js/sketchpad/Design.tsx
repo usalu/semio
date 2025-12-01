@@ -44,7 +44,7 @@ import * as Y from "yjs";
 import { Guid, KitDiff, PieceDiff } from "../semio";
 import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
-import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesignAppStoreFactory, SketchpadStore, useDesignScope, useKitScope, usePieceScope, useSketchpadStore, useSync, useSyncDeep } from "./Sketchpad"; // TODO: Get rid of this import
+import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesignAppStoreFactory, SketchpadStore, useDesignScope, useKitScope, usePieceScope, useSketchpadStore, useSync, useSyncDeep, useSyncField } from "./Sketchpad"; // TODO: Get rid of this import
 
 // #endregion Store
 
@@ -55,7 +55,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, RemoveIcon, SceneIcon, SelectToolIcon, TableViewIcon } from "@semio/assets";
-import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
@@ -976,16 +976,17 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
     }
     if (!yMap.has("panelVisibility")) {
       const yPanelVisibility = new Y.Map<boolean>();
-      yPanelVisibility.set("toolbar", false);
+      yPanelVisibility.set("toolbar", true);
       yPanelVisibility.set("workbench", false);
       yPanelVisibility.set("details", false);
       yPanelVisibility.set("chat", false);
       yPanelVisibility.set("settings", false);
       yMap.set("panelVisibility", yPanelVisibility as any);
     } else {
+      // Ensure toolbar is always visible for existing instances
       const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
-      if (yPanelVisibility && !yPanelVisibility.has("toolbar")) {
-        yPanelVisibility.set("toolbar", false);
+      if (yPanelVisibility && yPanelVisibility.get("toolbar") !== true) {
+        yPanelVisibility.set("toolbar", true);
       }
     }
 
@@ -1479,44 +1480,62 @@ export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: De
   return useSyncDeep<DesignAppState, T>(store as DesignAppStore, selector || ((s: DesignAppState) => s as T));
 }
 
-export function useDesignAppSelection(): DesignAppSelection {
-  return useDesignApp((s) => s.selection) as DesignAppSelection;
+export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return {};
+  return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", (s) => s.selection ?? {});
 }
 
-export function useDesignAppFullscreen(): DesignAppFullscreenWindow {
-  return useDesignApp((s) => s.fullscreenWindow) as DesignAppFullscreenWindow;
+export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWindow {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return DesignAppFullscreenWindow.None;
+  return useSyncField<DesignAppState, DesignAppFullscreenWindow>(store as DesignAppStore, "fullscreenWindow", (s) => s.fullscreenWindow, false);
 }
 
 export function useDesignAppDiff(): KitDiff | undefined {
   return undefined;
 }
 
-export function useDesignAppOthers(): DesignAppPresenceOther[] {
-  return useDesignApp((s) => s.others) as DesignAppPresenceOther[];
+export function useDesignAppOthers(id?: DesignAppId): DesignAppPresenceOther[] {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return [];
+  return useSyncDeep<DesignAppState, DesignAppPresenceOther[]>(store as DesignAppStore, (s) => s.others);
 }
 
-export function useDesignAppCamera(): Camera | undefined {
-  return useDesignApp((s) => s.camera) as Camera | undefined;
+export function useDesignAppCamera(id?: DesignAppId): Camera | undefined {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<DesignAppState, Camera | undefined>(store as DesignAppStore, "camera", (s) => s.camera, false);
 }
 
-export function useDesignAppDiagramCenter(): Coord | undefined {
-  return useDesignApp((s) => s.diagramCenter) as Coord | undefined;
+export function useDesignAppDiagramCenter(id?: DesignAppId): Coord | undefined {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<DesignAppState, Coord | undefined>(store as DesignAppStore, "diagramCenter", (s) => s.diagramCenter, false);
 }
 
-export function useDesignAppDiagramScale(): number | undefined {
-  return useDesignApp((s) => s.diagramScale) as number | undefined;
+export function useDesignAppDiagramScale(id?: DesignAppId): number | undefined {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<DesignAppState, number | undefined>(store as DesignAppStore, "diagramScale", (s) => s.diagramScale, false);
 }
 
-export function useDesignAppFocusedPieceGuid(): Guid | undefined {
-  return useDesignApp((s) => s.focusedPieceGuid) as Guid | undefined;
+export function useDesignAppFocusedPieceGuid(id?: DesignAppId): Guid | undefined {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<DesignAppState, Guid | undefined>(store as DesignAppStore, "focusedPieceGuid", (s) => s.focusedPieceGuid, false);
 }
 
-export function useDesignAppSelectedModelTags(): Record<Guid, string[]> {
-  return useDesignApp((s) => s.selectedModelTags ?? {}) as Record<Guid, string[]>;
+export function useDesignAppSelectedModelTags(id?: DesignAppId): Record<Guid, string[]> {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return {};
+  return useSyncField<DesignAppState, Record<Guid, string[]>>(store as DesignAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? {});
 }
 
-export function useDesignAppHover(): DesignAppHover | undefined {
-  return useDesignApp((s) => s.hover) as DesignAppHover | undefined;
+export function useDesignAppHover(id?: DesignAppId): DesignAppHover | undefined {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return undefined;
+  return useSyncField<DesignAppState, DesignAppHover | undefined>(store as DesignAppStore, "hover", (s) => s.hover);
 }
 
 export function useDesignAppCommands(id?: DesignAppId) {
@@ -1594,6 +1613,35 @@ export function useDesignAppCommands(id?: DesignAppId) {
         },
       });
     },
+    setModelTagsForType: (origin: string, typeGuid: Guid, tags: string[]) => {
+      const current = store.snapshot().selectedModelTags ?? {};
+      store.change({
+        selectedModelTags: {
+          ...current,
+          [typeGuid]: tags,
+        },
+      });
+    },
+    addModelTagForAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
+      const current = store.snapshot().selectedModelTags ?? {};
+      const updated: Record<Guid, string[]> = { ...current };
+      typeGuids.forEach((typeGuid) => {
+        const existing = updated[typeGuid] ?? [];
+        if (!existing.includes(tagGuid)) {
+          updated[typeGuid] = [...existing, tagGuid];
+        }
+      });
+      store.change({ selectedModelTags: updated });
+    },
+    removeModelTagForAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
+      const current = store.snapshot().selectedModelTags ?? {};
+      const updated: Record<Guid, string[]> = { ...current };
+      typeGuids.forEach((typeGuid) => {
+        const existing = updated[typeGuid] ?? [];
+        updated[typeGuid] = existing.filter((t) => t !== tagGuid);
+      });
+      store.change({ selectedModelTags: updated });
+    },
     execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };
 }
@@ -1643,14 +1691,8 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
 
 export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      const hover = state.hover;
-      return hover?.pieces?.includes(pieceId) ?? false;
-    },
-    true,
-  ) as boolean;
+  if (!store) return false;
+  return useSyncField<DesignAppState, boolean>(store, "hover", (state) => state.hover?.pieces?.includes(pieceId) ?? false);
 }
 
 export function useDesignAppIsPieceTransitiveHovered(id: DesignAppId | undefined, pieceId: string): boolean {
@@ -1746,13 +1788,8 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
 
 export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      return state.selection?.pieces?.includes(pieceId) ?? false;
-    },
-    true,
-  ) as boolean;
+  if (!store) return false;
+  return useSyncField<DesignAppState, boolean>(store, "selection", (state) => state.selection?.pieces?.includes(pieceId) ?? false);
 }
 
 export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: string): { fill: string; stroke: string; opacity: number } {
@@ -1814,24 +1851,14 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
 
 export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, connectionId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      return state.hover?.connections?.includes(connectionId) ?? false;
-    },
-    true,
-  ) as boolean;
+  if (!store) return false;
+  return useSyncField<DesignAppState, boolean>(store, "hover", (state) => state.hover?.connections?.includes(connectionId) ?? false);
 }
 
 export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, connectionId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      return state.selection?.connections?.includes(connectionId) ?? false;
-    },
-    true,
-  ) as boolean;
+  if (!store) return false;
+  return useSyncField<DesignAppState, boolean>(store, "selection", (state) => state.selection?.connections?.includes(connectionId) ?? false);
 }
 
 export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
@@ -1954,13 +1981,102 @@ export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
+  const design = useDesign() as Design | undefined;
+  const kit = useKit() as Kit | undefined;
+  const selectedModelTags = useDesignAppSelectedModelTags();
+  const { addModelTagForAllTypes, removeModelTagForAllTypes } = useDesignAppCommands();
+
+  // Get all unique type guids from the design's pieces
+  const designTypeGuids = useMemo(() => {
+    if (!design?.pieces) return [];
+    const typeGuids = new Set<string>();
+    design.pieces.forEach((piece) => {
+      if (piece.type?.guid) {
+        typeGuids.add(piece.type.guid);
+      }
+    });
+    return Array.from(typeGuids);
+  }, [design?.pieces]);
+
+  // Get all unique tag guids from all types in the design
+  const allModelTagGuids = useMemo(() => {
+    if (!kit?.types || designTypeGuids.length === 0) return [];
+    const tagGuids = new Set<string>();
+    designTypeGuids.forEach((typeGuid) => {
+      const type = kit.types?.find((t) => t.guid === typeGuid);
+      type?.models?.forEach((model) => {
+        model.tags?.forEach((tag) => tagGuids.add(tag.guid));
+      });
+    });
+    return Array.from(tagGuids);
+  }, [kit?.types, designTypeGuids]);
+
+  // Get tag names from kit
+  const tagNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    kit?.tags?.forEach((tag) => {
+      map.set(tag.guid, tag.name);
+    });
+    return map;
+  }, [kit?.tags]);
+
+  // Check if a tag is selected for any type
+  const isTagSelected = useCallback(
+    (tagGuid: string): boolean => {
+      return designTypeGuids.some((typeGuid) => {
+        const tags = selectedModelTags[typeGuid] ?? [];
+        return tags.includes(tagGuid);
+      });
+    },
+    [selectedModelTags, designTypeGuids],
+  );
+
+  // Get types that have this tag in their models
+  const getTypesWithTag = useCallback(
+    (tagGuid: string): Guid[] => {
+      if (!kit?.types) return [];
+      return designTypeGuids.filter((typeGuid) => {
+        const type = kit.types?.find((t) => t.guid === typeGuid);
+        return type?.models?.some((model) => model.tags?.some((tag) => tag.guid === tagGuid));
+      });
+    },
+    [kit?.types, designTypeGuids],
+  );
 
   useEffect(() => {
     if (appType !== "design") return;
+
+    // Remove previous tag items
+    allModelTagGuids.forEach((tagGuid) => {
+      removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
+    });
+
+    // Add footer items for each tag
+    allModelTagGuids.forEach((tagGuid, index) => {
+      const tagName = tagNameMap.get(tagGuid) || tagGuid.slice(0, 8);
+      const selected = isTagSelected(tagGuid);
+      const typesWithTag = getTypesWithTag(tagGuid);
+
+      addFooterItem({
+        id: `semio.sketchpad.app.design.footer.tag.${tagGuid}`,
+        content: <span className={`cursor-pointer transition-colors ${selected ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>{tagName}</span>,
+        onClick: () => {
+          if (selected) {
+            removeModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.remove", tagGuid, typesWithTag);
+          } else {
+            addModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.add", tagGuid, typesWithTag);
+          }
+        },
+        order: index,
+      });
+    });
+
     return () => {
-      // Cleanup
+      allModelTagGuids.forEach((tagGuid) => {
+        removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
+      });
     };
-  }, [appType, addFooterItem, removeFooterItem]);
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTagForAllTypes, removeModelTagForAllTypes, isTagSelected, getTypesWithTag]);
 
   return null;
 };
@@ -5940,28 +6056,46 @@ const PieceMesh: FC = () => {
 
   const { modelUrl, fileExtension, fileGuid } = useMemo(() => {
     if (!type?.models || type.models.length === 0) {
+      console.warn("[PieceMesh] No models available for type:", type?.guid, type?.name);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
     const tagsForType = selectedModelTags[type.guid] ?? [];
     let model: Model | undefined;
     if (tagsForType.length > 0) {
+      // Use manually selected tags with strict filtering
       model = selectBestModel(type.models, tagsForType);
+      console.log("[PieceMesh] Selected model using manual tags:", model?.guid, "tags:", tagsForType);
     } else {
-      const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
-      model = defaultRep ?? type.models[0];
+      // Use type's concepts as default tags for jaccard-based selection
+      const conceptGuids = type.concepts?.map((c) => c.guid) ?? [];
+      if (conceptGuids.length > 0) {
+        // Use findModel directly (jaccard) instead of selectBestModel (which filters first)
+        // This finds the model with highest jaccard similarity to the type's concepts
+        model = findModel(type.models, conceptGuids);
+        console.log("[PieceMesh] Selected model using type concepts:", model?.guid, "concepts:", conceptGuids);
+      } else {
+        // Fallback to default model (one with no tags) or first model
+        const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
+        model = defaultRep ?? type.models[0];
+        console.log("[PieceMesh] Selected default/first model:", model?.guid);
+      }
     }
     if (!model) {
+      console.warn("[PieceMesh] No model found for type:", type.guid);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
     const file = kit?.files?.find((f) => f.guid === model.file);
     if (!file) {
+      console.warn("[PieceMesh] File not found in kit for model:", model.guid, "file guid:", model.file);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
     const ext = file.name?.split(".").pop() || "";
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
+      console.warn("[PieceMesh] File URL not available:", file.guid, file.name);
       return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
+    console.log("[PieceMesh] Model ready to load:", model.guid, "file:", file.name);
     return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
   }, [type, kit, kitStore, selectedModelTags]);
 
@@ -6946,21 +7080,7 @@ const App: FC<AppProps> = () => {
     );
   };
 
-  // Add toolbar tools
-  useEffect(() => {
-    if (appType !== "design") return;
-
-    addSection("toolbar", {
-      id: "semio.sketchpad.app.design.tools",
-      specificity: 20,
-      order: 0,
-      content: <ToolsToggleGroup />,
-    });
-
-    return () => {
-      removeSection("toolbar", "semio.sketchpad.app.design.tools");
-    };
-  }, [appType, addSection, removeSection]);
+  // Toolbar section is now registered in DesignApp component for earlier initialization
 
   useEffect(() => {
     if (appType !== "design") return;
@@ -7157,11 +7277,31 @@ const App: FC<AppProps> = () => {
   );
 };
 
+const DesignApp: FC = () => {
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+
+  useLayoutEffect(() => {
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.design.tools",
+      specificity: 20,
+      order: 0,
+      content: <ToolsToggleGroup />,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.design.tools");
+    };
+  }, [addSection, removeSection]);
+
+  return <App />;
+};
+
 // #region Config
 
 export const config: AppConfig = {
   id: "design",
-  component: App,
+  component: DesignApp,
   routeSegments: [
     {
       path: "kits/:kit",
@@ -7180,9 +7320,9 @@ export const config: AppConfig = {
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -7193,4 +7333,4 @@ export const config: AppConfig = {
 
 // #endregion Config
 
-export default App;
+export default DesignApp;

@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 5
     },
     "preserveOutput": "always",
     "reporter": [
@@ -37,7 +37,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 5
         },
         "id": "chromium",
         "name": "chromium",
@@ -46,12 +46,12 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 180000
+        "timeout": 30000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
-    "updateSourceMethod": "patch",
+    "updateSourceMethod": "3way",
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
@@ -73,152 +73,262 @@
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 20,
+          "line": 67,
           "column": 6,
-          "specs": [],
-          "suites": [
+          "specs": [
             {
-              "title": "Kit Import Drag and Drop",
-              "file": "sketchpad.test.ts",
-              "line": 204,
-              "column": 8,
-              "specs": [
+              "title": "Home",
+              "ok": true,
+              "tags": [],
+              "tests": [
                 {
-                  "title": "Drop metabolism.zip creates temporary kit with files",
-                  "ok": false,
-                  "tags": [],
-                  "tests": [
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
                     {
-                      "timeout": 90000,
+                      "workerIndex": 49,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5017,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-01T16:50:45.894Z",
                       "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium",
-                      "projectName": "chromium",
-                      "results": [
-                        {
-                          "workerIndex": 0,
-                          "parallelIndex": 0,
-                          "status": "timedOut",
-                          "duration": 94179,
-                          "error": {
-                            "message": "\u001b[31mTest timeout of 90000ms exceeded.\u001b[39m",
-                            "stack": "\u001b[31mTest timeout of 90000ms exceeded.\u001b[39m"
-                          },
-                          "errors": [
-                            {
-                              "message": "\u001b[31mTest timeout of 90000ms exceeded.\u001b[39m"
-                            },
-                            {
-                              "location": {
-                                "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                                "column": 20,
-                                "line": 281
-                              },
-                              "message": "Error: page.evaluate: Target page, context or browser has been closed\n\n\u001b[0m \u001b[90m 279 |\u001b[39m         \u001b[36mawait\u001b[39m action()\u001b[33m;\u001b[39m\n \u001b[90m 280 |\u001b[39m         \u001b[90m// Wait for any React renders to complete\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 281 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mPromise\u001b[39m(resolve \u001b[33m=>\u001b[39m requestAnimationFrame(() \u001b[33m=>\u001b[39m requestAnimationFrame(resolve))))\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 282 |\u001b[39m         \u001b[36mconst\u001b[39m end \u001b[33m=\u001b[39m \u001b[33mDate\u001b[39m\u001b[33m.\u001b[39mnow()\u001b[33m;\u001b[39m\n \u001b[90m 283 |\u001b[39m         \u001b[36mreturn\u001b[39m end \u001b[33m-\u001b[39m start\u001b[33m;\u001b[39m\n \u001b[90m 284 |\u001b[39m       }\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at measureAction (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:281:20)\u001b[22m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:371:28\u001b[22m"
-                            }
-                          ],
-                          "stdout": [
-                            {
-                              "text": "Files view text: Metabolism\nr25.07-1\nSearch\n\nSearch for kits, designs, types, and more\n\nFocus\n\nFocus on an element in the current view\n\nKind\n\t\nName\n\t\nUpdated\n\t\nCreated\n\n\n\t\nNC\nNakagin Capsule Tower\n\tless than a minute ago\tless than a minute ago\n\n\t\nCD\nCapsule Dream\n\tless than a minute ago\tless than a minute ago\n\n\t\nC\nCapsule\n\tless than a minute ago\tless than a minute ago\n\n\t\nB\nBase\n\tless than a minute ago\tless than a minute ago\n\n\t\nB\nBridge\n\tless than a minute ago\tless than a minute ago\n\n\t\nC\nCapital\n\tless than a minute ago\tless than a minute ago\n\n\t\nCC\nCylindric Capital\n\tless than a minute ago\tless than a minute ago\n\n\t\nT\nTambour\n\tless than a minute ago\tless than a minute ago\n\n\t\nCT\nCylindric Tambour\n\tless than a minute ago\tless than a minute ago\n\n\t\nicons\n\tless than a minute ago\tless than a minute ago\n\n\t\nmetabolism\n\tless than a minute ago\tless than a minute ago\n\n\t\nrepresentations\n\tless than a minute ago\tless than a minute ago\n\n\t\nUeli Saluz\n\t\t\n"
-                            },
-                            {
-                              "text": "Y.js warnings count: 0\n"
-                            },
-                            {
-                              "text": "Files toggle not found or already showing types\n"
-                            },
-                            {
-                              "text": "Types toggle not found, maybe already showing types\n"
-                            },
-                            {
-                              "text": "Found 14 table rows\n"
-                            },
-                            {
-                              "text": "Page has types visible: true\n"
-                            },
-                            {
-                              "text": "Found 18 buttons in table body\n"
-                            },
-                            {
-                              "text": "Found 9 chevron buttons in table\n"
-                            },
-                            {
-                              "text": "Button 0: NCNakagin Capsule Towerless than a minute agoless than a min\n"
-                            },
-                            {
-                              "text": "Button 1: CDCapsule Dreamless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Button 2: CCapsuleless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Button 3: BBaseless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Button 4: TTambourless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Button 5: CTCylindric Tambourless than a minute agoless than a minute\n"
-                            },
-                            {
-                              "text": "Button 6: iconsless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Button 7: metabolismless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Button 8: representationsless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "Testing button 0: NCNakagin Capsule Towerless than a minute agoless than a minute ago\n"
-                            },
-                            {
-                              "text": "NCNakagin Capsule Towerless than a minut: expand=4796ms, collapse=4822ms\n"
-                            },
-                            {
-                              "text": "Testing button 1: CDCapsule Dream1 minute ago1 minute ago\n"
-                            },
-                            {
-                              "text": "CDCapsule Dream1 minute ago1 minute ago: expand=4945ms, collapse=4810ms\n"
-                            },
-                            {
-                              "text": "Testing button 2: CCapsule1 minute ago1 minute ago\n"
-                            },
-                            {
-                              "text": "CCapsule1 minute ago1 minute ago: expand=6047ms, collapse=6281ms\n"
-                            },
-                            {
-                              "text": "Testing button 3: BBase1 minute ago1 minute ago\n"
-                            },
-                            {
-                              "text": "BBase1 minute ago1 minute ago: expand=4929ms, collapse=4955ms\n"
-                            },
-                            {
-                              "text": "Testing button 4: TTambour1 minute ago1 minute ago\n"
-                            }
-                          ],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-11-29T23:41:56.939Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "error-context",
-                              "contentType": "text/markdown",
-                              "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Kit-Im-134ec-es-temporary-kit-with-files-chromium\\error-context.md"
-                            }
-                          ]
-                        }
-                      ],
-                      "status": "unexpected"
+                      "attachments": []
                     }
                   ],
-                  "id": "1f96767271edc4239dfa-768dee4b6eb943248797",
-                  "file": "sketchpad.test.ts",
-                  "line": 205,
-                  "column": 5
+                  "status": "expected"
                 }
-              ]
+              ],
+              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
+              "file": "sketchpad.test.ts",
+              "line": 68,
+              "column": 3
+            },
+            {
+              "title": "Kit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 50,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 26385,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Capsule\"\u001b[39m\nReceived string:    \u001b[31m\"Search·\u001b[39m\n\u001b[31mSearch for kits, designs, types, and more·\u001b[39m\n\u001b[31mFocus·\u001b[39m\n\u001b[31mFocus on an element in the current view·\u001b[39m\n\u001b[31mKind··\u001b[39m\n\u001b[31mName··\u001b[39m\n\u001b[31mLast Updated··\u001b[39m\n\u001b[31mCreated····\u001b[39m\n\u001b[31mD\u001b[39m\n\u001b[31mDocumentation······\u001b[39m\n\u001b[31mM\u001b[39m\n\u001b[31mMetabolism\u001b[39m\n\u001b[31m\tless than a minute ago\tless than a minute ago\"\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Capsule\"\u001b[39m\nReceived string:    \u001b[31m\"Search·\u001b[39m\n\u001b[31mSearch for kits, designs, types, and more·\u001b[39m\n\u001b[31mFocus·\u001b[39m\n\u001b[31mFocus on an element in the current view·\u001b[39m\n\u001b[31mKind··\u001b[39m\n\u001b[31mName··\u001b[39m\n\u001b[31mLast Updated··\u001b[39m\n\u001b[31mCreated····\u001b[39m\n\u001b[31mD\u001b[39m\n\u001b[31mDocumentation······\u001b[39m\n\u001b[31mM\u001b[39m\n\u001b[31mMetabolism\u001b[39m\n\u001b[31m\tless than a minute ago\tless than a minute ago\"\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:109:22",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 22,
+                          "line": 109
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 107 |\u001b[39m     \u001b[36mconst\u001b[39m pageText \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m document\u001b[33m.\u001b[39mbody\u001b[33m.\u001b[39minnerText)\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m     expect(pageText)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"Metabolism\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 109 |\u001b[39m     expect(pageText)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"Capsule\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 110 |\u001b[39m     expect(pageText)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"Nakagin Capsule Tower\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m\n \u001b[90m 112 |\u001b[39m     \u001b[36mconst\u001b[39m filesButton \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.kit.kind.files\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 22,
+                            "line": 109
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Capsule\"\u001b[39m\nReceived string:    \u001b[31m\"Search·\u001b[39m\n\u001b[31mSearch for kits, designs, types, and more·\u001b[39m\n\u001b[31mFocus·\u001b[39m\n\u001b[31mFocus on an element in the current view·\u001b[39m\n\u001b[31mKind··\u001b[39m\n\u001b[31mName··\u001b[39m\n\u001b[31mLast Updated··\u001b[39m\n\u001b[31mCreated····\u001b[39m\n\u001b[31mD\u001b[39m\n\u001b[31mDocumentation······\u001b[39m\n\u001b[31mM\u001b[39m\n\u001b[31mMetabolism\u001b[39m\n\u001b[31m\tless than a minute ago\tless than a minute ago\"\u001b[39m\n\n\u001b[0m \u001b[90m 107 |\u001b[39m     \u001b[36mconst\u001b[39m pageText \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mevaluate(() \u001b[33m=>\u001b[39m document\u001b[33m.\u001b[39mbody\u001b[33m.\u001b[39minnerText)\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m     expect(pageText)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"Metabolism\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 109 |\u001b[39m     expect(pageText)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"Capsule\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 110 |\u001b[39m     expect(pageText)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"Nakagin Capsule Tower\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 111 |\u001b[39m\n \u001b[90m 112 |\u001b[39m     \u001b[36mconst\u001b[39m filesButton \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.app.kit.kind.files\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:109:22\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-01T16:50:45.826Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Kit-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 22,
+                        "line": 109
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-8ea0390a28d2fa06fd58",
+              "file": "sketchpad.test.ts",
+              "line": 81,
+              "column": 3
+            },
+            {
+              "title": "Design",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 51,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 37396,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m5\u001b[39m\nReceived: \u001b[31m0\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m5\u001b[39m\nReceived: \u001b[31m0\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:274:35",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 35,
+                          "line": 274
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 272 |\u001b[39m     \u001b[36mfor\u001b[39m (\u001b[36mlet\u001b[39m i \u001b[33m=\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m i \u001b[33m<\u001b[39m cornerDropPoints\u001b[33m.\u001b[39mlength\u001b[33m;\u001b[39m i\u001b[33m++\u001b[39m) {\n \u001b[90m 273 |\u001b[39m       \u001b[36mawait\u001b[39m dragAndDrop(sourceCenter\u001b[33m,\u001b[39m cornerDropPoints[i])\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 274 |\u001b[39m       expect(\u001b[36mawait\u001b[39m countPieces())\u001b[33m.\u001b[39mtoBe(i \u001b[33m+\u001b[39m \u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 275 |\u001b[39m       \u001b[36mawait\u001b[39m verifyPiecePlacement(i\u001b[33m,\u001b[39m cornerDropPoints[i])\u001b[33m;\u001b[39m\n \u001b[90m 276 |\u001b[39m     }\n \u001b[90m 277 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 35,
+                            "line": 274
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m5\u001b[39m\nReceived: \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 272 |\u001b[39m     \u001b[36mfor\u001b[39m (\u001b[36mlet\u001b[39m i \u001b[33m=\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m i \u001b[33m<\u001b[39m cornerDropPoints\u001b[33m.\u001b[39mlength\u001b[33m;\u001b[39m i\u001b[33m++\u001b[39m) {\n \u001b[90m 273 |\u001b[39m       \u001b[36mawait\u001b[39m dragAndDrop(sourceCenter\u001b[33m,\u001b[39m cornerDropPoints[i])\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 274 |\u001b[39m       expect(\u001b[36mawait\u001b[39m countPieces())\u001b[33m.\u001b[39mtoBe(i \u001b[33m+\u001b[39m \u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 275 |\u001b[39m       \u001b[36mawait\u001b[39m verifyPiecePlacement(i\u001b[33m,\u001b[39m cornerDropPoints[i])\u001b[33m;\u001b[39m\n \u001b[90m 276 |\u001b[39m     }\n \u001b[90m 277 |\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:274:35\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-01T16:50:45.966Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 35,
+                        "line": 274
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
+              "file": "sketchpad.test.ts",
+              "line": 188,
+              "column": 3
+            },
+            {
+              "title": "Type",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 52,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 17652,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('div.flex.items-stretch.border.overflow-hidden.h-large').first()\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('div.flex.items-stretch.border.overflow-hidden.h-large').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('div.flex.items-stretch.border.overflow-hidden.h-large').first()\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('div.flex.items-stretch.border.overflow-hidden.h-large').first()\u001b[22m\n\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:331:27",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 27,
+                          "line": 331
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 329 |\u001b[39m\n \u001b[90m 330 |\u001b[39m     \u001b[36mconst\u001b[39m toolbar \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"div.flex.items-stretch.border.overflow-hidden.h-large\"\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 331 |\u001b[39m     \u001b[36mawait\u001b[39m expect(toolbar)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 332 |\u001b[39m\n \u001b[90m 333 |\u001b[39m     \u001b[36mconst\u001b[39m selectionTool \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.tool.selection\"]'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 334 |\u001b[39m     \u001b[36mawait\u001b[39m expect(selectionTool)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 27,
+                            "line": 331
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('div.flex.items-stretch.border.overflow-hidden.h-large').first()\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('div.flex.items-stretch.border.overflow-hidden.h-large').first()\u001b[22m\n\n\n\u001b[0m \u001b[90m 329 |\u001b[39m\n \u001b[90m 330 |\u001b[39m     \u001b[36mconst\u001b[39m toolbar \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"div.flex.items-stretch.border.overflow-hidden.h-large\"\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 331 |\u001b[39m     \u001b[36mawait\u001b[39m expect(toolbar)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 332 |\u001b[39m\n \u001b[90m 333 |\u001b[39m     \u001b[36mconst\u001b[39m selectionTool \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.tool.selection\"]'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 334 |\u001b[39m     \u001b[36mawait\u001b[39m expect(selectionTool)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:331:27\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-01T16:50:45.911Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Type-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 27,
+                        "line": 331
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
+              "file": "sketchpad.test.ts",
+              "line": 326,
+              "column": 3
+            },
+            {
+              "title": "Docs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 53,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 9771,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-01T16:50:45.828Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-5a4f50354005f7ed4484",
+              "file": "sketchpad.test.ts",
+              "line": 357,
+              "column": 3
             }
           ]
         }
@@ -227,11 +337,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-11-29T23:41:56.117Z",
-    "duration": 95209.57400000001,
-    "expected": 0,
+    "startTime": "2025-12-01T16:50:42.188Z",
+    "duration": 42156.41899999976,
+    "expected": 2,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 3,
     "flaky": 0
   }
 }

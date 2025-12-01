@@ -409,6 +409,14 @@ export abstract class Store<TState> {
   onChangedDeep(subscribe: Subscribe): Unsubscribe {
     return createObserver(this.yMap, subscribe, true);
   }
+
+  onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubscribe {
+    return createFieldObserver(this.yMap, key, subscribe, deep);
+  }
+
+  onFieldsChanged(keys: string[], subscribe: Subscribe, deep: boolean = false): Unsubscribe {
+    return createFieldsObserver(this.yMap, keys, subscribe, deep);
+  }
 }
 
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
@@ -6762,6 +6770,87 @@ export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscr
   }
 }
 
+export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
+  const disposables: Disposable[] = [];
+  let currentValue = yMap.get(key);
+  const notifySubscriber = () => subscribe(() => {});
+  const setupNestedObserver = (value: any) => {
+    if (deep && value instanceof Y.Map) {
+      const nestedCallback = () => notifySubscriber();
+      value.observeDeep(nestedCallback);
+      disposables.push(() => value.unobserveDeep(nestedCallback));
+    } else if (deep && value instanceof Y.Array) {
+      const nestedCallback = () => notifySubscriber();
+      value.observeDeep(nestedCallback);
+      disposables.push(() => value.unobserveDeep(nestedCallback));
+    }
+  };
+  if (currentValue !== undefined) setupNestedObserver(currentValue);
+  const mapCallback = (event: Y.YMapEvent<T>) => {
+    if (event.keysChanged.has(key)) {
+      disposables.forEach((d) => d());
+      disposables.length = 0;
+      currentValue = yMap.get(key);
+      if (currentValue !== undefined) setupNestedObserver(currentValue);
+      notifySubscriber();
+    }
+  };
+  yMap.observe(mapCallback);
+  return () => {
+    yMap.unobserve(mapCallback);
+    disposables.forEach((d) => d());
+  };
+}
+
+export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscribe: Subscribe, deep: boolean = false): Disposable {
+  const disposables: Disposable[] = [];
+  const keySet = new Set(keys);
+  const nestedDisposables = new Map<string, Disposable[]>();
+  const notifySubscriber = () => subscribe(() => {});
+  const setupNestedObserver = (key: string, value: any) => {
+    const keyDisposables: Disposable[] = [];
+    if (deep && value instanceof Y.Map) {
+      const nestedCallback = () => notifySubscriber();
+      value.observeDeep(nestedCallback);
+      keyDisposables.push(() => value.unobserveDeep(nestedCallback));
+    } else if (deep && value instanceof Y.Array) {
+      const nestedCallback = () => notifySubscriber();
+      value.observeDeep(nestedCallback);
+      keyDisposables.push(() => value.unobserveDeep(nestedCallback));
+    }
+    nestedDisposables.set(key, keyDisposables);
+  };
+  const cleanupNestedObserver = (key: string) => {
+    const keyDisposables = nestedDisposables.get(key);
+    if (keyDisposables) {
+      keyDisposables.forEach((d) => d());
+      nestedDisposables.delete(key);
+    }
+  };
+  keys.forEach((key) => {
+    const value = yMap.get(key);
+    if (value !== undefined) setupNestedObserver(key, value);
+  });
+  const mapCallback = (event: Y.YMapEvent<T>) => {
+    let shouldNotify = false;
+    event.keysChanged.forEach((key) => {
+      if (keySet.has(key)) {
+        cleanupNestedObserver(key);
+        const newValue = yMap.get(key);
+        if (newValue !== undefined) setupNestedObserver(key, newValue);
+        shouldNotify = true;
+      }
+    });
+    if (shouldNotify) notifySubscriber();
+  };
+  yMap.observe(mapCallback);
+  return () => {
+    yMap.unobserve(mapCallback);
+    nestedDisposables.forEach((keyDisposables) => keyDisposables.forEach((d) => d()));
+    nestedDisposables.clear();
+  };
+}
+
 export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T }, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -6796,8 +6885,59 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+export function useSyncField<T, TSelected = T>(
+  store: { onFieldChanged: (key: string, subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T },
+  key: string,
+  selector: (value: T) => TSelected = identitySelector as any,
+  deep: boolean = true,
+): TSelected {
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      return store.onFieldChanged(
+        key,
+        (cb: () => void) => {
+          cb();
+          callback();
+          return () => {};
+        },
+        deep,
+      );
+    },
+    [store, key, deep],
+  );
+  const getSnapshot = useCallback(() => selector(store.snapshot()), [store, selector]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+export function useSyncFields<T, TSelected = T>(
+  store: { onFieldsChanged: (keys: string[], subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T },
+  keys: string[],
+  selector: (value: T) => TSelected = identitySelector as any,
+  deep: boolean = true,
+): TSelected {
+  const keysRef = useRef(keys);
+  if (keys.length !== keysRef.current.length || keys.some((k, i) => k !== keysRef.current[i])) keysRef.current = keys;
+  const stableKeys = keysRef.current;
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      return store.onFieldsChanged(
+        stableKeys,
+        (cb: () => void) => {
+          cb();
+          callback();
+          return () => {};
+        },
+        deep,
+      );
+    },
+    [store, stableKeys, deep],
+  );
+  const getSnapshot = useCallback(() => selector(store.snapshot()), [store, selector]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
 const defaultPanelVisibility: PanelVisibility = {
-  toolbar: false,
+  toolbar: true,
   workbench: false,
   details: false,
   chat: false,
@@ -9141,7 +9281,6 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
               items={tool.modes.map((mode) => ({
                 value: mode.id,
                 label: mode.icon || mode.label || mode.id,
-                id: mode.tooltipId || `semio.sketchpad.tool.${mode.id}`,
               }))}
               value={activeMode.id}
               onValueChange={handleModeSelect}
@@ -11696,6 +11835,7 @@ const LayoutWrapper: FC = () => {
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
   const panelVisibility = useAppPanelVisibility();
+  const appType = useAppType();
   const panelSizes = usePanelSizes();
   const footerItems = useFooterItems();
   const workbenchSections = usePanelSections("workbench");
@@ -12112,6 +12252,7 @@ const LayoutWrapper: FC = () => {
                   onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.workbench ? "workbenchWidth" : "toolsWidth", size),
                   sections: panelVisibility.workbench ? workbenchSections : toolsSections,
                   opacity: panelOpacity,
+                  panelKey: panelVisibility.workbench ? "workbench" : "tools",
                 }
               : undefined
           }
@@ -12122,6 +12263,7 @@ const LayoutWrapper: FC = () => {
                   size: panelVisibility.hud ? panelSizes.hudWidth : panelSizes.statsWidth,
                   onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.hud ? "hudWidth" : "statsWidth", size),
                   sections: panelVisibility.hud ? hudSections : statsSections,
+                  panelKey: panelVisibility.hud ? "hud" : "stats",
                 }
               : undefined
           }
@@ -12132,6 +12274,7 @@ const LayoutWrapper: FC = () => {
                   size: panelVisibility.details ? panelSizes.detailsWidth : panelVisibility.chat ? panelSizes.chatWidth : panelSizes.settingsWidth,
                   onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.details ? "detailsWidth" : panelVisibility.chat ? "chatWidth" : "settingsWidth", size),
                   sections: panelVisibility.details ? detailsSections : panelVisibility.chat ? chatSections : settingsSections,
+                  panelKey: panelVisibility.details ? "details" : panelVisibility.chat ? "chat" : "settings",
                 }
               : undefined
           }
@@ -12148,12 +12291,14 @@ const LayoutWrapper: FC = () => {
           canvas={
             <div className="relative h-full w-full">
               <AppRouter />
-              {panelVisibility.toolbar && toolbarSections.length > 0 && (
+              {(panelVisibility.toolbar || appType === "type" || appType === "design") && (
                 <div className="absolute bottom-single left-1/2 -translate-x-1/2 z-panel pointer-events-auto">
                   <div className="flex items-center gap-single bg-panel border p-single">
-                    {toolbarSections.map((section) => (
-                      <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>
-                    ))}
+                    {toolbarSections.length > 0 ? (
+                      toolbarSections.map((section) => <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>)
+                    ) : (
+                      <div className="text-muted-foreground text-sm">Loading...</div>
+                    )}
                   </div>
                 </div>
               )}

@@ -1,5 +1,5 @@
 ---
-date: '2025-11-27T00:54:01.213Z'
+date: "2025-11-27T00:54:01.213Z"
 slug: DOCS-HEADINGS-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
@@ -7,6 +7,7 @@ summary: >-
   it's outside the HeadingsProvider context
 model: claude-sonnet-4.5
 ---
+
 # Previously
 
 The Docs app had an issue where the Details panel showed "No headings found" even when the page had headings. This was caused by the `HeadingsProvider` context being inside the App component while the Details panel was rendered through the `PanelSectionProvider` which is at the Sketchpad level - outside the HeadingsProvider's context.

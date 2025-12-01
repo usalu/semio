@@ -171,6 +171,8 @@ export type ConnectionId = { guid: Guid };
 export type StatId = { guid: Guid };
 export type DesignId = { guid: Guid };
 export type KitId = { guid: Guid };
+export type TagId = { guid: Guid };
+export type ConceptId = { guid: Guid };
 
 export const AttributeIdSchema = z.object({ guid: z.string() });
 export const LocationIdSchema = z.object({ guid: z.string() });
@@ -191,6 +193,8 @@ export const ConnectionIdSchema = z.object({ guid: z.string() });
 export const StatIdSchema = z.object({ guid: z.string() });
 export const DesignIdSchema = z.object({ guid: z.string() });
 export const KitIdSchema = z.object({ guid: z.string() });
+export const TagIdSchema = z.object({ guid: z.string() });
+export const ConceptIdSchema = z.object({ guid: z.string() });
 
 export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
 export const createLocationId = (guid: Guid): LocationId => ({ guid });
@@ -211,6 +215,8 @@ export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
 export const createStatId = (guid: Guid): StatId => ({ guid });
 export const createDesignId = (guid: Guid): DesignId => ({ guid });
 export const createKitId = (guid: Guid): KitId => ({ guid });
+export const createTagId = (guid: Guid): TagId => ({ guid });
+export const createConceptId = (guid: Guid): ConceptId => ({ guid });
 
 export const areSameAttributeId = (a: AttributeId, b: AttributeId): boolean => a.guid === b.guid;
 export const areSameLocationId = (a: LocationId, b: LocationId): boolean => a.guid === b.guid;
@@ -231,6 +237,8 @@ export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean =
 export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.guid;
 export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
 export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
+export const areSameTagId = (a: TagId, b: TagId): boolean => a.guid === b.guid;
+export const areSameConceptId = (a: ConceptId, b: ConceptId): boolean => a.guid === b.guid;
 
 export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
 export const getLocationGuid = (id: LocationId): Guid => id.guid;
@@ -251,6 +259,8 @@ export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
 export const getStatGuid = (id: StatId): Guid => id.guid;
 export const getDesignGuid = (id: DesignId): Guid => id.guid;
 export const getKitGuid = (id: KitId): Guid => id.guid;
+export const getTagGuid = (id: TagId): Guid => id.guid;
+export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
 // #endregion Entity IDs
 
@@ -761,6 +771,7 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
   const result: Location = {
+    guid: base.guid,
     longitude: diff.longitude ?? base.longitude,
     latitude: diff.latitude ?? base.latitude,
     altitude: diff.altitude ?? base.altitude,
@@ -1426,9 +1437,9 @@ export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
   const result: Prop = {
     guid: base.guid,
     quality: diff.quality ?? base.quality,
+    value: diff.value ?? base.value,
   };
 
-  if (diff.value !== undefined || base.value !== undefined) result.value = diff.value ?? base.value;
   if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -1502,14 +1513,302 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 
 // #endregion Prop
 
+// #region Tag
+// https://github.com/usalu/semio#-tag-
+
+export const TagSchema = z.object({
+  guid: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Tag = z.infer<typeof TagSchema>;
+export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse(tag));
+export const deserializeTag = (json: string): Tag => TagSchema.parse(JSON.parse(json));
+
+export const TagDiffSchema = TagSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+  description: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+});
+export type TagDiff = z.infer<typeof TagDiffSchema>;
+export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
+  const diff: TagDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description ?? null;
+  if (before.icon !== after.icon) diff.icon = after.icon ?? null;
+  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => {
+  const inverse: TagDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+};
+export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Tag = {
+    guid: base.guid,
+    name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
+  };
+
+  if ("description" in diff) {
+    const value = diff.description ?? undefined;
+    if (value !== undefined) result.description = value;
+  } else if (base.description !== undefined) {
+    result.description = base.description;
+  }
+  if ("icon" in diff) {
+    const value = diff.icon ?? undefined;
+    if (value !== undefined) result.icon = value;
+  } else if (base.icon !== undefined) {
+    result.icon = base.icon;
+  }
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
+};
+
+export const TagsDiffSchema = z.object({
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: TagDiffSchema })).optional(),
+  added: z.array(TagSchema).optional(),
+});
+export type TagsDiff = z.infer<typeof TagsDiffSchema>;
+export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
+  const diff: TagsDiff = {};
+  const beforeGuids = new Set(before.map((t) => t.guid));
+  const afterGuids = new Set(after.map((t) => t.guid));
+  const removed = before.filter((t) => !afterGuids.has(t.guid)).map((t) => t.guid);
+  if (removed.length > 0) diff.removed = removed;
+  const updated = before
+    .filter((t) => afterGuids.has(t.guid))
+    .map((t) => {
+      const afterTag = after.find((a) => a.guid === t.guid)!;
+      const tagDiff = getTagDiff(t, afterTag);
+      return { id: t.guid, diff: tagDiff };
+    })
+    .filter((u) => Object.keys(u.diff).length > 0);
+  if (updated.length > 0) diff.updated = updated;
+  const added = after.filter((t) => !beforeGuids.has(t.guid));
+  if (added.length > 0) diff.added = added;
+  return diff;
+};
+export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDiff => {
+  const inverse: TagsDiff = {};
+  if (appliedDiff.removed) inverse.added = original.filter((t) => appliedDiff.removed!.includes(t.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((t) => t.guid);
+  if (appliedDiff.updated) {
+    inverse.updated = appliedDiff.updated.map((u) => {
+      const originalTag = original.find((t) => t.guid === u.id)!;
+      return { id: u.id, diff: inverseTagDiff(originalTag, u.diff) };
+    });
+  }
+  return inverse;
+};
+export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
+  const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
+  const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
+  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.id, u.diff]));
+  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.id, u.diff]));
+  const allIds = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
+  const updated = Array.from(allIds).map((id) => ({
+    id,
+    diff: mergeTagDiff(updated1Map.get(id) ?? {}, updated2Map.get(id) ?? {}),
+  }));
+  return {
+    removed: removed.length > 0 ? removed : undefined,
+    updated: updated.length > 0 ? updated : undefined,
+    added: added.length > 0 ? added : undefined,
+  };
+};
+export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
+  let result = [...base];
+  if (diff.removed) {
+    result = result.filter((t) => !diff.removed!.includes(t.guid));
+  }
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex((t) => t.guid === update.id);
+      if (index !== -1) {
+        result[index] = applyTagDiff(result[index], update.diff);
+      }
+    }
+  }
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  return result;
+};
+
+export const findTag = (tags: Tag[], guid: string): Tag => {
+  const tag = tags.find((t) => t.guid === guid);
+  if (!tag) throw new Error(`Tag ${guid} not found`);
+  return tag;
+};
+
+// #endregion Tag
+
+// #region Concept
+// https://github.com/usalu/semio#-concept-
+
+export const ConceptSchema = z.object({
+  guid: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Concept = z.infer<typeof ConceptSchema>;
+export const serializeConcept = (concept: Concept): string => JSON.stringify(ConceptSchema.parse(concept));
+export const deserializeConcept = (json: string): Concept => ConceptSchema.parse(JSON.parse(json));
+
+export const ConceptDiffSchema = ConceptSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+  description: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+});
+export type ConceptDiff = z.infer<typeof ConceptDiffSchema>;
+export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => {
+  const diff: ConceptDiff = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description ?? null;
+  if (before.icon !== after.icon) diff.icon = after.icon ?? null;
+  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
+  return diff;
+};
+export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff): ConceptDiff => {
+  const inverse: ConceptDiff = {};
+  if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
+  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
+  return inverse;
+};
+export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): ConceptDiff => {
+  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+};
+export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+
+  const result: Concept = {
+    guid: base.guid,
+    name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
+  };
+
+  if ("description" in diff) {
+    const value = diff.description ?? undefined;
+    if (value !== undefined) result.description = value;
+  } else if (base.description !== undefined) {
+    result.description = base.description;
+  }
+  if ("icon" in diff) {
+    const value = diff.icon ?? undefined;
+    if (value !== undefined) result.icon = value;
+  } else if (base.icon !== undefined) {
+    result.icon = base.icon;
+  }
+  if (attributes && attributes.length > 0) result.attributes = attributes;
+
+  return result;
+};
+
+export const ConceptsDiffSchema = z.object({
+  removed: z.array(z.string()).optional(),
+  updated: z.array(z.object({ id: z.string(), diff: ConceptDiffSchema })).optional(),
+  added: z.array(ConceptSchema).optional(),
+});
+export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
+export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDiff => {
+  const diff: ConceptsDiff = {};
+  const beforeGuids = new Set(before.map((c) => c.guid));
+  const afterGuids = new Set(after.map((c) => c.guid));
+  const removed = before.filter((c) => !afterGuids.has(c.guid)).map((c) => c.guid);
+  if (removed.length > 0) diff.removed = removed;
+  const updated = before
+    .filter((c) => afterGuids.has(c.guid))
+    .map((c) => {
+      const afterConcept = after.find((a) => a.guid === c.guid)!;
+      const conceptDiff = getConceptDiff(c, afterConcept);
+      return { id: c.guid, diff: conceptDiff };
+    })
+    .filter((u) => Object.keys(u.diff).length > 0);
+  if (updated.length > 0) diff.updated = updated;
+  const added = after.filter((c) => !beforeGuids.has(c.guid));
+  if (added.length > 0) diff.added = added;
+  return diff;
+};
+export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDiff): ConceptsDiff => {
+  const inverse: ConceptsDiff = {};
+  if (appliedDiff.removed) inverse.added = original.filter((c) => appliedDiff.removed!.includes(c.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((c) => c.guid);
+  if (appliedDiff.updated) {
+    inverse.updated = appliedDiff.updated.map((u) => {
+      const originalConcept = original.find((c) => c.guid === u.id)!;
+      return { id: u.id, diff: inverseConceptDiff(originalConcept, u.diff) };
+    });
+  }
+  return inverse;
+};
+export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): ConceptsDiff => {
+  const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
+  const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
+  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.id, u.diff]));
+  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.id, u.diff]));
+  const allIds = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
+  const updated = Array.from(allIds).map((id) => ({
+    id,
+    diff: mergeConceptDiff(updated1Map.get(id) ?? {}, updated2Map.get(id) ?? {}),
+  }));
+  return {
+    removed: removed.length > 0 ? removed : undefined,
+    updated: updated.length > 0 ? updated : undefined,
+    added: added.length > 0 ? added : undefined,
+  };
+};
+export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[] => {
+  let result = [...base];
+  if (diff.removed) {
+    result = result.filter((c) => !diff.removed!.includes(c.guid));
+  }
+  if (diff.updated) {
+    for (const update of diff.updated) {
+      const index = result.findIndex((c) => c.guid === update.id);
+      if (index !== -1) {
+        result[index] = applyConceptDiff(result[index], update.diff);
+      }
+    }
+  }
+  if (diff.added) {
+    result.push(...diff.added);
+  }
+  return result;
+};
+
+export const findConcept = (concepts: Concept[], guid: string): Concept => {
+  const concept = concepts.find((c) => c.guid === guid);
+  if (!concept) throw new Error(`Concept ${guid} not found`);
+  return concept;
+};
+
+// #endregion Concept
+
 // #region Model
 // https://github.com/usalu/semio#-model-
 
 export const ModelSchema = z.object({
   guid: z.string(),
   name: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  file: z.string(),
+  tags: z.array(TagIdSchema).optional(),
+  file: FileIdSchema,
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -1525,7 +1824,7 @@ export const getModelDiff = (before: Model, after: Model): ModelDiff => {
   const diff: ModelDiff = {};
   if (before.name !== after.name) diff.name = after.name;
   if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
-  if (before.file !== after.file) diff.file = after.file;
+  if (before.file.guid !== after.file.guid) diff.file = after.file;
   if (before.description !== after.description) diff.description = after.description;
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
@@ -1547,11 +1846,11 @@ export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
 
   const result: Model = {
     guid: base.guid,
+    file: diff.file ?? base.file,
   };
 
   if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
   if (diff.tags !== undefined || base.tags !== undefined) result.tags = diff.tags ?? base.tags;
-  if (diff.file !== undefined || base.file !== undefined) result.file = diff.file ?? base.file;
   if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -1565,47 +1864,136 @@ export const ModelsDiffSchema = z.object({
 });
 
 export const areSameModel = (model: Model, other: Model): boolean => {
-  return model.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
+  const modelTagGuids = model.tags?.map((t) => t.guid) ?? [];
+  const otherTagGuids = other.tags?.map((t) => t.guid) ?? [];
+  return modelTagGuids.every((guid) => otherTagGuids.includes(guid));
 };
 
-export const findModel = (models: Model[], tags: string[]): Model => {
-  const indices = models.map((r) => jaccard(r.tags, tags));
+export const findModel = (models: Model[], tagGuids: string[]): Model => {
+  const indices = models.map((r) => jaccard(r.tags?.map((t) => t.guid), tagGuids));
   const maxIndex = Math.max(...indices);
   const maxIndexIndex = indices.indexOf(maxIndex);
   return models[maxIndexIndex];
 };
 
-export const getAllTagsFromModels = (models: Model[]): string[] => {
+export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
   const tagsSet = new Set<string>();
   models.forEach((r) => {
-    toArray(r.tags).forEach((tag) => tagsSet.add(tag));
+    toArray(r.tags).forEach((tag) => tagsSet.add(tag.guid));
   });
   return Array.from(tagsSet).sort();
 };
 
-export const filterModelsByTags = (models: Model[], selectedTags: string[]): Model[] => {
-  if (!selectedTags || selectedTags.length === 0) return models;
+export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string[]): Model[] => {
+  if (!selectedTagGuids || selectedTagGuids.length === 0) return models;
   return models.filter((r) => {
     if (!r.tags || r.tags.length === 0) return false;
-    return selectedTags.every((tag) => r.tags?.includes(tag));
+    const modelTagGuids = r.tags.map((t) => t.guid);
+    return selectedTagGuids.every((guid) => modelTagGuids.includes(guid));
   });
 };
 
-export const getAvailableTagsForModels = (models: Model[], selectedTags: string[]): string[] => {
-  const filteredReps = filterModelsByTags(models, selectedTags);
-  const availableTags = getAllTagsFromModels(filteredReps);
-  return availableTags.filter((tag) => !selectedTags.includes(tag));
+export const getAvailableTagGuidsForModels = (models: Model[], selectedTagGuids: string[]): string[] => {
+  const filteredReps = filterModelsByTagGuids(models, selectedTagGuids);
+  const availableTags = getAllTagGuidsFromModels(filteredReps);
+  return availableTags.filter((guid) => !selectedTagGuids.includes(guid));
 };
 
-export const selectBestModel = (models: Model[], selectedTags: string[]): Model | undefined => {
+export const selectBestModel = (models: Model[], selectedTagGuids: string[]): Model | undefined => {
   if (models.length === 0) return undefined;
-  if (selectedTags.length === 0) {
+  if (selectedTagGuids.length === 0) {
     const defaultRep = models.find((r) => !r.tags || r.tags.length === 0);
     return defaultRep ?? models[0];
   }
-  const filteredReps = filterModelsByTags(models, selectedTags);
+  const filteredReps = filterModelsByTagGuids(models, selectedTagGuids);
   if (filteredReps.length === 0) return undefined;
-  return findModel(filteredReps, selectedTags);
+  return findModel(filteredReps, selectedTagGuids);
+};
+
+// Supported 3D file extensions (based on Three.js loaders)
+export const SUPPORTED_3D_EXTENSIONS = [
+  // GLTF/GLB - Primary format
+  "gltf",
+  "glb",
+  // FBX
+  "fbx",
+  // OBJ
+  "obj",
+  // Collada
+  "dae",
+  // 3DS
+  "3ds",
+  // STL
+  "stl",
+  // PLY
+  "ply",
+  // USDZ
+  "usdz",
+  // VRM
+  "vrm",
+  // IFC
+  "ifc",
+  // 3MF
+  "3mf",
+  // AMF
+  "amf",
+  // BVH
+  "bvh",
+  // Draco
+  "drc",
+  // KTX2
+  "ktx2",
+  // LDraw
+  "ldr",
+  "mpd",
+  // LOTTIE
+  "json", // Lottie animations
+  // MMD
+  "pmd",
+  "pmx",
+  "vmd",
+  // PCD
+  "pcd",
+  // PDB
+  "pdb",
+  // SVG (3D extrusion)
+  "svg",
+  // TILT
+  "tilt",
+  // VOX
+  "vox",
+  // VRML
+  "wrl",
+  // XYZ
+  "xyz",
+] as const;
+
+export type Supported3DExtension = (typeof SUPPORTED_3D_EXTENSIONS)[number];
+
+export const isSupportedModelExtension = (filename: string): boolean => {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  return SUPPORTED_3D_EXTENSIONS.includes(ext as Supported3DExtension);
+};
+
+export interface ModelFileValidation {
+  isValid: boolean;
+  warning?: string;
+  extension?: string;
+}
+
+export const validateModelFile = (filename: string): ModelFileValidation => {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  if (!ext) {
+    return { isValid: false, warning: "File has no extension" };
+  }
+  if (!isSupportedModelExtension(filename)) {
+    return {
+      isValid: true,
+      warning: `File extension '.${ext}' is not a common 3D format. Supported: ${SUPPORTED_3D_EXTENSIONS.slice(0, 5).join(", ")}...`,
+      extension: ext,
+    };
+  }
+  return { isValid: true, extension: ext };
 };
 
 // #endregion Model
@@ -1678,6 +2066,7 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
 
   const result: Port = {
     guid: base.guid,
+    t: diff.t ?? base.t,
     point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
     direction: diff.direction ? applyVectorDiff(base.direction, diff.direction) : base.direction,
   };
@@ -1686,7 +2075,6 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
   if (diff.interface !== undefined || base.interface !== undefined) result.interface = diff.interface ?? base.interface;
   if (diff.mandatory !== undefined || base.mandatory !== undefined) result.mandatory = diff.mandatory ?? base.mandatory;
-  if (diff.t !== undefined || base.t !== undefined) result.t = diff.t ?? base.t;
   if (props && props.length > 0) result.props = props;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -1888,7 +2276,7 @@ export const TypeSchema = z.object({
   updatedAt: DateProperty(),
   location: LocationIdSchema.optional(),
   authors: z.array(AuthorIdSchema).optional(),
-  concepts: z.array(z.string()).optional(),
+  concepts: z.array(ConceptIdSchema).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),
@@ -1917,7 +2305,7 @@ export const TypeDiffSchema = TypeSchema.partial()
     image: z.string().nullable().optional(),
     location: LocationIdSchema.nullable().optional(),
     folder: z.string().nullable().optional(),
-    concepts: z.array(z.string()).nullable().optional(),
+    concepts: z.array(ConceptIdSchema).nullable().optional(),
     authors: z.array(AuthorIdSchema).nullable().optional(),
     parent: TypeIdSchema.nullable().optional(),
   });
@@ -2221,7 +2609,7 @@ export const getPieceModelFileGuids = (design: Design, types: Type[], tags: stri
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
     if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
     const model = findModel(type.models, tags);
-    modelFileGuids.set(p.guid, model.file);
+    modelFileGuids.set(p.guid, model.file.guid);
   });
   return modelFileGuids;
 };
@@ -2242,8 +2630,8 @@ export const getPieceModelUrls = (design: Design, types: Type[], files: File[], 
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
     if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
     const model = findModel(type.models, tags);
-    const file = files.find((f) => f.guid === model.file);
-    if (!file) throw new Error(`File ${model.file} for model ${model.guid} not found`);
+    const file = files.find((f) => f.guid === model.file.guid);
+    if (!file) throw new Error(`File ${model.file.guid} for model ${model.guid} not found`);
     modelUrls.set(p.guid, getFileUrl(file.guid));
   });
   return modelUrls;
@@ -2615,7 +3003,7 @@ export const DesignSchema = z.object({
   unit: z.string().optional(),
   location: LocationIdSchema.optional(),
   authors: z.array(AuthorIdSchema).optional(),
-  concepts: z.array(z.string()).optional(),
+  concepts: z.array(ConceptIdSchema).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),
@@ -3644,6 +4032,8 @@ export const KitSchema = z.object({
   version: z.string().optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
+  tags: z.array(TagSchema).optional(),
+  concepts: z.array(ConceptSchema).optional(),
   interfaces: z.array(InterfaceSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   files: z.array(FileSchema).optional(),
@@ -3653,7 +4043,6 @@ export const KitSchema = z.object({
   homepage: z.string().optional(),
   license: z.string().optional(),
   preview: z.string().optional(),
-  concepts: z.array(z.string()).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),
@@ -3665,9 +4054,11 @@ export type Kit = z.infer<typeof KitSchema>;
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
-export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, interfaces: true, qualities: true, folders: true, authors: true }).extend({
+export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, interfaces: true, qualities: true, folders: true, authors: true }).extend({
   types: z.array(z.string()).optional(),
   designs: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  concepts: z.array(z.string()).optional(),
   interfaces: z.array(z.string()).optional(),
   qualities: z.array(z.string()).optional(),
   folders: z.array(z.string()).optional(),
@@ -3677,10 +4068,12 @@ export type KitShallow = z.infer<typeof KitShallowSchema>;
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
 export const KitDiffSchema = KitSchema.partial()
-  .omit({ types: true, designs: true, interfaces: true, qualities: true, authors: true, files: true, folders: true, attributes: true })
+  .omit({ types: true, designs: true, tags: true, concepts: true, interfaces: true, qualities: true, authors: true, files: true, folders: true, attributes: true })
   .extend({
     types: TypesDiffSchema.optional(),
     designs: DesignsDiffSchema.optional(),
+    tags: TagsDiffSchema.optional(),
+    concepts: ConceptsDiffSchema.optional(),
     interfaces: InterfacesDiffSchema.optional(),
     qualities: QualitiesDiffSchema.optional(),
     authors: AuthorsDiffSchema.optional(),
@@ -3694,7 +4087,6 @@ export const KitDiffSchema = KitSchema.partial()
     homepage: z.string().nullable().optional(),
     license: z.string().nullable().optional(),
     preview: z.string().nullable().optional(),
-    concepts: z.array(z.string()).nullable().optional(),
   });
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 const getCollectionDiff = <T extends { guid: string }, D>(before: T[], after: T[], getItemDiff: (before: T, after: T) => D): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
@@ -3786,11 +4178,14 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   if (before.homepage !== after.homepage) diff.homepage = after.homepage;
   if (before.license !== after.license) diff.license = after.license;
   if (before.preview !== after.preview) diff.preview = after.preview;
-  if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
   const typesDiff = getCollectionDiff(before.types ?? [], after.types ?? [], getTypeDiff);
   if (Object.keys(typesDiff).length > 0) diff.types = typesDiff;
   const designsDiff = getCollectionDiff(before.designs ?? [], after.designs ?? [], getDesignDiff);
   if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
+  const tagsDiff = getTagsDiff(before.tags ?? [], after.tags ?? []);
+  if (Object.keys(tagsDiff).length > 0) diff.tags = tagsDiff;
+  const conceptsDiff = getConceptsDiff(before.concepts ?? [], after.concepts ?? []);
+  if (Object.keys(conceptsDiff).length > 0) diff.concepts = conceptsDiff;
   const interfacesDiff = getInterfacesDiff(before.interfaces ?? [], after.interfaces ?? []);
   if (Object.keys(interfacesDiff).length > 0) diff.interfaces = interfacesDiff;
   const qualitiesDiff = getCollectionDiff(before.qualities ?? [], after.qualities ?? [], getQualityDiff);
@@ -3816,9 +4211,10 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage ?? null;
   if (appliedDiff.license !== undefined) inverse.license = original.license ?? null;
   if (appliedDiff.preview !== undefined) inverse.preview = original.preview ?? null;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
   if (appliedDiff.types) inverse.types = inverseCollectionDiff(original.types ?? [], appliedDiff.types, inverseTypeDiff);
   if (appliedDiff.designs) inverse.designs = inverseCollectionDiff(original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
+  if (appliedDiff.tags) inverse.tags = inverseTagsDiff(original.tags ?? [], appliedDiff.tags);
+  if (appliedDiff.concepts) inverse.concepts = inverseConceptsDiff(original.concepts ?? [], appliedDiff.concepts);
   if (appliedDiff.interfaces) inverse.interfaces = inverseInterfacesDiff(original.interfaces ?? [], appliedDiff.interfaces);
   if (appliedDiff.qualities) inverse.qualities = inverseCollectionDiff(original.qualities ?? [], appliedDiff.qualities, inverseQualityDiff);
   if (appliedDiff.files) inverse.files = inverseCollectionDiff(original.files ?? [], appliedDiff.files, inverseFileDiff);
@@ -3833,6 +4229,8 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
     ...diff2,
     types: diff1.types || diff2.types ? (mergeInterfacesDiff(diff1.types ?? {}, diff2.types ?? {}) as any) : undefined,
     designs: diff1.designs || diff2.designs ? (mergeInterfacesDiff(diff1.designs ?? {}, diff2.designs ?? {}) as any) : undefined,
+    tags: diff1.tags || diff2.tags ? mergeTagsDiff(diff1.tags ?? {}, diff2.tags ?? {}) : undefined,
+    concepts: diff1.concepts || diff2.concepts ? mergeConceptsDiff(diff1.concepts ?? {}, diff2.concepts ?? {}) : undefined,
     interfaces: diff1.interfaces || diff2.interfaces ? mergeInterfacesDiff(diff1.interfaces ?? {}, diff2.interfaces ?? {}) : undefined,
     qualities: diff1.qualities || diff2.qualities ? (mergeInterfacesDiff(diff1.qualities ?? {}, diff2.qualities ?? {}) as any) : undefined,
     files: diff1.files || diff2.files ? (mergeInterfacesDiff(diff1.files ?? {}, diff2.files ?? {}) as any) : undefined,
@@ -3861,14 +4259,6 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
     }
   }
 
-  // Concepts array - only include if in diff or base
-  if ("concepts" in diff) {
-    const value = diff.concepts ?? undefined;
-    if (value !== undefined) result.concepts = value;
-  } else if (base.concepts !== undefined) {
-    result.concepts = base.concepts;
-  }
-
   // Collections - only include if result is non-empty
   if (diff.types || base.types) {
     const types = applyCollectionDiff(base.types ?? [], diff.types, applyTypeDiff);
@@ -3877,6 +4267,14 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   if (diff.designs || base.designs) {
     const designs = applyCollectionDiff(base.designs ?? [], diff.designs, applyDesignDiff);
     if (designs.length > 0) result.designs = designs;
+  }
+  if (diff.tags || base.tags) {
+    const tags = applyTagsDiff(base.tags ?? [], diff.tags ?? {});
+    if (tags.length > 0) result.tags = tags;
+  }
+  if (diff.concepts || base.concepts) {
+    const concepts = applyConceptsDiff(base.concepts ?? [], diff.concepts ?? {});
+    if (concepts.length > 0) result.concepts = concepts;
   }
   if (diff.interfaces || base.interfaces) {
     const interfaces = applyInterfacesDiff(base.interfaces ?? [], diff.interfaces ?? {});
@@ -3983,6 +4381,30 @@ export const removeFileFromKit = (fileGuid: string): KitDiff => ({
 
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
   attributes: { added: [attribute] },
+});
+
+export const findTagInKit = (kit: Kit, tagGuid: string): Tag => {
+  const tag = (kit.tags || []).find((t) => t.guid === tagGuid);
+  if (!tag) throw new Error(`Tag ${tagGuid} not found in kit`);
+  return tag;
+};
+
+export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
+export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
+export const removeTagFromKit = (tagGuid: string): KitDiff => ({
+  tags: { removed: [tagGuid] },
+});
+
+export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
+  const concept = (kit.concepts || []).find((c) => c.guid === conceptGuid);
+  if (!concept) throw new Error(`Concept ${conceptGuid} not found in kit`);
+  return concept;
+};
+
+export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
+export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
+export const removeConceptFromKit = (conceptGuid: string): KitDiff => ({
+  concepts: { removed: [conceptGuid] },
 });
 
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {

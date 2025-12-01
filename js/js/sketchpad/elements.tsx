@@ -3986,6 +3986,7 @@ export interface PanelProps {
   footer?: React.ReactNode;
   className?: string;
   opacity?: number;
+  panelKey?: string;
 }
 
 const Panel: React.FC<PanelProps> = ({
@@ -4003,6 +4004,7 @@ const Panel: React.FC<PanelProps> = ({
   footer,
   className = "",
   opacity = 1,
+  panelKey,
 }) => {
   const { t } = useTranslation();
   const mode = useTooltipMode();
@@ -4064,7 +4066,7 @@ const Panel: React.FC<PanelProps> = ({
       : { bottom: 0, height: `${size}px`, zIndex };
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
   return (
-    <div className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
+    <div data-panel={panelKey} className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
       <Scrollable className={`h-full ${showBackground ? "bg-panel" : ""}`}>
         <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
           <TreeStateProvider>

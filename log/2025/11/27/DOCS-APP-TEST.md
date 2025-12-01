@@ -1,5 +1,5 @@
 ---
-date: '2025-11-27T00:34:29.374Z'
+date: "2025-11-27T00:34:29.374Z"
 slug: DOCS-APP-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
@@ -7,6 +7,7 @@ summary: >-
   pages, and details panel headings
 model: claude-sonnet-4.5
 ---
+
 # Previously
 
 No prior work on docs app E2E tests.

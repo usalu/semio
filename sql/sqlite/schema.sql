@@ -136,21 +136,33 @@ CREATE TABLE type (
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
+CREATE TABLE tag (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	description TEXT,
+	icon TEXT,
+	kit_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
 CREATE TABLE model (
 	guid VARCHAR(36) NOT NULL,
-	file VARCHAR(256) NOT NULL,
+	file_guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256),
 	description TEXT,
 	type_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
+	FOREIGN KEY(file_guid) REFERENCES file (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
 );
 
 CREATE TABLE model_tag (
 	model_guid VARCHAR(36) NOT NULL,
-	tag VARCHAR(128) NOT NULL,
-	PRIMARY KEY (model_guid, tag),
-	FOREIGN KEY(model_guid) REFERENCES model (guid)
+	tag_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (model_guid, tag_guid),
+	FOREIGN KEY(model_guid) REFERENCES model (guid),
+	FOREIGN KEY(tag_guid) REFERENCES tag (guid)
 );
 
 CREATE TABLE prop (
@@ -347,16 +359,21 @@ CREATE TABLE stat (
 );
 
 CREATE TABLE concept (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	description TEXT,
+	icon TEXT,
 	kit_guid VARCHAR(36) NOT NULL,
-	value VARCHAR(256) NOT NULL,
-	PRIMARY KEY (kit_guid, value),
+	PRIMARY KEY (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
 CREATE TABLE type_concept (
 	type_guid VARCHAR(36) NOT NULL,
-	concept VARCHAR(256) NOT NULL,
-	PRIMARY KEY (type_guid, concept)
+	concept_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (type_guid, concept_guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(concept_guid) REFERENCES concept (guid)
 );
 
 CREATE TABLE type_author (
@@ -370,8 +387,10 @@ CREATE TABLE type_author (
 
 CREATE TABLE design_concept (
 	design_guid VARCHAR(36) NOT NULL,
-	concept VARCHAR(256) NOT NULL,
-	PRIMARY KEY (design_guid, concept)
+	concept_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (design_guid, concept_guid),
+	FOREIGN KEY(design_guid) REFERENCES design (guid),
+	FOREIGN KEY(concept_guid) REFERENCES concept (guid)
 );
 
 CREATE TABLE attribute (
@@ -382,6 +401,8 @@ CREATE TABLE attribute (
 	quality_guid VARCHAR(36),
 	benchmark_guid VARCHAR(36),
 	interface_guid VARCHAR(36),
+	tag_guid VARCHAR(36),
+	concept_guid VARCHAR(36),
 	folder_guid VARCHAR(36),
 	file_guid VARCHAR(36),
 	author_guid VARCHAR(36),
@@ -400,6 +421,8 @@ CREATE TABLE attribute (
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
 	FOREIGN KEY(benchmark_guid) REFERENCES benchmark (guid),
 	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
+	FOREIGN KEY(tag_guid) REFERENCES tag (guid),
+	FOREIGN KEY(concept_guid) REFERENCES concept (guid),
 	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
 	FOREIGN KEY(file_guid) REFERENCES file (guid),
 	FOREIGN KEY(author_guid) REFERENCES author (guid),

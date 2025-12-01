@@ -129,40 +129,41 @@ entity stats {
 
 entity tags {
     *id : int <<PK,generated>>
+    *guid : string <<UNIQUE>>
     *name : string
-    *order : int
+    *description : string
+    *icon : string
     ..
-    *model_id : int <<FK>>
+    *kit_id : int <<FK>>
     --
-    UNIQUE (name, model_id)
+    UNIQUE (guid)
+    UNIQUE (name, kit_id)
 }
 
 entity concepts {
     *id : int <<PK,generated>>
+    *guid : string <<UNIQUE>>
     *name : string
-    *order : int
+    *description : string
+    *icon : string
     ..
-    type_id : int <<FK>>
-    design_id : int <<FK>>
-    kit_id : int <<FK>>
+    *kit_id : int <<FK>>
     --
-    CHECK ((type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR
-           (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR
-           (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL))
-    UNIQUE (name, type_id, design_id, kit_id)
+    UNIQUE (guid)
+    UNIQUE (name, kit_id)
 }
 
 entity models {
     *id : int <<PK,generated>>
-    *url : string
-    file_id : int <<FK>>
+    *guid : string <<UNIQUE>>
+    *name : string
     *description : string
     ..
+    *file_id : int <<FK>>
     type_id : int <<FK>>
     --
-    CHECK ((url != '' AND file_id IS NULL) OR (url == '' AND file_id IS NOT NULL))
+    UNIQUE (guid)
 }
-
 
 entity planes {
     *id : int <<PK,generated>>
@@ -367,7 +368,14 @@ author_artifact -- authors : "links" >
 author_artifact -- types : "references" >
 author_artifact -- designs : "references" >
 
-models ||--o{ tags : "has" >
+entity model_tags {
+    *model_id : int <<PK,FK>>
+    *tag_id : int <<PK,FK>>
+    *order : int
+}
+
+model_tags -- models : "links" >
+model_tags -- tags : "references" >
 models ||--o{ attributes : "has" >
 models -- files : "might reference" >
 
@@ -376,6 +384,33 @@ ports ||--o{ attributes : "has" >
 ports ||--o{ props : "has" >
 
 types ||--o{ locations : "has" >
+entity type_concepts {
+    *type_id : int <<PK,FK>>
+    *concept_id : int <<PK,FK>>
+    *order : int
+}
+
+entity design_concepts {
+    *design_id : int <<PK,FK>>
+    *concept_id : int <<PK,FK>>
+    *order : int
+}
+
+entity kit_concepts {
+    *kit_id : int <<PK,FK>>
+    *concept_id : int <<PK,FK>>
+    *order : int
+}
+
+type_concepts -- types : "links" >
+type_concepts -- concepts : "references" >
+
+design_concepts -- designs : "links" >
+design_concepts -- concepts : "references" >
+
+kit_concepts -- kits : "links" >
+kit_concepts -- concepts : "references" >
+
 types ||--o{ models : "has" >
 types ||--o{ ports : "has" >
 types ||--o{ authors : "has" >
@@ -412,6 +447,7 @@ kits ||--o{ designs
 kits ||--o{ qualities
 kits ||--o{ files
 kits ||--o{ authors
+kits ||--o{ tags
 kits ||--o{ concepts
 kits ||--o{ attributes
 

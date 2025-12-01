@@ -22,8 +22,7 @@
 // #region Imports
 
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { HashIcon } from "@semio/assets";
-import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
 import * as Y from "yjs";
@@ -31,7 +30,7 @@ import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
 import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "./Sketchpad";
 import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
-import { createPanelDefinition, PanelKind, type AppConfig, type AppEdit, type PanelVisibility } from "./shared";
+import { PanelKind, createPanelDefinition, type AppConfig, type AppEdit, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 
